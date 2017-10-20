@@ -114,10 +114,10 @@
 			</Box>
 		</Container>
 
-		<Container ID="SearchResultsPanelContainer" Anchor="L,T"	Offset="0,125"		Size="193,110" AutoSize="V" Hidden="1">
+		<Container ID="SearchResultsPanelContainer" Anchor="L,T"	Offset="0,125"	 Size="193,auto" Hidden="1">
 			<ScrollPanel ID="SearchResultsPanel"  Size="parent,693"  Vertical="1" AutoScrollBar="1">
 				<ScrollBar Style="Slider_Blue" Anchor="R,C" AnchorSide="O,I"/>
-				<Grid Texture="Controls_OptionPanel" 	SliceCorner="3,3"		SliceSize="10,52" SliceTextureSize="16,64" Size="250,110" AutoSize="V" AutoSizePadding="0,5">
+				<Grid Texture="Controls_OptionPanel" 	SliceCorner="3,3"		SliceSize="10,52" SliceTextureSize="16,64" Size="250,auto" AutoSizePadding="0,5">
 					<Stack ID="SearchResultsStack" StackGrowth="Bottom" Padding="2" Offset="0,5"/>
 				</Grid>
 			</ScrollPanel>
@@ -125,8 +125,8 @@
 	</Container>
 
 	<Instance Name="SearchResultInstance">
-		<Container ID="Root" Size="370,84" AutoSize="1">
-			<GridButton ID="Button" Offset="0,0" Size="250,84" Style="ButtonLightWeightGrid" AutoSize="V" InnerPadding="10,10">
+		<Container ID="Root" Size="auto,auto">
+			<GridButton ID="Button" Offset="0,0" Size="250,auto" Style="ButtonLightWeightGrid" InnerPadding="10,10">
 				<Image ID="Icon" Anchor="L,C" Texture="CivilopediaChapter32" Size="32,32" />
 				<Label ID="Name" Offset="36,0" Style="FontNormal14" String="TechName" Anchor="L,C" WrapWidth="parent-45" ColorSet="BodyTextCool"/>
 			</GridButton>

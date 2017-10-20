@@ -39,7 +39,7 @@ function CreateTabs( tabContainerControl, sizeX, sizeY, selectedFontColor)
 	-- ===========================================================================
 	tabs.SetSelectedTabVisually =
 		function ( tabControl )
-			if ( tabs.decoAnim ~= nil ) then
+			if ( tabControl ~= nil and tabs.decoAnim ~= nil ) then
 				tabs.decoAnim:SetEndVal(tabControl:GetOffsetX() + (tabControl:GetSizeX()/2) - tabs.decoOffset,0);
 				tabs.decoAnim:Play();		
 			end

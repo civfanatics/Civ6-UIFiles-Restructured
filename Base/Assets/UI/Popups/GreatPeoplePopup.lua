@@ -192,7 +192,6 @@ function ViewCurrent( data:table )
 				textureOffsetY = 0;
 				textureSheet = "GreatPeopleClass90";
 			end
-			instance.ClassImage:SetTexture( textureOffsetX, textureOffsetY, textureSheet );
 			instance.BiographyClassImage:SetTexture( textureOffsetX, textureOffsetY, textureSheet );
 		end
 
@@ -200,7 +199,7 @@ function ViewCurrent( data:table )
 		-- then grab a generic representation based on the class.
 		if (kPerson.ClassID ~= nil) and (kPerson.IndividualID ~= nil) then
 			local portrait:string = "ICON_" .. individualData.GreatPersonIndividualType;
-			textureOffsetX, textureOffsetY, textureSheet = IconManager:FindIconAtlas(portrait, 160, true);
+			textureOffsetX, textureOffsetY, textureSheet = IconManager:FindIconAtlas(portrait, 216, true);
 			if textureSheet == nil then		-- Use a default if none found
 				print("WARNING: Could not find icon atlas entry for the individual Great Person '"..portrait.."', using default instead.");
 				portrait = "ICON_GENERIC_" .. classData.GreatPersonClassType .. "_" .. individualData.Gender;

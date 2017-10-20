@@ -8,7 +8,7 @@
 	</Instance>
 
 	<!-- Background -->
-	<Box ID="BackgroundFill" Size="full,full" Color="0,0,0,255" ConsumeMouse="1">
+	<Box ID="BackgroundFill" Size="parent,parent" Color="0,0,0,255" ConsumeMouse="1">
 		<Image ID="Background" Size="parent,parent" StretchMode="Fill" Anchor="C,C" Texture="EndGame_BG_Time" />
 	</Box>
 
@@ -27,7 +27,7 @@
     </Container>
 	</Container>
 
-  <Grid Texture="EndGame_Frame" SliceCorner="3,55" SliceSize="1,1" SliceTextureSize="6,190" Anchor="L,T" Offset="0,155" Size="full,parent-180">
+  <Grid Texture="EndGame_Frame" SliceCorner="3,55" SliceSize="1,1" SliceTextureSize="6,190" Anchor="L,T" Offset="0,155" Size="parent,parent-180">
     <Box ID="MainPanel" Size="1000,parent" Color="120,0,120,0" Anchor="C,T">
 
       <!-- Tab Buttons -->
@@ -68,9 +68,9 @@
       <Container ID="InfoPanel"  Anchor="C,T" Size="1024,parent">
         <Stack Anchor="L,C" Offset="16,-50" StackGrowth="Down" StackPadding="6">
           <!-- Victory Info -->
-          <Grid ID="VictoryPanel" Texture="Controls_SubContainerFill" Size="999,100" AutoSize="V" SliceCorner="11,11" SliceSize="0,0" Color="0,0,0,50">
-            <Grid  Texture="Controls_SubContainer3" Size="parent,100" AutoSize="V" AutoSizePadding="0,4"  SliceCorner="20,20" SliceSize="0,0" Color="0,0,0,100">
-              <Grid  Texture="Controls_Deco" Size="parent-16,100" AutoSize="V" AutoSizePadding="0,6" Offset="8,8" SliceCorner="20,25" SliceSize="0,0" Color="255,255,255,30">
+          <Grid ID="VictoryPanel" Texture="Controls_SubContainerFill" Size="999,auto" SliceCorner="11,11" SliceSize="0,0" Color="0,0,0,50">
+            <Grid  Texture="Controls_SubContainer3" Size="parent,auto" AutoSizePadding="0,4"  SliceCorner="20,20" SliceSize="0,0" Color="0,0,0,100">
+              <Grid  Texture="Controls_Deco" Size="parent-16,auto" AutoSizePadding="0,6" Offset="8,8" SliceCorner="20,25" SliceSize="0,0" Color="255,255,255,30">
                 <!-- Victory Pennant -->
                 <Image ID="VictoryPennant" Size="41,141" Offset="30,30" Texture="Controls_Pennant">
                   <Image ID="VictoryIcon" Anchor="C,T" Offset="0,-32" Size="80,80" Texture="Victories80"/>
@@ -93,8 +93,8 @@
           </Grid>
 
           <!-- Defeated Info -->
-          <Grid ID="DefeatedPanel" Texture="Controls_SubContainerFill" Size="999,100" AutoSize="V" SliceCorner="11,11" SliceSize="0,0" Color="0,0,0,50">
-            <Grid  Texture="Controls_SubContainer3" Size="parent,100" AutoSize="V" AutoSizePadding="0,6"  SliceCorner="20,20" SliceSize="0,0" Color="0,0,0,100">
+          <Grid ID="DefeatedPanel" Texture="Controls_SubContainerFill" Size="999,auto" SliceCorner="11,11" SliceSize="0,0" Color="0,0,0,50">
+            <Grid  Texture="Controls_SubContainer3" Size="parent,auto" AutoSizePadding="0,6"  SliceCorner="20,20" SliceSize="0,0" Color="0,0,0,100">
                 <!-- Defeated Civ Icon -->
                 <Image ID="DefeatedCivIconBacking" Anchor="L,C" Offset="26,0" Size="44,44" Texture="CircleBacking44">
                   <Image Anchor="C,C" Offset="0,0" Size="44,45" Texture="Controls_CircleRimSmall"/>
@@ -190,15 +190,15 @@
 	<!--</Box>-->
 
 	<!-- Top/Bottom cutoffs -->
-	<Box ID="BarTop" Anchor="C,T" Size="full,10" Color="0,0,0,255" >
+	<Box ID="BarTop" Anchor="C,T" Size="parent,10" Color="0,0,0,255" >
 		<Image Anchor="C,B" Size="parent,10" Texture="Loading_LetterboxEdge" StretchMode="TileX" AnchorSide="O,O" />
 	</Box>
-	<Box ID="BarBottom" Anchor="C,B" Size="full,10" Color="0,0,0,255" >
+	<Box ID="BarBottom" Anchor="C,B" Size="parent,10" Color="0,0,0,255" >
 		<Image Anchor="C,T" Size="parent,10" Texture="Loading_LetterboxEdge" StretchMode="TileX" AnchorSide="O,O" FlipY="1" />
 	</Box>
 
-	<BoxButton	ID="MovieFill" Size="full,full" Color="0,0,0,255" Hidden="1" ConsumeAllMouse="1">
-		<Movie ID="Movie" Size="full,full" LoopMovie="0" StretchMode="UniformToFill"/>
+	<BoxButton	ID="MovieFill" Size="parent,parent" Color="0,0,0,255" Hidden="1" ConsumeAllMouse="1">
+		<Movie ID="Movie" Size="parent,parent" LoopMovie="0" StretchMode="UniformToFill"/>
 	</BoxButton>
 
 	<Instance Name="RankEntry" >

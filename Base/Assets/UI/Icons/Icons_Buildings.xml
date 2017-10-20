@@ -59,6 +59,8 @@
     <Row Name="ICON_BUILDING_PAGODA"               Atlas="ICON_ATLAS_BUILDINGS" Index="44"/>
     <Row Name="ICON_BUILDING_SYNAGOGUE"            Atlas="ICON_ATLAS_BUILDINGS" Index="45"/>
     <Row Name="ICON_BUILDING_WAT"                  Atlas="ICON_ATLAS_BUILDINGS" Index="46"/>
+    <Row Name="ICON_BUILDING_STUPA"                Atlas="ICON_ATLAS_BUILDINGS" Index="47"/>
+    <Row Name="ICON_BUILDING_DAR_E_MEHR"           Atlas="ICON_ATLAS_BUILDINGS" Index="48"/>
 
     <Row Name="ICON_BUILDING_MONUMENT_FOW"            Atlas="ICON_ATLAS_BUILDINGS_FOW" Index="0"/>
     <Row Name="ICON_BUILDING_PALACE_FOW"              Atlas="ICON_ATLAS_BUILDINGS_FOW" Index="1"/>
@@ -108,5 +110,7 @@
     <Row Name="ICON_BUILDING_PAGODA_FOW"              Atlas="ICON_ATLAS_BUILDINGS_FOW" Index="44"/>
     <Row Name="ICON_BUILDING_SYNAGOGUE_FOW"           Atlas="ICON_ATLAS_BUILDINGS_FOW" Index="45"/>
     <Row Name="ICON_BUILDING_WAT_FOW"                 Atlas="ICON_ATLAS_BUILDINGS_FOW" Index="46"/>
+    <Row Name="ICON_BUILDING_STUPA_FOW"               Atlas="ICON_ATLAS_BUILDINGS_FOW" Index="47"/>
+    <Row Name="ICON_BUILDING_DAR_E_MEHR_FOW"          Atlas="ICON_ATLAS_BUILDINGS_FOW" Index="48"/>
   </IconDefinitions>
 </GameInfo>

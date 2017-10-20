@@ -26,12 +26,12 @@
 
   <!-- Instance for a string parameters -->
   <Instance Name="StringParameterInstance">
-    <Container AutoSize="1" ID="StringRoot">
-      <Container AutoSize="1">
+    <Container  Size="auto,auto" ID="StringRoot">
+      <Container  Size="auto,auto">
         <Box Size="140,30" Color="0,0,0,0"/>
         <Label ID="StringName" Anchor="R,C" Offset="0,0" Style="FontNormal14" ColorSet="ShellOptionText" FontStyle="stroke" WrapWidth="180" String="UNKNOWN_EDIT_BOX"/>
       </Container>
-      <Container AutoSize="1" Offset="145,0">
+      <Container  Size="auto,auto" Offset="145,0">
         <Grid Style="EditTextArea" Size="160,30">
           <EditBox ID="StringEdit" Anchor="L,C" Offset="6,0" Size="248,23" EditMode="1" Style="FontNormal18" ColorSet="BodyTextCool" FontStyle="stroke" MaxLength="10"/>
         </Grid>

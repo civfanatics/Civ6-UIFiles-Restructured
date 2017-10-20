@@ -11,7 +11,9 @@ local CONSEQUENCE_TYPES = {WARMONGER = 1, DEFENSIVE_PACT = 2, CITY_STATE = 3, TR
 --	MEMBERS
 --	******************************************************************************************************
 local m_ConsequenceItemIM :table	= InstanceManager:new( "ConsequenceItem",  "Root" );
-
+--	******************************************************************************************************
+--	FUNCTIONS
+--	******************************************************************************************************
 function OnClose()
 	Controls.ConsequencesStack:SetHide(true);
 	Controls.WarmongerContainer:SetHide(true);
@@ -23,9 +25,14 @@ function OnClose()
 end
 
 -- ===========================================================================
-function DeclareWar(eAttackingPlayer:number, eDefendingPlayer:number, eWarType:number)
+function CanDeclareWar(eDefendingPlayer:number)
 	local pPlayerConfig:table = PlayerConfigurations[eDefendingPlayer];
-	if( pPlayerConfig:GetCivilizationLevelTypeID() == CivilizationLevelTypes.CIVILIZATION_LEVEL_FULL_CIV ) then
+	return pPlayerConfig:GetCivilizationLevelTypeID() == CivilizationLevelTypes.CIVILIZATION_LEVEL_FULL_CIV;
+end
+-- ===========================================================================
+function DeclareWar(eAttackingPlayer:number, eDefendingPlayer:number, eWarType:number)
+	
+	if CanDeclareWar(eDefendingPlayer) then
 
 		if (eWarType == WarTypes.SURPRISE_WAR) then 
 			DiplomacyManager.RequestSession(eAttackingPlayer, eDefendingPlayer, "DECLARE_SURPRISE_WAR");
@@ -53,7 +60,6 @@ function DeclareWar(eAttackingPlayer:number, eDefendingPlayer:number, eWarType:n
 
 		else
 			DiplomacyManager.RequestSession(eAttackingPlayer, eDefendingPlayer, "DECLARE_SURPRISE_WAR");
-
 		end
 
 	else

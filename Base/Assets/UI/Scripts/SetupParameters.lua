@@ -6,6 +6,9 @@
 QueryChanges = 0;
 QueryCache = {};
 
+-------------------------------------------------------------------------------
+-- Global function for caching the result of a database query with arguments.
+-------------------------------------------------------------------------------
 function CachedQuery(sql, arg1, arg2, arg3, arg4)
 
 	-- If the database has been updated.  Invalidate the cache.
@@ -42,7 +45,63 @@ function CachedQuery(sql, arg1, arg2, arg3, arg4)
 	return results;
 end
 
+-------------------------------------------------------------------------------
+-- Global functions for parsing domains into pieces and caching the result.
+-------------------------------------------------------------------------------
+local _WildcardChar = string.byte("*");
+local _WildCardDomains = {};
+local _DomainParts = {};
 
+local _CacheFunction = function(cache, func) 
+	local f = function(v)
+		local result = cache[v];
+		if(result ~= nil) then
+			return result;
+		else
+			result = func(v);
+			cache[v] = result;
+			return result;
+		end
+	end
+
+	return f;
+end
+local sbyte = string.byte;
+local _IsWildCard = _CacheFunction(_WildCardDomains, function(d)
+	-- Optimization NOTE: Is string.find(domain, "*") ~= nil faster?
+	local len = #d;
+	for i = 1, len, 1 do
+		if(sbyte(d, i) == _WildcardChar) then
+			return true;
+		end
+	end
+	return false;
+end);
+
+local sgmatch = string.gmatch;
+local _SplitDomain = _CacheFunction(_DomainParts, function(d)
+	local i = 1;
+	local v = {};
+
+	for w in sgmatch(d, "[^:]+") do
+		v[i] = w;
+		i = i + 1;
+	end
+
+	return v;
+end);
+
+local _CacheDomainParts = function(domains)
+	for d,_ in pairs(domains) do
+		_IsWildCard(d);
+		_SplitDomain(d);
+	end
+end
+
+
+-------------------------------------------------------------------------------
+-- Beginning of actual SetupParameter code.
+-------------------------------------------------------------------------------
 SetupParameters = {};
 
 -------------------------------------------------------------------------------
@@ -76,51 +135,49 @@ end
 -------------------------------------------------------------------------------
 
 -------------------------------------------------------------------------------
+-- Perform a simple refresh on all parameters.  This will update both config-only. 
+-------------------------------------------------------------------------------
+function SetupParameters:Refresh()
+	self:UpdateParameters(self:Data_DiscoverParameters());
+end
+
+-------------------------------------------------------------------------------
 -- Perform a full refresh on all parameters.  This will update both config 
 -- and UI.
 -------------------------------------------------------------------------------
 function SetupParameters:FullRefresh()
-	self:Refresh(self:Data_DiscoverParameters());
+	self:UpdateParameters(self:Data_DiscoverParameters());
+	self:UpdateVisualization();
 end
 
 -------------------------------------------------------------------------------
--- Resets parameters to their default values.
+-- Perform an update with the supplied parameters.
+-- Returns true if Update should probably be called again due to changes made.
+-- Does *not* update the UI.  UpdateVisualization() should be called after.
 -------------------------------------------------------------------------------
-function SetupParameters:ResetDefaults()
-	-- Removes all parameters and nils out values.
-	self:Refresh(nil);	
-
-	-- Discovers all parameters under the normal config
-	-- Because config values are null, supplies them with a default value.
-	self:Refresh(self:Data_DiscoverParameters());
-end
-
--------------------------------------------------------------------------------
--- Perform a refresh with the supplied parameters.
--------------------------------------------------------------------------------
-function SetupParameters:Refresh(parameters)
+function SetupParameters:UpdateParameters(parameters)
 	
-	--if(self.Refreshing == true) then
-	--	error("Refresh inception! This is bad");
+	--local startTicks = 0;
+	--if(profile) then
+		--local stats = profile.runtime("stats");
+		--startTicks = stats.currentTicks;
+		--profile.runtime("start");
 	--end
+
+	if(self.Refreshing == true) then
+		error("Refresh inception! This is bad");
+	end
 
 	self.Refreshing = true;
 	
-
-	print("Refreshing Parameters - " .. tostring(self.PlayerId or "Game"));
+	print("Updating Parameters - " .. tostring(self.PlayerId or "Game"));
 	local old_params = self.Parameters or {};
 	local new_params = parameters or {}; 
-
-	self:UI_BeforeRefresh();
 
 	-- Handle parameters that no longer exist first.
 	local params_to_wipe = {};
 	for pid, p in pairs(old_params) do
 		if(new_params[pid] == nil) then
-
-			-- First, tell UI that the parameter is being destroyed.
-			self:UI_DestroyParameter(p);
-			
 			-- Next, wipe out any configuration values associated with the parameter.
 			table.insert(params_to_wipe, p);	
 		end
@@ -155,20 +212,12 @@ function SetupParameters:Refresh(parameters)
 		local gid = group[1];
 		local g = group[2];
 
-		self:UI_BeforeRefreshGroup(gid);
-
 		for ii, p in ipairs(g) do
 		
 			local pid = p.ParameterId;
 
 			local old_param = old_params[pid];
 			
-			-- Is this a newly added parameter?
-			if(old_param == nil) then
-				-- Tell UI about the new parameter.
-				 self:UI_CreateParameter(p);
-			end
-
 			-- This logic needs to be performed for both new and existing parameters.
 			-- Fetch the values from configuration and update parameter value.
 			-- Sync will return true if the sync'd value doesn't match config.
@@ -185,17 +234,8 @@ function SetupParameters:Refresh(parameters)
 			if(should_write and self:Config_CanWriteParameter(p)) then
 				print("Parameter needs to update config.");
 				table.insert(params_to_write, p);
-			end
-		
-			-- With values properly synchronized, it's time to notify UI of the changes.
-			self:UI_SetParameterPossibleValues(p);   
-			self:UI_SetParameterValue(p);
-			self:UI_SetParameterEnabled(p);
-			self:UI_SetParameterVisible(p);
- 
+			end 
 		end
-
-		self:UI_AfterRefreshGroup(gid);
 	end
 
 	self.Parameters = new_params;
@@ -261,13 +301,114 @@ function SetupParameters:Refresh(parameters)
 			end
 			self:Config_EndWrite(parameters_changed);
 		end
-
 	end
 
-	self.Refreshing = nil;
+	--if(profile) then
+		--profile.runtime("stop");
+		--local stats = profile.runtime("stats");
+		--print("Update Parameters Perf:");
+		--print(" * Interpreter Time - " .. stats.interpreterTime);
+		--print(" * Callback Time - " .. stats.callbackTime);
+		--print(" * Compiler Time - " .. stats.compilerTime);
+		--print(" * GC Time - " .. stats.gcTime);
+		--print(" * Finalizer Time - " .. stats.finalizerTime);
+		--print(" * Ticks- " .. stats.currentTicks - startTicks);
+	--end
 
+	self.Refreshing = nil;
+end
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+-- Syncronize the UI to the current parameter data.
+-------------------------------------------------------------------------------
+function SetupParameters:UpdateVisualization()
+
+	--local startTicks = 0;
+	--if(profile) then
+		--local stats = profile.runtime("stats");
+		--startTicks = stats.currentTicks;
+		--profile.runtime("start");
+	--end
+
+	print("Visualizing Parameters - " .. tostring(self.PlayerId or "Game"));
+	local old_params = self.VisualParameters or {};
+	local new_params = self.Parameters or {}; 
+
+	self:UI_BeforeRefresh();
+
+	-- Handle parameters that no longer exist first.
+	for pid, p in pairs(old_params) do
+		if(new_params[pid] == nil) then
+			-- First, tell UI that the parameter is being destroyed.
+			self:UI_DestroyParameter(p);
+		end
+	end
+
+	-- Handle any new parameters.
+	local params_by_group = {};
+	for pid, p in pairs(new_params) do
+		local group = params_by_group[p.GroupId];
+		if(group == nil) then
+			group = {};
+			params_by_group[p.GroupId] = group;
+		end
+
+		table.insert(group, p);
+	end
+
+	-- Sort individual groups and place group in array to be sorted.
+	-- This might be overkill, but we want the order of operations to be consistent across all machines.
+	local sorted_groups = {};
+	for gid, g in pairs(params_by_group) do
+		self.Utility_SortValues(g);
+		table.insert(sorted_groups, {gid, g});
+	end
+
+	table.sort(sorted_groups, function(a,b) return a[1] < b[1] end);
+	for i, group in ipairs(sorted_groups) do
+		local gid = group[1];
+		local g = group[2];
+
+		self:UI_BeforeRefreshGroup(gid);
+
+		for ii, p in ipairs(g) do
+		
+			local pid = p.ParameterId;
+
+			local old_param = old_params[pid];
+			
+			-- Is this a newly added parameter?
+			if(old_param == nil) then
+				-- Tell UI about the new parameter.
+				 self:UI_CreateParameter(p);
+			end
+
+			-- With values properly synchronized, it's time to notify UI of the changes.
+			self:UI_SetParameterPossibleValues(p);   
+			self:UI_SetParameterValue(p);
+			self:UI_SetParameterEnabled(p);
+			self:UI_SetParameterVisible(p);
+ 
+		end
+
+		self:UI_AfterRefreshGroup(gid);
+	end
+
+	self.VisualParameters = new_params;
 	self:UI_AfterRefresh();
 
+	--if(profile) then
+		--profile.runtime("stop");
+		--local stats = profile.runtime("stats");
+		--print("Visualize Parameters Perf:");
+		--print(" * Interpreter Time - " .. stats.interpreterTime);
+		--print(" * Callback Time - " .. stats.callbackTime);
+		--print(" * Compiler Time - " .. stats.compilerTime);
+		--print(" * GC Time - " .. stats.gcTime);
+		--print(" * Finalizer Time - " .. stats.finalizerTime);
+		--print(" * Ticks- " .. stats.currentTicks - startTicks);
+	--end
 end
 -------------------------------------------------------------------------------
 
@@ -333,7 +474,7 @@ function SetupParameters:Config_CanWriteParameter(parameter)
 		return false;
 	end
 
-	if (not Network.IsInSession() or Network.IsHost() or self.PlayerId == Network.GetLocalPlayerID()) then
+	if (not Network.IsInSession() or Network.IsNetSessionHost() or self.PlayerId == Network.GetLocalPlayerID()) then
 
 		-- As long as this isn't hot seat, Human players will provide their own settings (including filtered domains)
 		if(self.PlayerId and not GameConfiguration.IsHotseat() and self.PlayerId ~= Network.GetLocalPlayerID()) then
@@ -503,6 +644,13 @@ end
 -- Returns a map of all discovered parameters using the latest configuration.
 -------------------------------------------------------------------------------
 function SetupParameters:Data_DiscoverParameters()
+	
+	--local startTicks = 0;
+	--if(profile) then
+		--local stats = profile.runtime("stats");
+		--startTicks = stats.currentTicks;
+		--profile.runtime("start");
+	--end
 
 	--Cache data.
 	local queries = {};
@@ -546,27 +694,31 @@ function SetupParameters:Data_DiscoverParameters()
 	end
 
 	local domain_override_queries = {};
-	for i, row in ipairs(CachedQuery("SELECT * from DomainOverrideQueries")) do
+	for i, row in ipairs(CachedQuery("SELECT * FROM DomainOverrideQueries")) do
 		table.insert(domain_override_queries, row);
 	end
 
 	local domain_range_queries = {};
-	for i, row in ipairs(CachedQuery("SELECT * from DomainRangeQueries")) do
+	for i, row in ipairs(CachedQuery("SELECT * FROM DomainRangeQueries")) do
 		table.insert(domain_range_queries, row);
 	end
 
-	local domain_value_union_queries = {};
-	local domain_value_intersect_queries = {};
-	local domain_value_difference_queries = {};
+	-- Domain values.
+	local domain_value_queries = {};
+	for i, row in ipairs(CachedQuery("SELECT * FROM DomainValueQueries")) do
+		table.insert(domain_value_queries, row);
+	end
 
-	for i, row in ipairs(CachedQuery("SELECT * from DomainValueQueries")) do
-		if(row.Set == "union") then
-			table.insert(domain_value_union_queries, row);
-		elseif(row.Set == "intersect") then
-			table.insert(domain_value_intersect_queries, row);
-		elseif(row.Set == "difference") then
-			table.insert(domain_value_difference_queries, row);
-		end
+	-- Domain value filters.
+	local domain_value_filter_queries = {};
+	for i, row in ipairs(CachedQuery("SELECT * FROM DomainValueFilterQueries")) do
+		table.insert(domain_value_filter_queries, row);
+	end
+
+	-- Domain value unions.
+	local domain_union_queries = {};
+	for i, row in ipairs(CachedQuery("SELECT * FROM DomainValueUnionQueries")) do
+		table.insert(domain_union_queries, row);
 	end
 
 	-- Cross reference parameters with criteria and dependencies.
@@ -681,7 +833,7 @@ function SetupParameters:Data_DiscoverParameters()
 						end
 					end				
 
-					if(self:Parameter_MeetsCriteria(parameter_dependencies[p.ParameterId]) and self:Parameter_GetRelevant(p)) then			
+					if(self:Parameter_GetRelevant(p) and self:Parameter_MeetsCriteria(parameter_dependencies[p.ParameterId])) then			
 						self:Parameter_PostProcess(p);											 
 						parameters[p.ParameterId] = p;
 					end
@@ -709,9 +861,9 @@ function SetupParameters:Data_DiscoverParameters()
 		["text"] = true
 	};
 
-	local domains = {};
-
+	
 	-- Query for Domain Ranges.
+	local domain_ranges = {};
 	for _, drq in ipairs(domain_range_queries) do
 		local q = queries[drq.QueryId];
 		if(q) then
@@ -725,7 +877,7 @@ function SetupParameters:Data_DiscoverParameters()
 				}
 
 				if(dr.MinimumValue ~= nil and dr.MaximumValue ~= nil) then
-					domains[dr.Domain] = dr;
+					domain_ranges[dr.Domain] = dr;
 				else
 					print("Setup Parameter Error! IntRange domain lacks constraints Min: " .. tostring(dr.MinimumValue) .. " Max: " .. tostring(dr.MaximumValue));
 				end
@@ -734,7 +886,8 @@ function SetupParameters:Data_DiscoverParameters()
 	end
 
 	-- Query for Domain Values.
-	for _, dvq in ipairs(domain_value_union_queries) do
+	local union_values = {};
+	for _, dvq in ipairs(domain_value_queries) do
 		local q = queries[dvq.QueryId];
 		if(q) then
 			
@@ -753,20 +906,23 @@ function SetupParameters:Data_DiscoverParameters()
 				dv.Hash = DB.MakeHash(dv.Value);
 					
 				-- Add domain value.
-				local values = domains[dv.Domain];
+				local values = union_values[dv.Domain];
 				if(values == nil) then 
 					values = {};
-					domains[dv.Domain] = values;	
+					union_values[dv.Domain] = values;	
 				end
 					 
 				table.insert(values, dv);
 			end
 		end
 	end
+	
+
 
 	-- Populate intersect values per domain
 	local intersect_values = {};
-	for _, dvq in ipairs(domain_value_intersect_queries) do
+	local difference_values = {};
+	for _, dvq in ipairs(domain_value_filter_queries) do
 		local q = queries[dvq.QueryId];
 		if(q) then
 			
@@ -774,12 +930,20 @@ function SetupParameters:Data_DiscoverParameters()
 
 				local domain = row[dvq.DomainField];
 				local value = row[dvq.ValueField];
+				local filter = row[dvq.FilterField];
+
+				local filter_values;
+				if(filter == "intersect") then
+					filter_values = intersect_values;
+				elseif(filter == "difference") then
+					filter_values = difference_values;
+				end
 
 				-- Add domain value.
-				local values = intersect_values[domain];
+				local values = filter_values[domain];
 				if(values == nil) then 
 					values = {}; 
-					intersect_values[domain] = values;	
+					filter_values[domain] = values;	
 				end
 				 
 				values[value] = true;
@@ -787,59 +951,104 @@ function SetupParameters:Data_DiscoverParameters()
 		end
 	end
 
-	-- Populate difference values per domain	
-	local difference_values = {};
-	for _, dvq in ipairs(domain_value_difference_queries) do
-		local q = queries[dvq.QueryId];
+	-- Populate domain unions
+	local domain_unions = {};
+	for _, du in ipairs(domain_union_queries) do
+		local q = queries[du.QueryId];
 		if(q) then		
 			for i, row in ipairs(self:Data_Query(q)) do
 
-				local domain = row[dvq.DomainField];
-				local value = row[dvq.ValueField];
+				local domain = row[du.DomainField];
+				local other_domain = row[du.OtherDomainField];
 
-				-- Add domain value.
-				local values = difference_values[domain];
-				if(values == nil) then 
-					values = {}; 
-					difference_values[domain] = values;	
+				local unions = domain_unions[domain];
+				if(unions == nil) then
+					unions = {};
+					domain_unions[domain] = unions;
 				end
-				 
-				values[value] = true;
+
+				table.insert(unions, other_domain);
+			end
+		end
+	end
+				
+	-- Parse domains and split 
+	_CacheDomainParts(domain_ranges);		-- from domain_range definitions.
+	_CacheDomainParts(union_values);
+	_CacheDomainParts(intersect_values);
+	_CacheDomainParts(difference_values);
+
+	local ForEachMatchedDomain = function(d, set, func)
+		local parts = _SplitDomain(d);
+		for domain, values in pairs(set) do
+			local domainParts = _SplitDomain(domain);
+			local match = true;
+			for i = 1, #parts, 1 do
+				local a = parts[i];
+				local b = domainParts[i];
+				if(a ~= "*" and b ~="*" and a ~= b) then
+					match = false;
+					break;
+				end
+			end
+
+			if(match) then
+				func(domain, values);
 			end
 		end
 	end
 
-	-- Perform intersection.
-	for domain, values in pairs(intersect_values) do
-		local new_values = {};
-		
-		local domain_values = domains[domain];
-		if(domain_values) then		
-			for i, dv in ipairs(domain_values) do
-				if(values[dv.Value]) then
+	local domain_values = {};
+	local _EnumerateDomainValues;
+	_EnumerateDomainValues = _CacheFunction(domain_values, function(domain)
+		local values = {};
+
+		-- Populate with union'd domain values.
+		local unions = domain_unions[domain];
+		if(unions) then
+			for _,d in ipairs(unions) do
+				-- This will recursively populate values.
+				local v = _EnumerateDomainValues(d);
+				for i, dv in ipairs(v) do
+					table.insert(values, dv);
+				end
+			end
+		end
+
+		-- Populate with values from this domain.
+		ForEachMatchedDomain(domain, union_values, function(d, v)
+			for i, dv in ipairs(v) do
+				table.insert(values, dv);
+			end
+		end);
+
+		-- Filter (intersection)
+		ForEachMatchedDomain(domain, intersect_values, function(d, intersect)
+			local new_values = {};
+			for i, dv in ipairs(values) do
+				if(intersect[dv.Value]) then
 					table.insert(new_values, dv);
 				end
 			end
-		end
+			
+			values = new_values;
+		end);
 
-		domains[domain] = new_values;
-	end
-
-	-- Perform difference.
-	for domain, values in pairs(difference_values) do
-		local new_values = {};
+		-- Filter (difference)
+		ForEachMatchedDomain(domain, difference_values, function(d, difference)
+			local new_values = {};
 		
-		local domain_values = domains[domain];
-		if(domain_values) then		
-			for i, dv in ipairs(domain_values) do
-				if(values[dv.Value] == nil) then
+			for i, dv in ipairs(values) do
+				if(difference[dv.Value] == nil) then
 					table.insert(new_values, dv);
 				end
 			end
-		end
+			
+			values = new_values;
+		end);
 
-		domains[domain] = new_values;
-	end
+		return values;
+	end);
 
 	local domain_overrides = {};
 	for _, doq in ipairs(domain_override_queries) do
@@ -848,53 +1057,65 @@ function SetupParameters:Data_DiscoverParameters()
 			for i, row in ipairs(self:Data_Query(q)) do
 				local pid = row[doq.ParameterIdField];
 				local domain = row[doq.DomainField]
-				if(pid and domain and domains[domain]) then
+				if(pid and domain) then
 					domain_overrides[pid] = domain;
 				end
 			end
 		end
 	end
+	
+	local count = 0;
+	for pid, p in pairs(parameters) do
+		count = count + 1;
+	end
+	print("Parameter Count - " .. count);
 
 	for pid, p in pairs(parameters) do
 		
 		-- Override, if necessary.
 		p.Domain = domain_overrides[pid] or p.Domain;
+		local domain = p.Domain;
 
 		-- Is this a multi-value domain?
-		if(pod_domains[p.Domain] == nil) then
+		if(pod_domains[domain] == nil) then
 
-			local domain = domains[p.Domain];
-			if(domain) then
-				if(domain.Type == "IntRange") then
-					p.Values = domain;
-				else
-					-- Each parameter gets a unique list of values.
-					local values = {};
-			
-					local domain_values = domains[p.Domain];
-					if(domain_values ~= nil) then
-						for i, v in ipairs(domain_values) do
-							table.insert(values, v);
-						end
-					end
-			
-					-- Sort Values.
-					self.Utility_SortValues(values);	
-
-					-- Call a hook to filter possible values for the parameter.
-					values = self:Parameter_FilterValues(p, values);	
-
-					-- Assign.
-					p.Values = values;
+			local range = domain_ranges[domain];
+			if(range) then
+				if(range.Type ~= "IntRange") then
+					error("Invalid domain range type.");
 				end
+
+				p.Values = range;
+			else
+				local values = _EnumerateDomainValues(domain);
+			
+				-- Sort Values.
+				self.Utility_SortValues(values);	
+
+				-- Call a hook to filter possible values for the parameter.
+				values = self:Parameter_FilterValues(p, values);	
+
+				-- Assign.
+				p.Values = values;
 			end
 		end
 		
 		p.Enabled = self:Parameter_GetEnabled(p);
 	end
-
+	
+	--if(profile) then
+		--profile.runtime("stop");
+		--local stats = profile.runtime("stats");
+		--print("Discover Parameters Perf:");
+		--print(" * Interpreter Time - " .. stats.interpreterTime);
+		--print(" * Callback Time - " .. stats.callbackTime);
+		--print(" * Compiler Time - " .. stats.compilerTime);
+		--print(" * GC Time - " .. stats.gcTime);
+		--print(" * Finalizer Time - " .. stats.finalizerTime);
+		--print(" * Ticks- " .. stats.currentTicks - startTicks);
+	--end
+	
 	return parameters;
-
 end
 -------------------------------------------------------------------------------
 
@@ -959,7 +1180,7 @@ function SetupParameters:Parameter_FilterValues(parameter, values)
 
 		local checkOwnership = true;
 		if(GameConfiguration.IsAnyMultiplayer()) then
-			local checkComputerSlots = Network.IsHost() and not gameInProgress;
+			local checkComputerSlots = Network.IsGameHost() and not gameInProgress;
 
 			local curPlayerConfig = PlayerConfigurations[self.PlayerId];
 			local curSlotStatus = curPlayerConfig:GetSlotStatus();
@@ -1021,7 +1242,7 @@ function SetupParameters:Parameter_GetEnabled(parameter)
 													-- This should be removed once the player configuration team pulldown is handled like a proper player parameter.
 		return not Network.IsInSession();
 	else
-		return (not Network.IsInSession() or Network.IsHost() or self.PlayerId == Network.GetLocalPlayerID());
+		return (not Network.IsInSession() or Network.IsGameHost() or self.PlayerId == Network.GetLocalPlayerID());
 	end	
 end
 -------------------------------------------------------------------------------
@@ -1239,7 +1460,7 @@ function SetupParameters:Parameter_SyncConfigurationValues(parameter)
 							}
 						end
 
-						return self:Parameter_SyncAuxConfigurationValues(parameter); 
+						return self:Parameter_SyncAuxConfigurationValues(parameter);
 					end
 				end
 			end
@@ -1256,8 +1477,15 @@ function SetupParameters:Parameter_SyncConfigurationValues(parameter)
 			end
 
 			-- blech! get the first value.
-			parameter.Value = parameter.Values[1];
-			return true;
+			local first_value = parameter.Values[1];
+			if(first_value) then
+				parameter.Value = first_value;
+				return true;
+			else
+				-- We're in an error state :(
+				parameter.Error = {Id = "MissingDomainValue"};
+				return false;
+			end
 		else
 			-- We're in an error state :(
 			parameter.Error = {Id = "MissingDomainValue"};

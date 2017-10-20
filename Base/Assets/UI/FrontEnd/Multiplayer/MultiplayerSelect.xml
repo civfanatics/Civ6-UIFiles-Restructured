@@ -10,7 +10,6 @@
 				<GridButton ID="InternetButton"	Style="MainButton" Anchor="C,C" Offset="0,0" Size="400,41" FontStyle="Stroke" ColorSet="ButtonCS" String="LOC_MULTIPLAYER_INTERNET_GAME"	ToolTip="LOC_MULTIPLAYER_INTERNET_GAME_TT"	Hidden="1"/>
 				<GridButton ID="LANButton"			Style="MainButton" Anchor="C,C" Offset="0,0" Size="400,41" FontStyle="Stroke" ColorSet="ButtonCS" String="LOC_MULTIPLAYER_LAN_GAME"				ToolTip="LOC_MULTIPLAYER_LAN_GAME_TT"				Hidden="1"/>
 				<GridButton ID="HotSeatButton"	Style="MainButton" Anchor="C,C" Offset="0,0" Size="400,41" FontStyle="Stroke" ColorSet="ButtonCS" String="LOC_MULTIPLAYER_HOTSEAT_GAME"		ToolTip="LOC_MULTIPLAYER_HOTSEAT_GAME_TT"/>
-				<GridButton ID="CloudButton"			Style="MainButton" Anchor="C,C" Offset="0,0" Size="400,41" FontStyle="Stroke" ColorSet="ButtonCS" String="LOC_MULTIPLAYER_CLOUD_GAME"		ToolTip="LOC_MULTIPLAYER_CLOUD_GAME_TT" />
 				<GridButton ID="BackButton"				Style="MainButton" Anchor="C,C" Offset="0,0" Size="400,41" FontStyle="Stroke" ColorSet="ButtonCS" String="LOC_MENU_BACK"/>
 			</Stack>
 		
@@ -19,5 +18,4 @@
     <!-- Child Screens -->
     <LuaContext FileName="UI/FrontEnd/Multiplayer/Lobby" ID="LobbyScreen" Hidden="1"/>
     <LuaContext FileName="UI/FrontEnd/Multiplayer/HostGame" ID="HostGameScreen" Hidden="1"/>
-	<LuaContext FileName="UI/FrontEnd/Multiplayer/CloudGame" ID="CloudGameScreen" Hidden="1" />
 </Context>

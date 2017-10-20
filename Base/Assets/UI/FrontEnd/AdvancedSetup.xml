@@ -71,28 +71,28 @@
                 <Container ID="CreateGame_GameDifficultyContainer" Size="parent+10,50">
                     <Box Color="62,152,203,20" Anchor="C,B" Size="parent,30">
                       <Label Anchor="C,T" Style="ShellSubHeaderText" String="{LOC_SETUP_DIFFICULTY:upper}" AnchorSide="I,O"/>
-                      <PullDown ID="CreateGame_GameDifficulty" Anchor="C,C" Style="PullDownBlue" Size="200,24"/>
+                      <PullDown ID="CreateGame_GameDifficulty" Anchor="C,C" Style="PullDownBlue" Size="220,24"/>
                     </Box>
                   </Container>
                   
                 <Container ID="CreateGame_SpeedPulldownContainer" Size="parent+10,70">
                     <Box Color="62,152,203,20" Anchor="C,B" Size="parent,30">
                       <Label Anchor="C,T" Style="ShellSubHeaderText" String="{LOC_SETUP_SPEED:upper}" AnchorSide="I,O"/>
-                      <PullDown ID="CreateGame_SpeedPulldown" Anchor="C,C" Style="PullDownBlue" Size="200,24"/>
+                      <PullDown ID="CreateGame_SpeedPulldown" Anchor="C,C" Style="PullDownBlue" Size="220,24"/>
                     </Box>
                   </Container>
                   
                 <Container ID="CreateGame_MapTypeContainer" Size="parent+10,70">
                     <Box Color="62,152,203,20" Anchor="C,B" Size="parent,30">
                       <Label Anchor="C,T" Style="ShellSubHeaderText" String="{LOC_SETUP_MAP_TYPE:upper}" AnchorSide="I,O"/>
-                      <PullDown ID="CreateGame_MapType" Anchor="C,C" Style="PullDownBlue" Size="200,24"/>
+                      <PullDown ID="CreateGame_MapType" Anchor="C,C" Style="PullDownBlue" Size="220,24"/>
                     </Box>
                   </Container>
                   
                 <Container ID="CreateGame_MapSizeContainer" Size="parent+10,70">
                     <Box Color="62,152,203,20" Anchor="C,B" Size="parent,30">
                       <Label Anchor="C,T" Style="ShellSubHeaderText" String="{LOC_SETUP_MAP_SIZE:upper}" AnchorSide="I,O"/>
-                      <PullDown ID="CreateGame_MapSize" Anchor="C,C" Style="PullDownBlue" Size="200,24"/>
+                      <PullDown ID="CreateGame_MapSize" Anchor="C,C" Style="PullDownBlue" Size="220,24"/>
                     </Box>
                   </Container>
                 
@@ -122,7 +122,7 @@
           
               <Stack Anchor="C,T" Offset="0,50" StackGrowth="Bottom" Padding="5">
                 <!-- Human Player Info, placed at the top -->
-                <Box Color="65,118,163,50" Size="parent-6,90" AutoSize="V" AutoSizePadding="0,5" Anchor="C,T">
+                <Box Color="65,118,163,50" Size="parent-6,auto" AutoSizePadding="0,5" Anchor="C,T">
                   <Stack StackGrowth="Down" Anchor="C,C" Padding="5">
                     <Container ID="NetworkIdentity" Size="parent-85,26" Anchor="C,T" Hidden="1">
                       <GridButton ID="EditLocalPlayerButton" Style="EditTextButton" Size="parent,26" Anchor="L,C" Color="255,255,255,200" ToolTip="LOC_NETWORK_NAME_TT">
@@ -232,7 +232,7 @@
   <!-- Non Local Player Slot Instance -->
   <Instance Name="NonLocalPlayerSlotInstance" >
 		<!-- Local Player Civ -->
-    <Container ID="Root" AutoSize="1">
+    <Container ID="Root"  Size="auto,auto">
       <!-- Local Player Civ -->
       <PullDown ID="PlayerPullDown"  Anchor="C,T" Style="PlayerSelectPullDown" Offset="0,0" Size="325,50">
 				<Container AnchorSide="O,I" Anchor="R,C" Size="40,50">
@@ -265,12 +265,12 @@
 
 	<!-- Instance for a string parameters -->
 	<Instance Name="StringParameterInstance">
-    <Container AutoSize="1" ID="StringRoot">
-      <Container AutoSize="1">
+    <Container  Size="auto,auto" ID="StringRoot">
+      <Container  Size="auto,auto">
         <Box Size="140,30" Color="0,0,0,0"/>
         <Label ID="StringName" Anchor="R,C" Offset="0,0" Style="FontNormal14" ColorSet="ShellOptionText" FontStyle="stroke" WrapWidth="180" String="UNKNOWN_EDIT_BOX"/>
       </Container>
-      <Container AutoSize="1" Offset="145,0">
+      <Container  Size="auto,auto" Offset="145,0">
         <Grid Style="EditTextArea" Size="160,30">
           <EditBox ID="StringEdit" Anchor="L,C" Offset="6,0" Size="248,23" EditMode="1" Style="FontNormal18" ColorSet="BodyTextCool" FontStyle="stroke" MaxLength="32"/>
         </Grid>
@@ -289,7 +289,7 @@
   </Instance>
 
   <Instance			Name="IconInfoInstance">
-    <Container	ID="Top"					Size="340,40" AutoSize="V">
+    <Container	ID="Top"				 Size="340,auto">
       <Image    Texture="Controls_CircleCompass" Size="52,53" Offset="0,-2" Color="34,58,80,150">
         <Image		ID="Icon"					Size="38,38" Anchor="C,C" />
       </Image>
@@ -307,7 +307,7 @@
   </Instance>
 
   <Instance			Name="IconInstance">
-    <Container	ID="Top"					Size="340,40" AutoSize="V">
+    <Container	ID="Top"				 Size="340,auto">
       <Image    Texture="Controls_CircleBacking45" Size="51,51" Offset="0,-2">
         <Image		ID="Icon"					Size="45,45" Anchor="C,C" Offset="0,-1" />
       </Image>

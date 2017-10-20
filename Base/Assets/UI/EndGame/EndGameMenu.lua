@@ -368,7 +368,7 @@ function OnReplayMovie()
         end
 	end
 
-	-- If in Network MP, release the pause event, so our local machine continues processing
+	-- If in Network MP , release the pause event, so our local machine continues processing
 	if (GameConfiguration.IsNetworkMultiplayer()) then
 		UI.ReleasePauseEvent();
 	end
@@ -472,7 +472,8 @@ end
 -- If the player can "One More Turn" and the game has a turn timer, 
 -- to prevent the game from progressing while players are looking at the screen.
 function ShouldPauseGame()
-	if(not GameConfiguration.IsAnyMultiplayer() or GameConfiguration.GetTurnTimerType() == TurnTimerTypes.NO_TURNTIMER) then
+	if(not GameConfiguration.IsAnyMultiplayer()
+		or GameConfiguration.GetTurnTimerType() == TurnTimerTypes.NO_TURNTIMER) then
 		return false;
 	end
 
@@ -867,11 +868,6 @@ function OnTeamVictory(team, victory, eventID)
 	end
 end
 
-local ruleset = GameConfiguration.GetValue("RULESET");
-if(ruleset ~= "RULESET_TUTORIAL") then
-	Events.TeamVictory.Add(OnTeamVictory);
-end
-
 ----------------------------------------------------------------
 -- Called when the display is to be manually shown.
 ----------------------------------------------------------------
@@ -1066,6 +1062,11 @@ function Initialize()
 	Events.MultiplayerPrePlayerDisconnected.Add( OnMultiplayerPrePlayerDisconnected );
 	Events.MultiplayerPlayerConnected.Add( OnMultplayerPlayerConnected );
 	Events.MultiplayerChat.Add( OnMultiplayerChat );
+
+	local ruleset = GameConfiguration.GetValue("RULESET");
+	if(ruleset ~= "RULESET_TUTORIAL") then
+		Events.TeamVictory.Add(OnTeamVictory);
+	end
 
 	Resize();
 end

@@ -2,11 +2,11 @@
 <Context ColorSet="BodyTextCool" Style="FontNormal22" FontStyle="Shadow" >
 	<!-- Background fade -->
 
-  <Box                ID="PlayerChangePopup"  Size="Full,Full" ConsumeMouse="1" Color="0,0,0,150" Hidden="0">
+  <Box                ID="PlayerChangePopup"  Size="parent,parent" ConsumeMouse="1" Color="0,0,0,150" Hidden="0">
     <AlphaAnim        ID="PopupAlphaIn" Size="parent,parent"  AlphaBegin="0"  AlphaEnd="1"  Speed="3" Function="Root" Cycle="Once">
       <SlideAnim      ID="PopupSlideIn" Size="parent,parent"  Start="0,-20"   End="0,0"     Speed="3" Function="Root" Cycle="Once">
-        <Grid         ID="DropShadow"   Size="500,250"              Anchor="C,C" Offset="0,0" Style="DropShadow2"     Color="255,255,255,200" AutoSize="1" AutoSizePadding="25,25" ConsumeMouse="1">
-          <Grid       ID="Window"       Size="500,250"              Anchor="C,C" Offset="0,0" Style="WindowFrameTitle" AutoSize="V" AutoSizePadding="0,10">
+        <Grid         ID="DropShadow"   Size="auto,auto"              Anchor="C,C" Offset="0,0" Style="DropShadow2"     Color="255,255,255,200" AutoSizePadding="25,25" ConsumeMouse="1">
+          <Grid       ID="Window"       Size="500,auto"              Anchor="C,C" Offset="0,0" Style="WindowFrameTitle" AutoSizePadding="0,10">
             <Container                  Size="parent,38"                         Offset="0,4">
               <Label  ID="DialogTitle"    Style="WindowHeader"        Anchor="C,C" String="{LOC_HOTSEAT_EDIT_PLAYER:upper}" />
             </Container>
@@ -35,7 +35,7 @@
                 </Grid>
               </Stack>
 
-              <Container Size="400,20" AutoSize="V" MinSize="20,20">
+              <Container Size="400,auto" MinSize="20,20">
                 <Label        ID="HotseatPasswordsMatchLabel"       Anchor="C,T" Style="BodyTextDark18" Align="Center" WrapWidth="parent-20" String="LOC_MULTIPLAYER_HOTSEAT_PASSWORDS_DONT_MATCH" Hidden="1"/>
               </Container>
               

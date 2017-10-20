@@ -4,6 +4,10 @@ local district3 = "DISTRICT_COMMERCIAL_HUB";
 local district4 = "DISTRICT_CITY_CENTER";
 
 
+function OnClose()
+	ContextPtr:SetHide(true);
+end
+
 function OnButton1()
 	local tParameters = {};
 	tParameters[ PlayerOperations.PARAM_DISTRICT_TYPE ] = GameInfo.Districts[district1].Index;
@@ -109,7 +113,22 @@ function OnOpen(testParam)
 end
 
 -- ===========================================================================
+--	Input
+--	UI Event Handler
+-- ===========================================================================
+function OnInputHandler( pInputStruct:table )
+	local uiMsg = pInputStruct:GetMessageType();
+	if uiMsg == KeyEvents.KeyUp then
+		if pInputStruct:GetKey() == Keys.VK_ESCAPE then
+			OnClose();
+			return true;
+		end
+	end
+	return false;
+end
+
 function Initialize()
+	ContextPtr:SetInputHandler( OnInputHandler, true );
 	Controls.Button1:RegisterCallback(Mouse.eLClick, OnButton1);
 	Controls.Button2:RegisterCallback(Mouse.eLClick, OnButton2);
 	Controls.Button3:RegisterCallback(Mouse.eLClick, OnButton3);

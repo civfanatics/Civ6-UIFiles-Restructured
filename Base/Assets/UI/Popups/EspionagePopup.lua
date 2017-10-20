@@ -97,7 +97,7 @@ function RefreshStack()
 		Controls.CancelButton:SetHide(false);
 		Controls.MissionSucceedButton:SetHide(true)
 		Controls.MissionFailureButton:SetHide(true);
-	elseif m_currentPopupState == EspionagePopupStates.MISSION_BRIEFING then
+	elseif m_currentPopupState == EspionagePopupStates.ABORT_MISSION then
 		Controls.AcceptButton:SetHide(true);
 		Controls.AbortButton:SetHide(false);
 		Controls.CancelButton:SetHide(false);

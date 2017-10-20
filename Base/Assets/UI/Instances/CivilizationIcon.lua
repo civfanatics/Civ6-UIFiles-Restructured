@@ -24,9 +24,7 @@ CivilizationIcon.DATA_FIELD_CLASS = "CIVILIZATION_ICON_CLASS";
 ------------------------------------------------------------------
 -- Class Members
 ------------------------------------------------------------------
---This is needed for how we deal with tooltip callbacks. The stack
---seizure could end up changing because of reuse of tables in other
---files
+-- This is needed for how we deal with tooltip callbacks.
 CivilizationIcon.playerID = -1;
 CivilizationIcon.detailString = "";
 

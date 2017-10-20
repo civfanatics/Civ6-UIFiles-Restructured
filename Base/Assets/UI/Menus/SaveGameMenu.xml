@@ -4,7 +4,7 @@
 
   <Include File="CivilizationIcon" />
   
-    <Box ID="MainGrid" Size="1024,full" Anchor="C,T" Color="9,44,72,200" TutorialActive="1">
+    <Box ID="MainGrid" Size="1024,parent" Anchor="C,T" Color="9,44,72,200" TutorialActive="1">
       <Image Texture="Controls_GradientSmall" Size="22,parent" AnchorSide="O,I" Anchor="R,T" Color="0,0,0,200" Rotate="270" Offset="0,0"/>
       <Image Texture="Controls_GradientSmall" Size="22,parent" AnchorSide="O,I" Anchor="L,T" Color="0,0,0,200" Rotate="90" Offset="0,0"/>
       <Box Color="32,70,101,150" Anchor="L,T" Size="2,parent"/>
@@ -54,10 +54,10 @@
                           </Grid>
                         </Grid>
                         <!-- Map Area -->
-                        <Container ID="InspectorTopArea" Size="parent, 0" AutoSize="V">
-                          <Box ID="InspectorTopAreaBox" Color="6,77,127,150" Size="parent,0" AutoSize="V" InnerPadding="4,4">
-                            <Container ID="InspectorTopAreaGridContainer" Size="parent,0" AutoSize="V" InnerPadding="8,8">
-                              <Grid ID="InspectorTopAreaGrid" Style="DecoGrid" Color="30,125,182,50" Size="parent, 0" AutoSize="V" InnerPadding="6,25" Anchor="C,T">
+                        <Container ID="InspectorTopArea" Size="parent,auto">
+                          <Box ID="InspectorTopAreaBox" Color="6,77,127,150" Size="parent,auto" InnerPadding="4,4">
+                            <Container ID="InspectorTopAreaGridContainer" Size="parent,auto" InnerPadding="8,8">
+                              <Grid ID="InspectorTopAreaGrid" Style="DecoGrid" Color="30,125,182,50" Size="parent,auto" InnerPadding="6,25" Anchor="C,T">
                                 <Stack ID="InspectorTopAreaStack" StackGrowth="Down" Padding="1">
                                   <Container ID="SavedMinimapContainer" Anchor="C,T" Size="parent,160">
                                     <Grid Style="DropShadow3" Size="267,160" Anchor="C,C" Color="0,0,0,120"/>
@@ -166,7 +166,7 @@
 
 
 	<!-- ************************** DELETE popup ******************************** -->
-	<Box ID="DeleteConfirm" Color="0,0,0,150" Size="Full,Full" ConsumeMouseOver="1" Hidden="1" TutorialActive="1">
+	<Box ID="DeleteConfirm" Color="0,0,0,150" Size="parent,parent" ConsumeMouseOver="1" Hidden="1" TutorialActive="1">
 		<AlphaAnim ID="DeleteConfirmAlpha" AlphaBegin="0" AlphaEnd="1" Speed="3" Function="Root" Cycle="Once" Size="parent,parent">
 			<SlideAnim ID="DeleteConfirmSlide" Start="0,-20" End="0,0" Speed="3" Function="Root" Cycle="Once" Size="parent,parent">
 				<Grid Size="500,250" Anchor="C,C" Offset="0,0" Style="DropShadow2"  Hidden="0" Color="255,255,255,200">
@@ -202,18 +202,18 @@
 	</Instance>
 
 	<Instance Name="DescriptionText">
-		<Container AutoSize="1" ID="Root">
+		<Container  Size="auto,auto" ID="Root">
 			<Label ID="Text" Anchor="L,T" Offset="0,0" Style="FontNormalMedium14" ColorSet="BodyTextCool" FontStyle="stroke" WrapWidth="300"  String=""/>
 		</Container>
 	</Instance>
 
 	<Instance Name="DetailsItem">
-		<Container AutoSize="1" ID="Root">
-			<Container AutoSize="1">
+		<Container  Size="auto,auto" ID="Root">
+			<Container  Size="auto,auto">
 				<Box Size="140,10" Color="0,0,0,0"/>
 				<Label ID="Title" Anchor="R,T" Offset="0,0" Style="FontNormal14" ColorSet="ShellOptionText" FontStyle="stroke" WrapWidth="140" String="Map Type:"/>
 			</Container>
-			<Container AutoSize="1" Offset="145,0">
+			<Container  Size="auto,auto" Offset="145,0">
 				<Box Size="160,10" Color="0,0,0,0"/>
 				<Label ID="Description" Anchor="L,T" Offset="0,0" Style="FontNormal14" ColorSet="BodyTextCool" FontStyle="stroke" WrapWidth="160"  String="Pangaea"/>
 			</Container>

@@ -86,8 +86,7 @@ function GetRelevantParameters(o, parameter)
 	elseif(not GameConfiguration.IsAnyMultiplayer()) then
 		return parameter.SupportsSinglePlayer;
 
-	elseif(GameConfiguration.IsHotseat() 
-		or GameConfiguration.IsPlayByCloud()) then
+	elseif(GameConfiguration.IsHotseat()) then
 		return parameter.SupportsHotSeat;
 
 	elseif(GameConfiguration.IsLANMultiplayer()) then

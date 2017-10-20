@@ -22,7 +22,7 @@ local MIN_PADDING_SLOTS:number = 2;
 local MAX_PADDING_SLOTS:number = 30;
 local MAX_NUM_SLOTS:number = 6;
 
-local NUM_RELIC_TEXTURES:number = 16;
+local NUM_RELIC_TEXTURES:number = 24;
 local NUM_ARIFACT_TEXTURES:number = 25;
 local GREAT_WORK_RELIC_TYPE:string = "GREATWORKOBJECT_RELIC";
 local GREAT_WORK_ARTIFACT_TYPE:string = "GREATWORKOBJECT_ARTIFACT";
@@ -469,8 +469,18 @@ function GetGreatWorkTooltip(pCityBldgs:table, greatWorkIndex:number, greatWorkT
 	local greatWorkName:string = Locale.Lookup(greatWorkInfo.Name);
 	local greatWorkCreator:string = Locale.Lookup(pCityBldgs:GetCreatorNameFromIndex(greatWorkIndex));
 	local greatWorkCreationDate:string = Calendar.MakeDateStr(pCityBldgs:GetTurnFromIndex(greatWorkIndex), GameConfiguration.GetCalendarType(), GameConfiguration.GetGameSpeedType(), false);
-	local yieldType:string = GameInfo.GreatWork_YieldChanges[greatWorkInfo.GreatWorkType].YieldType;
-	local yieldValue:number = GameInfo.GreatWork_YieldChanges[greatWorkInfo.GreatWorkType].YieldChange;
+	
+	local yieldType;
+	local yieldValue;
+	
+	for row in GameInfo.GreatWork_YieldChanges() do
+		if(row.GreatWorkType == greatWorkInfo.GreatWorkType) then
+			yieldType = row.YieldType;
+			yieldValue = row.YieldChange;
+			break;
+		end
+	end
+	
 	local greatWorkYields:string = YIELD_FONT_ICONS[yieldType] .. yieldValue .. " " .. YIELD_FONT_ICONS[DATA_FIELD_TOURISM_YIELD] .. greatWorkInfo.Tourism;
 	local buildingName:string = Locale.Lookup(GameInfo.Buildings[pBuildingInfo.BuildingType].Name);
 	
@@ -787,30 +797,32 @@ function CanMoveGreatWork(srcBldgs:table, srcBuilding:number, srcSlot:number, ds
 end
 
 function OnClickSlot(pCityBldgs:table, buildingIndex:number, slotIndex:number)
-	print("moving great work ["..slotIndex.."] from "..Locale.Lookup(m_GreatWorkSelected.CityBldgs:GetCity():GetName()).." to "..Locale.Lookup(pCityBldgs:GetCity():GetName()));
+	if m_GreatWorkSelected ~= nil and m_GreatWorkSelected.CityBldgs:GetCity() ~= nil then
+		print("moving great work ["..slotIndex.."] from "..Locale.Lookup(m_GreatWorkSelected.CityBldgs:GetCity():GetName()).." to "..Locale.Lookup(pCityBldgs:GetCity():GetName()));
 
-	-- Don't allow moving artifacts to a museum that is not full
-	if not CanMoveToSlot(pCityBldgs, buildingIndex, slotIndex) then
-		return;
-	end
+		-- Don't allow moving artifacts to a museum that is not full
+		if not CanMoveToSlot(pCityBldgs, buildingIndex, slotIndex) then
+			return;
+		end
 
-	m_dest_building = buildingIndex;
-    m_dest_city = pCityBldgs:GetCity():GetID();
+		m_dest_building = buildingIndex;
+		m_dest_city = pCityBldgs:GetCity():GetID();
 	
-	local tParameters = {};
-	tParameters[PlayerOperations.PARAM_PLAYER_ONE] = Game.GetLocalPlayer();
-	tParameters[PlayerOperations.PARAM_CITY_SRC] = m_GreatWorkSelected.CityBldgs:GetCity():GetID();
-	tParameters[PlayerOperations.PARAM_CITY_DEST] = pCityBldgs:GetCity():GetID();
-	tParameters[PlayerOperations.PARAM_GREAT_WORK_INDEX] = m_GreatWorkSelected.Index;
-	tParameters[PlayerOperations.PARAM_BUILDING_SRC] = m_GreatWorkSelected.Building;
-	tParameters[PlayerOperations.PARAM_BUILDING_DEST] = buildingIndex;
-	tParameters[PlayerOperations.PARAM_SLOT] = slotIndex;
-	UI.RequestPlayerOperation(Game.GetLocalPlayer(), PlayerOperations.MOVE_GREAT_WORK, tParameters);
+		local tParameters = {};
+		tParameters[PlayerOperations.PARAM_PLAYER_ONE] = Game.GetLocalPlayer();
+		tParameters[PlayerOperations.PARAM_CITY_SRC] = m_GreatWorkSelected.CityBldgs:GetCity():GetID();
+		tParameters[PlayerOperations.PARAM_CITY_DEST] = pCityBldgs:GetCity():GetID();
+		tParameters[PlayerOperations.PARAM_GREAT_WORK_INDEX] = m_GreatWorkSelected.Index;
+		tParameters[PlayerOperations.PARAM_BUILDING_SRC] = m_GreatWorkSelected.Building;
+		tParameters[PlayerOperations.PARAM_BUILDING_DEST] = buildingIndex;
+		tParameters[PlayerOperations.PARAM_SLOT] = slotIndex;
+		UI.RequestPlayerOperation(Game.GetLocalPlayer(), PlayerOperations.MOVE_GREAT_WORK, tParameters);
 
-    UI.PlaySound("UI_GreatWorks_Put_Down");
+		UI.PlaySound("UI_GreatWorks_Put_Down");
 
-	-- Clear the transfer, but don't do an update, that will be handled when the move completes.
-	m_GreatWorkSelected = nil;
+		-- Clear the transfer, but don't do an update, that will be handled when the move completes.
+		m_GreatWorkSelected = nil;
+	end
 	ContextPtr:ClearUpdate();
 end
 
@@ -951,7 +963,7 @@ end
 --	Input Hotkey Event
 -- ===========================================================================
 function OnInputActionTriggered( actionId )
-	if actionId == m_ToggleGreatWorksId then
+	if actionId == m_ToggleGreatWorksId and UI.QueryGlobalParameterInt("DISABLE_GREAT_WORKS_HOTKEY") ~= 1 then
 		if(ContextPtr:IsHidden()) then
 			LuaEvents.LaunchBar_OpenGreatWorksOverview();
 			UI.PlaySound("UI_Screen_Open");

@@ -55,7 +55,9 @@
 
     <Row Name="ICON_BELIEF_GODDESS_OF_THE_HARVEST"      Atlas="ICON_ATLAS_BELIEFS_PATHEON" Index="21"/>
 
-    
+    <Row Name="ICON_BELIEF_CITY_PATRON_GODDESS"         Atlas="ICON_ATLAS_BELIEFS_PATHEON" Index="27"/>
+
+    <Row Name="ICON_BELIEF_EARTH_GODDESS"               Atlas="ICON_ATLAS_BELIEFS_PATHEON" Index="26"/>
 
     <Row Name="ICON_BELIEF_DIVINE_INSPIRATION"          Atlas="ICON_ATLAS_BELIEFS_PATHEON"	Index="23"/>
 
@@ -71,8 +73,12 @@
 
     <Row Name="ICON_BELIEF_ZEN_MEDITATION"              Atlas="ICON_ATLAS_BELIEFS_PATHEON" Index="23"/>
 
-    
+    <Row Name="ICON_BELIEF_CHORAL_MUSIC"                Atlas="ICON_ATLAS_BELIEFS_PATHEON" Index="23"/>
 
+    <Row Name="ICON_BELIEF_WARRIOR_MONKS"               Atlas="ICON_ATLAS_BELIEFS_PATHEON" Index="23"/>
+
+    
+    
     <Row Name="ICON_BELIEF_CATHEDRAL"                   Atlas="ICON_ATLAS_BELIEFS_PATHEON" Index="22"/>
 
     <Row Name="ICON_BELIEF_GURDWARA"                    Atlas="ICON_ATLAS_BELIEFS_PATHEON" Index="22"/>
@@ -87,7 +93,11 @@
 
     <Row Name="ICON_BELIEF_WAT"                         Atlas="ICON_ATLAS_BELIEFS_PATHEON" Index="22"/>
 
-    
+    <Row Name="ICON_BELIEF_STUPA"                       Atlas="ICON_ATLAS_BELIEFS_PATHEON" Index="22"/>
+
+    <Row Name="ICON_BELIEF_DAR_E_MEHR"                  Atlas="ICON_ATLAS_BELIEFS_PATHEON" Index="22"/>
+
+
 
     <Row Name="ICON_BELIEF_CHURCH_PROPERTY"             Atlas="ICON_ATLAS_BELIEFS_PATHEON" Index="24"/>
 
@@ -103,7 +113,10 @@
 
     <Row Name="ICON_BELIEF_WORLD_CHURCH"                Atlas="ICON_ATLAS_BELIEFS_PATHEON" Index="24"/>
 
-    
+    <Row Name="ICON_BELIEF_CROSS_CULTURAL_DIALOGUE"     Atlas="ICON_ATLAS_BELIEFS_PATHEON" Index="24"/>
+
+    <Row Name="ICON_BELIEF_RELIGIOUS_UNITY"             Atlas="ICON_ATLAS_BELIEFS_PATHEON" Index="24"/>
+
 
     <Row Name="ICON_BELIEF_DEFENDER_OF_FAITH"           Atlas="ICON_ATLAS_BELIEFS_PATHEON" Index="25"/>
 
@@ -119,7 +132,10 @@
 
     <Row Name="ICON_BELIEF_SCRIPTURE"                   Atlas="ICON_ATLAS_BELIEFS_PATHEON" Index="25"/>
 
-    
+    <Row Name="ICON_BELIEF_BURIAL_GROUNDS"              Atlas="ICON_ATLAS_BELIEFS_PATHEON" Index="25"/>
+
+    <Row Name="ICON_BELIEF_RELIGIOUS_COLONIZATION"      Atlas="ICON_ATLAS_BELIEFS_PATHEON" Index="25"/>
+
 
   </IconDefinitions>
 

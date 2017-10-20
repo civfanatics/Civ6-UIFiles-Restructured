@@ -15,20 +15,7 @@
 				<Label ID="TitleLabel" Style="ShellHeader" Anchor="C,C" String="LOC_MULTIPLAYER_LAN_LOBBY"/>
 			</Container>
 
-			<Stack ID="ShellTabs" Anchor="C,T" Offset="0,54" StackGrowth="Right" Size="940,70" Padding="10"/>
-
-			<!-- PlayByCloud join code edit box -->
-			<Container AutoSize="1" Anchor="R,T" Offset="0,54" ID="JoinCodeRoot" Hidden="1">
-				<Container AutoSize="1">
-					<Box Size="140,30" Color="0,0,0,0"/>
-					<Label ID="JoinCodeEditLabel" Anchor="R,C" Offset="0,0" Style="FontNormal14" ColorSet="ShellOptionText" FontStyle="stroke" WrapWidth="180" String="Join Code:"/>
-				</Container>
-				<Container AutoSize="1" Offset="145,0">
-					<Grid Style="EditTextArea" Size="160,30">
-						<EditBox ID="JoinCodeEditBox" Anchor="L,C" Offset="6,0" Size="248,23" EditMode="0" Style="FontNormal18" ColorSet="BodyTextCool" FontStyle="stroke" MaxLength="20"/>
-					</Grid>
-				</Container>
-			</Container>
+			<Stack ID="ShellTabs" Anchor="L,T" Offset="50,54" StackGrowth="Right" Size="940,70" Padding="10"/>
 
 			<Container ID="GameListRoot" Anchor="L,T" Offset="0,114" Size="1024,661">
 

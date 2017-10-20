@@ -2072,8 +2072,7 @@ function OnDiplomacyMeet(player1, player2)
 
 	if player1 == localPlayer
 	or player2 == localPlayer then
-		if false == Players[player1]:IsMajor()
-		or false == Players[player2]:IsMajor() then
+		if ( Players[player1]:IsMinor() or Players[player2]:IsMinor() ) then
 			TutorialCheck("DiplomacyMeet")
 		end
 	end
@@ -2240,6 +2239,8 @@ end
 
 -- ===========================================================================
 function OnTreasuryChanged(player, yield, balance)
+
+	-- Note: We don't attach this listener if CAPABILITY_GOLD is off
 	local localPlayer = Game.GetLocalPlayer()
 
 	if player == localPlayer then
@@ -3001,7 +3002,9 @@ function OnShutdown()
 	Events.ResearchChanged.Remove(			OnResearchChanged );
 	Events.ResearchCompleted.Remove(		OnResearchCompleted );
 	Events.FaithChanged.Remove(				OnFaithChanged );
-	Events.TreasuryChanged.Remove(			OnTreasuryChanged );
+	if GameCapabilities.HasCapability("CAPABILITY_GOLD") then
+		Events.TreasuryChanged.Remove(			OnTreasuryChanged );
+	end
 	Events.PantheonFounded.Remove(			OnPantheonFounded );
 	Events.TradeRouteAddedToMap.Remove(		OnTradeRouteAddedToMap );
 	Events.UnitAddedToMap.Remove(			OnUnitAddedToMap );
@@ -3290,7 +3293,9 @@ function Initialize()
 	Events.ResearchChanged.Add(			OnResearchChanged );
 	Events.ResearchCompleted.Add(		OnResearchCompleted );
 	Events.FaithChanged.Add(			OnFaithChanged );
-	Events.TreasuryChanged.Add(			OnTreasuryChanged );
+	if GameCapabilities.HasCapability("CAPABILITY_GOLD") then
+		Events.TreasuryChanged.Add(			OnTreasuryChanged );
+	end
 	Events.PantheonFounded.Add(			OnPantheonFounded );
 	Events.TradeRouteAddedToMap.Add(	OnTradeRouteAddedToMap );
 	Events.UnitAddedToMap.Add(			OnUnitAddedToMap );

@@ -57,6 +57,8 @@ local m_kResourceData		:table = nil;
 local m_kDealData			:table = nil;
 local m_uiGroups			:table = nil;	-- Track the groups on-screen for collapse all action.
 
+local m_isCollapsing		:boolean = true;
+
 
 -- ===========================================================================
 --	Single exit point for display
@@ -117,12 +119,14 @@ function OnCollapseAllButton()
 	end
 
 	for i,instance in ipairs( m_uiGroups ) do
-		if instance["isCollapsed"] == false then
-			instance["isCollapsed"] = true;
+		if instance["isCollapsed"] ~= m_isCollapsing then
+			instance["isCollapsed"] = m_isCollapsing;
 			instance.CollapseAnim:Reverse();
 			RealizeGroup( instance );
 		end
 	end
+	Controls.CollapseAll:LocalizeAndSetText(m_isCollapsing and "LOC_HUD_REPORTS_EXPAND_ALL" or "LOC_HUD_REPORTS_COLLAPSE_ALL");
+	m_isCollapsing = not m_isCollapsing;
 end
 
 -- ===========================================================================
@@ -541,8 +545,7 @@ function OnAnimGroupCollapse( instance:table)
 	local endY			:number = instance["isCollapsed"]==false and groupHeight or collapseHeight;
 	local progress		:number = instance.CollapseAnim:GetProgress();
 	local sizeY			:number = lerp(startY,endY,progress);
-
-	instance.CollapseAnim:SetSizeY( groupHeight );		
+		
 	instance.CollapseScroll:SetSizeY( sizeY );	
 	instance.ContentStack:ReprocessAnchoring();	
 	instance.Top:ReprocessAnchoring()
@@ -563,6 +566,8 @@ function ResetTabForNewPageContent()
 	m_uiGroups = {};
 	m_simpleIM:ResetInstances();
 	m_groupIM:ResetInstances();
+	m_isCollapsing = true;
+	Controls.CollapseAll:LocalizeAndSetText("LOC_HUD_REPORTS_COLLAPSE_ALL");
 	Controls.Scroll:SetScrollValue( 0 );	
 end
 
@@ -671,7 +676,7 @@ function ViewYieldsPage()
 		local pCityInstance:table = {};
 		ContextPtr:BuildInstanceForControl( "CityIncomeInstance", pCityInstance, instance.ContentStack ) ;
 		pCityInstance.LineItemStack:DestroyAllChildren();
-		pCityInstance.CityName:SetText( Locale.Lookup(kCityData.CityName) );
+		TruncateStringWithTooltip(pCityInstance.CityName, 230, Locale.Lookup(kCityData.CityName)); 
 
 		--Great works
 		local greatWorks:table = GetGreatWorksForCity(kCityData.City);
@@ -711,14 +716,6 @@ function ViewYieldsPage()
 		scienceCityTotal= scienceCityTotal + kCityData.SciencePerTurn;
 		cultureCityTotal= cultureCityTotal + kCityData.CulturePerTurn;
 		tourismCityTotal= tourismCityTotal + kCityData.WorkedTileYields["TOURISM"];
-		
-		-- Compute tiles worked by setting to total and subtracting all the things...
-		local productionTilesWorked :number = kCityData.ProductionPerTurn;
-		local foodTilesWorked		:number = kCityData.FoodPerTurn;
-		local goldTilesWorked		:number = kCityData.GoldPerTurn;
-		local faithTilesWorked		:number = kCityData.FaithPerTurn;
-		local scienceTilesWorked	:number = kCityData.SciencePerTurn;
-		local cultureTilesWorked	:number = kCityData.CulturePerTurn;
 
 		for i,kDistrict in ipairs(kCityData.BuildingsAndDistricts) do			
 			--District line item
@@ -764,13 +761,6 @@ function ViewYieldsPage()
 										kBuilding.SciencePerTurn,
 										kBuilding.CulturePerTurn,
 										kBuilding.FaithPerTurn);
-				
-				productionTilesWorked	= productionTilesWorked - kBuilding.ProductionPerTurn;
-				foodTilesWorked			= foodTilesWorked		- kBuilding.FoodPerTurn;
-				goldTilesWorked			= goldTilesWorked		- kBuilding.GoldPerTurn;
-				faithTilesWorked		= faithTilesWorked		- kBuilding.FaithPerTurn;
-				scienceTilesWorked		= scienceTilesWorked	- kBuilding.SciencePerTurn;
-				cultureTilesWorked		= cultureTilesWorked	- kBuilding.CulturePerTurn;
 
 				--Add great works
 				if greatWorks[kBuilding.Type] ~= nil then
@@ -942,7 +932,7 @@ function ViewYieldsPage()
 			if kBuilding.Maintenance > 0 then
 				local pBuildingInstance:table = {};		
 				ContextPtr:BuildInstanceForControl( "BuildingExpensesEntryInstance", pBuildingInstance, instance.ContentStack ) ;		
-				pBuildingInstance.CityName:SetText( Locale.Lookup(cityName) );
+				TruncateStringWithTooltip(pBuildingInstance.CityName, 224, Locale.Lookup(cityName)); 
 				pBuildingInstance.BuildingName:SetText( Locale.Lookup(kBuilding.Name) );
 				pBuildingInstance.Gold:SetText( "-"..tostring(kBuilding.Maintenance));
 				iTotalBuildingMaintenance = iTotalBuildingMaintenance - kBuilding.Maintenance;
@@ -952,7 +942,7 @@ function ViewYieldsPage()
 			if kDistrict.Maintenance > 0 then
 				local pDistrictInstance:table = {};		
 				ContextPtr:BuildInstanceForControl( "BuildingExpensesEntryInstance", pDistrictInstance, instance.ContentStack ) ;		
-				pDistrictInstance.CityName:SetText( Locale.Lookup(cityName) );
+				TruncateStringWithTooltip(pDistrictInstance.CityName, 224, Locale.Lookup(cityName)); 
 				pDistrictInstance.BuildingName:SetText( Locale.Lookup(kDistrict.Name) );
 				pDistrictInstance.Gold:SetText( "-"..tostring(kDistrict.Maintenance));
 				iTotalBuildingMaintenance = iTotalBuildingMaintenance - kDistrict.Maintenance;
@@ -968,63 +958,67 @@ function ViewYieldsPage()
 
 	-- ========== Unit Expenses ==========
 
-	instance = NewCollapsibleGroupInstance();
-	instance.RowHeaderButton:SetText( Locale.Lookup("LOC_HUD_REPORTS_ROW_UNIT_EXPENSES") );
+	if GameCapabilities.HasCapability("CAPABILITY_REPORTS_UNIT_EXPENSES") then 
+		instance = NewCollapsibleGroupInstance();
+		instance.RowHeaderButton:SetText( Locale.Lookup("LOC_HUD_REPORTS_ROW_UNIT_EXPENSES") );
 
-	-- Header
-	local pHeader:table = {};
-	ContextPtr:BuildInstanceForControl( "UnitExpensesHeaderInstance", pHeader, instance.ContentStack ) ;
+		-- Header
+		local pHeader:table = {};
+		ContextPtr:BuildInstanceForControl( "UnitExpensesHeaderInstance", pHeader, instance.ContentStack ) ;
 
-	-- Units
-	local iTotalUnitMaintenance:number = 0;
-	for UnitType,kUnitData in pairs(m_kUnitData) do
-		local pUnitInstance:table = {};
-		ContextPtr:BuildInstanceForControl( "UnitExpensesEntryInstance", pUnitInstance, instance.ContentStack );
-		pUnitInstance.UnitName:SetText(Locale.Lookup( kUnitData.Name ));
-		pUnitInstance.UnitCount:SetText(kUnitData.Count);
-		pUnitInstance.Gold:SetText("-" .. kUnitData.Maintenance);
-		iTotalUnitMaintenance = iTotalUnitMaintenance + kUnitData.Maintenance;
+		-- Units
+		local iTotalUnitMaintenance:number = 0;
+		for UnitType,kUnitData in pairs(m_kUnitData) do
+			local pUnitInstance:table = {};
+			ContextPtr:BuildInstanceForControl( "UnitExpensesEntryInstance", pUnitInstance, instance.ContentStack );
+			pUnitInstance.UnitName:SetText(Locale.Lookup( kUnitData.Name ));
+			pUnitInstance.UnitCount:SetText(kUnitData.Count);
+			pUnitInstance.Gold:SetText("-" .. kUnitData.Maintenance);
+			iTotalUnitMaintenance = iTotalUnitMaintenance + kUnitData.Maintenance;
+		end
+
+		-- Footer
+		local pUnitFooterInstance:table = {};		
+		ContextPtr:BuildInstanceForControl( "GoldFooterInstance", pUnitFooterInstance, instance.ContentStack ) ;		
+		pUnitFooterInstance.Gold:SetText("[ICON_Gold]-"..tostring(iTotalUnitMaintenance) );
+
+		SetGroupCollapsePadding(instance, pUnitFooterInstance.Top:GetSizeY() );
+		RealizeGroup( instance );
 	end
 
-	-- Footer
-	local pUnitFooterInstance:table = {};		
-	ContextPtr:BuildInstanceForControl( "GoldFooterInstance", pUnitFooterInstance, instance.ContentStack ) ;		
-	pUnitFooterInstance.Gold:SetText("[ICON_Gold]-"..tostring(iTotalUnitMaintenance) );
-
-	SetGroupCollapsePadding(instance, pUnitFooterInstance.Top:GetSizeY() );
-	RealizeGroup( instance );
-	
 	-- ========== Diplomatic Deals Expenses ==========
 	
-	instance = NewCollapsibleGroupInstance();	
-	instance.RowHeaderButton:SetText( Locale.Lookup("LOC_HUD_REPORTS_ROW_DIPLOMATIC_DEALS") );
+	if GameCapabilities.HasCapability("CAPABILITY_REPORTS_DIPLOMATIC_DEALS") then 
+		instance = NewCollapsibleGroupInstance();	
+		instance.RowHeaderButton:SetText( Locale.Lookup("LOC_HUD_REPORTS_ROW_DIPLOMATIC_DEALS") );
 
-	local pHeader:table = {};
-	ContextPtr:BuildInstanceForControl( "DealHeaderInstance", pHeader, instance.ContentStack ) ;
+		local pHeader:table = {};
+		ContextPtr:BuildInstanceForControl( "DealHeaderInstance", pHeader, instance.ContentStack ) ;
 
-	local iTotalDealGold :number = 0;
-	for i,kDeal in ipairs(m_kDealData) do
-		if kDeal.Type == DealItemTypes.GOLD then
-			local pDealInstance:table = {};		
-			ContextPtr:BuildInstanceForControl( "DealEntryInstance", pDealInstance, instance.ContentStack ) ;		
+		local iTotalDealGold :number = 0;
+		for i,kDeal in ipairs(m_kDealData) do
+			if kDeal.Type == DealItemTypes.GOLD then
+				local pDealInstance:table = {};		
+				ContextPtr:BuildInstanceForControl( "DealEntryInstance", pDealInstance, instance.ContentStack ) ;		
 
-			pDealInstance.Civilization:SetText( kDeal.Name );
-			pDealInstance.Duration:SetText( kDeal.Duration );
-			if kDeal.IsOutgoing then
-				pDealInstance.Gold:SetText( "-"..tostring(kDeal.Amount) );
-				iTotalDealGold = iTotalDealGold - kDeal.Amount;
-			else
-				pDealInstance.Gold:SetText( "+"..tostring(kDeal.Amount) );
-				iTotalDealGold = iTotalDealGold + kDeal.Amount;
+				pDealInstance.Civilization:SetText( kDeal.Name );
+				pDealInstance.Duration:SetText( kDeal.Duration );
+				if kDeal.IsOutgoing then
+					pDealInstance.Gold:SetText( "-"..tostring(kDeal.Amount) );
+					iTotalDealGold = iTotalDealGold - kDeal.Amount;
+				else
+					pDealInstance.Gold:SetText( "+"..tostring(kDeal.Amount) );
+					iTotalDealGold = iTotalDealGold + kDeal.Amount;
+				end
 			end
 		end
-	end
-	local pDealFooterInstance:table = {};		
-	ContextPtr:BuildInstanceForControl( "GoldFooterInstance", pDealFooterInstance, instance.ContentStack ) ;		
-	pDealFooterInstance.Gold:SetText("[ICON_Gold]"..tostring(iTotalDealGold) );
+		local pDealFooterInstance:table = {};		
+		ContextPtr:BuildInstanceForControl( "GoldFooterInstance", pDealFooterInstance, instance.ContentStack ) ;		
+		pDealFooterInstance.Gold:SetText("[ICON_Gold]"..tostring(iTotalDealGold) );
 
-	SetGroupCollapsePadding(instance, pDealFooterInstance.Top:GetSizeY() );
-	RealizeGroup( instance );
+		SetGroupCollapsePadding(instance, pDealFooterInstance.Top:GetSizeY() );
+		RealizeGroup( instance );
+	end
 
 
 	-- ========== TOTALS ==========
@@ -1061,7 +1055,8 @@ function ViewYieldsPage()
 	--Tourism. We don't talk about this one much.
 	Controls.TourismIncome:SetText( toPlusMinusNoneString( m_kCityTotalData.Income["TOURISM"] ));	
 	Controls.TourismBalance:SetText( m_kCityTotalData.Treasury["TOURISM"] );
-		
+	
+	Controls.CollapseAll:SetHide(false);
 	Controls.BottomYieldTotals:SetHide( false );
 	Controls.BottomYieldTotals:SetSizeY( SIZE_HEIGHT_BOTTOM_YIELDS );
 	Controls.BottomResourceTotals:SetHide( true );
@@ -1171,6 +1166,7 @@ function ViewResourcesPage()
 	Controls.Stack:CalculateSize();
 	Controls.Scroll:CalculateSize();
 
+	Controls.CollapseAll:SetHide(false);
 	Controls.BottomYieldTotals:SetHide( true );
 	Controls.BottomResourceTotals:SetHide( false );
 	Controls.Scroll:SetSizeY( Controls.Main:GetSizeY() - (Controls.BottomResourceTotals:GetSizeY() + SIZE_HEIGHT_PADDING_BOTTOM_ADJUST ) );	
@@ -1194,7 +1190,7 @@ function ViewCityStatusPage()
 
 		local pCityInstance:table = {}
 		ContextPtr:BuildInstanceForControl( "CityStatusEntryInstance", pCityInstance, instance.Top ) ;	
-		pCityInstance.CityName:SetText( Locale.Lookup(kCityData.CityName) );
+		TruncateStringWithTooltip(pCityInstance.CityName, 130, Locale.Lookup(kCityData.CityName)); 
 		pCityInstance.Population:SetText( tostring(kCityData.Population) );
 
 		if kCityData.HousingMultiplier == 0 or kCityData.Occupied then
@@ -1215,7 +1211,8 @@ function ViewCityStatusPage()
 		local warWearyValue:number = kCityData.AmenitiesLostFromWarWeariness;
 		pCityInstance.WarWeariness:SetText( (warWearyValue==0) and "0" or "-"..tostring(warWearyValue) );
 
-		pCityInstance.Status:SetText( kCityData.IsUnderSiege and Locale.Lookup("LOC_HUD_REPORTS_STATUS_UNDER_SEIGE") or Locale.Lookup("LOC_HUD_REPORTS_STATUS_NORMAL") );
+		local statusText:string = kCityData.IsUnderSiege and Locale.Lookup("LOC_HUD_REPORTS_STATUS_UNDER_SEIGE") or Locale.Lookup("LOC_HUD_REPORTS_STATUS_NORMAL");
+		TruncateStringWithTooltip(pCityInstance.Status, 80, statusText); 
 
 		pCityInstance.Strength:SetText( tostring(kCityData.Defense) );
 		pCityInstance.Damage:SetText( tostring(kCityData.Damage) );			
@@ -1224,6 +1221,7 @@ function ViewCityStatusPage()
 	Controls.Stack:CalculateSize();
 	Controls.Scroll:CalculateSize();
 
+	Controls.CollapseAll:SetHide(true);
 	Controls.BottomYieldTotals:SetHide( true );
 	Controls.BottomResourceTotals:SetHide( true );
 	Controls.Scroll:SetSizeY( Controls.Main:GetSizeY() - 88);

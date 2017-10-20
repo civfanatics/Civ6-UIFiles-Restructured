@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Context Style="FontNormal18" ColorSet="Beige_Black" FontStyle="Shadow">
-    <Box								ID="PopupGenericBlocker" Color="0,0,0,150" Size="Full,Full" ConsumeMouse="0">
+    <Box								ID="PopupGenericBlocker" Color="0,0,0,150" Size="parent,parent" ConsumeMouse="1">
       <AlphaAnim        ID="PopupAlphaIn" AlphaBegin="0" AlphaEnd="1" Speed="3" Function="Root" Cycle="Once" Size="parent,parent">
         <SlideAnim      ID="PopupSlideIn" Start="0,-20" End="0,0" Speed="3" Function="Root" Cycle="Once" Size="parent,parent">
 
-          <Grid         ID="PopupDialog"      Size="500,500"             Anchor="C,C" Offset="0,0" Style="DropShadow2"     Color="255,255,255,200" AutoSize="1" AutoSizePadding="25,25" ConsumeMouse="1">
+          <Grid         ID="PopupDialog"      Size="auto,auto"             Anchor="C,C" Offset="0,0" Style="DropShadow2"     Color="255,255,255,200" AutoSizePadding="25,25" ConsumeMouse="1">
 
-            <Grid       ID="EscapeWindow"     Size="500,500"          Anchor="C,C" Offset="0,0" Style="WindowFrameTitle" AutoSize="V" AutoSizePadding="0,15">
+            <Grid       ID="EscapeWindow"     Size="500,auto"          Anchor="C,C" Offset="0,0" Style="WindowFrameTitle" AutoSizePadding="0,15">
               <Container                            Size="parent,38"     Anchor="C,T"                       Offset="0,4">
                 <Label  ID="PanelHeader"   Style="WindowHeader"        Anchor="C,C" String="ESCAPE SEQUENCE"/>
               </Container>

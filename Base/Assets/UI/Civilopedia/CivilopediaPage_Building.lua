@@ -130,7 +130,7 @@ local sectionId = page.SectionId;
 			if(valid_modifiers[row.ModifierID]) then
 				local belief = GameInfo.Beliefs[row.BeliefType];
 				if(belief) then
-					table.insert(beliefs, belief);
+					table.insert(unique_to, {"ICON_" .. belief.BeliefType, belief.Name, belief.BeliefType});
 				end
 			end
 		end
@@ -297,14 +297,6 @@ local sectionId = page.SectionId;
 	AddRightColumnStatBox("LOC_UI_PEDIA_TRAITS", function(s)
 		s:AddSeparator();
 
-		if(#stats > 0) then
-			for _, v in ipairs(stats) do
-				s:AddLabel(v);
-			end
-			s:AddSeparator();
-		end
-	
-		
 		if(#unique_to > 0) then
 			s:AddHeader("LOC_UI_PEDIA_UNIQUE_TO");
 			for _, icon in ipairs(unique_to) do
@@ -339,21 +331,21 @@ local sectionId = page.SectionId;
 			s:AddLabel(obsolete_era.Name);
 			s:AddSeparator();
 		end
+
+		if(#stats > 0) then
+			for _, v in ipairs(stats) do
+				s:AddLabel(v);
+			end
+			s:AddSeparator();
+		end
 		
 	end);
 
 	AddRightColumnStatBox("LOC_UI_PEDIA_REQUIREMENTS", function(s)
 		s:AddSeparator();
 
-		if(#beliefs > 0 or building.PrereqTech or building.PrereqCivic or building.PrereqDistrict or #prereq_buildings > 0) then
+		if(building.PrereqTech or building.PrereqCivic or building.PrereqDistrict or #prereq_buildings > 0) then
 			
-			if(#beliefs > 0) then
-				s:AddHeader("LOC_BELIEF_NAME");
-				for i,belief in ipairs(beliefs) do
-					s:AddIconLabel({"ICON_" .. belief.BeliefType, belief.Name, belief.BeliefType}, belief.Name);
-				end
-			end
-
 			if(building.PrereqDistrict ~= nil) then
 				local district = GameInfo.Districts[building.PrereqDistrict];
 				if(district) then

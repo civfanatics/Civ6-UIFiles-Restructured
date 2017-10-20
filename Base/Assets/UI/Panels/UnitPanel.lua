@@ -67,8 +67,6 @@ local m_locY = nil;
 local INVALID_PLOT_ID	:number = -1;
 local m_plotId			:number = INVALID_PLOT_ID;
 
-local m_kPopupDialog			:table;
-
 local m_targetData				:table;
 local m_subjectData				:table;
 
@@ -111,6 +109,7 @@ function InitSubjectData()
 		Owner						= 0,
 		BuildCharges				= 0,
 		SpreadCharges				= 0,
+		HealCharges					= 0,
 		GreatPersonActionCharges	= 0,
 		GreatPersonPassiveName		= "",
 		GreatPersonPassiveText		= "",
@@ -157,6 +156,7 @@ function InitTargetData()
 		PotentialWallDamage			= 0,
 		BuildCharges				= 0,
 		SpreadCharges				= 0,
+		HealCharges					= 0,
 		ReligiousStrength			= 0,
 		GreatPersonActionCharges	= 0,
 		Moves						= 0,
@@ -260,11 +260,12 @@ function AddActionToTable( actionsTable:table, action:table, disabled:boolean, t
 	-- up the range attack lens layer.
 	local wrappedCallback:ifunction = 
 		function(void1,void2)
-			if UI.GetInterfaceMode() ~= InterfaceModeTypes.SELECTION then
+		currentMode = UI.GetInterfaceMode(); 
+			if currentMode ~= InterfaceModeTypes.SELECTION then
 				print("Unit panel forcing interface mode back to selection before performing operation/action"); --Debug
 				UI.SetInterfaceMode( InterfaceModeTypes.SELECTION );
 			end
-			callbackFunc(void1,void2);
+			callbackFunc(void1,void2, currentMode);
 		end;	
 
 	table.insert( actionsCategoryTable, {
@@ -1185,7 +1186,8 @@ function AddDistrictStat(value:number, name:string, icon:string, relativeSizeX:n
 	--statInstance.StatNameLabel:SetText(Locale.ToUpper(name));
 
 	-- Update value
-	statInstance.StatValueLabel:SetText(value);
+	local roundedValue: number = math.floor(value + 0.5);
+	statInstance.StatValueLabel:SetText(roundedValue);
 	statInstance.StatValueSlash:SetHide(true);
 	statInstance.StatMaxValueLabel:SetHide(true);
 
@@ -1241,6 +1243,9 @@ function FilterUnitStatsFromUnitData( unitData:table, ignoreStatType:number )
 	end
 	if (unitData.BuildCharges > 0) then
 		table.insert(data, {Value = unitData.BuildCharges, Type = "BuildCharges",		Label = "LOC_HUD_UNIT_PANEL_BUILDS",				FontIcon="[ICON_Charges_Large]",		IconName="ICON_BUILD_CHARGES"});
+	end
+	if (unitData.HealCharges > 0) then
+		table.insert(data, {Value = unitData.HealCharges, Type = "HealCharges",		Label = "LOC_HUD_UNIT_PANEL_HEALS",				FontIcon="[ICON_ReligionStat_Large]",		IconName="ICON_RELIGION"});
 	end
 	if (unitData.GreatPersonActionCharges > 0) then
 		table.insert(data, {Value = unitData.GreatPersonActionCharges, Type = "ActionCharges",		Label = "LOC_HUD_UNIT_PANEL_GREAT_PERSON_ACTIONS",				FontIcon="[ICON_Charges_Large]",		IconName="ICON_GREAT_PERSON"});
@@ -1667,17 +1672,20 @@ function UpdateModifiers(startIndex:number, stack:table, stackAnim:table, stackA
 	local shouldPlayAnim:boolean = false;
 	local nextIndex = 0;
 
-	for i=startIndex,modifierCount,1 do
-		if modifierList[i] ~= nil then
-			local modifierEntry = modifierList[i];
-			if not AddModifierToStack(stack, stackIM, modifierEntry["text"], modifierEntry["icon"], stackAnim:GetSizeY()) then
-				nextIndex = i;
-				break;
-			end
+	-- Make sure our inputs are valid
+	if modifierList ~= nil and modifierCount ~= nil then
+		for i=startIndex,modifierCount,1 do
+			if modifierList[i] ~= nil then
+				local modifierEntry = modifierList[i];
+				if not AddModifierToStack(stack, stackIM, modifierEntry["text"], modifierEntry["icon"], stackAnim:GetSizeY()) then
+					nextIndex = i;
+					break;
+				end
 
-			-- If we hit the end of the list then reset the next index
-			if i == modifierCount then
-				nextIndex = 0;
+				-- If we hit the end of the list then reset the next index
+				if i == modifierCount then
+					nextIndex = 0;
+				end
 			end
 		end
 	end
@@ -1926,6 +1934,7 @@ function ReadUnitData( unit:table )
 	m_subjectData.Owner						= unit:GetOwner();
 	m_subjectData.BuildCharges				= unit:GetBuildCharges();
 	m_subjectData.SpreadCharges				= unit:GetSpreadCharges();
+	m_subjectData.HealCharges				= unit:GetReligiousHealCharges();
 	m_subjectData.ReligiousStrength			= unit:GetReligiousStrength();
 	m_subjectData.HasMovedIntoZOC			= unit:HasMovedIntoZOC();
 	m_subjectData.MilitaryFormation			= unit:GetMilitaryFormation();
@@ -2028,7 +2037,7 @@ function ReadUnitData( unit:table )
 
 	-- Check if we're a settler
 	if (GameInfo.Units[m_subjectData.UnitType].FoundCity == true) then
-		m_subjectData.IsSettler = true;				
+		m_subjectData.IsSettler = true;
 	end
 
 	View(m_subjectData);
@@ -2046,10 +2055,9 @@ function ReadDistrictData( pDistrict:table )
 			districtName = Locale.Lookup(parentCity:GetName());
 		end
 
-		local eDistrictType = pDistrict:GetType();
-		if (not GameInfo.Districts[eDistrictType].CityCenter) then
-			local districtTypeName = Locale.Lookup(GameInfo.Districts[eDistrictType].Name);
-			districtName = districtName .. " " .. districtTypeName;
+		local districtInfo = GameInfo.Districts[pDistrict:GetType()];
+		if (not districtInfo.CityCenter) then
+			districtName = districtName .. " " .. Locale.Lookup(districtInfo.Name);
 		end
 
 		-- district data
@@ -2090,7 +2098,6 @@ function Refresh(player, unitId)
 		local unit = units:FindID(unitId);
 		if(unit ~= nil) then
 			ReadUnitData( unit, numUnits );
-			-- UI.SetRenderGameObject( Controls.PortraitFrame ,unit);	
 		else
 			Hide();
 		end
@@ -2186,6 +2193,10 @@ end
 
 -------------------------------------------------------------------------------
 function OnUnitCommandStarted(player, unitId, hCommand, iData1)
+    if (hCommand == UnitCommandTypes.CONDEMN_HERETIC) then
+        UI.PlaySound("Unit_CondemnHeretic_2D");
+    end
+
 	if(player == m_selectedPlayerId and unitId == m_UnitId) then
 		ContextPtr:RequestRefresh();		-- Set a refresh request, the UI will update on the next frame.
 	end
@@ -2208,8 +2219,7 @@ end
 --------------------------------------------------------------------------------
 -- UnitAction<idx> was clicked.
 --------------------------------------------------------------------------------
-function OnUnitActionClicked( actionType:number, actionHash:number )
-	
+function OnUnitActionClicked( actionType:number, actionHash:number, currentMode:number )
 	if m_isOkayToProcess then
 		local pSelectedUnit :table= UI.GetHeadSelectedUnit();
 		if (pSelectedUnit ~= nil) then
@@ -2222,7 +2232,7 @@ function OnUnitActionClicked( actionType:number, actionHash:number )
 
 				if (eInterfaceMode ~= InterfaceModeTypes.NONE) then
 					-- Must change to the interface mode or if we are already in that mode, the user wants to cancel.
-					if (UI.GetInterfaceMode() == eInterfaceMode) then
+					if (currentMode == eInterfaceMode) then
 						UI.SetInterfaceMode(InterfaceModeTypes.SELECTION);
 					else
 						UI.SetInterfaceMode(eInterfaceMode);
@@ -2242,7 +2252,7 @@ function OnUnitActionClicked( actionType:number, actionHash:number )
 
 					if (eInterfaceMode ~= InterfaceModeTypes.NONE) then
 						-- Must change to the interface mode or if we are already in that mode, the user wants to cancel.
-						if (UI.GetInterfaceMode() == eInterfaceMode) then
+						if (currentMode == eInterfaceMode) then
 							UI.SetInterfaceMode(InterfaceModeTypes.SELECTION);
 						else
 							local tParameters = {};
@@ -2324,8 +2334,10 @@ end
 -- ===========================================================================
 --	UnitAction<MoveTo> was clicked.
 -- ===========================================================================
-function OnUnitActionClicked_MoveTo()
-	UI.SetInterfaceMode(InterfaceModeTypes.MOVE_TO);
+function OnUnitActionClicked_MoveTo(dummy1, dummy2, currentMode:number)
+	if currentMode ~= InterfaceModeTypes.MOVE_TO then
+		UI.SetInterfaceMode(InterfaceModeTypes.MOVE_TO);
+	end
 end
 
 -- ===========================================================================
@@ -2438,7 +2450,8 @@ function OnPromptToDeleteUnit()
 			local msg		:string = Locale.Lookup("LOC_HUD_UNIT_PANEL_ARE_YOU_SURE_DELETE", unitName);
 			-- Pass the unit ID through, the user can take their time in the dialog and it is possible that the selected unit will change
 			local unitID = pUnit:GetComponentID();
-			m_kPopupDialog:ShowOkCancelDialog( msg, function() OnDeleteUnit(unitID) end, function() OnNoDelete() end);
+			local popup = PopupDialogInGame:new( "UnitPanelPopup" );
+			popup:ShowYesNoDialog( msg, function() OnDeleteUnit(unitID) end, OnNoDelete);
             m_DeleteInProgress = true;
 		end
 	end
@@ -3063,9 +3076,17 @@ function OnUnitFlagPointerEntered( playerID:number, unitID:number )
 					return;
 				end
 
+				local eCombatType = nil;
+				if (UI.GetInterfaceMode() == InterfaceModeTypes.RANGE_ATTACK) then
+					eCombatType = CombatTypes.RANGED;
+					if (attackerUnit:GetBombardCombat() > attackerUnit:GetRangedCombat()) then
+						eCombatType = CombatTypes.BOMBARD;
+					end
+				end
+
 				local pDefender = UnitManager.GetUnit(playerID, unitID);	
 				if (pDefender ~= nil) then
-					m_combatResults	= CombatManager.SimulateAttackVersus( attackerUnit:GetComponentID(), pDefender:GetComponentID() );
+					m_combatResults	= CombatManager.SimulateAttackVersus( attackerUnit:GetComponentID(), pDefender:GetComponentID(), eCombatType );
 					isValidToShow = ReadTargetData(attackerUnit);		
 				end
 			end
@@ -3195,6 +3216,7 @@ function ReadTargetData(attacker)
 				m_targetData.PotentialDamage			= potentialDamage;
 				m_targetData.BuildCharges				= pkDefender:GetBuildCharges();
 				m_targetData.SpreadCharges				= pkDefender:GetSpreadCharges();
+				m_targetData.HealCharges				= pkDefender:GetReligiousHealCharges();
 				m_targetData.ReligiousStrength			= pkDefender:GetReligiousStrength();
 				m_targetData.GreatPersonActionCharges	= unitGreatPerson:GetActionCharges();
 				m_targetData.Moves						= pkDefender:GetMovesRemaining();
@@ -3215,10 +3237,18 @@ function ReadTargetData(attacker)
 			if (pDefendingPlayer ~= nil) then
 				local pDistrict = pDefendingPlayer:GetDistricts():FindID(defenderID.id);
 				if (pDistrict ~= nil) then
+
+					local targetName = "";
 					local owningCity = pDistrict:GetCity();
-					local targetName :string = "";
-					if (owningCity ~= nil) then
+					local districtOwner = pDistrict:GetOwner();
+					local districtInfo = GameInfo.Districts[pDistrict:GetType()];
+
+					if (not districtInfo.CityCenter) then
+						targetName = Locale.Lookup(districtInfo.Name);
+					elseif (owningCity ~= nil) then
 						targetName = owningCity:GetName();
+					else
+						UI.DataError("Failed to find target name for district.");
 					end
 
 					local combat				:number = pDistrict:GetBaseDefenseStrength();
@@ -3240,9 +3270,9 @@ function ReadTargetData(attacker)
 					m_targetData.PotentialDamage			= potentialDamage;
 					m_targetData.PotentialWallDamage		= potentialWallDamage;
 
-					m_primaryColor, m_secondaryColor  = UI.GetPlayerColors( pDistrict:GetOwner() );
+					m_primaryColor, m_secondaryColor = UI.GetPlayerColors(districtOwner);
 
-					local leader:string = PlayerConfigurations[pDistrict:GetOwner()]:GetLeaderTypeName();
+					local leader:string = PlayerConfigurations[districtOwner]:GetLeaderTypeName();
 					if GameInfo.CivilizationLeaders[leader] == nil then
 						UI.DataError("Banners found a leader \""..leader.."\" which is not/no longer in the game; icon may be whack.");
 					else
@@ -3437,7 +3467,17 @@ function GetCombatResults ( attacker, locX, locY )
 	m_locY = locY;
 
 	if (locX ~= nil and locY ~= nil) then
-		m_combatResults	= CombatManager.SimulateAttackInto( attacker, locX, locY );
+		local eCombatType = nil;
+		if (UI.GetInterfaceMode() == InterfaceModeTypes.RANGE_ATTACK) then
+			local pUnit = UnitManager.GetUnit(attacker.player, attacker.id);
+			if (pUnit ~= nil) then
+				eCombatType = CombatTypes.RANGED;
+				if (pUnit:GetBombardCombat() > pUnit:GetRangedCombat()) then
+					eCombatType = CombatTypes.BOMBARD;
+				end
+			end
+		end
+		m_combatResults	= CombatManager.SimulateAttackInto( attacker, eCombatType, locX, locY );
 	end
 end
 
@@ -3730,9 +3770,6 @@ function Initialize()
 	LuaEvents.UnitFlagManager_PointerEntered.Add(		OnUnitFlagPointerEntered );
 	LuaEvents.UnitFlagManager_PointerExited.Add(		OnUnitFlagPointerExited );
 	LuaEvents.PlayerChange_Close.Add(					OnPlayerChangeClose );
-
-	-- Popup setup
-	m_kPopupDialog = PopupDialogInGame:new( "UnitPanelPopup" );
 
 	-- Setup settlement water guide colors
 	local FreshWaterColor:number = UI.GetColorValue("COLOR_BREATHTAKING_APPEAL");

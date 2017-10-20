@@ -351,20 +351,24 @@ function ReplayGraphRefresh()
 					
 			local blackThreshold = 5000;
 			local differenceThreshold = 3000;
-					
+							
 			local distanceAgainstBlack = ColorDistance(color, colorBlack);
 			if(distanceAgainstBlack > blackThreshold) then
 				for i, v in pairs(g_PlayerGraphColors) do
 					local distanceAgainstOtherPlayer = ColorDistance(color, v);
 					if(distanceAgainstOtherPlayer < differenceThreshold) then
+						-- Return false if the color is too close to a color that's already being used
 						colorNotUnique[color.Type] = true;
 						return false;
 					end
 				end
-						
+
+				-- Return true if the color is far enough away from black and other colors being used
+				colorNotUnique[color.Type] = true;	
 				return true;
 			end
 					
+			-- Return false if color is too close to black
 			colorNotUnique[color.Type] = true;
 			return false;
 		end
@@ -377,8 +381,11 @@ function ReplayGraphRefresh()
 			else
 				for color in GameInfo.Colors() do
 					-- Ensure we only use unique and opaque colors
-					if(IsUniqueColor(color) and color.Alpha == 1) then
-						return color;
+					if(IsUniqueColor(color)) then
+						local parsedColor = UIManager:ParseColorString(color.Color);
+						if parsedColor[4] == 255 then
+							return color;
+						end
 					end
 				end
 			end

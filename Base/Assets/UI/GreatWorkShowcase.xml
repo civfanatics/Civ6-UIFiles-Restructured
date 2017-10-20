@@ -1,9 +1,9 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Context xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="..\..\..\..\..\CivTech\Libs\ForgeUI\ForgeUI_Assets\Controls.xsd">
 
 	<Container ID="GalleryBG" Style="ModalScreen"/>
-	<Box Size="full,full" Color="0,0,0,100" ConsumeMouse="1">
-		<Image ID="BannerBG" Size="314,full" Offset="0,0" Anchor="C,T" Texture="Diplomacy_Banner" StretchMode="Tile">
+	<Box Size="parent,parent" Color="0,0,0,100" ConsumeMouse="1">
+		<Image ID="BannerBG" Size="314,parent" Offset="0,0" Anchor="C,T" Texture="Diplomacy_Banner" StretchMode="Tile">
 			<Label ID="GreatWorkHeader" Style="GreatWorksHeader" Offset="0,35" Anchor="C,T" Align="center" Size="300,100" String="LOC_GREAT_WORKS_NEW_GREAT_WORK"/>
 			<Image ID="GreatWorkImage" Anchor="C,C" Offset="0,0" Texture="Portrait" StretchMode="Auto">
 				<Container ID="DetailsContainer" Anchor="C,B" Size="300,155" Offset="0,-25" AnchorSide="I,O">

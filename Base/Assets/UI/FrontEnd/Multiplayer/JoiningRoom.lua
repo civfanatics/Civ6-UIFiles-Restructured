@@ -47,7 +47,7 @@ end
 -------------------------------------------------
 function OnJoinRoomComplete()
 	if (not ContextPtr:IsHidden()) then
-		if(not Network.IsHost()) then
+		if(not Network.IsNetSessionHost()) then
 			Controls.JoiningLabel:SetText(Locale.ToUpper(Locale.Lookup("LOC_MULTIPLAYER_JOINING_HOST")));
 		end
 	end
@@ -76,8 +76,6 @@ end
 function OnJoinGameComplete()
 	print("OnJoinGameComplete()");
 	-- This event triggers when the game has finished joining the multiplayer.  
-	-- NOTE:  If you are the game host, you'll get this event before MultiplayerJoinRoomComplete because
-	--				the game host creates and joins the game before advertising with the lobby system.
 	if (not ContextPtr:IsHidden()) then
 		g_waitingForJoinGameComplete = false;
 		CheckTransitionToStagingRoom();
@@ -99,7 +97,7 @@ function CheckTransitionToStagingRoom()
 	end
 
 	-- Remote clients need to wait for FinishedGameplayContentConfigure
-	if(not Network.IsHost() and g_waitingForContentConfigure) then
+	if(not Network.IsNetSessionHost() and g_waitingForContentConfigure) then
 		return;
 	end
 
@@ -170,6 +168,15 @@ function OnModStatusUpdated(playerID: number, modState : number, bytesDownloaded
 	end
 end
 
+-------------------------------------------------
+-- Event Handler: ConnectedToNetSessionHost
+-------------------------------------------------
+function OnConnectedToNetSessionHost()
+	if (not ContextPtr:IsHidden()) then
+		Controls.JoiningLabel:SetText(Locale.ToUpper(Locale.Lookup("LOC_MULTIPLAYER_CONNECTING_TO_PLAYERS")));
+	end
+end
+
 -- APPNETTODO - Implement these events for better join game status reporting
 --[[
 -------------------------------------------------
@@ -184,16 +191,6 @@ function OnMultiplayerConnectionFailed()
 	end
 end
 Events.MultiplayerConnectionFailed.Add( OnMultiplayerConnectionFailed );
-
--------------------------------------------------
--- Event Handler: ConnectedToNetworkHost
--------------------------------------------------
-function OnHostConnect()
-	if (not ContextPtr:IsHidden()) then
-		Controls.JoiningLabel:SetText( Locale.ConvertTextKey("LOC_MULTIPLAYER_JOINING_PLAYERS" ));  
-	end
-end
-Events.ConnectedToNetworkHost.Add ( OnHostConnect );
 
 -------------------------------------------------
 -- Event Handler: MultiplayerNetRegistered
@@ -301,6 +298,7 @@ function Initialize()
 	Events.SystemUpdateUI.Add( OnUpdateUI );
 	Events.BeforeMultiplayerInviteProcessing.Add( OnBeforeMultiplayerInviteProcessing );
 	Events.ModStatusUpdated.Add( OnModStatusUpdated );
+	Events.ConnectedToNetSessionHost.Add ( OnConnectedToNetSessionHost );
 
 	Controls.CancelButton:RegisterCallback(Mouse.eLClick, HandleExitRequest);
 	AdjustScreenSize();

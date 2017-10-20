@@ -309,24 +309,26 @@ function DrawGossipLog()
 
     --Only show the gossip generated in the last 100 turns.  Otherwise we can end up with a TON of gossip, and everything bogs down.
     for iPlayer = 0, PlayerManager.GetWasEverAliveCount() - 1 do
-    	local gossipManager = Game.GetGossipManager();
-    	local iCurrentTurn = Game.GetCurrentGameTurn();
-    	local earliestTurn = iCurrentTurn - 100;
-    	local gossipStringTable = gossipManager:GetRecentVisibleGossipStrings(earliestTurn, m_LocalPlayerID, iPlayer);
-    	for i, currTable:table in pairs(gossipStringTable) do
+        if PlayerManager.IsAlive(iPlayer) then
+        	local gossipManager = Game.GetGossipManager();
+        	local iCurrentTurn = Game.GetCurrentGameTurn();
+        	local earliestTurn = iCurrentTurn - 100;
+        	local gossipStringTable = gossipManager:GetRecentVisibleGossipStrings(earliestTurn, m_LocalPlayerID, iPlayer);
+        	for i, currTable:table in pairs(gossipStringTable) do
 
-    		local gossipString = currTable[1];
-    		local gossipTurn = currTable[2];
+        		local gossipString = currTable[1];
+        		local gossipTurn = currTable[2];
 
-    		if (gossipString ~= nil) then
-                if iNumAdded < iMaxAdded then
-                    fullStr = fullStr..gossipString.."</br>";
-                    iNumAdded = iNumAdded + 1;
-                end
-    		else
-    			break;
-    		end
-    	end
+        		if (gossipString ~= nil) then
+                    if iNumAdded < iMaxAdded then
+                        fullStr = fullStr..gossipString.."</br>";
+                        iNumAdded = iNumAdded + 1;
+                    end
+        		else
+        			break;
+        		end
+        	end
+        end
     end
 
     if iNumAdded == 0 then

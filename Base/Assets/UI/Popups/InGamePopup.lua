@@ -16,9 +16,9 @@ function OnPopupOpen( uniqueStringName:string, options:table )
 	if options == nil or #options == 0 then
 		options = {};
 		options[1] = { Type="Text",	Content=TXT_ARE_YOU_SURE};
-		options[2] = { Type="Button", Content=TXT_ACCEPT, CallbackString="accept"};
-		options[3] = { Type="Button", Content=TXT_CANCEL, CallbackString="cancel"};
-		print("Using generic popup because no options were passed in!", uniqueStringName);
+		options[2] = { Type="Button", Content=TXT_ACCEPT, CommandString=PopupDialog.COMMAND_CONFIRM };
+		options[3] = { Type="Button", Content=TXT_CANCEL, CommandString=PopupDialog.COMMAND_CANCEL };
+		UI.DataError("Using generic popup because no options were passed in.");
 	end
 
 	m_PopupDialog:Reset();
@@ -27,7 +27,10 @@ function OnPopupOpen( uniqueStringName:string, options:table )
 		local optionType:string = option.Type;
 		if optionType ~= nil then
 			if		optionType == "Text"	then m_PopupDialog:AddText( option.Content );
-			elseif	optionType == "Button"	then m_PopupDialog:AddButton( option.Content, option.Callback );
+			elseif	optionType == "Button"	then
+				-- Make sure to call OnClosePopup so DequeuePopup gets called
+				local closeAndCallback:ifunction = function() OnClosePopup(); if option.Callback then option.Callback(); end end
+				m_PopupDialog:AddButton( option.Content, closeAndCallback, option.CommandString );
 			elseif	optionType == "Count"	then m_PopupDialog:AddCountDown( option.Content, option.Callback );
 			elseif	optionType == "Title"	then m_PopupDialog:AddTitle(option.Content);
 			else
@@ -53,13 +56,23 @@ end
 -- ESC handler
 -- ===========================================================================
 function InputHandler( uiMsg, wParam, lParam )
-	if uiMsg == KeyEvents.KeyUp then
-		if wParam == Keys.VK_ESCAPE then
-			if(m_PopupDialog and m_PopupDialog:IsOpen()) then
-				m_PopupDialog:Close();
-				return true;
+	if(m_PopupDialog and m_PopupDialog:IsOpen()) then
+		if uiMsg == KeyEvents.KeyUp then
+			if wParam == Keys.VK_ESCAPE then -- Try CANCEL. Then DEFAULT. Then give up and close window.
+				if ( not m_PopupDialog:ActivateCommand( PopupDialog.COMMAND_CANCEL ) ) then
+					if ( not m_PopupDialog:ActivateCommand( PopupDialog.COMMAND_DEFAULT ) ) then
+						OnClosePopup();
+					end
+				end
+			elseif wParam == Keys.VK_RETURN then -- Try CONFIRM. Then DEFAULT. Then give up and close window.
+				if ( not m_PopupDialog:ActivateCommand( PopupDialog.COMMAND_CONFIRM ) ) then
+					if ( not m_PopupDialog:ActivateCommand( PopupDialog.COMMAND_DEFAULT ) ) then
+						OnClosePopup();
+					end
+				end
 			end
 		end
+		return true; -- eat all the input, just in case. popups are blocking!
 	end
 	return false;
 end

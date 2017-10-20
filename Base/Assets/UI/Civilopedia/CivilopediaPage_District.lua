@@ -170,11 +170,43 @@ PageLayouts["District" ] = function(page)
 		end
 	end
 
-
 	local buildings = {};
 	for row in GameInfo.Buildings() do
 		if(row.InternalOnly ~= true and match_district[row.PrereqDistrict]) then
-			table.insert(buildings, {"ICON_" .. row.BuildingType, row.Name, row.BuildingType});
+
+			-- If this district is unique_to a civ or leader, then check if the building is unique to a different civ or leader.
+			if(#unique_to > 0 and row.TraitType ~= nil) then
+				local building_unique_to = {};
+				
+				-- Determine who the building is unique to.
+				local traitType = row.TraitType;
+				for leader_trait in GameInfo.LeaderTraits() do
+					if(leader_trait.TraitType == traitType) then
+						local leader = GameInfo.Leaders[leader_trait.LeaderType];
+						if(leader) then
+							building_unique_to[leader_trait.LeaderType] = true;
+						end
+					end
+				end
+
+				for civ_trait in GameInfo.CivilizationTraits() do
+					if(civ_trait.TraitType == traitType) then
+						local civ = GameInfo.Civilizations[civ_trait.CivilizationType];
+						if(civ) then
+							building_unique_to[civ_trait.CivilizationType] = true;
+						end
+					end
+				end
+
+				for i, v in ipairs(unique_to) do
+					if(building_unique_to[v[3]]) then
+						table.insert(buildings, {"ICON_" .. row.BuildingType, row.Name, row.BuildingType});
+						break;
+					end
+				end
+			else
+				table.insert(buildings, {"ICON_" .. row.BuildingType, row.Name, row.BuildingType});
+			end
 		end
 	end
 	table.sort(buildings, function(a, b)
@@ -494,39 +526,20 @@ PageLayouts["District" ] = function(page)
 
 		if(#buildings > 0) then
 			s:AddHeader("LOC_UI_PEDIA_USAGE_UNLOCKS_BUILDINGS");
-			local icons = {};
 			for _, icon in ipairs(buildings) do
-				table.insert(icons, icon);	
-				
-				if(#icons == 4) then
-					s:AddIconList(icons[1], icons[2], icons[3], icons[4]);
-					icons = {};
-				end
+				s:AddIconLabel(icon, icon[2]);
 			end
 
-			if(#icons > 0) then
-				s:AddIconList(icons[1], icons[2], icons[3], icons[4]);
-			end
 			s:AddSeparator();
 		end
 
 		if(#units > 0) then
 			s:AddHeader("LOC_UI_PEDIA_USAGE_UNLOCKS_UNITS");
-			local icons = {};
 			for _, icon in ipairs(units) do
-				table.insert(icons, icon);	
-				
-				if(#icons == 4) then
-					s:AddIconList(icons[1], icons[2], icons[3], icons[4]);
-					icons = {};
-				end
+				s:AddIconLabel(icon, icon[2]);
 			end
 
-			if(#icons > 0) then
-				s:AddIconList(icons[1], icons[2], icons[3], icons[4]);
-			end
 			s:AddSeparator();
-
 		end
 	end);
 

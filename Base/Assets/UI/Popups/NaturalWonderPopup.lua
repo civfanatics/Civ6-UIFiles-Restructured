@@ -90,7 +90,6 @@ function ShowPopup( kData:table )
 		Controls.WonderIcon:SetToolTipString( kData.Description );
 	end
 	Controls.QuoteContainer:DoAutoSize();
-	Controls.DropShadow:ReprocessAnchoring();
 end
 
 -- ===========================================================================

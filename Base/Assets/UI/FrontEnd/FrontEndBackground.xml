@@ -1,0 +1,3 @@
+﻿<Root>
+	<Movie ID="BackgroundMovie" Movie="TitleBG.bk2" Size="parent,parent" LoopMovie="1" StretchMode="UniformToFill"/>
+</Root>

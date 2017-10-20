@@ -17,11 +17,11 @@
     </Grid>
     	</Container>
 -->
-    <Box     ID="RazeCityPanel"      Size="Full,Full" ConsumeMouse="1" Color="0,0,0,150">
+    <Box     ID="RazeCityPanel"      Size="parent,parent" ConsumeMouse="1" Color="0,0,0,150">
       <AlphaAnim        ID="PopupAlphaIn"       Size="parent,parent"  AlphaBegin="0"  AlphaEnd="1"  Speed="3" Function="Root" Cycle="Once">
         <SlideAnim      ID="PopupSlideIn"       Size="parent,parent"  Start="0,-20"   End="0,0"     Speed="3" Function="Root" Cycle="Once">
-          <Grid                                 Size="500,250"        Anchor="C,C" Offset="0,0" Style="DropShadow2"     Color="255,255,255,200" AutoSize="1" AutoSizePadding="25,25" ConsumeMouse="1">
-            <Grid       ID="RazeCityWindow"     Size="500,250"        Anchor="C,C" Offset="0,0" Style="WindowFrameTitle" AutoSize="V" AutoSizePadding="0,10">
+          <Grid                                 Size="auto,auto"        Anchor="C,C" Offset="0,0" Style="DropShadow2"     Color="255,255,255,200" AutoSizePadding="25,25" ConsumeMouse="1">
+            <Grid       ID="RazeCityWindow"     Size="500,auto"        Anchor="C,C" Offset="0,0" Style="WindowFrameTitle" AutoSizePadding="0,10">
               <Container                        Size="parent,38"                         Offset="0,4">
                 <Label  ID="PanelHeader"   Style="WindowHeader"        Anchor="C,C" String="{LOC_CONFIRM_CHOICE:upper}" />
               </Container>
@@ -29,26 +29,26 @@
               <Stack		ID="PopupStack"  	      Size="400,100"			Anchor="L,T" Offset="50,50" StackGrowth="Bottom" StackPadding="10">
                 <Container Size="1,1"/>
                 <Stack StackGrowth="Right" Anchor="L,T" Padding="5">
-                  <Container  Size="200, 20" AutoSize="V">
+                  <Container  Size="200,auto">
                     <Label        ID="CityHeader"         Anchor="R,C" Style="BodyTextDark16" Align="Right" WrapWidth="parent"/>
                   </Container>
-                  <Container  Size="200, 20" AutoSize="V">
+                  <Container  Size="200,auto">
                     <Label        ID="CityName"           Anchor="L,C" Style="BodyTextDark16" Align="Left"  WrapWidth="parent"/>
                   </Container>
                 </Stack>
                 <Stack StackGrowth="Right" Anchor="L,T" Padding="5">
-                  <Container  Size="200, 20" AutoSize="V">
+                  <Container  Size="200,auto">
                     <Label        ID="CityPopulation"     Anchor="R,C" Style="BodyTextDark16" Align="Right" WrapWidth="parent"/>
                   </Container>
-                  <Container  Size="200, 20" AutoSize="V">
+                  <Container  Size="200,auto">
                     <Label        ID="NumPeople"          Anchor="L,C" Style="BodyTextDark16" Align="Left"  WrapWidth="parent"/>
                   </Container>
                 </Stack>
                 <Stack StackGrowth="Right" Anchor="L,T" Padding="5">
-                  <Container  Size="200, 20" AutoSize="V">
+                  <Container  Size="200,auto">
                     <Label        ID="CityDistricts"      Anchor="R,C" Style="BodyTextDark16" Align="Right" WrapWidth="parent"/>
                   </Container>
-                  <Container  Size="200, 20" AutoSize="V">
+                  <Container  Size="200,auto">
                     <Label        ID="NumDistricts"       Anchor="L,C" Style="BodyTextDark16" Align="Left"  WrapWidth="parent"/>
                   </Container>
                 </Stack>

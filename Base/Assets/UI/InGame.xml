@@ -44,7 +44,7 @@
 	<Container		ID="PartialScreens"           Size="parent,parent">
     <LuaContext	ID="TopPanel"									FileName="TopPanel"														  />
     <LuaContext	ID="DiplomacyRibbon"					FileName="DiplomacyRibbon"									  	/>
-		<LuaContext	ID="CityStatesPopup"					FileName="CityStates"								Hidden="1"	/>
+		<LuaContext	ID="CityStates"								FileName="CityStates"								Hidden="1"	/>
 		<LuaContext ID="EspionageOverview"        FileName="EspionageOverview"        Hidden="1"  />
 		<LuaContext	ID="WorldRankings"						FileName="WorldRankings"						Hidden="1"  />
     <LuaContext	ID="TradeOverview"					  FileName="TradeOverview"						Hidden="1"	/>
@@ -112,7 +112,10 @@
 	</Container>
 	
 	<LuaContext		ID="Civilopedia"							FileName="CivilopediaScreen"				Hidden="1"	/>
-	<LuaContext		ID="PausePanel"								FileName="PausePanel"								Hidden="0"	/>	
+	<LuaContext		ID="PausePanel"								FileName="PausePanel"								Hidden="0"	/>
+
+	<!-- Additional UI screens specified by <AddUserInterfaces> tag in modinfo files. -->
+	<Container		ID="AdditionalUserInterfaces"/>
 	
 	<!-- Always very last/top: the in-game 'SHELL' menu. -->
   <LuaContext		ID="TopOptionsBackground"			FileName="InGameTopOptionsBackground"			Hidden="1" /> 

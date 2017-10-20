@@ -66,7 +66,7 @@
   <LuaContext FileName="UI/FrontEnd/LoadGameMenu" ID="LoadGameMenu"	Hidden="1" />
 
 	<Instance Name="ShellTab">
-		<Container ID="TopControl" AutoSize="1">
+		<Container ID="TopControl"  Size="auto,auto">
 			<GridButton ID="Button" Anchor="C,T" Style="ShellTab"/>
 			<AlphaAnim ID="Selected" Anchor="C,T" Speed="5" AlphaBegin="0" AlphaEnd="1" Cycle="Once" Function="Root" Hidden="1" >
 				<GridButton ID="SelectedButton" Style="ShellTabSelected" Anchor="C,T"/>
@@ -99,11 +99,11 @@
   <!-- Instance for a string parameters -->
   <Instance Name="StringParameterInstance">
     <Container  ID="StringRoot" Size="200,36">
-      <Container AutoSize="1">
+      <Container  Size="auto,auto">
         <Box Size="140,30" Color="0,0,0,0"/>
         <Label ID="StringName" Anchor="R,C" Offset="0,0" Style="FontNormal14" ColorSet="ShellOptionText" FontStyle="stroke" WrapWidth="180" String="UNKNOWN_EDIT_BOX"/>
       </Container>
-      <Container AutoSize="1" Offset="145,0">
+      <Container  Size="auto,auto" Offset="145,0">
 				<Grid Style="EditTextArea" Size="205,30">
 					<EditBox ID="StringEdit" Anchor="L,C" Offset="6,0" Size="248,23" EditMode="1" Style="FontNormal14" ColorSet="BodyTextCool" FontStyle="stroke" MaxLength="22"/>
 				</Grid>

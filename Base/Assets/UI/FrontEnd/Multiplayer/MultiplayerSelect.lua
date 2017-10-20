@@ -81,14 +81,6 @@ end
 Controls.HotSeatButton:RegisterCallback( Mouse.eLClick, HotSeatButtonClick );
 
 -------------------------------------------------
--- Cloud Game Button Handler
--------------------------------------------------
-function CloudButtonClick()
-	UIManager:QueuePopup( Controls.CloudGameScreen, PopupPriority.Current );
-end
-Controls.CloudButton:RegisterCallback( Mouse.eLClick, CloudButtonClick );
-
--------------------------------------------------
 -- Back Button Handler
 -------------------------------------------------
 function BackButtonClick()
@@ -123,7 +115,6 @@ function ShowHideHandler( bIsHide )
 		UpdateInternetButton();
 
 		local isFullyLoggedIn = FiraxisLive.IsFullyLoggedIn()
-		Controls.CloudButton:SetDisabled(not isFullyLoggedIn)
 	end
 
 	--[[

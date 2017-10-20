@@ -1,10 +1,10 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Context FontStyle="Stroke">
 
   <Container Offset="-65,-34">
-    <Grid AutoSize="H" AutoSizePadding="22,0" Size="310,60" Texture="Controls_Glow2" SliceCorner="25,25" SliceTextureSize="50,50" Color="0,0,0,200">
-      <Image ID="LaunchBackingTile" AutoSize="1" AutoSizePadding="-34,0" Size="200,41" Texture="LaunchBar_Backing_Tile" StretchMode="Tile" >
-        <Grid ID="LaunchBacking" AutoSize="H" AutoSizePadding="30,0" Size="350,77" Texture="LaunchBar_BackingLeft_Backing" SliceCorner="114,32" SliceSize="1,1" SliceTextureSize="226,77">
+    <Grid AutoSizePadding="22,0" Size="auto,60" Texture="Controls_Glow2" SliceCorner="25,25" SliceTextureSize="50,50" Color="0,0,0,200">
+      <Image ID="LaunchBackingTile" AutoSizePadding="-34,0" Size="auto,auto" Texture="LaunchBar_Backing_Tile" StretchMode="Tile" >
+        <Grid ID="LaunchBacking" AutoSizePadding="30,0" Size="auto,77" Texture="LaunchBar_BackingLeft_Backing" SliceCorner="114,32" SliceSize="1,1" SliceTextureSize="226,77">
 
           <Stack ID="ButtonStack" Offset="63,32" Padding="-2" StackGrowth="Right" >
             <Image Anchor="L,C" Offset="0,-2" Size="7,7" Texture="LaunchBar_TrackPip" Color="255,255,255,200" />

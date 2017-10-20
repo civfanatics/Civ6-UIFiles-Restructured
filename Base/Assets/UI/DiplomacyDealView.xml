@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Context Style="FontNormal16" ColorSet="BodyTextCool" FontStyle="Shadow" Size="Full,Full" ConsumeMouse="1">
+<Context Style="FontNormal16" ColorSet="BodyTextCool" FontStyle="Shadow" Size="parent,parent" ConsumeMouse="1">
 
   <Include File="PopupDialog"/>
 
@@ -10,7 +10,7 @@
 	<Container ID="TopDownListContainer" Hidden="1"/>
 
 	<!-- The full screen container, so they player can't click through. -->
-	<Container Size="Full,Full"/>
+	<Container Size="parent,parent"/>
 
 	<!-- An instance of an Icon, with optional Amount Text that overlaps the icon -->
 	<Instance	Name="IconOnly">
@@ -72,7 +72,7 @@
 		</Stack>
 	</Instance>
   
-  <Container ID="TradePanel" Size="full,full">
+  <Container ID="TradePanel" Size="parent,parent">
     <!-- The background of the panel, enclosing all contents -->
     <AlphaAnim ID="TradePanelFade" AlphaBegin="0" AlphaEnd="1" Speed="2" Cycle="Once" Size="parent,parent">
       <SlideAnim ID="TradePanelSlide" Start="-10,0" End="0,0" Speed="2" Cycle="Once" Size="parent,parent">
@@ -136,7 +136,7 @@
                     <ScrollBar Size="15,parent" SliceTextureSize="11,11" SliceCorner="5,5" Anchor="L,B" Color="111,101,94,250" Offset="-6,0" AnchorSide="O,I"  Texture="Controls_ScrollBarBacking" StateOffsetIncrement="0,0" Vertical="1" >
                       <Thumb																										Size="13,13"					Texture="Controls_ScrollBarHandleV_Brown" StateOffsetIncrement="0,0" SliceCorner="6,6" SliceTextureSize="13,13"/>
                     </ScrollBar>
-                    <Grid  ID="MyOfferBracket" Style="DecoGrid" Size="200,100" Color="Dark_Gray" Anchor="C,C" AutoSize="1" Offset="-2,0" InnerPadding="30,25" MinSize="39,49">
+                    <Grid  ID="MyOfferBracket" Style="DecoGrid" Size="auto,auto" Color="Dark_Gray" Anchor="C,C" Offset="-2,0" InnerPadding="30,25" MinSize="39,49">
                       <Stack ID="MyOfferStack" StackGrowth="Right" WrapWidth="240" WrapGrowth="Bottom">
                         <Label ID="MyDirections" String="LOC_DIPLOMACY_TRADE_UI_SELECT_TEXT" Anchor="C,C" Style="FontNormalMedium16" Color0="GrayMedium" Color1="Black" FontStyle="Shadow" WrapWidth="160" Align="Center" Hidden="0"/>
                       </Stack>
@@ -153,7 +153,7 @@
                     <ScrollBar Size="15,parent" SliceTextureSize="11,11" SliceCorner="5,5" Anchor="R,B" Color="111,101,94,250" Offset="-6,0" AnchorSide="O,I"  Texture="Controls_ScrollBarBacking" StateOffsetIncrement="0,0" Vertical="1" >
                       <Thumb																										Size="13,13"					Texture="Controls_ScrollBarHandleV_Brown" StateOffsetIncrement="0,0" SliceCorner="6,6" SliceTextureSize="13,13"/>
                     </ScrollBar>
-                    <Grid  ID="TheirOfferBracket" Style="DecoGrid" Size="200,100" Color="Dark_Gray" Anchor="C,C" AutoSize="1" Offset="-2,0" InnerPadding="30,25" MinSize="39,49">
+                    <Grid  ID="TheirOfferBracket" Style="DecoGrid" Size="auto,auto" Color="Dark_Gray" Anchor="C,C" Offset="-2,0" InnerPadding="30,25" MinSize="39,49">
                       <Stack ID="TheirOfferStack" StackGrowth="Right" WrapWidth="240" WrapGrowth="Bottom">
                         <Label ID="TheirDirections" String="LOC_DIPLOMACY_TRADE_UI_SELECT_THEIR_TEXT" LeadingOffset="0,-2" Anchor="C,C" Style="FontNormalMedium16" Color0="GrayMedium" Color1="Black" FontStyle="Shadow" WrapWidth="160" Align="Center" Hidden="0"/>
                       </Stack>
@@ -170,7 +170,7 @@
               </Grid>
 
               <!-- Dynamic: Inventory area-->
-              <Container ID="InventoryColumns" Size="parent-12, parent-318" Anchor="C,T">
+              <Container ID="InventoryColumns" Size="parent-12, parent-351" Anchor="C,T">
                 <Container ID="MyInventory" Size="249,parent" Anchor="L,T">
                   <Image Texture="Controls_Gradient" Size="parent, 150"  Offset="0,0" Anchor="L,B" Color="24,47,70,230"/>
                   <ScrollPanel			ID="MyInventoryScroll"	Size="parent, parent" 			Vertical="1" AutoScollbar="1">
@@ -202,7 +202,7 @@
 
           <!-- Value Edit Popup -->
           <Box ID="ValueEditPopupBackground" Size="parent,parent" Color="0,0,0,200" ConsumeMouse="1" Hidden="1">
-            <Grid ID="ValueEditPopup" Style="DiplomacyInfoWindowGrid" Anchor="C,T" Size="300,10" AutoSize="V" AutoSizePadding="0,13" Offset="0,200">
+            <Grid ID="ValueEditPopup" Style="DiplomacyInfoWindowGrid" Anchor="C,T" Size="300,auto" AutoSizePadding="0,13" Offset="0,200">
               
               <Stack StackPadding="4">
                 <!-- Header -->
@@ -218,7 +218,7 @@
 
                   <Stack ID="ValueEditStack" Anchor="C,T" StackPadding="4"> 
                       <!-- Icon and/or Text -->
-                      <GridButton ID="ValueEditIconGrid" Style="ButtonDraggableGrid" Size="210,56" AutoSize="H" AutoSizePadding="2,0" Anchor="C,T" States="1">
+                      <GridButton ID="ValueEditIconGrid" Style="ButtonDraggableGrid" Size="auto,56" AutoSizePadding="2,0" Anchor="C,T" States="1">
                         <Stack Anchor="C,T" StackGrowth="Right">
                           <Container Size="44, parent">
                             <Image ID="ValueEditIcon" StretchMode="None" Size="44,44" Anchor="C,C"/>
@@ -262,29 +262,29 @@
     </AlphaAnim>
 
     <!-- The yields -->
-    <AlphaAnim ID="YieldAlpha"  Size="full,full" AlphaBegin="0" AlphaEnd="1" Cycle="Once" Speed="3" Function="Root" Stopped="1">
-      <SlideAnim ID="YieldSlide" Size="full,full" Start="0,-30" End="0,0" Cycle="Once" Speed="3" Function="Root" Stopped="1">
+    <AlphaAnim ID="YieldAlpha"  Size="parent,parent" AlphaBegin="0" AlphaEnd="1" Cycle="Once" Speed="3" Function="Root" Stopped="1">
+      <SlideAnim ID="YieldSlide" Size="parent,parent" Start="0,-30" End="0,0" Cycle="Once" Speed="3" Function="Root" Stopped="1">
         <Stack				ID="YieldStack"											   Offset="10,0"  StackGrowth="Right" Padding="2" Anchor="R,T">
-          <GridButton	ID="ScienceBacking"																		Size="40,24"		Style="YieldBacking" Color="24,156,216,150"											AutoSize="H">
+          <GridButton	ID="ScienceBacking"																	 Size="auto,24"		Style="YieldBacking" Color="24,156,216,150"										>
             <Stack		ID="ScienceStack"					Anchor="L,C" Offset="0,2"	StackGrowth="Right">
               <Label															Anchor="L,B" Offset="0,4"	String="[ICON_ScienceLarge]"/>
               <Label	ID="SciencePerTurn"				Anchor="C,T"																Style="FontNormal18" ColorSet="ResScienceLabelCS" FontStyle="Stroke" String="0"/>
             </Stack>
           </GridButton>
-          <GridButton	ID="CultureBacking"																		Size="40,24"		Style="YieldBacking" Color="254,42,237,100"											AutoSize="H">
+          <GridButton	ID="CultureBacking"																	 Size="auto,24"		Style="YieldBacking" Color="254,42,237,100"										>
             <Stack		ID="CultureStack"					Anchor="L,C" Offset="0,2"	StackGrowth="Right">
               <Label															Anchor="L,B" Offset="0,4"	String="[ICON_CultureLarge]"/>
               <Label	ID="CulturePerTurn"				Anchor="C,T"																Style="FontNormal18" ColorSet="ResCultureLabelCS" FontStyle="Stroke" String="0"/>
             </Stack>
           </GridButton>
-          <GridButton	ID="FaithBacking"																			Size="40,24"		Style="YieldBacking" Color="99,114,159,200"										AutoSize="H">
+          <GridButton	ID="FaithBacking"																		 Size="auto,24"		Style="YieldBacking" Color="99,114,159,200"									>
             <Stack		ID="FaithStack"						Anchor="L,C" Offset="0,2"	StackGrowth="Right">
               <Label															Anchor="L,B" Offset="0,4"	String="[ICON_FaithLarge]"/>
               <Label	ID="FaithBalance"					Anchor="C,T"								Style="FontNormal18" ColorSet="ResFaithLabelCS" String="?"										/>
               <Label	ID="FaithPerTurn"					Offset="2,-2"																Style="FontNormal14" ColorSet="ResFaithLabelCS" FontStyle="Stroke" String="0"/>
             </Stack>
           </GridButton>
-          <Grid				ID="GoldBacking"																			Size="40,24" Style="YieldBacking" Color="185,176,70,150" AutoSize="H">
+          <Grid				ID="GoldBacking"																		 Size="auto,24" Style="YieldBacking" Color="185,176,70,150">
             <Stack		ID="GoldStack"						Anchor="L,C" Offset="0,2"	StackGrowth="Right" >
               <Label															Anchor="L,B" Offset="0,4"	String="[ICON_GoldLarge]"/>
               <Label	ID="GoldBalance"					Anchor="C,T"								Style="FontNormal18" ColorSet="ResGoldLabelCS" String="?"											 />

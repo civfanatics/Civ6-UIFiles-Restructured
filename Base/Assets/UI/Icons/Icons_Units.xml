@@ -56,7 +56,7 @@
     <Row Name="ICON_UNIT_JAPANESE_SAMURAI"         Atlas="ICON_ATLAS_UNITS" Index="43"/>
     <Row Name="ICON_UNIT_NORWEGIAN_BERSERKER"      Atlas="ICON_ATLAS_UNITS" Index="44"/>
     <Row Name="ICON_UNIT_KNIGHT"                   Atlas="ICON_ATLAS_UNITS" Index="45"/>
-    <Row Name="ICON_UNIT_POLISH_HUSSAR"            Atlas="ICON_ATLAS_UNITS" Index="46"/>
+    <!--<Row Name="ICON_UNIT_POLISH_HUSSAR"            Atlas="ICON_ATLAS_UNITS" Index="46"/>-->
     <Row Name="ICON_UNIT_INDIAN_VARU"              Atlas="ICON_ATLAS_UNITS" Index="47"/>
     <Row Name="ICON_UNIT_ARABIAN_MAMLUK"           Atlas="ICON_ATLAS_UNITS" Index="48"/>
     <Row Name="ICON_UNIT_CROSSBOWMAN"              Atlas="ICON_ATLAS_UNITS" Index="49"/>
@@ -106,6 +106,8 @@
     <Row Name="ICON_UNIT_MISSILE_CRUISER"          Atlas="ICON_ATLAS_UNITS" Index="93"/>
     <Row Name="ICON_UNIT_MODERN_AT"                Atlas="ICON_ATLAS_UNITS" Index="94"/>
     <Row Name="ICON_UNIT_MODERN_ARMOR"             Atlas="ICON_ATLAS_UNITS" Index="95"/>
+    <Row Name="ICON_UNIT_WARRIOR_MONK"             Atlas="ICON_ATLAS_UNITS" Index="96"/>
+    <Row Name="ICON_UNIT_GURU"                     Atlas="ICON_ATLAS_UNITS" Index="97"/>
     
     <Row Name="ICON_UNIT_SETTLER_FOW"                  Atlas="ICON_ATLAS_UNITS_FOW" Index="0"/>
     <Row Name="ICON_UNIT_BUILDER_FOW"                  Atlas="ICON_ATLAS_UNITS_FOW" Index="1"/>
@@ -203,6 +205,9 @@
     <Row Name="ICON_UNIT_MISSILE_CRUISER_FOW"          Atlas="ICON_ATLAS_UNITS_FOW" Index="93"/>
     <Row Name="ICON_UNIT_MODERN_AT_FOW"                Atlas="ICON_ATLAS_UNITS_FOW" Index="94"/>
     <Row Name="ICON_UNIT_MODERN_ARMOR_FOW"             Atlas="ICON_ATLAS_UNITS_FOW" Index="95"/>
+    
+    <Row Name="ICON_UNIT_WARRIOR_MONK_FOW"             Atlas="ICON_ATLAS_UNITS_FOW" Index="96"/>
+    <Row Name="ICON_UNIT_GURU_FOW"             Atlas="ICON_ATLAS_UNITS_FOW" Index="97"/>
   </IconDefinitions>
 </GameInfo>
 

@@ -160,6 +160,23 @@ function SetCurrentMinPlayers( newMinPlayers : number )
 	g_currentMinPlayers = math.max(newMinPlayers, MIN_EVER_PLAYERS);
 end
 
+-- Could this player slot be displayed on the staging room?  The staging room ignores a lot of possible slots (city states; barbs; player slots exceeding the map size)
+function IsDisplayableSlot(playerID :number)
+	local pPlayerConfig = PlayerConfigurations[playerID];
+	if(pPlayerConfig == nil) then
+		return false;
+	end
+
+	if(playerID < g_currentMaxPlayers	-- Any slot under the current max player limit is displayable.
+		-- Full Civ participants are displayable.
+		or (pPlayerConfig:IsParticipant() 
+			and pPlayerConfig:GetCivilizationLevelTypeID() == CivilizationLevelTypes.CIVILIZATION_LEVEL_FULL_CIV) ) then
+			return true;
+	end
+
+	return false;
+end
+
 ----------------------------------------------------------------  
 -- Event Handlers
 ---------------------------------------------------------------- 
@@ -190,11 +207,8 @@ function OnGameConfigChanged()
 		RealizeGameSetup(); -- Rebuild the game settings UI.
 		RebuildTeamPulldowns();	-- NoTeams setting might have changed.
 
-		-- PLAYBYCLOUDTODO - Remove PBC special case once ready state changes have been moved to cloud player meta data.
-		-- PlayByCloud uses GameConfigChanged to communicate player ready state changes, don't reset ready in that mode.
-		if(not GameConfiguration.IsPlayByCloud()) then
-			SetLocalReady(false);  -- unready so player can acknowledge the new settings.
-		end
+		SetLocalReady(false);  -- unready so player can acknowledge the new settings.
+
 		CheckGameAutoStart();  -- Toggling "No Duplicate Leaders" can affect the start countdown.
 	end
 	OnMapMaxMajorPlayersChanged(MapConfiguration.GetMaxMajorPlayers());	
@@ -221,10 +235,15 @@ end
 
 function OnPlayerInfoChanged(playerID)
 	if(ContextPtr:IsHidden() == false) then
+		-- Ignore PlayerInfoChanged events for non-displayable player slots.
+		if(not IsDisplayableSlot(playerID)) then
+			return;
+		end
+
 		if(playerID == Network.GetLocalPlayerID()) then
 			-- If we are the host and our info changed, we need to locally refresh all the player slots.
 			-- We do this because the host's ready status disables/enables pulldowns on all the other player slots.
-			if(Network.IsHost()) then
+			if(Network.IsGameHost()) then
 				UpdateAllPlayerEntries();
 			else
 				-- A remote client needs to update the disabled status of all slot type pulldowns if their data was changed.
@@ -287,19 +306,6 @@ function OnMultiplayerPingTimesChanged()
 	for playerID, playerEntry in pairs( g_PlayerEntries ) do
 		--UpdateNetConnectionIcon(playerID, playerEntry.ConnectionStatus, playerEntry.StatusLabel);
 		--UpdateNetConnectionLabel(playerID, playerEntry.StatusLabel);
-	end
-end
-
-function OnCloudGameKilled( matchID, success )
-	if(success) then
-		-- On success, exit the screen
-		LuaEvents.Multiplayer_ExitShell();
-	else
-		--Show error prompt.
-		m_kPopupDialog:Close();
-		m_kPopupDialog:AddText(	  Locale.Lookup("LOC_MULTIPLAYER_ENDING_GAME_FAIL"));
-		m_kPopupDialog:AddButton( Locale.Lookup("LOC_MULTIPLAYER_ENDING_GAME_FAIL_ACCEPT") );
-		m_kPopupDialog:Open();
 	end
 end
 
@@ -740,6 +746,7 @@ function SetLocalReady(newReady)
 	end
 end
 
+
 -------------------------------------------------
 -- Update Teams valid status
 -------------------------------------------------
@@ -795,7 +802,8 @@ function CheckGameAutoStart()
 			local curPlayerConfig = PlayerConfigurations[iPlayer];
 			local curSlotStatus = curPlayerConfig:GetSlotStatus();
 			local curIsFullCiv = curPlayerConfig:GetCivilizationLevelTypeID() == CivilizationLevelTypes.CIVILIZATION_LEVEL_FULL_CIV;
-			if(curSlotStatus == SlotStatus.SS_TAKEN) then
+			if(curSlotStatus == SlotStatus.SS_TAKEN 
+				and curPlayerConfig:IsAlive()) then -- Dead players do not block launch countdown.
 				if(not curPlayerConfig:GetReady()) then
 					print("CheckGameAutoStart: Can't start game because player ".. iPlayer .. " isn't ready");
 					startCountdown = false;
@@ -851,7 +859,6 @@ function CheckGameAutoStart()
 			print("CheckGameAutoStart: Can't start game because all civs are on the same team!");
 			startCountdown = false;
 		end
-
 	
 		-- Hotseat bypasses the countdown system.
 		if not GameConfiguration.IsHotseat() then
@@ -988,13 +995,10 @@ function PopulateSlotTypePulldown( pullDown, playerID, slotTypeOptions )
 
 		-- This option is a valid slot type option.
 		local showSlotButton = pair.slotStatus ~= -1 
-			and Network.IsHost() -- Only the host can change slot types.
+			and Network.IsGameHost() -- Only the game host can change slot types.
 			-- You can't switch a civilization to open/closed if the game is at the minimum player count.
 			and ((pair.slotStatus ~= SlotStatus.SS_CLOSED and pair.slotStatus ~= SlotStatus.SS_OPEN)		-- Target SlotType isn't open/close
 				or (playerSlotStatus ~= SlotStatus.SS_TAKEN and playerSlotStatus ~= SlotStatus.SS_COMPUTER) -- Current SlotType isn't a civ
-				or (GameConfiguration.IsPlayByCloud() and pair.slotStatus == SlotStatus.SS_OPEN)			-- In PlayByCloud OPEN slots are autoflagged as HumanRequired.
-																											-- We allow them to bypass the minimum player count because 
-																											-- a human player must occupy the slot for the game to launch. 
 				or GameConfiguration.GetParticipatingPlayerCount() > g_currentMinPlayers)					-- Above player count
 			and (playerSlotStatus ~= SlotStatus.SS_TAKEN or GameConfiguration.IsHotseat())					-- You can only change the slot type of humans while in hotseat.
 			and not pPlayerConfig:IsLocked() -- Can't change the slot type of locked player slots.
@@ -1013,12 +1017,6 @@ function PopulateSlotTypePulldown( pullDown, playerID, slotTypeOptions )
 			local instance = instanceManager:GetInstance();
 			local slotDisplayName = pair.name;
 			local slotToolTip = pair.tooltip;
-
-			-- In PlayByCloud OPEN slots are autoflagged as HumanRequired., morph the display name and tooltip.
-			if(GameConfiguration.IsPlayByCloud() and pair.slotStatus == SlotStatus.SS_OPEN) then
-				slotDisplayName = "LOC_SLOTTYPE_HUMANREQ";
-				slotToolTip = "LOC_SLOTTYPE_HUMANREQ_TT";
-			end
 
 			instance.Button:LocalizeAndSetText( slotDisplayName );
 
@@ -1204,13 +1202,13 @@ function UpdatePlayerEntry(playerID)
 										and not pPlayerConfig:IsLocked() -- Can't change the values of locked players.
 										and (playerID == localPlayerID		-- You can change yourself.
 											-- Game host can alter all the non-human slots if they are not ready.
-											or (slotStatus ~= SlotStatus.SS_TAKEN and Network.IsHost() and not localPlayerConfig:GetReady())
+											or (slotStatus ~= SlotStatus.SS_TAKEN and Network.IsGameHost() and not localPlayerConfig:GetReady())
 											-- The player has permission to change everything in hotseat.
 											or isHotSeat);
 		
 
 			
-		local isKickable:boolean = Network.IsHost()			-- Only the host may kick
+		local isKickable:boolean = Network.IsGameHost()			-- Only the game host may kick
 			and slotStatus == SlotStatus.SS_TAKEN
 			and playerID ~= localPlayerID			-- Can't kick yourself
 			and not isHotSeat;	-- Can't kick in hotseat, players use the slot type pulldowns instead.
@@ -1226,7 +1224,7 @@ function UpdatePlayerEntry(playerID)
 
 		local statusText:string = "";
 		if slotStatus == SlotStatus.SS_TAKEN then
-			local hostID:number = Network.GetHostPlayerID()
+			local hostID:number = Network.GetGameHostPlayerID();
 			statusText = Locale.Lookup(playerID == hostID and "LOC_SLOTLABEL_HOST" or "LOC_SLOTLABEL_PLAYER");
 		elseif slotStatus == SlotStatus.SS_COMPUTER then
 			statusText = Locale.Lookup("LOC_SLOTLABEL_COMPUTER");
@@ -1321,7 +1319,7 @@ function UpdatePlayerEntry(playerID)
 			elseif slotStatus == SlotStatus.SS_CLOSED then
 				
 				if (m_iFirstClosedSlot == -1 or m_iFirstClosedSlot == playerID) 
-				and Network.IsHost() 
+				and Network.IsGameHost() 
 				and not gameInProgress 
 				and g_fCountdownTimer == -1 then -- Don't show Add Player button while in the countdown.
 					m_iFirstClosedSlot = playerID;
@@ -1662,14 +1660,8 @@ end
 function StartCountdown()
 	--print("StartCountdown");
 	local gameState = GameConfiguration.GetGameState();
-	if(GameConfiguration.IsPlayByCloud() and gameState == GameStateTypes.GAMESTATE_LAUNCHED) then
-		-- Joining a PlayByCloud game already in progress has a much faster countdown to be less annoying.
-		g_fCountdownTimer = 3;
-		g_fCountdownTickSoundTime = g_fCountdownTimer; -- start countdown tick now.
-	else
-		g_fCountdownTimer = 10;
-		g_fCountdownTickSoundTime = g_fCountdownTimer - 3; -- start countdown ticks in 3 seconds.
-	end
+	g_fCountdownTimer = 10;
+	g_fCountdownTickSoundTime = g_fCountdownTimer - 3; -- start countdown ticks in 3 seconds.
 	
 	g_fCountdownInitialTime = g_fCountdownTimer;
 	g_fCountdownReadyButtonTime = g_fCountdownTimer;
@@ -1709,6 +1701,7 @@ function BuildPlayerList()
 	-- Clear previous data.
 	g_PlayerEntries = {};
 	g_PlayerRootToPlayerID = {};
+	g_cachedTeams = {};
 	m_playersIM:ResetInstances();
 	m_iFirstClosedSlot = -1;
 	local numPlayers:number = 0;
@@ -1718,9 +1711,7 @@ function BuildPlayerList()
 	for i, iPlayer in ipairs(player_ids) do	
 		local pPlayerConfig = PlayerConfigurations[iPlayer];
 		if(pPlayerConfig ~= nil
-			and (iPlayer < g_currentMaxPlayers
-				or (pPlayerConfig:IsParticipant() 
-					and pPlayerConfig:GetCivilizationLevelTypeID() == CivilizationLevelTypes.CIVILIZATION_LEVEL_FULL_CIV)) ) then
+			and IsDisplayableSlot(iPlayer)) then
 			if(GameConfiguration.IsHotseat()) then
 				local nickName = pPlayerConfig:GetNickName();
 				if(nickName == nil or #nickName == 0) then
@@ -1774,8 +1765,8 @@ function OnUpdate( fDTime )
 		-- not all players are connected anymore.  This is probably due to a player join in progress.
 		StopCountdown();
 	elseif( g_fCountdownTimer <= 0 ) then
-		-- Timer elapsed, launch the game if we're the host.
-		if(Network.IsHost()) then
+		-- Timer elapsed, launch the game if we're the netsession host.
+		if(Network.IsNetSessionHost()) then
 			Network.LaunchGame();
 		end
 		StopCountdown();
@@ -1800,7 +1791,7 @@ function OnShow()
 	
 	-- Fetch g_currentMaxPlayers because it might be stale due to loading a save.
 	g_currentMaxPlayers = math.min(MapConfiguration.GetMaxMajorPlayers(), 12);
-
+	
 	InitializeReadyUI();
 	ShowHideInviteButton();	
 	ShowHideEndGameButton();
@@ -1810,7 +1801,7 @@ function OnShow()
 	ShowHideChatPanel();
 
 	if (Steam ~= nil) then
-		Steam.SetRichPresence("civPresence", Network.IsHost() and "LOC_PRESENCE_HOSTING_GAME" or "LOC_PRESENCE_IN_STAGING_ROOM");
+		Steam.SetRichPresence("civPresence", Network.IsGameHost() and "LOC_PRESENCE_HOSTING_GAME" or "LOC_PRESENCE_IN_STAGING_ROOM");
 	end
 
 	UpdateFriendsList();
@@ -1875,7 +1866,7 @@ end
 -------------------------------------------------
 -------------------------------------------------
 function ShowHideEndGameButton()
-	local showEndGame :boolean = GameConfiguration.IsPlayByCloud();
+	local showEndGame :boolean = false;
 	Controls.EndGameButton:SetHide( not showEndGame);
 end
 
@@ -2012,18 +2003,7 @@ function BuildGameState()
 		Controls.GameStateText:SetHide(true);
 	end
 
-	-- Display join code for PlayByCloud games.
-	if(GameConfiguration.IsPlayByCloud()) then
-		local joinCode :string = Network.GetJoinCode();
-		if(joinCode ~= nil and joinCode ~= "") then
-			Controls.JoinCodeRoot:SetHide(false);
-			Controls.JoinCodeText:SetText(joinCode);
-		else
-			Controls.JoinCodeRoot:SetHide(true);
-		end
-	else
-		Controls.JoinCodeRoot:SetHide(true);
-	end
+	Controls.JoinCodeRoot:SetHide(true);
 
 	Controls.AdditionalContentStack:CalculateSize();
 	Controls.AdditionalContentStack:ReprocessAnchoring();
@@ -2237,14 +2217,12 @@ function OnExitGame()
 end
 
 function OnEndGame_Start()
-	Network.CloudKillGame();
 
 	-- Show killing game popup
 	m_kPopupDialog:Close(); -- clear out the popup incase it is already open.
 	m_kPopupDialog:AddText(	  Locale.Lookup("LOC_MULTIPLAYER_ENDING_GAME_PROMPT"));
 	m_kPopupDialog:Open();
 
-	-- Next step is in OnCloudGameKilled.
 end
 
 function OnExitGameAskAreYouSure()
@@ -2305,7 +2283,6 @@ function Initialize()
 	Events.MultiplayerPingTimesChanged.Add(OnMultiplayerPingTimesChanged);
 	Events.SteamFriendsStatusUpdated.Add( UpdateFriendsList );
 	Events.SteamFriendsPresenceUpdated.Add( UpdateFriendsList );
-	Events.CloudGameKilled.Add(OnCloudGameKilled);
 
 	LuaEvents.GameDebug_Return.Add(OnGameDebugReturn);
 	LuaEvents.HostGame_ShowStagingRoom.Add( OnRaise );

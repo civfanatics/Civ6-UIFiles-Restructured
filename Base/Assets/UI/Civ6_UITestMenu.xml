@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Context ColorSet="Beige_Black_Alpha" Style="FontNormal18" Name="FrontEnd" FontSize="16" >
 
-    <Box Anchor="C,C" Size="Full,Full" Color="128,128,128,128" />
+    <Box Anchor="C,C" Size="parent,parent" Color="128,128,128,128" />
 
   <!--
     <Stack Anchor="c,b" StackGrowth="R" StackPadding="30" Offset="0,60" >

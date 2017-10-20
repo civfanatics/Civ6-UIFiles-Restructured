@@ -24,6 +24,11 @@ local m_isSimpleMenu	: boolean = false;
 local m_isLoadingDone   : boolean = false;
 local m_isRetired		: boolean = false;
 
+-- State variable to track that the menu is in the process of being closed and 
+-- prevent duplicate calls.
+local m_isClosing = nil;
+
+
 -- ===========================================================================
 --	COSTANTS
 -- ===========================================================================
@@ -145,6 +150,7 @@ end
 
 -- ===========================================================================
 function CloseImmediately()
+	m_isClosing = nil;
 	LuaEvents.InGameTopOptionsMenu_Close();
 	UIManager:DequeuePopup( ContextPtr );
 	UI.SetSoundStateValue("Game_Views", "Normal_View");
@@ -152,6 +158,13 @@ end
 
 -- ===========================================================================
 function Close()
+	if(m_isClosing) then
+		print("Menu is already closing.");
+		return;
+	end
+	
+	m_isClosing = true;
+
 	if(Controls.AlphaIn:IsStopped()) then
 		-- Animation is good for a nice clean animation out..
 		Controls.AlphaIn:Reverse();
@@ -164,20 +177,26 @@ function Close()
 		Controls.SlideIn:SetToBeginning();
 		Controls.PauseWindowClose:SetToBeginning();
 		ShutdownAfterClose();
-		ContextPtr:SetHide(true);
 		UI.DataError("Forced closed() of the in game top options menu.  (Okay if someone was spamming ESC.)");
 	end
+
 
 	local playerChange =  ContextPtr:LookUpControl( "/InGame/PlayerChange" );
 	if (not UIManager:IsInPopupQueue(playerChange)) then
 		LuaEvents.InGameTopOptionsMenu_Close();
 	end	
 
-	Input.PopContext();
+	-- Only pop the context if what we expect is the current context.
+	if(Input.GetActiveContext() == InputContext.GameOptions) then
+		Input.PopContext();
+	else
+		print("Expected a different input active context...");
+	end
 end
 
 -- ===========================================================================
 function ShutdownAfterClose()
+	m_isClosing = nil;
 	UIManager:DequeuePopup( ContextPtr );
 	UI.SetSoundStateValue("Game_Views", "Normal_View");
 	UI.PlaySound("UI_Pause_Menu_On");
@@ -187,7 +206,7 @@ end
 --	UI callback
 -- ===========================================================================
 function OnReturn()
-	if (not ContextPtr:IsHidden() ) then
+	if (not ContextPtr:IsHidden() and m_isClosing ~= true) then
 		Close();
 	end
 end
@@ -398,6 +417,11 @@ end
 --	receive input from ForgeUI.
 -- ===========================================================================
 function OnShow()
+
+	if(m_isClosing) then
+		print("Show was requested on menu that is in the midst of closing.");
+		return;
+	end
 
 	-- do not re-push the context if we're already in the GameOptions context
 	-- (e.g. returning from a sub-screen)

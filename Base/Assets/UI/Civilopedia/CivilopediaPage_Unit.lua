@@ -65,6 +65,38 @@ PageLayouts["Unit" ] = function(page)
 		end
 	end
 
+	-- Many beliefs unlock units using modifiers.
+	-- Search for a specific effect type in belief modifiers to see if any refer to this unit.
+	local unlock_modifiers = {};
+	for row in GameInfo.Modifiers() do
+		local info = GameInfo.DynamicModifiers[row.ModifierType];
+		if(info) then
+			if(info.EffectType == "EFFECT_ADD_RELIGIOUS_UNIT") then
+				for args in GameInfo.ModifierArguments() do
+					if(args.ModifierId == row.ModifierId) then
+						if(args.Name == "UnitType" and args.Value == unitType) then
+							unlock_modifiers[row.ModifierId] = true;
+						end
+					end
+				end
+			end
+		end
+	end
+
+	local beliefs = {};
+	for row in GameInfo.BeliefModifiers() do
+		if(unlock_modifiers[row.ModifierID]) then
+			beliefs[row.BeliefType] = true;
+		end
+	end
+
+	for k,_ in pairs(beliefs) do
+		local belief = GameInfo.Beliefs[k];
+		if(belief) then
+			table.insert(unique_to, {"ICON_" .. belief.BeliefType, belief.Name, belief.BeliefType});
+		end
+	end
+
 	local replaces;
 	local replaced_by = {};
 	for row in GameInfo.UnitReplaces() do
@@ -83,20 +115,86 @@ PageLayouts["Unit" ] = function(page)
 		end
 	end
 
-	local upgrades_to;			-- the unit icon of what it upgrades to.
+	local function matches_unique(other)
+		if(#unique_to > 0) then
+			-- Determine who the item is unique to.
+			local other_unique_to = {};
+			local traitType = other.TraitType;
+
+			-- Other unit is not unique, so it matches.
+			if(traitType == nil) then
+				return true;
+			else
+				for leader_trait in GameInfo.LeaderTraits() do
+					if(leader_trait.TraitType == traitType) then
+						local leader = GameInfo.Leaders[leader_trait.LeaderType];
+						if(leader) then
+							other_unique_to[leader_trait.LeaderType] = true;
+						end
+					end
+				end
+
+				for civ_trait in GameInfo.CivilizationTraits() do
+					if(civ_trait.TraitType == traitType) then
+						local civ = GameInfo.Civilizations[civ_trait.CivilizationType];
+						if(civ) then
+							other_unique_to[civ_trait.CivilizationType] = true;
+						end
+					end
+				end
+			
+				-- Other unit is unique but matches.
+				for i, v in ipairs(unique_to) do
+					if(other_unique_to[v[3]]) then
+						return true;
+					end
+				end
+
+				return false;
+			end
+		else
+			-- This unit isn't unique.
+			return true;
+		end
+	end
+
+	local upgrades_to = {};		-- the unit(s) of what it upgrades to.
 	local upgrades_from = {};	-- the unit(s) of what it upgrades from.
 	for row in GameInfo.UnitUpgrades() do
 		if(row.Unit == unitType) then
 			local u = GameInfo.Units[row.UpgradeUnit];
 			if(u and u.TraitType ~= "TRAIT_BARBARIAN") then
-				upgrades_to = {"ICON_" .. u.UnitType, u.Name, u.UnitType};
+
+				if(matches_unique(u)) then
+					table.insert(upgrades_to, {"ICON_" .. u.UnitType, u.Name, u.UnitType});
+				end
+
+				for replaces in GameInfo.UnitReplaces() do
+					if(replaces.ReplacesUnitType == u.UnitType) then
+						local replaced_unit = GameInfo.Units[replaces.CivUniqueUnitType];
+						if(replaced_unit and matches_unique(replaced_unit)) then
+							table.insert(upgrades_to, {"ICON_" .. replaced_unit.UnitType, replaced_unit.Name, replaced_unit.UnitType});
+						end
+					end
+				end
+
 			end
 		end
 
 		if(row.UpgradeUnit == unitType) then
 			local u = GameInfo.Units[row.Unit];
-			if(u and u.TraitType ~= "TRAIT_BARBARIAN") then
+			if(u and u.TraitType ~= "TRAIT_BARBARIAN" and matches_unique(u)) then
 				table.insert(upgrades_from, {"ICON_" .. u.UnitType, u.Name, u.UnitType});
+			end
+		end
+
+		-- For unique units, check the upgrade path of the unit they replace. (but make sure another unique unit isn't in the path).
+		for replaces in GameInfo.UnitReplaces() do
+			if(replaces.CivUniqueUnitType == unitType and row.UpgradeUnit == replaces.ReplacesUnitType) then
+				local u = GameInfo.Units[row.Unit];
+				if(u and u.TraitType ~= "TRAIT_BARBARIAN" and matches_unique(u)) then
+					table.insert(upgrades_from, {"ICON_" .. u.UnitType, u.Name, u.UnitType});
+				end
 			end
 		end
 	end
@@ -163,11 +261,13 @@ PageLayouts["Unit" ] = function(page)
 			s:AddSeparator();
 		end
 
-		if(upgrades_to or #upgrades_from > 0) then
+		if(#upgrades_to > 0 or #upgrades_from > 0) then
 
-			if(upgrades_to) then
+			if(#upgrades_to > 0) then
 				s:AddHeader("LOC_UI_PEDIA_UPGRADES_TO");
-				s:AddIconLabel(upgrades_to, upgrades_to[2]);
+				for _, icon in ipairs(upgrades_to) do
+					s:AddIconLabel(icon, icon[2]);
+				end
 			end
 
 			if(#upgrades_from > 0) then
@@ -230,6 +330,10 @@ PageLayouts["Unit" ] = function(page)
 
 		if(unit.BuildCharges ~= 0) then
 			s:AddIconNumberLabel({"ICON_BUILD_CHARGES", nil,"IMPROVEMENTS"}, unit.BuildCharges, "LOC_UI_PEDIA_BUILD_CHARGES");
+		end		
+
+		if(unit.ReligiousHealCharges ~= 0) then
+			s:AddIconNumberLabel({"ICON_RELIGION", nil,"FAITH_6"}, unit.ReligiousHealCharges, "LOC_UI_PEDIA_HEAL_CHARGES");
 		end		
 
 		local airSlots = unit.AirSlots or 0;

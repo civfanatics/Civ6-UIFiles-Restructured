@@ -65,7 +65,9 @@ function GetAdjacentIconArtdefName( targetDistrictType:string, plot:table, pkCit
 			return "Terrain_Tundra";
 		elseif iSubType == g_TERRAIN_TYPE_DESERT or iSubType == g_TERRAIN_TYPE_DESERT_HILLS then
 			return "Terrain_Desert";
-		else
+		elseif iSubType == g_TERRAIN_TYPE_COAST then -- TODO or TERRAIN_TYPE_OCEAN?
+			return "Terrain_Coast";
+		else -- TODO specify mountain and have an error asset if no match?
 			return "Terrain_Mountain";
 		end
 	elseif eType == AdjacencyBonusTypes.ADJACENCY_WONDER then

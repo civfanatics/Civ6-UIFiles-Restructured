@@ -92,7 +92,8 @@
 
             <Container ID="PlaceVisibility" Size="parent,parent">
               <SimplePullDown ID="VisibilityPullDown" Anchor="R,T" Style="PullDownBlue" ScrollThreshold="400" Size="250,24" Offset="0,0" SpaceForScroll="0" EntryInstance="InstanceOne"/>
-            </Container>
+			  <GridButton  Size="200,24" Style="ButtonControl" Anchor="C,C" ID="VisibilityRevealAllButton" String="LOC_WORLDBUILDER_REVEAL_ALL"/>
+			</Container>
           
           </Container>
 

@@ -80,8 +80,9 @@ function OnDefaultButton()
 	print("Resetting Setup Parameters");
 
 	-- Get the game name since we wish to persist this.
+	local gameMode = GameModeTypeForMPLobbyType(m_lobbyModeName);
 	local gameName = GameConfiguration.GetValue("GAME_NAME");
-	g_GameParameters:ResetDefaults();
+	GameConfiguration.SetToDefaults(gameMode);
 	GameConfiguration.RegenerateSeeds();
 	
 	-- Only assign GAME_NAME if the value is valid.
@@ -126,6 +127,43 @@ function OnConfirmClick()
 	end
 
 	Network.HostGame(serverType);	
+end
+
+function OnAbandoned(eReason)
+	if (not ContextPtr:IsHidden()) then
+
+		-- We need to CheckLeaveGame before triggering the reason popup because the reason popup hides the host game screen.
+		-- and would block the leave game incorrectly.  This fixes TTP 22192.  See CheckLeaveGame() in stagingroom.lua.
+		CheckLeaveGame();
+
+		if (eReason == KickReason.KICK_HOST) then
+			LuaEvents.MultiplayerPopup( "LOC_GAME_ABANDONED_KICKED" );
+		elseif (eReason == KickReason.KICK_NO_HOST) then
+			LuaEvents.MultiplayerPopup( "LOC_GAME_ABANDONED_HOST_LOSTED" );
+		elseif (eReason == KickReason.KICK_NO_ROOM) then
+			LuaEvents.MultiplayerPopup( "LOC_GAME_ABANDONED_ROOM_FULL" );
+		elseif (eReason == KickReason.KICK_VERSION_MISMATCH) then
+			LuaEvents.MultiplayerPopup( "LOC_GAME_ABANDONED_VERSION_MISMATCH" );
+		elseif (eReason == KickReason.KICK_MOD_ERROR) then
+			LuaEvents.MultiplayerPopup( "LOC_GAME_ABANDONED_MOD_ERROR" );
+		elseif (eReason == KickReason.KICK_MOD_MISSING) then
+			local modMissingErrorStr = Modding.GetLastModErrorString();
+			LuaEvents.MultiplayerPopup(modMissingErrorStr);
+		else
+			LuaEvents.MultiplayerPopup( "LOC_GAME_ABANDONED_CONNECTION_LOST");
+		end
+		LuaEvents.Multiplayer_ExitShell();
+	end
+end
+
+function CheckLeaveGame()
+	-- Leave the network session if we're in a state where the host game should be triggering the exit.
+	if not ContextPtr:IsHidden()	-- If the screen is not visible, this exit might be part of a general UI state change (like Multiplayer_ExitShell)
+									-- and should not trigger a game exit.
+		and Network.IsInSession()	-- Still in a network session.
+		and not Network.IsInGameStartedState() then -- Don't trigger leave game if we're being used as an ingame screen. Worldview is handling this instead.
+		Network.LeaveGame();
+	end
 end
 
 -- ===========================================================================
@@ -184,15 +222,8 @@ end
 -- Leave the screen
 -------------------------------------------------
 function HandleExitRequest()
-	-- Handle LeaveGame when exiting the host game.
-	-- If the screen is visible, we assume the host game commanded the exit and should 
-	-- also leave the associated game.  
-	-- IF the screen is not visible, this exit might be part of a general UI state change (like Multiplayer_ExitShell)
-	-- and should not trigger a game exit.
-	if not ContextPtr:IsHidden()
-		and Network.IsInSession() then
-		Network.LeaveGame();
-	end
+	-- Check to see if the screen needs to also leave the network session.
+	CheckLeaveGame();
 
 	UIManager:DequeuePopup( ContextPtr );
 end
@@ -290,6 +321,7 @@ function Initialize()
 	Controls.ConfirmButton:RegisterCallback( Mouse.eLClick, OnConfirmClick );
 	Controls.ModsButton:RegisterCallback( Mouse.eLClick, ModsButtonClick );
 
+	Events.MultiplayerGameAbandoned.Add( OnAbandoned );
 	Events.LeaveGameComplete.Add( OnLeaveGameComplete );
 	Events.BeforeMultiplayerInviteProcessing.Add( OnBeforeMultiplayerInviteProcessing );
 	

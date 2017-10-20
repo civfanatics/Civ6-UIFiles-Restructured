@@ -18,7 +18,7 @@ local NUM_CUSTOM_ICONS:number = 36;
 local PADDING_RELIGION_ICON:number = 8;
 local PADDING_RELIGION_ICON_SMALL:number = 4;
 local PADDING_RELIGION_ICON_SELECTION:number = 8;
-local PADDING_RELIGION_ICON_SELECTION_SMALL:number = 6;
+local PADDING_RELIGION_ICON_SELECTION_SMALL:number = 4;
 local PADDING_TAB_BUTTON_TEXT:number = 55;
 local SIZE_BELIEF_ICON_SMALL:number = 32;
 local SIZE_BELIEF_ICON_LARGE:number = 64;
@@ -34,8 +34,28 @@ local TXT_MY_PANTHEON:string = Locale.Lookup("LOC_UI_RELIGION_MY_PANTHEON");
 local DATA_FIELD_FOLLOWERS_IM:string = "FollowersIM";
 local DATA_FIELD_BELIEFS_IM:string = "BeliefsIM";
 local DATA_FIELD_SELECTION:string = "Selection";
+local DATA_FIELD_INDEX:string = "Index";
 local DATA_FIELD_ICONS:string = "Icons";
 local CITIES_FILTER:table = { FOLLOWING_RELIGION = 1, RELIGION_PRESENT = 2 };
+
+-- Table of localized strings used for when religion units can and cannot be produced
+local UNIT_ICON_TOOLTIPS:table = {};
+UNIT_ICON_TOOLTIPS["UNIT_MISSIONARY"] = {
+	canProduce = "LOC_UI_RELIGION_MISSIONARY_TT",
+	cannotProduce = "LOC_UI_RELIGION_HOW_TO_MAKE_MISSIONARY_TT"
+};
+UNIT_ICON_TOOLTIPS["UNIT_APOSTLE"] = {
+	canProduce = "LOC_UI_RELIGION_APOSTLE_TT",
+	cannotProduce = "LOC_UI_RELIGION_HOW_TO_MAKE_APOSTLE_TT"
+};
+UNIT_ICON_TOOLTIPS["UNIT_INQUISITOR"] = {
+	canProduce = "LOC_UI_RELIGION_INQUISITOR_TT",
+	cannotProduce = "LOC_UI_RELIGION_HOW_TO_MAKE_INQUISITOR_TT"
+};
+UNIT_ICON_TOOLTIPS["UNIT_GURU"] = {
+	canProduce = "LOC_UI_RELIGION_GURU_TT",
+	cannotProduce = "LOC_UI_RELIGION_HOW_TO_MAKE_GURU_TT"
+};
 
 -- ===========================================================================
 --	SCREEN VARIABLES
@@ -63,7 +83,7 @@ local m_SelectBeliefsIM:table = InstanceManager:new("BeliefSlot", "BeliefButton"
 local m_SelectedBeliefsIM:table = InstanceManager:new("BeliefSlot", "BeliefButton", Controls.SelectedBeliefs);
 local m_ReligionBeliefsIM:table = InstanceManager:new("ReligionBelief", "BeliefBG", Controls.ViewReligionBeliefs);
 local m_ReligionSelections:table = InstanceManager:new("ReligionOption", "ReligionButton", Controls.ChooseReligionItems);
-
+local m_UnitIconIM:table = InstanceManager:new("UnitIconInstance", "UnitIconBacking", Controls.IconStack);
 
 -- ===========================================================================
 --	PLAYER VARIABLES
@@ -185,7 +205,22 @@ function UpdateTabs()
 
 	-- Create "View All Religions" Tab
 	if(numFoundedReligions > 0) then
-		local maxReligions = GameInfo.Map_GreatPersonClasses[Map.GetMapSize()].MaxWorldInstances;
+		local maxReligions;
+		local mapSizeIndex = Map.GetMapSize();
+		local mapSize = GameInfo.Maps[mapSizeIndex];
+		local mapSizeType = mapSize and mapSize.MapSizeType;
+		if(mapSizeType) then
+			for row in GameInfo.Map_GreatPersonClasses() do
+				if(row.MapSizeType == mapSizeType and row.GreatPersonClassType == "GREAT_PERSON_CLASS_PROPHET") then
+					maxReligions = row.MaxWorldInstances;
+				end
+			end
+		end
+
+		if(maxReligions == nil) then
+			maxReligions = 0;
+		end
+
 		m_AllReligionsTab = AddTab(Locale.Lookup("LOC_UI_RELIGION_ALL_RELIGIONS", numFoundedReligions .. "/"  .. maxReligions), nil, ViewAllReligions);
 	end
 
@@ -199,7 +234,7 @@ function UpdateTabs()
 	local smallSize:number = SIZE_RELIGION_ICON_SMALL + (PADDING_ICON * 2);
 	local bSmallTabs:boolean = totalSize > Controls.TabContainer:GetSizeX();
 	for i, tabButton in ipairs(m_ReligionTabs.tabControls) do
-		if(i ~= 1 and i ~= numTabs) then
+		if(i ~= 1 and i ~= numTabs ) then
 			local tabIcons:table = tabButton[DATA_FIELD_ICONS];
 			if bSmallTabs then
 				tabButton:SetText("");
@@ -207,12 +242,7 @@ function UpdateTabs()
 				tabButton[DATA_FIELD_SELECTION]:SetSizeX(smallSize + 4);
 				tabIcons.Icon:SetOffsetX(PADDING_RELIGION_ICON_SMALL);
 				tabIcons.SelectionIcon:SetOffsetX(PADDING_RELIGION_ICON_SELECTION_SMALL);
-				local index:number = pAllReligions[i - 1].Religion;
-				religionData = GameInfo.Religions[index];
-				if religionData == nil then
-					error("Unable to find religion data at index "..tostring(index));
-				end
-				tabButton:SetToolTipString(Game.GetReligion():GetName(index));
+				tabButton:SetToolTipString(Game.GetReligion():GetName(tabButton[DATA_FIELD_INDEX]));
 			else
 				tabIcons.Icon:SetOffsetX(PADDING_RELIGION_ICON);
 				tabIcons.SelectionIcon:SetOffsetX(PADDING_RELIGION_ICON_SELECTION);
@@ -240,6 +270,7 @@ function AddTab(label:string, religionData:table, onClickCallback:ifunction)
 	tabInst.Selection:SetSizeX(textSize + PADDING_TAB_BUTTON_TEXT + 4);
 
 	if(religionData ~= nil) then
+		tabInst.Button[DATA_FIELD_INDEX] = religionData.Index;
 		local religionColor:number = UI.GetColorValue(religionData.Color);
 		local textureOffsetX:number, textureOffsetY:number, textureSheet:string = IconManager:FindIconAtlas("ICON_" .. religionData.ReligionType, SIZE_RELIGION_ICON_SMALL);
 		if(textureSheet == nil or textureSheet == "") then
@@ -252,7 +283,7 @@ function AddTab(label:string, religionData:table, onClickCallback:ifunction)
 			tabInst.SelectionIcon:SetTexture(textureOffsetX, textureOffsetY, textureSheet);
 
 			tabInst.Icon:SetHide(false);
-			tabInst.SelectionIcon:SetHide(false);
+			tabInst.SelectionIcon:SetHide(true);
 		end
 	else
 		tabInst.Icon:SetHide(true);
@@ -262,8 +293,10 @@ function AddTab(label:string, religionData:table, onClickCallback:ifunction)
 	local callback = function()
 		if(m_ReligionTabs.prevSelectedControl ~= nil) then
 			m_ReligionTabs.prevSelectedControl[DATA_FIELD_SELECTION]:SetHide(true);
+			m_ReligionTabs.prevSelectedControl[DATA_FIELD_ICONS].SelectionIcon:SetHide(true);
 		end
 		tabInst.Selection:SetHide(false);
+		tabInst.SelectionIcon:SetHide(false);
 		onClickCallback();
 	end
 
@@ -910,7 +943,7 @@ end
 function SetBeliefIcon(targetControl:table, beliefType:string, iconSize:number)
 	local textureOffsetX:number, textureOffsetY:number, textureSheet:string = IconManager:FindIconAtlas("ICON_" .. beliefType, iconSize);
 	if(textureSheet == nil or textureSheet == "") then
-		error("Could not find icon in SetBeliefIcon: religionType=\""..religionType.."\", iconSize="..tostring(iconSize) );
+		error("Could not find icon in SetBeliefIcon: beliefType=\""..beliefType.."\", iconSize="..tostring(iconSize) );
 	else
 		targetControl:SetTexture(textureOffsetX, textureOffsetY, textureSheet);
 		targetControl:SetSizeVal(iconSize, iconSize);
@@ -984,29 +1017,8 @@ function ViewReligion(religionType:number)
 
 	-- Spawn religion beliefs
 	m_ReligionBeliefsIM:ResetInstances();
-	for _, beliefIndex in ipairs(religion.Beliefs) do
-		belief = GameInfo.Beliefs[beliefIndex];
-		local beliefInst:table = m_ReligionBeliefsIM:GetInstance();
-		beliefInst.BeliefBG:SetColor(0xFFFFFFFF);
-		beliefInst.BeliefLabel:SetText(Locale.ToUpper(belief.Name));
-		beliefInst.BeliefDescription:LocalizeAndSetText(belief.Description);
-		SetBeliefIcon(beliefInst.BeliefIcon, belief.BeliefType, SIZE_BELIEF_ICON_LARGE);
-		beliefInst.BeliefIcon:SetHide(false);
-	end
-
-	-- Spawn num religion beliefs not yet unlocked
-	local numLockedBeliefs:number = NUM_MAX_BELIEFS - table.count(religion.Beliefs);
-	for i = 1, numLockedBeliefs do
-		local beliefInst:table = m_ReligionBeliefsIM:GetInstance();
-		beliefInst.BeliefBG:SetColor(0xFF808080);
-		beliefInst.BeliefLabel:SetText(Locale.ToUpper(Locale.Lookup("LOC_UI_RELIGION_LOCKED_BELIEF")));
-		if religion.Founder == localPlayerID then
-			beliefInst.BeliefDescription:LocalizeAndSetText("LOC_UI_RELIGION_LOCKED_BELIEF_DESCRIPTION");
-		else
-			beliefInst.BeliefDescription:SetText("");
-		end
-		beliefInst.BeliefIcon:SetHide(true);
-	end
+	AddUnlockedBeliefs(religion);
+	AddLockedBeliefs(religion);
 
 	RealizeStack(Controls.ViewReligionBeliefs, Controls.ViewReligionScroll);
 	
@@ -1091,19 +1103,51 @@ function ViewReligion(religionType:number)
 			end
 		end
 	end
-	
-	Controls.IconApostle:SetHide(not showUnitIcons);
-	Controls.IconMissionary:SetHide(not showUnitIcons);
-	Controls.IconInquisitor:SetHide(not showUnitIcons);
+
+	-- Add scenario specific religious units
+	m_UnitIconIM:ResetInstances();
+
+	-- Table of unit types to ignore since they have already been added
+	local typesToIgnore:table = {};
+
+	local localPlayer = Players[Game.GetLocalPlayer()];
+	local localPlayerCities = localPlayer:GetCities();
+
+	for _, city in localPlayerCities:Members() do
+		local buildQueue:table = city:GetBuildQueue();
+
+		for row in GameInfo.Units() do
+			if row.ReligiousStrength > 0 and not typesToIgnore[row.UnitType] then
+				-- Create instance
+				local unitIconInst:table = m_UnitIconIM:GetInstance();
+				typesToIgnore[row.UnitType] = true;
+
+				-- Update unit icon
+				local iconString:string = "ICON_" .. row.UnitType .. "_PORTRAIT";
+				unitIconInst.UnitIcon:SetIcon(iconString);
+
+				if buildQueue:CanProduce(row.UnitType, false, true) then
+					-- If we can currently produce set tooltip to normal description
+					if UNIT_ICON_TOOLTIPS[row.UnitType] and UNIT_ICON_TOOLTIPS[row.UnitType].canProduce then
+						unitIconInst.UnitIconBacking:SetToolTipString(Locale.Lookup(UNIT_ICON_TOOLTIPS[row.UnitType].canProduce));
+					else
+						unitIconInst.UnitIconBacking:SetToolTipString(Locale.Lookup(row.Name));
+					end
+				else
+					-- If not set tooltip to tell player how to be able to produce them
+					if UNIT_ICON_TOOLTIPS[row.UnitType] and UNIT_ICON_TOOLTIPS[row.UnitType].cannotProduce then
+						unitIconInst.UnitIconBacking:SetToolTipString(Locale.Lookup(UNIT_ICON_TOOLTIPS[row.UnitType].cannotProduce));
+					else
+						unitIconInst.UnitIconBacking:SetToolTipString(Locale.Lookup(row.Name));
+					end
+				end
+			end
+		end
+	end
+
 	RealizeStack(Controls.IconStack);
 	RealizeStack(Controls.ViewReligionStack);
 
-	if showUnitIcons then
-		local canProduceInquisitor:boolean = playerReligion:HasLaunchedInquisition();
-		Controls.IconApostle:SetToolTipString(Locale.Lookup(canProduceApostle and "LOC_UI_RELIGION_APOSTLE_TT" or "LOC_UI_RELIGION_HOW_TO_MAKE_APOSTLE_TT"));
-		Controls.IconMissionary:SetToolTipString(Locale.Lookup(canProduceMissionary and "LOC_UI_RELIGION_MISSIONARY_TT" or "LOC_UI_RELIGION_HOW_TO_MAKE_MISSIONARY_TT"));
-		Controls.IconInquisitor:SetToolTipString(Locale.Lookup(canProduceInquisitor and "LOC_UI_RELIGION_INQUISITOR_TT" or "LOC_UI_RELIGION_HOW_TO_MAKE_INQUISITOR_TT"));
-	end
 	-- Update dominant city text
 	if(numDominantCities == 1) then
 		Controls.ViewReligionDominance:SetText(Locale.ToUpper(Locale.Lookup("LOC_UI_RELIGION_RELIGION_DOMINANCE", numDominantCities)));
@@ -1156,7 +1200,7 @@ function ViewReligion(religionType:number)
 
 			followersInst.BG:SetOffsetX(nextX);
 			followersInst.BG:SetSizeX(nextSizeX);
-			local rowSize = cityInst.BG:GetSizeY();
+			local rowSize = math.max(cityInst.CityPantheon:GetSizeY() + 20, 38);
 			followersInst.BG:SetSizeY(rowSize);
 
 			if(cityFollowers ~= nil and cityFollowers[religionEntry.Religion] ~= nil and cityFollowers[religionEntry.Religion] ~= 0) then
@@ -1173,6 +1217,36 @@ function ViewReligion(religionType:number)
 	RealizeSortTypePulldown();
 end
 
+-- ==============================================
+function AddUnlockedBeliefs(religion)
+	for _, beliefIndex in ipairs(religion.Beliefs) do
+		belief = GameInfo.Beliefs[beliefIndex];
+		local beliefInst:table = m_ReligionBeliefsIM:GetInstance();
+		beliefInst.BeliefBG:SetColor(0xFFFFFFFF);
+		beliefInst.BeliefLabel:SetText(Locale.ToUpper(belief.Name));
+		beliefInst.BeliefDescription:LocalizeAndSetText(belief.Description);
+		SetBeliefIcon(beliefInst.BeliefIcon, belief.BeliefType, SIZE_BELIEF_ICON_LARGE);
+		beliefInst.BeliefIcon:SetHide(false);
+	end
+end
+
+-- ==============================================
+function AddLockedBeliefs(religion)
+	local numLockedBeliefs:number = NUM_MAX_BELIEFS - table.count(religion.Beliefs);
+	for i = 1, numLockedBeliefs do
+		local beliefInst:table = m_ReligionBeliefsIM:GetInstance();
+		beliefInst.BeliefBG:SetColor(0xFF808080);
+		beliefInst.BeliefLabel:SetText(Locale.ToUpper(Locale.Lookup("LOC_UI_RELIGION_LOCKED_BELIEF")));
+		if religion.Founder == Game.GetLocalPlayer() then
+			beliefInst.BeliefDescription:LocalizeAndSetText("LOC_UI_RELIGION_LOCKED_BELIEF_DESCRIPTION");
+		else
+			beliefInst.BeliefDescription:SetText("");
+		end
+		beliefInst.BeliefIcon:SetHide(true);
+	end
+end
+
+-- ==============================================
 function SortCitiesByFollowers(cityReligionA:table, cityReligionB:table, selectedReligion:number)
 	local numFollowersA:number, numFollowersB:number = 0, 0;
 
@@ -1457,7 +1531,7 @@ end
 --	Input Hotkey Event
 -- ===========================================================================
 function OnInputActionTriggered( actionId )
-	if actionId == m_ToggleReligionId then
+	if actionId == m_ToggleReligionId and UI.QueryGlobalParameterInt("DISABLE_RELIGION_HOTKEY") ~= 1 then
         UI.PlaySound("Play_UI_Click");
 		if(ContextPtr:IsHidden()) then
 			OnShowScreen();

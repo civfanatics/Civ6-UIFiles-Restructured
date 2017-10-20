@@ -142,7 +142,7 @@
                   <GridButton ID="AdvancedGraphicsOptions" Size="parent-200,22" Style="ShellButton" Anchor="C,C" String="LOC_OPTIONS_SHOW_ADVANCED_GRAPHICS"/>
                 </Container>
 
-                <Container AutoSize="1" ID="AdvancedOptionsContainer" Hidden="1">
+                <Container  Size="auto,auto" ID="AdvancedOptionsContainer" Hidden="1">
                   <Stack Anchor="C,T" StackGrowth="Down" Padding="5">
 
                     <Grid Size="parent,21" Texture="Shell_SectionHeader" SliceCorner="154,10" SliceTextureSize="308,21" Color="20,144,140,100" Offset="0,8">
@@ -387,11 +387,11 @@
   </Box>
 
   <!-- Are you sure dialog LOC_OPTIONS_SET_KEY_BINDING_TEXT -->
-  <Box ID="KeyBindingPopup" Color="0,0,0,150" Size="Full,Full" ConsumeMouseOver="1" Hidden="1" IgnoreTutorial="1">
+  <Box ID="KeyBindingPopup" Color="0,0,0,150" Size="parent,parent" ConsumeMouseOver="1" Hidden="1" IgnoreTutorial="1">
     <AlphaAnim ID="KeyBindingAlpha" AlphaBegin="0" AlphaEnd="1" Speed="3" Function="Root" Cycle="Once" Size="parent,parent">
       <SlideAnim ID="KeyBindingSlide" Start="0,-20" End="0,0" Speed="3" Function="Root" Cycle="Once" Size="parent,parent">
         <Grid Size="500,250" Anchor="C,C" Offset="0,0" Style="DropShadow2"  Hidden="0" Color="255,255,255,200">
-          <Grid ID="KeyBindingPopupWindow" Size="parent-50,0" Anchor="C,C" Offset="0,-50" SizePadding="0,20" Style="WindowFrameTitle" Hidden="0" AutoSize="V">
+          <Grid ID="KeyBindingPopupWindow" Size="parent-50,auto" Anchor="C,C" Offset="0,-50" SizePadding="0,20" Style="WindowFrameTitle" Hidden="0">
             <Label ID="BindingTitle" Anchor="C,T" String="Title of Window" Align="Center" Style="BlueGlow" Offset="0,15"/>
             <Stack Offset="0,60" Size="parent,0" StackGrowth="Down" Anchor="C,T" Padding="15">
               <Label ID="Message" Anchor="C,T" WrapWidth="400" String="LOC_OPTIONS_SET_KEY_BINDING_TEXT" Style="BodyTextDark18" Align="Center"/>

@@ -156,6 +156,16 @@ function OnVisibilityPlayerChanged(entry)
 end
 
 -- ===========================================================================
+function OnVisibilityPlayerRevealAll()
+	
+	local entry = Controls.VisibilityPullDown:GetSelectedEntry();
+	if entry ~= nil then
+		WorldBuilder.MapManager():SetAllRevealed(true, entry.PlayerIndex);
+	end
+
+end
+
+-- ===========================================================================
 function UpdatePlayerEntries()
 
 	m_PlayerEntries = {};
@@ -728,6 +738,7 @@ function OnInit()
 
 	-- VisibilityPullDown
 	Controls.VisibilityPullDown:SetEntrySelectedCallback( OnVisibilityPlayerChanged );
+	Controls.VisibilityRevealAllButton:RegisterCallback( Mouse.eLClick, OnVisibilityPlayerRevealAll );
 
 	-- Register for events
 	ContextPtr:SetShowHandler( OnShow );

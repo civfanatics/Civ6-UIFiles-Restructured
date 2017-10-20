@@ -38,5 +38,13 @@
 		<Row Name="ICON_STATS_SLEEP"				Index="26" Atlas="ICON_ATLAS_STATS"/>
 		<Row Name="ICON_STATS_SKIP"					Index="27" Atlas="ICON_ATLAS_STATS"/>
     <Row Name="ICON_STATS_SPREADCHARGES"					Index="30" Atlas="ICON_ATLAS_STATS"/>
+
+    <Row Name="ICON_AGENDA"							Index="31" Atlas="ICON_ATLAS_STATS"/>
+    <Row Name="ICON_AGREEMENT"					Index="32" Atlas="ICON_ATLAS_STATS"/>
+    <Row Name="ICON_ACCESS_LEVEL"				Index="33" Atlas="ICON_ATLAS_STATS"/>
+    <Row Name="ICON_GOSSIP"							Index="34" Atlas="ICON_ATLAS_STATS"/>
+		<Row Name="ICON_RELATIONSHIP"				Index="35" Atlas="ICON_ATLAS_STATS"/>
+		<Row Name="ICON_RELATIONSHIPS"			Index="36" Atlas="ICON_ATLAS_STATS"/>
+    <Row Name="ICON_OVERVIEW"			      Index="37" Atlas="ICON_ATLAS_STATS"/>
 	</IconDefinitions>
 </GameInfo>

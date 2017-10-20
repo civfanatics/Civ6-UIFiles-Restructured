@@ -1,4 +1,4 @@
-<GameInfo>
+﻿<GameInfo>
   <IconTextureAtlases>
     <Row Name="ICON_ATLAS_UNIT_ACTIONS" IconSize="38" IconsPerRow="8" IconsPerColumn="12" Filename="UnitActions38.dds"/>
 		<Row Name="ICON_ATLAS_UNIT_ACTIONS" IconSize="50" IconsPerRow="8" IconsPerColumn="12" Filename="UnitActions50.dds"/>
@@ -53,6 +53,7 @@
     <Row Name="ICON_UNITCOMMAND_PLUNDER_TRADE_ROUTE"      	Atlas="ICON_ATLAS_UNIT_ACTIONS"   Index="38"/>
     <Row Name="ICON_UNITCOMMAND_NAME_UNIT"                	Atlas="ICON_ATLAS_UNIT_ACTIONS"   Index="39"/>
     <Row Name="ICON_UNITCOMMAND_WONDER_PRODUCTION"        	Atlas="ICON_ATLAS_UNIT_ACTIONS"   Index="40"/>
+    <Row Name="ICON_UNITCOMMAND_CONDEMN_HERETIC"     	      Atlas="ICON_ATLAS_UNIT_ACTIONS"   Index="58"/>
     <Row Name="ICON_UNITOPERATION_AIR_ATTACK"             	Atlas="ICON_ATLAS_UNIT_ACTIONS"   Index="41"/>
     <Row Name="ICON_UNITOPERATION_BUILD_IMPROVEMENT"      	Atlas="ICON_ATLAS_UNIT_ACTIONS"   Index="42"/>
     <Row Name="ICON_UNITOPERATION_BUILD_ROUTE"            	Atlas="ICON_ATLAS_UNIT_ACTIONS"   Index="43"/>
@@ -67,6 +68,7 @@
     <Row Name="ICON_UNITOPERATION_EXCAVATE"               	Atlas="ICON_ATLAS_UNIT_ACTIONS"   Index="52"/>
     <Row Name="ICON_UNITOPERATION_FORTIFY"                	Atlas="ICON_ATLAS_UNIT_ACTIONS"   Index="53"/>
     <Row Name="ICON_UNITOPERATION_HEAL"                   	Atlas="ICON_ATLAS_UNIT_ACTIONS"   Index="54"/>
+		<Row Name="ICON_UNITOPERATION_RELIGIOUS_HEAL"                   	Atlas="ICON_ATLAS_UNIT_ACTIONS"   Index="54"/>
 	<Row Name="ICON_UNITOPERATION_ALERT"					Atlas="ICON_ATLAS_UNIT_ACTIONS"   Index="90"/>
     <Row Name="ICON_UNITOPERATION_FOUND_CITY"             	Atlas="ICON_ATLAS_UNIT_ACTIONS"   Index="55"/>
     <Row Name="ICON_UNITOPERATION_FOUND_RELIGION"         	Atlas="ICON_ATLAS_UNIT_ACTIONS"   Index="56"/>

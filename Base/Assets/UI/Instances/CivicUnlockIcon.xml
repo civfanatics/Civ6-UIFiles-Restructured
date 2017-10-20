@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<Root>
+
+	<Instance Name="CivicUnlockInstance">
+		<Button ID="Top" Style="UnlockFrames" NoStateChange="1">
+			<Image ID="Icon" Size="38,38" Texture="Controls_Blank" Anchor="C,C"/>
+		</Button>
+	</Instance>
+
+	<Instance Name="CivicUnlockNumberedInstance">
+		<GridButton ID="Top" Texture="Controls_FrameInfo" Anchor="C,C" Size="42,28" Offset="4,0" SliceCorner="9,9" SliceSize="5,5" SliceTextureSize="23,23">
+			<Label ID="NumberLabel" Anchor="L,C" Offset="5,1" Style="FontNormal18"/>
+			<Label ID="FontIcon" Anchor="R,C" Offset="6,-1" Style="FontNormal16"/>
+		</GridButton>
+	</Instance>
+	
+	<!-- For backwards compatibility -->
+	<Instance Name="UnlockIconInstance">
+		<Button ID="UnlockIcon" Style="UnlockFrames" NoStateChange="1">
+			<Image ID="Icon" Size="38,38" Texture="Controls_Blank" Anchor="C,C"/>
+		</Button>
+	</Instance>
+
+</Root>

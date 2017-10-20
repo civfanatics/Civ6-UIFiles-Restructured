@@ -100,6 +100,7 @@
 	<!-- Event Popup Fonts -->
 	<EventPopupTitle FontStyle="Shadow"	Color0="179,185,192,255"	Color1="0,0,0,38"	Style="FontFlair20" Align="Center" SmallCaps="26" SmallCapsType="EveryWord" />
 	<EventPopupDescription Color0="179,185,176,255" Color1="0,0,0,43" Style="FontNormalMedium16" />
+  <EventPopupDescriptionBold Color0="179,185,176,255" Color1="0,0,0,43" Style="FontNormalBold16" />
 	<EventPopupJournal Color="66,54,19,255" Style="FontItalicFlair22"/>
 	<EventPopupEffects Style="EventPopupDescription"/>
 
@@ -1546,6 +1547,7 @@
   <MainMenuFrame			Texture="grid_mainmenubk"					SliceCorner="8,8"		SliceSize="48,48" SliceTextureSize="64,64" />
   <MainMenu_1Frame		Texture="grid_mainmenubk_rope"		SliceCorner="8,8"		SliceSize="48,48" SliceTextureSize="64,64" />
 
+  <DebugPanelFrame Style="UnitFrame" ConsumeAllMouse="1" />
 
   <WindowFillHUD Texture="Controls_BlueGradient"
                SliceCorner="2,2"
@@ -1580,7 +1582,7 @@
     LRSize="24,24"  LRTexStart="40,40"
               />
 
-  <BGBlock Size="Full,Full"  Anchor="C,C" Color="0,0,0,200" ConsumeMouse="1" />
+  <BGBlock Size="parent,parent"  Anchor="C,C" Color="0,0,0,200" ConsumeMouse="1" />
 
   <!-- *******************************************************************	-->
   <!--	Front End																														-->
@@ -1688,14 +1690,14 @@
 	<!--  Works great with PopupDialog.lua                           -->
 	<!-- *****************************************​************************* -->
 	<PopupDialogGrid      ID="PopupDialog"    Anchor="C,C" AutoSize="V" InnerPadding="0,60" Size="500,200" Style="WindowFrame"   Hidden="1">
-	  <Stack              ID="PopupStack"     Anchor="C,C" AutoSize="V" StackGrowth="Bottom" StackPadding="30" InnerPadding="0,10" />
+	  <Stack              ID="PopupStack"     Anchor="C,C" Size="default,auto" StackGrowth="Bottom" StackPadding="30" InnerPadding="0,10" />
 	</PopupDialogGrid>
 	
-	<PopupDialogBox     ID="PopupDialog"  Size="Full,Full" ConsumeMouse="1" Color="0,0,0,150" Hidden="1">
+	<PopupDialogBox     ID="PopupDialog"  Size="parent,parent" ConsumeMouse="1" Color="0,0,0,150" Hidden="1">
 	  <AlphaAnim        ID="PopupAlphaIn" Size="parent,parent"  AlphaBegin="0"  AlphaEnd="1"  Speed="3" Function="Root" Cycle="Once">
 	    <SlideAnim      ID="PopupSlideIn" Size="parent,parent"  Start="0,-20"   End="0,0"     Speed="3" Function="Root" Cycle="Once">
-	      <Grid                           Size="500,250"              Anchor="C,C" Offset="0,0" Style="DropShadow2"     Color="255,255,255,200" AutoSize="1" AutoSizePadding="25,25" ConsumeMouse="1">
-	        <Grid                         Size="500,250"              Anchor="C,C" Offset="0,0" Style="WindowFrameTitle" AutoSize="V" AutoSizePadding="0,10">
+	      <Grid                           Size="auto,auto"              Anchor="C,C" Offset="0,0" Style="DropShadow2"     Color="255,255,255,200" AutoSizePadding="25,25" ConsumeMouse="1">
+	        <Grid                         Size="500,auto"              Anchor="C,C" Offset="0,0" Style="WindowFrameTitle" AutoSizePadding="0,10">
 	          <Container                  Size="parent,38"                         Offset="0,4">
 	            <Label  ID="PopupTitle"   Style="WindowHeader"        Anchor="C,C" String="{LOC_CONFIRM_CHOICE:upper}" />
 	          </Container>
@@ -1741,7 +1743,7 @@
     <Grid	Offset="-8,-8"	Size="parent+16,parent+16"	Style="ScreenFrame"/>
     
     <!-- Minispec Yields -->
-    <Grid ID="YieldsContainer" Anchor="R,T" AutoSize="1" AutoSizePadding="20,5" Offset="0,0" Texture="TopBar_YieldFrame" SliceCorner="60,25" SliceSize="1,1" SliceTextureSize="64,54" Hidden="1">
+    <Grid ID="YieldsContainer" Anchor="R,T"  Size="auto,auto" AutoSizePadding="20,5" Offset="0,0" Texture="TopBar_YieldFrame" SliceCorner="60,25" SliceSize="1,1" SliceTextureSize="64,54" Hidden="1">
       <Stack                                    Offset="37,1" StackGrowth="Right" Padding="-1">
         <Stack				                          StackGrowth="Down" Padding="-1">
           <Grid	ID="ScienceBacking"							Size="40,24"	Style="YieldBacking" Color="24,156,216,150"	ToolTip="LOC_TOP_PANEL_SCIENCE_YIELD">
@@ -1785,7 +1787,7 @@
   <!--  Targets a SlideAnim control)																			-->
   <!--  Fixed width, but covers full screen height                        -->
   <!-- ****************************************************************** -->
-  <RundownAnimBG	ID="SlideAnim"	Anchor="R,T"									Size="514,full"				Start="-514,27" End="-1,27" Cycle="Once"	Speed="3.4" Function="OutSine" Stopped="1" >
+  <RundownAnimBG	ID="SlideAnim"	Anchor="R,T"									Size="514,parent"				Start="-514,27" End="-1,27" Cycle="Once"	Speed="3.4" Function="OutSine" Stopped="1" >
     <Image				ID="Background"	Anchor="R,T"									Size="parent,parent"	Texture="Controls_BannerWide" StretchMode="Tile" ConsumeMouse="1">
       <Image Texture="Controls_GradientSmall" Size="22,parent" AnchorSide="O,I" Anchor="L,T" Color="0,0,0,255" Rotate="90" Offset="-2,0"/>
     </Image>
@@ -1800,7 +1802,7 @@
   <!--  (Targets a SlideAnim control)																			-->
   <!--  Fixed width, but covers full screen height                        -->
   <!-- ****************************************************************** -->
-  <ChooserAnim	  ID="SlideAnim"		Anchor="L,T"								Size="295,full"							Start="-330,27" End="0,27" Cycle="Once" Speed="3.4" Function="OutSine" Stopped="1" >
+  <ChooserAnim	  ID="SlideAnim"		Anchor="L,T"								Size="295,parent"							Start="-330,27" End="0,27" Cycle="Once" Speed="3.4" Function="OutSine" Stopped="1" >
     <Grid  				ID="Background"		Anchor="L,T"	              Size="parent,parent+5"			Style="WindowFillHUD" ConsumeMouse="1" Color="255,255,255,230">
       <Image			AnchorSide="O,I"	Anchor="R,T" Offset="-1,0"	Size="22,parent"						Texture="Controls_GradientSmall" Color="0,0,0,190" Rotate="270" />
     </Grid>
@@ -1811,7 +1813,7 @@
     </Grid>
   </ChooserAnim>
 
-  <ChooserAnimCivics	  ID="SlideAnim"	Anchor="L,T"									Size="295,full"				Start="-330,27" End="0,27" Cycle="Once" Speed="3.4" Function="OutSine" Stopped="1" >
+  <ChooserAnimCivics	  ID="SlideAnim"	Anchor="L,T"									Size="295,parent"				Start="-330,27" End="0,27" Cycle="Once" Speed="3.4" Function="OutSine" Stopped="1" >
     <Box  				ID="Background"	Anchor="L,T"	                Size="parent,parent+5"	ConsumeMouse="1" Color="38,30,62,230">
       <Image Texture="Controls_GradientSmall" Size="22,parent" AnchorSide="O,I" Anchor="R,T" Color="0,0,0,190" Rotate="270" Offset="-1,0"/>
     </Box>
@@ -2049,17 +2051,17 @@
   <!-- =======================================================
         Common Full Screens (e.g., TechTree)
 	============================================================ -->
-  <FullScreenVignetteConsumer																	 Size="Full,parent-29"			ConsumeMouse="1" Anchor="L,B">
+  <FullScreenVignetteConsumer																	 Size="parent,parent"			ConsumeMouse="1" Anchor="L,B">
     <AlphaAnim								ID="ScreenAnimIn"								 Size="parent,parent"	AlphaBegin="0" AlphaEnd="1" Speed="1" Function="Root" Cycle="Once" Delay="1">
-      <Box																										 Size="Full,Full"															Color="21,46,75,150" >
+      <Box																										 Size="parent,parent"															Color="21,46,75,150" >
         <Image																		Anchor="R,B" Size="500,500"   Texture="Controls_Vignette" Color="0,0,0,200" />
         <Image																		Anchor="R,T" Size="500,500"   Texture="Controls_Vignette" Color="0,0,0,200"  FlipY="1"/>
         <Image																		Anchor="L,T" Size="500,500"   Texture="Controls_Vignette" Color="0,0,0,200"  FlipY="1" FlipX="1"/>
         <Image																		Anchor="L,B" Size="500,500"   Texture="Controls_Vignette" Color="0,0,0,200"  FlipX="1"/>
-        <Image																		Anchor="L,T" Size="150,full"  Texture="Controls_Gradient" Color="0,0,0,200"  Rotate="90"/>
-        <Image																		Anchor="R,T" Size="150,full"  Texture="Controls_Gradient" Color="0,0,0,200"  Rotate="270"/>
-        <Image																		Anchor="L,T" Size="full,150"  Texture="Controls_Gradient" Color="0,0,0,200"  FlipY="1"/>
-        <Image																		Anchor="L,B" Size="full,150"  Texture="Controls_Gradient" Color="0,0,0,200" />
+        <Image																		Anchor="L,T" Size="150,parent"  Texture="Controls_Gradient" Color="0,0,0,200"  Rotate="90"/>
+        <Image																		Anchor="R,T" Size="150,parent"  Texture="Controls_Gradient" Color="0,0,0,200"  Rotate="270"/>
+        <Image																		Anchor="L,T" Size="parent,150"  Texture="Controls_Gradient" Color="0,0,0,200"  FlipY="1"/>
+        <Image																		Anchor="L,B" Size="parent,150"  Texture="Controls_Gradient" Color="0,0,0,200" />
       </Box>
     </AlphaAnim>
   </FullScreenVignetteConsumer>
@@ -2150,7 +2152,7 @@
 	<!-- =======================================================
 			Shell
 	============================================================ -->
-  <ShellBGBox Size="1024,full" Anchor="C,T" Color="9,44,72,200" IgnoreTutorial="1" ConsumeMouse="1">
+  <ShellBGBox Size="1024,parent" Anchor="C,T" Color="9,44,72,200" IgnoreTutorial="1" ConsumeMouse="1">
     <Image Texture="Controls_GradientSmall" Size="22,parent" AnchorSide="O,I" Anchor="R,T" Color="0,0,0,200" Rotate="270" Offset="0,0"/>
     <Image Texture="Controls_GradientSmall" Size="22,parent" AnchorSide="O,I" Anchor="L,T" Color="0,0,0,200" Rotate="90" Offset="0,0"/>
     <Box Color="32,70,101,150" Anchor="L,T" Size="2,parent"/>
@@ -2247,7 +2249,7 @@
     <Grid         ID="WindowBacking"  Size="parent+20,parent+20" Color="255,255,255,200" Style="DropShadow3" Offset="-7,0">
       <Box                            Size="parent-20,parent-20" Color="21,46,75,255" Anchor="C,C">
         <Grid     ID="WindowOutline"  Size="parent+10,parent+10" Style="WindowFrameAlpha" Anchor="C,C">
-          <Image ID="My2KLogo" Anchor="C,T" Offset="20,30" Texture="Controls_DropShadow2" Color="0,0,0,200" AutoSize="1" AutoSizePadding="30,10">
+          <Image ID="My2KLogo" Anchor="C,T" Offset="20,30" Texture="Controls_DropShadow2" Color="0,0,0,200"  Size="auto,auto" AutoSizePadding="30,10">
             <Image Anchor="C,T" Size="256,100" Texture="My2KLogo" Offset="0,-10" />
           </Image>
         </Grid>
@@ -2328,7 +2330,7 @@
   <!-- EXPERIMENTAL STYLE CLASS MODULES -->
 
   <CivTooltip Size="220,75">
-    <Grid ID="BG" Size="parent,parent" SliceCorner="10,10" SliceTextureSize="33,32" Texture="Controls_Tooltip" AutoSize="1" InnerPadding="25,25" InnerOffset="10,10" >
+    <Grid ID="BG" Size="auto,auto" SliceCorner="10,10" SliceTextureSize="33,32" Texture="Controls_Tooltip" InnerPadding="25,25" InnerOffset="10,10" >
       <Image ID="LeaderIcon" Offset="0,0" Size="55,55" Texture="Leaders55"/>
       <Image ID="YouIndicator" Offset="0,0" Hidden="1" Size="55,55" Texture="Diplomacy_YouIndicatorSmall"/>
       <Label ID="LeaderName" Anchor="L,C" Offset="65,0" Style="FontNormal16" Color="0,0,0,255"/>

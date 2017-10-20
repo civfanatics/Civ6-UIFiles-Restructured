@@ -6,7 +6,7 @@
 	<Grid							ID="LensPanel"						Anchor="L,T" AnchorSide="I,O" 								Offset="-10,-5" Size="190,326" 	Texture="Tracker_OptionsBacking.dds" SliceCorner="55,61" SliceSize="1,1" SliceTextureSize="121,119" ConsumeAllMouse="1" Hidden="1">
 		<Label																		Anchor="C,T" String="{LOC_HUD_LENSES:upper}"	Offset="-6,10"	Style="FontFlair16" Color0="106,93,69,255" Color1="0,0,0,150" Color2="146,133,109,255" FontStyle="Glow" SmallCaps="20" SmallCapsLeading="0" SmallCapsType="EveryWord" KerningAdjustment="0"/>
 		<ScrollPanel		ID="LensChooserList"																										Offset="10,30"	Size="parent,parent" Style="ScrollPanelWithLeftBar"         HideScrollBar="1" >
-      <Stack			ID="LensToggleStack"			Anchor="L,C"							StackGrowth="Bottom"	Offset="0,-30" StackPadding="1" >
+      <Stack			ID="LensToggleStack"			Anchor="L,C"							StackGrowth="Bottom"	Offset="0,-30" StackPadding="-10" >
         <RadioButton	ID="ReligionLensButton"   RadioGroup="ActiveLens" TextOffset="-5,0" String="LOC_HUD_RELIGION_LENS"    AllowClickOff="1" ToolTip="LOC_HUD_RELIGION_LENS_TOOLTIP"   Style="WhiteSemiBold14" Offset="10,4"	ButtonTexture="Controls_RadioButtonLarge.dds"	ButtonSize="35,35" CheckTexture="Controls_RadioButtonLarge.dds"	CheckSize="35,35" CheckTextureOffset="0,35"  Anchor="L,T" BoxOnLeft="1"/>
         <RadioButton	ID="ContinentLensButton"  RadioGroup="ActiveLens" TextOffset="-5,0" String="LOC_HUD_CONTINENT_LENS"   AllowClickOff="1" ToolTip="LOC_HUD_CONTINENT_LENS_TOOLTIP"  Style="WhiteSemiBold14" Offset="10,4"	ButtonTexture="Controls_RadioButtonLarge.dds"	ButtonSize="35,35" CheckTexture="Controls_RadioButtonLarge.dds"	CheckSize="35,35" CheckTextureOffset="0,35"  Anchor="L,T" BoxOnLeft="1"/>
         <RadioButton	ID="AppealLensButton"     RadioGroup="ActiveLens" TextOffset="-5,0" String="LOC_HUD_APPEAL_LENS"      AllowClickOff="1" ToolTip="LOC_HUD_APPEAL_LENS_TOOLTIP"     Style="WhiteSemiBold14" Offset="10,4"	ButtonTexture="Controls_RadioButtonLarge.dds"	ButtonSize="35,35" CheckTexture="Controls_RadioButtonLarge.dds"	CheckSize="35,35" CheckTextureOffset="0,35"  Anchor="L,T" BoxOnLeft="1"/>
@@ -55,8 +55,8 @@
 						<Image                       Anchor="L,C" Size="7,7"    Texture="LaunchBar_TrackPip" Color="255,255,255,200" Offset="0,-2"/>
 						<CheckBox ID="MapPinListButton" UseSelectedTextures="1" Anchor="L,C" ButtonSize="40,40"  ButtonTexture="LaunchBar_Hook_ButtonSmall" Style="ButtonNormalText" ToolTip="LOC_HUD_MAP_TOGGLE_MAP_PIN_LIST" CheckTexture="Controls_Bolt" CheckColor="0,0,0,0">
 							<Image Texture="MiniMap_MapPins" Size="24,24" Anchor="C,C"/>
-							<Container ID="MapPinListPanel" Anchor="L,T" AnchorSide="I,O" Offset="-9,-5" Size="320,219" Hidden="1" AutoSize="1">
-								<LuaContext  FileName="MapPinListPanel"/>
+							<Container ID="MapPinListPanel" Anchor="L,T" Offset="-9,-35" Size="auto,auto" Hidden="1">
+								<LuaContext FileName="MapPinListPanel"/>
 							</Container>
 	          </CheckBox>
 						<Image                       Anchor="L,C" Size="7,7"    Texture="LaunchBar_TrackPip" Color="255,255,255,200" Offset="0,-2"/>
@@ -73,5 +73,9 @@
 			</SlideAnim>
 		</SlideAnim>
 	</Container>
-	
+
+	<Instance Name="LensButtonInstance">
+		<RadioButton ID="LensButton" RadioGroup="ActiveLens" TextOffset="-5,0" String="$LensName$" AllowClickOff="1" Style="WhiteSemiBold14" Offset="10,4"	ButtonTexture="Controls_RadioButtonLarge.dds"	ButtonSize="35,35" CheckTexture="Controls_RadioButtonLarge.dds"	CheckSize="35,35" CheckTextureOffset="0,35" Anchor="L,T" BoxOnLeft="1"/>
+	</Instance>
+
 </Context>

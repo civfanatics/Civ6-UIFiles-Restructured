@@ -33,7 +33,7 @@ function OnUnitCaptured( currentUnitOwner, unit, owningPlayer, capturingPlayer )
 		local pPopupDialog	:table = PopupDialogInGame:new("UnitCaptured"); 
 		pPopupDialog:AddTitle( Locale.ToUpper( Locale.Lookup("LOC_UNIT_CAPTURE_DEFAULT")));	
 		pPopupDialog:AddText( msg );
-		pPopupDialog:AddButton(Locale.Lookup("LOC_UNIT_CAPTURE_OK"),  function() end );	-- Just lower.
+		pPopupDialog:AddDefaultButton(Locale.Lookup("LOC_UNIT_CAPTURE_OK"),  function() end );	-- Just lower.
 		pPopupDialog:Open();
 	end
 end

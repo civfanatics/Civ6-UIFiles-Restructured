@@ -5,19 +5,18 @@
 
   <Label  ID="PlayerChangingText"    Style="WindowHeader"        Anchor="C,C" String="LOC_MULTIPLAYER_JOINING_ROOM_TITLE" />
   
-  <AlphaAnim        ID="PopupAlphaIn" Size="full,full"  AlphaBegin="0"  AlphaEnd="1"  Speed="3" Function="Root" Cycle="Once">
-    <SlideAnim      ID="PopupSlideIn" Size="full,full"  Start="0,-20"   End="0,0"     Speed="3" Function="Root" Cycle="Once">
-      <Grid         ID="DropShadow"   Size="500,250"              Anchor="C,C" Offset="0,0" Style="DropShadow2"     Color="255,255,255,200" AutoSize="1" AutoSizePadding="25,25" ConsumeMouse="1">
-        <Grid       ID="Window"       Size="500,250"              Anchor="C,C" Offset="0,0" Style="WindowFrameTitle" AutoSize="V" AutoSizePadding="0,10">
+  <AlphaAnim        ID="PopupAlphaIn" Size="parent,parent"  AlphaBegin="0"  AlphaEnd="1"  Speed="3" Function="Root" Cycle="Once">
+    <SlideAnim      ID="PopupSlideIn" Size="parent,parent"  Start="0,-20"   End="0,0"     Speed="3" Function="Root" Cycle="Once">
+      <Grid         ID="DropShadow"   Size="auto,auto"              Anchor="C,C" Offset="0,0" Style="DropShadow2"     Color="255,255,255,200" AutoSizePadding="25,25" ConsumeMouse="1">
+        <Grid       ID="Window"       Size="500,auto"              Anchor="C,C" Offset="0,0" Style="WindowFrameTitle" AutoSizePadding="0,10">
           <Container                  Size="parent,38"                         Offset="0,4">
             <Label  ID="TitleText"    Style="WindowHeader"        Anchor="C,C" String="PLAYER 1 TURN" />
           </Container>
           <Stack		ID="WindowContentStack"  	Size="parent,100"				    Anchor="C,T" Offset="0,50" StackGrowth="Bottom" StackPadding="10">
 
             <Stack ID="BottomButtonsStack" Offset="0,0" StackGrowth="Right" Padding="20" Anchor="C,T">
-              <GridButton   ID="SaveButton"     Size="200,41"   Style="MainButton" String="LOC_PLAYER_CHANGE_POPUP_SAVE_GAME"/>
-              <GridButton   ID="OkButton"       Size="200,41"   Style="MainButton" String="LOC_PLAYER_CHANGE_POPUP_START_TURN"/>
-			  <GridButton   ID="CancelUploadButton"       Size="200,41"   Style="MainButton" String="LOC_PLAYER_CHANGE_POPUP_CANCEL_UPLOAD" ToolTip="LOC_PLAYER_CHANGE_POPUP_CANCEL_UPLOAD_TOOLTIP"/>
+              <GridButton   ID="SaveButton"			Size="200,41"   Style="MainButton" String="LOC_PLAYER_CHANGE_POPUP_SAVE_GAME"/>
+              <GridButton   ID="OkButton"			Size="200,41"   Style="MainButton" String="LOC_PLAYER_CHANGE_POPUP_START_TURN"/>
 			</Stack>
             
             <Stack        ID="PasswordStack" StackGrowth="Right" Padding="20" Anchor="C,C">
@@ -28,7 +27,6 @@
               </Grid>
             </Stack>
 
-			<Label  ID="CloudUploadStatus" Style="FontNormal16" Anchor="C,C" String="" Hidden="1"/>
 		  </Stack>
         </Grid>
       </Grid>

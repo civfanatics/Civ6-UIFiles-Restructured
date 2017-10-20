@@ -12,7 +12,7 @@
         <Container Size="300,400">
           <ScrollPanel	  ID="MainMenuClip" Anchor="L,C"	Size="400,450" FullClip="1" Disabled="1">
             <Image Texture="Controls_DivVertical" Size="14,20" StretchMode="None" AnchorSide="I,O" Anchor="T,L" Color="90,139,190"/>
-            <SlideAnim	  ID="MainButtonTrackAnim" Begin="0,-390"	End="0,-20" Size="full,full" Speed="1" Pause=".5" Cycle="Once" Function="Root" Stopped="1">
+            <SlideAnim	  ID="MainButtonTrackAnim" Begin="0,-390"	End="0,-20" Size="parent,parent" Speed="1" Pause=".5" Cycle="Once" Function="Root" Stopped="1">
               <Grid         ID="MainButtonTrack" Style="DividerVertical" Size="14,390" Color="90,139,190"/>
             </SlideAnim>
             <ScrollPanel    ID="MainButtonClip" Anchor="L,T" Offset="9,0"	Size="parent-10,parent" FullClip="1" Disabled="1">
@@ -27,7 +27,7 @@
           <AlphaAnim        ID="SubMenuAlpha" Pause="0" AlphaBegin="0" AlphaEnd="1" Cycle="Once" Function="Root" Speed="3" Size="400,450" Stopped="1" Offset="0,40" Anchor="L,C">
             <ScrollPanel	  ID="SubMenuClip" Anchor="L,C"	Size="400,450" FullClip="1" Disabled="1">
               <Image Texture="Controls_DivVertical" Size="14,20" StretchMode="None" AnchorSide="I,O" Anchor="T,L" Color="90,139,190"/>
-              <SlideAnim	  ID="SubButtonTrackAnim" Begin="0,-390"	End="0,-20" Size="full,full" Speed="3" Cycle="Once" Function="Root" Stopped="1">
+              <SlideAnim	  ID="SubButtonTrackAnim" Begin="0,-390"	End="0,-20" Size="parent,parent" Speed="3" Cycle="Once" Function="Root" Stopped="1">
                 <Grid       ID="SubButtonTrack" Style="DividerVertical" Size="14,390" Color="90,139,190"/>
               </SlideAnim>
               <ScrollPanel  ID="SubButtonClip" Anchor="L,T" Offset="9,0"	Size="parent-10,parent" FullClip="1" Disabled="1">
@@ -69,10 +69,10 @@
   </Container>
 
 	<Container ID="MotDContainter" Anchor="C,B"	Size="parent,120" InnerPadding="300,0" Offset="0,24">
-		<Grid ID="MotDFrame" Style="SubContainer3" Color="204,207,245,100" Size="parent,120" AutoSize="V" Anchor="C,C">
-			<Stack ID="MotDStack" Anchor="L,T" StackGrowth="Right" StackPadding="10" AutoSize="V" ClampSize="V">
+		<Grid ID="MotDFrame" Style="SubContainer3" Color="204,207,245,100" Size="parent,auto" ClampSize="V" Anchor="C,C">
+			<Stack ID="MotDStack" Anchor="L,T" StackGrowth="Right" StackPadding="10" ClampSize="V">
 				<Button ID="MotDLogo" States="1" Anchor="R,C"	Size="32,32" Texture="Firaxis32"/>
-				<ScrollPanel ID="MotDScroll" Anchor="L,C"  Size="parent-60, parent" Vertical="1" AutoScollbar="1" AutoSize="V" ClampSize="V">
+				<ScrollPanel ID="MotDScroll" Anchor="L,C"  Size="parent-60, auto" Vertical="1" AutoScollbar="1" ClampSize="V">
 					<Label ID="MotDText" Style="FontNormal16" WrapWidth="parent-8" Anchor="L,C"/>
 					<ScrollBar Anchor="R,T" AnchorSide="I,I" Style="ScrollVerticalBarHighContrast" Size="9,parent-10"/>
 				</ScrollPanel>
@@ -95,6 +95,5 @@
 	<LuaContext		ID="StagingRoom"												FileName="StagingRoom"				Hidden="1" />
 	<LuaContext		ID="LoadGameMenu"												FileName="LoadGameMenu"				Hidden="1" />
 	<LuaContext		ID="SaveGameMenu"												FileName="SaveGameMenu"				Hidden="1" />
-	<LuaContext		ID="CloudGameScreen"	FileName="UI/FrontEnd/Multiplayer/CloudGame"	Hidden="1" />
 	<LuaContext		ID="FrontEndPopup"											FileName="FrontEndPopup"			Hidden="1" />
 </ContextDefaults>

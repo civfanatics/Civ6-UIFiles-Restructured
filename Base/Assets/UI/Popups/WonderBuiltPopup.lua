@@ -6,6 +6,8 @@
 --	***************************************************************************
 local ms_eventID = 0;
 
+local ms_hidReligionLensLayer = false;
+
 function OnWonderCompleted(locX, locY, buildingIndex, playerIndex, iPercentComplete)
 
 	local localPlayer = Game.GetLocalPlayer();
@@ -35,8 +37,6 @@ function OnWonderCompleted(locX, locY, buildingIndex, playerIndex, iPercentCompl
 				UI.DataError("The field 'Quote' has not been initialized for "..GameInfo.Buildings[buildingIndex].BuildingType);
 			end
 
-			AutoSizeControls();
-
 			if(GameInfo.Buildings[buildingIndex].QuoteAudio ~= nil) then
 				UI.PlaySound(GameInfo.Buildings[buildingIndex].QuoteAudio);
 			end
@@ -60,16 +60,14 @@ function OnWonderCompleted(locX, locY, buildingIndex, playerIndex, iPercentCompl
 			Controls.ReplayButton:SetHide(not UI.IsWorldRenderViewAvailable(WorldRenderView.VIEW_3D));
 		end
 	end
-end
 
-function AutoSizeControls()
-	Controls.WonderQuote:ReprocessAnchoring();
-	Controls.WonderQuoteContainer:ReprocessAnchoring();
-	Controls.WonderName:ReprocessAnchoring();
-	Controls.WonderNameContainer:ReprocessAnchoring();
-	Controls.RibbonBox:ReprocessAnchoring();
-	Controls.RibbonDropShadow:ReprocessAnchoring();
-	Controls.QuoteContainer:ReprocessAnchoring();
+	-- Ensure the religion lens is disabled when we show the wonder popup
+	if UILens.IsLayerOn( LensLayers.HEX_COLORING_RELIGION ) then
+		UILens.ToggleLayerOff( LensLayers.HEX_COLORING_RELIGION );
+		ms_hidReligionLensLayer = true;
+	else
+		ms_hidReligionLensLayer = false;
+	end
 end
 
 function Resize()
@@ -82,20 +80,6 @@ function Resize()
 	Controls.GradientB2:SetSizeX(screenX);
 	Controls.HeaderDropshadow:SetSizeX(screenX);
 	Controls.HeaderGrid:SetSizeX(screenX);
-
-	Controls.VignetteRB:ReprocessAnchoring();
-	Controls.VignetteRT:ReprocessAnchoring(); 
-	Controls.VignetteLT:ReprocessAnchoring();
-	Controls.VignetteLB:ReprocessAnchoring();
-	Controls.GradientL:ReprocessAnchoring();
-	Controls.GradientR:ReprocessAnchoring();
-	Controls.GradientT:ReprocessAnchoring();
-	Controls.GradientB:ReprocessAnchoring();
-	Controls.GradientB2:ReprocessAnchoring();
-	Controls.WonderCompletedHeader:ReprocessAnchoring();
-	Controls.Close:ReprocessAnchoring();
-
-	AutoSizeControls();
 end
 
 function Close()
@@ -105,6 +89,10 @@ function Close()
 	ms_eventID = 0;
 	UIManager:DequeuePopup( ContextPtr );
     UI.PlaySound("Stop_Wonder_Tracks");
+
+	if ms_hidReligionLensLayer then
+		UILens.ToggleLayerOn( LensLayers.HEX_COLORING_RELIGION );
+	end
 end
 
 function RestartMovie()

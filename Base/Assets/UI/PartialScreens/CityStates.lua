@@ -430,6 +430,14 @@ function Close()
         UI.PlaySound("CityStates_Panel_Close");
     end
 
+	local localPlayerID = Game.GetLocalPlayer();
+	if (localPlayerID ~= -1) then
+		local localPlayer = Players[localPlayerID];
+		if (localPlayer ~= nil and localPlayer:GetInfluence() ~= nil and not localPlayer:GetInfluence():IsGivingTokensConsidered()) then
+			localPlayer:GetInfluence():SetGivingTokensConsidered(true);
+		end
+	end
+
     m_kScreenSlideAnim.Hide();
 end
 
@@ -516,14 +524,6 @@ function OnOpenSendEnvoys( iPlayer:number )
 	UI.PlaySound("CityStates_Panel_Open");
 	m_kScreenSlideAnim.Show();
 	Refresh();
-
-	local localPlayerID = Game.GetLocalPlayer();
-	if (localPlayerID ~= -1) then
-		local localPlayer = Players[localPlayerID];
-		if (localPlayer ~= nil and localPlayer:GetInfluence() ~= nil and not localPlayer:GetInfluence():IsGivingTokensConsidered()) then
-			localPlayer:GetInfluence():SetGivingTokensConsidered(true);
-		end
-	end
 end
 
 
@@ -849,7 +849,9 @@ function AddCityStateRow( kCityState:table )
 
 	textureOffsetX, textureOffsetY, textureSheet, tooltip = GetRelationshipPipAtlasPieces( kCityState );
 	kInst.DiplomacyPip:SetTexture( textureOffsetX, textureOffsetY, textureSheet );
-	kInst.DiplomacyPip:SetToolTipString(tooltip);
+	if GameCapabilities.HasCapability("CAPABILITY_MILITARY") then
+		kInst.DiplomacyPip:SetToolTipString(tooltip);
+	end
 
 	for _,kQuest in pairs( kCityState.Quests ) do
 		numQuests = numQuests + 1;
@@ -1048,6 +1050,9 @@ function ViewCityState( iPlayer:number )
 		return;
 	end
 
+	local pLocalPlayer:table = Players[localPlayerID];
+	local pLocalPlayerDiplomacy:table = pLocalPlayer:GetDiplomacy();
+
 	-- Create a column of City-States on the left side so a player can click
 	-- and instantly view them.
 	m_CityStateColumnIM:ResetInstances();
@@ -1065,7 +1070,9 @@ function ViewCityState( iPlayer:number )
 
 			textureOffsetX, textureOffsetY, textureSheet, tooltip = GetRelationshipPipAtlasPieces( kCityState );
 			kInst.DiplomacyPip:SetTexture( textureOffsetX, textureOffsetY, textureSheet );
-			kInst.DiplomacyPip:SetToolTipString(tooltip);
+			if GameCapabilities.HasCapability("CAPABILITY_MILITARY") then
+				kInst.DiplomacyPip:SetToolTipString(tooltip);
+			end
 		end
 	end
 	Controls.CityStateIconStack:CalculateSize();
@@ -1092,39 +1099,52 @@ function ViewCityState( iPlayer:number )
 
 	local textureOffsetX, textureOffsetY, textureSheet, tooltip = GetRelationshipPipAtlasPieces( kCityState );
 	Controls.DiplomacyPip:SetTexture( textureOffsetX, textureOffsetY, textureSheet );
-	Controls.DiplomacyPip:SetToolTipString(tooltip);
+	if GameCapabilities.HasCapability("CAPABILITY_MILITARY") then
+		Controls.DiplomacyPip:SetToolTipString(tooltip);
+	end
 
-	local warPeaceTooltip:string = "";
-	if kCityState.isAtWar then
-		Controls.PeaceWarButton:SetText( Locale.Lookup("LOC_CITY_STATES_MAKE_PEACE") );
-		Controls.PeaceWarButton:SetDisabled( not kCityState.CanMakePeaceWith );		
-		if not kCityState.CanMakePeaceWith then
-			if(GlobalParameters.DIPLOMACY_WAR_LAST_FOREVER == 1 or GlobalParameters.DIPLOMACY_WAR_LAST_FOREVER == true) then
-				warPeaceTooltip = warPeaceTooltip .. Locale.Lookup("LOC_CITY_STATES_TURNS_WAR_NO_PEACE");
-			else
-				warPeaceTooltip = warPeaceTooltip .. Locale.Lookup("LOC_CITY_STATES_TURNS_WAR", m_iTurnsOfWar + kCityState.iTurnChanged - Game.GetCurrentGameTurn() );
+	if GameCapabilities.HasCapability("CAPABILITY_MILITARY") then
+		Controls.PeaceWarButton:SetHide(false);
+		local warPeaceTooltip:string = "";
+		if kCityState.isAtWar then
+			Controls.PeaceWarButton:SetText( Locale.Lookup("LOC_CITY_STATES_MAKE_PEACE") );
+			Controls.PeaceWarButton:SetDisabled( not kCityState.CanMakePeaceWith );		
+			if not kCityState.CanMakePeaceWith then
+				if(GlobalParameters.DIPLOMACY_WAR_LAST_FOREVER == 1 or GlobalParameters.DIPLOMACY_WAR_LAST_FOREVER == true) then
+					warPeaceTooltip = warPeaceTooltip .. Locale.Lookup("LOC_CITY_STATES_TURNS_WAR_NO_PEACE");
+				else
+					if kCityState.SuzerainID ~= -1 and pLocalPlayerDiplomacy:IsAtWarWith(kCityState.SuzerainID) then
+						warPeaceTooltip = warPeaceTooltip .. Locale.Lookup("LOC_CITY_STATES_SUZERAIN_WAR_NO_PEACE");
+					else
+						warPeaceTooltip = warPeaceTooltip .. Locale.Lookup("LOC_CITY_STATES_TURNS_WAR", m_iTurnsOfWar + kCityState.iTurnChanged - Game.GetCurrentGameTurn() );
+					end
+				end
+			end
+		else
+			Controls.PeaceWarButton:SetText( Locale.Lookup("LOC_CITY_STATES_DECLARE_WAR_BUTTON") );
+			Controls.PeaceWarButton:SetDisabled( not kCityState.CanDeclareWarOn );
+			warPeaceTooltip = warPeaceTooltip .. Locale.Lookup("LOC_CITY_STATES_DECLARE_WAR_DETAILS");
+			if not kCityState.CanDeclareWarOn then
+				warPeaceTooltip = warPeaceTooltip .. " " .. Locale.Lookup("LOC_CITY_STATES_TURNS_PEACE", m_iTurnsOfPeace + kCityState.iTurnChanged - Game.GetCurrentGameTurn() );
 			end
 		end
-	else
-		Controls.PeaceWarButton:SetText( Locale.Lookup("LOC_CITY_STATES_DECLARE_WAR_BUTTON") );
-		Controls.PeaceWarButton:SetDisabled( not kCityState.CanDeclareWarOn );
-		warPeaceTooltip = warPeaceTooltip .. Locale.Lookup("LOC_CITY_STATES_DECLARE_WAR_DETAILS");
-		if not kCityState.CanDeclareWarOn then
-			warPeaceTooltip = warPeaceTooltip .. " " .. Locale.Lookup("LOC_CITY_STATES_TURNS_PEACE", m_iTurnsOfPeace + kCityState.iTurnChanged - Game.GetCurrentGameTurn() );
-		end
-	end
-	Controls.PeaceWarButton:SetToolTipString( warPeaceTooltip );
-	Controls.PeaceWarButton:RegisterCallback( Mouse.eLClick, function() OnChangeWarPeaceStatus( kCityState ); end );
+		Controls.PeaceWarButton:SetToolTipString( warPeaceTooltip );
+		Controls.PeaceWarButton:RegisterCallback( Mouse.eLClick, function() OnChangeWarPeaceStatus( kCityState ); end );
 	
-	Controls.LevyMilitaryButton:SetDisabled(not kCityState.CanLevyMilitary);
-	if kCityState.HasLevyActive and kCityState.IsLocalPlayerSuzerain then
-		local levyTooltip = Locale.Lookup("LOC_CITY_STATES_MILITARY_ALREADY_LEVIED");
-		Controls.LevyMilitaryButton:SetToolTipString(levyTooltip);
+		Controls.LevyMilitaryButton:SetHide(false);
+		Controls.LevyMilitaryButton:SetDisabled(not kCityState.CanLevyMilitary);
+		if kCityState.HasLevyActive and kCityState.IsLocalPlayerSuzerain then
+			local levyTooltip = Locale.Lookup("LOC_CITY_STATES_MILITARY_ALREADY_LEVIED");
+			Controls.LevyMilitaryButton:SetToolTipString(levyTooltip);
+		else
+			local levyTooltip = Locale.Lookup("LOC_CITY_STATES_LEVY_MILITARY_DETAILS", kCityState.LevyMilitaryCost, kCityState.LevyMilitaryTurnLimit);
+			Controls.LevyMilitaryButton:SetToolTipString(levyTooltip);
+		end 
+		Controls.LevyMilitaryButton:RegisterCallback( Mouse.eLClick, function() OnLevyMilitary( kCityState ); end );
 	else
-		local levyTooltip = Locale.Lookup("LOC_CITY_STATES_LEVY_MILITARY_DETAILS", kCityState.LevyMilitaryCost, kCityState.LevyMilitaryTurnLimit);
-		Controls.LevyMilitaryButton:SetToolTipString(levyTooltip);
-	end 
-	Controls.LevyMilitaryButton:RegisterCallback( Mouse.eLClick, function() OnLevyMilitary( kCityState ); end );
+		Controls.LevyMilitaryButton:SetHide(true);
+		Controls.PeaceWarButton:SetHide(true);
+	end
 
 	Controls.TypeValue:SetText( GetTypeName(kCityState) );
 	Controls.PatronValue:SetText( kCityState.SuzerainName );
@@ -1234,15 +1254,12 @@ function ViewCityState( iPlayer:number )
 		-- Generate the information for each City-State
 		for iOtherPlayer,influence in pairs(kCityState.Influence) do
 			local kItem			:table	= m_InfluenceRowIM:GetInstance();
-			local pLocalPlayer	:table	= Players[localPlayerID];
 			local civName		:string = "LOCAL_CITY_STATES_UNKNOWN";
-			if (pLocalPlayer ~= nil) then
-				local pPlayerConfig :table = PlayerConfigurations[iOtherPlayer];
-				if (localPlayerID == iOtherPlayer) then
-					civName = Locale.Lookup(pPlayerConfig:GetPlayerName()) .. " (" .. Locale.Lookup("LOC_CITY_STATES_YOU") .. ")";
-				elseif (pLocalPlayer:GetDiplomacy():HasMet(iOtherPlayer)) then
-					civName = pPlayerConfig:GetPlayerName();
-				end
+			local pPlayerConfig :table = PlayerConfigurations[iOtherPlayer];
+			if (localPlayerID == iOtherPlayer) then
+				civName = Locale.Lookup(pPlayerConfig:GetPlayerName()) .. " (" .. Locale.Lookup("LOC_CITY_STATES_YOU") .. ")";
+			elseif (pLocalPlayerDiplomacy:HasMet(iOtherPlayer)) then
+				civName = pPlayerConfig:GetPlayerName();
 			end
 			kItem.CityName:SetText( Locale.ToUpper(civName) );
 			kItem.AmountBar:SetPercent( influence / largestAmount);
@@ -1343,7 +1360,9 @@ function RefreshRelationshipStack( kRelationships:table, StackIM:table )
 				local textureOffsetX:number, textureOffsetY:number, textureSheet:string = IconManager:FindIconAtlas(iconName, 23);
 		
 				instance.DiplomacyPip:SetTexture(textureOffsetX, textureOffsetY, textureSheet);
-				instance.DiplomacyPip:SetToolTipString(kRelationship.DiploTooltip);
+				if GameCapabilities.HasCapability("CAPABILITY_MILITARY") then
+					instance.DiplomacyPip:SetToolTipString(kRelationship.DiploTooltip);
+				end
 				instance.DiplomacyPip:SetHide(false);
 			else
 				instance.DiplomacyPip:SetHide(true);
@@ -1430,25 +1449,7 @@ function GetData()
 				end
 			end
 
-			local cityStateType	:string = "";
-			local leader		:string = PlayerConfigurations[ iPlayer ]:GetLeaderTypeName();
-			local leaderInfo	:table	= GameInfo.Leaders[leader];
-			if leaderInfo == nil or leaderInfo.InheritFrom == nil then
-				UI.DataError("Cannot determine leader type for player #"..tostring( iPlayer ));
-				cityStateType = "unknown";
-			elseif (leader == "LEADER_MINOR_CIV_SCIENTIFIC" or leaderInfo.InheritFrom == "LEADER_MINOR_CIV_SCIENTIFIC") then				
-				cityStateType = "SCIENTIFIC";
-			elseif (leader == "LEADER_MINOR_CIV_RELIGIOUS" or leaderInfo.InheritFrom == "LEADER_MINOR_CIV_RELIGIOUS") then
-				cityStateType = "RELIGIOUS";
-			elseif (leader == "LEADER_MINOR_CIV_TRADE" or leaderInfo.InheritFrom == "LEADER_MINOR_CIV_TRADE") then
-				cityStateType = "TRADE";
-			elseif (leader == "LEADER_MINOR_CIV_CULTURAL" or leaderInfo.InheritFrom == "LEADER_MINOR_CIV_CULTURAL") then
-				cityStateType = "CULTURE";
-			elseif (leader == "LEADER_MINOR_CIV_MILITARISTIC" or leaderInfo.InheritFrom == "LEADER_MINOR_CIV_MILITARISTIC") then
-				cityStateType = "MILITARISTIC";
-			elseif (leader == "LEADER_MINOR_CIV_INDUSTRIAL" or leaderInfo.InheritFrom == "LEADER_MINOR_CIV_INDUSTRIAL") then
-				cityStateType = "INDUSTRIAL";
-			end
+			local cityStateType	:string = GetCityStateType( iPlayer );
 
 			local leader	:string = PlayerConfigurations[iPlayer]:GetLeaderTypeName();
 			local civType	:string = GameInfo.CivilizationLeaders[leader].CivilizationType;
@@ -1554,6 +1555,31 @@ function GetData()
 	m_kLastCityStates = nil;
 end
 
+-- ===========================================================================
+function GetCityStateType( playerID:number )
+
+	local cityStateType	:string = "";
+	local leader		:string = PlayerConfigurations[ playerID ]:GetLeaderTypeName();
+	local leaderInfo	:table	= GameInfo.Leaders[leader];
+	if leaderInfo == nil or leaderInfo.InheritFrom == nil then
+		UI.DataError("Cannot determine leader type for player #"..tostring( iPlayer ));
+		cityStateType = "unknown";
+	elseif (leader == "LEADER_MINOR_CIV_SCIENTIFIC" or leaderInfo.InheritFrom == "LEADER_MINOR_CIV_SCIENTIFIC") then				
+		cityStateType = "SCIENTIFIC";
+	elseif (leader == "LEADER_MINOR_CIV_RELIGIOUS" or leaderInfo.InheritFrom == "LEADER_MINOR_CIV_RELIGIOUS") then
+		cityStateType = "RELIGIOUS";
+	elseif (leader == "LEADER_MINOR_CIV_TRADE" or leaderInfo.InheritFrom == "LEADER_MINOR_CIV_TRADE") then
+		cityStateType = "TRADE";
+	elseif (leader == "LEADER_MINOR_CIV_CULTURAL" or leaderInfo.InheritFrom == "LEADER_MINOR_CIV_CULTURAL") then
+		cityStateType = "CULTURE";
+	elseif (leader == "LEADER_MINOR_CIV_MILITARISTIC" or leaderInfo.InheritFrom == "LEADER_MINOR_CIV_MILITARISTIC") then
+		cityStateType = "MILITARISTIC";
+	elseif (leader == "LEADER_MINOR_CIV_INDUSTRIAL" or leaderInfo.InheritFrom == "LEADER_MINOR_CIV_INDUSTRIAL") then
+		cityStateType = "INDUSTRIAL";
+	end
+
+	return cityStateType;
+end
 
 -- ===========================================================================
 --	UI EVENT
@@ -1605,11 +1631,13 @@ end
 --	Game Event
 -- ===========================================================================
 function OnCityLiberated(playerID:number, cityID:number)
-	local localPlayerID = Game.GetLocalPlayer();
-	if (localPlayerID == -1) then
-		return;
+	if not ContextPtr:IsHidden() then
+		local localPlayerID = Game.GetLocalPlayer();
+		if (localPlayerID == -1) then
+			return;
+		end
+		Refresh();
 	end
-	Refresh();
 end
 
 -- ===========================================================================
@@ -1622,7 +1650,9 @@ function OnDiplomacyDeclareWar(firstPlayerID, secondPlayerID)
 			m_kEnvoyChanges = {}; -- Zero out any pending envoy choices
 		end
 	end
-	Refresh();
+	if not ContextPtr:IsHidden() then
+		Refresh();
+	end
 end
 
 -- ===========================================================================
@@ -1635,29 +1665,35 @@ function OnDiplomacyMakePeace(firstPlayerID, secondPlayerID)
 			m_kEnvoyChanges = {}; -- Zero out any pending envoy choices
 		end
 	end
-	Refresh();
+	if not ContextPtr:IsHidden() then
+		Refresh();
+	end
 end
 
 -- ===========================================================================
 --	Game Event
 -- ===========================================================================
 function OnInfluenceChanged()
-	local localPlayerID = Game.GetLocalPlayer();
-	if (localPlayerID == -1) then
-		return;
+	if not ContextPtr:IsHidden() then
+		local localPlayerID = Game.GetLocalPlayer();
+		if (localPlayerID == -1) then
+			return;
+		end
+		Refresh();
 	end
-	Refresh();
 end
 
 -- ===========================================================================
 --	Game Event
 -- ===========================================================================
 function OnInfluenceGiven()
-	local localPlayerID = Game.GetLocalPlayer();
-	if (localPlayerID == -1) then
-		return;
+	if not ContextPtr:IsHidden() then
+		local localPlayerID = Game.GetLocalPlayer();
+		if (localPlayerID == -1) then
+			return;
+		end
+		Refresh();
 	end
-	Refresh();
 end
 
 -- ===========================================================================
@@ -1673,11 +1709,13 @@ end
 --	Game Event
 -- ===========================================================================
 function OnQuestChanged()
-	local localPlayerID = Game.GetLocalPlayer();
-	if (localPlayerID == -1) then
-		return;
+	if not ContextPtr:IsHidden() then
+		local localPlayerID = Game.GetLocalPlayer();
+		if (localPlayerID == -1) then
+			return;
+		end
+		Refresh();
 	end
-	Refresh();
 end
 
 -- ===========================================================================

@@ -2,25 +2,22 @@
 <Context>
   <Include File="CivilizationIcon"/>
   
-  <Container Size="full,full">
+  <Container Size="parent,parent">
 
-    <!--
-    This container control passed to engine to use as a leader background. Hidden so UI system doesn't
-    render it but GlobalUpdate set to 1 so UI manager can update animaions while hidden.
-    -->
-    <Container ID="LeaderScene" Size="full,full" Hidden ="1" GlobalUpdate="1" ConsumeMouse="1">
-      <Container ID="Backgrounds" Size="full,full"/>
-      <Image ID="BottomLetterbox" Texture="DiplomacyLetterboxTop" Size="full,200" Anchor="L,B" Hidden="0" FlipX="1" FlipY="1" StretchMode="Fill" Color="0,0,0,255"/>
-      <Image ID="TopLetterbox" Texture="DiplomacyLetterboxTop" Size="full,200" Anchor="L,T" Hidden="0" StretchMode="Fill" Color="0,0,0,255"/>
-      <Image Texture="Controls_Gradient" Color="0,0,0,200" Size="full,400" Anchor="L,T" FlipY="1"/>
-      <Image Texture="Controls_Gradient" Color="0,0,0,255" Size="full,250" Anchor="L,T" FlipY="1"/>
+    <!--This container control passed to engine to use as a leader background. Hidden so UI system doesn't render it-->
+    <Container ID="LeaderScene" Size="parent,parent" Hidden ="1" ConsumeMouse="1">
+      <Container ID="Backgrounds" Size="parent,parent"/>
+      <Image ID="BottomLetterbox" Texture="DiplomacyLetterboxTop" Size="parent,200" Anchor="L,B" Hidden="0" FlipX="1" FlipY="1" StretchMode="Fill" Color="0,0,0,255"/>
+      <Image ID="TopLetterbox" Texture="DiplomacyLetterboxTop" Size="parent,200" Anchor="L,T" Hidden="0" StretchMode="Fill" Color="0,0,0,255"/>
+      <Image Texture="Controls_Gradient" Color="0,0,0,200" Size="parent,400" Anchor="L,T" FlipY="1"/>
+      <Image Texture="Controls_Gradient" Color="0,0,0,255" Size="parent,250" Anchor="L,T" FlipY="1"/>
       <Image Size="300,parent" Texture="Controls_Gradient" Anchor="R,T" Rotate="270" Color="0,0,0,255"/>
       <Image Size="300,parent" Texture="Controls_Gradient" Anchor="L,T" Rotate="90" Color="0,0,0,255"/>
     </Container>
 
     <!-- Signature area -->
-    <AlphaAnim		ID="Signature_Alpha"					AlphaBegin="0"	AlphaEnd="1"	Speed="2" Function="Root" Cycle="Once" Size="full,full"  >
-      <SlideAnim	ID="Signature_Slide"					Begin="-10,0"		End="0,0"			Speed="2" Function="Root" Cycle="Once" Size="full,full"  >
+    <AlphaAnim		ID="Signature_Alpha"					AlphaBegin="0"	AlphaEnd="1"	Speed="2" Function="Root" Cycle="Once" Size="parent,parent"  >
+      <SlideAnim	ID="Signature_Slide"					Begin="-10,0"		End="0,0"			Speed="2" Function="Root" Cycle="Once" Size="parent,parent"  >
         <Stack		ID="SignatureStack" StackGrowth="Left" Offset="10,20" Anchor="R,T">
           <Container Size="62,62">
             <MakeInstance Name="CivilizationIconShaded44"/>
@@ -36,7 +33,7 @@
   </Container>
   
   <Instance Name="Layer">
-    <SlideAnim ID="Background_Anim" Begin="0,0" End="0,0" Cycle="Once" Function="OutQuint" Power="4" Speed=".5" Size="full,full">
+    <SlideAnim ID="Background_Anim" Begin="0,0" End="0,0" Cycle="Once" Function="OutQuint" Power="4" Speed=".5" Size="parent,parent">
       <Image   ID="Background_Image" Anchor="C,C"	Size="parent,parent" Texture="CLEOPATRA_1" Sampler ="Linear" StretchMode="Fill"/>
     </SlideAnim>
   </Instance>

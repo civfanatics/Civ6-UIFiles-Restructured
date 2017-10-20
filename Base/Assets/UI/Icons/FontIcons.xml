@@ -224,6 +224,8 @@
 		<Row Name="PressureLow" Atlas="ICON_ATLAS_FONT_ICON_BASELINE_4" Index="226"/>
 		<Row Name="GoingTo" Atlas="ICON_ATLAS_FONT_ICON_BASELINE_6" Index="227"/>
 		<Row Name="Therefore" Atlas="ICON_ATLAS_FONT_ICON_BASELINE_6" Index="227"/>
+    <Row Name="PressureRight" Atlas="ICON_ATLAS_FONT_ICON_BASELINE_4" Index="229"/>
+    <Row Name="PressureLeft" Atlas="ICON_ATLAS_FONT_ICON_BASELINE_4" Index="230"/>
 		<Row Name="Bombard_Large" Atlas="ICON_ATLAS_FONT_ICON_BASELINE_4" Index="231"/>
 		<Row Name="Charges_Large" Atlas="ICON_ATLAS_FONT_ICON_BASELINE_4" Index="232"/>
 		<Row Name="Movement_Large" Atlas="ICON_ATLAS_FONT_ICON_BASELINE_4" Index="233"/>

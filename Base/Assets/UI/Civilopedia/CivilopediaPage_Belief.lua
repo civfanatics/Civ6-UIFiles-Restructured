@@ -22,7 +22,8 @@ local sectionId = page.SectionId;
 		beliefClass = GameInfo.BeliefClasses[belief.BeliefClassType];
 	end
 
-	local buildings = {};
+	local unlocks = {};
+	local unlock_units = {};
 	local has_modifier = {};
 	for row in GameInfo.BeliefModifiers() do
 		if(row.BeliefType == beliefType) then
@@ -38,9 +39,31 @@ local sectionId = page.SectionId;
 					for args in GameInfo.ModifierArguments() do
 						if(args.ModifierId == row.ModifierId) then
 							if(args.Name == "BuildingType") then
-								local building = GameInfo.Buildings[args.Value];
-								if(building) then
-									table.insert(buildings, {{"ICON_" .. building.BuildingType, building.Name, building.BuildingType}, building.Name});
+								local info = GameInfo.Buildings[args.Value];
+								if(info) then
+									table.insert(unlocks, {{"ICON_" .. info.BuildingType, info.Name, info.BuildingType}, info.Name});
+								end
+							end
+						end
+					end
+				elseif(info.EffectType == "EFFECT_ADJUST_PLAYER_VALID_IMPROVEMENT") then
+					for args in GameInfo.ModifierArguments() do
+						if(args.ModifierId == row.ModifierId) then
+							if(args.Name == "ImprovementType") then
+								local info = GameInfo.Improvements[args.Value];
+								if(info) then
+									table.insert(unlocks, {{"ICON_" .. info.ImprovementType, info.Name, info.ImprovementType}, info.Name});
+								end
+							end
+						end
+					end					
+				elseif(info.EffectType == "EFFECT_ADD_RELIGIOUS_UNIT") then
+					for args in GameInfo.ModifierArguments() do
+						if(args.ModifierId == row.ModifierId) then
+							if(args.Name == "UnitType") then
+								local info = GameInfo.Units[args.Value];
+								if(info) then
+									table.insert(unlock_units, {{"ICON_" .. info.UnitType, info.Name, info.UnitType}, info.Name});
 								end
 							end
 						end
@@ -60,9 +83,17 @@ local sectionId = page.SectionId;
 			s:AddLabel(beliefClass.Name);
 			s:AddSeparator();
 
-			if(#buildings > 0) then
+			if(#unlocks > 0) then
 				s:AddHeader("LOC_UI_PEDIA_SPECIAL_INFRASTRUCTURE");
-				for i,v in ipairs(buildings) do
+				for i,v in ipairs(unlocks) do
+					s:AddIconLabel(v[1], v[2]);
+				end
+				s:AddSeparator();
+			end
+
+			if(#unlock_units > 0) then
+				s:AddHeader("LOC_UI_PEDIA_SPECIAL_UNITS");
+				for i,v in ipairs(unlock_units) do
 					s:AddIconLabel(v[1], v[2]);
 				end
 				s:AddSeparator();

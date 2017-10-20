@@ -1,10 +1,6 @@
 --CityPanelOverview
 --Triggered by selecting a city
 
--- Include self contained additional tabs
-g_AdditionalTabData = {};
-include("CityPanelTab_", true);
-
 include( "AdjacencyBonusSupport" );		-- GetAdjacentYieldBonusString()
 include( "Civ6Common" );				-- GetYieldString()
 include( "InstanceManager" );
@@ -52,29 +48,33 @@ local YIELD_STATE :table = {
 --	VARIABLES
 -- ===========================================================================
 
-local m_kAmenitiesIM		:table	= InstanceManager:new( "AmenityInstance",			"Top", Controls.AmenityStack );
-local m_kBuildingsIM		:table	= InstanceManager:new( "BuildingInstance",			"Top");
-local m_kDistrictsIM		:table	= InstanceManager:new( "DistrictInstance",			"Top", Controls.BuildingAndDistrictsStack );
-local m_kHousingIM			:table	= InstanceManager:new( "HousingInstance",			"Top", Controls.HousingStack );
-local m_kOtherReligionsIM	:table	= InstanceManager:new( "OtherReligionInstance",		"Top", Controls.OtherReligions );
-local m_kProductionIM		:table	= InstanceManager:new( "ProductionInstance",		"Top", Controls.ProductionQueueStack );
-local m_kReligionsBeliefsIM	:table	= InstanceManager:new( "ReligionBeliefsInstance",	"Top", Controls.ReligionBeliefsStack );
-local m_kTradingPostsIM		:table	= InstanceManager:new( "TradingPostInstance",		"Top", Controls.TradingPostsStack );
-local m_kWondersIM			:table	= InstanceManager:new( "WonderInstance",			"Top", Controls.WondersStack );
-local m_kTabButtonIM		:table	= InstanceManager:new( "TabButtonInstance",		"Button", Controls.TabContainer );
+local m_kAmenitiesIM			= InstanceManager:new( "AmenityInstance",			"Top", Controls.AmenityStack );
+local m_kBuildingsIM			= InstanceManager:new( "BuildingInstance",			"Top");
+local m_kDistrictsIM			= InstanceManager:new( "DistrictInstance",			"Top", Controls.BuildingAndDistrictsStack );
+local m_kHousingIM			= InstanceManager:new( "HousingInstance",			"Top", Controls.HousingStack );
+local m_kOtherReligionsIM		= InstanceManager:new( "OtherReligionInstance",		"Top", Controls.OtherReligions );
+local m_kProductionIM			= InstanceManager:new( "ProductionInstance",		"Top", Controls.ProductionQueueStack );
+local m_kReligionsBeliefsIM	= InstanceManager:new( "ReligionBeliefsInstance",	"Top", Controls.ReligionBeliefsStack );
+local m_kTradingPostsIM		= InstanceManager:new( "TradingPostInstance",		"Top", Controls.TradingPostsStack );
+local m_kWondersIM			= InstanceManager:new( "WonderInstance",			"Top", Controls.WondersStack );
 
-local m_kData				:table	= nil;
-local m_isDirty				:boolean= false;
-local m_isInitializing		:boolean= false;		
-local m_isShowingPanels		:boolean= false;
-local m_pCity				:table	= nil;
-local m_pPlayer				:table	= nil;
-local m_primaryColor		:number = 0xcafef00d;	
-local m_secondaryColor		:number = 0xf00d1ace;
+local m_kData				= nil;
+local m_isDirty			= false;
+local m_isInitializing	= false;		
+local m_isShowingPanels	= false;
+local m_pCity				= nil;
+local m_pPlayer			= nil;
+local m_primaryColor		= 0xcafef00d;	
+local m_secondaryColor	= 0xf00d1ace;
+ 
+local ms_eventID			= 0;
+local m_isShowingPanel	= false;
 
-local ms_eventID = 0;
-local m_tabs;
-local m_isShowingPanel		:boolean = false;
+-- ===========================================================================
+--	GLOBALS
+-- ===========================================================================
+m_kTabButtonIM			= InstanceManager:new( "TabButtonInstance",		"Button", Controls.TabContainer );
+m_tabs				= nil;
 
 
 function UpdateYieldData( data:table )
@@ -111,14 +111,6 @@ function HideAll()
 	--Controls.StrengthButton:SetSelected(false);
 	--Controls.StrengthIcon:SetColorByName("White");
 
-	-- Loop through dynamic tab buttons deselecting them and setting them to color White
-	for _,tabData in pairs(g_AdditionalTabData) do
-		if tabData.ButtonInstance then
-			tabData.ButtonInstance.Button:SetSelected(false);
-			tabData.ButtonInstance.Icon:SetColorByName("White");
-		end
-	end
-
 	Controls.PanelBreakdown:SetHide(true);
 	Controls.PanelReligion:SetHide(true);
 	Controls.PanelAmenities:SetHide(true);
@@ -138,13 +130,13 @@ function CalculateSizeAndAccomodate(scrollPanelControl: table, stackControl: tab
 	stackControl:ReprocessAnchoring();
 	scrollPanelControl:CalculateSize();
 	
-	if(scrollPanelControl:GetRatio()<1) then
-		adjustedSizeX = SIZE_PANEL_X-12;
-	else	
-		adjustedSizeX = SIZE_PANEL_X;
-	end
-	scrollPanelControl:SetSizeX(adjustedSizeX);
-	stackControl:SetSizeX(adjustedSizeX);
+	--if(scrollPanelControl:GetRatio()<1) then
+	--	adjustedSizeX = SIZE_PANEL_X-12;
+	--else	
+	--	adjustedSizeX = SIZE_PANEL_X;
+	--end
+	--scrollPanelControl:SetSizeX(adjustedSizeX);
+	--stackControl:SetSizeX(adjustedSizeX);
 
 	scrollPanelControl:CalculateSize();
 	
@@ -233,6 +225,7 @@ function ViewPanelBreakdown( data:table )
 	m_kDistrictsIM:ResetInstances();	
 	m_kTradingPostsIM:ResetInstances();
 	m_kWondersIM:ResetInstances();
+	local playerID = Game.GetLocalPlayer();
 
 	-- Add districts (and their buildings)
 	for _, district in ipairs(data.BuildingsAndDistricts) do
@@ -245,6 +238,8 @@ function ViewPanelBreakdown( data:table )
 			kInstanceDistrict.DistrictName:SetText( districtName );
 			kInstanceDistrict.DistrictYield:SetText( district.YieldBonus );
 			kInstanceDistrict.Icon:SetIcon( district.Icon );
+			local sToolTip = ToolTipHelper.GetToolTip(district.Type, playerID)
+			kInstanceDistrict.Top:SetToolTipString( sToolTip);
 			for _,building in ipairs(district.Buildings) do
 				if building.isBuilt then
 					local kInstanceBuild:table = m_kBuildingsIM:GetInstance(kInstanceDistrict.BuildingStack);
@@ -254,6 +249,9 @@ function ViewPanelBreakdown( data:table )
 					end
 					kInstanceBuild.BuildingName:SetText( buildingName );
 					kInstanceBuild.Icon:SetIcon( building.Icon );
+					local pRow = GameInfo.Buildings[building.Type];
+					local sToolTip = ToolTipHelper.GetBuildingToolTip( pRow.Hash, playerID, m_pCity );
+					kInstanceBuild.Top:SetToolTipString( sToolTip);
 					local yieldString:string = "";
 					for _,kYield in ipairs(building.Yields) do
 						yieldString = yieldString .. GetYieldString(kYield.YieldType,kYield.YieldChange);
@@ -267,9 +265,11 @@ function ViewPanelBreakdown( data:table )
 	end
 
 	-- Add wonders
+	local hideWondersInfo :boolean = not GameCapabilities.HasCapability("CAPABILITY_CITY_HUD_WONDERS");
 	local isHasWonders :boolean = (table.count(data.Wonders) > 0)
-	Controls.NoWondersArea:SetHide( isHasWonders );
-	Controls.WondersArea:SetHide( not isHasWonders );
+	Controls.NoWondersArea:SetHide(hideWondersInfo or isHasWonders);
+	Controls.WondersArea:SetHide(hideWondersInfo or not isHasWonders);
+	Controls.WondersHeader:SetHide(hideWondersInfo);
 
 	for _, wonder in ipairs(data.Wonders) do
 		local kInstanceWonder:table = m_kWondersIM:GetInstance();
@@ -283,10 +283,12 @@ function ViewPanelBreakdown( data:table )
 	end
 
 	-- Add trading posts
-	local isHasTradingPosts :boolean = (table.count(data.TradingPosts) > 0)
-	Controls.NoTradingPostsArea:SetHide( isHasTradingPosts );
-	Controls.TradingPostsArea:SetHide( not isHasTradingPosts );
-	
+	local hideTradingPostsInfo :boolean = not GameCapabilities.HasCapability("CAPABILITY_CITY_HUD_TRADING_POSTS");
+	local isHasTradingPosts :boolean = (table.count(data.TradingPosts) > 0);
+	Controls.NoTradingPostsArea:SetHide(hideTradingPostsInfo or isHasTradingPosts);
+	Controls.TradingPostsArea:SetHide(hideTradingPostsInfo or not isHasTradingPosts);
+	Controls.TradingPostsHeader:SetHide(hideTradingPostsInfo);
+
 	if isHasTradingPosts then
 		for _, tradePostPlayerId in ipairs(data.TradingPosts) do
 			local kInstanceTradingPost	:table = m_kTradingPostsIM:GetInstance();		
@@ -339,7 +341,7 @@ function ViewPanelReligion( data:table )
 			
 			local religionName	:string = Game.GetReligion():GetName(religion.ID);
 			local iconName		:string = "ICON_" .. religion.ReligionType;
-			local textureOffsetX:number, textureOffsetY:number, textureSheet:string = IconManager:FindIconAtlas(iconName);
+			local textureOffsetX:number, textureOffsetY:number, textureSheet:string = IconManager:FindIconAtlas(iconName, 22);
 
 			Controls.DominantReligionGrid:SetHide(true);
 			if textureSheet ~= nil then
@@ -458,9 +460,11 @@ function ViewPanelAmenities( data:table )
 		kInstance.AmenityYield:SetText( Locale.ToNumber(data.AmenitiesFromGreatPeople) );
 	end
 
-	kInstance = m_kAmenitiesIM:GetInstance();
-	kInstance.Amenity:SetText( Locale.Lookup("LOC_HUD_CITY_AMENITIES_FROM_CITY_STATES") );
-	kInstance.AmenityYield:SetText( Locale.ToNumber(data.AmenitiesFromCityStates) );
+	if GameCapabilities.HasCapability("CAPABILITY_CITY_HUD_AMENITIES_CITY_STATES") then
+		kInstance = m_kAmenitiesIM:GetInstance();
+		kInstance.Amenity:SetText( Locale.Lookup("LOC_HUD_CITY_AMENITIES_FROM_CITY_STATES") );
+		kInstance.AmenityYield:SetText( Locale.ToNumber(data.AmenitiesFromCityStates) );
+	end
 
 	if GameCapabilities.HasCapability("CAPABILITY_CITY_HUD_AMENITIES_RELIGION") then
 		kInstance = m_kAmenitiesIM:GetInstance();
@@ -469,9 +473,11 @@ function ViewPanelAmenities( data:table )
 	end
 
 	if GameCapabilities.HasCapability("CAPABILITY_CITY_HUD_AMENITIES_NATIONAL_PARKS") then
-		kInstance = m_kAmenitiesIM:GetInstance();
-		kInstance.Amenity:SetText( Locale.Lookup("LOC_HUD_CITY_AMENITIES_FROM_NATIONAL_PARKS") );
-		kInstance.AmenityYield:SetText( Locale.ToNumber(data.AmenitiesFromNationalParks) );
+		if GameCapabilities.HasCapability("CAPABILITY_CITY_HUD_AMENITIES_NATIONAL_PARKS") then
+			kInstance = m_kAmenitiesIM:GetInstance();
+			kInstance.Amenity:SetText( Locale.Lookup("LOC_HUD_CITY_AMENITIES_FROM_NATIONAL_PARKS") );
+			kInstance.AmenityYield:SetText( Locale.ToNumber(data.AmenitiesFromNationalParks) );
+		end
 	end
 
 	if(data.AmenitiesFromStartingEra > 0) then 
@@ -486,20 +492,24 @@ function ViewPanelAmenities( data:table )
 		kInstance.AmenityYield:SetText( Locale.ToNumber(data.AmenitiesFromImprovements) );
 	end
 
-	kInstance = m_kAmenitiesIM:GetInstance();
-	kInstance.Amenity:SetText( Locale.Lookup("LOC_HUD_CITY_AMENITIES_LOST_FROM_WAR_WEARINESS") );
-	if data.AmenitiesLostFromWarWeariness == 0 then
-		kInstance.AmenityYield:SetText( Locale.ToNumber(data.AmenitiesLostFromWarWeariness) );
-	else
-		kInstance.AmenityYield:SetText( Locale.ToNumber(-data.AmenitiesLostFromWarWeariness) );
+	if GameCapabilities.HasCapability("CAPABILITY_CITY_HUD_AMENITIES_WAR_WEARINESS") then
+		kInstance = m_kAmenitiesIM:GetInstance();
+		kInstance.Amenity:SetText( Locale.Lookup("LOC_HUD_CITY_AMENITIES_LOST_FROM_WAR_WEARINESS") );
+		if data.AmenitiesLostFromWarWeariness == 0 then
+			kInstance.AmenityYield:SetText( Locale.ToNumber(data.AmenitiesLostFromWarWeariness) );
+		else
+			kInstance.AmenityYield:SetText( Locale.ToNumber(-data.AmenitiesLostFromWarWeariness) );
+		end
 	end
 
-	kInstance = m_kAmenitiesIM:GetInstance();
-	kInstance.Amenity:SetText( Locale.Lookup("LOC_HUD_CITY_AMENITIES_LOST_FROM_BANKRUPTCY") );
-	if data.AmenitiesLostFromBankruptcy == 0 then
-		kInstance.AmenityYield:SetText( Locale.ToNumber(data.AmenitiesLostFromBankruptcy) );
-	else
-		kInstance.AmenityYield:SetText( Locale.ToNumber(-data.AmenitiesLostFromBankruptcy) );
+	if GameCapabilities.HasCapability("CAPABILITY_CITY_HUD_AMENITIES_BANKRUPTCY") then
+		kInstance = m_kAmenitiesIM:GetInstance();
+		kInstance.Amenity:SetText( Locale.Lookup("LOC_HUD_CITY_AMENITIES_LOST_FROM_BANKRUPTCY") );
+		if data.AmenitiesLostFromBankruptcy == 0 then
+			kInstance.AmenityYield:SetText( Locale.ToNumber(data.AmenitiesLostFromBankruptcy) );
+		else
+			kInstance.AmenityYield:SetText( Locale.ToNumber(-data.AmenitiesLostFromBankruptcy) );
+		end
 	end
 
 	Controls.AmenitiesRequiredNum:SetText( Locale.ToNumber(data.AmenitiesRequiredNum) );
@@ -556,9 +566,11 @@ function ViewPanelHousing( data:table )
 	kInstance.HousingName:SetText( Locale.Lookup("LOC_HUD_CITY_HOUSING_FROM_CIVICS") );
 	kInstance.HousingYield:SetText( Locale.ToNumber(data.HousingFromCivics) );
 
-	kInstance = m_kHousingIM:GetInstance();
-	kInstance.HousingName:SetText( Locale.Lookup("LOC_HUD_CITY_HOUSING_FROM_DISTRICTS") );
-	kInstance.HousingYield:SetText( Locale.ToNumber(data.HousingFromDistricts) );
+	if GameCapabilities.HasCapability("CAPABILITY_CITY_HUD_HOUSING_DISTRICTS") then
+		kInstance = m_kHousingIM:GetInstance();
+		kInstance.HousingName:SetText( Locale.Lookup("LOC_HUD_CITY_HOUSING_FROM_DISTRICTS") );
+		kInstance.HousingYield:SetText( Locale.ToNumber(data.HousingFromDistricts) );
+	end
 
 	kInstance = m_kHousingIM:GetInstance();
 	kInstance.HousingName:SetText( Locale.Lookup("LOC_HUD_CITY_HOUSING_FROM_IMPROVEMENTS") );
@@ -568,9 +580,11 @@ function ViewPanelHousing( data:table )
 	kInstance.HousingName:SetText( Locale.Lookup("LOC_HUD_CITY_HOUSING_FROM_WATER") );
 	kInstance.HousingYield:SetText( Locale.ToNumber(data.HousingFromWater) );
 
-	kInstance = m_kHousingIM:GetInstance();
-	kInstance.HousingName:SetText( Locale.Lookup("LOC_HUD_CITY_HOUSING_FROM_GREAT_PEOPLE") );
-	kInstance.HousingYield:SetText( Locale.ToNumber(data.HousingFromGreatPeople) );
+	if GameCapabilities.HasCapability("CAPABILITY_CITY_HUD_HOUSING_GREAT_PEOPLE") then
+		kInstance = m_kHousingIM:GetInstance();
+		kInstance.HousingName:SetText( Locale.Lookup("LOC_HUD_CITY_HOUSING_FROM_GREAT_PEOPLE") );
+		kInstance.HousingYield:SetText( Locale.ToNumber(data.HousingFromGreatPeople) );
+	end
 
 	--Housing from Advanced Starts it is zero in the Ancient Era so we do not want to display it
 	if(data.HousingFromStartingEra > 0 ) then
@@ -762,28 +776,10 @@ function PopulateTabs()
 		m_tabs = CreateTabs( Controls.TabContainer,44,44);
 		m_tabs.AddTab( Controls.HealthButton,		OnSelectHealthTab );
 		m_tabs.AddTab( Controls.BuildingsButton,	OnSelectBuildingsTab );
-		m_tabs.AddTab( Controls.ReligionButton,		OnSelectReligionTab );
-
-		for _,tabData in pairs(g_AdditionalTabData) do
-			tabData.ButtonInstance = m_kTabButtonIM:GetInstance();
-			tabData.ButtonInstance.Icon:SetIcon(tabData.ButtonIcon);
-			tabData.ButtonInstance.Button:SetToolTipString(Locale.Lookup(tabData.ToolTip));
-
-			m_tabs.AddTab(tabData.ButtonInstance.Button, function()
-				HideAll();
-				
-				-- Context has to be shown before CityPanelTabRefresh to ensure a proper Refresh
-				tabData.Context:SetHide(false);
-
-				tabData.ButtonInstance.Button:SetSelected(true);
-				tabData.ButtonInstance.Icon:SetColorByName(tabData.ButtonColor);
-				UI.PlaySound("UI_CityPanel_ButtonClick");
-				LuaEvents.CityPanelTabRefresh();
-
-				Controls.PanelDynamicTab:SetHide(false);
-
-				CalculateSizeAndAccomodate(Controls.PanelScrollPanel, Controls.PanelStack);
-			end);
+		if GameCapabilities.HasCapability("CAPABILITY_CITY_HUD_RELIGION_TAB") then
+			m_tabs.AddTab( Controls.ReligionButton,		OnSelectReligionTab );
+		else
+			Controls.ReligionButton:SetHide(true);
 		end
 		
 		m_tabs.CenterAlignTabs(0);
@@ -955,7 +951,7 @@ function OnShowOverviewPanel( isShowing: boolean )
 	else
 		local offsetx = Controls.OverviewSlide:GetOffsetX();
 		if(offsetx == 0) then
-			Controls.OverviewSlide:Reverse();
+			Close();
 		end
 	end
 end
@@ -965,11 +961,6 @@ function OnShowBreakdownTab()
 end
 
 function Initialize()
-	-- Initialize dynamic tabs, passing the root control as parameter
-	for _,tabData in pairs(g_AdditionalTabData) do
-		tabData:Initialize(Controls.PanelDynamicTab);
-	end
-
 	PopulateTabs();
 
 	ContextPtr:SetInputHandler( OnInputHandler, true );

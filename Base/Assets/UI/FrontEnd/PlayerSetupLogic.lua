@@ -162,16 +162,17 @@ end
 function RefreshPlayerParameters()
 	print("Refresh Player Parameters");
 	for i,v in ipairs(g_PlayerParameters) do
-		v[2]:FullRefresh();
+		v[2]:Refresh();
 	end
 	print("End Refresh Player Parameters");
 end
 
-function ResetPlayerParameters()
-	print("Resetting Player Parameters");
+function VisualizePlayerParameters()
+	print("Visualizing Player Parameters");
 	for i,v in ipairs(g_PlayerParameters) do
-		v[2]:ResetDefaults();
+		v[2]:UpdateVisualization();
 	end
+	print("End Visualizing Player Parameters");
 end
 
 function ReleasePlayerParameters()
@@ -235,8 +236,8 @@ function GetPlayerInfo(domain, leader_type)
 	if(leader_type ~= "RANDOM") then
 		local info_query = "SELECT CivilizationIcon, LeaderIcon, LeaderName, CivilizationName, LeaderAbilityName, LeaderAbilityDescription, LeaderAbilityIcon, CivilizationAbilityName, CivilizationAbilityDescription, CivilizationAbilityIcon, Portrait, PortraitBackground from Players where Domain = ? and LeaderType = ? LIMIT 1";
 		local item_query = "SELECT Name, Description, Icon from PlayerItems where Domain = ? and LeaderType = ? ORDER BY SortIndex";
-		local info_results = DB.ConfigurationQuery(info_query, domain, leader_type);
-		local item_results = DB.ConfigurationQuery(item_query, domain, leader_type);
+		local info_results = CachedQuery(info_query, domain, leader_type);
+		local item_results = CachedQuery(item_query, domain, leader_type);
 		
 		if(info_results and item_results) then
 			local info = {};
@@ -492,7 +493,7 @@ function CheckExternalEnabled(playerID:number, inputEnabled:boolean, lockCheck:b
 	if(not GameConfiguration.IsHotseat() -- local player can change everything in hotseat.
 		and playerID ~= localPlayerID -- local player always has control of themselves.
 		-- Game host can alter all the non-human slots if the host is not ready.
-		and (not Network.IsHost()
+		and (not Network.IsGameHost()
 			or slotStatus == SlotStatus.SS_TAKEN
 			or localPlayerConfig:GetReady())) then
 		return false;
@@ -558,28 +559,34 @@ function SetupLeaderPulldown(playerId:number, instance:table, pulldownControlNam
 		UpdateValue = function(v)
 			local button = control:GetButton();
 
-			local caption = v.Name;
-			if(v.Invalid) then
-				local err = v.InvalidReason or "LOC_SETUP_ERROR_INVALID_OPTION";
-				caption = caption .. "[NEWLINE][COLOR_RED](" .. Locale.Lookup(err) .. ")[ENDCOLOR]";
-			end
+			if(v == nil) then
+				button:LocalizeAndSetText("LOC_SETUP_ERROR_INVALID_OPTION");
+				button:ClearCallback(Mouse.eMouseEnter);
+				button:ClearCallback(Mouse.eMouseExit);
+			else
+				local caption = v.Name;
+				if(v.Invalid) then
+					local err = v.InvalidReason or "LOC_SETUP_ERROR_INVALID_OPTION";
+					caption = caption .. "[NEWLINE][COLOR_RED](" .. Locale.Lookup(err) .. ")[ENDCOLOR]";
+				end
 
-			button:SetText(caption);
+				button:SetText(caption);
 				
-			local info = GetPlayerInfo(v.Domain, v.Value);
-			local tooltip = GenerateToolTipFromPlayerInfo(info);
+				local info = GetPlayerInfo(v.Domain, v.Value);
+				local tooltip = GenerateToolTipFromPlayerInfo(info);
 
-			if(civIcon) then
-				civIcon:SetIcon(info.CivilizationIcon);
-			end
-			if(leaderIcon) then
-				leaderIcon:SetIcon(info.LeaderIcon);
-			end
+				if(civIcon) then
+					civIcon:SetIcon(info.CivilizationIcon);
+				end
+				if(leaderIcon) then
+					leaderIcon:SetIcon(info.LeaderIcon);
+				end
 
-			if(not tooltipControls.HasLeaderPlacard) then
-				button:RegisterCallback( Mouse.eMouseEnter, function() DisplayCivLeaderToolTip(info, tooltipControls, false); end);
-				button:RegisterCallback( Mouse.eMouseExit, function() DisplayCivLeaderToolTip(info, tooltipControls, true); end);
-			end
+				if(not tooltipControls.HasLeaderPlacard) then
+					button:RegisterCallback( Mouse.eMouseEnter, function() DisplayCivLeaderToolTip(info, tooltipControls, false); end);
+					button:RegisterCallback( Mouse.eMouseExit, function() DisplayCivLeaderToolTip(info, tooltipControls, true); end);
+				end
+			end		
 		end,
 		UpdateValues = function(values)
 
@@ -665,16 +672,11 @@ function PlayerConfigurationValuesToUI(playerId)
 		parameters = CreatePlayerParameters(playerId);
 	end
 
-	if(parameters ~= nil) then
-		parameters:FullRefresh();
-	end
+	GameSetup_RefreshPlayerParameter(playerId);
 end
 
 function UpdatePlayerEntry(playerId)
-	local parameters = GetPlayerParameters(playerId);
-	if(parameters) then
-		parameters:FullRefresh();
-	end
+	GameSetup_RefreshPlayerParameter(playerId);
 end
 
 -- This event listener may be called during the act of refreshing parameters.
@@ -694,7 +696,7 @@ function GameSetup_RefreshParameters()
 		if(g_GameParameters == nil) then
 			BuildGameSetup();
 		else
-			g_GameParameters:FullRefresh();
+			g_GameParameters:Refresh();
 		end
 		
 		print("Refreshing Player parameters");
@@ -704,14 +706,37 @@ function GameSetup_RefreshParameters()
 		print("Finished Refreshing");
 
 		if(g_NeedsAdditionalRefresh) then
-			g_NeedsAdditionalRefresh = false;
 			print("Refreshing again, to be sure.")
 			return GameSetup_RefreshParameters();
+		else
+			print("Visualizing parameters"); 
+			g_GameParameters:UpdateVisualization();
+			VisualizePlayerParameters();
 		end
 
 		if(UI_PostRefreshParameters) then
 			UI_PostRefreshParameters();
 		end
+	end
+end
+
+function GameSetup_RefreshPlayerParameter(playerId)
+	print("Refreshing parameters for player " .. tostring(playerId));
+	local parameters = GetPlayerParameters(playerId);
+	if(parameters) then
+
+		g_Refreshing = true;
+		parameters:Refresh();
+		g_Refreshing = false;
+
+		if(g_NeedsAdditionalRefresh) then
+			print("Refreshing all parameters, to be sure.")
+			return GameSetup_RefreshParameters();
+		else
+			parameters:UpdateVisualization();
+		end
+	else
+		print("Player parameters not found!");
 	end
 end
 

@@ -6,6 +6,6 @@ It can be as simple as a gray box, or as complex as the UI system will allow... 
 
 <Context Name="TutorialOverlay">
 	
-	<Box		ID="ThatHugeTutorialOverlay" Anchor="C,C" Size="Full,Full" Color="20,20,0,46" ConsumeMouse="1" />
+	<Box		ID="ThatHugeTutorialOverlay" Anchor="C,C" Size="parent,parent" Color="20,20,0,46" ConsumeMouse="1" />
 
 </Context>

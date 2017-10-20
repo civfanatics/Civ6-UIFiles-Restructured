@@ -186,8 +186,8 @@ InstanceManager =
 
 
 	-------------------------------------------------
-	-- move all the instances back to the available
-	-- list and hide the specified control
+	-- Moves all instances back to the available list and hides them.
+	-- That's literally it. All other properties and attributes remain the same!
 	-------------------------------------------------
 	ResetInstances = function(self)
 		for i = 1, #self.m_AllocatedInstances, 1

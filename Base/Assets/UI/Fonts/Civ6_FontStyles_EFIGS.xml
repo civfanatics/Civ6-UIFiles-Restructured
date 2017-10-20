@@ -55,4 +55,6 @@
 	<FontNormalMedium16	Font="MyriadPro-Regular.otf"			FontSize="16"/>
 	<FontNormalMedium18	Font="MyriadPro-Regular.otf"			FontSize="18"/>
 	<FontNormalMedium20	Font="MyriadPro-Regular.otf"			FontSize="20"/>
+	
+	<FontMono14 Font="NotoMono-Regular.ttf"	FontSize="14"/>
 </StyleSheet>

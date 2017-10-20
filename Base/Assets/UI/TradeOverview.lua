@@ -147,35 +147,31 @@ function ViewRoutesToCities()
 	-- Gather data and sort
 	local routesSortedByPlayer:table = {};
 	local players = Game.GetPlayers();
-	for i, player in ipairs(players) do
-		local playerCities:table = player:GetCities();
-		for i,city in playerCities:Members() do
-			local outgoingRoutes = city:GetTrade():GetOutgoingRoutes();
-			for i,route in ipairs(outgoingRoutes) do
-				-- Check that the destination city owner is the local palyer
-				local isDestinationOwnedByLocalPlayer:boolean = false;
-				if route.DestinationCityPlayer == Game.GetLocalPlayer() then
-					isDestinationOwnedByLocalPlayer = true;
-				end
-
-				if isDestinationOwnedByLocalPlayer then
-					-- Make sure we have a table for each destination player
-					if routesSortedByPlayer[route.OriginCityPlayer] == nil then
-						local routes:table = {};
-						routesSortedByPlayer[route.OriginCityPlayer] = {};
+	for _, player in ipairs(players) do
+		-- Don't show domestic routes
+		if player:GetID() ~= Game.GetLocalPlayer() then	
+			local playerCities:table = player:GetCities();
+			for _, city in playerCities:Members() do
+				local outgoingRoutes = city:GetTrade():GetOutgoingRoutes();
+				for _, route in ipairs(outgoingRoutes) do
+					-- Check that the destination city owner is the local player
+					if route.DestinationCityPlayer == Game.GetLocalPlayer() then
+						-- Make sure we have a table for each destination player
+						if routesSortedByPlayer[route.OriginCityPlayer] == nil then
+							routesSortedByPlayer[route.OriginCityPlayer] = {};
+						end
+						table.insert(routesSortedByPlayer[route.OriginCityPlayer], route);
 					end
-
-					table.insert(routesSortedByPlayer[route.OriginCityPlayer], route);
 				end
 			end
 		end
 	end
 
 	-- Add routes to stack
-	for playerID,routes in pairs(routesSortedByPlayer) do
+	for playerID, routes in pairs(routesSortedByPlayer) do
 		CreatePlayerHeader(Players[playerID]);
 
-		for i,route in ipairs(routes) do
+		for _, route in ipairs(routes) do
 			AddRouteFromRouteInfo(route);
 		end
 	end
@@ -199,21 +195,9 @@ function ViewAvailableRoutes()
 	Controls.HeaderLabel:SetText(Locale.ToUpper("LOC_TRADE_OVERVIEW_AVAILABLE_ROUTES"));
 	Controls.ActiveRoutesLabel:SetHide(true);
 
-	-- Gather a list of trade units
-	local pPlayerUnits:table = Players[localPlayerID]:GetUnits();
-	local tradeUnitList:table = {};
-	for i, pUnit in pPlayerUnits:Members() do
-		-- Ignore trade units that have a pending operation
-		if not pUnit:HasPendingOperations() then
-			-- Find Each Trade Unit
-			local unitInfo:table = GameInfo.Units[pUnit:GetUnitType()];
-			if unitInfo.MakeTradeRoute == true then
-				table.insert(tradeUnitList, pUnit);
-			end
-		end
-	end
-
 	-- Determine if a trade unit in a city can trade with any other player cities
+	local pLocalPlayer:table = Players[localPlayerID];
+	local pLocalPlayerCities:table = pLocalPlayer:GetCities();
 	local hasTradeRouteWithPlayer:boolean = false;
 	local hasTradeRouteWithCityStates:boolean = false;
 	local players:table = Game:GetPlayers();
@@ -223,10 +207,10 @@ function ViewAvailableRoutes()
 
 		local cities:table = destinationPlayer:GetCities();
 		for j, destinationCity in cities:Members() do
-			for k, tradeUnit in ipairs(tradeUnitList) do
-				local originCity = Cities.GetCityInPlot(tradeUnit:GetX(), tradeUnit:GetY());
+			for cityID in pLocalPlayerCities:Members() do
+				local originCity = pLocalPlayerCities:FindID(cityID);
 				if originCity ~= nil then
-					if tradeManager:CanStartRoute(originCity:GetOwner(), originCity:GetID(), destinationCity:GetOwner(), destinationCity:GetID()) then
+					if tradeManager:CanStartRoute(originCity:GetOwner(), originCity:GetID(), destinationCity:GetOwner(), destinationCity:GetID(), true) then
 						-- Add Civ/CityState Header
 						local pPlayerInfluence:table = Players[destinationPlayer:GetID()]:GetInfluence();
 						if not pPlayerInfluence:CanReceiveInfluence() then
@@ -244,7 +228,7 @@ function ViewAvailableRoutes()
 						end
 						
 						-- Add Route
-						AddRoute(Players[Game.GetLocalPlayer()], originCity, destinationPlayer, destinationCity, tradeUnit:GetID());
+						AddRoute(Players[Game.GetLocalPlayer()], originCity, destinationPlayer, destinationCity, -1);
 					end
 				end
 			end
@@ -448,21 +432,7 @@ function AddRoute(originPlayer:table, originCity:table, destinationPlayer:table,
 			local leader		:string = destinationPlayerConfig:GetLeaderTypeName();
 			local leaderInfo	:table	= GameInfo.Leaders[leader];
 
-			local iconString:string;
-			if (leader == "LEADER_MINOR_CIV_SCIENTIFIC" or leaderInfo.InheritFrom == "LEADER_MINOR_CIV_SCIENTIFIC") then				
-				iconString = "ICON_CITYSTATE_SCIENCE";
-			elseif (leader == "LEADER_MINOR_CIV_RELIGIOUS" or leaderInfo.InheritFrom == "LEADER_MINOR_CIV_RELIGIOUS") then
-				iconString = "ICON_CITYSTATE_FAITH";
-			elseif (leader == "LEADER_MINOR_CIV_TRADE" or leaderInfo.InheritFrom == "LEADER_MINOR_CIV_TRADE") then
-				iconString = "ICON_CITYSTATE_TRADE";
-			elseif (leader == "LEADER_MINOR_CIV_CULTURAL" or leaderInfo.InheritFrom == "LEADER_MINOR_CIV_CULTURAL") then
-				iconString = "ICON_CITYSTATE_CULTURE";
-			elseif (leader == "LEADER_MINOR_CIV_MILITARISTIC" or leaderInfo.InheritFrom == "LEADER_MINOR_CIV_MILITARISTIC") then
-				iconString = "ICON_CITYSTATE_MILITARISTIC";
-			elseif (leader == "LEADER_MINOR_CIV_INDUSTRIAL" or leaderInfo.InheritFrom == "LEADER_MINOR_CIV_INDUSTRIAL") then
-				iconString = "ICON_CITYSTATE_INDUSTRIAL";
-			end
-								
+			local iconString:string = GetCityStateIcon(leader, leaderInfo);
 			if iconString ~= nil then
 				local textureOffsetX, textureOffsetY, textureSheet = IconManager:FindIconAtlas(iconString, 30);
 				routeInstance.DestinationCivIcon:SetTexture(textureOffsetX, textureOffsetY, textureSheet);
@@ -495,24 +465,47 @@ function AddRoute(originPlayer:table, originCity:table, destinationPlayer:table,
 	end
 
 	-- Find trader unit and set button callback to select that unit
-	local tradeUnit:table = originPlayer:GetUnits():FindID(traderUnitID);
-	if tradeUnit then
-		if m_currentTab == TRADE_TABS.AVAILABLE_ROUTES then
-			-- If selecting an available route, select unit and select route in route chooser
-			routeInstance.GridButton:RegisterCallback( Mouse.eLClick, 
-				function()
-					SelectUnit( tradeUnit );
-					LuaEvents.TradeOverview_SelectRouteFromOverview( destinationPlayer:GetID(), destinationCity:GetID() );
-				end
-			);
-		else
-			routeInstance.GridButton:RegisterCallback( Mouse.eLClick, 
-				function()
-					SelectUnit( tradeUnit );
-				end
-			);
+	if tradeUnitID and tradeUnitID ~= -1 then
+		local tradeUnit:table = originPlayer:GetUnits():FindID(traderUnitID);
+		if tradeUnit then
+			if m_currentTab == TRADE_TABS.AVAILABLE_ROUTES then
+				-- If selecting an available route, select unit and select route in route chooser
+				routeInstance.GridButton:RegisterCallback( Mouse.eLClick, 
+					function()
+						SelectUnit( tradeUnit );
+						LuaEvents.TradeOverview_SelectRouteFromOverview( destinationPlayer:GetID(), destinationCity:GetID() );
+					end
+				);
+			else
+				routeInstance.GridButton:RegisterCallback( Mouse.eLClick, 
+					function()
+						SelectUnit( tradeUnit );
+					end
+				);
+			end
 		end
 	end
+end
+
+-- ===========================================================================
+function GetCityStateIcon(leaderName:string, leaderInfo:table)
+	local iconString:string;
+
+	if (leader == "LEADER_MINOR_CIV_SCIENTIFIC" or leaderInfo.InheritFrom == "LEADER_MINOR_CIV_SCIENTIFIC") then				
+		iconString = "ICON_CITYSTATE_SCIENCE";
+	elseif (leader == "LEADER_MINOR_CIV_RELIGIOUS" or leaderInfo.InheritFrom == "LEADER_MINOR_CIV_RELIGIOUS") then
+		iconString = "ICON_CITYSTATE_FAITH";
+	elseif (leader == "LEADER_MINOR_CIV_TRADE" or leaderInfo.InheritFrom == "LEADER_MINOR_CIV_TRADE") then
+		iconString = "ICON_CITYSTATE_TRADE";
+	elseif (leader == "LEADER_MINOR_CIV_CULTURAL" or leaderInfo.InheritFrom == "LEADER_MINOR_CIV_CULTURAL") then
+		iconString = "ICON_CITYSTATE_CULTURE";
+	elseif (leader == "LEADER_MINOR_CIV_MILITARISTIC" or leaderInfo.InheritFrom == "LEADER_MINOR_CIV_MILITARISTIC") then
+		iconString = "ICON_CITYSTATE_MILITARISTIC";
+	elseif (leader == "LEADER_MINOR_CIV_INDUSTRIAL" or leaderInfo.InheritFrom == "LEADER_MINOR_CIV_INDUSTRIAL") then
+		iconString = "ICON_CITYSTATE_INDUSTRIAL";
+	end
+
+	return iconString;
 end
 
 -- ===========================================================================

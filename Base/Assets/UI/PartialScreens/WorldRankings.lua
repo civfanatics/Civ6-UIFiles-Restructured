@@ -29,8 +29,6 @@ local PADDING_HEADER:number = 10;
 local PADDING_CULTURE_HEADER:number = 90;
 local PADDING_GENERIC_ITEM_BG:number = 25;
 local PADDING_TAB_BUTTON_TEXT:number = 17;
-local PADDING_EXTRA_TAB_BG:number = 10;
-local PADDING_EXTRA_TAB_SHADOW:number = 23;
 local PADDING_ADVISOR_TEXT_BG:number = 20;
 local PADDING_RELIGION_NAME_BG:number = 42;
 local PADDING_RELIGION_BG_HEIGHT:number = 26;
@@ -266,10 +264,6 @@ function PopulateTabs()
 		Controls.ExpandExtraTabs:SetHide(true);
 	end
 
-	Controls.ExtraTabs:SetOffsetX(-1 * Controls.ExtraTabStack:GetSizeX() + PADDING_EXTRA_TAB_BG);
-	Controls.ExtraTabsBG:SetSizeVal(Controls.ExtraTabStack:GetSizeX() + PADDING_EXTRA_TAB_BG, Controls.ExtraTabStack:GetSizeY() + PADDING_EXTRA_TAB_BG);
-	Controls.ExtraTabsShadow:SetSizeVal(Controls.ExtraTabStack:GetSizeX() + PADDING_EXTRA_TAB_SHADOW, Controls.ExtraTabStack:GetSizeY() + PADDING_EXTRA_TAB_SHADOW);
-	
 	m_TabSupport.SelectTab(defaultTab);
 	m_TabSupport.EvenlySpreadTabs();
 end
@@ -1606,6 +1600,7 @@ function PopulateCultureTeamInstance(instance:table, teamData:table)
 
 	-- Show score for player closet to winning
 	instance.VisitingTourists:SetText(teamData.BestNumVisitingUs .. "/" .. teamData.BestNumRequiredTourists);
+	instance.TouristsFill:SetPercent(teamData.BestNumVisitingUs / teamData.BestNumRequiredTourists);
 end
 
 function PopulateCultureInstance(instance:table, playerData:table)
@@ -1822,10 +1817,14 @@ function ViewReligion()
 	ChangeActiveHeader("VICTORY_RELIGIOUS", m_GenericHeaderIM, Controls.ReligionViewHeader);
 	PopulateGenericHeader(RealizeReligionStackSize, RELIGION_TITLE, "", RELIGION_DETAILS, RELIGION_ICON);
 
+	-- Gather data
+	local religionData:table, totalCivs:number = GatherReligionData();
+
+	-- Sort teams
+	table.sort(religionData, function(a, b) return #a.ConvertedCivs > #b.ConvertedCivs; end);
+
 	m_ReligionIM:ResetInstances();
 	m_ReligionTeamIM:ResetInstances();
-
-	local religionData:table, totalCivs:number = GatherReligionData();
 
 	for i, teamData in ipairs(religionData) do
 		if #teamData.PlayerData > 1 then
@@ -1977,9 +1976,9 @@ function PopulateReligionInstance(instance:table, playerData:table, totalCivs:nu
 	end
 
 	if #playerData.ConvertedCivs == 0 then
-		instance.ButtonBG:SetSizeY(SIZE_RELIGION_BG_HEIGHT + instance.CivsConvertedStack:GetSizeY());
+	--	instance.ButtonBG:SetSizeY(SIZE_RELIGION_BG_HEIGHT + instance.CivsConvertedStack:GetSizeY());
 	else
-		instance.ButtonBG:SetSizeY(PADDING_RELIGION_BG_HEIGHT + instance.CivsConvertedStack:GetSizeY());
+	--	instance.ButtonBG:SetSizeY(PADDING_RELIGION_BG_HEIGHT + instance.CivsConvertedStack:GetSizeY());
 	end
 
 	instance.CivsConverted:SetText(Locale.Lookup("LOC_WORLD_RANKINGS_RELIGION_CONVERT_SUMMARY", #playerData.ConvertedCivs .. "/" .. totalCivs, Game.GetReligion():GetName(playerData.ReligionType)));

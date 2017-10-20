@@ -4,94 +4,92 @@
 	<Container Style="FullScreenVignetteConsumer" />
 	<AlphaAnim ID="SearchResultsTimer" Begin="0" End="1" Speed="2" Cycle="Once" Stopped="1"/>
 	
-  <Grid               ID="DropShadow"                 Anchor="C,C"  Style="DropShadow2" Color="255,255,255,200" AutoSize="1" AutoSizePadding="25,25" ConsumeMouse="1">
-    <Container Anchor="C,C" Size="Full,768">
-      <Box              Color="7,30,50,255" Anchor="L,B" Size="Full,5"/>
-      <Grid																							Anchor="C,B"	Offset="0,-8"		Size="Full,52"				Texture="Controls_Timeline"			SliceCorner="54,27" SliceSize="6,1" SliceTextureSize="114,52"/>
-      <Image						ID="ScrollbarBackgroundArt"			Anchor="C,B"	Offset="0,2"		Size="parent-108,32"	Texture="Controls_TimelineTile" StretchMode="Tile" />
-      <ScrollPanel			ID="FarBackArtScroller"												Offset="0,-2"		Size="parent,parent"		Vertical="0" ScrollBar="0">
-        <Image					ID="Background"																								Size="parent,parent"	Texture="Parchment_Pattern"			StretchMode="Tile" ConsumeMouse="1"/>
-        <Container			ID="ForceArtSizeX" Size="1,1" />
-      </ScrollPanel>
-      <Image                                          Anchor="L,B"  Offset="0,33"   Size="full,22"      Texture="Controls_GradientSmall" Color="0,0,0,150" FlipY="1"/>
-      <ScrollPanel			ID="ArtScroller"															Offset="0,-2"		Size="parent,parent"		Vertical="0" ScrollBar="0" >
-        <Container			ID="ForceSizeX" Size="1,1" />
-        <Image					ID="ArtParchmentLeft"													Offset="0,0"		Size="3,parent"					Texture="Controls_GradientSmall"						Rotate="90"   Color="0,0,0,255" />
-        <Image					ID="ArtParchmentDecoTop"											Offset="0,50"		Size="123,103"				Texture="Parchment_BorderDeco"							FlipY="1" StretchMode="Tile"  Alpha="0.2" />
-        <Image					ID="ArtParchmentDecoBottom"			Anchor="L,B"	Offset="0,50"		Size="123,103"				Texture="Parchment_BorderDeco"							FlipY="0" StretchMode="Tile"  Alpha="0.2" />
-        <Image					ID="ArtParchmentRippleTop"										Offset="0,44"		Size="609,217"				Texture="Parchment_Ripple"									FlipY="1" StretchMode="Tile"  Alpha="1.0"/>
-        <Image					ID="ArtParchmentRippleBottom"		Anchor="L,B"	Offset="0,33"		Size="609,217"				Texture="Parchment_Ripple"									FlipY="0" StretchMode="Tile"  Alpha="1.0"/>
-        <Image					ID="ArtCornerGrungeTL"												Offset="0,33"		Size="52,44"					Texture="Parchment_CornerGrunge" FlipX="1"	FlipY="1" Alpha="1.0" />
-        <Image					ID="ArtCornerGrungeTR"					Anchor="R,T"	Offset="0,33"		Size="52,44"					Texture="Parchment_CornerGrunge" FlipX="0"	FlipY="1" Alpha="1.0" />
-        <Image					ID="ArtCornerGrungeBL"					Anchor="L,B"	Offset="0,33"		Size="52,44"					Texture="Parchment_CornerGrunge" FlipX="1"	FlipY="0" Alpha="1.0" />
-        <Image					ID="ArtCornerGrungeBR"					Anchor="R,B"	Offset="0,33"		Size="52,44"					Texture="Parchment_CornerGrunge" FlipX="0"	FlipY="0" Alpha="1.0" />
-      </ScrollPanel>
+  <Container Anchor="C,C" Size="full,768">
+    <Box              Color="7,30,50,255" Anchor="L,B" Size="parent,5"/>
+    <Grid																							Anchor="C,B"	Offset="0,-8"		Size="parent,52"				Texture="Controls_Timeline"			SliceCorner="54,27" SliceSize="6,1" SliceTextureSize="114,52"/>
+    <Image						ID="ScrollbarBackgroundArt"			Anchor="C,B"	Offset="0,2"		Size="parent-108,32"	Texture="Controls_TimelineTile" StretchMode="Tile" />
+    <ScrollPanel			ID="FarBackArtScroller"												Offset="0,-2"		Size="parent,parent"		Vertical="0" ScrollBar="0">
+      <Image					ID="Background"																								Size="parent,parent"	Texture="Parchment_Pattern"			StretchMode="Tile" ConsumeMouse="1"/>
+      <Container			ID="ForceArtSizeX" Size="1,1" />
+    </ScrollPanel>
+    <Image                                          Anchor="L,B"  Offset="0,33"   Size="parent,22"      Texture="Controls_GradientSmall" Color="0,0,0,150" FlipY="1"/>
+    <ScrollPanel			ID="ArtScroller"															Offset="0,-2"		Size="parent,parent"		Vertical="0" ScrollBar="0" >
+      <Container			ID="ForceSizeX" Size="1,1" />
+      <Image					ID="ArtParchmentLeft"													Offset="0,0"		Size="3,parent"					Texture="Controls_GradientSmall"						Rotate="90"   Color="0,0,0,255" />
+      <Image					ID="ArtParchmentDecoTop"											Offset="0,50"		Size="123,103"				Texture="Parchment_BorderDeco"							FlipY="1" StretchMode="Tile"  Alpha="0.2" />
+      <Image					ID="ArtParchmentDecoBottom"			Anchor="L,B"	Offset="0,50"		Size="123,103"				Texture="Parchment_BorderDeco"							FlipY="0" StretchMode="Tile"  Alpha="0.2" />
+      <Image					ID="ArtParchmentRippleTop"										Offset="0,44"		Size="609,217"				Texture="Parchment_Ripple"									FlipY="1" StretchMode="Tile"  Alpha="1.0"/>
+      <Image					ID="ArtParchmentRippleBottom"		Anchor="L,B"	Offset="0,33"		Size="609,217"				Texture="Parchment_Ripple"									FlipY="0" StretchMode="Tile"  Alpha="1.0"/>
+      <Image					ID="ArtCornerGrungeTL"												Offset="0,33"		Size="52,44"					Texture="Parchment_CornerGrunge" FlipX="1"	FlipY="1" Alpha="1.0" />
+      <Image					ID="ArtCornerGrungeTR"					Anchor="R,T"	Offset="0,33"		Size="52,44"					Texture="Parchment_CornerGrunge" FlipX="0"	FlipY="1" Alpha="1.0" />
+      <Image					ID="ArtCornerGrungeBL"					Anchor="L,B"	Offset="0,33"		Size="52,44"					Texture="Parchment_CornerGrunge" FlipX="1"	FlipY="0" Alpha="1.0" />
+      <Image					ID="ArtCornerGrungeBR"					Anchor="R,B"	Offset="0,33"		Size="52,44"					Texture="Parchment_CornerGrunge" FlipX="0"	FlipY="0" Alpha="1.0" />
+    </ScrollPanel>
 
-      <ScrollPanel			ID="NodeScroller"															Offset="0,0"		Size="parent,parent"		Vertical="0" >
-        <Image					ID="TreeStart"  																							Size="56,56"					Texture="Tree_Start" />
-        <ScrollBar			ID="TimelineScrollbar"					Anchor="C,B"	Offset="0,15"		Size="12,8"						Texture="Controls_TimeSlider"		Vertical="0"	StateOffsetIncrement="0,0" SliceCorner="6,0"										SliceTextureSize="12,8" >
-          <Thumb				ID="TimelineThumb"																						Size="63,36"					Texture="Controls_TimeSlider"									StateOffsetIncrement="0,0" SliceCorner="22,18" SliceSize="19,1" SliceTextureSize="63,36" />
-        </ScrollBar>
-        <UpButton																				Anchor="L,B" AnchorSide="O,I"																	Style="ScrollUpButton" />
-        <DownButton																			Anchor="R,B" AnchorSide="O,I"																	Style="ScrollDownButton" />
+    <ScrollPanel			ID="NodeScroller"															Offset="0,0"		Size="parent,parent"		Vertical="0" >
+      <Image					ID="TreeStart"  																							Size="56,56"					Texture="Tree_Start" />
+      <ScrollBar			ID="TimelineScrollbar"					Anchor="C,B"	Offset="0,15"		Size="12,8"						Texture="Controls_TimeSlider"		Vertical="0"	StateOffsetIncrement="0,0" SliceCorner="6,0"										SliceTextureSize="12,8" >
+        <Thumb				ID="TimelineThumb"																						Size="63,36"					Texture="Controls_TimeSlider"									StateOffsetIncrement="0,0" SliceCorner="22,18" SliceSize="19,1" SliceTextureSize="63,36" />
+      </ScrollBar>
+      <UpButton																				Anchor="L,B" AnchorSide="O,I"																	Style="ScrollUpButton" />
+      <DownButton																			Anchor="R,B" AnchorSide="O,I"																	Style="ScrollDownButton" />
 
-        <Tutorial ID="CompletedTechNodePointer" Style="TutorialContainer" Anchor="L,C" Offset="1020, -50" TriggerBy="TutorialCompletedTechNodePointer">
-          <SlideAnim Start="0,-30" EndOffset="0,10" Cycle="Bounce" Function="OutQuad" >
-            <Image Texture="Tutorial_ArrowV" Offset="-22,-20" Size="44,58"/>
-          </SlideAnim>
-        </Tutorial>
-
-        <Tutorial ID="IncompleteTechNodePointer" Style="TutorialContainer" Anchor="L,C" Offset="1020, 140" TriggerBy="TutorialIncompleteTechNodePointer">
-          <SlideAnim Start="0,-30" EndOffset="0,10" Cycle="Bounce" Function="OutQuad" >
-            <Image Texture="Tutorial_ArrowV" Offset="-22,-20" Size="44,58" FlipY="true"/>
-          </SlideAnim>
-        </Tutorial>
-
-        <Tutorial ID="UnavailableTechNodePointer" Style="TutorialContainer" Anchor="L,C" Offset="2020, 220" TriggerBy="TutorialUnavailableTechNodePointer">
-          <SlideAnim Start="0,-30" EndOffset="0,10" Cycle="Bounce" Function="OutQuad" >
-            <Image Texture="Tutorial_ArrowV" Offset="-22,-20" Size="44,58" FlipY="true"/>
-          </SlideAnim>
-        </Tutorial>
-
-        <Tutorial ID="ChooseWritingPointer" Style="TutorialContainer" Anchor="L,C"  Offset="2020, 90" Size="200,100" TriggerBy="TutorialChooseWritingPointer" >
-          <Grid Style="TutorialCalloutGrid">
-            <Label Style="TutorialHeaderText" String="LOC_META_51_HEAD" />
-            <Label Style="TutorialBodyText" String="LOC_META_51_BODY" />
-          </Grid>
-          <SlideAnim Start="0,-30" EndOffset="0,10" Cycle="Bounce" Function="OutQuad" >
-            <Image Texture="Tutorial_ArrowV" Offset="-22,-20" Size="44,58" FlipY="true"/>
-          </SlideAnim>
-        </Tutorial>
-
-        <Tutorial ID="ActiveTechNodePointer" Style="TutorialContainer" Anchor="L,C" Offset="2160, 30" TriggerBy="TutorialActiveTechNodePointer">
-          <SlideAnim Start="0,-30" EndOffset="0,10" Cycle="Bounce" Function="OutQuad" >
-            <Image Texture="Tutorial_ArrowV" Offset="-22,-20" Size="44,58" FlipY="true"/>
-          </SlideAnim>
-        </Tutorial>
-
-        <Tutorial ID="TechUnlocksPointer" Style="TutorialContainer" Anchor="L,C" Offset="1950, 55" TriggerBy="TutorialTechUnlocksPointer">
-          <SlideAnim Start="0,-30" EndOffset="0,10" Cycle="Bounce" Function="OutQuad" >
-            <Image Texture="Tutorial_ArrowV" Offset="-22,-20" Size="44,58" FlipY="true"/>
-          </SlideAnim>
-        </Tutorial>
-
-      </ScrollPanel>
-
-      <!-- Modal screen controls are in a separate container because of the custom BG inside the scroll panel -->
-      <Container ID="TechTreeModal" Style="ModalScreenWide" />
-
-      <Tutorial ID="CloseTechTreePointer" Anchor="R,T" Offset="90,15" Size="200,100" Style="TutorialContainer" TriggerBy="TutorialCloseTechTreePointer">
-        <Grid Style="TutorialCalloutGrid" Anchor="R,T" >
-          <Label Style="TutorialHeaderText" String="LOC_META_54a_HEAD" />
-          <Label Style="TutorialBodyText" String="LOC_META_54a_BODY" />
-          <SlideAnim Anchor="C,T" Start="110,-40" EndOffset="30,0" Cycle="Bounce" Function="OutQuad" >
-            <Image Texture="Tutorial_ArrowH" Size="58,44" />
-          </SlideAnim>
-        </Grid>
+      <Tutorial ID="CompletedTechNodePointer" Style="TutorialContainer" Anchor="L,C" Offset="1020, -50" TriggerBy="TutorialCompletedTechNodePointer">
+        <SlideAnim Start="0,-30" EndOffset="0,10" Cycle="Bounce" Function="OutQuad" >
+          <Image Texture="Tutorial_ArrowV" Offset="-22,-20" Size="44,58"/>
+        </SlideAnim>
       </Tutorial>
 
-    </Container>
-  </Grid>
+      <Tutorial ID="IncompleteTechNodePointer" Style="TutorialContainer" Anchor="L,C" Offset="1020, 140" TriggerBy="TutorialIncompleteTechNodePointer">
+        <SlideAnim Start="0,-30" EndOffset="0,10" Cycle="Bounce" Function="OutQuad" >
+          <Image Texture="Tutorial_ArrowV" Offset="-22,-20" Size="44,58" FlipY="true"/>
+        </SlideAnim>
+      </Tutorial>
+
+      <Tutorial ID="UnavailableTechNodePointer" Style="TutorialContainer" Anchor="L,C" Offset="2020, 220" TriggerBy="TutorialUnavailableTechNodePointer">
+        <SlideAnim Start="0,-30" EndOffset="0,10" Cycle="Bounce" Function="OutQuad" >
+          <Image Texture="Tutorial_ArrowV" Offset="-22,-20" Size="44,58" FlipY="true"/>
+        </SlideAnim>
+      </Tutorial>
+
+      <Tutorial ID="ChooseWritingPointer" Style="TutorialContainer" Anchor="L,C"  Offset="2020, 90" Size="200,100" TriggerBy="TutorialChooseWritingPointer" >
+        <Grid Style="TutorialCalloutGrid">
+          <Label Style="TutorialHeaderText" String="LOC_META_51_HEAD" />
+          <Label Style="TutorialBodyText" String="LOC_META_51_BODY" />
+        </Grid>
+        <SlideAnim Start="0,-30" EndOffset="0,10" Cycle="Bounce" Function="OutQuad" >
+          <Image Texture="Tutorial_ArrowV" Offset="-22,-20" Size="44,58" FlipY="true"/>
+        </SlideAnim>
+      </Tutorial>
+
+      <Tutorial ID="ActiveTechNodePointer" Style="TutorialContainer" Anchor="L,C" Offset="2160, 30" TriggerBy="TutorialActiveTechNodePointer">
+        <SlideAnim Start="0,-30" EndOffset="0,10" Cycle="Bounce" Function="OutQuad" >
+          <Image Texture="Tutorial_ArrowV" Offset="-22,-20" Size="44,58" FlipY="true"/>
+        </SlideAnim>
+      </Tutorial>
+
+      <Tutorial ID="TechUnlocksPointer" Style="TutorialContainer" Anchor="L,C" Offset="1950, 55" TriggerBy="TutorialTechUnlocksPointer">
+        <SlideAnim Start="0,-30" EndOffset="0,10" Cycle="Bounce" Function="OutQuad" >
+          <Image Texture="Tutorial_ArrowV" Offset="-22,-20" Size="44,58" FlipY="true"/>
+        </SlideAnim>
+      </Tutorial>
+
+    </ScrollPanel>
+
+    <!-- Modal screen controls are in a separate container because of the custom BG inside the scroll panel -->
+    <Container ID="TechTreeModal" Style="ModalScreenWide" />
+
+    <Tutorial ID="CloseTechTreePointer" Anchor="R,T" Offset="90,15" Size="200,100" Style="TutorialContainer" TriggerBy="TutorialCloseTechTreePointer">
+      <Grid Style="TutorialCalloutGrid" Anchor="R,T" >
+        <Label Style="TutorialHeaderText" String="LOC_META_54a_HEAD" />
+        <Label Style="TutorialBodyText" String="LOC_META_54a_BODY" />
+        <SlideAnim Anchor="C,T" Start="110,-40" EndOffset="30,0" Cycle="Bounce" Function="OutQuad" >
+          <Image Texture="Tutorial_ArrowH" Size="58,44" />
+        </SlideAnim>
+      </Grid>
+    </Tutorial>
+
+  </Container>
 
   <Grid								ID="OptionsPanel"								Anchor="L,C"	Offset="0,-290"		Size="193,110"	Texture="Controls_OptionPanel"																SliceCorner="3,3"		SliceSize="10,52" SliceTextureSize="16,64">
     <Image																												Offset="-30,0"	Size="240,59"		Texture="Controls_HeaderBanner">
@@ -171,10 +169,10 @@
       </Image>
     </Grid>
 
-    <Container ID="SearchResultsPanelContainer" Anchor="L,T"	Offset="0,75"		Size="193,110" AutoSize="V" Hidden="1">
+    <Container ID="SearchResultsPanelContainer" Anchor="L,T"	Offset="0,75"	 Size="193,auto" Hidden="1">
       <ScrollPanel ID="SearchResultsPanel"  Size="parent,600"  Vertical="1" AutoScrollBar="1">
         <ScrollBar Style="Slider_Blue" Anchor="R,C" AnchorSide="O,I"/>
-        <Grid Texture="Controls_OptionPanel" 	SliceCorner="3,3"		SliceSize="10,52" SliceTextureSize="16,64" Size="193,110" AutoSize="V" AutoSizePadding="0,5">
+        <Grid Texture="Controls_OptionPanel" 	SliceCorner="3,3"		SliceSize="10,52" SliceTextureSize="16,64" Size="193,auto" AutoSizePadding="0,5">
           <Stack ID="SearchResultsStack" StackGrowth="Bottom" Padding="2" Offset="0,5"/>
         </Grid>
       </ScrollPanel>
@@ -217,8 +215,8 @@
   </Instance>
 
 	<Instance Name="SearchResultInstance">
-		<Container ID="Root" Size="370,84" AutoSize="1">
-			<GridButton ID="Button" Offset="0,0" Size="193,84" Style="ButtonLightWeightGrid" AutoSize="V" InnerPadding="10,10">
+		<Container ID="Root" Size="auto,auto">
+			<GridButton ID="Button" Offset="0,0" Size="193,auto" Style="ButtonLightWeightGrid" InnerPadding="10,10">
         <Label ID="Name" Offset="40,0" Style="FontNormal14" String="TechName" Anchor="L,C" WrapWidth="parent-45" ColorSet="BodyTextCool"/>
         <Image Texture="Controls_CircleRim40" Size="40,40" Anchor="L,C" Color="255,255,255,200">
           <Image ID="SearchIcon"						 Size="38,38"													Texture="Tech38" />

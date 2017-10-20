@@ -306,7 +306,7 @@
         </ScrollPanelData>
         <StackData StackGrowth="Bottom" Anchor="C,T"/>
         <InstanceData Name="InstanceOne">
-          <GridButton Style="ButtonControl" ID="Button" Anchor="L,T"	Size="190,42" FontStyle="glow" ColorSet="BlueGlow">
+          <GridButton Style="ButtonControl" ID="Button" Anchor="L,T"	Offset="10,0" Size="190,42" FontStyle="glow" ColorSet="BlueGlow">
             <Image ID="ButtonImage" Anchor="C,C" Texture="Controls_SlotCircle28" Size="29,29"/>
           </GridButton>
         </InstanceData>
@@ -396,7 +396,7 @@
   <MakeInstance Name="PopupDialog" />
 
   <Instance			Name="IconInfoInstance">
-    <Container	ID="Top"					Size="340,40" AutoSize="V">
+    <Container	ID="Top"				 Size="340,auto">
       <Image    Texture="Controls_CircleCompass" Size="52,53" Offset="0,-2" Color="34,58,80,150">
         <Image		ID="Icon"					Size="38,38" Anchor="C,C" />
       </Image>
@@ -414,7 +414,7 @@
   </Instance>
 
   <Instance			Name="IconInstance">
-    <Container	ID="Top"					Size="340,40" AutoSize="V">
+    <Container	ID="Top"				 Size="340,auto">
       <Image    Texture="Controls_CircleBacking45" Size="51,51" Offset="0,-2">
         <Image		ID="Icon"					Size="45,45" Anchor="C,C" Offset="0,-1" />
       </Image>

@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Context Style="FontNormal14">
 
-	<Box ID="MainGrid" Size="1024,full" Anchor="C,T" Color="9,44,72,240" IgnoreTutorial="1">
+	<Box ID="MainGrid" Size="1024,parent" Anchor="C,T" Color="9,44,72,240" IgnoreTutorial="1">
 		<Image Texture="Controls_GradientSmall" Size="22,parent" AnchorSide="O,I" Anchor="R,T" Color="0,0,0,200" Rotate="270" Offset="0,0"/>
 		<Image Texture="Controls_GradientSmall" Size="22,parent" AnchorSide="O,I" Anchor="L,T" Color="0,0,0,200" Rotate="90" Offset="0,0"/>
 		<Box Color="32,70,101,150" Anchor="L,T" Size="2,parent"/>
@@ -60,7 +60,7 @@
 		</Container>	
 	</Box>
 
-  <BoxButton	ID="IntroMovieContainer" Size="full,full" Color="255,255,255,255" Hidden="1" ConsumeAllMouse="1">
-    <Movie		ID="IntroMovie" Size="full,full" LoopMovie="0" StretchMode="UniformToFill" />
+  <BoxButton	ID="IntroMovieContainer" Size="parent,parent" Color="255,255,255,255" Hidden="1" ConsumeAllMouse="1">
+    <Movie		ID="IntroMovie" Size="parent,parent" LoopMovie="0" StretchMode="UniformToFill" />
   </BoxButton>
 </Context>

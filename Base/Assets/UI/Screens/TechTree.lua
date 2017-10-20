@@ -1709,7 +1709,6 @@ end
 --	current local player.
 -- ===========================================================================
 function Initialize()
-
 	--profile.runtime("start");
 	
 	PopulateItemData("Technologies","TechnologyType","TechnologyPrereqs","Technology","PrereqTech");	
@@ -1746,12 +1745,8 @@ function Initialize()
 
 
 	-- LUA Events
-	if(HasCapability("CAPABILITY_TECH_TREE")) then
-		LuaEvents.LaunchBar_RaiseTechTree.Add( OnOpen );
-		LuaEvents.ResearchChooser_RaiseTechTree.Add( OnOpen );
-
-		m_ToggleTechTreeId = Input.GetActionId("ToggleTechTree");
-	end
+	LuaEvents.LaunchBar_RaiseTechTree.Add( OnOpen );
+	LuaEvents.ResearchChooser_RaiseTechTree.Add( OnOpen );
 
 	LuaEvents.LaunchBar_CloseTechTree.Add( OnClose );
 	LuaEvents.Tutorial_TechTreeScrollToNode.Add( OnTutorialScrollToNode );
@@ -1766,7 +1761,7 @@ function Initialize()
 	Events.SystemUpdateUI.Add( OnUpdateUI );
 
 	--	Hot Key Handling
-	
+	m_ToggleTechTreeId = Input.GetActionId("ToggleTechTree");
 	if (m_ToggleTechTreeId ~= nil) then
 		Events.InputActionTriggered.Add( OnInputActionTriggered );
 	end
@@ -1777,4 +1772,7 @@ function Initialize()
 	TruncateStringWithTooltip(Controls.ResearchingLabelKey, MAX_BEFORE_TRUNC_KEY_LABEL, Controls.ResearchingLabelKey:GetText());
 	TruncateStringWithTooltip(Controls.CompletedLabelKey, MAX_BEFORE_TRUNC_KEY_LABEL, Controls.CompletedLabelKey:GetText());
 end
-Initialize();
+
+if HasCapability("CAPABILITY_TECH_TREE") then
+	Initialize();
+end

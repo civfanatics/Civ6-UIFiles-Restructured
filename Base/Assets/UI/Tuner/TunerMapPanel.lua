@@ -27,8 +27,19 @@ g_UnitPlacement =
 		for i, pUnit in ipairs(aUnits) do
 			Players[pUnit:GetOwner()]:GetUnits():Destroy(pUnit);
 		end
+		-- Layer IDs as seen in GameCore::Rules::Placement::MapLayers in Rules_Placement.h
 		local tradeLayerID = 1;
 		aUnits = Units.GetUnitsInPlotLayerID(plot, tradeLayerID);
+		for i, pUnit in ipairs(aUnits) do
+			Players[pUnit:GetOwner()]:GetUnits():Destroy(pUnit);
+		end
+		local spyLayerID = 2;
+		aUnits = Units.GetUnitsInPlotLayerID(plot, spyLayerID);
+		for i, pUnit in ipairs(aUnits) do
+			Players[pUnit:GetOwner()]:GetUnits():Destroy(pUnit);
+		end
+		local religiousLayerID = 3;
+		aUnits = Units.GetUnitsInPlotLayerID(plot, religiousLayerID);
 		for i, pUnit in ipairs(aUnits) do
 			Players[pUnit:GetOwner()]:GetUnits():Destroy(pUnit);
 		end

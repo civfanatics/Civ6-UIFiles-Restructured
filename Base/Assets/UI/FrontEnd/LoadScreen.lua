@@ -193,181 +193,180 @@ function OnLoadScreenContentReady()
 	local playerConfig		:table = PlayerConfigurations[localPlayer];
 	if playerConfig == nil then
 		UI.DataError("Received NIL playerConfig for player #"..tostring(localPlayer));
-	end
-
-	local backgroundTexture:string;
-	local leaderType:string = playerConfig:GetLeaderTypeName();
-	local loadingInfo:table = GameInfo.LoadingInfo[leaderType];
-	if loadingInfo and loadingInfo.BackgroundImage then
-		backgroundTexture = loadingInfo.BackgroundImage;
 	else
-		backgroundTexture = leaderType .. "_BACKGROUND";
-	end
+		local backgroundTexture:string;
+		local leaderType:string = playerConfig:GetLeaderTypeName();
+		local loadingInfo:table = GameInfo.LoadingInfo[leaderType];
+		if loadingInfo and loadingInfo.BackgroundImage then
+			backgroundTexture = loadingInfo.BackgroundImage;
+		else
+			backgroundTexture = leaderType .. "_BACKGROUND";
+		end
 	
-	Controls.BackgroundImage:SetTexture( backgroundTexture );
-	if (not Controls.BackgroundImage:HasTexture()) then
-		UI.DataError("Failed to load background image texture: "..backgroundTexture);
-	end
+		Controls.BackgroundImage:SetTexture( backgroundTexture );
+		if (not Controls.BackgroundImage:HasTexture()) then
+			UI.DataError("Failed to load background image texture: "..backgroundTexture);
+		end
 
-	local LEADER_CONTAINER_X = 512;
-	local offsetX = math.floor((Controls.Portrait:GetSizeX() - LEADER_CONTAINER_X)/2);
-	if (offsetX > 0) then
-		Controls.Portrait:SetOffsetX(offsetX);
-	else
-		Controls.Portrait:SetOffsetX(0);
-	end
+		local LEADER_CONTAINER_X = 512;
+		local offsetX = math.floor((Controls.Portrait:GetSizeX() - LEADER_CONTAINER_X)/2);
+		if (offsetX > 0) then
+			Controls.Portrait:SetOffsetX(offsetX);
+		else
+			Controls.Portrait:SetOffsetX(0);
+		end
 
-	local portraitName:string;
-	if loadingInfo and loadingInfo.ForegroundImage then
-		portraitName = loadingInfo.ForegroundImage;
-	else
-		portraitName = leaderType .. "_NEUTRAL";
-	end
+		local portraitName:string;
+		if loadingInfo and loadingInfo.ForegroundImage then
+			portraitName = loadingInfo.ForegroundImage;
+		else
+			portraitName = leaderType .. "_NEUTRAL";
+		end
 	
-	Controls.Portrait:SetTexture( portraitName );
-	if (not Controls.Portrait:HasTexture()) then
-		UI.DataError("We are lacking a texture for "..portraitName);
-	end
-	Controls.CivName:SetText( Locale.ToUpper( Locale.Lookup(playerConfig:GetCivilizationDescription())) );
+		Controls.Portrait:SetTexture( portraitName );
+		if (not Controls.Portrait:HasTexture()) then
+			UI.DataError("We are lacking a texture for "..portraitName);
+		end
+		Controls.CivName:SetText( Locale.ToUpper( Locale.Lookup(playerConfig:GetCivilizationDescription())) );
 
 	
-	local eraInfoText;
-	local leaderInfoText;
+		local eraInfoText;
+		local leaderInfoText;
 
-	local startEra = GameInfo.Eras[ GameConfiguration.GetStartEra() ];
-	if (GameConfiguration.IsSavedGame()) then
-		-- Returns a list of 1 entry...
-		local metaData = UI.GetSaveGameMetaData();
-		if(metaData and #metaData == 1) then
-			local item = metaData[1];
-			local saveEra = GameInfo.Eras[ item.HostEra ];
-			if(saveEra) then
-				startEra = saveEra;
+		local startEra = GameInfo.Eras[ GameConfiguration.GetStartEra() ];
+		if (GameConfiguration.IsSavedGame()) then
+			-- Returns a list of 1 entry...
+			local metaData = UI.GetSaveGameMetaData();
+			if(metaData and #metaData == 1) then
+				local item = metaData[1];
+				local saveEra = GameInfo.Eras[ item.HostEra ];
+				if(saveEra) then
+					startEra = saveEra;
+				end
 			end
 		end
-	end
 
-	if (startEra ~= nil) then
-		eraInfoText = startEra.Description;
-	end
+		if (startEra ~= nil) then
+			eraInfoText = startEra.Description;
+		end
 		
-	local kLeader	:table = GameInfo.Leaders[leaderType];
-	if kLeader ~= nil then
-		local leaderName:string = Locale.ToUpper(Locale.Lookup( kLeader.Name ));
-		Controls.LeaderName:SetText( leaderName );
+		local kLeader	:table = GameInfo.Leaders[leaderType];
+		if kLeader ~= nil then
+			local leaderName:string = Locale.ToUpper(Locale.Lookup( kLeader.Name ));
+			Controls.LeaderName:SetText( leaderName );
 
-		local details = "LOC_LOADING_INFO_" .. leaderType;
-		if(Locale.HasTextKey(details)) then
-			leaderInfoText = details;
+			local details = "LOC_LOADING_INFO_" .. leaderType;
+			if(Locale.HasTextKey(details)) then
+				leaderInfoText = details;
+			end
+		else
+			UI.DataError("No leader in DB by leaderType '"..leaderType.."'");
 		end
-	else
-		UI.DataError("No leader in DB by leaderType '"..leaderType.."'");
-	end
 	
-	if(loadingInfo) then
-		if(loadingInfo.EraText) then
-			eraInfoText = loadingInfo.EraText;
+		if(loadingInfo) then
+			if(loadingInfo.EraText) then
+				eraInfoText = loadingInfo.EraText;
+			end
+
+			if(loadingInfo.LeaderText) then
+				leaderInfoText = loadingInfo.LeaderText;
+			end
 		end
 
-		if(loadingInfo.LeaderText) then
-			leaderInfoText = loadingInfo.LeaderText;
+		if (eraInfoText) then
+			Controls.EraInfo:LocalizeAndSetText(eraInfoText);
+			Controls.EraInfo:SetHide(false);
+		else
+			Controls.EraInfo:SetHide(true);
 		end
-	end
 
-	if (eraInfoText) then
-		Controls.EraInfo:LocalizeAndSetText(eraInfoText);
-		Controls.EraInfo:SetHide(false);
-	else
-		Controls.EraInfo:SetHide(true);
-	end
+		if(leaderInfoText) then
+			Controls.LeaderInfo:LocalizeAndSetText(leaderInfoText);
+			Controls.LeaderInfo:SetHide(false);
+		else
+			Controls.LeaderInfo:SetHide(true);
+		end
 
-	if(leaderInfoText) then
-		Controls.LeaderInfo:LocalizeAndSetText(leaderInfoText);
-		Controls.LeaderInfo:SetHide(false);
-	else
-		Controls.LeaderInfo:SetHide(true);
-	end
+		local civType	:string = playerConfig:GetCivilizationTypeName();
+		local iconName	:string = "ICON_"..civType;
+		Controls.LogoContainer:SetColor(primaryColor);
+		Controls.Logo:SetColor(secondaryColor);
+		Controls.Logo:SetIcon(iconName);
 
-	local civType	:string = playerConfig:GetCivilizationTypeName();
-	local iconName	:string = "ICON_"..civType;
-	Controls.LogoContainer:SetColor(primaryColor);
-	Controls.Logo:SetColor(secondaryColor);
-	Controls.Logo:SetIcon(iconName);
+		Controls.Logo:SetHide(false);
+		Controls.BackgroundImage:SetHide(false);
+		Controls.Banner:SetHide(false);
+		Controls.Portrait:SetHide(false);
 
-	Controls.Logo:SetHide(false);
-	Controls.BackgroundImage:SetHide(false);
-	Controls.Banner:SetHide(false);
-	Controls.Portrait:SetHide(false);
+		-- start the voiceover
+		local leaderID = playerConfig:GetLeaderTypeID();
+		local bPlayDOM = true;
 
-    -- start the voiceover
-    local leaderID = playerConfig:GetLeaderTypeID();
-    local bPlayDOM = true;
+		if(loadingInfo) then
+			bPlayDOM = loadingInfo.PlayDawnOfManAudio;
+		end
 
-	if(loadingInfo) then
-		bPlayDOM = loadingInfo.PlayDawnOfManAudio;
-	end
+		if (m_isResyncLoad) then
+			bPlayDOM = false;
+		end
 
-    if (m_isResyncLoad) then
-        bPlayDOM = false;
-    end
+		if bPlayDOM then
+			UI.SetSoundSwitchValue("Leader_Screen_Civilization", UI.GetCivilizationSoundSwitchValueByLeader(leaderID));
+			UI.SetSoundSwitchValue("Civilization", UI.GetCivilizationSoundSwitchValueByLeader(leaderID));
+			UI.SetSoundSwitchValue("Era_DawnOfMan", UI.GetEraSoundSwitchValue(startEra.Hash));
+			UI.PlaySound("Play_DawnOfMan_Speech");
+		end
 
-    if bPlayDOM then
-        UI.SetSoundSwitchValue("Leader_Screen_Civilization", UI.GetCivilizationSoundSwitchValueByLeader(leaderID));
-        UI.SetSoundSwitchValue("Civilization", UI.GetCivilizationSoundSwitchValueByLeader(leaderID));
-        UI.SetSoundSwitchValue("Era_DawnOfMan", UI.GetEraSoundSwitchValue(startEra.Hash));
-        UI.PlaySound("Play_DawnOfMan_Speech");
-    end
-
-	-- Obtain "uniques" from Civilization and for the chosen leader
-	local uniqueAbilities;
-	local uniqueUnits;
-	local uniqueBuildings;
-	uniqueAbilities, uniqueUnits, uniqueBuildings = GetLeaderUniqueTraits( leaderType );
-	local CivUniqueAbilities, CivUniqueUnits, CivUniqueBuildings = GetCivilizationUniqueTraits( civType );
+		-- Obtain "uniques" from Civilization and for the chosen leader
+		local uniqueAbilities;
+		local uniqueUnits;
+		local uniqueBuildings;
+		uniqueAbilities, uniqueUnits, uniqueBuildings = GetLeaderUniqueTraits( leaderType );
+		local CivUniqueAbilities, CivUniqueUnits, CivUniqueBuildings = GetCivilizationUniqueTraits( civType );
 	
-	-- Merge tables
-	for i,v in ipairs(CivUniqueAbilities)	do table.insert(uniqueAbilities, v) end
-	for i,v in ipairs(CivUniqueUnits)		do table.insert(uniqueUnits, v)		end
-	for i,v in ipairs(CivUniqueBuildings)	do table.insert(uniqueBuildings, v) end
+		-- Merge tables
+		for i,v in ipairs(CivUniqueAbilities)	do table.insert(uniqueAbilities, v) end
+		for i,v in ipairs(CivUniqueUnits)		do table.insert(uniqueUnits, v)		end
+		for i,v in ipairs(CivUniqueBuildings)	do table.insert(uniqueBuildings, v) end
 
-	-- Generate content
-	for _, item in ipairs(uniqueAbilities) do
-		--print( "ua:", item.TraitType, item.Name, item.Description, Locale.Lookup(item.Description));	--debug
-		local instance:table = {};
-		ContextPtr:BuildInstanceForControl("TextInfoInstance", instance, Controls.FeaturesStack );
-		local headerText:string = Locale.ToUpper(Locale.Lookup( item.Name )); 
-		instance.Header:SetText( headerText );
-		instance.Description:SetText( Locale.Lookup( item.Description ) );
+		-- Generate content
+		for _, item in ipairs(uniqueAbilities) do
+			--print( "ua:", item.TraitType, item.Name, item.Description, Locale.Lookup(item.Description));	--debug
+			local instance:table = {};
+			ContextPtr:BuildInstanceForControl("TextInfoInstance", instance, Controls.FeaturesStack );
+			local headerText:string = Locale.ToUpper(Locale.Lookup( item.Name )); 
+			instance.Header:SetText( headerText );
+			instance.Description:SetText( Locale.Lookup( item.Description ) );
+		end
+
+		local size:number = SIZE_BUILDING_ICON;
+
+		for _, item in ipairs(uniqueUnits) do
+			--print( "uu:", item.TraitType, item.Name, item.Description, Locale.Lookup(item.Description));	--debug
+			local instance:table = {};
+			ContextPtr:BuildInstanceForControl("IconInfoInstance", instance, Controls.FeaturesStack );
+			iconAtlas = "ICON_"..item.Type;
+			instance.Icon:SetIcon(iconAtlas);
+			instance.TextStack:SetOffsetX( size + 4 );
+			local headerText:string = Locale.ToUpper(Locale.Lookup( item.Name ));
+			instance.Header:SetText( headerText );
+			instance.Description:SetText(Locale.Lookup(item.Description));
+		end
+
+
+		for _, item in ipairs(uniqueBuildings) do
+			--print( "ub:", item.TraitType, item.Name, item.Description, Locale.Lookup(item.Description));	--debug
+			local instance:table = {};
+			ContextPtr:BuildInstanceForControl("IconInfoInstance", instance, Controls.FeaturesStack );
+			instance.Icon:SetSizeVal(38,38);
+			iconAtlas = "ICON_"..item.Type;
+			instance.Icon:SetIcon(iconAtlas);
+			instance.TextStack:SetOffsetX( size + 4 );
+			local headerText:string = Locale.ToUpper(Locale.Lookup( item.Name ));
+			instance.Header:SetText( headerText );
+			instance.Description:SetText(Locale.Lookup(item.Description));
+		end
 	end
-
-	local size:number = SIZE_BUILDING_ICON;
-
-	for _, item in ipairs(uniqueUnits) do
-		--print( "uu:", item.TraitType, item.Name, item.Description, Locale.Lookup(item.Description));	--debug
-		local instance:table = {};
-		ContextPtr:BuildInstanceForControl("IconInfoInstance", instance, Controls.FeaturesStack );
-		iconAtlas = "ICON_"..item.Type;
-		instance.Icon:SetIcon(iconAtlas);
-		instance.TextStack:SetOffsetX( size + 4 );
-		local headerText:string = Locale.ToUpper(Locale.Lookup( item.Name ));
-		instance.Header:SetText( headerText );
-		instance.Description:SetText(Locale.Lookup(item.Description));
-	end
-
-
-	for _, item in ipairs(uniqueBuildings) do
-		--print( "ub:", item.TraitType, item.Name, item.Description, Locale.Lookup(item.Description));	--debug
-		local instance:table = {};
-		ContextPtr:BuildInstanceForControl("IconInfoInstance", instance, Controls.FeaturesStack );
-		instance.Icon:SetSizeVal(38,38);
-		iconAtlas = "ICON_"..item.Type;
-		instance.Icon:SetIcon(iconAtlas);
-		instance.TextStack:SetOffsetX( size + 4 );
-		local headerText:string = Locale.ToUpper(Locale.Lookup( item.Name ));
-		instance.Header:SetText( headerText );
-		instance.Description:SetText(Locale.Lookup(item.Description));
-	end
-
 end
 
 -- ===========================================================================

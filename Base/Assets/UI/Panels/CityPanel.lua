@@ -9,7 +9,7 @@ include( "Colors" );
 include( "InstanceManager" );
 include( "SupportFunctions" );			-- Round(), Clamp(), DarkenLightenColor()
 include( "ToolTipHelper" );	
-
+include("GameCapabilities");
 -- ===========================================================================
 --	DEBUG
 --	Toggle these for temporary debugging help.
@@ -27,7 +27,7 @@ local SIZE_MAIN_ROW_LEFT_WIDE		:number = 270;
 local SIZE_MAIN_ROW_LEFT_COLLAPSED	:number = 157;
 local TXT_NO_PRODUCTION				:string = Locale.Lookup("LOC_HUD_CITY_PRODUCTION_NOTHING_PRODUCED");
 local MAX_BEFORE_TRUNC_TURN_LABELS	:number = 160;
-local MAX_BEFORE_TRUNC_STATIC_LABELS:number	= 110;
+local MAX_BEFORE_TRUNC_STATIC_LABELS:number	= 112;
 local HEX_GROWTH_TEXT_PADDING		:number = 10;
 
 local UV_CITIZEN_GROWTH_STATUS		:table	= {};
@@ -269,6 +269,18 @@ function ViewMain( data:table )
 	Controls.HousingLabel:SetHide( m_isShowingPanels );
 	Controls.PanelStackShadow:SetHide( not m_isShowingPanels );
 	Controls.ProductionNowLabel:SetHide( m_isShowingPanels );	
+
+	-- Hide Religion / Faith UI in some scenarios
+	if not GameCapabilities.HasCapability("CAPABILITY_CITY_HUD_RELIGION_TAB") then
+		Controls.ReligionGrid:SetHide(true);
+		Controls.ReligionIcon:SetHide(true);
+	end
+	if not GameCapabilities.HasCapability("CAPABILITY_FAITH") then
+		Controls.ProduceWithFaithCheck:SetHide(true);
+		Controls.FaithGrid:SetHide(true);
+		Controls.ActionStack:ReprocessAnchoring();
+		Controls.YieldStack:ReprocessAnchoring();
+	end
 
 	-- Determine size of progress bars at the bottom, as well as sub-panel offset.
 	local OFF_BOTTOM_Y						:number = 9;
@@ -537,10 +549,11 @@ end
 
 function OnCitySelectionChanged( ownerPlayerID:number, cityID:number, i:number, j:number, k:number, isSelected:boolean, isEditable:boolean)
 	if ownerPlayerID == Game.GetLocalPlayer() then
-		if (isSelected) then
+		if (isSelected) then	
 			-- Determine if we should switch to the SELECTION interface mode
 			local shouldSwitchToSelection:boolean = true;
 			if UI.GetInterfaceMode() == InterfaceModeTypes.CITY_MANAGEMENT then
+				HideGrowthTile();
 				shouldSwitchToSelection = false;
 			end
 			if UI.GetInterfaceMode() == InterfaceModeTypes.ICBM_STRIKE then
@@ -555,6 +568,16 @@ function OnCitySelectionChanged( ownerPlayerID:number, cityID:number, i:number, 
 						shouldSwitchToSelection = false;
 					end
 				end
+			end			
+			if UI.GetInterfaceMode() == InterfaceModeTypes.CITY_RANGE_ATTACK then
+				-- During CITY_RANGE_ATTACK only switch to SELECTION if we're selecting a city
+				-- which can't currently perform a ranged attack
+				if CityManager.CanStartCommand( CityManager.GetCity(owningPlayerID, cityID), CityCommandTypes.RANGE_ATTACK ) then
+						shouldSwitchToSelection = false;
+						--we switch to selection mode briefly so that we can go back into CITY_RANGE_ATTACK with the correct settings
+						UI.SetInterfaceMode(InterfaceModeTypes.SELECTION);
+						UI.SetInterfaceMode(InterfaceModeTypes.CITY_RANGE_ATTACK);
+				end
 			end
 			if shouldSwitchToSelection then
 				UI.SetInterfaceMode(InterfaceModeTypes.SELECTION);
@@ -567,6 +590,9 @@ function OnCitySelectionChanged( ownerPlayerID:number, cityID:number, i:number, 
 			Controls.CityPanelSlide:SetToBeginning();
 			Controls.CityPanelSlide:Play();
 			Refresh();
+			if UI.GetInterfaceMode() == InterfaceModeTypes.CITY_MANAGEMENT then
+				DisplayGrowthTile();
+			end
 		else
 			Close();
 			-- Tell the CityPanelOverview a city was deselected
@@ -755,7 +781,7 @@ function OnTogglePurchaseTile()
 		RecenterCameraOnCity();
 		UILens.ToggleLayerOn( LensLayers.PURCHASE_PLOT );
 	else		
-		if not Controls.ManageCitizensCheck:IsChecked() then
+		if not Controls.ManageCitizensCheck:IsChecked() and UI.GetInterfaceMode() == InterfaceModeTypes.CITY_MANAGEMENT then
 			UI.SetInterfaceMode(InterfaceModeTypes.SELECTION);			-- Exit mode		
 		end
 		UILens.ToggleLayerOff( LensLayers.PURCHASE_PLOT );			
@@ -811,7 +837,7 @@ function OnToggleManageCitizens()
 		RecenterCameraOnCity();
 		UILens.ToggleLayerOn( LensLayers.CITIZEN_MANAGEMENT );
 	else		
-		if not Controls.PurchaseTileCheck:IsChecked() then
+		if not Controls.PurchaseTileCheck:IsChecked() and UI.GetInterfaceMode() == InterfaceModeTypes.CITY_MANAGEMENT then
 			UI.SetInterfaceMode(InterfaceModeTypes.SELECTION);			-- Exit mode
 		end
 		UILens.ToggleLayerOff( LensLayers.CITIZEN_MANAGEMENT );
@@ -857,7 +883,7 @@ function OnCameraUpdate( vFocusX:number, vFocusY:number, fZoomLevel:number )
 end
 
 function DisplayGrowthTile()
-	if m_pCity ~= nil then
+	if m_pCity ~= nil and HasCapability("CAPABILITY_CULTURE") then
 		local cityCulture:table = m_pCity:GetCulture();
 		if cityCulture ~= nil then
 			local newGrowthPlot:number = cityCulture:GetNextPlot();
@@ -888,6 +914,14 @@ function DisplayGrowthTile()
 	end
 end
 
+function HideGrowthTile()
+	if m_GrowthPlot ~= -1 then
+		Controls.GrowthHexAnchor:SetHide(true);
+		Events.Camera_Updated.Remove(OnCameraUpdate);
+		UILens.ClearHex(LensLayers.PURCHASE_PLOT, m_GrowthPlot);
+		m_GrowthPlot = -1;
+	end
+end
 -- ===========================================================================
 --	GAME Event
 --	eOldMode, mode the engine was formally in
@@ -899,13 +933,9 @@ function OnInterfaceModeChanged( eOldMode:number, eNewMode:number )
 		if Controls.PurchaseTileCheck:IsChecked()   then Controls.PurchaseTileCheck:SetAndCall( false ); end
 		if Controls.ManageCitizensCheck:IsChecked() then Controls.ManageCitizensCheck:SetAndCall( false ); end
 		UI.SetFixedTiltMode( false );
-
-		if m_GrowthPlot ~= -1 then
-			Controls.GrowthHexAnchor:SetHide(true);
-			Events.Camera_Updated.Remove(OnCameraUpdate);
-			UILens.ClearHex(LensLayers.PURCHASE_PLOT, m_GrowthPlot);
-			m_GrowthPlot = -1;
-		end
+		HideGrowthTile();
+	elseif eOldMode == InterfaceModeTypes.DISTRICT_PLACEMENT or eOldMode == InterfaceModeTypes.BUILDING_PLACEMENT then
+		HideGrowthTile();
 	end
 
 	if eNewMode == InterfaceModeTypes.CITY_MANAGEMENT then
@@ -929,12 +959,33 @@ function OnInterfaceModeChanged( eOldMode:number, eNewMode:number )
 		EnableIfNotTutorialBlocked("ProduceWithFaithCheck");
 		EnableIfNotTutorialBlocked("ProduceWithGoldCheck");
 		EnableIfNotTutorialBlocked("ChangeProductionCheck");
+
 	elseif eNewMode == InterfaceModeTypes.DISTRICT_PLACEMENT then
 		Controls.PurchaseTileCheck:SetDisabled( true );
 		Controls.ManageCitizensCheck:SetDisabled( true );
 		Controls.ChangeProductionCheck:SetDisabled( true );
 		Controls.ProduceWithFaithCheck:SetDisabled( true );
 		Controls.ProduceWithGoldCheck:SetDisabled( true );
+		local newGrowthPlot:number = m_pCity:GetCulture():GetNextPlot();	--show the growth tile if the district can be placed there
+		if(newGrowthPlot ~= -1) then
+			local districtHash:number	= UI.GetInterfaceModeParameter(CityOperationTypes.PARAM_DISTRICT_TYPE);
+			local district:table		= GameInfo.Districts[districtHash];
+			local kPlot		:table			= Map.GetPlotByIndex(newGrowthPlot);
+			if kPlot:CanHaveDistrict(district.Index, m_pPlayer, m_pCity:GetID()) then
+				DisplayGrowthTile();
+			end
+		end
+
+	elseif eNewMode == InterfaceModeTypes.BUILDING_PLACEMENT then
+		local newGrowthPlot:number = m_pCity:GetCulture():GetNextPlot();
+		if(newGrowthPlot ~= -1) then
+			local buildingHash :number = UI.GetInterfaceModeParameter(CityOperationTypes.PARAM_BUILDING_TYPE);
+			local building = GameInfo.Buildings[buildingHash];
+			local kPlot		:table			= Map.GetPlotByIndex(newGrowthPlot);
+			if kPlot:CanHaveWonder(building.Index, m_pPlayer, m_pCity:GetID()) then
+				DisplayGrowthTile();
+			end
+		end
 	end
 
 	if not ContextPtr:IsHidden() then
@@ -1056,16 +1107,22 @@ function Initialize()
 	Controls.PrevCityButton:RegisterCallback(	Mouse.eLClick,	OnPreviousCity); 
 	
 
-	Controls.PurchaseTileCheck:RegisterCheckHandler(	OnTogglePurchaseTile );
-	Controls.PurchaseTileCheck:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
+	if GameCapabilities.HasCapability("CAPABILITY_GOLD") then
+		Controls.PurchaseTileCheck:RegisterCheckHandler(OnTogglePurchaseTile );
+		Controls.PurchaseTileCheck:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
+		Controls.ProduceWithGoldCheck:RegisterCheckHandler( OnTogglePurchaseWithGold );
+		Controls.ProduceWithGoldCheck:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
+	else
+		Controls.PurchaseTileCheck:SetHide(true);
+		Controls.ProduceWithGoldCheck:SetHide(true);
+	end
+
 	Controls.ManageCitizensCheck:RegisterCheckHandler(	OnToggleManageCitizens );	
 	Controls.ManageCitizensCheck:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 	Controls.ChangeProductionCheck:RegisterCheckHandler( OnToggleProduction );
 	Controls.ChangeProductionCheck:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 	Controls.ProduceWithFaithCheck:RegisterCheckHandler( OnTogglePurchaseWithFaith );
 	Controls.ProduceWithFaithCheck:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
-	Controls.ProduceWithGoldCheck:RegisterCheckHandler( OnTogglePurchaseWithGold );
-	Controls.ProduceWithGoldCheck:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 	Controls.ToggleOverviewPanel:RegisterCheckHandler( OnToggleOverviewPanel );
 	Controls.ToggleOverviewPanel:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 

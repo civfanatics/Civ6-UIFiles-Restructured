@@ -1,5 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Context Hidden="0">
+  <!-- Darken the screen -->
+  <Box Color="0,0,0,150" Size="parent,parent" ConsumeMouse="1"/>
+  <Image Texture="Controls_Vignette" Size="500,500"   Color="0,0,0,255" Anchor="R,B"/>
+  <Image Texture="Controls_Vignette" Size="500,500"   Color="0,0,0,255" Anchor="R,T" FlipY="1"/>
+  <Image Texture="Controls_Vignette" Size="500,500"   Color="0,0,0,255" Anchor="L,T" FlipY="1" FlipX="1"/>
+  <Image Texture="Controls_Vignette" Size="500,500"   Color="0,0,0,255" Anchor="L,B" FlipX="1"/>
+  <Image Texture="Controls_Gradient" Size="150,parent"  Color="0,0,0,255" Anchor="L,T" Rotate="90"/>
+  <Image Texture="Controls_Gradient" Size="150,parent"  Color="0,0,0,255" Anchor="R,T" Rotate="270"/>
+  <Image Texture="Controls_Gradient" Size="parent,150"  Color="0,0,0,255" Anchor="L,T" FlipY="1"/>
+  <Image Texture="Controls_Gradient" Size="parent,150"  Color="0,0,0,255" Anchor="L,B"/>
   <Grid ID="PopupDrowShadowGrid" Anchor="C,C" Offset="0,0" Size="625,700" Style="DropShadow" >
     <Grid ID="PopupFrameGrid" Anchor="C,C" Size="parent,parent+20" Offset="0,0" Style="EnhancedToolTip">
       <!-- Corner Icons -->

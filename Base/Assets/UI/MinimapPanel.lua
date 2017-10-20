@@ -12,6 +12,11 @@ local LENS_PANEL_OFFSET				:number	= 50;
 local MINIMAP_BACKING_PADDING_SIZEY :number = 54;
 
 -- ===========================================================================
+--	GLOBALS
+-- ===========================================================================
+m_shouldCloseLensMenu = true;    -- Controls when the Lens menu should be closed.
+
+-- ===========================================================================
 --	MEMBERS
 -- ===========================================================================
 --local m_OptionsButtonManager= InstanceManager:new( "MiniMapOptionButtonInstance", "Top", 		Controls.OptionsStack );
@@ -23,8 +28,6 @@ local m_ContinentsCreated		:boolean=false;
 local m_MiniMap_xmloffsety		:number	= 0;
 local m_ContinentsCache			:table = {};
 local m_kFlyoutControlIds		:table = { "MapOptions", "Lens", "MapPinList"};	-- Name of controls that are the backing for "flyout" menus.
-
-local m_shouldCloseLensMenu           :boolean = true;    -- Controls when the Lens menu should be closed.
 
 local m_LensLayers				:table = {	LensLayers.HEX_COLORING_RELIGION,
 											LensLayers.HEX_COLORING_CONTINENT,
@@ -334,6 +337,13 @@ end
 -- ===========================================================================
 function ResizeBacking()
 	Controls.MinimapBacking:SetSizeY(Controls.MinimapImage:GetSizeY() + MINIMAP_BACKING_PADDING_SIZEY);
+
+	-- if the minimap is collapsed, shift it accordingly
+	if ( m_isCollapsed ) then
+		Controls.Pause:Play();
+		Controls.CollapseAnim:SetEndVal(0, Controls.MinimapContainer:GetOffsetY() + Controls.MinimapContainer:GetSizeY());
+		Controls.CollapseAnim:SetToEnd();
+	end
 end
 
 -- ===========================================================================
@@ -347,6 +357,7 @@ end
 function OnLensLayerOn( layerNum:number )		
 	if layerNum == LensLayers.HEX_COLORING_RELIGION then
         UI.PlaySound("UI_Lens_Overlay_On");
+		UILens.SetDesaturation(1.0);
 	elseif layerNum == LensLayers.HEX_COLORING_APPEAL_LEVEL then
 		SetAppealHexes();
         UI.PlaySound("UI_Lens_Overlay_On");
@@ -381,6 +392,10 @@ function OnLensLayerOff( layerNum:number )
 			UILens.ClearLayerHexes(LensLayers.HEX_COLORING_WATER_AVAILABLITY);
 		end
         UI.PlaySound("UI_Lens_Overlay_Off");
+	end
+
+	if (layerNum == LensLayers.HEX_COLORING_RELIGION) then
+		UILens.SetDesaturation(0.0);
 	end
 end
 

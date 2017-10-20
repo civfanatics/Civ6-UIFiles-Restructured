@@ -8,14 +8,9 @@ g_TrackedInstances = {};
 
 include("WorldTrackerItem_", true);
 
---table.insert(g_TrackedItems, {
-	--InstanceType = "ResearchInstance",
-	--Name = "Governor Panel",
-	--SelectFunc = function ()
-		--print("FLIBBY");
-	--end
---});
-
+-- Include self contained additional tabs
+g_ExtraIconData = {};
+include("CivicsTreeIconLoader_", true);
 
 --	Hotloading note: The World Tracker button check now positions based on how many hooks are showing.  
 --	You'll need to save "LaunchBar" to see the tracker button appear.
@@ -44,6 +39,7 @@ local m_unreadChatMsgs			:number  = 0;		-- number of chat messages unseen due to
 
 local m_researchInstance		:table	 = {};		-- Single instance wired up for the currently being researched tech
 local m_civicsInstance			:table	 = {};		-- Single instance wired up for the currently being researched civic
+local m_CachedModifiers			:table	 = {};
 
 local m_currentResearchID		:number = -1;
 local m_lastResearchCompletedID	:number = -1;
@@ -177,7 +173,7 @@ function UpdateResearchPanel( isHideResearch:boolean )
 		end
 	end
 	
-	RealizeCurrentResearch( ePlayer, kResearchData, m_researchInstance );
+	RealizeCurrentResearch( ePlayer, kResearchData, m_researchInstance);
 	
 	-- No tech started (or finished)
 	if kResearchData == nil then
@@ -221,8 +217,8 @@ function UpdateCivicsPanel(hideCivics:boolean)
 			kCivicData.IsLastCompleted = true;
 		end
 	end
-		
-	RealizeCurrentCivic( ePlayer, kCivicData, m_civicsInstance );
+	
+	RealizeCurrentCivic( ePlayer, kCivicData, m_civicsInstance, m_CachedModifiers, true );
 
 	-- No civic started (or finished)
 	if kCivicData == nil then
@@ -284,9 +280,15 @@ function Refresh()
 
 	UpdateResearchPanel();
 
+
 	local pPlayerCulture:table = Players[localPlayer]:GetCulture();
 	m_currentCivicID = pPlayerCulture:GetProgressingCivic();
-	m_lastCivicCompletedID = -1;
+
+	-- Only reset last completed civic once a new civic has been selected
+	if m_currentCivicID >= 0 then	
+		m_lastCivicCompletedID = -1;
+	end	
+
 	UpdateCivicsPanel();
 
 	-- Hide world tracker by default if there are no tracker options enabled
@@ -484,7 +486,45 @@ function Tutorial_ShowTrackerOptions()
 end
 
 -- ===========================================================================
+--	Obtain the data from the DB that doesn't change
+--	Base costs and relationships (prerequisites)
+--	RETURN: A table of node data (techs/civics/etc...) with a prereq for each entry.
+-- ===========================================================================
+function PopulateCachedModifiers()	
+	-- Build main item table.
+	for row:table in GameInfo.Civics() do
+		local entry:table	= {};
+		-- Look up and cache any civic modifiers we reward like envoys awarded
+		for civicModifier in GameInfo.CivicModifiers() do
+			if (row.CivicType == civicModifier.CivicType) then
+				for modifierType in GameInfo.Modifiers() do
+					if civicModifier.ModifierId == modifierType.ModifierId then
+						entry.ModifierId	= modifierType.ModifierId;
+						entry.ModifierType	= modifierType.ModifierType;
+					end
+				end
+				for modifierArguments in GameInfo.ModifierArguments() do
+					if civicModifier.ModifierId == modifierArguments.ModifierId then
+						entry.ModifierValue = modifierArguments.Value;
+					end
+				end
+			end
+		end
+
+		
+		m_CachedModifiers[row.CivicType] = entry;
+	end
+end
+
+-- ===========================================================================
 function Initialize()
+	
+	if not GameCapabilities.HasCapability("CAPABILITY_WORLD_TRACKER") then
+		ContextPtr:SetHide(true);
+		return;
+	end
+
+	PopulateCachedModifiers();
 
 	-- Create semi-dynamic instances; hack: change parent back to self for ordering:
 	ContextPtr:BuildInstanceForControl( "ResearchInstance", m_researchInstance, Controls.PanelStack );

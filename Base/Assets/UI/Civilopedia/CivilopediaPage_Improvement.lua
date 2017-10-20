@@ -169,6 +169,38 @@ local sectionId = page.SectionId;
 		end		
 	end
 
+	-- Many beliefs unlock improvements using modifiers.
+	-- Search for a specific effect type in belief modifiers to see if any refer to this improvement.
+	local unlock_modifiers = {};
+	for row in GameInfo.Modifiers() do
+		local info = GameInfo.DynamicModifiers[row.ModifierType];
+		if(info) then
+			if(info.EffectType == "EFFECT_ADJUST_PLAYER_VALID_IMPROVEMENT") then
+				for args in GameInfo.ModifierArguments() do
+					if(args.ModifierId == row.ModifierId) then
+						if(args.Name == "ImprovementType" and args.Value == improvementType) then
+							unlock_modifiers[row.ModifierId] = true;
+						end
+					end
+				end
+			end
+		end
+	end
+
+	local beliefs = {};
+	for row in GameInfo.BeliefModifiers() do
+		if(unlock_modifiers[row.ModifierID]) then
+			beliefs[row.BeliefType] = true;
+		end
+	end
+
+	for k,_ in pairs(beliefs) do
+		local belief = GameInfo.Beliefs[k];
+		if(belief) then
+			table.insert(unique_to, {"ICON_" .. belief.BeliefType, belief.Name, belief.BeliefType});
+		end
+	end
+
 	-- Generate list of adjacency bonuses.
 	local adjacency_yields = {};
 	local has_bonus = {};

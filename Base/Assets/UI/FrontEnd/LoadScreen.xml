@@ -2,7 +2,7 @@
 
 <Context Name="LoadScreen">
 
-	<Box			ID="Background"				Color="0,0,0,255"				Anchor="C,C" Size="full,full" ConsumeMouse="1">
+	<Box			ID="Background"				Color="0,0,0,255"				Anchor="C,C" Size="parent,parent" ConsumeMouse="1">
 
 		<TextButton				ID="FallbackMessage"	Anchor="C,C" Align="center" Style="FontFlair20"	SmallCapsType="EveryWord" SmallCaps="26" 	String="{LOC_LOADING_PLEASE_WAIT:upper}" Color="200,200,200,255"/>
 
@@ -68,7 +68,7 @@
 	</Instance>
 
 	<Instance			Name="IconInfoInstance">
-		<Container	ID="Top"					Size="230,40" AutoSize="V">
+		<Container	ID="Top"				 Size="230,auto">
 			<Image		ID="Icon"					Size="32,32" Offset="-5,-2" />
 			<Stack		ID="TextStack"		Offset="36,0"		StackGrowth="Bottom" StackPadding="4">
 				<Label	ID="Header"				WrapWidth="195" SmallCapsType="EveryWord" SmallCaps="20" Style="FontFlair14"		String="$Header$"/>

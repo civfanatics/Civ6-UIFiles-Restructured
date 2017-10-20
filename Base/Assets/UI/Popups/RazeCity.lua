@@ -63,7 +63,7 @@ function OnOpen()
 	local bWipedOut = (originalOwnerPlayer:GetCities():GetCount() < 1);
 
 	local iWarmongerPoints = localPlayer:GetDiplomacy():ComputeCityWarmongerPoints(g_pSelectedCity, eConqueredFrom);
-	if (eOriginalOwner ~= eOwnerBeforeOccupation and eOriginalOwner ~= Game.GetLocalPlayer() and not localPlayer:GetDiplomacy():IsAtWarWith(eOriginalOwner) and eOriginalOwner ~= eConqueredFrom) then
+	if (eOriginalOwner ~= eOwnerBeforeOccupation and localPlayer:GetDiplomacy():CanLiberateCityTo(eOriginalOwner) and eOriginalOwner ~= eConqueredFrom) then
 		Controls.Button1:LocalizeAndSetText("LOC_RAZE_CITY_LIBERATE_FOUNDER_BUTTON_LABEL", PlayerConfigurations[eOriginalOwner]:GetCivilizationShortDescription());
 		szWarmongerString = Locale.Lookup("LOC_RAZE_CITY_LIBERATE_WARMONGER_EXPLANATION");
 		Controls.Button1:LocalizeAndSetToolTip("LOC_RAZE_CITY_LIBERATE_EXPLANATION", szWarmongerString);
@@ -72,7 +72,7 @@ function OnOpen()
 		Controls.Button1:SetHide(true);
 	end
 
-	if (eOwnerBeforeOccupation ~= Game.GetLocalPlayer() and not localPlayer:GetDiplomacy():IsAtWarWith(eOwnerBeforeOccupation) and eOwnerBeforeOccupation ~= eConqueredFrom) then
+	if (localPlayer:GetDiplomacy():CanLiberateCityTo(eOwnerBeforeOccupation) and eOwnerBeforeOccupation ~= eConqueredFrom) then
 		Controls.Button2:LocalizeAndSetText("LOC_RAZE_CITY_LIBERATE_PREWAR_OWNER_BUTTON_LABEL", PlayerConfigurations[eOwnerBeforeOccupation]:GetCivilizationShortDescription());
 		szWarmongerString = Locale.Lookup("LOC_RAZE_CITY_LIBERATE_WARMONGER_EXPLANATION");
 		Controls.Button2:LocalizeAndSetToolTip("LOC_RAZE_CITY_LIBERATE_EXPLANATION", szWarmongerString);
@@ -113,6 +113,7 @@ function OnOpen()
 	Controls.PopupAlphaIn:Play();
 	Controls.PopupSlideIn:SetToBeginning();
 	Controls.PopupSlideIn:Play();
+	ContextPtr:SetInputHandler(OnInputHandler);
 end
 
 function OnInputHandler( uiMsg, wParam, lParam )

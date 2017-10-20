@@ -80,6 +80,10 @@ function OnCancel()
     Controls.SpeechVolSlider:SetValue(value / 100.0);
     Options.SetAudioOption("Sound", "Speech Volume", value, 0);
 
+	value = Options.GetGraphicsOption("General", "MinimapSize") or 0.0;
+	Controls.MinimapSizeSlider:SetValue(value);
+	UI.SetMinimapSize(value);
+
     value = Options.GetAudioOption("Sound", "Mute Focus"); 
     if (value == 0) then
         Controls.MuteFocusCheckbox:SetSelected(false);
@@ -1319,6 +1323,7 @@ function TemporaryHardCodedGoodness()
 	
 	local minimapSize = Options.GetGraphicsOption("General", "MinimapSize") or 0.0;
 	Controls.MinimapSizeSlider:SetValue(minimapSize);
+	UI.SetMinimapSize(minimapSize);
 	Controls.MinimapSizeSlider:RegisterSliderCallback(function(value)
 		Options.SetGraphicsOption("General", "MinimapSize", value);
 		UI.SetMinimapSize(value);

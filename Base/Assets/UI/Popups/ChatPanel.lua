@@ -35,7 +35,7 @@ local PlayerKickedChatStr = Locale.Lookup( "LOC_MP_PLAYER_KICKED_CHAT" );
 -- These have to be defined before g_playerListPullData to work correctly.
 -------------------------------------------------
 function IsKickPlayerValidPull(iPlayerID :number)
-	if(Network.IsHost() and iPlayerID ~= Game.GetLocalPlayer()) then
+	if(Network.IsGameHost() and iPlayerID ~= Game.GetLocalPlayer()) then
 		return true;
 	end
 	return false;
@@ -343,7 +343,7 @@ function UpdatePlayerEntry(iPlayerID :number)
 		local numEntries:number = PopulatePlayerPull(iPlayerID, playerEntry.PlayerListPull, g_playerListPullData);
 		playerEntry.PlayerListPull:SetDisabled(numEntries == 0 or iPlayerID == Game.GetLocalPlayer());
 
-		if iPlayerID == Network.GetHostPlayerID() then
+		if iPlayerID == Network.GetGameHostPlayerID() then
 			local connectionText:string = playerEntry.ConnectionLabel:GetText();
 			connectionText = "[ICON_Host] " .. connectionText;
 			playerEntry.ConnectionLabel:SetText(connectionText);
@@ -357,7 +357,8 @@ function OnPlayerListPull(iPlayerID :number, iPlayerListDataID :number)
 	local playerListData = g_playerListPullData[iPlayerListDataID];
 	if(playerListData ~= nil) then
 		if(playerListData.playerAction == "PLAYERACTION_KICKPLAYER") then
-			UIManager:PushModal(Controls.ConfirmKick, true);	
+			UIManager:PushModal(Controls.ConfirmKick, true);
+			Controls.ConfirmKick:SetSizeVal(UIManager:GetScreenSizeVal());
 			local pPlayerConfig = PlayerConfigurations[iPlayerID];
 			if(pPlayerConfig ~= nil) then
 				local playerName = pPlayerConfig:GetPlayerName();

@@ -25,9 +25,9 @@ include("InstanceManager");
 --	Example 2:
 --		-- Build a super custom styled dialog
 --		local kDialog:table = PopupDialog:new( "MyCustomPopupDialog" );
---		kDialog:AddTtitle("Sexy Dialog Title");
+--		kDialog:AddTitle("Sexy Dialog Title");
 --		kDialog:AddText("Press something?");
---		kDialog:AddButton("Something", function() print("Something pressed"); end );
+--		kDialog:AddButton("Something", function() print("Something pressed"); end, "String To Trigger This From Lua" );
 --		kDialog:Open();
 --
 -- ===========================================================================
@@ -41,15 +41,20 @@ PopupDialogInGame = LuaClass:Extend()
 ------------------------------------------------------------------
 -- Class Constants
 ------------------------------------------------------------------
-PopupDialog.TOP_CONTROL_ROW = "Row";
-PopupDialog.TOP_CONTROL_TEXT = "Text";
-PopupDialog.TOP_CONTROL_BUTTON = "Button";
-PopupDialog.TOP_CONTROL_COUNTDOWN = "Anim";
+PopupDialog.TOP_CONTROL_ROW				= "Row";
+PopupDialog.TOP_CONTROL_TEXT			= "Text";
+PopupDialog.TOP_CONTROL_BUTTON			= "Button";
+PopupDialog.TOP_CONTROL_COUNTDOWN		= "Anim";
 
-PopupDialog.DEFAULT_INSTANCE_ROW = "PopupRowInstance";
-PopupDialog.DEFAULT_INSTANCE_TEXT = "PopupTextInstance";
-PopupDialog.DEFAULT_INSTANCE_BUTTON = "PopupButtonInstance";
-PopupDialog.DEFAULT_INSTANCE_COUNTDOWN = "PopupCountDownInstance";
+PopupDialog.DEFAULT_INSTANCE_ROW		= "PopupRowInstance";
+PopupDialog.DEFAULT_INSTANCE_TEXT		= "PopupTextInstance";
+PopupDialog.DEFAULT_INSTANCE_BUTTON		= "PopupButtonInstance";
+PopupDialog.DEFAULT_INSTANCE_COUNTDOWN	= "PopupCountDownInstance";
+
+-- Strings for doing PopupDialog:ActivateCommand on default popups
+PopupDialog.COMMAND_CANCEL				= "_CMD_CANCEL";
+PopupDialog.COMMAND_CONFIRM				= "_CMD_CONFIRM";
+PopupDialog.COMMAND_DEFAULT				= "_CMD_DEFAULT";
 
 -- ===========================================================================
 --	PopupDialog Constructor
@@ -77,24 +82,37 @@ end
 
 -- ===========================================================================
 --	Utility Helper
---	Create a dialog with an "ok" button.
+--	Create a dialog with an "OK" button.
 -- ===========================================================================
 function PopupDialog:ShowOkDialog( text:string, callbackOk:ifunction )
 	self:Reset();
+	self:AddTitle( "" );
 	self:AddText( text );
-	self:AddButton( Locale.Lookup("LOC_OK"), callbackOk );
+	self:AddButton( Locale.Lookup("LOC_OK"), callbackOk, PopupDialog.COMMAND_CONFIRM );
 	self:Open();
 end
 
 -- ===========================================================================
 --	Utility Helper
---	Create a dialog with an "ok" and "cancel" buttons.
+--	Create a dialog with an "OK" and "Cancel" buttons.
 -- ===========================================================================
 function PopupDialog:ShowOkCancelDialog( text:string, callbackOk:ifunction, callbackCancel:ifunction )
 	self:Reset();
 	self:AddText( text );
-	self:AddButton( Locale.Lookup("LOC_CANCEL"),callbackCancel );
-	self:AddButton( Locale.Lookup("LOC_OK"), callbackOk );
+	self:AddButton( Locale.Lookup("LOC_OK"), callbackOk, PopupDialog.COMMAND_CONFIRM );
+	self:AddButton( Locale.Lookup("LOC_CANCEL"), callbackCancel, PopupDialog.COMMAND_CANCEL );
+	self:Open();
+end
+
+-- ===========================================================================
+--	Utility Helper
+--	Create a dialog with an "Yes" and "No" buttons.
+-- ===========================================================================
+function PopupDialog:ShowYesNoDialog( text:string, callbackOk:ifunction, callbackCancel:ifunction )
+	self:Reset();
+	self:AddText( text );
+	self:AddButton( Locale.Lookup("LOC_YES"), callbackOk, PopupDialog.COMMAND_CONFIRM );
+	self:AddButton( Locale.Lookup("LOC_NO"), callbackCancel, PopupDialog.COMMAND_CANCEL );
 	self:Open();
 end
 
@@ -108,7 +126,6 @@ function PopupDialog:AddTitle(title:string)
 	
 	if self:IsOpen() then
 		UI.DataError("Called AddTitle on an already opened PopupDialog: " .. self.ID);
-		return;
 	end
 
 	if optionalTitleControl then
@@ -129,7 +146,6 @@ function PopupDialog:AddText( text:string )
 	
 	if self:IsOpen() then
 		UI.DataError("Called AddText on an already opened PopupDialog: " .. self.ID);
-		return;
 	end
 
 	self.RowInstance = nil;	-- Reset for first/new row of buttons later on.
@@ -153,7 +169,6 @@ function PopupDialog:AddButton( label:string, callback:ifunction, optionalActiva
 	
 	if self:IsOpen() then
 		UI.DataError("Called AddButton on an already opened PopupDialog: " .. self.ID);
-		return;
 	end
 			
 	-- Build row instance manager if one doesn't exist.
@@ -206,7 +221,6 @@ function PopupDialog:AddCountDown(  startValue:number, callback:ifunction  )
 	
 	if self:IsOpen() then
 		UI.DataError("Called AddCountDown on an already opened PopupDialog, ID: " .. self.ID);
-		return;
 	end
 
 	self.RowInstance = nil;	-- Reset for first/new row of buttons later on.
@@ -239,7 +253,6 @@ end
 function PopupDialog:SetSize( width:number, height:number )
 	if self:IsOpen() then
 		UI.DataError("Called SetSize on an already opened PopupDialog, ID: " .. self.ID);
-		return;
 	end
 	self.Controls.PopupStack:SetSizeVal(width,height);
 end
@@ -250,7 +263,6 @@ function PopupDialog:Open( optionalID:string )
 	if self:IsOpen() then
 		local ID:string = optionalID and optionalID or self.ID;
 		UI.DataError("Attempt to open a popup dialog that is already open. ID: '" .. ID .. "'");
-		return;
 	end
 	
 	self.Controls.PopupRoot:SetHide(false);
@@ -306,9 +318,10 @@ function PopupDialog:ActivateCommand( command:string )
 	for _,uiControl in ipairs(self.PopupControls) do
 		if uiControl.Type == "Button" and uiControl.Command == command then
 			uiControl.Callback();
-			return;
+			return true;
 		end
-	end		
+	end
+	return false;
 end
 
 -- ===========================================================================
@@ -357,18 +370,28 @@ function PopupDialog:SetOpenAnimationControls( ... )
 end
 
 
+
+
 -- ===========================================================================
 --	PopupDialogInGame Constructor
 --
 --	Original Author: Tronster
 -- ===========================================================================
+--	Usage Notes:
+--  Perhaps better titled 'InGamePopupDialogBuilder'.
+--	This builds a table that's sent over to OnPopupOpen in InGamePopup.lua, which builds the actual popup.
+--	Don't bother preallocating unless you're laying down an improbable number of these, they're just parameters.
+--	The benefit of this is that certain keypresses can also trigger button actions, and will automatically close the popup.
+--	For example, VK_ENTER will trigger Confirm buttons, VK_ESCAPE will trigger Cancel buttons, and either can trigger Default buttons.
+--	Custom buttons may be added, as above, but they will not be triggered by any keypresses.
+-- ===========================================================================
 function PopupDialogInGame:new( id:string )
-	local o:table = LuaClass.new(self)
+	self = LuaClass.new(PopupDialogInGame)
 	
-	o.ID			= id;
-	o.m_options		= {};
+	self.ID			= id;
+	self.m_options	= {};
 	
-	return o;
+	return self;
 end
 
 -- ===========================================================================
@@ -384,10 +407,30 @@ function PopupDialogInGame:AddTitle( message:string )
 end
 
 -- ===========================================================================
-function PopupDialogInGame:AddButton( label:string, callback:ifunction )
-	table.insert(self.m_options, { Type = "Button", Content = label, Callback = callback });
+-- Adds a button whose callback will only be triggered by the button being clicked.
+-- ===========================================================================
+function PopupDialogInGame:AddCustomButton( label:string, callback:ifunction )
+	table.insert(self.m_options, {Type="Button", Content=label, Callback=callback});
 end
-
+-- ===========================================================================
+-- Adds a button whose callback can be triggered by click or by pressing 'escape'
+-- ===========================================================================
+function PopupDialogInGame:AddCancelButton( label:string, callback:ifunction )
+	table.insert(self.m_options, {Type="Button", Content=label, Callback=callback, CommandString=PopupDialog.COMMAND_CANCEL});
+end
+-- ===========================================================================
+-- Adds a button whose callback can be triggered by click or by pressing 'enter'
+-- ===========================================================================
+function PopupDialogInGame:AddConfirmButton( label:string, callback:ifunction )
+	table.insert(self.m_options, {Type="Button", Content=label, Callback=callback, CommandString=PopupDialog.COMMAND_CONFIRM});
+end
+-- ===========================================================================
+-- Adds a button whose callback can be triggered by click or by pressing 'enter' or 'escape'.
+-- Will only be triggered by keypress if there isn't a more specific button to handle it.
+-- ===========================================================================
+function PopupDialogInGame:AddDefaultButton( label:string, callback:ifunction )
+	table.insert(self.m_options, {Type="Button", Content=label, Callback=callback, CommandString=PopupDialog.COMMAND_DEFAULT});
+end
 -- ===========================================================================
 function PopupDialogInGame:AddCountDown( startValue:number, callback:ifunction )
 	table.insert(self.m_options, { Type = "Count", Content = startValue, Callback = callback });
@@ -401,23 +444,37 @@ end
 
 -- ===========================================================================
 --	Utility Helper
---	Create a dialog with an "ok" button.
+--	Create a dialog with an "OK" button.
 -- ===========================================================================
 function PopupDialogInGame:ShowOkDialog( text:string, callbackOk:ifunction )
 	self.m_options = {};
+	self:AddTitle( "" );
 	self:AddText( text );
-	self:AddButton( Locale.Lookup("LOC_OK"), callbackOk );
+	 -- ifunction is an acknowledgement of player seeing this, thus the callback should be hit on esc and enter.
+	self:AddDefaultButton( Locale.Lookup("LOC_OK"), callbackOk );
 	self:Open( self.ID );
 end
 
 -- ===========================================================================
 --	Utility Helper
---	Create a dialog with an "ok" and "cancel" buttons.
+--	Create a dialog with an "OK" and "Cancel" buttons.
 -- ===========================================================================
 function PopupDialogInGame:ShowOkCancelDialog( text:string, callbackOk:ifunction, callbackCancel:ifunction )
 	self.m_options = {};
 	self:AddText( text );
-	self:AddButton( Locale.Lookup("LOC_CANCEL"),callbackCancel );
-	self:AddButton( Locale.Lookup("LOC_OK"), callbackOk );
+	self:AddConfirmButton( Locale.Lookup("LOC_OK"), callbackOk );
+	self:AddCancelButton( Locale.Lookup("LOC_CANCEL"), callbackCancel );
 	self:Open( self.ID );
-end	
+end
+
+-- ===========================================================================
+--	Utility Helper
+--	Create a dialog with an "Yes" and "No" buttons.
+-- ===========================================================================
+function PopupDialogInGame:ShowYesNoDialog( text:string, callbackOk:ifunction, callbackCancel:ifunction )
+	self.m_options = {};
+	self:AddText( text );
+	self:AddConfirmButton( Locale.Lookup("LOC_YES"), callbackOk );
+	self:AddCancelButton( Locale.Lookup("LOC_NO"), callbackCancel );
+	self:Open( self.ID );
+end

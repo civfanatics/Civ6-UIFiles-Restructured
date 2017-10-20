@@ -34,7 +34,7 @@
 					<Label Style="TutorialHeaderText" String="LOC_META_7_HEAD"/>
 					<Label Style="TutorialBodyText" String="LOC_META_7_BODY" />
 				</Grid>
-        <SlideAnim Start="10,0" End="0,0" Cycle="Bounce" Speed="1.2" Function="OutSine" EndPause=".4" Size="parent,parent">
+        <SlideAnim Start="10,0" End="0,0" Cycle="Bounce" Speed="1.2" Function="OutSine" EndPause=".4" Size="auto,auto">
           <Image Texture="Tutorial_ArrowH" AnchorSide="O,I" Offset="-30,5" Size="59,44" FlipX="1"/>
         </SlideAnim>
 			</Tutorial>
@@ -44,7 +44,7 @@
 					<Label Style="TutorialHeaderText" String="LOC_META_33_HEAD"/>
 					<Label Style="TutorialBodyText" String="LOC_META_33_BODY" />
 				</Grid>
-        <SlideAnim Start="10,0" End="0,0" Cycle="Bounce" Speed="1.2" Function="OutSine" EndPause=".4" Size="parent,parent">
+        <SlideAnim Start="10,0" End="0,0" Cycle="Bounce" Speed="1.2" Function="OutSine" EndPause=".4" Size="auto,auto">
           <Image Texture="Tutorial_ArrowH" AnchorSide="O,I" Offset="-30,5" Size="59,44" FlipX="1"/>
         </SlideAnim>
 			</Tutorial>
@@ -54,7 +54,7 @@
 					<Label Style="TutorialHeaderText" String="LOC_META_51_HEAD"/>
 					<Label Style="TutorialBodyText" String="LOC_META_51_BODY" />
 				</Grid>
-        <SlideAnim Start="10,0" End="0,0" Cycle="Bounce" Speed="1.2" Function="OutSine" EndPause=".4" Size="parent,parent">
+        <SlideAnim Start="10,0" End="0,0" Cycle="Bounce" Speed="1.2" Function="OutSine" EndPause=".4" Size="auto,auto">
           <Image Texture="Tutorial_ArrowH" AnchorSide="O,I" Offset="-30,5" Size="59,44" FlipX="1"/>
         </SlideAnim>
 			</Tutorial>
@@ -64,7 +64,7 @@
 					<Label Style="TutorialHeaderText" String="LOC_META_6_HEAD"/>
 					<Label Style="TutorialBodyText" String="LOC_META_SELECT_IRRIGATION" />
         </Grid>
-        <SlideAnim Start="10,0" End="0,0" Cycle="Bounce" Speed="1.2" Function="OutSine" EndPause=".4" Size="parent,parent">
+        <SlideAnim Start="10,0" End="0,0" Cycle="Bounce" Speed="1.2" Function="OutSine" EndPause=".4" Size="auto,auto">
           <Image Texture="Tutorial_ArrowH" AnchorSide="O,I" Offset="-30,5" Size="59,44" FlipX="1"/>
         </SlideAnim>
 			</Tutorial>

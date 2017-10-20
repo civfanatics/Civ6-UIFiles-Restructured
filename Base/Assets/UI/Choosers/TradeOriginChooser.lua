@@ -86,6 +86,8 @@ function TeleportToCity(city:table)
 	local pSelectedUnit = UI.GetHeadSelectedUnit();
 	if (UnitManager.CanStartOperation( pSelectedUnit, eOperation, nil, tParameters)) then
 		UnitManager.RequestOperation( pSelectedUnit, eOperation, tParameters);
+		UI.SetInterfaceMode(InterfaceModeTypes.SELECTION);
+        UI.PlaySound("Unit_Relocate");
 		Close();
 	end
 end

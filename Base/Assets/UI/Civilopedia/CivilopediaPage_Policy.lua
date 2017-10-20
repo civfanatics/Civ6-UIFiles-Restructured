@@ -23,6 +23,14 @@ local sectionId = page.SectionId;
 		end
 	end
 
+	local required_government = nil;
+	for row in GameInfo.Governments() do
+		if(row.PolicyToUnlock == policyType) then
+			required_government = row;
+			break;
+		end
+	end
+
 	-- Right Column
 	AddPortrait("ICON_" .. policyType);
 
@@ -41,6 +49,11 @@ local sectionId = page.SectionId;
 
 	AddRightColumnStatBox("LOC_UI_PEDIA_REQUIREMENTS", function(s)
 		s:AddSeparator();
+
+		if(required_government) then
+			s:AddHeader("LOC_GOVERNMENT_NAME");
+			s:AddIconLabel({"ICON_" .. required_government.GovernmentType, required_government.Name, required_government.GovernmentType}, required_government.Name);
+		end
 
 		if(policy.PrereqCivic ~= nil) then
 			local civic = GameInfo.Civics[policy.PrereqCivic];

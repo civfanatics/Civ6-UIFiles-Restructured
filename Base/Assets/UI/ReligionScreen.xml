@@ -17,7 +17,7 @@
     </Container>
 
     <!-- Minispec Yields -->
-    <Grid ID="YieldsContainer" Anchor="R,T" AutoSize="1" AutoSizePadding="20,5" Offset="0,0" Texture="TopBar_YieldFrame" SliceCorner="60,25" SliceSize="1,1" SliceTextureSize="64,54" Hidden="0">
+    <Grid ID="YieldsContainer" Anchor="R,T"  Size="auto,auto" AutoSizePadding="20,5" Offset="0,0" Texture="TopBar_YieldFrame" SliceCorner="60,25" SliceSize="1,1" SliceTextureSize="64,54" Hidden="0">
       <Stack                                    Offset="37,1" StackGrowth="Right" Padding="-1">
         <Stack				                          StackGrowth="Down" Padding="-1">
           <Grid	ID="ScienceBacking"							Size="40,24"	Style="YieldBacking" Color="24,156,216,150"	ToolTip="LOC_TOP_PANEL_SCIENCE_YIELD">
@@ -266,17 +266,7 @@
             <Label ID="ViewReligionFounder"   WrapWidth="400" Align="center" Anchor="C,T" Style="ReligionSubHeadingSmall" String="ViewReligionFounder" />
             <Label ID="ViewReligionHolyCity"  WrapWidth="400" Align="center" Anchor="C,T" Style="ReligionSubHeadingSmall" String="ViewReligionHolyCity" />
             <Label ID="ViewReligionDominance" WrapWidth="400" Align="center" Anchor="C,T" Style="ReligionSubHeadingSmall" String="ViewReligionDominance" />
-            <Stack    ID="IconStack" StackGrowth="Right" Anchor="C,T" Padding="2" Size="400,80">
-              <Image  ID="IconMissionary" Texture="Controls_SlotCircle">
-                <Image Anchor="C,C" Size="70,70" Offset="0,0" Texture="UnitPortraits70_1" Icon="ICON_UNIT_MISSIONARY_PORTRAIT"/>
-              </Image>
-              <Image  ID="IconApostle" Texture="Controls_SlotCircle">
-                <Image Anchor="C,C" Size="70,70" Offset="0,0" Texture="UnitPortraits70_1" Icon="ICON_UNIT_APOSTLE_PORTRAIT"/>
-              </Image>
-              <Image ID="IconInquisitor" Texture="Controls_SlotCircle">
-                <Image Anchor="C,C" Size="70,70" Offset="0,0" Texture="UnitPortraits70_1" Icon="ICON_UNIT_INQUISITOR_PORTRAIT"/>
-              </Image>
-            </Stack>
+            <Stack    ID="IconStack" StackGrowth="Right" Anchor="C,T" Padding="2" Size="400,80"/>
           </Stack>
         </Container>
 
@@ -311,7 +301,7 @@
           <Container ID="ReligionIcons" Anchor="C,C" Size="280,22"	Offset="10,-98" />
           <Grid Size="parent-30,10" Offset="15,48" Texture="Controls_DecoHFlip" SliceCorner="19,0" SliceTextureSize="40,18" Color="255,255,255,70"/>
           <ScrollPanel ID="CitiesScrollbar" Offset="20,62" Size="940,200" Style="ScrollPanelWithRightBar">
-            <Stack ID="Cities" Size="parent,parent" StackPadding="3" StackGrowth="Down" />
+            <Stack ID="Cities" StackPadding="3" StackGrowth="Down" />
           </ScrollPanel>
         </Grid>
       </ScrollPanel>
@@ -324,7 +314,7 @@
     <Container ID="ViewAllReligions" Offset="20,90" Hidden="1">
 
       <ScrollPanel ID="ReligionsScrollbar" Offset="20,0" Size="960,660" Style="ScrollPanelWithRightBar">
-        <Stack ID="Religions" Size="parent,parent" StackPadding="3" StackGrowth="Down" />
+        <Stack ID="Religions" StackPadding="3" StackGrowth="Down" />
       </ScrollPanel>
 
     </Container>
@@ -352,7 +342,7 @@
   </Instance>
 
   <Instance Name="BeliefSlot">
-    <GridButton	ID="BeliefButton" Texture="Religion_BeliefButton" Size="450,72" SliceCorner="96,36" SliceTextureSize="192,72" StateOffsetIncrement="0,72" AutoSize="V" AutoSizePadding="0,6" MinSize="192,72">
+    <GridButton	ID="BeliefButton" Texture="Religion_BeliefButton" Size="450,auto" SliceCorner="96,36" SliceTextureSize="192,72" StateOffsetIncrement="0,72" AutoSizePadding="0,6" MinSize="192,72">
       <Image ID="BeliefIcon" Size="64,64" Offset="6,0" Anchor="L,C" Texture="BeliefsPantheon64" />
       <Stack StackGrowth="Down" Anchor="L,C" Offset="75,2" Padding="3">
         <Label ID="BeliefLabel" Style="ReligionSubHeadingSmallNoKern" String="BeliefLabel" />
@@ -362,7 +352,7 @@
   </Instance>
 
   <Instance Name="ReligionBelief">
-    <Grid	ID="BeliefBG" Texture="Religion_BeliefSlot" Size="450,72" SliceCorner="96,36" SliceTextureSize="192,72" StateOffsetIncrement="0,72" AutoSize="V" AutoSizePadding="0,4" MinSize="192,72"> 
+    <Grid	ID="BeliefBG" Texture="Religion_BeliefSlot" Size="450,auto" SliceCorner="96,36" SliceTextureSize="192,72" StateOffsetIncrement="0,72" AutoSizePadding="0,4" MinSize="192,72"> 
       <Image ID="BeliefIcon" Size="64,64" Offset="6,4" Texture="BeliefsPantheon64" />
       <Label ID="BeliefLabel" Offset="75,14" Style="ReligionSubHeadingSmallNoKern" String="BeliefLabel" />
       <Label ID="BeliefDescription" Offset="75,32" Size="365" Style="ReligionDescription" String="BeliefDescription" />
@@ -380,11 +370,11 @@
   </Instance>
 
   <Instance Name="City">
-    <Grid	ID="CityBG" Texture="Controls_SlotCap" Size="335,47" SliceCorner="15,17" SliceTextureSize="29,34" AutoSize="V">
+    <Grid	ID="CityBG" Texture="Controls_SlotCap" Size="335,auto" SliceCorner="15,17" SliceTextureSize="29,34">
       <Label ID="CityName" Offset="40,0" Size="300" Anchor="L,C" Style="ReligionDataCell" String="CityName" />
-      <Container ID="CityFollowers" Size="280,47"	Offset="340,0" AutoSize="V" AutoSizePadding="0,0">
-        <Grid ID="BG" Texture="Controls_Slot" Size="310,47" SliceCorner="17,17" SliceTextureSize="34,34" AutoSize="V"  AnchorSide="O,I" Anchor="R,T" Offset="3,0">
-          <Grid	Texture="Religion_BeliefSlotSmall" Size="310,57" SliceCorner="76,19" SliceTextureSize="152,38" AutoSize="V" AutoSizePadding="5,10" MinSize="152,38">
+      <Container ID="CityFollowers" Size="280,auto"	Offset="340,0" AutoSizePadding="0,0">
+        <Grid ID="BG" Texture="Controls_Slot" Size="310,auto" SliceCorner="17,17" SliceTextureSize="34,34"  AnchorSide="O,I" Anchor="R,T" Offset="3,0">
+          <Grid	Texture="Religion_BeliefSlotSmall" Size="310,auto" SliceCorner="76,19" SliceTextureSize="152,38" AutoSizePadding="5,10" MinSize="152,38">
             <Label ID="CityPantheon" WrapWidth="290" Anchor="C,C" Style="ReligionDataSmall" String="CityPantheon" />
           </Grid>
         </Grid>
@@ -399,9 +389,9 @@
   </Instance>
 
   <Instance Name="Religion">
-    <Grid ID="ReligionBG" Size="950,200" Texture="Religion_Panel" SliceCorner="24,30" SliceTextureSize="53,97" MinSize="53,97" Color="255,255,255,204" AutoSize="V">
+    <Grid ID="ReligionBG" Size="950,auto" Texture="Religion_Panel" SliceCorner="24,30" SliceTextureSize="53,97" MinSize="53,97" Color="255,255,255,204">
       <Image Offset="-30,3" Anchor="L,B" Texture="Religion_IconGlow" Color="255,255,255,200"/>
-      <Container Size="400,200" Anchor="L,C" Offset="20,0" AutoSize="V">
+      <Container Size="400,auto" Anchor="L,C" Offset="20,0">
         <Image ID="ReligionImage" Texture="Religion_Generic" Anchor="C,C"/>
         <Stack ID="ReligionStack"    Anchor="C,C" StackPadding="5">
           <Label ID="ReligionName"     WrapWidth="400" Align="center" Anchor="C,T" Style="ReligionHeadingSmall"    String="ReligionName" />
@@ -409,17 +399,23 @@
           <Label ID="ReligionDominance"  WrapWidth="400" Align="center" Anchor="C,T" Style="ReligionSubHeadingSmall" String="ReligionDominance" />
         </Stack>
       </Container>
-      <Container Size="400,200" Anchor="R,C" Offset="20,0" AutoSize="V">
+      <Container Size="400,auto" Anchor="R,C" Offset="20,0">
         <Stack ID="Beliefs" Anchor="R,C" Size="350" StackPadding="-2" StackGrowth="Down" />
       </Container>
     </Grid>
   </Instance>
 
   <Instance Name="ReligionBeliefSmall">
-    <Grid	ID="BeliefBG" Texture="Religion_BeliefSlotSmall" Offset="250,0" Size="400,45" SliceCorner="76,19" SliceTextureSize="152,38" AutoSize="V" AutoSizePadding="5,10" MinSize="152,38">
+    <Grid	ID="BeliefBG" Texture="Religion_BeliefSlotSmall" Offset="250,0" Size="400,auto" SliceCorner="76,19" SliceTextureSize="152,38" AutoSizePadding="5,10" MinSize="152,38">
       <Image ID="BeliefIcon" Size="32,32" Offset="6,0" Texture="BeliefsPantheon32" Anchor="L,C" />
       <Label ID="BeliefLabel" Offset="40,-1" Size="350" Anchor="L,C" Style="ReligionDescription" String="BeliefLabel" />
     </Grid>
+  </Instance>
+
+  <Instance Name="UnitIconInstance">
+    <Image ID="UnitIconBacking" Texture="Controls_SlotCircle">
+      <Image ID="UnitIcon" Anchor="C,C" Size="70,70" Icon="ICON_UNIT_APOSTLE_PORTRAIT"/>
+    </Image>
   </Instance>
   
 </Context>

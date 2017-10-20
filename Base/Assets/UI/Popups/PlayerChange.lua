@@ -7,22 +7,14 @@
 ----------------------------------------------------------------  
 -- Defines
 ---------------------------------------------------------------- 
-CloudCommitState = {
-	NONE = "NONE",
-	UPLOADING = "UPLOADING",
-	FAILED = "FAILED",
-	SUCCESS = "SUCCESS",
-};
 
 
 ----------------------------------------------------------------  
 -- Globals
 ---------------------------------------------------------------- 
 local PopupTitleSuffix = Locale.Lookup( "LOC_PLAYER_CHANGE_POPUP_TITLE_SUFFIX" );
-local PopupTitlePlayByCloud = Locale.Lookup( "LOC_PLAYER_CHANGE_POPUP_TITLE_PLAYBYCLOUD" );
 local bPlayerChanging :boolean = false; -- Are we in the "Please Wait" mode?
 local bLocalPlayerTurnEnded :boolean = false;
-local eCloudUploadState :string = CloudCommitState.NONE;
 
 
 ----------------------------------------------------------------        
@@ -66,16 +58,6 @@ function OnOk()
 	Controls.PopupSlideIn:SetToBeginning();
 end
 
--- ===========================================================================
-function OnCancelUpload()
-   	UIManager:SetUICursor( 1 );
-	UITutorialManager:EnableOverlay( false );	
-	UITutorialManager:HideAll();
-
-	UIManager:Log("Shutting down via player change exit-to-main-menu.");
-	Events.ExitToMainMenu();
-end
-	
 
 -- ===========================================================================
 function OnMenu()
@@ -90,26 +72,6 @@ function OnLocalPlayerTurnBegin()
 		-- this tells the UI to display us. ContextPtr is the this pointer for this object.
 		bPlayerChanging = false;
 		BuildTurnControls();
-	elseif(GameConfiguration.IsPlayByCloud() == true and not ContextPtr:IsHidden()) then
-		-- In PlayByCloud, just close the screen if it is visible so the player can take their turn.
-		OnOk();
-	end
-end
-
-function OnRemotePlayerTurnBegin( playerID :number)
-	-- In PlayByCloud, we show the full player change popup on the next human's turn after the local player
-	-- ended their turn.
-	if(bLocalPlayerTurnEnded and GameConfiguration.IsPlayByCloud() == true) then
-		local pPlayer = Players[playerID];
-		if (pPlayer ~= nil and pPlayer:IsHuman()) then
-			-- GameCoreController handles the cloud upload process for us.  
-			-- We just need to show our state and allow the player to cancel if needed.
-			if(eCloudUploadState == CloudCommitState.NONE) then
-				eCloudUploadState = CloudCommitState.UPLOADING;
-			end
-			bPlayerChanging = false;
-			BuildTurnControls();
-		end
 	end
 end
 
@@ -147,9 +109,6 @@ function BuildTurnControls()
 			local localPlayer = PlayerConfigurations[localPlayerID];
 			--print("Hotseat password=" .. localPlayer:GetHotseatPassword());
 			Controls.TitleText:SetText(Locale.ToUpper(localPlayer:GetPlayerName()));
-		elseif(GameConfiguration.IsPlayByCloud() == true) then
-			-- Panel title is static.
-			Controls.TitleText:SetText(PopupTitlePlayByCloud);
 		end
 
 		if(ContextPtr:IsHidden()) then
@@ -196,8 +155,7 @@ function ShowTurnControls()
 		Controls.PopupAlphaIn:Play();
 		Controls.PopupSlideIn:SetToBeginning();
 		Controls.PopupSlideIn:Play();
-		if(localPlayer:GetHotseatPassword() == "" 
-			or GameConfiguration.IsPlayByCloud() == true) then
+		if(localPlayer:GetHotseatPassword() == "") then
 			Controls.PasswordStack:SetHide(true);
 			Controls.OkButton:SetDisabled(false);
 		else
@@ -220,7 +178,6 @@ end
 function UpdateBottomButtons()
 	ShowOkButton();
 	ShowSaveButton();
-	ShowCloudUpload();
 
 	Controls.BottomButtonsStack:CalculateSize();
 	Controls.BottomButtonsStack:ReprocessAnchoring();
@@ -236,28 +193,6 @@ end
 function ShowSaveButton()
 	local showSave = GameConfiguration.IsHotseat();
 	Controls.SaveButton:SetHide(not showSave);
-end
-
--- ===========================================================================
-function ShowCloudUpload()
-	local showCancel = GameConfiguration.IsPlayByCloud() 
-		and eCloudUploadState ~= CloudCommitState.SUCCESS;
-	Controls.CancelUploadButton:SetHide(not showCancel);
-
-	-- Show Cloud Upload Status Text
-	if(eCloudUploadState == CloudCommitState.SUCCESS) then
-		Controls.CloudUploadStatus:SetHide(false);
-		Controls.CloudUploadStatus:LocalizeAndSetText("LOC_PLAYER_CHANGE_UPLOAD_SUCCESS");
-	elseif(eCloudUploadState == CloudCommitState.FAILED) then
-		Controls.CloudUploadStatus:SetHide(false);
-		Controls.CloudUploadStatus:LocalizeAndSetText("LOC_PLAYER_CHANGE_UPLOAD_FAILED");
-	elseif(eCloudUploadState == CloudCommitState.UPLOADING) then
-		Controls.CloudUploadStatus:SetHide(false);
-		Controls.CloudUploadStatus:LocalizeAndSetText("LOC_PLAYER_CHANGE_UPLOAD_IN_PROGRESS");
-	else
-		Controls.CloudUploadStatus:SetHide(true);
-		Controls.CloudUploadStatus:LocalizeAndSetText("");
-	end
 end
 
 -- ===========================================================================
@@ -316,25 +251,6 @@ function OnTeamVictory(team, victory, eventID)
 end
 
 -- ===========================================================================
-function OnUploadCloudSaveComplete(success)
-	if(success == true) then
-		eCloudUploadState = CloudCommitState.SUCCESS;
-	else
-		eCloudUploadState = CloudCommitState.FAILED;
-	end
-
-	UpdateBottomButtons();
-
-	-- exit to main menu after updating the buttons so the player will see the exiting message 
-	-- during the exit stall.
-	if(success == true) then
-		UIManager:Log("Shutting down via player change cloud commit success.");
-		Events.ExitToMainMenu();
-	end
-end
-
-
--- ===========================================================================
 function OnEndGameMenu_OneMoreTurn()
 	print("OnEndGameMenu_OneMoreTurn");
 	Events.LocalPlayerTurnBegin.Add(OnLocalPlayerTurnBegin);
@@ -358,9 +274,8 @@ end
 -- ===========================================================================
 function Initialize()
 
-	-- If not in a hotseat or PlayByCloud, do not register for events.
-	if (GameConfiguration.IsHotseat() == false 
-		and GameConfiguration.IsPlayByCloud() == false) then
+	-- If not in a hotseat, do not register for events.
+	if (GameConfiguration.IsHotseat() == false) then
 		return;
 	end
 
@@ -371,11 +286,9 @@ function Initialize()
 	--Events.LocalPlayerChanged.Add(OnLocalPlayerChanged);
 	-- changing to listen for TurnBegin so that on the initial turn, the first player will get this popup screen. this is consistent with Civ V's behavior.
 	Events.LocalPlayerTurnBegin.Add(OnLocalPlayerTurnBegin);
-	Events.RemotePlayerTurnBegin.Add( OnRemotePlayerTurnBegin );
 	Events.PlayerTurnDeactivated.Add(OnPlayerTurnDeactivated);
 	Events.LoadScreenClose.Add(OnLoadScreenClose);
 	Events.TeamVictory.Add(OnTeamVictory);
-	Events.UploadCloudSaveComplete.Add(OnUploadCloudSaveComplete);
 
 	LuaEvents.EndGameMenu_OneMoreTurn.Add(OnEndGameMenu_OneMoreTurn);
 	LuaEvents.EndGameMenu_ViewingPlayerDefeat.Add(OnEndGameMenu_ViewingPlayerDefeat);
@@ -388,7 +301,6 @@ function Initialize()
 	Controls.MenuButton:RegisterCallback( Mouse.eLClick, OnMenu );
 	Controls.PasswordEntry:RegisterStringChangedCallback(OnPasswordEntryStringChanged);
 	Controls.PasswordEntry:RegisterCommitCallback(OnPasswordEntryCommit);
-	Controls.CancelUploadButton:RegisterCallback( Mouse.eLClick, OnCancelUpload);
 end
 Initialize();
 

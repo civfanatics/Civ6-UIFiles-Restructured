@@ -18,15 +18,27 @@ PageLayouts["Civilization" ] = function(page)
     local civType = civ.CivilizationType;
 
     -- Leaders
+	-- If the leaders section is hidden, do not include leader listing in the side bar.
+	local exclude_leaders;
+	for row in GameInfo.CivilopediaSectionExcludes() do
+		if(row.SectionId == "LEADERS") then
+			exclude_leaders = true;
+			break;
+		end
+	end
+
     local leaders = {};
-    for row in GameInfo.CivilizationLeaders() do
-        if(row.CivilizationType == civType) then
-            local leader = GameInfo.Leaders[row.LeaderType];
-            if(leader) then
-                table.insert(leaders, leader);
-            end
-        end
-    end
+    
+	if(not exclude_leaders) then
+		for row in GameInfo.CivilizationLeaders() do
+			if(row.CivilizationType == civType) then
+				local leader = GameInfo.Leaders[row.LeaderType];
+				if(leader) then
+					table.insert(leaders, leader);
+				end
+			end
+		end
+	end
 
     local traits = {};
     for row in GameInfo.CivilizationTraits() do
@@ -160,7 +172,7 @@ PageLayouts["Civilization" ] = function(page)
 		if(preferred_religion ~= nil) then
 			s:AddHeader("LOC_UI_PEDIA_PREFERRED_RELIGION");
 
-			local icon = {"ICON_" .. preferred_religion.RelgionType, preferred_religion.Name, preferred_religion.RelgionType};
+			local icon = {"ICON_" .. preferred_religion.ReligionType, preferred_religion.Name, preferred_religion.ReligionType};
 			s:AddIconLabel(icon, preferred_religion.Name);
 			s:AddSeparator();
 		end

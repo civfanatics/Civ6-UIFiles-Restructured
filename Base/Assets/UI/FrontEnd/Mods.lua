@@ -332,25 +332,30 @@ function RefreshModDetails()
 					end);
 				else
 					enableButton:SetDisabled(true);
-							
-					-- Generate tip w/ list of mods to enable.
-					local error_suffix;
+					
+					if(err == "ContainsDuplicates") then
+						enableButton:SetToolTipString(Locale.Lookup("LOC_MODS_ERROR_MOD_VERSION_ALREADY_ENABLED"));
+					else
+						-- Generate tip w/ list of mods to enable.
+						local error_suffix;
 
-					if(err == "OwnershipRequired") then
-						error_suffix = "(" .. Locale.Lookup("LOC_MODS_DETAILS_OWNERSHIP_NO") .. ")";
-					end
-
-					local tip = {Locale.Lookup("LOC_MODS_ENABLE_ERROR")};
-					for k,ref in ipairs(xtra) do
-						local item = "[ICON_BULLET] " .. Locale.Lookup(ref.Name);
-						if(error_suffix) then
-							item = item .. " " .. error_suffix;
+						if(err == "OwnershipRequired") then
+							error_suffix = "(" .. Locale.Lookup("LOC_MODS_DETAILS_OWNERSHIP_NO") .. ")";
 						end
 
-						table.insert(tip, item);
-					end
+						local tip = {Locale.Lookup("LOC_MODS_ENABLE_ERROR")};
+						for k,ref in ipairs(xtra) do
+							local item = "[ICON_BULLET] " .. Locale.Lookup(ref.Name);
+							if(error_suffix) then
+								item = item .. " " .. error_suffix;
+							end
 
-					enableButton:SetToolTipString(table.concat(tip, "[NEWLINE]"));
+							table.insert(tip, item);
+						end
+
+						enableButton:SetToolTipString(table.concat(tip, "[NEWLINE]"));
+					end		
+					
 				end
 			end
 		end
@@ -522,7 +527,10 @@ function EnableAllMods()
 
 	local modHandles = {};
 	for i,v in ipairs(mods) do
-		modHandles[i] = v.Handle;
+		local err, _ =  Modding.CanEnableMod(v.Handle, true);
+		if (err == "OK") then
+			table.insert(modHandles, v.Handle);
+		end
 	end
 	Modding.EnableMod(modHandles);
 	RefreshListings();

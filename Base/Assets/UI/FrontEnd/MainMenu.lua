@@ -11,13 +11,9 @@ local m_preSaveMainMenuOptions:	table = {};
 local m_defaultMainMenuOptions:	table = {};
 local m_singlePlayerListOptions:table = {};
 local m_hasSaves:boolean = false;
-local m_hasCloudTurn:boolean = false;
-local m_checkedCloudTurns:boolean = false;
 local m_currentOptions:table = {};		--Track which main menu options are being displayed and selected. Indices follow the format of {optionControl:table, isSelected:boolean}
 local m_initialPause = 1.5;				--How long to wait before building the main menu options when the game first loads
 local m_internetButton:table = nil;		--Cache internet button so it can be updated when online status events fire
-local m_multiplayerButton:table = nil;	--Cache multiplayer button so it can be updated if a new cloud turn comes in.
-local m_cloudGamesButton:table = nil;	--Cache cloud games button so it can be updated if a new cloud turn comes in.
 local m_resumeButton:table = nil;		--Cache resume button so it can be updated when FileListQueryResults event fires
 local m_scenariosButton:table = nil;	--Cache scenarios button so it can be updated later.
 
@@ -104,6 +100,8 @@ function OnAdvancedSetup()
 	-- Clear this value so that the setup parameters code can guess the best 
 	-- default.
 	GameConfiguration.SetValue("RULESET", nil);
+	-- Reset the load game server type, in case a configuration is loaded.
+	LuaEvents.MainMenu_SetLoadGameServerType(ServerType.SERVER_TYPE_NONE);
 	UIManager:QueuePopup(Controls.AdvancedSetup, PopupPriority.Current);
 end
 
@@ -114,6 +112,8 @@ function OnScenarioSetup()
 	-- Clear this value so that the setup parameters code can guess the best 
 	-- default.
 	GameConfiguration.SetValue("RULESET", nil);
+	-- Reset the load game server type, in case a configuration is loaded.
+	LuaEvents.MainMenu_SetLoadGameServerType(ServerType.SERVER_TYPE_NONE);
 	UIManager:QueuePopup(Controls.ScenarioSetup, PopupPriority.Current);
 end
 
@@ -172,7 +172,6 @@ function UpdateMotD()
 	end
 			
 	Controls.MotDContainter:SetShow( bShow );
-	ResizeMOTD();
 end
 
 -- ===========================================================================
@@ -205,23 +204,11 @@ function OnCredits()
 end
 
 -- ===========================================================================
-function OnCloudTurnCheckComplete(haveTurn :boolean)
-	m_hasCloudTurn = haveTurn;
-	if (not ContextPtr:IsHidden()) then
-		UpdateCloudGamesButton();
-		UpdateMultiplayerButton();
-	end
-end
-
--- ===========================================================================
 -- Multiplayer Select Screen
 -- ===========================================================================
 local InternetButtonOnlineStr : string = Locale.Lookup("LOC_MULTIPLAYER_INTERNET_GAME_TT");
 local InternetButtonOfflineStr : string = Locale.Lookup("LOC_MULTIPLAYER_INTERNET_GAME_OFFLINE_TT");
-local CloudButtonTTStr : string = Locale.Lookup("LOC_MULTIPLAYER_CLOUD_GAME_TT");
-local CloudButtonHaveTurnTTStr : string = Locale.Lookup("LOC_MULTIPLAYER_CLOUD_GAME_HAVE_TURN_TT");
 local MultiplayerButtonTTStr : string = Locale.Lookup("LOC_MAINMENU_MULTIPLAYER_TT");
-local MultiplayerButtonHaveTurnTTStr : string = Locale.Lookup("LOC_MAINMENU_MULTIPLAYER_HAVE_CLOUD_TURN_TT");
 
 -- ===========================================================================
 function OnInternet()
@@ -255,40 +242,6 @@ function UpdateInternetButton(buttonControl: table)
 	end
 end
 
-function UpdateCloudGamesButton(buttonControl: table)
-	if (buttonControl ~=nil) then
-		m_cloudGamesButton = buttonControl;
-	end
-	
-	-- Your turn in a cloud game?
-	if(m_cloudGamesButton ~= nil) then
-		if (m_hasCloudTurn) then
-			m_cloudGamesButton.Top:SetToolTipString(CloudButtonHaveTurnTTStr);
-			m_cloudGamesButton.ButtonLabel:SetText(Locale.Lookup("LOC_MULTIPLAYER_CLOUD_GAME_HAVE_TURN"));
-		else
-			m_cloudGamesButton.Top:SetToolTipString(CloudButtonTTStr);
-			m_cloudGamesButton.ButtonLabel:SetText(Locale.Lookup("LOC_MULTIPLAYER_CLOUD_GAME"));
-		end
-	end
-end
-
-function UpdateMultiplayerButton(buttonControl: table)
-	if (buttonControl ~=nil) then
-		m_multiplayerButton = buttonControl;
-	end
-	
-	-- Your turn in a cloud game?
-	if(m_multiplayerButton ~= nil) then
-		if (m_hasCloudTurn) then
-			m_multiplayerButton.Top:SetToolTipString(MultiplayerButtonHaveTurnTTStr);
-			m_multiplayerButton.ButtonLabel:SetText(Locale.Lookup("LOC_PLAY_MULTIPLAYER_HAVE_CLOUD_TURN"));
-		else
-			m_multiplayerButton.Top:SetToolTipString(MultiplayerButtonTTStr);
-			m_multiplayerButton.ButtonLabel:SetText(Locale.Lookup("LOC_PLAY_MULTIPLAYER"));
-		end
-	end
-end
-
 -- ===========================================================================
 function OnLANGame()
 	LuaEvents.ChangeMPLobbyMode(MPLobbyTypes.STANDARD_LAN);
@@ -300,19 +253,6 @@ end
 function OnHotSeat()
 	LuaEvents.ChangeMPLobbyMode(MPLobbyTypes.HOTSEAT);
 	LuaEvents.MainMenu_RaiseHostGame();
-	Close();
-end
-
--- ===========================================================================
-function OnPlayByCloud()
-	LuaEvents.ChangeMPLobbyMode(MPLobbyTypes.PLAYBYCLOUD);
-	UIManager:QueuePopup( Controls.Lobby, PopupPriority.Current );
-	Close();
-end
-
--- ===========================================================================
-function OnCloud()
-	UIManager:QueuePopup( Controls.CloudGameScreen, PopupPriority.Current );
 	Close();
 end
 
@@ -465,11 +405,9 @@ local m_SinglePlayerSubMenu :table = {
 							};
 
 local m_MultiPlayerSubMenu :table = {
-								--{label = "LOC_MULTIPLAYER_CLOUD_GAME",		callback = OnPlayByCloud,	tooltip = "LOC_MULTIPLAYER_CLOUD_GAME_TT", buttonState = UpdateCloudGamesButton},
 								{label = "LOC_MULTIPLAYER_INTERNET_GAME",	callback = OnInternet,		tooltip = "LOC_MULTIPLAYER_INTERNET_GAME_TT", buttonState = UpdateInternetButton},
 								{label = "LOC_MULTIPLAYER_LAN_GAME",		callback = OnLANGame,		tooltip = "LOC_MULTIPLAYER_LAN_GAME_TT"},
 								{label = "LOC_MULTIPLAYER_HOTSEAT_GAME",	callback = OnHotSeat,		tooltip = "LOC_MULTIPLAYER_HOTSEAT_GAME_TT"},
-								--{label = "LOC_MULTIPLAYER_CLOUD_GAME",		callback = OnCloud,			tooltip = "LOC_MULTIPLAYER_CLOUD_GAME_TT"},
 							};
 
 local m_BenchmarkSubMenu :table = {
@@ -488,7 +426,7 @@ local m_BenchmarkSubMenu :table = {
 local m_preSaveMainMenuOptions :table = {	{label = "LOC_PLAY_CIVILIZATION_6",			callback = OnPlayCiv6}};  
 local m_defaultMainMenuOptions :table = {	
 								{label = "LOC_SINGLE_PLAYER",				callback = OnSinglePlayer,	tooltip = "LOC_MAINMENU_SINGLE_PLAYER_TT",	submenu = m_SinglePlayerSubMenu}, 
-								{label = "LOC_PLAY_MULTIPLAYER",			callback = OnMultiPlayer,	tooltip = "LOC_MAINMENU_MULTIPLAYER_TT",	submenu = m_MultiPlayerSubMenu, buttonState = UpdateMultiplayerButton},
+								{label = "LOC_PLAY_MULTIPLAYER",			callback = OnMultiPlayer,	tooltip = "LOC_MAINMENU_MULTIPLAYER_TT",	submenu = m_MultiPlayerSubMenu},
 								{label = "LOC_MAIN_MENU_OPTIONS",			callback = OnOptions,	tooltip = "LOC_MAINMENU_GAME_OPTIONS_TT"},
 								{label = "LOC_MAIN_MENU_ADDITIONAL_CONTENT",				callback = OnMods,	tooltip = "LOC_MAIN_MENU_ADDITIONAL_CONTENT_TT"},
 								{label = "LOC_MAIN_MENU_TUTORIAL",			callback = OnTutorial,	tooltip = "LOC_MAINMENU_TUTORIAL_TT"},
@@ -718,8 +656,6 @@ function BuildAllMenus()
 	m_resumeButton = nil;
 	m_internetButton = nil;
 	m_scenariosButton = nil;
-	m_multiplayerButton = nil;
-	m_cloudGamesButton = nil;
 
 	-- WISHLIST: When we rebuild the menus, let's check to see if there are ANY saved games whatsoever.  
 	-- If none exist, then do not display the option in the submenu. (See: OnFileListQueryResults)
@@ -737,31 +673,6 @@ function BuildAllMenus()
 		end
 	else
 		BuildMenu(m_defaultMainMenuOptions);
-	end
-end
-
-function Resize()
-	local screenX, screenY:number = UIManager:GetScreenSizeVal();
-	local adjustedWidth = screenY*1.9;
-	Controls.Logo:ReprocessAnchoring();
-	Controls.ShellMenuAndLogo:ReprocessAnchoring();
-	Controls.VersionLabel:ReprocessAnchoring();
-	Controls.ShellStack:ReprocessAnchoring();
-	Controls.My2KContents:ReprocessAnchoring();
-	Controls.MotDContainter:SetSizeX(screenX);
-	ResizeMOTD();
-end
-
-function ResizeMOTD()
-	if Controls.MotDContainter:IsVisible() then
-		Controls.MotDScroll:CalculateSize();
-		Controls.MotDScroll:ReprocessAnchoring();
-		Controls.MotDStack:CalculateSize();
-		Controls.MotDStack:ReprocessAnchoring();
-		Controls.MotDFrame:DoAutoSize();
-		Controls.MotDFrame:ReprocessAnchoring();
-		Controls.MotDContainter:DoAutoSize();
-		Controls.MotDContainter:ReprocessAnchoring();
 	end
 end
 
@@ -803,12 +714,6 @@ function OnHide()
 	m_initialPause = 0;
 end
 
-function OnUpdateUI( type:number, tag:string, iData1:number, iData2:number, strData1:string )   
-  if type == SystemUpdateUI.ScreenResize then
-    Resize();
-  end
-end
-
 -- Call-back for when the list of files have been updated.
 function OnFileListQueryResults( fileList, queryID )
 	if g_LastFileQueryRequestID ~= nil then
@@ -846,18 +751,22 @@ function OnFiraxisLiveActivate(bActive)
 end
 
 function UpdateCheckCloudTurns()
-	--[[
 	if(not m_checkedCloudTurns) then
-		local kandoConnected = FiraxisLive.IsKandoConnected();
+		local kandoConnected = FiraxisLive.IsFiraxisLiveLoggedIn();
 		if(kandoConnected) then
+			FiraxisLive.SetAutoCloudTurnChecks(true); -- continue polling the turn notification check in the future.
 			local started = FiraxisLive.CheckForCloudTurns();
 			if(started) then
 				m_checkedCloudTurns = true;
 			end
 		end
 	end
-	--]]
 end
+
+-- ===========================================================================
+function OnMy2KLinkAccountResult(bSuccess)
+end
+
 
 -- ===========================================================================
 function Initialize()
@@ -878,16 +787,14 @@ function Initialize()
 	Events.SteamServersConnected.Add( UpdateInternetButton );
 	Events.SteamServersDisconnected.Add( UpdateInternetButton );
 	Events.MultiplayerGameLaunched.Add( OnGameLaunched );
-	Events.SystemUpdateUI.Add( OnUpdateUI );
     Events.UserRequestClose.Add( OnUserRequestClose );
-	Events.CloudTurnCheckComplete.Add( OnCloudTurnCheckComplete );
 	Events.FiraxisLiveActivate.Add( OnFiraxisLiveActivate );
+	Events.My2KLinkAccountResult.Add( OnMy2KLinkAccountResult );
 
 	-- LUA Events
 	LuaEvents.FileListQueryResults.Add( OnFileListQueryResults );
 
 	BuildAllMenus();
 	UpdateMotD();
-	Resize();
 end
 Initialize();

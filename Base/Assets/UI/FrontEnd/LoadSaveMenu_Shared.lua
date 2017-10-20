@@ -91,7 +91,7 @@ end
 
 ----------------------------------------------------------------        
 function ReverseAlphabeticalSort( a, b ) 
-    return Locale.Compare(a.DisplayName, b.DisplayName) == -1;
+    return Locale.Compare(b.DisplayName, a.DisplayName) == -1;
 end
 
 ----------------------------------------------------------------        
@@ -105,17 +105,15 @@ end
 
 ----------------------------------------------------------------        
 function SortByLastModified(a, b)
-
-	if(a.LastModifiedHigh == nil or a.LastModifiedLow == nil) then
+	if(a.LastModified == nil) then
         return false;
-    elseif(b.LastModifiedHigh == nil or b.LastModifiedLow == nil) then
+    elseif(b.LastModified == nil) then
         return true;
-    elseif ( a.LastModifiedHigh == b.LastModifiedHigh ) then
-		return (a.LastModifiedLow > b.LastModifiedLow );
+    elseif ( a.LastModified == b.LastModified ) then
+		return SortByName(a,b);
 	else
-		return ( a.LastModifiedHigh > b.LastModifiedHigh );
+		return ( a.LastModified > b.LastModified );
 	end
-
 end
 
 ---------------------------------------------------------------------------
@@ -560,7 +558,7 @@ function PopulateInspectorData(fileInfo, fileName, mod_errors)
 	local hostLeaderName = LookupBundleOrText(fileInfo.HostLeaderName);
 	Controls.LeaderIcon:SetToolTipString(hostLeaderName);
 
-	if (fileInfo.HostLeader ~= nil and fileInfo.HostCivilization ~= nil) then
+	if (fileInfo.HostLeader ~= nil or fileInfo.HostCivilization ~= nil) then
 
 		if (fileInfo.HostBackgroundColorValue ~= nil and fileInfo.HostForegroundColorValue ~= nil) then
 
@@ -576,18 +574,25 @@ function PopulateInspectorData(fileInfo, fileName, mod_errors)
 			Controls.CivIcon:SetColor(m_secondaryColor);
 		end
 
-		if (not UI.ApplyFileQueryLeaderImage( g_LastFileQueryRequestID, fileInfo.Id, Controls.LeaderIcon)) then
-			if(not Controls.LeaderIcon:SetIcon("ICON_"..fileInfo.HostLeader)) then
-				Controls.LeaderIcon:SetIcon("ICON_LEADER_DEFAULT")
+		if (fileInfo.HostLeader ~= nil) then
+			if (not UI.ApplyFileQueryLeaderImage( g_LastFileQueryRequestID, fileInfo.Id, Controls.LeaderIcon)) then
+				if(not Controls.LeaderIcon:SetIcon("ICON_"..fileInfo.HostLeader)) then
+					Controls.LeaderIcon:SetIcon("ICON_LEADER_DEFAULT")
+				end
 			end
+		else
+			Controls.LeaderIcon:SetIcon("ICON_LEADER_DEFAULT")
 		end
 
-		if (not UI.ApplyFileQueryCivImage( g_LastFileQueryRequestID, fileInfo.Id, Controls.CivIcon)) then
-			if(not Controls.CivIcon:SetIcon("ICON_"..fileInfo.HostCivilization)) then
-				Controls.CivIcon:SetIcon("ICON_CIVILIZATION_UNKNOWN")
+		if (fileInfo.HostCivilization ~= nil) then
+			if (not UI.ApplyFileQueryCivImage( g_LastFileQueryRequestID, fileInfo.Id, Controls.CivIcon)) then
+				if(not Controls.CivIcon:SetIcon("ICON_"..fileInfo.HostCivilization)) then
+					Controls.CivIcon:SetIcon("ICON_CIVILIZATION_UNKNOWN")
+				end
 			end
+		else
+			Controls.CivIcon:SetIcon("ICON_CIVILIZATION_UNKNOWN")
 		end
-
 	else
 		Controls.CivBacking_Base:SetColorByName("LoadSaveGameInfoIconBackingBase");
 		Controls.CivBacking_Darker:SetColorByName("LoadSaveGameInfoIconBackingDarker");
@@ -642,11 +647,20 @@ function PopulateInspectorData(fileInfo, fileName, mod_errors)
 
 	optionsHeader = g_DescriptionHeaderManager:GetInstance();
 	optionsHeader.HeadingTitle:LocalizeAndSetText("LOC_LOADSAVE_GAME_OPTIONS_HEADER_TITLE");
+	
+	if(fileInfo.RulesetName) then
+		local rulesetName = LookupBundleOrText(fileInfo.RulesetName);
+		if(rulesetName) then
+			local item = g_DescriptionItemManager:GetInstance();
+			item.Title:LocalizeAndSetText("LOC_LOADSAVE_GAME_OPTIONS_RULESET_TYPE_TITLE");
+			item.Description:SetText(rulesetName);
+		end
+	end
 
 	local mapScriptName = LookupBundleOrText(fileInfo.MapScriptName);
 	if(mapScriptName) then
 		local maptype = g_DescriptionItemManager:GetInstance();
-		maptype.Title:SetText("LOC_LOADSAVE_GAME_OPTIONS_MAP_TYPE_TITLE");
+		maptype.Title:LocalizeAndSetText("LOC_LOADSAVE_GAME_OPTIONS_MAP_TYPE_TITLE");
 		maptype.Description:SetText(mapScriptName);
 	end
 
@@ -797,9 +811,7 @@ function RebuildFileList()
 			v.DisplayName = GetDisplayName(v.Name, v.IsDirectory);
 		end
 	
-		local high, low = UI.GetSaveGameModificationTimeRaw(v);
-		v.LastModifiedHigh = high;
-		v.LastModifiedLow = low;
+		v.LastModified = UI.GetSaveGameModificationTimeRaw(v);
 	end
 	table.sort(g_FileList, g_CurrentSort);
 

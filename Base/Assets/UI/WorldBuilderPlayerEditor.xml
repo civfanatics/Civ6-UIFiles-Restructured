@@ -82,7 +82,7 @@
 
 	<!-- Collapsable Row(s) area -->
 	<Instance					Name="GroupInstance">
-		<Container				ID="Top"																				Size="parent,10"	AutoSize="V">
+		<Container				ID="Top"																			 Size="parent,auto">
 			<GridButton			ID="RowHeaderButton"	Offset="0,0"	Size="parent,30"		Style="RowButton"		String="$RowHeaderButton"  />
 			<Image				ID="RowExpandCheck"		Anchor="R,T"	Offset="5,5"			Size="22,22"			Texture="Controls_ExpandButton" />
 			<ScrollPanel		ID="CollapseScroll"		Offset="0,31"	Size="parent,20"		StackGrowth="Bottom"	FullClip="1" >

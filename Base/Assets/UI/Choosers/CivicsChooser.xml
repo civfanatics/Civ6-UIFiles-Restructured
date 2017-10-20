@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Context xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="..\..\..\..\..\CivTech\Libs\ForgeUI\ForgeUI_Assets\Controls.xsd">
+
+	<Include File="CivicUnlockIcon"/>
+
   <SlideAnim Style="ChooserAnimCivics">
 
     <Button ID="CloseButton" Anchor="L,T" Offset="265,2" Style="CloseButtonSmall" />
@@ -68,12 +71,6 @@
         </Button>
 		  </GridButton>
     </Container>
-	</Instance>
-
-	<Instance				Name="UnlockIconInstance">
-    <Button				ID="UnlockIcon"					Style="UnlockFrames" NoStateChange="1">
-      <Image			ID="Icon"								Anchor="C,C"	Size="38,38" Texture="Controls_Blank" />
-    </Button>
 	</Instance>
 
 </Context>

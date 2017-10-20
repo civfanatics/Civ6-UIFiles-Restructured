@@ -3,7 +3,7 @@
 		ColorSet="BodyTextCool" Style="FontNormal22" FontEffect="Stroke">
 
 
-	<Box ID="MainGrid" Size="1024,full" Anchor="C,T" Color="9,44,72,200" TutorialActive="1">
+	<Box ID="MainGrid" Size="1024,parent" Anchor="C,T" Color="9,44,72,200" TutorialActive="1">
 		<Image Texture="Controls_GradientSmall" Size="22,parent" AnchorSide="O,I" Anchor="R,T" Color="0,0,0,200" Rotate="270" Offset="0,0"/>
 		<Image Texture="Controls_GradientSmall" Size="22,parent" AnchorSide="O,I" Anchor="L,T" Color="0,0,0,200" Rotate="90" Offset="0,0"/>
 		<Box Color="32,70,101,150" Anchor="L,T" Size="2,parent"/>
@@ -102,10 +102,10 @@
 
 									<Stack ID="ModPropertiesStack" StackGrowth="Right" Anchor="C,T" Padding="5">
 										<Stack ID="ModPropertiesCaptionStack">
-											<Container ID="ModAuthorsCaption" Anchor="R,T" Offset="0,5" AutoSize="Horizontal" Size="100,22">
+											<Container ID="ModAuthorsCaption" Anchor="R,T" Offset="0,5" Size="auto,22">
 												<Label Style="FontNormal16" String="LOC_MODS_DETAILS_AUTHOR" />
 											</Container>
-											<Container ID="ModSpecialThanksCaption" Anchor="R,T" Offset="0,5" AutoSize="Horizontal" Size="100,22">
+											<Container ID="ModSpecialThanksCaption" Anchor="R,T" Offset="0,5" Size="auto,22">
 												<Label Style="FontNormal16" String="LOC_MODS_DETAILS_SPECIAL_THANKS" />
 											</Container>
 											<Label ID="ModOwnershipCaption" Style="FontNormal16" Anchor="R,T" Offset="0,5" String="LOC_MODS_DETAILS_OWNERSHIP" />
@@ -167,11 +167,11 @@
 		</Container>
 	</Box>
 
-	<Box ID="NameModGroupPopup" Color="0,0,0,150" Size="Full,Full" ConsumeMouseOver="1" Hidden="1" IgnoreTutorial="1">
+	<Box ID="NameModGroupPopup" Color="0,0,0,150" Size="parent,parent" ConsumeMouseOver="1" Hidden="1" IgnoreTutorial="1">
 		<AlphaAnim ID="NameModGroupPopupAlpha" AlphaBegin="0" AlphaEnd="1" Speed="3" Function="Root" Cycle="Once" Size="parent,parent">
 			<SlideAnim ID="NameModGroupPopupSlide" Start="0,-20" End="0,0" Speed="3" Function="Root" Cycle="Once" Size="parent,parent">
-				<Grid Size="500,250" Anchor="C,C" Offset="0,0" Style="DropShadow2"  Hidden="0" Color="255,255,255,200">
-					<Grid ID="NameModGroupPopupWindow" Size="parent-50,0" Anchor="C,C" Offset="0,-50" SizePadding="0,20" Style="WindowFrameTitle" Hidden="0" AutoSize="V">
+				<Grid Size="500,250" Anchor="C,C" Offset="0,-50" Style="DropShadow2"  Hidden="0" Color="255,255,255,200">
+					<Grid ID="NameModGroupPopupWindow" Size="parent-50,auto" Anchor="C,C" SizePadding="0,20" Style="WindowFrameTitle" Hidden="0">
 						<Label ID="BindingTitle" Anchor="C,T" String="LOC_MODS_GROUP_ENTER_NAME" Align="Center" Style="BlueGlow" Offset="0,15"/>
 						<Stack Offset="0,60" Size="parent,0" StackGrowth="Down" Anchor="C,T" Padding="15">
 							<Grid Style="EditTextButton" Anchor="C,T" Size="parent-100,26">

@@ -50,7 +50,7 @@ function InputHandler( uiMsg, wParam, lParam )
 	if uiMsg == KeyEvents.KeyUp then
 		if wParam == Keys.VK_ESCAPE then
 			if(m_kPopupDialog and m_kPopupDialog:IsOpen()) then
-				m_kPopupDialog:Close();
+				OnPopupClose();
 			end
 		end
 		return true;

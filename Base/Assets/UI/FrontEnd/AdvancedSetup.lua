@@ -4,8 +4,12 @@
 include("InstanceManager");
 include("PlayerSetupLogic");
 include("Civ6Common");
+include("SupportFunctions");
+
 -- ===========================================================================
 -- ===========================================================================
+
+local PULLDOWN_TRUNCATE_OFFSET:number = 40;
 
 -- ===========================================================================
 -- ===========================================================================
@@ -14,6 +18,7 @@ local m_NonLocalPlayerSlotManager	:table = InstanceManager:new("NonLocalPlayerSl
 local m_singlePlayerID				:number = 0;			-- The player ID of the human player in singleplayer.
 local m_AdvancedMode				:boolean = false;
 local m_RulesetData					:table = {};
+local m_BasicTooltipData			:table = {};
 
 -- ===========================================================================
 -- Input Handler
@@ -66,7 +71,8 @@ function CreatePulldownDriver(o, parameter, c, container)
 		Container = container,
 		UpdateValue = function(value)
 			local button = c:GetButton();
-			button:SetText( value and value.Name or nil);
+			local truncateWidth = button:GetSizeX() - PULLDOWN_TRUNCATE_OFFSET;
+			TruncateStringWithTooltip(button, truncateWidth, value and value.Name or nil);
 		end,
 		UpdateValues = function(values)
 			-- If container was included, hide it if there is only 1 possible value.
@@ -211,13 +217,13 @@ function RefreshPlayerSlots()
 	Controls.BasicTooltipContainer:DestroyAllChildren();
 	Controls.BasicPlacardContainer:DestroyAllChildren();
 	Controls.AdvancedTooltipContainer:DestroyAllChildren();
-
-	local basicTooltip	:table = {};	
+	
+	local basicTooltip = {};
 	ContextPtr:BuildInstanceForControl( "CivToolTip", basicTooltip, Controls.BasicTooltipContainer );
 	local basicPlacard	:table = {};
 	ContextPtr:BuildInstanceForControl( "LeaderPlacard", basicPlacard, Controls.BasicPlacardContainer );
 
-	local basicTooltipData : table = {
+	m_BasicTooltipData = {
 		InfoStack			= basicTooltip.InfoStack,
 		InfoScrollPanel		= basicTooltip.InfoScrollPanel;
 		CivToolTipSlide		= basicTooltip.CivToolTipSlide;
@@ -249,7 +255,7 @@ function RefreshPlayerSlots()
 
 	for i, player_id in ipairs(player_ids) do	
 		if(m_singlePlayerID == player_id) then
-			SetupLeaderPulldown(player_id, Controls, "Basic_LocalPlayerPulldown", "Basic_LocalPlayerCivIcon", "Basic_LocalPlayerLeaderIcon", basicTooltipData);
+			SetupLeaderPulldown(player_id, Controls, "Basic_LocalPlayerPulldown", "Basic_LocalPlayerCivIcon", "Basic_LocalPlayerLeaderIcon", m_BasicTooltipData);
 			SetupLeaderPulldown(player_id, Controls, "Advanced_LocalPlayerPulldown", "Advanced_LocalPlayerCivIcon", "Advanced_LocalPlayerLeaderIcon", advancedTooltipData);
 		else
 			local ui_instance = m_NonLocalPlayerSlotManager:GetInstance();

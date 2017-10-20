@@ -471,8 +471,6 @@ function AddDestination(city:table)
 	local destinationInstance:table = m_RouteChoiceIM:GetInstance();
 
 	-- Update city name and banner color
-	TruncateStringWithTooltip(destinationInstance.CityName, 185, Locale.ToUpper(city:GetName()));
-
 	local backColor:number, frontColor:number  = UI.GetPlayerColors( city:GetOwner() );
 	local darkerBackColor:number = DarkenLightenColor(backColor,(-85),238);
 	local brighterBackColor:number = DarkenLightenColor(backColor,90,255);
@@ -481,6 +479,13 @@ function AddDestination(city:table)
 	destinationInstance.BannerDarker:SetColor( darkerBackColor );
 	destinationInstance.BannerLighter:SetColor( brighterBackColor );
 	destinationInstance.CityName:SetColor( frontColor );
+
+	-- Update capital indicator
+	if city:IsCapital() then
+		TruncateStringWithTooltip(destinationInstance.CityName, 185, "[ICON_Capital] " .. Locale.ToUpper(city:GetName()));
+	else
+		TruncateStringWithTooltip(destinationInstance.CityName, 185, Locale.ToUpper(city:GetName()));
+	end
 
 	-- Update travel time
 	local travelTime:number = UnitManager.GetTravelTime(m_spy, city);

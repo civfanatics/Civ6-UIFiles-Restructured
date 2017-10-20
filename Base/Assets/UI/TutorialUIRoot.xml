@@ -4,9 +4,9 @@
 <!-- Tabs set to 2 spaces, retaining the tab.		-->
 <Context					Name="TutorialUIRoot" Layer="Tutorial" >
 
-	<Container			ID="ListContainer"		Size="200,full" Hidden="1" Buttons="L" ConsumeAllMouse="1">
+	<Container			ID="ListContainer"		Size="200,parent" Hidden="1" Buttons="L" ConsumeAllMouse="1">
 		<Box																Size="parent,parent" Color="10,10,10,200" />
-		<ScrollPanel	ID="TutorialScroll"		Size="200,full" Vertical="1" >
+		<ScrollPanel	ID="TutorialScroll"		Size="200,parent" Vertical="1" >
 			<Stack			ID="TutorialItemStack" StackGrowth="Down" StackPadding="2" />
 			<ScrollBar	Anchor="L,C"	Size="10,400" Offset="0,0"	  Style="ScrollVerticalBar"		Color="57,48,42,255" />
 		</ScrollPanel>
@@ -22,8 +22,8 @@
 	<LuaContext		ID="TutorialWorldAnchor"	FileName="TutorialWorldAnchor"	Hidden="1"	/>
 	<!--<LuaContext		ID="TutorialInput"				FileName="TutorialInput"				Hidden="1"	/>-->
 
-  <BoxButton	ID="TutorialMovieContainer" Size="full,full" Color="255,255,255,255" Hidden="1" ConsumeAllMouse="1">
-    <Movie		ID="TutorialMovie" Size="full,full" LoopMovie="0" StretchMode="UniformToFill" />
+  <BoxButton	ID="TutorialMovieContainer" Size="parent,parent" Color="255,255,255,255" Hidden="1" ConsumeAllMouse="1">
+    <Movie		ID="TutorialMovie" Size="parent,parent" LoopMovie="0" StretchMode="UniformToFill" />
   </BoxButton>
 
 </Context>
