@@ -8,7 +8,6 @@ include("SupportFunctions");
 -- ===========================================================================
 --	CONSTANS / MEMBERS
 -- ===========================================================================
-local m_isPopupQueued			:boolean = false;
 local m_queuedBoosts			:table	 = {};
 local m_isDisabledByTutorial	:boolean = false;
 local m_isPastLoadingScreen		:boolean = false;
@@ -23,7 +22,6 @@ function ShowBoost(queueEntry:table)
 
 	-- Queue Popup through UI Manager
 	UIManager:QueuePopup( ContextPtr, PopupPriority.Normal);
-	m_isPopupQueued = true;
 
 	PlayAnimations();
 end
@@ -133,6 +131,7 @@ function ShowTechBoost(techIndex, iTechProgress, eSource)
 	Controls.ProgressBar:SetPercent(endPercent);
 	Controls.BoostBar:SetPercent(endPercent);
     if (m_isPastLoadingScreen) then
+        UI.PlaySound("Pause_TechCivic_Speech");
         UI.PlaySound("Receive_Tech_Boost");
     end
 end
@@ -239,6 +238,7 @@ function ShowCivicBoost(civicIndex, iCivicProgress, eSource)
 	Controls.BoostBar:SetPercent(endPercent);
 
     if (m_isPastLoadingScreen) then
+        UI.PlaySound("Pause_TechCivic_Speech");
         UI.PlaySound("Receive_Culture_Boost");
     end
 end
@@ -269,7 +269,7 @@ function DoCivicBoost(ePlayer, civicIndex, iCivicProgress, eSource)
 		local civicBoostEntry:table = { civicIndex=civicIndex, iCivicProgress=iCivicProgress, eSource=eSource };
 
 		-- If we're not showing a boost popup then add it to the popup system queue
-		if not m_isPopupQueued then
+		if UI.CanShowPopup() then
 			ShowBoost(civicBoostEntry);
 		else
 			-- Add to queue if already showing a boost popup
@@ -290,7 +290,7 @@ function DoTechBoost(ePlayer, techIndex, iTechProgress, eSource)
 		local techBoostEntry:table = { techIndex=techIndex, iTechProgress=iTechProgress, eSource=eSource };
 
 		-- If we're not showing a boost popup then add it to the popup system queue
-		if not m_isPopupQueued then
+		if UI.CanShowPopup() then
 			ShowBoost(techBoostEntry);
 		else
 			-- Add to queue if already showing a boost popup
@@ -300,11 +300,7 @@ function DoTechBoost(ePlayer, techIndex, iTechProgress, eSource)
 end
 
 -- ===========================================================================
-function OnClose()	
-	-- Dequeue popup from UI mananger
-	UIManager:DequeuePopup( ContextPtr );
-	m_isPopupQueued = false;
-
+function ShowNextQueuedPopup()
 	-- Find first entry in table, display that, then remove it from the internal queue
 	for i, entry in ipairs(m_queuedBoosts) do
 		ShowBoost(m_queuedBoosts[i]);
@@ -312,7 +308,14 @@ function OnClose()
 		table.remove(m_queuedBoosts, i);
 		break;
 	end
+end
 
+-- ===========================================================================
+function OnClose()	
+	-- Dequeue popup from UI mananger
+	UIManager:DequeuePopup( ContextPtr );
+
+	ShowNextQueuedPopup();
 end
 
 -- ===========================================================================
@@ -343,6 +346,14 @@ end
 -- ===========================================================================
 function OnProgressMeterAnimEnd()
 	Controls.GearAnim:Stop();
+end
+
+-- ===========================================================================
+function OnUIIdle()
+	-- The UI is idle, are we waiting to show a popup?
+	if UI.CanShowPopup() then
+		ShowNextQueuedPopup();
+	end
 end
 
 -- ===========================================================================
@@ -396,5 +407,6 @@ function Initialize()
 	-- Game Events
 	Events.LocalPlayerTurnEnd.Add( OnLocalPlayerTurnEnd );
     Events.LoadGameViewStateDone.Add( OnLoadGameViewStateDone );	
+	Events.UIIdle.Add( OnUIIdle );
 end
 Initialize();

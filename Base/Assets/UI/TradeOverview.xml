@@ -2,7 +2,7 @@
 <Context>
   <SlideAnim Style="RundownAnimBG">
     <!-- Title Area -->
-    <Grid Anchor="C,T" Size="parent-6,140" Offset="0,50" Texture="Controls_TitleBarDark" SliceCorner="21,17" SliceTextureSize="42,34">
+    <Grid Anchor="C,T" Size="parent-6,135" Offset="0,50" Texture="Controls_TitleBarDark" SliceCorner="21,17" SliceTextureSize="42,34">
       <!-- ==================================================================	-->
       <!--	Tab Container																												-->
       <!-- ==================================================================	-->
@@ -37,7 +37,7 @@
       <!-- ==================================================================	-->
       <!--	Header																									-->
       <!-- ==================================================================	-->
-      <Grid	ID="HeaderFrame" Anchor="C,T" Offset="0,40" Size="parent-40,50" Texture="Controls_DecoFrame" SliceCorner="19,18" SliceSize="1,1" SliceTextureSize="40,38" Color="31,44,53,255">
+      <Grid	ID="HeaderFrame" Anchor="C,T" Offset="0,44" Size="parent-40,50" Texture="Controls_DecoFrame" SliceCorner="19,18" SliceSize="1,1" SliceTextureSize="40,38" Color="31,44,53,255">
         <Stack ID="HeaderStack" Anchor="C,T" Offset="0,15" StackGrowth="Right" StackPadding="6">
           <Label ID="HeaderLabel" Style="TradeOverviewHeader"/>
           <Label ID="ActiveRoutesLabel" Style="TradeOverviewActiveRoutes"/>
@@ -50,12 +50,12 @@
       <Container Anchor="C,T" Size="parent-40, 35" Offset="0,95">
         <!-- Origin Column Label -->
         <Grid Style="ColumnHeader" Anchor="L,C" Size="130, 25" Offset="2,0">
-          <Label Anchor="C,C" Style="FontNormal14" String="LOC_TRADE_OVERVIEW_ORIGIN"/>
+          <Label Anchor="C,C" Style="HalfScreenBody" String="LOC_TRADE_OVERVIEW_ORIGIN"/>
         </Grid>
 
         <!-- Destination Column Label -->
         <Grid Style="ColumnHeader" Anchor="R,C" Size="130, 25" Offset="2,0">
-          <Label Anchor="C,C" Style="FontNormal14" String="LOC_TRADE_OVERVIEW_DESTINATION"/>
+          <Label Anchor="C,C" Style="HalfScreenBody" String="LOC_TRADE_OVERVIEW_DESTINATION"/>
         </Grid>
 
         <!-- Show Benefits Button -->
@@ -73,25 +73,23 @@
     <!-- ==================================================================	-->
     <!--	Body Area																						              -->
     <!-- ==================================================================	-->
-    <Container Anchor="C,B" Size="parent, parent-195" Offset="0,5">
-      <ScrollPanel ID="BodyScrollPanel" Size="495,parent" Vertical="1">
-        <ScrollBar Anchor="R,C" AnchorSide="O,I"  Offset="0,0" Style="ScrollVerticalBar"/>
-
-        <!-- Stack Background -->
-        <Box Size="2,parent" Offset="80,0" Color="50,53,54,150"/>
-        <Image Size="48,parent" Offset="82,0" Texture="Espionage_ColumnShading"/>
-        <Box Size="2,parent" Offset="128,0" Color="50,53,54,150"/>
-        <Box Size="2,parent" Offset="177,0" Color="50,53,54,150"/>
-        <Image Size="48,parent" Offset="179,0" Texture="Espionage_ColumnShading"/>
-        <Box Size="2,parent" Offset="225,0" Color="50,53,54,150"/>
-        <Box Size="2,parent" Offset="274,0" Color="50,53,54,150"/>
-        <Image Size="48,parent" Offset="276,0" Texture="Espionage_ColumnShading"/>
-        <Box Size="2,parent" Offset="322,0" Color="50,53,54,150"/>
-        <Box Size="2,parent" Offset="371,0" Color="50,53,54,150"/>
-        <Image Size="48,parent" Offset="373,0" Texture="Espionage_ColumnShading"/>
-        <Box Size="2,parent" Offset="420,0" Color="50,53,54,150"/>
-        
-        <!-- Stack -->
+    <Container Anchor="C,B" Size="parent, parent-190" Offset="0,5">
+			<!-- Stack Background -->
+			<Box Size="2,parent" Offset="80,0" Color="50,53,54,150"/>
+			<Image Size="48,parent" Offset="82,0" Texture="Espionage_ColumnShading"/>
+			<Box Size="2,parent" Offset="128,0" Color="50,53,54,150"/>
+			<Box Size="2,parent" Offset="177,0" Color="50,53,54,150"/>
+			<Image Size="48,parent" Offset="179,0" Texture="Espionage_ColumnShading"/>
+			<Box Size="2,parent" Offset="225,0" Color="50,53,54,150"/>
+			<Box Size="2,parent" Offset="274,0" Color="50,53,54,150"/>
+			<Image Size="48,parent" Offset="276,0" Texture="Espionage_ColumnShading"/>
+			<Box Size="2,parent" Offset="322,0" Color="50,53,54,150"/>
+			<Box Size="2,parent" Offset="371,0" Color="50,53,54,150"/>
+			<Image Size="48,parent" Offset="373,0" Texture="Espionage_ColumnShading"/>
+			<Box Size="2,parent" Offset="420,0" Color="50,53,54,150"/>
+			
+			<ScrollPanel ID="BodyScrollPanel" Size="495,parent" Vertical="1">
+        <ScrollBar Anchor="R,C" AnchorSide="O,I"  Offset="-2,0" Style="ScrollVerticalBarAlt"/>
         <Stack ID="BodyStack" StackGrowth="Down"/>
       </ScrollPanel>
     </Container>
@@ -104,21 +102,21 @@
 
   <!-- Section Header -->
   <Instance	Name="HeaderInstance">
-    <Container ID="Top" Size="485,34" Offset="10,2">
-      <Grid Texture="TradeOverview_Subheader" SliceCorner="12,11" SliceSize="2,2" Color="67,70,72,255" Size="parent,parent">
-        <Label ID="HeaderLabel" Anchor="L,C" Offset="36,0" Style="FontFlair16" SmallCaps="20" SmallCapsType="EveryWord" Color="Beige"/>
+    <Container ID="Top" Size="486,38" Offset="10,2">
+      <Grid Texture="TradeOverview_Subheader" SliceCorner="16,16" SliceSize="1,1" Size="parent,43">
+        <Label ID="HeaderLabel" Anchor="L,C" Offset="14,-1" Style="FontFlair16" Color0="225,225,225,255" SmallCaps="20" SmallCapsLeading="0" SmallCapsType="FirstWord" />
         
         <!-- Visibility Bonus -->
-        <Grid ID="VisibilityBonusGrid" Anchor="R,T" Size="55,22" Offset="120,5" Texture="Controls_SubContainerFill" SliceCorner="10,10" SliceSize="2,2" Color="25,33,35,255">
-          <Button ID="VisibilityBonusIcon" Anchor="L,T" Size="22,22" Offset="0,0" Texture="Diplomacy_VisibilityIcons" StateOffsetIncrement="22,0" Disabled="1"/>
-          <Label ID="VisibilityBonusCheckmark" Anchor="R,T" Size="70,26" Offset="10,4" Style="FontNormal16" String="[Icon_Checkmark]"/>
+        <Grid ID="VisibilityBonusGrid" Anchor="R,C" Size="55,26" Offset="116,-2" Texture="Controls_SubContainerFill" SliceCorner="10,10" SliceSize="2,2" Color="0,0,0,85">
+          <Button ID="VisibilityBonusIcon" Anchor="L,C" Size="22,22" Offset="0,0" Texture="Diplomacy_VisibilityIcons" StateOffsetIncrement="22,0" Disabled="1"/>
+          <Label ID="VisibilityBonusCheckmark" Anchor="R,C" Size="70,26" Offset="10,0" Style="FontNormal16" String="[Icon_Checkmark]"/>
         </Grid>
 
         <!-- Tourism Bonus -->
-        <Grid ID="TourismBonusGrid" Anchor="R,T" Size="100,22" Offset="7,5" Texture="Controls_SubContainerFill" SliceCorner="10,10" SliceSize="2,2" Color="25,33,35,255">
-          <Image ID="TourismBonusIcon" Anchor="L,T" Size="24,24" Offset="-5,0" Texture="Tourism_VisitingSmallGrey"/>
-          <Label ID="TourismBonusPercentage" Anchor="R,T" Size="70,26" Offset="32,3" Style="FontNormal16" String="LOC_TRADE_OVERVIEW_TOURISM_BONUS" Color="Beige"/>
-          <Label ID="TourismBonusCheckmark" Anchor="R,T" Size="70,26" Offset="8,4" Style="FontNormal16" String="[Icon_Checkmark]"/>
+        <Grid ID="TourismBonusGrid" Anchor="R,C" Size="100,26" Offset="7,-2" Texture="Controls_SubContainerFill" SliceCorner="10,10" SliceSize="2,2" Color="0,0,0,85">
+          <Image ID="TourismBonusIcon" Anchor="L,C" Size="24,24" Offset="-5,0" Texture="Tourism_VisitingSmallGrey"/>
+          <Label ID="TourismBonusPercentage" Anchor="R,C" Size="70,26" Offset="32,0" Style="FontNormal16" String="LOC_TRADE_OVERVIEW_TOURISM_BONUS" />
+          <Label ID="TourismBonusCheckmark" Anchor="R,C" Size="70,26" Offset="8,0" Style="FontNormal16" String="[Icon_Checkmark]"/>
         </Grid>
       </Grid>
     </Container>
@@ -126,22 +124,22 @@
   
   <!-- Route Entry -->
   <Instance	Name="RouteInstance">
-    <Container ID="Top" Size="485,78" Offset="10,2">
-      <GridButton ID="GridButton" Size="parent,parent" Color="255,255,255,150">
+    <Container ID="Top" Size="482,78" Offset="10,2">
+      <GridButton ID="GridButton" Size="parent,parent" Color="255,255,255,160">
         <GridData Texture="Controls_ListButton" SliceCorner="209,29"  SliceTextureSize="417,51" StateOffsetIncrement="0,51"/>
         
         <!-- Route Status Font Icon -->
-        <Label ID="RouteStatusFontIcon" Anchor="L,T" Offset="10,8" String="[Icon_TradeRouteLarge]" Hidden="1"/>
+        <Label ID="RouteStatusFontIcon" Anchor="L,T" Offset="11,8" String="[Icon_TradeRouteLarge]" Hidden="1"/>
         
         <!-- Route Label -->
-        <Label ID="RouteLabel" Anchor="L,T" Offset="38,8" Style="FontFlair16" SmallCaps="20" SmallCapsType="EveryWord" Color="Beige"/>
+        <Label ID="RouteLabel" Anchor="L,T" Offset="38,8" Style="FontFlair14" Color="190,190,190,255" SmallCaps="18" SmallCapsLeading="0" SmallCapsType="EveryWord" />
 
         <!-- Trading Post Indicator -->
         <Label ID="TradingPostIndicator" Anchor="R,T" Offset="60,7" Style="FontNormal16" String="[Icon_TradingPost]"/>
 
         <!-- Route Distance -->
         <Stack ID="RouteDistanceStack" Anchor="R,T" Offset="12,4" StackGrowth="Right" StackPadding="2">
-          <Image Size="22,22" Offset="0,0" Icon="ICON_MOVES" IconSize="22" Texture="Stats22" TextureOffset="66,0" ToolTip="LOC_TRADE_OVERVIEW_TOOLTIP_TOTAL_ROUTE_TURNS"/>
+          <Label Anchor="C,C" Offset="0,1" String="[Icon_Turn]" ToolTip="LOC_TRADE_OVERVIEW_TOOLTIP_TOTAL_ROUTE_TURNS"/>
           <Label ID="RouteDistance" Offset="0,4" Style="FontNormal16" String="00" ToolTip="LOC_TRADE_OVERVIEW_TOOLTIP_TOTAL_ROUTE_TURNS"/>
         </Stack>
 
@@ -170,7 +168,7 @@
           
         <!-- Resource Stack -->
         <Stack ID="ResourceStack" Size="50,50" Offset="71,34" StackGrowth="Right" StackPadding="2"/>
-        <Label ID="NoBenefitsLabel" Anchor="C,C" Offset="0,15" Style="FontNormal16" String="LOC_ROUTECHOOSER_NO_BENEFITS_FROM_ROUTE"/>
+        <Label ID="NoBenefitsLabel" Anchor="C,C" Offset="0,15" Style="HalfScreenBody" Color="255,255,255,100" String="LOC_ROUTECHOOSER_NO_BENEFITS_FROM_ROUTE"/>
       
         <!-- Religious Influence Indicator -->
         <Container ID="ReligionPressureContainer" Anchor="R,T" Size="48,46" Offset="74,30">

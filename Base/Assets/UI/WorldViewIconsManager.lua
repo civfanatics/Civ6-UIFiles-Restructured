@@ -125,7 +125,19 @@ function SetResourceIcon( pInstance:table, pPlot, type, state)
 			local tValidImprovements:table = {}
 			for row in GameInfo.Improvement_ValidResources() do
 				if (row.ResourceType == resourceType) then
-					table.insert(tValidImprovements, row.ImprovementType);
+					if( GameInfo.Terrains[terrainType].TerrainType   == "TERRAIN_COAST") then
+						if ("DOMAIN_SEA" == GameInfo.Improvements[ row.ImprovementType].Domain) then
+							table.insert(tValidImprovements, row.ImprovementType);
+						elseif ("DOMAIN_LAND" == GameInfo.Improvements[ row.ImprovementType].Domain) then
+							valid_domain = false;
+						end
+					else
+						if ("DOMAIN_SEA" == GameInfo.Improvements[ row.ImprovementType].Domain) then
+							valid_domain = false;
+						elseif ("DOMAIN_LAND" == GameInfo.Improvements[ row.ImprovementType].Domain) then
+							table.insert(tValidImprovements, row.ImprovementType);
+						end
+					end
 				end
 			end
 
@@ -137,7 +149,7 @@ function SetResourceIcon( pInstance:table, pPlot, type, state)
 						local improvementType = improvement;
 
 						local has_feature = false;
-						local valid_feature = false;
+						valid_feature = false;
 						for inner_row in GameInfo.Improvement_ValidFeatures() do
 							if(inner_row.ImprovementType == improvementType) then
 								has_feature = true;
@@ -149,7 +161,7 @@ function SetResourceIcon( pInstance:table, pPlot, type, state)
 						valid_feature = not has_feature or valid_feature;
 
 						local has_terrain = false;
-						local valid_terrain = false;
+						valid_terrain = false;
 						for inner_row in GameInfo.Improvement_ValidTerrains() do
 							if(inner_row.ImprovementType == improvementType) then
 								has_terrain = true;
@@ -160,7 +172,7 @@ function SetResourceIcon( pInstance:table, pPlot, type, state)
 						end
 						valid_terrain = not has_terrain or valid_terrain;
 
-						if(valid_feature and valid_terrain) then
+						if(valid_feature == true and valid_terrain == true) then
 							resourceTechType = GameInfo.Improvements[improvementType].PrereqTech;
 							resourceCivicType = GameInfo.Improvements[improvementType].PrereqCivic;
 							break;
@@ -460,6 +472,20 @@ function OnPlotVisibilityChanged(x, y, visibilityType)
 end
 
 -- ===========================================================================
+function OnCityAddedToMap(playerID, cityID, x, y)
+	local plotIndex:number = GetPlotIndex(x, y);
+	if plotIndex ~= -1 then
+		-- This is a bit tricky, but the reason we have to use ReleaseInstanceAt
+		-- instead of UnloadResourceIconAt is this callback is called after the
+		-- visibility changed callbacks for this tile. The animation to fade from
+		-- the FOW icon to the new icon has begun, and once it ends, will become the
+		-- current icon. ReleaseInstanceAt clears the icon entirely, so the animation
+		-- won't make the icon reappear a second after the city has been founded
+		ReleaseInstanceAt(plotIndex);
+	end
+end
+
+-- ===========================================================================
 function OnPlotMarkersChanged(x, y)
 
 	-- The marker for a plot has changed.
@@ -670,6 +696,7 @@ function Initialize()
 	Events.BeginWonderReveal.Add( OnBeginWonderReveal );
 	Events.EndWonderReveal.Add( OnEndWonderReveal );
 	Events.LocalPlayerChanged.Add(OnLocalPlayerChanged);
+	Events.CityAddedToMap.Add(OnCityAddedToMap);
 	Events.ResourceVisibilityChanged.Add(OnResourceVisibilityChanged);
 	Events.ResourceAddedToMap.Add(OnResourceChanged);
 	Events.ResourceRemovedFromMap.Add(OnResourceRemovedFromMap);

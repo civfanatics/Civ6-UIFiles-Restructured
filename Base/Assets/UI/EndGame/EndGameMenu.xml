@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Context>
+	<Include File="PopupDialog"/>
+	
 	<!-- Chat Text Instance -->
 	<Instance		Name="ChatEntry" >
 		<Box		ID="ChatRoot"			Anchor="L,T" Size="430,22" Color="0,0,0,0"  >
@@ -235,5 +237,8 @@
 			<CheckBox ID="ShowHide" Anchor="R,C" Offset="4,0" Style="MainCheckBox" IsChecked="1"  ConsumeMouse="1"  />
 		</Box>
 	</Instance>
+
+	<!-- Dialog Support -->
+	<MakeInstance Name="PopupDialog" />
 
 </Context>

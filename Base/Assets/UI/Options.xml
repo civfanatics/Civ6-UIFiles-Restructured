@@ -270,6 +270,9 @@
                       <Label Anchor="L,C" Style="ShellOptionText" String="LOC_OPTIONS_LEADER_QUALITY_TEXT"/>
                     </Stack>
 
+                    <Stack Anchor="R,T" StackGrowth="Left" Padding="5" Offset="200,0">
+                      <GridButton ID="MotionBlurEnabledCheckbox" Anchor="L,L" Offset="5,0" Size="300,24" Style="CheckBoxControl" String="LOC_OPTIONS_LEADER_MOTIONBLUR_TEXT" ToolTip="LOC_OPTIONS_LEADER_MOTIONBLUR_TOOLTIP"/>
+                    </Stack>
                   </Stack>
                 </Container>
               </Stack>
@@ -355,6 +358,9 @@
 									<Slider ID="PlotToolTipDelaySlider" Style="SliderControl"   Anchor="R,C" Size="250,13" Steps="10" />
 								</Container>
               </Stack>
+							<Stack ID="HistoricMomentsAnimStack" Anchor="R,T" StackGrowth="Left" Padding="5">
+								<GridButton ID="HistoricMomentsAnimCheckbox" Anchor="L,C" Offset="0,0" Size="300,24" Style="CheckBoxControl" String="LOC_OPTIONS_HISTORIC_MOMENT_ANIMATION" />
+							</Stack>
             </Stack>
           </Container>
           <Container ID="KeyBindings" Size="parent,parent" Hidden="1">
@@ -387,7 +393,7 @@
   </Box>
 
   <!-- Are you sure dialog LOC_OPTIONS_SET_KEY_BINDING_TEXT -->
-  <Box ID="KeyBindingPopup" Color="0,0,0,150" Size="parent,parent" ConsumeMouseOver="1" Hidden="1" IgnoreTutorial="1">
+  <Box ID="KeyBindingPopup" Color="0,0,0,150" Size="parent,parent" ConsumeMouse="1" Hidden="1" IgnoreTutorial="1">
     <AlphaAnim ID="KeyBindingAlpha" AlphaBegin="0" AlphaEnd="1" Speed="3" Function="Root" Cycle="Once" Size="parent,parent">
       <SlideAnim ID="KeyBindingSlide" Start="0,-20" End="0,0" Speed="3" Function="Root" Cycle="Once" Size="parent,parent">
         <Grid Size="500,250" Anchor="C,C" Offset="0,0" Style="DropShadow2"  Hidden="0" Color="255,255,255,200">

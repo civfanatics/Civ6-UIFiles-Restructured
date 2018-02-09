@@ -41,7 +41,7 @@
 		</Container>
 		<Grid Size="parent+3,default" Anchor="L,B" Offset="-2,-2" Style="Divider3Grid"/>
 	</Box>
-
+	
 	<!-- Player List Panel -->
 	<Container ID="PlayerListPanel" Offset="300,0" Hidden="1">
 

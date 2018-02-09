@@ -62,6 +62,8 @@ function OnJoinRoomFailed( iExtendedError)
 			LuaEvents.MultiplayerPopup( "LOC_MP_ROOM_FULL" );
 		elseif iExtendedError == JoinGameErrorType.JOINGAME_GAME_STARTED then
 			LuaEvents.MultiplayerPopup( "LOC_MP_ROOM_GAME_STARTED" );
+		elseif iExtendedError == JoinGameErrorType.JOINGAME_TOO_MANY_MATCHES then
+			LuaEvents.MultiplayerPopup( "LOC_MP_ROOM_TOO_MANY_MATCHES" );
 		else
 			LuaEvents.MultiplayerPopup( "LOC_MP_JOIN_FAILED" );
 		end

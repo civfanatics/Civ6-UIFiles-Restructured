@@ -10,6 +10,10 @@
 		<Label ID="Text"  WrapWidth="770" Style="FontMono14" Color="COLOR_RED" FontSize="14" />
 	</Instance>
   
+	<Instance Name="MouseOverText" >
+			<Label ID="Text" WrapWidth="parent-30" Style="FontMono14" ColorSet="Gray_Black" FontSize="12" />
+	</Instance>
+	
 	<LuaContext ID="DebugHotloadCache"		FileName="UI/DebugContext/DebugHotloadCache"	Hidden="0" />
 
 	<Stack ID="DebugStack" >
@@ -19,6 +23,9 @@
 				<EditBox Anchor="C,C" Size="730,20" MaxLength="255" ID="ConsoleEdit" FocusStop="1" KeepFocus="true" />
 			</ColorBox>
 
+			<Grid Style="DebugPanelFrame" Anchor="R,C" AnchorSide="o,i" Size="30,30" >
+				<Button Anchor="C,C" Style="Select_Down" ToolTip="Toggle Position" ID="RepositionButton" />
+			</Grid>
 			<Grid Style="DebugPanelFrame" Anchor="L,C" AnchorSide="o,i" Size="30,30" >
 				<Button Anchor="C,C" Style="Select_Down" ToolTip="Toggle Log" ID="LogButton" />
 			</Grid>
@@ -66,6 +73,7 @@
 						<CheckBox Style="MainMenuCheck" BoxOnLeft="1" ID="ShowTOD" String="Show Time Of Day"/>
 						<CheckBox Style="MainMenuCheck" BoxOnLeft="1" ID="ShowCamera" String="Show Camera"/>
 						<CheckBox Style="MainMenuCheck" BoxOnLeft="1" ID="ShowLuaStats" String="Show Lua Statistics"/>
+						<CheckBox Style="MainMenuCheck" BoxOnLeft="1" ID="ShowUIStats" String="Show UI Statistics"/>
 						<CheckBox Style="MainMenuCheck" BoxOnLeft="1" ID="ShowMemory" String="Show Memory"/>
 						<CheckBox Style="MainMenuCheck" BoxOnLeft="1" ID="ShowGameCoreStats" String="Show Game Core Statistics"/>
 					</Stack>
@@ -177,6 +185,23 @@
 					</ScrollPanel>
 				</Grid>
 
+				<Grid Style="DebugPanelFrame" Anchor="R,T" Size="560,260" ID="UIStatsPanel" Hidden="1" >
+					<ScrollPanel Size="parent-10,parent-10" Anchor="L,C" Vertical="1" >
+						<ScrollBar Style="ScrollVerticalBar" Length="234" Offset="4,16" Anchor="R,T" AnchorSide="I,I" />
+						<UpButton Style="ScrollUpButton" Anchor="R,T" />
+						<DownButton Style="ScrollDownButton" Anchor="R,B" />
+
+						<Stack StackPadding="8" Offset="2,10" Anchor="L,T" ID="UIStatsStack">
+							<Label String="Draw Counter" ID="UIDrawText" />
+							<Label String="Dynamic Usage" ID="UIDynamicText" />
+
+							<Label String="MouseOver Controls:" Offset="0,20" />
+							<Stack ID="UIMouseOverStack" StackPadding="4" />
+						</Stack>
+
+					</ScrollPanel>
+				</Grid>
+				
 				<Grid Style="DebugPanelFrame" Anchor="R,T" Size="220,260" ID="LuaPanel" Hidden="1" >
 					<ScrollPanel Size="210,250" Anchor="C,C" Vertical="1" >
 

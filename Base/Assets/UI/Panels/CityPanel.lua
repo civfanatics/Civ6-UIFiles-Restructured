@@ -608,6 +608,7 @@ function OnUnitSelectionChanged( playerID:number, unitID:number, hexI:number, he
 	if playerID == Game.GetLocalPlayer() then
 		if ContextPtr:IsHidden()==false then
 			Close();
+			Controls.ToggleOverviewPanel:SetAndCall(false);
 		end
 	end
 end
@@ -1149,6 +1150,12 @@ function Initialize()
 	LuaEvents.ProductionPanel_Close.Add( OnProductionPanelClose );
 	LuaEvents.Tutorial_CityPanelOpen.Add( OnTutorialOpen );
 	LuaEvents.Tutorial_ContextDisableItems.Add( OnTutorial_ContextDisableItems );
+	LuaEvents.CityPanel_SetOverViewState.Add(function(isOpened)
+		Controls.ToggleOverviewPanel:SetCheck(isOpened);
+	end);
+	LuaEvents.CityPanel_ToggleManageCitizens.Add(function()
+		Controls.ManageCitizensCheck:SetAndCall(not Controls.ManageCitizensCheck:IsChecked());
+	end);
 
 	-- Truncate possible static text overflows
 	TruncateStringWithTooltip(Controls.BreakdownLabel,	MAX_BEFORE_TRUNC_STATIC_LABELS,	Controls.BreakdownLabel:GetText());

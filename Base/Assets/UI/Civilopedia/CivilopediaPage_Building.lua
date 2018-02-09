@@ -143,7 +143,7 @@ local sectionId = page.SectionId;
 		table.insert(adjacency_requirements, Locale.Lookup("LOC_UI_PEDIA_PLACEMENT_REQUIRES_ADJACENT_RIVER"));
 	end
 
-	if(building.AdjacentToMountain == 1) then
+	if(building.AdjacentToMountain) then
 		table.insert(adjacency_requirements, Locale.Lookup("LOC_UI_PEDIA_PLACEMENT_REQUIRES_ADJACENT_MOUNTAIN"));
 	end
 	table.sort(adjacency_requirements, function(a,b) return Locale.Compare(a,b) == -1 end);
@@ -191,14 +191,6 @@ local sectionId = page.SectionId;
 	table.sort(placement_requirements, function(a,b) return Locale.Compare(a[1],b[1]) == -1 end);
 
 	local additional_placement_requirements = {};
-	if(building.RequiresRiver or building.RequiresAdjacentRiver) then
-		table.insert(additional_placement_requirements, Locale.Lookup("LOC_TOOLTIP_PLACEMENT_REQUIRES_ADJACENT_RIVER"));
-	end
-
-	if(building.AdjacentToMountain == 1) then
-		table.insert(additional_placement_requirements, Locale.Lookup("LOC_TOOLTIP_PLACEMENT_REQUIRES_ADJACENT_MOUNTAIN"));
-	end
-
 	if(building.MustBeLake) then
 		table.insert(additional_placement_requirements, Locale.Lookup("LOC_UI_PEDIA_PLACEMENT_REQUIRES_LAKE"));
 	end
@@ -265,6 +257,17 @@ local sectionId = page.SectionId;
 				local greatPersonClassIconString = gpClass.IconString;
 				table.insert(stats, Locale.Lookup("LOC_TYPE_TRAIT_GREAT_PERSON_POINTS", row.PointsPerTurn, greatPersonClassIconString, greatPersonClassName));
 			end
+		end
+	end
+
+	local cost = tonumber(building.Cost);
+	local maintenance = tonumber(building.Maintenance);
+	local purchase_cost;
+	if(building.PurchaseYield) then
+		if(building.PurchaseYield == "YIELD_GOLD") then
+			purchase_cost = cost * GlobalParameters.GOLD_PURCHASE_MULTIPLIER * GlobalParameters.GOLD_EQUIVALENT_OTHER_YIELDS;
+		else
+			purchase_cost = cost *  GlobalParameters.GOLD_EQUIVALENT_OTHER_YIELDS
 		end
 	end
 	
@@ -396,18 +399,42 @@ local sectionId = page.SectionId;
 			s:AddSeparator();
 		end
 
-		if(building.AdjacentDistrict or building.AdjacentResource or #adjacency_requirements > 0) then
+		if(building.AdjacentDistrict or building.AdjacentImprovement or building.AdjacentResource or #adjacency_requirements > 0) then
 			s:AddHeader("LOC_UI_PEDIA_ADJACENCY");
 			
-			local d = GameInfo.Districts[building.AdjacentDistrict];
-			if(d) then
-				s:AddIconLabel({"ICON_" .. d.DistrictType, d.Name, d.DistrictType}, d.Name);
+			if(building.AdjacentDistrict) then
+				local d = GameInfo.Districts[building.AdjacentDistrict];
+				if(d) then
+					s:AddIconLabel({"ICON_" .. d.DistrictType, d.Name, d.DistrictType}, d.Name);
+				end
 			end
 
-			local r = GameInfo.Resources[building.AdjacentResource];
-			if(r) then
-				s:AddIconLabel({"ICON_" .. r.ResourceType, r.Name, r.ResourceType}, r.Name);
+			if(building.AdjacentImprovement) then
+				local improvement = GameInfo.Improvements[building.AdjacentImprovement];
+				if(improvement) then
+					s:AddIconLabel({"ICON_" .. improvement.ImprovementType, improvement.Name, improvement.ImprovementType}, improvement.Name);
+				end
 			end
+
+			if(building.AdjacentResource) then
+				local r = GameInfo.Resources[building.AdjacentResource];
+				if(r) then
+					s:AddIconLabel({"ICON_" .. r.ResourceType, r.Name, r.ResourceType}, r.Name);
+				end
+			end
+			
+			for i, v in ipairs(adjacency_requirements) do
+				local t = type(v);
+				if(t == "table") then
+					local tName = v[1];
+					local tType = v[2];
+					s:AddIconLabel({"ICON_" .. tType, tName, tType}, tName);
+
+				elseif(t == "string") then
+					s:AddLabel("[ICON_Bullet] " .. v);
+				end
+			end
+
 
 			s:AddSeparator();
 		end
@@ -430,15 +457,12 @@ local sectionId = page.SectionId;
 			s:AddSeparator();
 		end
 		
-		local cost = tonumber(building.Cost);
-		local maintenance = tonumber(building.Maintenance);
-
 		if(cost ~= 0) then
 			if (not building.MustPurchase) then
 				local yield = GameInfo.Yields["YIELD_PRODUCTION"];
 				if(yield) then
 					s:AddHeader("LOC_UI_PEDIA_PRODUCTION_COST");
-					local t = Locale.Lookup("LOC_UI_PEDIA_BASE_COST", tonumber(building.Cost), yield.IconString, yield.Name);
+					local t = Locale.Lookup("LOC_UI_PEDIA_BASE_COST", cost, yield.IconString, yield.Name);
 					s:AddLabel(t);
 				end
 			end
@@ -447,7 +471,7 @@ local sectionId = page.SectionId;
 				local y = GameInfo.Yields[building.PurchaseYield];
 				if(y) then
 					s:AddHeader("LOC_UI_PEDIA_PURCHASE_COST");
-					local t = Locale.Lookup("LOC_UI_PEDIA_BASE_COST", tonumber(building.Cost), y.IconString, y.Name);
+					local t = Locale.Lookup("LOC_UI_PEDIA_BASE_COST", purchase_cost, y.IconString, y.Name);
 					s:AddLabel(t);
 				end
 			end

@@ -113,8 +113,6 @@ ContextPtr:SetInputHandler( InputHandler );
 function ShowHideHandler( bIsHide )
 	if not bIsHide then
 		UpdateInternetButton();
-
-		local isFullyLoggedIn = FiraxisLive.IsFullyLoggedIn()
 	end
 
 	--[[

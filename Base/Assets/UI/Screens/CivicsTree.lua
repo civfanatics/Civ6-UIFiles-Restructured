@@ -61,7 +61,7 @@ local PIC_METER_BACK_DONE		:string = "TechTree_Meter_Done";
 local SIZE_ART_ERA_OFFSET_X		:number = 40;			-- How far to push each era marker
 local SIZE_ART_ERA_START_X		:number = 40;			-- How far to set the first era marker
 local SIZE_GOVTPANEL_HEIGHT     :number = 220;
-local SIZE_MARKER_PLAYER_X		:number = 122;			-- Marker of player
+local SIZE_MARKER_PLAYER_X		:number = 42;			-- Marker of player
 local SIZE_MARKER_PLAYER_Y		:number = 42;			-- "
 local SIZE_MARKER_OTHER_X		:number = 34;			-- Marker of other players
 local SIZE_MARKER_OTHER_Y		:number = 37;			-- "
@@ -159,12 +159,12 @@ local m_kNodeGrid			:table = {};		-- Static data about node location once it's l
 local m_uiNodes				:table = {};
 local m_uiConnectorSets		:table = {};
 local m_kFilters			:table = {};
-local m_ToggleCivicsTreeId		   = Input.GetActionId("ToggleCivicsTree");		-- Hot key to toggle screen open/close.
 local m_kGovernments		:table = {};
 local m_kPolicyCatalogData	:table;
 
 local m_shiftDown			:boolean = false;
 
+local m_lastPercent         :number = 0.1;
 
 -- ===========================================================================
 -- Return string respresenation of a prereq table
@@ -399,7 +399,7 @@ function AllocateUI()
 
 		local inst:table = m_kEraLabelIM:GetInstance();
 		local eraMarkerx, _	= ColumnRowToPixelXY( eraData.PriorColumns + 1, 0);
-		if m_kEraLabelIM.m_iAllocatedInstances == 1 then
+		if eraData.Index == 1 then
 			eraMarkerx = eraMarkerx + PADDING_FIRST_ERA_INDICATOR;
 		end
 		inst.Top:SetOffsetX( (eraMarkerx - (SIZE_NODE_X*0.5)) * (1/PARALLAX_SPEED) );
@@ -447,11 +447,14 @@ function AllocateUI()
 		end
 
 		-- Include extra icons in total unlocks
-		for _,iconData in pairs(g_ExtraIconData) do
-			if iconData.ModifierType == item.ModifierType then
-				numUnlocks = numUnlocks + 1;
-				hideDescriptionIcon = hideDescriptionIcon or iconData.HideDescriptionIcon;
-				table.insert(extraUnlocks, iconData);
+		if ( item.ModifierList ) then
+			for _,tModifier in ipairs(item.ModifierList) do
+				local tIconData :table = g_ExtraIconData[tModifier.ModifierType];
+				if ( tIconData ) then
+					numUnlocks = numUnlocks + 1;
+					hideDescriptionIcon = hideDescriptionIcon or tIconData.HideDescriptionIcon;
+					table.insert(extraUnlocks, {IconData=tIconData, ModifierTable=tModifier});
+				end
 			end
 		end
 
@@ -492,20 +495,19 @@ function AllocateUI()
 		PopulateUnlockablesForCivic(playerId, civic.Index, node["unlockIM"], node["unlockGOV"], item.Callback, hideDescriptionIcon);
 
 		-- Initialize extra icons
-		for _,iconData in pairs(extraUnlocks) do
-			iconData:Initialize(node.UnlockStack, item);
-		end
-
-		-- What happens when clicked
-		function OpenPedia()	
-			LuaEvents.OpenCivilopedia(civicType); 
+		for _,tUnlock in pairs(extraUnlocks) do
+			tUnlock.IconData:Initialize(node.UnlockStack, tUnlock.ModifierTable);
 		end
 
 		node.NodeButton:RegisterCallback( Mouse.eLClick, item.Callback);
 		node.OtherStates:RegisterCallback( Mouse.eLClick, item.Callback);
 		
 		-- Only wire up Civilopedia handlers if not in a on-rails tutorial.
-		if IsTutorialRunning()==false then
+		if not IsTutorialRunning() then
+			-- What happens when clicked
+			local OpenPedia = function()	
+				LuaEvents.OpenCivilopedia(civicType); 
+			end
 			node.NodeButton:RegisterCallback( Mouse.eRClick, OpenPedia);
 			node.OtherStates:RegisterCallback( Mouse.eRClick, OpenPedia);
 		end
@@ -652,10 +654,15 @@ function OnScroll( control:table, percent:number )
 	
 	-- Audio
 	if percent==0 or percent==1.0 then 
+        if m_lastPercent == percent then
+            return;
+        end
 		UI.PlaySound("UI_TechTree_ScrollTick_End"); 
 	else 
 		UI.PlaySound("UI_TechTree_ScrollTick"); 
 	end 
+
+    m_lastPercent = percent; 
 end
 
 
@@ -1258,8 +1265,9 @@ function Resize()
 	Controls.ArtCornerGrungeTR:ReprocessAnchoring();
 	Controls.ArtCornerGrungeBR:ReprocessAnchoring();
 
-
-	Controls.Background:SetSizeX( math.max(artAndEraScrollWidth + 100, m_width) );
+	
+	local backArtScrollWidth:number = scrollPanelX * (1/PARALLAX_ART_SPEED) + 100;
+	Controls.Background:SetSizeX( math.max(backArtScrollWidth, m_width) );
 	Controls.Background:SetSizeY( SIZE_WIDESCREEN_HEIGHT - (SIZE_TIMELINE_AREA_Y - 8) );	
 	Controls.FarBackArtScroller:CalculateSize();
 
@@ -1291,6 +1299,8 @@ function PopulateItemData( tableName:string, tableColumn:string, prereqTableName
 		end
 	end
 
+	local tCivicModCache :table = TechAndCivicSupport_BuildCivicModifierCache();
+
 	for row:table in GameInfo[tableName]() do
 
 		local entry:table	= {};
@@ -1309,21 +1319,7 @@ function PopulateItemData( tableName:string, tableColumn:string, prereqTableName
 		entry.Unlocks		= {};				-- Each unlock has: unlockType, iconUnavail, iconAvail, tooltip
 
 		-- Look up and cache any civic modifiers we reward like envoys awarded
-		for civicModifier in GameInfo.CivicModifiers() do
-			if (entry.Type == civicModifier.CivicType) then
-				for modifierType in GameInfo.Modifiers() do
-					if civicModifier.ModifierId == modifierType.ModifierId then
-						entry.ModifierId	= modifierType.ModifierId;
-						entry.ModifierType	= modifierType.ModifierType;
-					end
-				end
-				for modifierArguments in GameInfo.ModifierArguments() do
-					if civicModifier.ModifierId == modifierArguments.ModifierId then
-						entry.ModifierValue = modifierArguments.Value;
-					end
-				end
-			end
-		end
+		entry.ModifierList = tCivicModCache[entry.Type];
 
 		-- Boost?
 		for boostRow in GameInfo.Boosts() do
@@ -1907,20 +1903,6 @@ function ScrollToNode( typeName:string )
 end
 
 -- ===========================================================================
---	Input Hotkey Event
--- ===========================================================================
-function OnInputActionTriggered( actionId )
-	if m_ToggleCivicsTreeId ~= nil and actionId == m_ToggleCivicsTreeId then
-        UI.PlaySound("Play_UI_Click");
-		if(ContextPtr:IsHidden()) then
-			LuaEvents.CivicsChooser_RaiseCivicsTree();
-		else
-			OnClose();
-		end
-	end
-end
-
--- ===========================================================================
 --	Searching
 -- ===========================================================================
 function OnSearchCharCallback()
@@ -2095,7 +2077,6 @@ function Initialize()
 	Events.GovernmentChanged.Add( OnGovernmentChanged );
 	Events.GovernmentPolicyChanged.Add( OnGovernmentPolicyChanged );
 	Events.GovernmentPolicyObsoleted.Add( OnGovernmentPolicyChanged );
-	Events.InputActionTriggered.Add( OnInputActionTriggered );	
 	Events.LocalPlayerTurnBegin.Add( OnLocalPlayerTurnBegin );
 	Events.LocalPlayerTurnEnd.Add( OnLocalPlayerTurnEnd );
 	Events.LocalPlayerChanged.Add(AllocateUI);

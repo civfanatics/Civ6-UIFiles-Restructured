@@ -57,12 +57,12 @@ local prodWonderList;
 local prodUnitList;
 local prodDistrictList;
 local prodProjectList;
-local purchBuildingList;
+local purchGoldDistrictList;
+local purchFaithDistrictList;
 local purchGoldBuildingList;
 local purchFaithBuildingList;
-local purchUnitList;
-local purchGoldUnitList
-local purchFaithUnitList
+local purchGoldUnitList;
+local purchFaithUnitList;
 
 local showDisabled :boolean = true;
 local m_recommendedItems:table;
@@ -462,6 +462,25 @@ function View(data)
 	local selectedCity	= UI.GetHeadSelectedCity();
 	-- Get the hashes for the top three recommended items
 	m_recommendedItems = selectedCity:GetCityAI():GetBuildRecommendations();
+
+	-- TODO there is a ton of duplicated code between producing, buying with gold, and buying with faith
+	-- there is also a ton of duplicated code between districts, buildings, units, wonders, etc
+	-- I think this could be a prime candidate for a refactor if there is time, currently, care must
+	-- be taken to copy any changes in several places to keep it functioning consistently
+	
+	-- These need to be cleared out before the PopulateLists() calls
+	prodBuildingList       = nil;
+	prodWonderList         = nil;
+	prodUnitList           = nil;
+	prodDistrictList       = nil;
+	prodProjectList        = nil;
+	purchGoldDistrictList  = nil;
+	purchFaithDistrictList = nil;
+	purchGoldBuildingList  = nil;
+	purchFaithBuildingList = nil;
+	purchGoldUnitList      = nil;
+	purchFaithUnitList     = nil;
+
 	PopulateList(data, LISTMODE.PRODUCTION, m_listIM);
 	PopulateList(data, LISTMODE.PURCHASE_GOLD, m_purchaseListIM);
 	PopulateList(data, LISTMODE.PURCHASE_FAITH, m_purchaseFaithListIM);
@@ -489,6 +508,12 @@ function View(data)
 	end
 	if( purchGoldUnitList ~= nil) then
 		OnExpand(purchGoldUnitList);
+	end
+	if (purchGoldDistrictList ~= nil) then
+		OnExpand(purchGoldDistrictList);
+	end
+	if (purchFaithDistrictList ~= nil) then
+		OnExpand(purchFaithDistrictList);
 	end
 	--
 	
@@ -576,8 +601,8 @@ function PopulateList(data, listMode, listIM)
 			Controls.CurrentProductionProgress:SetPercent(currentProductionInfo.PercentComplete);
 			Controls.CurrentProductionProgress:SetShadowPercent(currentProductionInfo.PercentCompleteNextTurn);
 			Controls.CurrentProductionIcon:SetIcon(currentProductionInfo.Icon);
-			if(currentProductionInfo.Description ~= nil) then
-				Controls.CurrentProductionIcon:SetToolTipString(Locale.Lookup(currentProductionInfo.Description));
+			if(currentProductionInfo.Tooltip ~= nil) then
+				Controls.CurrentProductionIcon:SetToolTipString(Locale.Lookup(currentProductionInfo.Tooltip));
 			else
 				Controls.CurrentProductionIcon:SetToolTipString();
 			end
@@ -697,9 +722,8 @@ function PopulateList(data, listMode, listIM)
 				districtListing.Button:SetColor(0xFFFFFFFF);
 			end
 			districtListing.Button:SetDisabled(item.Disabled);
+			districtListing.Button:RegisterCallback( Mouse.eMouseEnter,	function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 			districtListing.Button:RegisterCallback( Mouse.eLClick, function()
-            districtListing.Button:RegisterCallback( Mouse.eMouseEnter,	function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
-
 				ZoneDistrict(data.City, item);
 				Close();
 			end);
@@ -739,6 +763,7 @@ function PopulateList(data, listMode, listIM)
 				local uniqueDrawerName = BUILDING_DRAWER_PREFIX..buildingItem.PrereqDistrict;
 				local uniqueIMName = BUILDING_IM_PREFIX..buildingItem.PrereqDistrict;
 				if (districtList[uniqueIMName] ~= nil) then
+
 					local buildingListing = districtList[uniqueIMName]:GetInstance();	
 					ResetInstanceVisibility(buildingListing);	
 					-- Check to see if this is one of the recommended items
@@ -975,6 +1000,29 @@ function PopulateList(data, listMode, listIM)
 			end
 		end
 
+		districtList.List:CalculateSize();
+		districtList.List:ReprocessAnchoring();
+
+		if (districtList.List:GetSizeY()==0) then
+			districtList.Top:SetHide(true);
+		else
+			m_maxPurchaseSize = m_maxPurchaseSize + HEADER_Y + SEPARATOR_Y;
+            districtList.Header:RegisterCallback( Mouse.eMouseEnter,	function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
+			districtList.Header:RegisterCallback( Mouse.eLClick, function()
+				OnExpand(dL);					
+				end);
+            districtList.HeaderOn:RegisterCallback( Mouse.eMouseEnter,	function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
+			districtList.HeaderOn:RegisterCallback( Mouse.eLClick, function()
+				OnCollapse(dL);					
+				end);
+		end
+
+		if( listMode== LISTMODE.PURCHASE_GOLD) then
+			purchGoldDistrictList = dL;
+		elseif (listMode == LISTMODE.PURCHASE_FAITH) then
+			purchFaithDistrictList = dL;
+		end
+
 		-- Populate Buildings ------------------------
 		buildingList = listIM:GetInstance();
 		buildingList.Header:SetText(Locale.ToUpper(Locale.Lookup("LOC_HUD_BUILDINGS")));
@@ -1163,10 +1211,11 @@ function PopulateList(data, listMode, listIM)
 							local religion:table = GameInfo.Religions[religionType];
 							local religionIcon:string = "ICON_" .. religion.ReligionType;
 							local religionColor:number = UI.GetColorValue(religion.Color);
+							local religionName:string = Game.GetReligion():GetName(religion.Index);
 
 							unitListing.ReligionIcon:SetIcon(religionIcon);
 							unitListing.ReligionIcon:SetColor(religionColor);
-							unitListing.ReligionIcon:LocalizeAndSetToolTip(religion.Name);
+							unitListing.ReligionIcon:LocalizeAndSetToolTip( religionName );
 							unitListing.ReligionIcon:SetHide(false);
 							showReligionIcon = true;
 						end
@@ -1595,31 +1644,32 @@ function ComposeProductionCostString( iProductionProgress:number, iProductionCos
 	end
 	return "";
 end
+
 -- Returns ( tooltip:string, subtitle:string )
-function ComposeUnitCorpsStrings( sUnitName:string, sUnitDomain:string, iProdProgress:number, iCorpsCost:number )
-	local tooltip	:string = Locale.Lookup( sUnitName ) .. " ";
+function ComposeUnitCorpsStrings( unit:table, iProdProgress:number, pBuildQueue )
+
+	local tooltip:string = ToolTipHelper.GetUnitToolTip( unit.Hash, MilitaryFormationTypes.CORPS_MILITARY_FORMATION, pBuildQueue );
+
 	local subtitle	:string = "";
-	if sUnitDomain == "DOMAIN_SEA" then
-		tooltip = tooltip .. Locale.Lookup("LOC_UNITFLAG_FLEET_SUFFIX");
+	if unit.Domain == "DOMAIN_SEA" then
 		subtitle = "(" .. Locale.Lookup("LOC_HUD_UNIT_PANEL_FLEET_SUFFIX") .. ")";
 	else
-		tooltip = tooltip .. Locale.Lookup("LOC_UNITFLAG_CORPS_SUFFIX");
 		subtitle = "(" .. Locale.Lookup("LOC_HUD_UNIT_PANEL_CORPS_SUFFIX") .. ")";
 	end
-	tooltip = tooltip .. "[NEWLINE]---" .. ComposeProductionCostString( iProdProgress, iCorpsCost );
+	tooltip = tooltip .. ComposeProductionCostString( iProdProgress, pBuildQueue:GetUnitCorpsCost( unit.Index ) );
 	return tooltip, subtitle;
 end
-function ComposeUnitArmyStrings( sUnitName:string, sUnitDomain:string, iProdProgress:number, iArmyCost:number )
-	local tooltip	:string = Locale.Lookup( sUnitName ) .. " ";
+function ComposeUnitArmyStrings( unit:table, iProdProgress:number, pBuildQueue )
+
+	local tooltip:string = ToolTipHelper.GetUnitToolTip( unit.Hash, MilitaryFormationTypes.ARMY_MILITARY_FORMATION, pBuildQueue );
+
 	local subtitle	:string = "";
-	if sUnitDomain == "DOMAIN_SEA" then
-		tooltip = tooltip .. Locale.Lookup("LOC_UNITFLAG_ARMADA_SUFFIX");
+	if unit.Domain == "DOMAIN_SEA" then
 		subtitle = "("..Locale.Lookup("LOC_HUD_UNIT_PANEL_ARMADA_SUFFIX")..")";
 	else
-		tooltip = tooltip .. Locale.Lookup("LOC_UNITFLAG_ARMY_SUFFIX");
 		subtitle = "("..Locale.Lookup("LOC_HUD_UNIT_PANEL_ARMY_SUFFIX")..")";
 	end
-	tooltip = tooltip .. "[NEWLINE]---" .. ComposeProductionCostString( iProdProgress, iArmyCost );
+	tooltip = tooltip .. ComposeProductionCostString( iProdProgress, pBuildQueue:GetUnitArmyCost( unit.Index ) );
 	return tooltip, subtitle;
 end
 
@@ -1654,7 +1704,7 @@ function ComposeUnitForPurchase( row:table, pCity:table, sYield:string, pYieldSo
 		local pBuildQueue			:table  = pCity:GetBuildQueue();
 		local nProductionCost		:number = pBuildQueue:GetUnitCost( row.Index );
 		local nProductionProgress	:number = pBuildQueue:GetUnitProgress( row.Index );
-		sToolTip = sToolTip .. ComposeProductionCostString( nProductionProgress, nProductionCost );
+		sToolTip = sToolTip .. "[NEWLINE]---" .. ComposeProductionCostString( nProductionProgress, nProductionCost );
 		
 		local kUnit	 :table = {
 			Type				= row.UnitType;
@@ -1681,9 +1731,8 @@ function ComposeUnitForPurchase( row:table, pCity:table, sYield:string, pYieldSo
 			
 			local nProdProgress	:number = pBuildQueue:GetUnitProgress( row.Index );
 			if kUnit.Corps then
-				local nCost = pBuildQueue:GetUnitCorpsCost( row.Index );
 				kUnit.CorpsCost	= pCityGold:GetPurchaseCost( YIELD_TYPE, row.Hash, MilitaryFormationTypes.CORPS_MILITARY_FORMATION );
-				kUnit.CorpsTooltip, kUnit.CorpsName = ComposeUnitCorpsStrings( row.Name, row.Domain, nProdProgress, nCost );
+				kUnit.CorpsTooltip, kUnit.CorpsName = ComposeUnitCorpsStrings( row, nProdProgress, pBuildQueue );
 				kUnit.CorpsDisabled = not pYieldSource:CanAfford( nCityID, row.Hash, MilitaryFormationTypes.CORPS_MILITARY_FORMATION );
 				if kUnit.CorpsDisabled then
 					kUnit.CorpsTooltip = kUnit.CorpsTooltip .. TXT_INSUFFIENT_YIELD;
@@ -1691,9 +1740,8 @@ function ComposeUnitForPurchase( row:table, pCity:table, sYield:string, pYieldSo
 			end
 			
 			if kUnit.Army then
-				local nCost = pBuildQueue:GetUnitArmyCost( row.Index );
 				kUnit.ArmyCost	= pCityGold:GetPurchaseCost( YIELD_TYPE, row.Hash, MilitaryFormationTypes.ARMY_MILITARY_FORMATION );
-				kUnit.ArmyTooltip, kUnit.ArmyName = ComposeUnitArmyStrings( row.Name, row.Domain, nProdProgress, nCost );
+				kUnit.ArmyTooltip, kUnit.ArmyName = ComposeUnitArmyStrings( row, nProdProgress, pBuildQueue );
 				kUnit.ArmyDisabled = not pYieldSource:CanAfford( nCityID, row.Hash, MilitaryFormationTypes.ARMY_MILITARY_FORMATION );
 				if kUnit.ArmyDisabled then
 					kUnit.ArmyTooltip = kUnit.ArmyTooltip .. TXT_INSUFFIENT_YIELD;
@@ -1719,7 +1767,7 @@ function ComposeBldgForPurchase( pRow:table, pCity:table, sYield:string, pYieldS
 		local isCantAfford		:boolean = false;
 		
 		-- Affordability check
-		if not pYieldSource:CanAfford( cityID, pRow.Hash ) then
+		if not pYieldSource:CanAfford( pCity:GetID(), pRow.Hash ) then
 			sToolTip = sToolTip .. "[NEWLINE][NEWLINE][COLOR:Red]" .. Locale.Lookup(sCantAffordKey) .. "[ENDCOLOR]";
 			isDisabled = true;
 			isCantAfford = true;
@@ -1760,7 +1808,7 @@ function ComposeDistrictForPurchase( pRow:table, pCity:table, sYield:string, pYi
 		local isCantAfford		:boolean = false;
 		
 		-- Affordability check
-		if not pYieldSource:CanAfford( cityID, pRow.Hash ) then
+		if not pYieldSource:CanAfford( pCity:GetID(), pRow.Hash ) then
 			sToolTip = sToolTip .. "[NEWLINE][NEWLINE][COLOR:Red]" .. Locale.Lookup(sCantAffordKey) .. "[ENDCOLOR]";
 			isDisabled = true;
 			isCantAfford = true;
@@ -1828,9 +1876,16 @@ function Refresh()
 		
 		local currentProductionHash = buildQueue:GetCurrentProductionTypeHash();
 
+		--Must do districts before buildings
 		for row in GameInfo.Districts() do
 			if row.Hash == currentProductionHash then
 				new_data.CurrentProduction = row.Name;
+				
+				if(GameInfo.DistrictReplaces[row.DistrictType] ~= nil) then
+					new_data.CurrentProductionType = GameInfo.DistrictReplaces[row.DistrictType].ReplacesDistrictType;
+				else
+					new_data.CurrentProductionType = row.DistrictType;
+				end
 			end
 			
 			local isInPanelList 		:boolean = row.Hash ~= currentProductionHash and not row.InternalOnly;
@@ -1854,6 +1909,21 @@ function Refresh()
 					-- If not, this district can't be built. Guarantee that isDisabled is set.
 					if not isPlotAllocated then
 						isDisabled = true;
+					end
+				elseif isDisabled and results ~= nil then
+					-- TODO this should probably be handled in the exposure, for example:
+					-- BuildQueue::CanProduce(nDistrictHash, bExclusionTest, bReturnResults, bAllowPurchasingPlots)
+					local pFailureReasons : table = results[CityCommandResults.FAILURE_REASONS];
+					if pFailureReasons ~= nil and table.count( pFailureReasons ) > 0 then
+						-- There are available plots to purchase, it could still be available
+						isDisabled = false;
+						for i,v in ipairs(pFailureReasons) do
+							-- If its disabled for another reason, keep it disabled
+							if v ~= "LOC_DISTRICT_ZONE_NO_SUITABLE_LOCATION" then
+								isDisabled = true;
+								break;
+							end
+						end
 					end
 				end
 				
@@ -1888,12 +1958,25 @@ function Refresh()
 
 		end
 
+		--Must do buildings after districts
 		for row in GameInfo.Buildings() do
 			if row.Hash == currentProductionHash then
 				new_data.CurrentProduction = row.Name;
+				new_data.CurrentProductionType= row.BuildingType;
 			end
-			
-			if row.Hash ~= currentProductionHash and (not row.MustPurchase or cityBuildings:IsPillaged(row.Hash)) and buildQueue:CanProduce( row.Hash, true ) then
+
+			local bCanProduce = buildQueue:CanProduce( row.Hash, true );
+			local iPrereqDistrict = "";
+			if row.PrereqDistrict ~= nil then
+				iPrereqDistrict = row.PrereqDistrict;
+				
+				--Only add buildings if the prereq district is not the current production (this can happen when repairing)
+				if new_data.CurrentProductionType == row.PrereqDistrict then
+					bCanProduce = false;
+				end
+			end
+
+			if row.Hash ~= currentProductionHash and (not row.MustPurchase or cityBuildings:IsPillaged(row.Hash)) and bCanProduce then
 				local isCanStart, results			 = buildQueue:CanProduce( row.Hash, false, true );
 				local isDisabled			:boolean = not isCanStart;
 				local allReasons			 :string = ComposeFailureReasonStrings( isDisabled, results );
@@ -1902,11 +1985,6 @@ function Refresh()
 				local iProductionCost		:number = buildQueue:GetBuildingCost( row.Index );
 				local iProductionProgress	:number = buildQueue:GetBuildingProgress( row.Index );
 				sToolTip = sToolTip .. ComposeProductionCostString( iProductionProgress, iProductionCost );
-			
-				local iPrereqDistrict = "";
-				if row.PrereqDistrict ~= nil then
-					iPrereqDistrict = row.PrereqDistrict;
-				end
 				
 				table.insert( new_data.BuildingItems, {
 					Type			= row.BuildingType, 
@@ -1943,6 +2021,7 @@ function Refresh()
 		for row in GameInfo.Units() do
 			if row.Hash == currentProductionHash then
 				new_data.CurrentProduction = row.Name;
+				new_data.CurrentProductionType= row.UnitType;
 			end
 			-- Can it be built normally?
 			if row.Hash ~= currentProductionHash and not row.MustPurchase and buildQueue:CanProduce( row.Hash, true ) then
@@ -1985,13 +2064,13 @@ function Refresh()
 						kUnit.Corps			= true;
 						kUnit.CorpsCost		= buildQueue:GetUnitCorpsCost( row.Index );
 						kUnit.CorpsTurnsLeft	= buildQueue:GetTurnsLeft( row.Hash, MilitaryFormationTypes.CORPS_MILITARY_FORMATION );
-						kUnit.CorpsTooltip, kUnit.CorpsName = ComposeUnitCorpsStrings( row.Name, row.Domain, nProductionProgress, kUnit.CorpsCost );
+						kUnit.CorpsTooltip, kUnit.CorpsName = ComposeUnitCorpsStrings( row, nProductionProgress, buildQueue );
 					end
 					if results[CityOperationResults.CAN_TRAIN_ARMY] then
 						kUnit.Army			= true;
 						kUnit.ArmyCost		= buildQueue:GetUnitArmyCost( row.Index );
 						kUnit.ArmyTurnsLeft	= buildQueue:GetTurnsLeft( row.Hash, MilitaryFormationTypes.ARMY_MILITARY_FORMATION );
-						kUnit.ArmyTooltip, kUnit.ArmyName = ComposeUnitArmyStrings( row.Name, row.Domain, nProductionProgress, kUnit.ArmyCost );
+						kUnit.ArmyTooltip, kUnit.ArmyName = ComposeUnitArmyStrings( row, nProductionProgress, buildQueue );
 					end
 				end
 				
@@ -2011,12 +2090,13 @@ function Refresh()
 				if isAllowed then
 					table.insert( new_data.UnitPurchases, kUnit );
 				end
-			end
+			end 
 		end
 		
 		for row in GameInfo.Projects() do
 			if row.Hash == currentProductionHash then
 				new_data.CurrentProduction = row.Name;
+				new_data.CurrentProductionType= row.ProjectType;
 			end
 			
 			if row.Hash ~= currentProductionHash and buildQueue:CanProduce( row.Hash, true ) then
@@ -2074,7 +2154,7 @@ end
 --	LUA Event
 -- ===========================================================================
 function OnNotificationPanelChooseProduction()
-		if ContextPtr:IsHidden() then
+	if ContextPtr:IsHidden() then
 		Open();
 		
 	--else																--TESTING TO SEE IF THIS FIXES OUR TUTORIAL BUG.

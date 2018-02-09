@@ -21,13 +21,23 @@ local m_ImageIM		:table = InstanceManager:new("ImageInstance",		"Image",Controls
 local m_MajorTitleIM:table = InstanceManager:new("MajorTitleInstance",	"Text", Controls.CreditsList);
 local m_MinorTitleIM:table = InstanceManager:new("MinorTitleInstance",	"Text", Controls.CreditsList);
 local m_TurboMode   :boolean = false;
+local m_CreditsKeyList :table = { { TextKey="LOC_CREDITS" }, { TextKey="LOC_EXPANSION1_CREDITS", ModID="1B28771A-C749-434B-9053-D1380C553DE9"} };
+local m_CurrentCreditListIndex:number = 1;
 
 -- ===========================================================================
 function OnClose()
 	UIManager:DequeuePopup( ContextPtr );
 end
 
+-- ===========================================================================
+function OnNext()
+	DisplayCredits(m_CurrentCreditListIndex + 1);
+end
 
+-- ===========================================================================
+function OnCreditScrollComplete()
+	OnNext();
+end
 -- ===========================================================================
 --	Key Down Processing
 -- ===========================================================================
@@ -85,11 +95,8 @@ end
 -- ===========================================================================
 -- ===========================================================================
 function OnShow()
-	local sizeY = -Controls.CreditsList:GetSizeY();
-	Controls.SlideAnim:SetRelativeEndVal(0, sizeY );
-   	Controls.SlideAnim:SetToBeginning();
-   	Controls.SlideAnim:Play();
-    Controls.SlideAnim:SetSpeed(0.001);
+
+	DisplayCredits(1);
     m_TurboMode = false;
 end
 
@@ -103,20 +110,91 @@ function Resize()
 	ContextPtr:ReprocessAnchoring();
 end
 
+-- ===========================================================================
+function CanShowCreditEntry(entry:table)
+	if Locale.HasTextKey(entry.TextKey) and (entry.ModID == nil or Modding.CanEnableMod(entry.ModID) == "OK") then
+		return true;
+	else
+		return false;
+	end
+end
 
 -- ===========================================================================
-function ReadCredits()
+function DisplayCredits(creditsIndex:number)
 
-	local creditsFile:string  = Locale.Lookup("LOC_CREDITS");
+	m_CurrentCreditListIndex = creditsIndex;
+	while #m_CreditsKeyList >= m_CurrentCreditListIndex and not CanShowCreditEntry(m_CreditsKeyList[m_CurrentCreditListIndex]) do
+		m_CurrentCreditListIndex = m_CurrentCreditListIndex + 1;
+	end
+
+	if #m_CreditsKeyList < m_CurrentCreditListIndex then
+		OnClose();
+	else
 		
-	if not creditsFile then		
-		UI.DataError("Unable to obtian the credits file.");
-		return;
-	end		
-	
-	local creditsTable:table = makeTable(creditsFile);
-	
-	
+		removeEntries();
+		local initialSpaceSize1 = -Controls.InitialSpace:GetSizeY();
+		Controls.SlideAnim:SetRelativeEndVal(0, 0);
+   		Controls.SlideAnim:SetToBeginning();
+		Controls.CreditsList:CalculateSize();		
+		Controls.MajorScroll:CalculateInternalSize();
+
+		generateCredits(m_CreditsKeyList[m_CurrentCreditListIndex].TextKey);
+			
+		Controls.CreditsList:CalculateSize();		
+		Controls.CreditsList:ReprocessAnchoring();		
+		Controls.MajorScroll:CalculateInternalSize();
+
+		Resize();
+
+		local sizeY = -Controls.CreditsList:GetSizeY();
+		Controls.SlideAnim:SetRelativeEndVal(0, sizeY );
+   		Controls.SlideAnim:SetToBeginning();
+   		Controls.SlideAnim:Play();
+		Controls.SlideAnim:SetSpeed(0.001);
+
+		-- Show the Next button if we have more credits to show.
+		Controls.NextButton:SetShow( hasMoreCredits(m_CurrentCreditListIndex + 1) );
+
+	end
+end
+
+----------------------------------------------------------------        
+---------------------------------------------------------------- 
+function hasMoreCredits(creditsIndex)
+	while #m_CreditsKeyList >= creditsIndex and not CanShowCreditEntry(m_CreditsKeyList[creditsIndex]) do
+		creditsIndex = creditsIndex + 1;
+	end
+
+	return #m_CreditsKeyList >= creditsIndex;
+end
+----------------------------------------------------------------        
+---------------------------------------------------------------- 
+function removeEntries()
+	m_BlankIM:DestroyInstances();
+	m_MajorTitleIM:DestroyInstances();
+	m_MinorTitleIM:DestroyInstances();
+	m_HeadingIM:DestroyInstances();
+	m_ImageIM:DestroyInstances();
+	m_EntryIM:DestroyInstances();
+end
+----------------------------------------------------------------        
+---------------------------------------------------------------- 
+function generateCredits(creditsKey)
+	if Locale.HasTextKey(creditsKey) then
+		local creditsFile:string  = Locale.Lookup(creditsKey);
+		
+		if creditsFile then		
+			local creditsTable:table = makeTable(creditsFile);
+			if creditsTable then
+				generateEntries(creditsTable);
+			end
+		end
+	end
+end
+
+----------------------------------------------------------------        
+---------------------------------------------------------------- 
+function generateEntries(creditsTable)
 	--print each line out, with header information formatting string
 	for key,currentLine in ipairs(creditsTable) do	
 
@@ -146,12 +224,7 @@ function ReadCredits()
 			end
 		end
 	end		
-
-	Controls.CreditsList:CalculateSize();		
-	Controls.CreditsList:ReprocessAnchoring();		
-	Controls.MajorScroll:CalculateInternalSize();
 end
-
 ----------------------------------------------------------------        
 ---------------------------------------------------------------- 
 function makeTable(creditsFile)
@@ -199,9 +272,12 @@ function Initialize()
 
 	Controls.BackButton:RegisterCallback( Mouse.eLClick, OnClose );
 	Controls.BackButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
+
+	Controls.NextButton:RegisterCallback( Mouse.eLClick, OnNext );
+	Controls.NextButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
+
+	Controls.SlideAnim:RegisterEndCallback( OnCreditScrollComplete );
 	
-	ReadCredits();
-	Resize()
 end
 Initialize();
 

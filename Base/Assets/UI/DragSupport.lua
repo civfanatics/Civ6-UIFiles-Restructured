@@ -2,6 +2,82 @@
 --	Drag and Drop support, common functions
 -- ===========================================================================
 
+
+-- Returns a control from targetControlArray that is the most likely to be the player's intention.
+-- Cursor position is the first priority. If the cursor is over multiple targets, the target with the centroid nearest the cursor is used.
+-- If the cursor is not over anything, the overlap with draggedControl is used: nOverlapArea / targetControlArea
+-- The largest overlap wins.
+DragSupport_GetBestOverlappingControl = function( draggedControl:table, targetControlArray:table )
+	if ( draggedControl == nil or targetControlArray == nil ) then
+		return nil;
+	end
+	
+	local mx:number, my:number = UIManager:GetMousePos();
+
+	local x:number, y:number	= draggedControl:GetScreenOffset();	-- Use sparningly; expensive!
+	local w:number, h:number	= draggedControl:GetSizeVal();
+	
+	local nBestProximity :number = -1; -- cursor vs centroid
+	local nBestOverlap :number = 0; -- control vs control
+	local tBestInst :table = nil;
+	for _,tControl in ipairs(targetControlArray) do
+		local tx:number, ty:number	= tControl:GetScreenOffset();	-- Use sparningly; expensive!
+		local tw:number, th:number	= tControl:GetSizeVal();
+
+		if ( IsPointInRect( mx, my, tx, ty, tw, th ) ) then
+			local nProx = GetProximityFromCentroid( mx, my, tx, ty, tw, th );
+			if ( nBestProximity == -1 or nProx < nBestProximity ) then
+				nBestProximity = nProx;
+				tBestInst = tControl;
+			end
+		elseif ( nBestProximity == -1 ) then -- overlap tests only relevant as long as there's no cursor proximity.
+			local nOverlapRatio :number = GetOverlapRatio( x, y, w, h, tx, ty, tw, th );
+			if ( nOverlapRatio > nBestOverlap ) then
+				nBestOverlap = nOverlapRatio;
+				tBestInst = tControl;
+			end
+		end
+
+	end
+	return tBestInst;
+end
+
+-- Distance squared, a simple proximity metric.
+function GetProximityFromCentroid( x:number, y:number, tx:number, ty:number, tw:number, th:number )
+	local dx :number = x - (tx + tw*0.5);
+	local dy :number = y - (ty + th*0.5);
+	return dx*dx + dy*dy;
+end
+
+function IsPointInRect(x:number, y:number, tx:number, ty:number, tw:number, th:number)
+	return x >= tx and y >= ty and x <= tx+tw and y <= ty+th;
+end
+
+function GetOverlapRatio( x:number, y:number, w:number, h:number, tx:number, ty:number, tw:number, th:number )
+	return (math.max(0, math.min(x+w, tx+tw) - math.max(x, tx)) *
+		   math.max(0, math.min(y+h, ty+th) - math.max(y, ty))) / (tw * th);
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+--------------------------------------------------------------------------------
+-- HERE BE DEPRECATED DRAG AND DROP STUFF.  DON'T USE IF YOU WORK AT FIRAXIS. --
+--------------------------------------------------------------------------------
+
 -- COPY THIS STRUCT to your local file to use it
 hstructure DropAreaStruct
 	x		: number

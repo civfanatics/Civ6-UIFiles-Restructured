@@ -234,7 +234,7 @@ function GetCityRelatedPlotIndexesDistrictsAlternative( pCity:table, districtHas
 		for _,plotId in pairs(tResults[CityCommandResults.PLOTS]) do
 			
 			local kPlot	:table = Map.GetPlotByIndex(plotId);	
-			if kPlot:CanHaveDistrict(district.DistrictType, pCity:GetOwner(), pCity:GetID()) then
+			if kPlot:CanHaveDistrict(district.Index, pCity:GetOwner(), pCity:GetID()) then
 				local isValid :boolean = IsShownIfPlotPurchaseable(district.Index, pCity, kPlot);
 				if isValid then
 					table.insert(plots, plotId);

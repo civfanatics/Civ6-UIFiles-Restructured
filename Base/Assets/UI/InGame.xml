@@ -51,6 +51,9 @@
     <LuaContext	ID="PartialScreenHooks"			  FileName="PartialScreenHooks"      />
 		<LuaContext	ID="ProductionPanel"					FileName="ProductionPanel"					Hidden="1"	/>
 	</Container>
+	
+	<!-- TODO this should have higher precedence than some things in the TopLevelHUD container -->
+  <LuaContext	  ID="EdgeScroll"							  FileName="EdgeScroll"                           />
 	  
   <Container		ID="Screens"                  Size="parent,parent">
     <LuaContext	ID="TechTree"									FileName="TechTree"									Hidden="1"	/>

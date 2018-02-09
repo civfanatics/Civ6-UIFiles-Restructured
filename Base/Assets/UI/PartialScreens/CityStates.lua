@@ -71,8 +71,8 @@ local m_kEnvoyChanges			:table = {};		-- Table (player,deltas) for envoy tokens 
 local m_uiCityStateRows			:table = {};		-- Instances holding the city state rows
 local m_mode					:string;			-- How the screen should act.
 local m_iCurrentCityState		:number= -1;		-- Player # of the city state currently active
-local m_iTurnsOfPeace			:number= tonumber(GameInfo.GlobalParameters["DIPLOMACY_PEACE_MIN_TURNS"].Value);
-local m_iTurnsOfWar				:number= tonumber(GameInfo.GlobalParameters["DIPLOMACY_WAR_MIN_TURNS"].Value);
+local m_iTurnsOfPeace			:number= Game.GetGameDiplomacy():GetMinPeaceDuration();
+local m_iTurnsOfWar				:number= Game.GetGameDiplomacy():GetMinPeaceDuration();
 
 local m_isLocalPlayerTurn		:boolean = true;
 
@@ -1160,10 +1160,6 @@ function ViewCityState( iPlayer:number )
 
 	Controls.SingleViewStack:CalculateSize();
 
-	-- Scale the tab container to fill the remaining area
-	Controls.ReportTabContainer:SetParentRelativeSizeY(REPORT_CONTAINER_SIZE_PADDING - Controls.SingleViewStack:GetSizeY() - Controls.SingleViewStack:GetOffsetY());
-	Controls.ReportTabContainer:ReprocessAnchoring();
-
 	if m_mode == MODE.EnvoySent then
 		-- Setup the buttons and what (sub) areas are shown/hidden.
 		Controls.EnvoysSentButton:SetSelected( true );
@@ -1253,17 +1249,7 @@ function ViewCityState( iPlayer:number )
 
 		-- Generate the information for each City-State
 		for iOtherPlayer,influence in pairs(kCityState.Influence) do
-			local kItem			:table	= m_InfluenceRowIM:GetInstance();
-			local civName		:string = "LOCAL_CITY_STATES_UNKNOWN";
-			local pPlayerConfig :table = PlayerConfigurations[iOtherPlayer];
-			if (localPlayerID == iOtherPlayer) then
-				civName = Locale.Lookup(pPlayerConfig:GetPlayerName()) .. " (" .. Locale.Lookup("LOC_CITY_STATES_YOU") .. ")";
-			elseif (pLocalPlayerDiplomacy:HasMet(iOtherPlayer)) then
-				civName = pPlayerConfig:GetPlayerName();
-			end
-			kItem.CityName:SetText( Locale.ToUpper(civName) );
-			kItem.AmountBar:SetPercent( influence / largestAmount);
-			kItem.Amount:SetText( tostring(influence) );			
+			local kItem:table = AddInfluenceRow(kCityState.iPlayer, iOtherPlayer, influence, largestAmount);			
 			kSortTable[ tostring(kItem.GetTopControl()) ] = { influence = influence };	-- Store for sorting.
 		end
 		Controls.InfluenceStack:SortChildren( SortHighestFirst )
@@ -1299,6 +1285,34 @@ function ViewCityState( iPlayer:number )
 		UI.DataError("City-States in an unhandled mode '"..tostring(m_mode).."' when attempting to view a single City-State.");
 		return;
 	end
+end
+
+-- ===========================================================================
+function OnSingleViewStackSizeChanged()
+	Controls.ReportTabContainer:SetParentRelativeSizeY(REPORT_CONTAINER_SIZE_PADDING - Controls.SingleViewStack:GetSizeY() - Controls.SingleViewStack:GetOffsetY());
+end
+
+-- ===========================================================================
+function AddInfluenceRow(cityStateID:number, playerID:number, influence:number, largestInfluence:number)
+	local kItem			:table	= m_InfluenceRowIM:GetInstance();
+	
+	local localPlayerID:number = Game.GetLocalPlayer();
+	local pLocalPlayerDiplomacy:table = Players[localPlayerID]:GetDiplomacy();
+
+	local pPlayerConfig :table = PlayerConfigurations[playerID];
+
+	local civName		:string = "LOCAL_CITY_STATES_UNKNOWN";
+	if (localPlayerID == playerID) then
+		civName = Locale.Lookup(pPlayerConfig:GetPlayerName()) .. " (" .. Locale.Lookup("LOC_CITY_STATES_YOU") .. ")";
+	elseif (pLocalPlayerDiplomacy:HasMet(playerID)) then
+		civName = pPlayerConfig:GetPlayerName();
+	end
+	kItem.CityName:SetText( Locale.ToUpper(civName) );
+
+	kItem.AmountBar:SetPercent( influence / largestInfluence);
+	kItem.Amount:SetText( tostring(influence) );
+
+	return kItem;
 end
 
 -- ===========================================================================
@@ -1777,6 +1791,7 @@ function Initialize()
 	Controls.InfluencedByButton:RegisterCallback( Mouse.eLClick, OnInfluencedByClick );
 	Controls.QuestsButton:RegisterCallback( Mouse.eLClick, OnQuestsClick );
 	Controls.RelationshipsButton:RegisterCallback( Mouse.eLClick, OnRelationshipsClick );
+	Controls.SingleViewStack:RegisterSizeChanged( OnSingleViewStackSizeChanged );
 
 	-- UI Events
 	ContextPtr:SetInitHandler( OnInit );

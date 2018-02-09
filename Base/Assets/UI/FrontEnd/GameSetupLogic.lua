@@ -67,6 +67,9 @@ function GameParameters_WriteAuxParameterValues(o, parameter)
 	if(parameter.ParameterId == "MapSize" and MapSize_ValueChanged) then	
 		MapSize_ValueChanged(parameter);
 	end
+	if(parameter.ParameterId == "Ruleset" and GameSetup_PlayerCountChanged) then
+		GameSetup_PlayerCountChanged();
+	end
 end
 
 -------------------------------------------------------------------------------
@@ -157,6 +160,9 @@ function GameParameters_UI_DefaultCreateParameterDriver(o, parameter)
 				
 		c.StringName:SetText(parameter.Name);
 		c.StringRoot:SetToolTipString(parameter.Description);
+		c.StringEdit:SetEnabled(true);
+
+		local canChangeEnableState = true;
 
 		if(parameter.Domain == "int") then
 			c.StringEdit:SetNumberInput(true);
@@ -176,10 +182,15 @@ function GameParameters_UI_DefaultCreateParameterDriver(o, parameter)
 		else
 			c.StringEdit:SetNumberInput(false);
 			c.StringEdit:SetMaxCharacters(64);
-			c.StringEdit:RegisterCommitCallback(function(textString)
-				o:SetParameterValue(parameter, textString);	
-				Network.BroadcastGameConfig();
-			end);
+			if UI.HasFeature("TextEntry") == true then
+				c.StringEdit:RegisterCommitCallback(function(textString)
+					o:SetParameterValue(parameter, textString);	
+					Network.BroadcastGameConfig();
+				end);
+			else
+				canChangeEnableState = false;
+				c.StringEdit:SetEnabled(false);
+			end
 		end
 
 		c.StringRoot:ChangeParent(parent);
@@ -190,8 +201,10 @@ function GameParameters_UI_DefaultCreateParameterDriver(o, parameter)
 				c.StringEdit:SetText(value);
 			end,
 			SetEnabled = function(enabled)
-				c.StringRoot:SetDisabled(not enabled);
-				c.StringEdit:SetDisabled(not enabled);
+				if canChangeEnableState then
+					c.StringRoot:SetDisabled(not enabled);
+					c.StringEdit:SetDisabled(not enabled);
+				end
 			end,
 			SetVisible = function(visible)
 				c.StringRoot:SetHide(not visible);
@@ -466,7 +479,7 @@ function GameParameters_PostProcess(o, parameter)
 end
 
 -- Generate the game setup parameters and populate the UI.
-function BuildGameSetup(createParameterFunc:ifunction)
+function BuildGameSetup(createParameterFunc)
 
 	-- If BuildGameSetup is called twice, call HideGameSetup to reset things.
 	if(g_GameParameters) then
@@ -497,6 +510,41 @@ function BuildGameSetup(createParameterFunc:ifunction)
 
 	g_GameParameters:Initialize();
 	g_GameParameters:FullRefresh();
+end
+
+-- Generate the game setup parameters and populate the UI.
+function BuildHeadlessGameSetup()
+
+	-- If BuildGameSetup is called twice, call HideGameSetup to reset things.
+	if(g_GameParameters) then
+		HideGameSetup();
+	end
+
+	print("Building Headless Game Setup");
+
+	g_GameParameters = SetupParameters.new();
+	g_GameParameters.Config_EndWrite = Parameters_Config_EndWrite;
+	g_GameParameters.Parameter_GetRelevant = GetRelevantParameters;
+	g_GameParameters.Parameter_PostProcess = GameParameters_PostProcess;
+	g_GameParameters.Parameter_SyncAuxConfigurationValues = GameParameters_SyncAuxConfigurationValues;
+	g_GameParameters.Config_WriteAuxParameterValues = GameParameters_WriteAuxParameterValues;
+
+	g_GameParameters.UpdateVisualization = function() end
+	g_GameParameters.UI_AfterRefresh = nil;
+	g_GameParameters.UI_CreateParameter = nil;
+	g_GameParameters.UI_DestroyParameter = nil;
+	g_GameParameters.UI_SetParameterPossibleValues = nil;
+	g_GameParameters.UI_SetParameterValue = nil;
+	g_GameParameters.UI_SetParameterEnabled = nil;
+	g_GameParameters.UI_SetParameterVisible = nil;
+
+	-- Optional overrides.
+	if(GameParameters_FilterValues) then
+		g_GameParameters.Default_Parameter_FilterValues = g_GameParameters.Parameter_FilterValues;
+		g_GameParameters.Parameter_FilterValues = GameParameters_FilterValues;
+	end
+
+	g_GameParameters:Initialize();
 end
 
 -- Hide game setup parameters.

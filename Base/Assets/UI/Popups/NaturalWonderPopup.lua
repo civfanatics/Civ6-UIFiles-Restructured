@@ -9,7 +9,7 @@ local m_isWaitingToShowPopup:boolean = false;
 local m_kQueuedPopups		:table	 = {};
 local m_eCurrentFeature		:number  = -1;
 local m_kCurrentPopup		:table	 = nil;
-
+local ms_eventID					 = 0;
 
 -- ===========================================================================
 --	FUNCTIONS
@@ -22,6 +22,9 @@ function Close()
 	
 	-- Dequeue popup from UI mananger (will re-queue if another is about to show).
 	ShowNaturalWonderLens(false);
+	-- Release our hold on the event
+	ReleaseGameCoreEvent( ms_eventID );
+	ms_eventID = 0;
 	UIManager:DequeuePopup( ContextPtr );
 	UI.PlaySound("Stop_Speech_NaturalWonders");
 	local isNewOneSet = false;
@@ -101,6 +104,13 @@ function OnNaturalWonderRevealed( plotx:number, ploty:number, eFeature:number, i
 		return;	-- autoplay
 	end
 
+	-- No wonder popups in multiplayer games.
+	if(GameConfiguration.IsAnyMultiplayer()) then
+		return;
+	end
+	
+	UILens.SetActive("Default");
+
 	-- Only human players and NO hotseat
 	if Players[localPlayer]:IsHuman() and not GameConfiguration.IsHotseat() then
 		local info:table = GameInfo.Features[eFeature];
@@ -129,6 +139,7 @@ function OnNaturalWonderRevealed( plotx:number, ploty:number, eFeature:number, i
 
 			-- Add to queue if already showing a popup
 			if not m_isWaitingToShowPopup then				
+				ms_eventID = ReferenceCurrentGameCoreEvent();
 				ShowPopup( kData );
 				LuaEvents.NaturalWonderPopup_Shown();	-- Signal other systems (e.g., bulk hide UI)
 			else		

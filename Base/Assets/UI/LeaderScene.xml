@@ -14,22 +14,6 @@
       <Image Size="300,parent" Texture="Controls_Gradient" Anchor="R,T" Rotate="270" Color="0,0,0,255"/>
       <Image Size="300,parent" Texture="Controls_Gradient" Anchor="L,T" Rotate="90" Color="0,0,0,255"/>
     </Container>
-
-    <!-- Signature area -->
-    <AlphaAnim		ID="Signature_Alpha"					AlphaBegin="0"	AlphaEnd="1"	Speed="2" Function="Root" Cycle="Once" Size="parent,parent"  >
-      <SlideAnim	ID="Signature_Slide"					Begin="-10,0"		End="0,0"			Speed="2" Function="Root" Cycle="Once" Size="parent,parent"  >
-        <Stack		ID="SignatureStack" StackGrowth="Left" Offset="10,20" Anchor="R,T">
-          <Container Size="62,62">
-            <MakeInstance Name="CivilizationIconShaded44"/>
-            <Image Texture="Controls_CircleRim50" Size="50,50" Anchor="C,C" Offset="-1,-1" Color="255,255,255,50"/>
-          </Container>
-          <Stack StackGrowth="Down" Padding="5" Offset="10,10" Anchor="R,T">
-            <Label	ID="LeaderName"	String="CLEOPATRA"  WrapWidth="400" Align="R" Anchor="R,T" Style="FontBoldFlair18"	SmallCaps="22" FontStyle="glow" Color0="130,130,130,255"	Color1="0,0,0,200"/>
-            <Label	ID="CivName"	  String="EGYPT"      WrapWidth="400" Align="R" Anchor="R,T" Style="FontBoldFlair18"	SmallCaps="22" FontStyle="glow" Color0="130,130,130,255"	Color1="0,0,0,200"/>
-          </Stack>
-        </Stack>
-      </SlideAnim>
-    </AlphaAnim>
   </Container>
   
   <Instance Name="Layer">

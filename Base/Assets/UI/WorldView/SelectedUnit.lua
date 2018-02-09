@@ -159,8 +159,8 @@ function OnUnitSelectionChanged( playerID:number, unitID:number, hexI:number, he
 			UILens.SetActive("Default");
 
 			local religiousStrength :number = kUnit:GetReligiousStrength();
-			if religiousStrength > 0 then
-				UILens.ToggleLayerOn(LensLayers.HEX_COLORING_RELIGION);
+			if religiousStrength > 0 and not UILens.IsLensActive("Religion") then
+				UILens.SetActive("Religion");
 			elseif GameInfo.Units[kUnit:GetUnitType()].FoundCity and (not m_isDisableWaterAvailLens) and pPlayer:GetCities():GetCount() > 0 then
 				UILens.ToggleLayerOn(LensLayers.HEX_COLORING_WATER_AVAILABLITY);			-- Used on the settler lens
 			end
@@ -168,7 +168,7 @@ function OnUnitSelectionChanged( playerID:number, unitID:number, hexI:number, he
 			if kUnit ~= nil then
 				local religiousStrength :number = kUnit:GetReligiousStrength();
 				if religiousStrength > 0 then
-					UILens.ToggleLayerOff(LensLayers.HEX_COLORING_RELIGION);
+					UILens.SetActive("Default");
 				elseif GameInfo.Units[kUnit:GetUnitType()].FoundCity and (not m_isDisableWaterAvailLens) then
 					UILens.ToggleLayerOff(LensLayers.HEX_COLORING_WATER_AVAILABLITY);
 				end
@@ -176,8 +176,8 @@ function OnUnitSelectionChanged( playerID:number, unitID:number, hexI:number, he
 			else
 				-- No selected unit, if a missionary just consumed themselves,
 				-- kUnit will be nul but the lens still needs to be turned off.
-				if UILens.IsLayerOn( LensLayers.HEX_COLORING_RELIGION ) then
-					UILens.ToggleLayerOff( LensLayers.HEX_COLORING_RELIGION );
+				if UILens.IsLensActive("Religion") then
+					UILens.SetActive("Default");
 				end
 			end
 		end
@@ -296,6 +296,10 @@ end
 function OnLocalPlayerTurnBegin()
 	local idLocalPlayer	:number = Game.GetLocalPlayer();
 	local pPlayer		:table = Players[ idLocalPlayer ];
+	
+	if UI.GetInterfaceMode() == InterfaceModeTypes.VIEW_MODAL_LENS then
+		UI.SetInterfaceMode(InterfaceModeTypes.SELECTION);
+	end
 	UILens.SetActive("Default");
 end
 
@@ -335,15 +339,19 @@ function OnLocalPlayerChanged( eLocalPlayer:number , ePrevLocalPlayer:number )
 	UI.DeselectAllUnits();
 	UI.DeselectAllCities();
 
+	-- Equivalent to original code, not sure if actually needed
+	if UILens.IsLensActive("Religion") then
+		UILens.ClearLayerHexes( LensLayers.HEX_COLORING_RELIGION );
+	end
+	
+	if UI.GetInterfaceMode() == InterfaceModeTypes.VIEW_MODAL_LENS then
+		UI.SetInterfaceMode(InterfaceModeTypes.SELECTION);
+	end
 	UILens.SetActive("Default");
+
 	if(UILens.IsLayerOn(LensLayers.HEX_COLORING_GREAT_PEOPLE)) then
 		UILens.ClearLayerHexes( LensLayers.HEX_COLORING_GREAT_PEOPLE );
 		UILens.ToggleLayerOff( LensLayers.HEX_COLORING_GREAT_PEOPLE );
-	end
-
-	if(UILens.IsLayerOn(LensLayers.HEX_COLORING_RELIGION)) then
-		UILens.ClearLayerHexes( LensLayers.HEX_COLORING_RELIGION );
-		UILens.ToggleLayerOff( LensLayers.HEX_COLORING_RELIGION );
 	end
 
 	if(UILens.IsLayerOn(LensLayers.HEX_COLORING_WATER_AVAILABLITY)) then

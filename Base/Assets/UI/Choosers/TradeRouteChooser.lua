@@ -24,6 +24,8 @@ local m_destinationCityOwner	: number = -1;	-- City where the trade route will e
 local m_destinationCityID		: number = -1;
 local m_pTradeOverviewContext	: table = nil;	-- Trade Overview context
 
+local m_selectedUnit			:table = nil;
+
 -- These can be set by other contexts to have a route selected automatically after the chooser opens
 local m_postOpenSelectPlayerID:number = -1;
 local m_postOpenSelectCityID:number = -1;
@@ -69,13 +71,13 @@ end
 --	Refresh
 -- ===========================================================================
 function Refresh()
-	local selectedUnit:table = UI.GetHeadSelectedUnit();
-	if selectedUnit == nil then
+	m_selectedUnit = UI.GetHeadSelectedUnit();
+	if m_selectedUnit == nil then
 		Close();
 		return;
 	end
 
-	local originCity = Cities.GetCityInPlot(selectedUnit:GetX(), selectedUnit:GetY());
+	local originCity = Cities.GetCityInPlot(m_selectedUnit:GetX(), m_selectedUnit:GetY());
 	if originCity == nil then
 		Close();
 		return;
@@ -142,7 +144,7 @@ function RefreshTopPanel()
 		local distanceToDestination:number = Map.GetPlotDistance(originCity:GetX(), originCity:GetY(), destinationCity:GetX(), destinationCity:GetY());
 		Controls.DistenceToCity:SetColor( frontColor );
 		Controls.DistenceToCity:SetText(distanceToDestination);
-		Controls.DistenceToCityIcon:SetColor( frontColor );
+		
 
 		-- Update turns to complete route
 
@@ -175,7 +177,7 @@ function RefreshTopPanel()
 		end
 		Controls.OriginResources:SetToolTipString(originTooltipText);
 		Controls.OriginResourceHeader:SetText(Locale.Lookup("LOC_ROUTECHOOSER_RECEIVES_RESOURCE", Locale.Lookup(originCity:GetName())));
-		Controls.OriginResourceList:ReprocessAnchoring();
+		Controls.OriginResources:RegisterSizeChanged( function() ResizeResourceBackgroundColumns(Controls.OriginResources, Controls.OriginResourcesLeftColumn, Controls.OriginResourcesRightColumn); end );
 
 		if originReceivedResources then
 			Controls.OriginReceivesNoBenefitsLabel:SetHide(true);
@@ -211,7 +213,7 @@ function RefreshTopPanel()
 		end
 		Controls.DestinationResources:SetToolTipString(destinationTooltipText);
 		Controls.DestinationResourceHeader:SetText(Locale.Lookup("LOC_ROUTECHOOSER_RECEIVES_RESOURCE", Locale.Lookup(destinationCity:GetName())));
-		Controls.DestinationResourceList:ReprocessAnchoring();
+		Controls.DestinationResources:RegisterSizeChanged( function() ResizeResourceBackgroundColumns(Controls.DestinationResources, Controls.DestinationResourcesLeftColumn, Controls.DestinationResourcesRightColumn); end );
 
 		if destinationReceivedResources then
 			Controls.DestinationReceivesNoBenefitsLabel:SetHide(true);
@@ -220,8 +222,7 @@ function RefreshTopPanel()
 		end
 
 		-- Show Begin Route or Repeat Route if we're rerun the last completed route
-		local selectedUnit:table = UI.GetHeadSelectedUnit();
-		local trade:table = selectedUnit:GetTrade();
+		local trade:table = m_selectedUnit:GetTrade();
 		local prevOriginComponentID:table = trade:GetLastOriginTradeCityComponentID();
 		local prevDestComponentID:table = trade:GetLastDestinationTradeCityComponentID();
 		local tradeManager = Game.GetTradeManager();
@@ -248,6 +249,17 @@ function RefreshTopPanel()
 	else
 		HideConfirmGrid(true);
 	end
+
+	Controls.OriginResources:DoAutoSize();
+	Controls.CurrentSelectionContainer:DoAutoSize();
+	Controls.TopGrid:DoAutoSize();
+	OnTopGridSizeChanged();
+end
+
+-- ===========================================================================
+function OnTopGridSizeChanged()
+	Controls.BottomGrid:SetSizeY(Controls.RouteChooser:GetSizeY() - Controls.TopGrid:GetSizeY());
+	Controls.BottomGrid:SetOffsetY(Controls.TopGrid:GetSizeY() - 1);
 end
 
 -- ===========================================================================
@@ -421,25 +433,36 @@ function RefreshChooserPanel()
 		return;
 	end
 
-	-- Gather All Possible Destinations
-	local players:table = Game:GetPlayers();
-	for i, player in ipairs(players) do
-		local cities:table = player:GetCities();
-		for j, city in cities:Members() do
-			local cityOwner = city:GetOwner();
-			local cityID = city:GetID();
-			-- Check if a route is allowed. This will not check if there is a valid route, just that if there is one, we can start it.
-			if tradeManager:IsRouteAllowed(m_originCityOwner, m_originCityID, cityOwner, cityID) then
-				-- We know we can possibly start a route, now see if we can get a route
-				local pathPlots:table = {};
-				pathPlots = tradeManager:GetTradeRoutePath(m_originCityOwner, m_originCityID, cityOwner, cityID );
-				if pathPlots ~= nil and table.count(pathPlots) > 0 then
-					local entry:table = {};
-					entry.owner = cityOwner;
-					entry.id = cityID;
-					entry.pathPlots = pathPlots;
+	-- Gather All Possible Destinations, starting with ourselves
+	if (Game.GetLocalPlayer() ~= nil) then
+		local localPlayer = Players[Game.GetLocalPlayer()];
+		if (localPlayer ~= nil) then
+			local players:table = {};
+			table.insert(players, localPlayer);
+			for i, player in ipairs(Game.GetPlayers()) do
+				if (player:GetID() ~= localPlayer:GetID()) then
+					table.insert(players, player);
+				end
+			end
+			for i, player in ipairs(players) do
+				local cities:table = player:GetCities();
+				for j, city in cities:Members() do
+					local cityOwner = city:GetOwner();
+					local cityID = city:GetID();
+					-- Check if a route is allowed. This will not check if there is a valid route, just that if there is one, we can start it.
+					if CheckTradeRoute(m_selectedUnit, city) then
+						-- We know we can possibly start a route, now see if we can get a route
+						local pathPlots:table = {};
+						pathPlots = tradeManager:GetTradeRoutePath(m_originCityOwner, m_originCityID, cityOwner, cityID );
+						if pathPlots ~= nil and table.count(pathPlots) > 0 then
+							local entry:table = {};
+							entry.owner = cityOwner;
+							entry.id = cityID;
+							entry.pathPlots = pathPlots;
 
-					table.insert(m_unfilteredDestinations, entry);
+							table.insert(m_unfilteredDestinations, entry);
+						end
+					end
 				end
 			end
 		end
@@ -549,10 +572,10 @@ function AddCityToDestinationStack(city:table)
 
 	-- Update Selector Brace
 	if destinationCity ~= nil and city:GetName() == destinationCity:GetName() then
-		cityEntry.SelectorBrace:SetHide(false);
+		cityEntry.SelectorBrace:SetColor(1,1,1,1);
 		cityEntry.Button:SetSelected(true);
 	else
-		cityEntry.SelectorBrace:SetHide(true);
+		cityEntry.SelectorBrace:SetColor(1,1,1,0);
 		cityEntry.Button:SetSelected(false);
 	end
 
@@ -596,7 +619,6 @@ function AddCityToDestinationStack(city:table)
 	local distanceToDestination:number = Map.GetPlotDistance(originCity:GetX(), originCity:GetY(), city:GetX(), city:GetY());
 	cityEntry.DistenceToCity:SetColor( frontColor );
 	cityEntry.DistenceToCity:SetText(distanceToDestination);
-	cityEntry.DistenceToCityIcon:SetColor( frontColor );
 
 	-- Update turns to complete route
 
@@ -630,8 +652,14 @@ function AddCityToDestinationStack(city:table)
 	cityEntry.Button:SetVoids(city:GetOwner(), city:GetID());
 	cityEntry.Button:RegisterCallback( Mouse.eLClick, OnTradeRouteSelected );
 
-	-- Process Anchoring
-	cityEntry.ResourceList:ReprocessAnchoring();
+	-- Resize resource background columns to fit parent
+	cityEntry.ResourceInfoGrid:RegisterSizeChanged( function() ResizeResourceBackgroundColumns(cityEntry.ResourceInfoGrid, cityEntry.ResourceInfoLeftColumn, cityEntry.ResourceInfoRightColumn); end );
+end
+
+-- ===========================================================================
+function ResizeResourceBackgroundColumns(parent:table, leftColumn:table, rightColumn:table)
+	leftColumn:SetSizeY(parent:GetSizeY());
+	rightColumn:SetSizeY(parent:GetSizeY());
 end
 
 -- ===========================================================================
@@ -643,7 +671,6 @@ function AddYieldResourceEntry(yieldInfo:table, yieldValue:number, sourceText:st
 	entryInstance.ResourceEntryIcon:SetText(icon);
 	entryInstance.ResourceEntryText:SetText(text);
 	entryInstance.ResourceEntryStack:CalculateSize();
-	entryInstance.ResourceEntryStack:ReprocessAnchoring();
 end
 
 -- ===========================================================================
@@ -661,7 +688,6 @@ function AddReligiousPressureResourceEntry(religionInfo:table, pressureValue:num
 	local icon:string, text:string = FormatReligiousPressureText(religionInfo, pressureValue, forOriginCity);
 	entryInstance.ResourceEntryText:SetText(text);
 	entryInstance.ResourceEntryStack:CalculateSize();
-	entryInstance.ResourceEntryStack:ReprocessAnchoring();
 end
 
 ---------------------------------------
@@ -766,17 +792,32 @@ function OnTradeRouteSelected( cityOwner:number, cityID:number )
 end
 
 -- ===========================================================================
+function CheckTradeRoute(unit:table, city:table)
+	if city and unit then
+		local operationParams = {};
+		operationParams[UnitOperationTypes.PARAM_X0] = city:GetX();
+		operationParams[UnitOperationTypes.PARAM_Y0] = city:GetY();
+		operationParams[UnitOperationTypes.PARAM_X1] = unit:GetX();
+		operationParams[UnitOperationTypes.PARAM_Y1] = unit:GetY();
+		if (UnitManager.CanStartOperation(unit, UnitOperationTypes.MAKE_TRADE_ROUTE, nil, operationParams)) then
+			return true;
+		end
+	end
+
+	return false;
+end
+
+-- ===========================================================================
 function RequestTradeRoute()
-	local selectedUnit = UI.GetHeadSelectedUnit();
 	local destinationCity = GetDestinationCity();
-	if destinationCity and selectedUnit then
+	if destinationCity and m_selectedUnit then
 		local operationParams = {};
 		operationParams[UnitOperationTypes.PARAM_X0] = destinationCity:GetX();
 		operationParams[UnitOperationTypes.PARAM_Y0] = destinationCity:GetY();
-		operationParams[UnitOperationTypes.PARAM_X1] = selectedUnit:GetX();
-		operationParams[UnitOperationTypes.PARAM_Y1] = selectedUnit:GetY();
-		if (UnitManager.CanStartOperation(selectedUnit, UnitOperationTypes.MAKE_TRADE_ROUTE, nil, operationParams)) then
-			UnitManager.RequestOperation(selectedUnit, UnitOperationTypes.MAKE_TRADE_ROUTE, operationParams);
+		operationParams[UnitOperationTypes.PARAM_X1] = m_selectedUnit:GetX();
+		operationParams[UnitOperationTypes.PARAM_Y1] = m_selectedUnit:GetY();
+		if (UnitManager.CanStartOperation(m_selectedUnit, UnitOperationTypes.MAKE_TRADE_ROUTE, nil, operationParams)) then
+			UnitManager.RequestOperation(m_selectedUnit, UnitOperationTypes.MAKE_TRADE_ROUTE, operationParams);
 			UI.SetInterfaceMode(InterfaceModeTypes.SELECTION);
             UI.PlaySound("START_TRADE_ROUTE");
 		end
@@ -947,12 +988,12 @@ function Open()
 		m_postOpenSelectCityID = -1;
 	else
 		-- Select the previously completed trade route automatically
-		local selectedUnit:table = UI.GetHeadSelectedUnit();
-		local trade:table = selectedUnit:GetTrade();
+		m_selectedUnit = UI.GetHeadSelectedUnit();
+		local trade:table = m_selectedUnit:GetTrade();
 		local prevOriginComponentID:table = trade:GetLastOriginTradeCityComponentID();
 		local prevDestComponentID:table = trade:GetLastDestinationTradeCityComponentID();
 
-		local originCity:table = Cities.GetCityInPlot(selectedUnit:GetX(), selectedUnit:GetY());
+		local originCity:table = Cities.GetCityInPlot(m_selectedUnit:GetX(), m_selectedUnit:GetY());
 		if originCity:GetID() == prevOriginComponentID.id and originCity:GetOwner() == prevOriginComponentID.player then
 			TradeRouteSelected( prevDestComponentID.player, prevDestComponentID.id );
 		end
@@ -1158,6 +1199,7 @@ function Initialize()
 	Controls.FilterButton:RegisterCallback( eLClick, UpdateFilterArrow );
 	Controls.DestinationFilterPulldown:RegisterSelectionCallback( OnFilterSelected );
 	Controls.Header_CloseButton:RegisterCallback( eLClick, OnClose );
+	Controls.TopGrid:RegisterSizeChanged( OnTopGridSizeChanged );
 
 	-- Obtain refrence to another context.
 	m_pTradeOverviewContext = ContextPtr:LookUpControl("/InGame/TradeOverview");

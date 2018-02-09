@@ -167,7 +167,7 @@
 		<Container				ID="Top"																				 Size="1003,auto">
 			<GridButton			ID="RowHeaderButton"								Offset="0,0"	Size="parent,30"		Style="RowButton"		String="$RowHeaderButton"  />
 			<Image					ID="RowExpandCheck"		Anchor="R,T"	Offset="5,5"	Size="22,22"				Texture="Controls_ExpandButton" />
-			<ScrollPanel		ID="CollapseScroll"									Offset="0,31"	Size="parent,auto"		StackGrowth="Bottom" FullClip="1" >
+			<ScrollPanel		ID="CollapseScroll"									Offset="0,31"	Size="parent,default"		StackGrowth="Bottom" FullClip="1" >
 				<SlideAnim		ID="CollapseAnim"			Start="0,0"	EndOffset="0,0" Size="parent,auto" Speed="4" Cycle="Once" Stopped="1">
 					<Stack			ID="ContentStack"										Offset="0,0"	StackGrowth="Bottom" />
 				</SlideAnim>

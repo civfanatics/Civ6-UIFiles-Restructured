@@ -39,7 +39,10 @@ end
 
 -- ===========================================================================
 function OnShow()
+	
+	RebuildPlayerParameters(true);
 	GameSetup_RefreshParameters();
+	
 
 
 	-- Hide buttons if we're already in a game
@@ -70,6 +73,7 @@ end
 
 -- ===========================================================================
 function OnHide( isHide, isInit )
+	ReleasePlayerParameters();
 	HideGameSetup();
 end
 
@@ -84,6 +88,11 @@ function OnDefaultButton()
 	local gameName = GameConfiguration.GetValue("GAME_NAME");
 	GameConfiguration.SetToDefaults(gameMode);
 	GameConfiguration.RegenerateSeeds();
+
+	-- Kludge:  SetToDefaults assigns the ruleset to be standard.
+	-- Clear this value so that the setup parameters code can guess the best 
+	-- default.
+	GameConfiguration.SetValue("RULESET", nil);
 	
 	-- Only assign GAME_NAME if the value is valid.
 	if(gameName and #gameName > 0) then
@@ -233,6 +242,12 @@ function OnRaiseHostGame()
 	-- "Raise" means the host game screen is being shown for a fresh game.  Game configuration need to be defaulted.
 	local gameMode = GameModeTypeForMPLobbyType(m_lobbyModeName);
 	GameConfiguration.SetToDefaults(gameMode);
+
+	-- Kludge:  SetToDefaults assigns the ruleset to be standard.
+	-- Clear this value so that the setup parameters code can guess the best 
+	-- default.
+	GameConfiguration.SetValue("RULESET", nil);
+
 	UIManager:QueuePopup( ContextPtr, PopupPriority.Current );
 end
 

@@ -61,8 +61,8 @@ function OnActionButton()
 		   			if ( not m_kPopupDialog:IsOpen()) then
 						m_kPopupDialog:AddText(Locale.Lookup("LOC_CONFIRM_LOAD_TXT"));
 						m_kPopupDialog:AddTitle(Locale.ToUpper(Locale.Lookup("LOC_CONFIRM_TITLE_LOAD_TXT")));
-						m_kPopupDialog:AddButton(Locale.Lookup("LOC_NO_BUTTON"), OnLoadNo);
 						m_kPopupDialog:AddButton(Locale.Lookup("LOC_YES_BUTTON"), OnLoadYes, nil, nil, "PopupButtonInstanceGreen"); 
+						m_kPopupDialog:AddButton(Locale.Lookup("LOC_NO_BUTTON"), OnLoadNo);
 						m_kPopupDialog:Open();
 					end
 				else
@@ -105,7 +105,7 @@ function OnShow()
 	local cloudEnabled = UI.AreCloudSavesEnabled() and not GameConfiguration.IsAnyMultiplayer();
 	Controls.CloudCheck:SetHide(not cloudEnabled);
 	
-	local autoSavesDisabled = (g_GameType == SaveTypes.WORLDBUILDER_MAP or g_FileType == SaveFileTypes.GAME_CONFIGURATION);
+	local autoSavesDisabled = (g_GameType == SaveTypes.WORLDBUILDER_MAP);
 	Controls.AutoCheck:SetHide(autoSavesDisabled);	
 
 	RefreshSortPulldown();
@@ -350,13 +350,29 @@ function OnLoadComplete(eResult, eType, eOptions, eFileType )
 
 	-- Did a configuration load?
 	if eFileType == SaveFileTypes.GAME_CONFIGURATION then
+
 		if ContextPtr:IsVisible() then
-			-- Yes, then just dequeue the popup
+
+			-- Doing this code inside the IsVisible if, because there are multiple instances of the LoadGameMenu
+
+			-- Make sure the Game State is pre-game.  If the user loaded a auto-save of the configuration, or 
+			-- got the configuration out of a save, it will be in a state where they can't edit some values.
+			if (GameConfiguration ~= nil) then
+				GameConfiguration.SetToPreGame();
+			end
+
 			UIManager:DequeuePopup( ContextPtr );
+
 		end
 	end
 
 end
+
+-- ===========================================================================
+function OnSelectedFileStackSizeChanged()
+	ResizeGameInfoScrollPanel();
+end
+
 -- ===========================================================================
 function Initialize()
 	m_kPopupDialog = PopupDialog:new( "LoadGameMenu" );
@@ -385,6 +401,7 @@ function Initialize()
 	Controls.CloudCheck:RegisterCallback( Mouse.eLClick, OnCloudCheck );
 	Controls.Delete:RegisterCallback( Mouse.eLClick, OnDelete );
 	Controls.Delete:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
+	Controls.SelectedFileStack:RegisterSizeChanged( OnSelectedFileStackSizeChanged );
 
 	-- LUA Events
 	--??TRON remove LuaEvents.Lobby_ShowLoadScreen.Add(function() m_showMainMenuOnHide = false; end);

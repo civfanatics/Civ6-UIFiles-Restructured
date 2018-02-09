@@ -98,7 +98,7 @@ end
 -------------------------------------------------------------------------------
 -- Create parameters for all players.
 -------------------------------------------------------------------------------
-function CreatePlayerParameters(playerId)
+function CreatePlayerParameters(playerId, bHeadless)
 	print("Creating player parameters for Player " .. tonumber(playerId));
 
 	-- Don't create player parameters for minor city states.  The configuration database doesn't know city state parameter values (like city state leader types) so it will stomp on them.
@@ -123,12 +123,19 @@ function CreatePlayerParameters(playerId)
 	-- In the future, I hope this can be more like the GameSetup and allow for unique player parameters to be created.
 	parameters.Config_ReadParameterValues = Player_ReadParameterValues;
 	parameters.Config_WriteParameterValues = Player_WriteParameterValues;
-	parameters.UI_CreateParameter = Player_UI_CreateParameter;
-	parameters.UI_DestroyParameter = Player_UI_DestroyParameter;
-	parameters.UI_SetParameterPossibleValues = UI_SetParameterPossibleValues;
-	parameters.UI_SetParameterValue = UI_SetParameterValue;
-	parameters.UI_SetParameterEnabled = UI_SetParameterEnabled;
-	parameters.UI_SetParameterVisible = UI_SetParameterVisible;
+
+
+	-- Stub out Visualization function to do nothing if headless.
+	-- While the UI_ methods should no longer be called because of this, nil them out just in case.
+	if(bHeadless) then
+		parameters.UpdateVisualization = function() end
+	end
+	parameters.UI_CreateParameter = (bHeadless ~= true) and Player_UI_CreateParameter;
+	parameters.UI_DestroyParameter = (bHeadless ~= true) and Player_UI_DestroyParameter;
+	parameters.UI_SetParameterPossibleValues = (bHeadless ~= true) and UI_SetParameterPossibleValues;
+	parameters.UI_SetParameterValue = (bHeadless ~= true) and UI_SetParameterValue;
+	parameters.UI_SetParameterEnabled = (bHeadless ~= true) and UI_SetParameterEnabled;
+	parameters.UI_SetParameterVisible = (bHeadless ~= true) and UI_SetParameterVisible;
 
 	parameters:Initialize();
 
@@ -149,13 +156,13 @@ function GetPlayerParameters(player_id)
 	end
 end
 
-function RebuildPlayerParameters()
+function RebuildPlayerParameters(bHeadless)
 	g_PlayerParameters = {};
 
 	local player_ids = GameConfiguration.GetParticipatingPlayerIDs();
 	print("There are " .. #player_ids .. " participating players.");
 	for i, player_id in ipairs(player_ids) do	
-		CreatePlayerParameters(player_id);
+		CreatePlayerParameters(player_id, bHeadless);
 	end
 end
 
@@ -196,7 +203,15 @@ function GetPlayerParameterError(playerId)
 				-- parameters.
 				local playerLeader = p.Parameters["PlayerLeader"];
 				if(playerLeader) then
-					return playerLeader.Error;
+					-- TTP 31558 - In multiplayer, Open and Closed slots have nil for most of their player configuration values because the slots have not been reset yet.
+					-- On the client, the player setup logic will try to change the nil values to their default values and fail because the client does not have write access.
+					-- This is OK and should not count as a player parameter error, which would block game start incorrectly.
+					local pPlayerConfig = PlayerConfigurations[playerId];
+					if(pPlayerConfig ~= nil and not pPlayerConfig:IsParticipant()) then
+						return nil;
+					else
+						return playerLeader.Error;
+					end
 				end
 			end
 		end

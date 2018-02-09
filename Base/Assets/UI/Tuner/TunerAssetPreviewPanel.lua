@@ -85,3 +85,10 @@ function OnUIDebugModeEntered()
 end
 
 LuaEvents.UIDebugModeEntered.Add(OnUIDebugModeEntered);
+
+-- Globals for Landmarks asset visualization
+g_SelectedEra = nil;
+g_SelectedCiv = nil;
+g_AddCitySpacing = true;
+g_BenchmarkLogName = "ap_frametimes";
+

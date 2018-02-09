@@ -29,7 +29,7 @@
         <Image  ID="PageTurnerImage"    Anchor="C,C"   Offset="0,0"     Size="parent,parent"  Texture="Controls_ArrowButtonRight" FlipX="false"/>
       </Button>
       
-			<Tutorial  ID="TutSelectCityResearch" Style="TutorialContainer" Anchor="R,T" AnchorSide="O,I" Offset="60,350" TriggerBy="TutorialSelectResearch"  >
+			<Tutorial  ID="TutSelectCityResearch" Style="TutorialContainer" Anchor="R,T" AnchorSide="O,I" Offset="20,350" TriggerBy="TutorialSelectResearch"  >
 				<Grid Style="TutorialCalloutGrid">
 					<Label Style="TutorialHeaderText" String="LOC_META_7_HEAD"/>
 					<Label Style="TutorialBodyText" String="LOC_META_7_BODY" />
@@ -39,7 +39,7 @@
         </SlideAnim>
 			</Tutorial>
 
-			<Tutorial ID="TutSelectCityResearchB" Style="TutorialContainer" Anchor="R,T" AnchorSide="O,I" Offset="60,530" TriggerBy="TutorialSelectResearchB">
+			<Tutorial ID="TutSelectCityResearchB" Style="TutorialContainer" Anchor="R,T" AnchorSide="O,I" Offset="20,530" TriggerBy="TutorialSelectResearchB">
 				<Grid Style="TutorialCalloutGrid">
 					<Label Style="TutorialHeaderText" String="LOC_META_33_HEAD"/>
 					<Label Style="TutorialBodyText" String="LOC_META_33_BODY" />
@@ -49,7 +49,7 @@
         </SlideAnim>
 			</Tutorial>
 
-			<Tutorial  ID="TutSelectCityResearchC" Style="TutorialContainer" Anchor="R,T" AnchorSide="O,I" Offset="60,710" TriggerBy="TutorialSelectResearchC">
+			<Tutorial  ID="TutSelectCityResearchC" Style="TutorialContainer" Anchor="R,T" AnchorSide="O,I" Offset="20,710" TriggerBy="TutorialSelectResearchC">
 				<Grid Style="TutorialCalloutGrid">
 					<Label Style="TutorialHeaderText" String="LOC_META_51_HEAD"/>
 					<Label Style="TutorialBodyText" String="LOC_META_51_BODY" />
@@ -59,7 +59,7 @@
         </SlideAnim>
 			</Tutorial>
 
-			<Tutorial  ID="TutSelectCityResearchIrrigation" Style="TutorialContainer" Anchor="R,T" AnchorSide="O,I" Offset="60,450" TriggerBy="TutorialSelectResearchIrrigation">
+			<Tutorial  ID="TutSelectCityResearchIrrigation" Style="TutorialContainer" Anchor="R,T" AnchorSide="O,I" Offset="20,450" TriggerBy="TutorialSelectResearchIrrigation">
 				<Grid Style="TutorialCalloutGrid">
 					<Label Style="TutorialHeaderText" String="LOC_META_6_HEAD"/>
 					<Label Style="TutorialBodyText" String="LOC_META_SELECT_IRRIGATION" />

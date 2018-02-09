@@ -201,7 +201,7 @@
       <Label ID="SpyName" Offset="46,10" Style="FontFlair18" SmallCaps="24" SmallCapsType="EveryWord"/>
       <Label ID="CivName" Offset="46,28" Style="FontNormal16"/>
       
-      <Label Anchor="R,C" Offset="10,0" Style="FontNormal18" String="LOC_ESPIONAGEOVERVIEW_OFFER_TRADE"/>
+      <Label ID="OfferTradeText" Anchor="R,C" Offset="10,0" Style="FontNormal18" String="LOC_ESPIONAGEOVERVIEW_OFFER_TRADE"/>
     </GridButton>
   </Instance>
   

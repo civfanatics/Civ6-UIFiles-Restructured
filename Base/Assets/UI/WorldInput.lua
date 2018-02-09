@@ -95,6 +95,7 @@ local m_actionHotkeyPrevUnit	:number = Input.GetActionId("PrevUnit");		--	Hot Ke
 local m_actionHotkeyNextUnit	:number = Input.GetActionId("NextUnit");		--	Hot Key Handling
 local m_actionHotkeyPrevCity	:number = Input.GetActionId("PrevCity");		--	Hot Key Handling
 local m_actionHotkeyNextCity	:number = Input.GetActionId("NextCity");		--	Hot Key Handling
+local m_actionHotkeyCapitalCity :number = Input.GetActionId("CapitalCity");     --  Hot Key Handling
 local m_kTouchesDownInWorld		:table	= {};		-- Tracks "down" touches that occurred in this context.
 local m_isALTDown				:boolean= false;
 local m_isMouseButtonLDown		:boolean= false;
@@ -184,14 +185,6 @@ function ProcessPan( panX :number, panY :number )
 	end
 
 	UI.PanMap( panX, panY );
-end
-
-
--- ===========================================================================
---	Input conditions are set for edge camera panning
--- ===========================================================================
-function IsAbleToEdgePan()
-	return UserConfiguration.IsEdgePanEnabled() or ( (UI.GetInterfaceMode() == InterfaceModeTypes.SELECTION) and m_isMouseButtonRDown );
 end
 
 
@@ -811,7 +804,7 @@ function RealizeMovementPath(showQueuedPath:boolean)
 		
 		if table.count(pathPlots) > 1 then
 			-- Start and end art "variations" when drawing path
-			local startHexId:number = pathPlots[1];
+			local startHexId:number = kUnit:GetPlotId();
 			local endHexId	:number = pathPlots[table.count(pathPlots)];
 			
 			-- Check if our desired "movement" is actually a ranged attack. Early out if so.
@@ -1859,6 +1852,7 @@ function OnInterfaceModeChange_UnitRangeAttack(eNewMode)
 			m_focusedTargetPlot = -1;
 		end
 
+		local unitPlotID = pSelectedUnit:GetPlotId();
 		local tResults = UnitManager.GetOperationTargets(pSelectedUnit, UnitOperationTypes.RANGE_ATTACK );
 		local allPlots = tResults[UnitOperationResults.PLOTS];
 		if (allPlots ~= nil) then
@@ -1873,9 +1867,9 @@ function OnInterfaceModeChange_UnitRangeAttack(eNewMode)
 			if (table.count(g_targetPlots) ~= 0) then			
 				-- Variation will hold specific targets in range 
 				local kVariations:table = {};
-				for _,plotId in ipairs(g_targetPlots) do
+				for _,targetPlotId in ipairs(g_targetPlots) do
 					-- Variant needed to place the attack arc, but we don't want to double-draw the crosshair on the hex.
-					table.insert(kVariations, {"EmptyVariant", allPlots[1], plotId} );	
+					table.insert(kVariations, {"EmptyVariant", unitPlotID, targetPlotId} );	
 				end
 				local eLocalPlayer:number = Game.GetLocalPlayer();
 
@@ -1906,17 +1900,19 @@ function UnitAirAttack( pInputStruct )
 		local pSelectedUnit = UI.GetHeadSelectedUnit();
 		local eAttackingPlayer = pSelectedUnit:GetOwner();
 		local eUnitComponentID:table = pSelectedUnit:GetComponentID();
-		local bWillStartWar = PlayersVisibility[eAttackingPlayer]:IsVisible(plotX, plotY) and CombatManager.IsAttackChangeWarState(eUnitComponentID, plotX, plotY);
+
+		local bWillStartWar = false;
+		local results:table;
+		if (PlayersVisibility[eAttackingPlayer]:IsVisible(plotX, plotY)) then
+			results = CombatManager.IsAttackChangeWarState(eUnitComponentID, plotX, plotY);
+			if (results ~= nil and #results > 0) then
+				bWillStartWar = true;
+			end
+		end
+
 		if (bWillStartWar) then
-			local eDefendingPlayer = CombatManager.GetBestDefender(eUnitComponentID, plotX, plotY );
-			if (eDefendingPlayer == nil) then
-				local pPlot = Map.GetPlot(plotX, plotY);
-				eDefendingPlayer = pPlot:GetOwner();
-			end
-			-- Create the action specific parameters 
-			if (eDefendingPlayer ~= nil and eDefendingPlayer ~= -1) then
-				LuaEvents.Civ6Common_ConfirmWarDialog(eAttackingPlayer, eDefendingPlayer, WarTypes.SURPRISE_WAR);
-			end
+			local eDefendingPlayer = results[1];
+			LuaEvents.Civ6Common_ConfirmWarDialog(eAttackingPlayer, eDefendingPlayer, WarTypes.SURPRISE_WAR);
 		else
 			if (UnitManager.CanStartOperation( pSelectedUnit, UnitOperationTypes.AIR_ATTACK, nil, tParameters)) then
 				UnitManager.RequestOperation( pSelectedUnit, UnitOperationTypes.AIR_ATTACK, tParameters);
@@ -1982,17 +1978,15 @@ function OnWMDStrikeEnd( pInputStruct )
 		tParameters[UnitOperationTypes.PARAM_Y] = plot:GetY();
 		tParameters[UnitOperationTypes.PARAM_WMD_TYPE] = eWMD;
 		if (UnitManager.CanStartOperation( pSelectedUnit, UnitOperationTypes.WMD_STRIKE, nil, tParameters)) then
+			
+			local bWillStartWar = false;
+			local results:table = CombatManager.IsAttackChangeWarState(pSelectedUnit:GetComponentID(), plot:GetX(), plot:GetY(), eWMD);
+			if (results ~= nil and #results > 0) then
+				bWillStartWar = true;
+			end
 
-			local bWillStartWar = CombatManager.IsAttackChangeWarState( pSelectedUnit:GetComponentID(), plot:GetX(), plot:GetY(), eWMD );
 			if (bWillStartWar) then
-				local eDefendingPlayer = CombatManager.GetBestDefender( pSelectedUnit:GetComponentID(), plot:GetX(), plot:GetY() );
-				if (eDefendingPlayer == nil) then
-					eDefendingPlayer = plot:GetOwner();
-				end
-				-- Create the action specific parameters 
-				if (eDefendingPlayer ~= nil and eDefendingPlayer ~= -1) then
-					LuaEvents.WorldInput_ConfirmWarDialog(pSelectedUnit:GetOwner(), eDefendingPlayer, WarTypes.SURPRISE_WAR, strikeFn);
-				end
+				LuaEvents.WorldInput_ConfirmWarDialog(pSelectedUnit:GetOwner(), results, WarTypes.SURPRISE_WAR, strikeFn);
 			else
 				local pPopupDialog :table = PopupDialogInGame:new("ConfirmWMDStrike");
 				pPopupDialog:AddText(Locale.Lookup("LOC_LAUNCH_WMD_DIALOG_ARE_YOU_SURE"));
@@ -2087,16 +2081,15 @@ function OnICBMStrikeEnd( pInputStruct )
 		tParameters[CityCommandTypes.PARAM_Y1] = targetPlot:GetY();
 		tParameters[CityCommandTypes.PARAM_WMD_TYPE] = eWMD;
 		if (CityManager.CanStartCommand( pSelectedCity, CityCommandTypes.WMD_STRIKE, tParameters)) then
-			local bWillStartWar = CombatManager.IsAttackChangeWarState( pSelectedCity:GetComponentID(), targetPlot:GetX(), targetPlot:GetY(), eWMD );
+			
+			local bWillStartWar = false;
+			local results:table = CombatManager.IsAttackChangeWarState(pSelectedCity:GetComponentID(), targetPlot:GetX(), targetPlot:GetY(), eWMD);
+			if (results ~= nil and #results > 0) then
+				bWillStartWar = true;
+			end
+
 			if (bWillStartWar) then
-				local eDefendingPlayer = CombatManager.GetBestDefender( pSelectedCity:GetComponentID(), targetPlot:GetX(), targetPlot:GetY() );
-				if (eDefendingPlayer == nil) then
-					eDefendingPlayer = targetPlot:GetOwner();
-				end
-				-- Create the action specific parameters 
-				if (eDefendingPlayer ~= nil and eDefendingPlayer ~= -1 ) then
-					LuaEvents.WorldInput_ConfirmWarDialog(pSelectedCity:GetOwner(), eDefendingPlayer, WarTypes.SURPRISE_WAR, strikeFn );
-				end
+				LuaEvents.WorldInput_ConfirmWarDialog(pSelectedCity:GetOwner(), results, WarTypes.SURPRISE_WAR, strikeFn);
 			else
 				local pPopupDialog :table = PopupDialogInGame:new("ConfirmICBMStrike");
 				pPopupDialog:AddText(Locale.Lookup("LOC_LAUNCH_ICBM_DIALOG_ARE_YOU_SURE"));
@@ -2186,16 +2179,15 @@ function CoastalRaid( pInputStruct )
 
 		local pSelectedUnit = UI.GetHeadSelectedUnit();
 
-		local bWillStartWar = CombatManager.IsAttackChangeWarState( pSelectedUnit:GetComponentID(), plot:GetX(), plot:GetY());
+		local bWillStartWar = false;
+		local results:table = CombatManager.IsAttackChangeWarState(pSelectedUnit:GetComponentID(), plot:GetX(), plot:GetY());
+		if (results ~= nil and #results > 0) then
+			bWillStartWar = true;
+		end
+
 		if (bWillStartWar) then
-			local eDefendingPlayer = CombatManager.GetBestDefender( pSelectedUnit:GetComponentID(), plot:GetX(), plot:GetY() );
-			if (eDefendingPlayer == nil) then
-				eDefendingPlayer = plot:GetOwner();
-			end
 			-- Create the action specific parameters 
-			if (eDefendingPlayer ~= nil and eDefendingPlayer ~= -1) then
-				LuaEvents.WorldInput_ConfirmWarDialog(pSelectedUnit:GetOwner(), eDefendingPlayer, WarTypes.SURPRISE_WAR);
-			end
+			LuaEvents.WorldInput_ConfirmWarDialog(pSelectedUnit:GetOwner(), results, WarTypes.SURPRISE_WAR);
 		else
 			if (UnitManager.CanStartOperation( pSelectedUnit, UnitOperationTypes.COASTAL_RAID, nil, tParameters)) then
 				UnitManager.RequestOperation( pSelectedUnit, UnitOperationTypes.COASTAL_RAID, tParameters);
@@ -2422,6 +2414,8 @@ function OnInterfaceModeChange_CityRangeAttack(eNewMode)
 		local tParameters = {};
 		tParameters[CityCommandTypes.PARAM_RANGED_ATTACK] = UI.GetInterfaceModeParameter(CityCommandTypes.PARAM_RANGED_ATTACK);
 
+		local sourcePlotID = Map.GetPlotIndex(pSelectedCity:GetX(), pSelectedCity:GetY());
+
 		local tResults = CityManager.GetCommandTargets(pSelectedCity, CityCommandTypes.RANGE_ATTACK, tParameters );
 		local allPlots = tResults[CityCommandResults.PLOTS];
 		if (allPlots ~= nil) then
@@ -2437,7 +2431,7 @@ function OnInterfaceModeChange_CityRangeAttack(eNewMode)
 				-- Variation will hold specific targets in range
 				local kVariations:table = {};
 				for _,plotId in ipairs(g_targetPlots) do
-					table.insert(kVariations, {"AttackRange_Target", allPlots[1], plotId} );
+					table.insert(kVariations, {"AttackRange_Target", sourcePlotID, plotId} );
 				end
 				local eLocalPlayer:number = Game.GetLocalPlayer();
 				
@@ -2490,6 +2484,9 @@ function OnInterfaceModeChange_DistrictRangeAttack(eNewMode)
 		local tParameters = {};
 		tParameters[CityCommandTypes.PARAM_RANGED_ATTACK] = UI.GetInterfaceModeParameter(CityCommandTypes.PARAM_RANGED_ATTACK);
 
+		--The source of the attack is the plot that the district is in
+		local sourcePlotID = Map.GetPlotIndex(pSelectedDistrict:GetX(), pSelectedDistrict:GetY());
+
 		local tResults		:table = CityManager.GetCommandTargets(pSelectedDistrict, CityCommandTypes.RANGE_ATTACK, tParameters );
 		local allPlots		:table = tResults[CityCommandResults.PLOTS];
 		if (allPlots ~= nil) then
@@ -2505,7 +2502,7 @@ function OnInterfaceModeChange_DistrictRangeAttack(eNewMode)
 				-- Variation will hold specific targets in range
 				local kVariations:table = {};
 				for _,plotId in ipairs(g_targetPlots) do
-					table.insert(kVariations, {"AttackRange_Target", allPlots[1], plotId} );
+					table.insert(kVariations, {"AttackRange_Target", sourcePlotID, plotId} );
 				end
 				local eLocalPlayer:number = Game.GetLocalPlayer();
 				
@@ -3044,59 +3041,6 @@ end
 
 
 -- ===========================================================================
---	Related to edge-panning.
--- ===========================================================================
-function OnMouseBeginPanLeft()	
-	if IsAbleToEdgePan() then 
-		m_edgePanX = -PAN_SPEED; 
-		ProcessPan(m_edgePanX,m_edgePanY);
-	end 
-end
-function OnMouseStopPanLeft()	
-	if not ( m_edgePanX == 0.0 ) then
-		m_edgePanX = 0.0; 
-		ProcessPan(m_edgePanX,m_edgePanY);
-	end
-end
-function OnMouseBeginPanRight() 
-	if IsAbleToEdgePan() then 
-		m_edgePanX = PAN_SPEED; 
-		ProcessPan(m_edgePanX,m_edgePanY);
-	end 
-end
-function OnMouseStopPanRight()  
-	if not ( m_edgePanX == 0.0 ) then 
-		m_edgePanX = 0;	
-		ProcessPan(m_edgePanX,m_edgePanY);
-	end
-end
-function OnMouseBeginPanUp()	
-	if IsAbleToEdgePan() then 
-		m_edgePanY = PAN_SPEED; 
-		ProcessPan(m_edgePanX,m_edgePanY);
-	end 
-end
-function OnMouseStopPanUp()		
-	if not ( m_edgePanY == 0.0 ) then
-		m_edgePanY = 0;	
-		ProcessPan(m_edgePanX,m_edgePanY);
-	end
-end
-function OnMouseBeginPanDown()	
-	if IsAbleToEdgePan() then 
-		m_edgePanY = -PAN_SPEED; 
-		ProcessPan(m_edgePanX,m_edgePanY);
-	end 
-end
-function OnMouseStopPanDown()	
-	if not ( m_edgePanY == 0.0 ) then
-		m_edgePanY = 0;	
-		ProcessPan(m_edgePanX,m_edgePanY);
-	end
-end
-
-
--- ===========================================================================
 --	UI Event
 --	Input Event Processing
 -- ===========================================================================
@@ -3341,6 +3285,24 @@ function OnInputActionTriggered( actionId )
 		UI.SelectNextCity(curCity);
 		UI.PlaySound("Play_UI_Click");
 
+	elseif actionId == m_actionHotkeyCapitalCity then
+		local capital;
+		local ePlayer = Game.GetLocalPlayer();
+		local player = Players[ePlayer];
+		if(player) then
+			local cities = player:GetCities();
+			for i, city in cities:Members() do
+				if(city:IsCapital()) then
+					capital = city;
+					break;
+				end
+			end
+		end
+
+		if(capital) then
+			UI.SelectNextCity(capital);
+			UI.PlaySound("Play_UI_Click");
+		end
 	elseif actionId == m_actionHotkeyOnlinePause then
 		if GameConfiguration.IsNetworkMultiplayer() then
 			TogglePause();
@@ -3375,6 +3337,7 @@ function Initialize()
 	DefaultMessageHandler[MouseEvents.RButtonUp]													= OnDefaultChangeToSelectionMode;
 	DefaultMessageHandler[MouseEvents.PointerUp]													= OnDefaultChangeToSelectionMode;
 	DefaultMessageHandler[MouseEvents.MouseWheel]													= OnMouseWheelZoom;
+	DefaultMessageHandler[MouseEvents.MButtonDown]													= OnMouseSelectionSnapToPlot;
 
 	-- Interface Mode ENTERING :
 	InterfaceModeMessageHandler[InterfaceModeTypes.AIR_ATTACK]			[INTERFACEMODE_ENTER]		= OnInterfaceModeChange_Air_Attack;
@@ -3559,14 +3522,6 @@ function Initialize()
 	LuaEvents.InGameTopOptionsMenu_Close.Add(function() m_isPauseMenuOpen = false; ClearAllCachedInputState(); end);
 
 	-- UI Events
-	Controls.LeftScreenEdge:RegisterMouseEnterCallback( OnMouseBeginPanLeft );
-	Controls.LeftScreenEdge:RegisterMouseExitCallback( OnMouseStopPanLeft );
-	Controls.RightScreenEdge:RegisterMouseEnterCallback( OnMouseBeginPanRight );
-	Controls.RightScreenEdge:RegisterMouseExitCallback( OnMouseStopPanRight );
-	Controls.TopScreenEdge:RegisterMouseEnterCallback( OnMouseBeginPanUp );
-	Controls.TopScreenEdge:RegisterMouseExitCallback( OnMouseStopPanUp );
-	Controls.BottomScreenEdge:RegisterMouseEnterCallback( OnMouseBeginPanDown );
-	Controls.BottomScreenEdge:RegisterMouseExitCallback( OnMouseStopPanDown );
 	ContextPtr:SetInputHandler( OnInputHandler, true );
 	ContextPtr:SetRefreshHandler( OnRefresh );
 	ContextPtr:SetAppRegainedFocusHandler( OnAppRegainedFocusHandler );

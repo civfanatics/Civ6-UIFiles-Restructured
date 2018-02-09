@@ -19,12 +19,4 @@
       </Box>
     </AlphaAnim>
   </Container>
-	
-  <Container                                        Size="parent,parent">
-    <Container  ID="LeftScreenEdge"    Anchor="L,T" Size="30,parent" Offset="0,30"              />
-    <Container  ID="RightScreenEdge"   Anchor="R,T" Size="30,parent" Offset="0,30"               />
-		<Container  ID="TopScreenEdge"     Anchor="L,T" Size="parent,40" Offset="0,30" />
-    <Container  ID="BottomScreenEdge"  Anchor="L,B" Size="parent,30" Offset="0,0"  />
-  </Container>
-	
 </Context>

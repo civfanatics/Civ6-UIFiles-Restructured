@@ -88,6 +88,7 @@
   <ColorSet Name="BodyTextLightBlue"  Color0="93,153,205,255" Color1="6,53,92,150"/>
 	<ColorSet Name="ServerText"					Color0="211,215,218" Color1="Black"/>
 	<ColorSet Name="ServerTextFaded"    Color0="82,118,125" Color1="Black"/>
+	<ColorSet Name="ServerTextVersionMismatch"    Color0="125,82,96" Color1="Black"/>
 	<ColorSet Name="ServerColumnHeader" Color0="231,235,238" Color1="Black"/>
   <ColorSet Name="ConfirmButton"      Color0="206,229,238,255" Color1="83,198,247,100"/>
   <ColorSet Name="DenyButton"					Color0="206,205,206,255" Color1="168,34,34,100"/>

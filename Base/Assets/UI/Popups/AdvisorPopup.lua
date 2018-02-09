@@ -2,6 +2,7 @@
 --	Popup that occurs with the tutorial system
 -- ===========================================================================
 include( "InstanceManager" );
+include( "Civ6Common" ); -- IsTutorialRunning()
 
 
 -- ===========================================================================
@@ -48,6 +49,7 @@ local m_currentItem			: AdvisorItem;		-- Currently only exists for hotloading
 local m_isDiplomacyUp		: boolean = false;	-- Is the diplomacy system currently not showing
 local m_hotkeyCallback		: ifunction = nil;
 local m_isAlwaysActiveSet	: boolean = false;	-- Did this context set the tutorial to be in always active mode.
+local m_kQueuedPopups		: table	 = {};
 
 -- ===========================================================================
 --	FUNCTIONS
@@ -87,6 +89,7 @@ function AddAdvisorButton( data:AdvisorItem, text:string, callbackFunc:ifunction
 	buttonStackControl:CalculateSize();
 	buttonStackControl:ReprocessAnchoring();
 end
+
 
 -- ===========================================================================
 function ShowAdvisorPopup( advisorData:AdvisorItem )
@@ -192,7 +195,7 @@ function ShowAdvisorPopup( advisorData:AdvisorItem )
 		UITutorialManager:ShowControlsByID( trigger, false );	
 	end
 
-	UIManager:QueuePopup( ContextPtr, PopupPriority.Current );
+	UIManager:QueuePopup( ContextPtr, PopupPriority.Medium );
 
 	-- Put a hold on the event so further events don't process
 	ms_eventID = ReferenceCurrentGameCoreEvent();
@@ -251,12 +254,52 @@ function OnHideAdvisorDialog()
 	end
 	
 	m_hotkeyCallback = nil;
+	
+	-- If the tutorial is running, there will be another event to dequeue the dialog.
+	-- It is possible that the tutorial system simply wants to hide the AdvisorBase and keep some other
+	-- part of the tutorial popup visible.
+	if not IsTutorialRunning() then
+		UIManager:DequeuePopup( ContextPtr );		
+	end
 
 	Controls.AdvisorBase:SetHide( true );
 	Controls.MetaBase:SetHide( true );
 end
 
-	
+-- ===========================================================================
+-- Show the next advisor in the queue
+function ShowNextQueuedPopup()
+
+	-- Find first entry in table, display that, then remove it from the internal queue
+	for i, entry in ipairs(m_kQueuedPopups) do
+		ShowAdvisorPopup(entry);
+		table.remove(m_kQueuedPopups, i);
+		break;
+	end
+
+end
+
+-- ===========================================================================
+-- Show the supplied advisor if possible, else queue it.
+function ShowOrQueuePopup(advisorData:AdvisorItem)
+
+	if UI.CanShowPopup() or IsTutorialRunning() then
+		ShowAdvisorPopup(advisorData);
+	else
+		-- Add to queue
+		table.insert(m_kQueuedPopups, advisorData);
+	end
+
+end
+
+-- ===========================================================================
+function OnUIIdle()
+	-- The UI is idle, are we waiting to show a popup?
+	if UI.CanShowPopup() then
+		ShowNextQueuedPopup();
+	end
+end
+
 -- ===========================================================================
 --	LUA Event
 --	Called when a diplomacy scene is closed
@@ -286,7 +329,7 @@ end
 --	LUA Event
 -- ===========================================================================
 function OnAdvisorRaise( item:AdvisorItem )
-	ShowAdvisorPopup( item );
+	ShowOrQueuePopup( item );
 end
 
 -- ===========================================================================
@@ -463,6 +506,7 @@ function Initialize()
 
 	-- Events
 	Events.InputActionTriggered.Add( OnInputActionTriggered );
+	Events.UIIdle.Add( OnUIIdle );
 
 	-- Lua Events
 	LuaEvents.DiploScene_SceneClosed.Add( OnDiploSceneClosed );

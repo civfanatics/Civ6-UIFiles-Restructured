@@ -13,8 +13,8 @@
 
   <AlphaAnim ID="WarConfirmAlpha" AlphaBegin="0" AlphaEnd="1" Speed="3" Function="Root" Cycle="Once" Size="parent,parent">
     <SlideAnim ID="WarConfirmSlide" Start="0,-20" End="0,0" Speed="3" Function="Root" Cycle="Once" Size="parent,parent">
-      <Grid ID="DropShadow" Size="500,250" Anchor="C,C" Offset="0,0" Style="DropShadow2" Color="255,255,255,200">
-        <Grid ID="Window" Size="parent-50,auto" Anchor="C,C" Offset="0,0" SizePadding="0,20" Style="WindowFrameTitle">
+      <Grid ID="DropShadow" Size="500,315" Anchor="C,C" Offset="0,0" Style="DropShadow2" Color="255,255,255,200">
+        <Grid ID="Window" Size="parent-50,295" Anchor="C,C" Offset="0,0" SizePadding="0,20" Style="WindowFrameTitle">
           <Container Size="parent,38" Offset="0,4">
             <Label Style="WindowHeader" String="{LOC_DECLARE_WAR_HEADER:upper}" Anchor="C,C"/>
           </Container>
@@ -57,39 +57,30 @@
                 </Stack>
               </Grid>
             </Stack>
-            
-            
 
-            <Container Size="parent-20,64" Anchor="C,T">
+            <Container Size="parent-20,50" Anchor="C,T">
               <Image Texture="Controls_CircleBacking68" Size="68,68" Anchor="R,C">
                 <Image Texture="Advisors64" Size="64,64" Anchor="C,C"/>
               </Image>
-              <Grid Size="parent-75,48" Style="AdvisorWordBubble" Anchor="L,C" Offset="10,2">
-                <Container Size="parent-44,auto" AutoSizePadding="0,2" Anchor="C,T">
-                  <Label ID="Message" WrapWidth="parent-44" String="LOC_DECLARE_WAR_ADVISOR_TEXT" Style="BodyTextDark16" Anchor="L,C" Align="Center"/>
-                  <Image    ID="CircleBacking"  Texture="Circle44_Base"     Size="44,44"  Anchor="R,C">
-                    <Image  ID="CircleDarker"   Texture="Circle44_Darker"   Size="44,44"/>
-                    <Image  ID="CircleLighter"  Texture="Circle44_Lighter"  Size="44,44"/>
-                    <Image                      Texture="Circle44_Lighter"  Size="44,44"/>
-                    <Image  ID="CivIcon"        Texture="CivSymbols44"      Size="44,44"/>
-                    <AlphaAnim  Size="44,44"  AlphaBegin="0" AlphaEnd="1" Speed=".5" Cycle="Bounce">
-                      <Image Texture="Circle44_Base"     Size="44,44"  Color="0,0,0,200">
-                        <Image Texture="Controls_CircleRimSmall" Size="44,45" Anchor="C,B" Color="255,255,255,200"/>
-                        <Image Texture="Notifications40" Size="40,40" Anchor="C,C" Icon="ICON_NOTIFICATION_DECLARE_WAR"/>
-                      </Image>
-                    </AlphaAnim>
-                  </Image>
+              <Grid ID="AdvisorWordBubble" Size="parent-75,auto" Style="AdvisorWordBubble" Anchor="L,T" Offset="10,0">
+                <Container Size="parent,auto" AutoSizePadding="0,2" Anchor="L,T">
+                  <Stack ID="Contents" Anchor="L,T" Offset="2,2" Size="parent-22,auto">
+										<Container Size="10,10"/>
+                    <Label ID="Message" Size="parent-44,auto" WrapWidth="parent-44" String="LOC_DECLARE_WAR_ADVISOR_TEXT" Style="BodyTextDark16" Anchor="C,C" Align="Center"/>
+                    <Container Size="10,10"/>
+                    <Stack ID="Targets" Size="200,auto" StackPadding="5" Anchor="C,T"/>
+										<Container Size="5,5"/>
+                  </Stack>
                 </Container>
               </Grid>
             </Container>
-            
-            <Container Size="parent,60" Anchor="C,T">
-              <Stack ID="ButtonStack" Anchor="C,B" StackPadding="15" StackGrowth="Right">
-                <GridButton ID="No" Style="MainButton" Size="200,41" Anchor="C,T" Offset="0,0"  Hidden="0" String="LOC_DIPLOMACY_DEAL_EXIT_DEAL"/>
-                <GridButton ID="Yes" Style="ButtonRed" Size="200,41" Anchor="C,T" Offset="0,0"  Hidden="0" String="LOC_DECLARE_WAR_BUTTON"/>
-              </Stack>
-            </Container>
           </Stack>
+          <Container Size="parent,60" Anchor="C,B" Offset="0,30">
+            <Stack ID="ButtonStack" Anchor="C,B" StackPadding="15" StackGrowth="Right">
+              <GridButton ID="No" Style="MainButton" Size="200,41" Anchor="C,T" Offset="0,0"  Hidden="0" String="LOC_DIPLOMACY_DEAL_EXIT_DEAL"/>
+              <GridButton ID="Yes" Style="ButtonRed" Size="200,41" Anchor="C,T" Offset="0,0"  Hidden="0" String="LOC_DECLARE_WAR_BUTTON"/>
+            </Stack>
+          </Container>
         </Grid>
       </Grid>
     </SlideAnim>
@@ -102,5 +93,23 @@
       <Label ID="Text" WrapWidth="parent" String="This string is a text instance for a consequence" Style="BodyText16" Align="Center" Anchor="C,T"/>
     </Container>
   </Instance>
-  
+
+	<Instance Name="TargetCivilization">
+		<Container ID="Root" Size="auto,44">
+			<Image    ID="CircleBacking"  Texture="Circle44_Base"     Size="44,44"  Anchor="L,C">
+				<Image  ID="CircleDarker"   Texture="Circle44_Darker"   Size="44,44"/>
+				<Image  ID="CircleLighter"  Texture="Circle44_Lighter"  Size="44,44"/>
+				<Image                      Texture="Circle44_Lighter"  Size="44,44"/>
+				<Image  ID="CivIcon"        Texture="CivSymbols44"      Size="44,44"/>
+				<AlphaAnim ID="PulseAnim" Size="44,44"  AlphaBegin="0" AlphaEnd="1" Speed=".5" Cycle="Bounce">
+					<Image Texture="Circle44_Base"     Size="44,44"  Color="0,0,0,200">
+						<Image Texture="Controls_CircleRimSmall" Size="44,45" Anchor="C,B" Color="255,255,255,200"/>
+						<Image Texture="Notifications40" Size="40,40" Anchor="C,C" Icon="ICON_NOTIFICATION_DECLARE_WAR"/>
+					</Image>
+				</AlphaAnim>
+			</Image>
+			<Label ID="TargetName" Style="BodyTextDark16" Anchor="L,C" Size="auto,44" Offset="50,0"/>
+		</Container>
+	</Instance>
+
 </Context>

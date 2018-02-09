@@ -7,7 +7,7 @@ function OnButton1()
 		UI.DeselectAllCities();
 		CityManager.RequestCommand( g_pSelectedCity, CityCommandTypes.DESTROY, tParameters);
 	end
-	ContextPtr:SetHide(true);
+	OnClose();
 end
 function OnButton2()
 	local tParameters = {};
@@ -16,7 +16,7 @@ function OnButton2()
 		UI.DeselectAllCities();
 		CityManager.RequestCommand( g_pSelectedCity, CityCommandTypes.DESTROY, tParameters);
 	end
-	ContextPtr:SetHide(true);
+	OnClose();
 end
 function OnButton3()
 	local tParameters = {};
@@ -24,7 +24,7 @@ function OnButton3()
 	if (CityManager.CanStartCommand( g_pSelectedCity, CityCommandTypes.DESTROY, tParameters)) then
 		CityManager.RequestCommand( g_pSelectedCity, CityCommandTypes.DESTROY, tParameters);
 	end
-	ContextPtr:SetHide(true);
+	OnClose();
 end
 function OnButton4()
 	local tParameters = {};
@@ -34,9 +34,11 @@ function OnButton4()
 		CityManager.RequestCommand( g_pSelectedCity, CityCommandTypes.DESTROY, tParameters);
        UI.PlaySound("RAZE_CITY");
 	end
+	OnClose();
+end
+function OnClose()
 	ContextPtr:SetHide(true);
 end
-
 function OnOpen()
 	local localPlayerID = Game.GetLocalPlayer();
 	local localPlayer = Players[localPlayerID];
@@ -61,6 +63,7 @@ function OnOpen()
 	local eOwnerBeforeOccupation = g_pSelectedCity:GetOwnerBeforeOccupation();
 	local eConqueredFrom = g_pSelectedCity:GetJustConqueredFrom();
 	local bWipedOut = (originalOwnerPlayer:GetCities():GetCount() < 1);
+	local eLastTransferType = g_pSelectedCity:GetLastTransferType();
 
 	local iWarmongerPoints = localPlayer:GetDiplomacy():ComputeCityWarmongerPoints(g_pSelectedCity, eConqueredFrom);
 	if (eOriginalOwner ~= eOwnerBeforeOccupation and localPlayer:GetDiplomacy():CanLiberateCityTo(eOriginalOwner) and eOriginalOwner ~= eConqueredFrom) then
@@ -82,7 +85,10 @@ function OnOpen()
 	end
 
 	Controls.Button3:LocalizeAndSetText("LOC_RAZE_CITY_KEEP_BUTTON_LABEL");
-	if (bWipedOut ~= true) then
+	if (eLastTransferType == CityTransferTypes.BY_GIFT) then
+		szWarmongerString = Locale.Lookup("LOC_RAZE_CITY_KEEP_EXPLANATION_TRADED");
+		Controls.Button3:LocalizeAndSetToolTip(szWarmongerString);
+	elseif (bWipedOut ~= true) then
 		szWarmongerString = Locale.Lookup("LOC_RAZE_CITY_KEEP_WARMONGER_EXPLANATION", localPlayer:GetDiplomacy():GetWarmongerLevel(-iWarmongerPoints));
 		Controls.Button3:LocalizeAndSetToolTip("LOC_RAZE_CITY_KEEP_EXPLANATION", szWarmongerString);
 	else
@@ -119,7 +125,7 @@ end
 function OnInputHandler( uiMsg, wParam, lParam )
     if uiMsg == KeyEvents.KeyUp then
         if wParam == Keys.VK_ESCAPE then
-            ContextPtr:SetHide(true); 
+            OnClose();
         end
     end
     return true;
@@ -132,5 +138,6 @@ function Initialize()
 	Controls.Button3:RegisterCallback(Mouse.eLClick, OnButton3);
 	Controls.Button4:RegisterCallback(Mouse.eLClick, OnButton4);
 	LuaEvents.NotificationPanel_OpenRazeCityChooser.Add(OnOpen);
+	Controls.ModalScreenClose:RegisterCallback(Mouse.eLClick, OnClose);
 end
 Initialize();

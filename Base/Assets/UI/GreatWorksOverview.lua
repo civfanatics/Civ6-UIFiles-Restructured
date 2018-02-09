@@ -6,6 +6,7 @@
 include("InstanceManager");
 include("PopupDialog")
 include("GameCapabilities");
+include("GreatWorksSupport");
 
 -- ===========================================================================
 --	CONSTANTS
@@ -72,7 +73,6 @@ local m_GreatWorkSelected:table = nil;
 local m_GreatWorkBuildings:table = nil;
 local m_GreatWorkSlotsIM:table = InstanceManager:new("GreatWorkSlot", "TopControl", Controls.GreatWorksStack);
 local m_TotalResourcesIM:table = InstanceManager:new("AgregateResource", "Resource", Controls.TotalResources);
-local m_ToggleGreatWorksId;
 
 
 -- ===========================================================================
@@ -336,10 +336,10 @@ function GreatWorkFitsTheme(pCityBldgs:table, pBuildingInfo:table, greatWorkInde
 
 			if firstGreatWork == greatWorkIndex then
 				return true;
-			elseif firstGreatWorkObjectType == greatWorkInfo.GreatWorkObjectType then
-				return pCityBldgs:GetCreatorNameFromIndex(firstGreatWork) ~= pCityBldgs:GetCreatorNameFromIndex(greatWorkIndex);
-			else
+			elseif not IsFirstGreatWorkByArtist(greatWorkIndex, pCityBldgs, pBuildingInfo) then
 				return false;
+			else
+				return firstGreatWorkObjectType == greatWorkInfo.GreatWorkObjectType;
 			end
 		elseif pBuildingInfo.BuildingType == "BUILDING_MUSEUM_ARTIFACT" then
 
@@ -449,7 +449,7 @@ function PopulateGreatWork(instance:table, pCityBldgs:table, pBuildingInfo:table
 		instance.GreatWorkIcon:SetTexture(textureOffsetX, textureOffsetY, textureSheet);
 		instance.GreatWorkIcon:SetOffsetVal(-13,-2);
 
-		instance.EmptySlot:SetToolTipString(GetGreatWorkTooltip(pCityBldgs, greatWorkIndex, greatWorkType, slotIndex, pBuildingInfo));
+		instance.EmptySlot:SetToolTipString(GetGreatWorkTooltip(pCityBldgs, greatWorkIndex, greatWorkType, pBuildingInfo));
 		instance.EmptySlot:RegisterCallback(Mouse.eLClick, function() OnClickGreatWork(instance.GreatWorkIcon, pCityBldgs, buildingIndex, greatWorkIndex, slotIndex); end);
 
 		if m_FirstGreatWork == nil then
@@ -461,27 +461,14 @@ function PopulateGreatWork(instance:table, pCityBldgs:table, pBuildingInfo:table
 end
 
 -- IMPORTANT: This logic is largely duplicated in GreatWorkFitsTheme() - if you make an update here, make sure to update that function as well
-function GetGreatWorkTooltip(pCityBldgs:table, greatWorkIndex:number, greatWorkType:number, slotIndex:number, pBuildingInfo:table)
-	local themeText:string;
-	local tooltipText:string;
+function GetGreatWorkTooltip(pCityBldgs:table, greatWorkIndex:number, greatWorkType:number, pBuildingInfo:table)
 	local greatWorkTypeName:string;
 	local greatWorkInfo:table = GameInfo.GreatWorks[greatWorkType];
-	local greatWorkName:string = Locale.Lookup(greatWorkInfo.Name);
 	local greatWorkCreator:string = Locale.Lookup(pCityBldgs:GetCreatorNameFromIndex(greatWorkIndex));
-	local greatWorkCreationDate:string = Calendar.MakeDateStr(pCityBldgs:GetTurnFromIndex(greatWorkIndex), GameConfiguration.GetCalendarType(), GameConfiguration.GetGameSpeedType(), false);
 	
-	local yieldType;
-	local yieldValue;
-	
-	for row in GameInfo.GreatWork_YieldChanges() do
-		if(row.GreatWorkType == greatWorkInfo.GreatWorkType) then
-			yieldType = row.YieldType;
-			yieldValue = row.YieldChange;
-			break;
-		end
-	end
-	
-	local greatWorkYields:string = YIELD_FONT_ICONS[yieldType] .. yieldValue .. " " .. YIELD_FONT_ICONS[DATA_FIELD_TOURISM_YIELD] .. greatWorkInfo.Tourism;
+	local bIsThemeable :boolean = GetThemeDescription(pBuildingInfo.BuildingType) ~= nil;
+	local strBasicTooltip :string = GreatWorksSupport_GetBasicTooltip( greatWorkIndex, bIsThemeable );
+
 	local buildingName:string = Locale.Lookup(GameInfo.Buildings[pBuildingInfo.BuildingType].Name);
 	
 	if greatWorkInfo.EraType ~= nil then
@@ -490,49 +477,45 @@ function GetGreatWorkTooltip(pCityBldgs:table, greatWorkIndex:number, greatWorkT
 		greatWorkTypeName = Locale.Lookup("LOC_" .. greatWorkInfo.GreatWorkObjectType);
 	end
 
-	if GetThemeDescription(pBuildingInfo.BuildingType) ~= nil then
-		if greatWorkInfo.GreatWorkObjectType == "GREATWORKOBJECT_ARTIFACT" then
-			tooltipText = Locale.Lookup("LOC_GREAT_WORKS_ARTIFACT_TOOLTIP_THEMABLE", greatWorkName, greatWorkTypeName, greatWorkCreator, greatWorkCreationDate, greatWorkYields);
-		else
-			tooltipText = Locale.Lookup("LOC_GREAT_WORKS_TOOLTIP_THEMABLE", greatWorkName, greatWorkTypeName, greatWorkCreator, greatWorkCreationDate, greatWorkYields);
-		end
-
+	if bIsThemeable then
+		local strThemeTooltip :string;
 		local firstGreatWork:number = GetFirstGreatWorkInBuilding(pCityBldgs, pBuildingInfo);
 		if firstGreatWork < 0 then
-			return tooltipText;
+			return strBasicTooltip;
 		end
 
 		local firstGreatWorkObjectTypeID:number = pCityBldgs:GetGreatWorkTypeFromIndex(firstGreatWork);
 		local firstGreatWorkObjectType:string = GameInfo.GreatWorks[firstGreatWorkObjectTypeID].GreatWorkObjectType;
 		
 		if pCityBldgs:IsBuildingThemedCorrectly(GameInfo.Buildings[pBuildingInfo.BuildingType].Index) then
-			themeText = Locale.Lookup("LOC_GREAT_WORKS_ART_MATCHED_THEME", buildingName);
+			strThemeTooltip = Locale.Lookup("LOC_GREAT_WORKS_ART_MATCHED_THEME", buildingName);
 		else
 			if pBuildingInfo.BuildingType == "BUILDING_MUSEUM_ART" then
 
 				if firstGreatWork == greatWorkIndex then
-					themeText = Locale.Lookup("LOC_GREAT_WORKS_ART_THEME_SINGLE", Locale.Lookup("LOC_" .. firstGreatWorkObjectType));
+					strThemeTooltip = Locale.Lookup("LOC_GREAT_WORKS_ART_THEME_SINGLE", Locale.Lookup("LOC_" .. firstGreatWorkObjectType));
+				elseif not IsFirstGreatWorkByArtist(greatWorkIndex, pCityBldgs, pBuildingInfo) then
+					-- Override the basic tooltip with the duplicate tooltip, this could be moved to GreatWorksSupport.lua depending on how it should work with artifacts
+					local nTurnCreated:number = Game.GetGreatWorkDataFromIndex(greatWorkIndex).TurnCreated;
+					local greatWorkName:string = Locale.Lookup(greatWorkInfo.Name);
+					local greatWorkCreationDate:string = Calendar.MakeDateStr(nTurnCreated, GameConfiguration.GetCalendarType(), GameConfiguration.GetGameSpeedType(), false);
+					strBasicTooltip = Locale.Lookup("LOC_GREAT_WORKS_TOOLTIP_DUPLICATE", greatWorkName, greatWorkTypeName, greatWorkCreator, greatWorkCreationDate);
+					strThemeTooltip = Locale.Lookup("LOC_GREAT_WORKS_ART_THEME_DUPLICATE_ARTIST");
 				elseif firstGreatWorkObjectType == greatWorkInfo.GreatWorkObjectType then
-					local firstGreatWorkCreator:string = Locale.Lookup(pCityBldgs:GetCreatorNameFromIndex(firstGreatWork));
-
-					if firstGreatWorkCreator == greatWorkCreator then
-						themeText = Locale.Lookup("LOC_GREAT_WORKS_ART_THEME_DUPLICATE_ARTIST", Locale.Lookup("LOC_" .. firstGreatWorkObjectType));
-					else
-						themeText = Locale.Lookup("LOC_GREAT_WORKS_ART_THEME_DUAL", Locale.Lookup("LOC_" .. firstGreatWorkObjectType));
-					end
+					strThemeTooltip = Locale.Lookup("LOC_GREAT_WORKS_ART_THEME_DUAL", Locale.Lookup("LOC_" .. firstGreatWorkObjectType));
 				else
-					themeText = Locale.Lookup("LOC_GREAT_WORKS_MISMATCHED_THEME",  greatWorkTypeName, Locale.Lookup("LOC_" .. firstGreatWorkObjectType .. "_PLURAL"));
+					strThemeTooltip = Locale.Lookup("LOC_GREAT_WORKS_MISMATCHED_THEME",  greatWorkTypeName, Locale.Lookup("LOC_" .. firstGreatWorkObjectType .. "_PLURAL"));
 				end
 			elseif pBuildingInfo.BuildingType == "BUILDING_MUSEUM_ARTIFACT" then
 
 				local artifactEraName:string = Locale.Lookup("LOC_" .. greatWorkInfo.GreatWorkObjectType .. "_" .. greatWorkInfo.EraType);
 				if firstGreatWork == greatWorkIndex then
-					themeText = Locale.Lookup("LOC_GREAT_WORKS_ART_THEME_SINGLE", artifactEraName);
+					strThemeTooltip = Locale.Lookup("LOC_GREAT_WORKS_ART_THEME_SINGLE", artifactEraName);
 				else
 					local firstArtifactEraName:string = Locale.Lookup("LOC_" .. firstGreatWorkObjectType .. "_" .. GameInfo.GreatWorks[firstGreatWorkObjectTypeID].EraType .. "_PLURAL");
 
 					if greatWorkInfo.EraType ~= GameInfo.GreatWorks[firstGreatWorkObjectTypeID].EraType then
-						themeText = Locale.Lookup("LOC_GREAT_WORKS_MISMATCHED_ERA",  artifactEraName, firstArtifactEraName);
+						strThemeTooltip = Locale.Lookup("LOC_GREAT_WORKS_MISMATCHED_ERA",  artifactEraName, firstArtifactEraName);
 					else
 						local greatWorkPlayer:number = Game.GetGreatWorkPlayer(greatWorkIndex);
 						local greatWorks:table = GetGreatWorksInBuilding(pCityBldgs, pBuildingInfo);
@@ -550,25 +533,18 @@ function GetGreatWorkTooltip(pCityBldgs:table, greatWorkIndex:number, greatWorkT
 						end
 
 						if table.count(duplicates) > 0 then
-							themeText = Locale.Lookup("LOC_GREAT_WORKS_DUPLICATE_ARTIFACT_CIVS", PlayerConfigurations[duplicates[1]]:GetCivilizationShortDescription(), firstArtifactEraName);
+							strThemeTooltip = Locale.Lookup("LOC_GREAT_WORKS_DUPLICATE_ARTIFACT_CIVS", PlayerConfigurations[duplicates[1]]:GetCivilizationShortDescription(), firstArtifactEraName);
 						end
 					end
 				end
 			end
 		end
-		
-		if themeText ~= nil then
-			tooltipText = tooltipText .. "[NEWLINE][NEWLINE]" .. themeText;
-		end
-	else
-		if greatWorkInfo.GreatWorkObjectType == "GREATWORKOBJECT_ARTIFACT" then
-			tooltipText = Locale.Lookup("LOC_GREAT_WORKS_ARTIFACT_TOOLTIP", greatWorkName, greatWorkTypeName, greatWorkCreator, greatWorkCreationDate, greatWorkYields);
-		else
-			tooltipText = Locale.Lookup("LOC_GREAT_WORKS_TOOLTIP", greatWorkName, greatWorkTypeName, greatWorkCreator, greatWorkCreationDate, greatWorkYields);
+		if strThemeTooltip ~= nil then
+			return strBasicTooltip .. "[NEWLINE][NEWLINE]" .. strThemeTooltip;
 		end
 	end
 
-	return tooltipText;
+	return strBasicTooltip;
 end
 
 function GetFirstGreatWorkInBuilding(pCityBldgs:table, pBuildingInfo:table)
@@ -598,6 +574,28 @@ function GetGreatWorksInBuilding(pCityBldgs:table, pBuildingInfo:table)
 		index = index + 1;
 	end
 	return results;
+end
+
+function IsFirstGreatWorkByArtist(greatWorkIndex, pCityBldgs, pBuildingInfo)
+	local greatWorks:table = GetGreatWorksInBuilding(pCityBldgs, pBuildingInfo);
+	local artist = pCityBldgs:GetCreatorNameFromIndex(greatWorkIndex); -- no need to localize
+
+	-- Find duplicates for theming description
+	for _,index in ipairs(greatWorks) do
+		if (index == greatWorkIndex) then
+			-- Didn't find a duplicate before the specified great work
+			return true; 
+		end
+
+		local creator = pCityBldgs:GetCreatorNameFromIndex(index); -- no need to localize
+		if (creator == artist) then
+			-- Found a duplicate before the specified great work
+			return false;
+		end
+	end
+
+	-- The specified great work isn't in this building, if it was added it would be unique
+	return true;
 end
 
 function AddYield(instance:table, yieldName:string, yieldIcon:string, yieldValue:number)
@@ -960,21 +958,6 @@ function OnGameDebugReturn(context:string, contextTable:table)
 end
 
 -- ===========================================================================
---	Input Hotkey Event
--- ===========================================================================
-function OnInputActionTriggered( actionId )
-	if actionId == m_ToggleGreatWorksId and UI.QueryGlobalParameterInt("DISABLE_GREAT_WORKS_HOTKEY") ~= 1 then
-		if(ContextPtr:IsHidden()) then
-			LuaEvents.LaunchBar_OpenGreatWorksOverview();
-			UI.PlaySound("UI_Screen_Open");
-		else
-			OnHideScreen();
-			UI.PlaySound("UI_Screen_Close");
-		end
-	end
-end
-
--- ===========================================================================
 --	Player Turn Events
 -- ===========================================================================
 function OnLocalPlayerTurnBegin()
@@ -1018,12 +1001,6 @@ function Initialize()
 	Events.GreatWorkMoved.Add(OnGreatWorkMoved);
 	Events.LocalPlayerTurnBegin.Add(OnLocalPlayerTurnBegin);
 	Events.LocalPlayerTurnEnd.Add(OnLocalPlayerTurnEnd);
-
-	-- Hot Key Handling
-	m_ToggleGreatWorksId = Input.GetActionId("ToggleGreatWorks");
-	if m_ToggleGreatWorksId ~= nil then
-		Events.InputActionTriggered.Add( OnInputActionTriggered )
-	end
 
 end
 Initialize();

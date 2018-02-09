@@ -4,8 +4,9 @@ local ms_kPopupDialog = nil;
 
 -------------------------------------------------
 function OnExitToDesktop()
-	if (Steam ~= nil) then
-		Steam.ClearRichPresence();
+	local pFriends = Network.GetFriends();
+	if pFriends ~= nil then
+		pFriends:ClearRichPresence();
 	end
 
 	Events.UserConfirmedClose();

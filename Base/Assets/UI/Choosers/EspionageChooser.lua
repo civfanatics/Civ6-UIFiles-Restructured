@@ -136,6 +136,7 @@ function RefreshBottom()
 		else
 			Controls.DestinationPanel:SetHide(false);
 			Controls.MissionPanel:SetHide(true);
+			m_RouteChoiceIM:ResetInstances();
 			RefreshDestinationList();
 		end
 	else
@@ -157,15 +158,13 @@ end
 -- Refresh the destination list with all revealed non-city state owned cities
 -- ===========================================================================
 function RefreshDestinationList()
-	m_RouteChoiceIM:ResetInstances();
 	local localPlayer = Players[Game.GetLocalPlayer()];
 
 	-- Add each players cities to destination list
 	local players:table = Game.GetPlayers();
 	for i, player in ipairs(players) do
-		local playerInfluence:table = player:GetInfluence();
-		-- Ignore city states (only they can receive influence)
-		if playerInfluence and not playerInfluence:CanReceiveInfluence() then
+		-- Only show full civs
+		if player:IsMajor() then
 			if (player:GetID() == localPlayer:GetID() or player:GetTeam() == -1 or localPlayer:GetTeam() == -1 or player:GetTeam() ~= localPlayer:GetTeam()) then
 				AddPlayerCities(player)
 			end
@@ -480,8 +479,8 @@ function AddDestination(city:table)
 	destinationInstance.BannerLighter:SetColor( brighterBackColor );
 	destinationInstance.CityName:SetColor( frontColor );
 
-	-- Update capital indicator
-	if city:IsCapital() then
+	-- Update capital indicator but never show it for city-states
+	if city:IsCapital() and Players[city:GetOwner()]:IsMajor() then
 		TruncateStringWithTooltip(destinationInstance.CityName, 185, "[ICON_Capital] " .. Locale.ToUpper(city:GetName()));
 	else
 		TruncateStringWithTooltip(destinationInstance.CityName, 185, Locale.ToUpper(city:GetName()));

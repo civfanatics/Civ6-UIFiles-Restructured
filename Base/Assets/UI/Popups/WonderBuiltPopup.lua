@@ -62,8 +62,8 @@ function OnWonderCompleted(locX, locY, buildingIndex, playerIndex, iPercentCompl
 	end
 
 	-- Ensure the religion lens is disabled when we show the wonder popup
-	if UILens.IsLayerOn( LensLayers.HEX_COLORING_RELIGION ) then
-		UILens.ToggleLayerOff( LensLayers.HEX_COLORING_RELIGION );
+	if UILens.IsLensActive("Religion") then
+		UILens.SetActive("Default");
 		ms_hidReligionLensLayer = true;
 	else
 		ms_hidReligionLensLayer = false;
@@ -91,7 +91,7 @@ function Close()
     UI.PlaySound("Stop_Wonder_Tracks");
 
 	if ms_hidReligionLensLayer then
-		UILens.ToggleLayerOn( LensLayers.HEX_COLORING_RELIGION );
+		UILens.SetActive("Religion");
 	end
 end
 

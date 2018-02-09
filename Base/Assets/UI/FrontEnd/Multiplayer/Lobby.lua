@@ -3,7 +3,7 @@
 -- ===========================================================================
 include( "InstanceManager" );	--InstanceManager
 include("LobbyTypes");		--MPLobbyTypes
-include("SteamUtilities");
+include("NetworkUtilities");
 include("ButtonUtilities");
 include( "Civ6Common" ); -- AutoSizeGridButton
 
@@ -79,6 +79,7 @@ local m_steamFriendActions =
 
 local ColorSet_Default			:string = "ServerText";
 local ColorSet_Faded			:string = "ServerTextFaded";
+local ColorSet_VersionMismatch		:string = "ServerTextVersionMismatch";
 local ColorSet_ModGreen			:string = "ModStatusGreenCS";
 local ColorSet_ModYellow		:string = "ModStatusYellowCS";
 local ColorSet_ModRed			:string = "ModStatusRedCS";
@@ -90,13 +91,15 @@ local DEFAULT_RULE_SET:string = Locale.Lookup("LOC_MULTIPLAYER_STANDARD_GAME");
 local DEFAULT_GAME_SPEED:string = Locale.Lookup("LOC_GAMESPEED_STANDARD_NAME");
 local gameStartedTooltip:string = Locale.Lookup("LOC_LOBBY_GAME_STARTED_TOOLTIP");
 local gameLoadingSaveTooltip:string = Locale.Lookup("LOC_LOBBY_GAME_LOADING_SAVE_TOOLTIP");
-local gameYourTurnTooltip:string = Locale.Lookup("LOC_LOBBY_GAME_YOUR_TURN_TOOLTIP");
+local joinDisabledVersionMismatch:string = Locale.Lookup("LOC_LOBBY_JOIN_DISABLED_VERSION_MISMATCH_TOOLTIP");
 local LOC_LOBBY_MY_GAMES			:string = Locale.Lookup("LOC_LOBBY_MY_GAMES");
 local LOC_LOBBY_MY_GAMES_TT			:string = Locale.Lookup("LOC_LOBBY_MY_GAMES_TT");
 local LOC_LOBBY_OPEN_GAMES			:string = Locale.Lookup("LOC_LOBBY_OPEN_GAMES");
 local LOC_LOBBY_OPEN_GAMES_TT		:string = Locale.Lookup("LOC_LOBBY_OPEN_GAMES_TT");
 local LOC_LOBBY_COMPLETED_GAMES		:string = Locale.Lookup("LOC_LOBBY_COMPLETED_GAMES");
 local LOC_LOBBY_COMPLETED_GAMES_TT	:string = Locale.Lookup("LOC_LOBBY_COMPLETED_GAMES_TT");
+local LOC_MULTIPLAYER_JOIN_GAME		:string = Locale.Lookup("LOC_MULTIPLAYER_JOIN_GAME");
+local LOC_MULTIPLAYER_PLAY_GAME		:string = Locale.Lookup("LOC_MULTIPLAYER_PLAY_GAME");
 													  
 g_SelectedServerID = nil;
 g_Listings = {};
@@ -149,7 +152,6 @@ g_SortFunction = nil;
 -------------------------------------------------
 -- Helper Functions
 -------------------------------------------------
-
 function IsUsingInternetGameList()
 	if (m_lobbyModeName == MPLobbyTypes.STANDARD_INTERNET 
 		or m_lobbyModeName == MPLobbyTypes.PITBOSS_INTERNET
@@ -169,6 +171,22 @@ function IsUsingPitbossGameList()
 	end
 end
 
+-- Performs game version mismatch check. Returns false if the check failed.
+function CheckServerVersion(serverID)
+	local localGameVersion :string = UI.GetAppVersion();
+	local serverListing = GetServerListing(serverID);
+	if(serverListing ~= nil 
+		and (serverListing.GameVersion == nil or serverListing.GameVersion ~= localGameVersion)) then
+		return false;
+	end
+	
+	return true;
+end
+
+function RefreshGameList()
+	Matchmaking.RefreshGameList();
+end
+
 -------------------------------------------------
 -- Server Listing Button Handler (Dynamic)
 -------------------------------------------------
@@ -180,6 +198,11 @@ function ServerListingButtonClick()
 	end
 
 	if g_SelectedServerID and g_SelectedServerID >= 0 then
+		-- Version mismatch check. 
+		if(not CheckServerVersion(g_SelectedServerID)) then
+			return;
+		end
+
 		local bSuccess, bPending = Network.JoinGame( g_SelectedServerID );
 		if(not bSuccess) then
 			LuaEvents.MultiplayerPopup( "LOC_GAME_ABANDONED_JOIN_FAILED" );
@@ -215,7 +238,7 @@ function OnRefreshButtonClick()
 	if (Matchmaking.IsRefreshingGameList()) then
 		Matchmaking.StopRefreshingGameList();
 	else
-		Matchmaking.RefreshGameList();
+		RefreshGameList();
 	end	
 	UpdateRefreshButton();
 end
@@ -265,6 +288,9 @@ end
 function OnGameListComplete()
 	if(ContextPtr:IsVisible()) then
 		UpdateRefreshButton();
+		
+		-- Stop overriding the scroll panel position.
+		m_browseScrollOverride = SCROLL_NONE;
 	end
 end
 
@@ -337,6 +363,15 @@ function SelectGame( serverID )
 			listItem.Selected:SetHide(true);
 		end
 	end
+
+	-- Set disabled state and reasoning tooltip
+	if(not CheckServerVersion(serverID)) then
+		Controls.JoinGameButton:SetDisabled(true);
+		Controls.JoinGameButton:SetToolTipString(joinDisabledVersionMismatch);
+	else
+		Controls.JoinGameButton:SetDisabled(false);
+		Controls.JoinGameButton:SetToolTipString(LOC_MULTIPLAYER_JOIN_GAME_TT);
+	end
 	
 	Controls.BottomButtons:CalculateSize();
 	Controls.BottomButtons:ReprocessAnchoring();
@@ -402,6 +437,7 @@ function AddServer(serverEntry)
 		Initialized = serverEntry.Initialized,
 		ServerID = serverEntry.serverID,
 		ServerName = serverEntry.serverName,
+		GameVersion = serverEntry.GameVersion,
 		MembersLabelCaption = serverEntry.numPlayers .. "/" .. serverEntry.maxPlayers,
 		MembersLabelToolTip = ParseServerPlayers(serverEntry.Players),
 		MembersSort = serverEntry.numPlayers,
@@ -453,6 +489,18 @@ end
 
 -------------------------------------------------
 -------------------------------------------------
+function GetServerListing(serverID)
+	for _,listServer in ipairs(g_Listings) do
+		if(listServer.ServerID == serverID) then
+			return listServer;
+		end
+	end
+
+	return nil;
+end
+
+-------------------------------------------------
+-------------------------------------------------
 function UpdateGameList() 
 
 	g_Listings = {};
@@ -500,7 +548,7 @@ function UpdateFriendsList()
 
 	local friends : table;
 	if (Steam ~= nil) then
-		friends = GetSteamFriendsList(FlippedSteamFriendsSortFunction);
+		friends = GetFriendsList(FlippedFriendsSortFunction);
 	else
 		friends = {};
 	end
@@ -537,9 +585,6 @@ end
 
 -- ===========================================================================
 function SortAndDisplayListings(resetSelection:boolean)
-
-	table.sort(g_Listings, g_SortFunction);
-
 	g_InstanceManager:ResetInstances();
 	g_InstanceList = {};
 	
@@ -549,17 +594,30 @@ function SortAndDisplayListings(resetSelection:boolean)
 		local textColor = ColorSet_Default;
 		local rowTooltip = "";
 		local gameName = listing.ServerName;
+		local localGameVersion :string = UI.GetAppVersion();
 		g_InstanceList[serverID] = controlTable;
 
 		-- Row color and tooltip is determined by game state.
-		if(listing.SavedGame == 1) then
+		if(not CheckServerVersion(serverID)) then
+		  -- Version mismatch
+			textColor = ColorSet_VersionMismatch;
+			if(rowTooltip ~= "") then
+				rowTooltip = rowTooltip .. "[NEWLINE][NEWLINE]";
+			end
+
+			local serverGameVersion = "LOC_MULTIPLAYER_UNKNOWN";
+			if(listing.GameVersion ~= nil and #listing.GameVersion > 0) then
+				serverGameVersion = listing.GameVersion;
+			end
+			rowTooltip = rowTooltip .. Locale.Lookup("LOC_LOBBY_GAME_VERSION_MISMATCH_TOOLTIP", serverGameVersion, localGameVersion);
+		elseif(listing.SavedGame == 1) then
 			textColor = ColorSet_Faded;
 			rowTooltip = gameLoadingSaveTooltip;
 		elseif(listing.GameStarted == 1) then
 			textColor = ColorSet_Faded;
 			rowTooltip = gameStartedTooltip;
 		end
-		
+	
 		controlTable.ServerNameLabel:SetText(gameName);
 		controlTable.ServerNameLabel:SetColorByName(textColor);
 		controlTable.ServerNameLabel:SetToolTipString(rowTooltip);
@@ -595,6 +653,8 @@ function SortAndDisplayListings(resetSelection:boolean)
 		local hasMods = listing.EnabledMods ~= nil;
 		local hasOfficialMods = false;
 		local hasCommunityMods = false;
+		local missingOfficial = false;
+
 		if(hasMods) then
 			
 			local needsDownload = false;
@@ -609,7 +669,13 @@ function SortAndDisplayListings(resetSelection:boolean)
 
 					-- Check if mod is installed
 					if(Modding.GetModHandle(v.ModId)) then
-						modIcon = Modding.IsJoinGameAllowed(v.ModId) and "[ICON_CheckSuccess]" or "[ICON_CheckFail]";
+						local ownershipCheck : boolean = Modding.IsJoinGameAllowed(v.ModId);
+						if(ownershipCheck == true) then
+							modIcon = "[ICON_CheckSuccess]";
+						else
+							missingOfficial = true;
+							modIcon = "[ICON_CheckFail]";
+						end
 					-- Mod isn't installed but is downloadable from Steam.
 					elseif(v.SubscriptionId and #v.SubscriptionId > 0) then
 						needsDownload = true;
@@ -634,7 +700,7 @@ function SortAndDisplayListings(resetSelection:boolean)
 				hasOfficialMods = true;
 				local ToolTipPrefix = Locale.Lookup("LOC_MULTIPLAYER_LOBBY_MODS_OFFICIAL") .. "[NEWLINE][NEWLINE]";
 				controlTable.ModsOfficial:SetToolTipString(ToolTipPrefix .. table.concat(officialModNames, "[NEWLINE]"));
-				controlTable.ModsOfficial:SetTexture(needsDownload and "OfficialContent_MissingIcon" or "OfficialContent_Owned");
+				controlTable.ModsOfficial:SetTexture(missingOfficial and "OfficialContent_Missing_Icon" or "OfficialContent_Owned");
 			end
 
 			if #communityModNames > 0 then
@@ -663,6 +729,13 @@ function SortAndDisplayListings(resetSelection:boolean)
 
 	local listWidth:number = Controls.ListingScrollPanel:GetScrollBar():IsHidden() and 1024 or 1004;
 	Controls.ListingScrollPanel:SetSizeX(listWidth);
+
+	-- Set the initial scroll position if we are overriding it.
+	if(m_browseScrollOverride == SCROLL_UP) then
+		Controls.ListingScrollPanel:SetScrollValue(0.1);	
+	elseif(m_browseScrollOverride == SCROLL_DOWN) then
+		Controls.ListingScrollPanel:SetScrollValue(0.9);	
+	end
 
 	-- Adjust horizontal grid lines
 	listWidth = listWidth - 5;
@@ -870,9 +943,12 @@ end
 -- Registers the sort option controls click events
 -- ===========================================================================
 function RegisterSortOptions()
+	local sortDisabled : boolean = false;
+
 	for i,v in ipairs(g_SortOptions) do
 		if(v.Button ~= nil) then
 			v.Button:RegisterCallback(Mouse.eLClick, function() SortOptionSelected(v); end);
+			v.Button:SetDisabled(sortDisabled);
 		end
 	end
 
@@ -923,8 +999,10 @@ function OnShow()
 		Matchmaking.SetGameListType( LIST_LOBBIES, SEARCH_INTERNET );
 	end
 
+	RealizeShellTabs();
+
 	UpdateGameList();
-	Matchmaking.RefreshGameList();
+	RefreshGameList();
 	UpdateRefreshButton();
 		
 	if IsUsingPitbossGameList() then
@@ -937,8 +1015,9 @@ function OnShow()
 
 	UpdateFriendsList();
 
-	if (Steam ~= nil) then
-		Steam.SetRichPresence("civPresence", "LOC_PRESENCE_IN_SHELL");
+	local pFriends = Network.GetFriends();
+	if (pFriends ~= nil) then
+		pFriends:SetRichPresence("civPresence", "LOC_PRESENCE_IN_SHELL");
 	end
 end
 
@@ -981,6 +1060,33 @@ function FilterTabsSetSelected(shellTabControl :table)
 		local isSelected = shellTabControl == v;
 		v.Selected:SetHide(not isSelected);
 	end
+end
+
+function AddShellTab(browserModeType :number, buttonText :string, buttonTooltip :string)
+	local newTab:table = m_shellTabIM:GetInstance();
+	newTab.Button:SetText(buttonText);
+	newTab.Button:SetToolTipString(buttonTooltip);
+	newTab.SelectedButton:SetText(buttonText);
+	newTab.SelectedButton:SetToolTipString(buttonTooltip);
+	newTab.Button:SetVoid1(browserModeType);
+
+	AutoSizeGridButton(newTab.Button,200,32,10,"H");
+	AutoSizeGridButton(newTab.SelectedButton,200,32,20,"H");
+	newTab.TopControl:SetSizeX(newTab.Button:GetSizeX());
+	g_TabInstances[browserModeType] = newTab;
+end
+
+function RealizeShellTabs()
+	m_shellTabIM:ResetInstances();
+	g_TabInstances = {};
+
+	Controls.GameListRoot:SetOffsetY(GAME_LIST_OFFSET_Y);
+	Controls.GameListRoot:SetSizeY(GAME_LIST_SIZE_Y);
+	Controls.ListingScrollPanel:SetSizeY(LIST_PANEL_SIZE_Y);
+	Controls.GameListGrid:SetSizeY(GAME_GRID_TABS_SIZE_Y);
+
+	Controls.ShellTabs:CalculateSize();
+	Controls.ShellTabs:ReprocessAnchoring();
 end
 
 -- ===========================================================================

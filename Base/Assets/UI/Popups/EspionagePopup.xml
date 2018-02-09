@@ -49,17 +49,21 @@
             <Image Offset="6,6" Size="64,64" Texture="Controls_Circle" Color="EspionagePopup_Deco">
               <Image Anchor="C,C" Size="64,64" Texture="Consequences64" Icon="ICON_CONSEQUENCE_SUCCESS" IconSize="64"/>
             </Image>
-            <Label ID="SpyPromotionLabel" Anchor="L,T" Offset="76,8" Style="FontNormal14" Color="EspionagePopup_Header" Align="Left" WrapWidth="parent-15"/>
-            <Label ID="SpyPromotionDescription" Anchor="L,T" Offset="76,30" Style="FontNormal14" Color="EspionagePopup_Body" Align="Left" WrapWidth="parent-80"/>
-          </Grid>
+						<Stack Offset="76,8" StackGrowth="Down" StackPadding="6">
+							<Label ID="SpyPromotionLabel" Style="FontNormal14" Color="EspionagePopup_Header" Align="Left" WrapWidth="parent-80"/>
+							<Label ID="SpyPromotionDescription" Style="FontNormal14" Color="EspionagePopup_Body" Align="Left" WrapWidth="parent-80"/>
+						</Stack>
+					</Grid>
 
           <!-- Loot Aquired -->
           <Grid ID="SpyLootGrid" Anchor="L,T" Size="parent,auto" AutoSizePadding="0,8" Color="EspionagePopup_Deco" Texture="Controls_DecoFaded" SliceCorner="36,58" SliceSize="1,3" SliceTextureSize="73,73">
             <Image Offset="6,6" Size="64,64" Texture="Controls_Circle" Color="EspionagePopup_Deco">
               <Image Anchor="C,C" Size="64,64" Texture="Consequences64" Icon="ICON_CONSEQUENCE_SUCCESS" IconSize="64"/>
             </Image>
-            <Label ID="SpyLootRewardLabel" Anchor="L,T" Offset="76,8" Style="FontNormal14" Color="EspionagePopup_Header" Align="Left" WrapWidth="parent-15"/>
-            <Label ID="SpyLootRewardDescription" Anchor="L,T" Offset="76,30" Style="FontNormal14" Color="EspionagePopup_Body" Align="Left" WrapWidth="parent-80"/>
+						<Stack Offset="76,8" StackGrowth="Down" StackPadding="6">
+							<Label ID="SpyLootRewardLabel" Style="FontNormal14" Color="EspionagePopup_Header" Align="Left" WrapWidth="parent-80"/>
+							<Label ID="SpyLootRewardDescription" Style="FontNormal14" Color="EspionagePopup_Body" Align="Left" WrapWidth="parent-80"/>
+						</Stack>
           </Grid>
         </Stack>
       </Container>

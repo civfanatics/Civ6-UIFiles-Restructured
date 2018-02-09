@@ -20,7 +20,7 @@ end
 
 
 -- ===========================================================================
-function OnShow()
+function OnInit()
 
     -- Inform the user if we're unable to find the their graphics device in the device database
     if(UI.HasUnknownDevice() and Options.GetAppOption("Misc", "AcceptedUnknownDevice") ~= 1) then
@@ -31,9 +31,10 @@ function OnShow()
                 print("Failed to determine graphics device capabilities. User was informed.");
                 Options.SetAppOption("Misc", "AcceptedUnknownDevice", 1);
                 Events.UserAcceptsUnknownDevice();
+				ClosePopup();
             end
         );
-    
+		OpenPopup();
     end
 
     -- Inform the user if their driver is older than the recommended version 
@@ -46,17 +47,29 @@ function OnShow()
                 print("User is running with outdated drivers. User was informed and chose not to be informed again.");
                 Options.SetAppOption("Misc", "AcceptedOutdatedDriver", 1);
                 Events.UserAcceptsOutdatedDriver();
+				ClosePopup();
             end
         );
         outdatedDriversPopupDialog:AddButton(Locale.Lookup("LOC_FRONTEND_POPUP_OUTDATED_DRIVER_LOUD"),
             function()
                 print("User is running with outdated drivers. User was informed and wants to keep being informed.");
+				ClosePopup();
             end
         );
         outdatedDriversPopupDialog:Open();
-    
+		OpenPopup();
     end
 
+end
+
+function OpenPopup()
+	UIManager:QueuePopup( ContextPtr, PopupPriority.Current );
+end
+
+function ClosePopup()
+	UIManager:DequeuePopup(ContextPtr);
+	-- Front end background is visible on this context, so we should never be hidden
+	ContextPtr:SetHide(false);
 end
 
 -- ===========================================================================
@@ -84,7 +97,7 @@ function Initialize()
 	Input.SetActiveContext( InputContext.Shell );
 
 	ContextPtr:SetInputHandler( OnInputHandler, true );
-    ContextPtr:SetShowHandler( OnShow );
+    ContextPtr:SetInitHandler( OnInit );
     ContextPtr:SetShutdown( OnShutdown );
 
     Events.SystemUpdateUI.Add( OnUpdateUI );

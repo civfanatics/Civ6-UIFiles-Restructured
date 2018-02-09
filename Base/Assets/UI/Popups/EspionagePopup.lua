@@ -240,9 +240,12 @@ function RefreshPossibleOutcomes()
 				AddOutcomePercent(capturedOrKilledProbability, "LOC_ESPIONAGEPOPUP_CAPTUREDORKILLED_OUTCOME_CHANCE");
 			end
 
-			-- Add discovered warning for city owner
-			local targetPlayerConfiguration = PlayerConfigurations[m_city:GetOwner()];
-			AddOutcomeLabel(Locale.Lookup("LOC_ESPIONAGEPOPUP_DISCOVERED_WARNING", targetPlayerConfiguration:GetPlayerName()));
+			-- Add discovered warning for city owner if target is not a city state
+			local targetInfluence:table = Players[m_city:GetOwner()]:GetInfluence();
+			if not targetInfluence:CanReceiveInfluence() then
+				local targetPlayerConfiguration = PlayerConfigurations[m_city:GetOwner()];
+				AddOutcomeLabel(Locale.Lookup("LOC_ESPIONAGEPOPUP_DISCOVERED_WARNING", targetPlayerConfiguration:GetPlayerName()));
+			end
 		end
 	end
 end
@@ -455,6 +458,7 @@ function OnShutdown()
 	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "city", m_city);
 	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "operation", m_operation);
 	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "popupState", m_currentPopupState);
+	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "missionHistory", m_missionHistory);
 end
 
 -- ===========================================================================
@@ -465,6 +469,9 @@ function OnGameDebugReturn(context:string, contextTable:table)
 	if context == RELOAD_CACHE_ID then
 		if contextTable["popupState"] ~= nil then			
 			m_currentPopupState = contextTable["popupState"];
+		end
+		if contextTable["missionHistory"] ~= nil then			
+			m_missionHistory = contextTable["missionHistory"];
 		end
 		if contextTable["spy"] ~= nil then			
 			m_spy = contextTable["spy"];
@@ -494,6 +501,15 @@ function OnInputHandler( pInputStruct:table )
 end
 
 -- ===========================================================================
+function OnInterfaceModeChanged( oldMode:number, newMode:number )
+	if oldMode == InterfaceModeTypes.SPY_CHOOSE_MISSION and newMode ~= InterfaceModeTypes.SPY_CHOOSE_MISSION then
+		if not ContextPtr:IsHidden() then
+			Close();
+		end
+	end
+end
+
+-- ===========================================================================
 --	INIT
 -- ===========================================================================
 function Initialize()
@@ -504,6 +520,7 @@ function Initialize()
 	-- Game Engine Events
 	Events.LocalPlayerTurnEnd.Add( OnLocalPlayerTurnEnd );
 	Events.SpyMissionCompleted.Add( OnSpyMissionCompleted );
+	Events.InterfaceModeChanged.Add( OnInterfaceModeChanged );
 
 	-- Control Events
 	Controls.AcceptButton:RegisterCallback( Mouse.eLClick, OnAccept );

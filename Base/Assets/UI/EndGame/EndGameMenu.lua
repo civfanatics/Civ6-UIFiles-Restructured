@@ -1,8 +1,9 @@
 
 include("InstanceManager")
 include("EndGameReplayLogic")
-include( "ChatLogic" );
-include( "TeamSupport" );
+include("ChatLogic");
+include("TeamSupport");
+include("PopupDialog");
 
 ---------------------------------------------------------------
 -- Globals
@@ -22,6 +23,9 @@ g_GraphHorizontalMarkers = {
 	Controls.HorizontalLabel4,
 	Controls.HorizontalLabel5
 };
+
+-- Custom popup setup
+local m_kPopupDialog = PopupDialog:new( "EndGameMenu" );
 
 local g_HasPlayerPortrait;	-- Whether or not a player portrait has been set.
 local g_Movie;				-- The movie which has been set.
@@ -368,7 +372,7 @@ function OnReplayMovie()
         end
 	end
 
-	-- If in Network MP , release the pause event, so our local machine continues processing
+	-- If in Network MP, release the pause event, so our local machine continues processing
 	if (GameConfiguration.IsNetworkMultiplayer()) then
 		UI.ReleasePauseEvent();
 	end
@@ -439,7 +443,7 @@ function ShowHideHandler( bIsHide, bIsInit )
 			UpdateButtonStates();
 
 			-- Setup Chat Player Target Pulldown.
-			PopulateTargetPull(Controls.ChatPull, Controls.ChatEntry, m_playerTargetEntries, m_playerTarget, false, OnChatPulldownChanged);
+			PopulateTargetPull(Controls.ChatPull, Controls.ChatEntry, Controls.ChatIcon, m_playerTargetEntries, m_playerTarget, false, OnChatPulldownChanged);
         else
 
 			print("Hiding EndGame Menu");
@@ -511,7 +515,7 @@ function Resize()
 	Controls.PlayerPortrait:SetOffsetVal(-420, portraitOffsetY);
 
 	-- Show/Hide the chat panel button
-	Controls.ChatButton:SetHide(not GameConfiguration.IsNetworkMultiplayer()); 
+	Controls.ChatButton:SetShow(GameConfiguration.IsNetworkMultiplayer() and UI.HasFeature("Chat")); 
 
 end
 
@@ -947,6 +951,7 @@ function SendChat( text )
 			ValidatePlayerTarget(m_playerTarget);
 			UpdatePlayerTargetPulldown(Controls.ChatPull, m_playerTarget);
 			UpdatePlayerTargetEditBox(Controls.ChatEntry, m_playerTarget);
+			UpdatePlayerTargetIcon(Controls.ChatIcon, m_playerTarget);
 		end
 
 		if(printHelp) then
@@ -1024,29 +1029,36 @@ end
 function OnPlayerInfoChanged(playerID)
 	if(ContextPtr:IsHidden() == false) then
 		-- Update chat target pulldown.
-		PlayerTarget_OnPlayerInfoChanged( playerID, Controls.ChatPull, Controls.ChatEntry, m_playerTargetEntries, m_playerTarget, false);
+		PlayerTarget_OnPlayerInfoChanged( playerID, Controls.ChatPull, Controls.ChatEntry, Controls.ChatIcon, m_playerTargetEntries, m_playerTarget, false);
 	end
 end
 
 ----------------------------------------------------------------
 function OnChatPulldownChanged(newTargetType :number, newTargetID :number)
-	ChangeChatIcon(Controls.ChatIcon, newTargetType);
 	local textControl:table = Controls.ChatPull:GetButton():GetTextControl();
 	local text:string = textControl:GetText();
 	Controls.ChatPull:SetToolTipString(text);
 end
 
-----------------------------------------------------------------
-function ChangeChatIcon(iconControl:table, targetType:number)
-	if(targetType == ChatTargetTypes.CHATTARGET_ALL) then
-		iconControl:SetText("[ICON_Global]");
-	elseif(targetType == ChatTargetTypes.CHATTARGET_TEAM) then
-		iconControl:SetText("[ICON_Team]");
-	else
-		iconControl:SetText("[ICON_Whisper]");
+-- ===========================================================================
+function OnRequestClose()
+	if (not m_kPopupDialog:IsOpen()) then
+		m_kPopupDialog:AddText(	  Locale.Lookup("LOC_GAME_MENU_QUIT_WARNING"));
+		m_kPopupDialog:AddButton( Locale.Lookup("LOC_COMMON_DIALOG_NO_BUTTON_CAPTION"), nil );
+		m_kPopupDialog:AddButton( Locale.Lookup("LOC_COMMON_DIALOG_YES_BUTTON_CAPTION"), OnExitGame, nil, nil, "PopupButtonInstanceRed" );
+		m_kPopupDialog:Open();
 	end
 end
 
+-- ===========================================================================
+function OnExitGame()
+	local pFriends = Network.GetFriends();
+	if pFriends ~= nil then
+		pFriends:ClearRichPresence();
+	end
+
+	Events.UserConfirmedClose();
+end
 
 -- ===========================================================================
 --	Initialize screen
@@ -1057,7 +1069,9 @@ function Initialize()
 	Controls.ChatEntry:RegisterCommitCallback( SendChat );
 
 	LuaEvents.ShowEndGame.Add(OnShowEndGame);
+
 	Events.SystemUpdateUI.Add( OnUpdateUI );
+	Events.UserRequestClose.Add( OnRequestClose );
 	Events.PlayerInfoChanged.Add(OnPlayerInfoChanged);
 	Events.MultiplayerPrePlayerDisconnected.Add( OnMultiplayerPrePlayerDisconnected );
 	Events.MultiplayerPlayerConnected.Add( OnMultplayerPlayerConnected );

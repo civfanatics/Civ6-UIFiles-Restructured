@@ -23,6 +23,7 @@ local ms_ExitToMain		: boolean = true;
 local m_isSimpleMenu	: boolean = false;
 local m_isLoadingDone   : boolean = false;
 local m_isRetired		: boolean = false;
+local m_isEndGameOpen	: boolean = false;
 
 -- State variable to track that the menu is in the process of being closed and 
 -- prevent duplicate calls.
@@ -85,8 +86,9 @@ end
 
 -- ===========================================================================
 function OnExitGame()
-    if (Steam ~= nil) then
-        Steam.ClearRichPresence();
+	local pFriends = Network.GetFriends();
+	if pFriends ~= nil then
+        pFriends:ClearRichPresence();
     end
 
     Events.UserConfirmedClose();
@@ -243,7 +245,6 @@ function SetupButtons()
 	Controls.SaveGameButton:SetDisabled( not bCanSave );
 	Controls.LoadGameButton:SetDisabled( not bCanLoad );
 	Controls.RetireButton:SetDisabled( not bIsLocalPlayersTurn );
-	Controls.RestartButton:SetDisabled( not bCanRestart );
 
 	-- Hide the restart button until functionality is implemented and stable.
 	Controls.RestartGameButton:SetHide(true); -- m_isSimpleMenu or bIsAutomation or bIsMultiplayer);
@@ -267,6 +268,7 @@ function SetupButtons()
 	end
 
 	Controls.RetireButton:SetHide(m_isSimpleMenu or bIsAutomation or bIsMultiplayer or bAlreadyWon);
+	Controls.RestartButton:SetHide( not bCanRestart );
 
 	Controls.ExitGameButton:SetHide(false);	
 
@@ -467,6 +469,8 @@ end
 
 -- ===========================================================================
 function OnRequestClose()
+	-- End Game Screen handles this
+	if m_isEndGameOpen then return end
 	if m_isLoadingDone then
 		-- Only handle the message if popup queuing is active (diplomacy is not up)
 		if UIManager:IsPopupQueueDisabled()==false then
@@ -475,7 +479,7 @@ function OnRequestClose()
 			end
 			OnExitGameAskAreYouSure();
 		end
-    else
+	else
 		Events.UserConfirmedClose();
 	end
 end
@@ -494,8 +498,8 @@ function Initialize()
 	Controls.MainMenuButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 	Controls.OptionsButton:RegisterCallback( Mouse.eLClick, OnOptions );
 	Controls.OptionsButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
-	Controls.QuickSaveButton:RegisterCallback( Mouse.eLClick, OnQuickSaveGame );      
-	Controls.QuickSaveButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);                   
+	Controls.QuickSaveButton:RegisterCallback( Mouse.eLClick, OnQuickSaveGame );
+	Controls.QuickSaveButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 	Controls.RetireButton:RegisterCallback( Mouse.eLClick, OnRetireGame );
 	Controls.RetireButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 	Controls.RestartButton:RegisterCallback( Mouse.eLClick, OnRestartGame );
@@ -510,10 +514,14 @@ function Initialize()
 	LuaEvents.InGame_OpenInGameOptionsMenu.Add( OnOpenInGameOptionsMenu );
 
 	LuaEvents.TutorialUIRoot_SimpleInGameMenu.Add( OnSimpleInGameMenu );
+	LuaEvents.DiplomacyActionView_HideIngameUI.Add( CloseImmediately );
+
+	LuaEvents.EndGameMenu_Shown.Add( function() m_isEndGameOpen = true; end );
+	LuaEvents.EndGameMenu_OneMoreTurn.Add( function() m_isEndGameOpen = false; end );
 
 	Events.PlayerTurnActivated.Add( OnPlayerTurnActivationChanged );
 	Events.PlayerTurnDeactivated.Add( OnPlayerTurnActivationChanged );
-    Events.UserRequestClose.Add( OnRequestClose );
+	Events.UserRequestClose.Add( OnRequestClose );
 	Events.LoadGameViewStateDone.Add( OnLoadGameViewStateDone );
 
 	Controls.VersionLabel:SetText( UI.GetAppVersion() );

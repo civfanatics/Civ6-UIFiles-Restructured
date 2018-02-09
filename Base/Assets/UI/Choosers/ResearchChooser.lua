@@ -192,7 +192,7 @@ function AddAvailableResearch( playerID:number, kData:table )
 
 	numUnlockables = PopulateUnlockablesForTech( playerID, kData.ID, techUnlockIM, callback );
 	if numUnlockables ~= nil then
-		HandleOverflow(numUnlockables, kItemInstance);
+		HandleOverflow(numUnlockables, kItemInstance, 5, 5);
 	end
 
 	if kData.ResearchQueuePosition ~= -1 then
@@ -372,7 +372,7 @@ end
 -- input processing) so we can defer the rebuild until here.
 -- ===========================================================================
 function FlushChanges()
-	if m_needsRefresh then
+	if m_needsRefresh and ContextPtr:IsVisible() then
 		Refresh();	
 	end
 end
@@ -403,6 +403,12 @@ function OnInit( isReload:boolean )
 		end
 	end
 end
+
+-- ===========================================================================
+function OnShow()
+	Refresh();
+end
+
 -- ===========================================================================
 function OnShutdown()
 	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "m_currentID", m_currentID);
@@ -430,6 +436,7 @@ function Initialize()
 
 	-- Hot-reload events
 	ContextPtr:SetInitHandler(OnInit);
+	ContextPtr:SetShowHandler(OnShow);
 	ContextPtr:SetShutdown(OnShutdown);
 	LuaEvents.GameDebug_Return.Add(OnGameDebugReturn);
 
@@ -440,6 +447,7 @@ function Initialize()
 	LuaEvents.Tutorial_ResearchOpen.Add(OnOpenPanel);
 	LuaEvents.ActionPanel_OpenChooseResearch.Add(OnOpenPanel);
 	LuaEvents.WorldTracker_OpenChooseResearch.Add(OnOpenPanel);
+	LuaEvents.LaunchBar_CloseChoosers.Add(OnClosePanel);
 	
 	-- Game events
 	Events.CityInitialized.Add(			OnCityInitialized );

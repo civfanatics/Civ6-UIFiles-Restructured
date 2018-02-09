@@ -7,44 +7,18 @@
 		<Grid Size="parent+10,parent+10" Offset="-5,-5" Style="WindowFrameTitle"/>
 
 		<Container Anchor="L,T" Offset="0,37" Size="parent-2, parent-39">
-			<Image Texture="Parchment_Pattern" Size="parent,parent" StretchMode="Tile" />
+			<Image Texture="Parchment_PatternBright" Size="parent,parent" StretchMode="Tile" />
 		</Container>
 
 		<Grid Texture="Civilopedia_Banner" SliceCorner="8,8" SliceTextureSize="16,16" Size="260,parent-30" Offset="-5,32" />
 
-		<Label ID="WindowTitle" Anchor="C,T" Offset="0,5" String="LOC_UI_PEDIA_TITLE" Style="FontFlair28" FontStyle="glow" Color="206,218,225,255" EffectColor="74,108,37,191" />
+		<Label ID="WindowTitle" Anchor="C,T" Offset="0,6" String="LOC_UI_PEDIA_TITLE"	Style="FontFlair24" FontStyle="glow" ColorSet="ShellHeader" SmallCaps="28" SmallCapsLeading="0" SmallCapsType="EveryWord"  />
 		<Button ID="WindowCloseButton" Anchor="R,T" Style="CloseButtonSmall" />
 
-		<Grid Anchor="C,T" Size="980,61" Offset="0,32" Texture="Controls_TabLedge2"  SliceCorner="194,18" SliceSize="52,26" SliceTextureSize="438,61">
+		<Grid Anchor="C,T" Size="1028,61" Offset="0,28" Texture="Controls_TabLedge2"  SliceCorner="194,18" SliceSize="52,26" SliceTextureSize="438,61">
 			<Image Anchor="C,C"	Size="639,27" Texture="Controls_TabLedge2_Fill" StretchMode="Tile" />
 			<Container ID="TabContainer" Size="Parent-80,34"	Offset="40,13" />
 		</Grid>
-
-		<!-- Section Tab Area -->
-		<Stack ID="CivilopediaSectionTabStack" StackGrowth="Right" Offset="65,27" Padding="0">
-			<PullDown ID="AdditionalSectionsPullDown" Hidden="1" Style="SmallPullDown" Offset="0,-10" Size="100,29" AutoSizePopUp="1" SpaceForScroll="0" ScrollThreshold="450">
-				<ButtonData>
-					<GridButton ID="AdditionalSectionsPullDownButton" Offset="0,30" Size="194,26" String="More" Style="TreeOptionText" >
-						<GridData Texture="Controls_Dropdown2" StateOffsetIncrement="0,26"	SliceCorner="30,14"	SliceSize="1,1"		SliceTextureSize="41,26" />
-					</GridButton>
-				</ButtonData>
-
-				<GridData Offset="0,50" Texture="Controls_OptionPanel" SliceCorner="3,3" SliceSize="10,52" SliceTextureSize="16,64" />
-				<ScrollPanelData Anchor="C,C" Vertical="1" Size="18,18" AutoScrollBar="1" >
-					<ScrollBar Style="Slider_Vert" Anchor="R,C" AnchorSide="O,I"   />
-					<UpButton Style="Scroll_Up" Anchor="R,T" AnchorSide="O,I"   />
-					<DownButton Style="Scroll_Down" Anchor="R,B" AnchorSide="O,I"   />
-				</ScrollPanelData>
-				<StackData StackGrowth="Bottom" Anchor="C,T" Padding="0"/>
-				<InstanceData Name="AdditionalSectionsPullDownInstance" >
-					<Button ID="Button" Anchor="L,T"	Size="194,30"	>
-						<Label ID="IconText" Offset="4,8"	String="a" Style="FontNormal14" Color="255,255,255,255" Hidden="1"/>
-						<Label ID="DescriptionText" Offset="4,8" String="b" Style="FontNormal14" Color="255,255,255,255" />
-					</Button>
-				</InstanceData>
-			</PullDown>
-		</Stack>
-
 
 		<Container Size="parent-1,parent" Offset="0,100">
 
@@ -62,9 +36,9 @@
 			</Box>
 
 			<!-- Page Content Area -->
-			<Box Size="parent-260,parent-102" Offset="260,0" Color="0,0,0,0">
+			<Box Size="parent-260,parent-74" Offset="260,-28" Color="0,0,0,0">
 				<ScrollPanel ID="PageContentScrollPanel" Style="Civilopedia_PageContentScrollPanel" Size="parent-15,parent">
-					<Grid ID="PageContentFrame" Style="Civilopedia_PageFrame" Anchor="L,T" Size="742,parent-100">
+					<Grid ID="PageContentFrame" Style="Civilopedia_PageFrame" Anchor="L,T" Size="742,parent-112" Offset="0,18">
 
 						<Stack ID="PageContentStack" StackGrowth="Bottom">
 
@@ -113,7 +87,31 @@
 				</ScrollPanel>
 			</Box>
 		</Container>
+    
+    <!-- Section Tab Area -->
+    <Stack ID="CivilopediaSectionTabStack" StackGrowth="Right" Offset="45,23" Padding="0">
+      <PullDown ID="AdditionalSectionsPullDown" Hidden="1" Style="SmallPullDown" Offset="0,-10" Size="100,29" AutoSizePopUp="1" SpaceForScroll="0" ScrollThreshold="450">
+        <ButtonData>
+          <GridButton ID="AdditionalSectionsPullDownButton" Offset="0,30" Size="194,26" String="More" Style="TreeOptionText" >
+            <GridData Texture="Controls_Dropdown2" StateOffsetIncrement="0,26"	SliceCorner="30,14"	SliceSize="1,1"		SliceTextureSize="41,26" />
+          </GridButton>
+        </ButtonData>
 
+        <GridData Offset="0,50" Texture="Controls_OptionPanel" SliceCorner="3,3" SliceSize="10,52" SliceTextureSize="16,64" />
+        <ScrollPanelData Anchor="C,C" Vertical="1" Size="18,18" AutoScrollBar="1" >
+          <ScrollBar Style="Slider_Vert" Anchor="R,C" AnchorSide="O,I"   />
+          <UpButton Style="Scroll_Up" Anchor="R,T" AnchorSide="O,I"   />
+          <DownButton Style="Scroll_Down" Anchor="R,B" AnchorSide="O,I"   />
+        </ScrollPanelData>
+        <StackData StackGrowth="Bottom" Anchor="C,T" Padding="0"/>
+        <InstanceData Name="AdditionalSectionsPullDownInstance" >
+          <Button ID="Button" Anchor="L,T"	Size="194,30"	>
+            <Label ID="IconText" Offset="4,8"	String="a" Style="FontNormal14" Color="255,255,255,255" Hidden="1"/>
+            <Label ID="DescriptionText" Offset="4,8" String="b" Style="FontNormal14" Color="255,255,255,255" />
+          </Button>
+        </InstanceData>
+      </PullDown>
+    </Stack>
 		<Container ID="SearchResultsPanelContainer" Anchor="L,T"	Offset="0,125"	 Size="193,auto" Hidden="1">
 			<ScrollPanel ID="SearchResultsPanel"  Size="parent,693"  Vertical="1" AutoScrollBar="1">
 				<ScrollBar Style="Slider_Blue" Anchor="R,C" AnchorSide="O,I"/>
@@ -207,6 +205,12 @@
 		</Image>
 	</Instance>
 
+	<Instance Name="RightColumnPortraitTallNoScaling">
+		<Image ID="Root" Anchor="C,T" Texture="Civilopedia_PortraitSquare" Size="298,295" StretchMode="UniformToFill">
+			<Image ID="PortraitIcon" Texture="Civilopedia_PortraitSquare" Size="256,256" StretchMode="Auto" Anchor="C,C"/>
+		</Image>
+	</Instance>
+
 	<Instance Name="RightColumnQuote">
 		<Grid ID="Root" Style="Civilopedia_RightColumnQuotePanel">
 			<Button ID="PlayQuote" Anchor="C,C" Texture="Controls_Play" StateOffsetIncrement="0" Size="57,57" />
@@ -229,7 +233,7 @@
 
 	<Instance Name="RightColumnStatSeparator">
 		<Container ID="Root" Size="parent,2">
-			<Box Anchor="C,T" Color="0,20,20,255" Size="225,2" />
+			<Box Anchor="C,T" Color="0,20,20,70" Size="225,2" />
 		</Container>
 	</Instance>
 

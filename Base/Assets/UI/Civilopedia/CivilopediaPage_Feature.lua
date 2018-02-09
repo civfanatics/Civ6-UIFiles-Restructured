@@ -37,6 +37,10 @@ PageLayouts["Feature" ] = function(page)
 		table.insert(traits, Locale.Lookup("LOC_UI_PEDIA_TERRAIN_IMPASSABLE"));
 	end
 
+	if(tonumber(feature.MovementChange)> 0) then
+		table.insert(traits, Locale.Lookup("LOC_UI_PEDIA_MOVEMENT_CHANGE", tonumber(feature.MovementChange)));
+	end
+
 	table.sort(traits, function(a,b) return Locale.Compare(a,b) == -1; end);
 
 	-- Right column, first!

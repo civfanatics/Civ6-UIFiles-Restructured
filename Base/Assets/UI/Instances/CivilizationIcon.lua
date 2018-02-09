@@ -142,6 +142,7 @@ function CivilizationIcon:UpdateLeaderTooltip(playerID:number, details:string)
 		local leaderTypeName:string = playerConfig:GetLeaderTypeName();
 		if(leaderTypeName ~= nil) then
 			self.m_CivTooltip.LeaderIcon:SetIcon("ICON_"..leaderTypeName);
+			self.m_CivTooltip.LeaderIcon:SetHide(false);
 
 			local desc:string;
 			local leaderDesc:string = playerConfig:GetLeaderName();

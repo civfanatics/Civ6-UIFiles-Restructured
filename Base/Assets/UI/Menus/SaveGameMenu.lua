@@ -160,7 +160,8 @@ function OnShow()
 	end
 		
 	local decoSize = 611;
-	Controls.DecoContainer:SetSizeY(decoSize - (count * 23));
+	Controls.DecoContainer:SetSizeY(decoSize - (count * 23));	
+	Controls.FileName:TakeFocus();
 
 end
 ----------------------------------------------------------------        
@@ -300,6 +301,11 @@ function OnRefresh()
 end
 
 -- ===========================================================================
+function OnSelectedFileStackSizeChanged()
+	ResizeGameInfoScrollPanel();
+end
+
+-- ===========================================================================
 function Initialize()
 	ContextPtr:SetInitHandler(OnInit);
 	ContextPtr:SetShutdown(OnShutdown);
@@ -321,6 +327,7 @@ function Initialize()
 	Controls.Yes:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 	Controls.Delete:RegisterCallback( Mouse.eLClick, OnDelete );
 	Controls.Delete:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
+	Controls.SelectedFileStack:RegisterSizeChanged( OnSelectedFileStackSizeChanged );
 
 	-- UI Events
 	ContextPtr:SetShowHandler( OnShow );

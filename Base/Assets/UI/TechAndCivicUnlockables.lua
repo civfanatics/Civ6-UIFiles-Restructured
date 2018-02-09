@@ -148,7 +148,7 @@ function GetUnlockableItems(playerId)
 	end
 
 	for row in GameInfo.DiplomaticActions() do
-		if(CanEverUnlock(row)) then
+		if(CanEverUnlock(row)  and row.Name ~= nil) then
 			table.insert(unlockables, {row, row.DiplomaticActionType, row.Name, row.CivilopediaKey});
 		end
 	end

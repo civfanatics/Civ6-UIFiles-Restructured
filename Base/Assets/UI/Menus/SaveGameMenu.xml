@@ -45,7 +45,7 @@
                       <Label String="LOC_NO_FILE_SELECTED" Style="BlueGlow" Anchor="C,C"/>
                     </Container>
                     <Container ID="SelectedFile" Size="parent,parent" Hidden="1">
-                      <Stack StackGrowth="Down" Padding="1">
+                      <Stack ID="SelectedFileStack" StackGrowth="Down" Padding="1">
                         <!-- INSPECTOR contents-->
                         <Grid Style="ShellLoadSaveHeader" Size="parent,40" Offset="0,1" Anchor="C,T">
                           <Grid Style="EditTextArea" Size="parent-60,29" Anchor="C,T" Offset="0,4">
@@ -108,11 +108,12 @@
                           </Stack>
                           <Box Color="30,125,182,50" Size="parent,2" Anchor="L,B"/>
                         </Box>
-                        <ScrollPanel	ID="GameInfoScrollPanel" Anchor="L,T" Size="parent,320"	Vertical="1" AutoScrollBar="1">
-                          <Stack ID="GameInfoStack" StackGrowth="Down" Anchor="C,T" Padding="3"/>
-                          <ScrollBar Anchor="R,C" Style="Slider_Blue" Vertical="1" Offset="-2,-2"/>
-                        </ScrollPanel>
+												<Container Size="parent,1"/>
                       </Stack>
+											<ScrollPanel	ID="GameInfoScrollPanel" Anchor="L,B" Size="parent,320"	Vertical="1" AutoScrollBar="1">
+												<Stack ID="GameInfoStack" StackGrowth="Down" Anchor="C,T" Padding="3"/>
+												<ScrollBar Anchor="R,C" Style="Slider_Blue" Vertical="1" Offset="-2,-2"/>
+											</ScrollPanel>
                     </Container>
                   </Grid>
                   <!-- /INSPECTOR inner glow -->

@@ -900,7 +900,7 @@ function Initialize()
 		end
 	end);
 
-	if(Steam.GetAppID() ~= 0) then
+	if(Steam ~= nil and Steam.GetAppID() ~= 0) then
 		Controls.SubscriptionsTab:RegisterCallback(Mouse.eLClick, function() OnSubscriptionsTabClick() end);
 		Controls.SubscriptionsTab:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 		Controls.SubscriptionsTab:SetHide(false);
@@ -908,7 +908,8 @@ function Initialize()
 		Controls.SubscriptionsTab:SetHide(true);
 	end
 
-	if(Steam.IsOverlayEnabled()) then
+	local pFriends = Network:GetFriends();
+	if(pFriends ~= nil and pFriends:IsOverlayEnabled()) then
 		Controls.BrowseWorkshop:RegisterCallback( Mouse.eLClick, OnOpenWorkshop );
 		Controls.BrowseWorkshop:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 	else

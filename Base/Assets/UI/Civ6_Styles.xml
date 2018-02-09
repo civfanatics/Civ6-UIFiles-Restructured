@@ -99,7 +99,7 @@
 
 	<!-- Event Popup Fonts -->
 	<EventPopupTitle FontStyle="Shadow"	Color0="179,185,192,255"	Color1="0,0,0,38"	Style="FontFlair20" Align="Center" SmallCaps="26" SmallCapsType="EveryWord" />
-	<EventPopupDescription Color0="179,185,176,255" Color1="0,0,0,43" Style="FontNormalMedium16" />
+	<EventPopupDescription Color0="124,144,162,255" Color1="0,0,0,43" Style="FontNormalMedium16" />
   <EventPopupDescriptionBold Color0="179,185,176,255" Color1="0,0,0,43" Style="FontNormalBold16" />
 	<EventPopupJournal Color="66,54,19,255" Style="FontItalicFlair22"/>
 	<EventPopupEffects Style="EventPopupDescription"/>
@@ -1481,8 +1481,9 @@
   <SubContainerCallout	  Texture="Controls_SubContainerCallout"        SliceCorner="8,8"   SliceSize="1,1"     SliceTextureSize="41,42" MinSize="41,42" InnerPadding="14,20" InnerOffset="7,7"/>
   <SubContainerFill	      Texture="Controls_SubContainerFill"           SliceCorner="10,10"                     SliceTextureSize="18,18" SliceStart="2,2"/>
 
-  <SubContainerSmall AutoSize="H" AutoSizePadding="0,0" Texture="Controls_ItemContainer" SliceCorner="8,8" SliceTextureSize="16,16" MinSize="16,16"/>
-
+  <SubContainerSmall  AutoSize="H" AutoSizePadding="0,0" Texture="Controls_ItemContainer" SliceCorner="8,8" SliceTextureSize="16,16" MinSize="16,16"/>
+  <SubContainerSmall2 AutoSize="H" AutoSizePadding="0,0" Texture="Controls_ItemContainerDark" SliceCorner="8,8" SliceTextureSize="16,16" MinSize="16,16"/>
+  
   <DropShadow Texture="Controls_DropShadow"
             SliceCorner="100,100"
             SliceTextureSize="200,200"
@@ -2093,7 +2094,7 @@
   <ReligionHeadingLarge 	  Style="FontFlair40"		Color="206,218,225,255"	FontStyle="glow"	EffectColor="74,108,37,191" />
   <ReligionHeadingFaded	    Style="FontFlair26"		Color="106,130,144,255"	SmallCaps="30" FontStyle="glow" EffectColor="106,130,144,50"/>
   <ReligionSubHeading		    Style="FontFlair20"		Color="188,201,208,255"	SmallCaps="24" EffectColor="88,144,191,128" SmallCapsType="FirstWord" FontStyle="Glow"/>
-  <ReligionSubHeadingSmall  Style="FontFlair14"		Color="188,201,208,190"	SmallCaps="18"	SmallCapsType="EveryWord" EffectColor="88,144,191,64" FontStyle="Glow"/>
+  <ReligionSubHeadingSmall  Style="FontFlair14"		Color="188,201,208,190"	SmallCaps="0"	EffectColor="88,144,191,64" FontStyle="Glow"/>
   <ReligionSubHeadingSmallNoKern  Style="FontFlair14"		Color0="188,201,208,190"	SmallCaps="18"	SmallCapsType="EveryWord" Color1="88,144,191,64" FontStyle="Glow"/>
   <ReligionDescription	    Style="FontNormalMedium14"	Color0="188,201,208,190" Color1="88,144,191,64" FontStyle="Glow" />
   <ReligionDataHeading	    Style="FontFlair20"		Color="188,201,208,255" EffectColor="88,144,191,128" SmallCaps="24" SmallCapsType="FirstWord" FontStyle="Glow"/>
@@ -2116,6 +2117,20 @@
   <CityStateTinyButton				FontStyle="Shadow" Style="FontNormal16" TextAnchor="R,C" TextOffset="6,0" TextColor="190,200,230,255" SelectedTextColor="10,10,30,255" States="7">
     <GridData Style="ButtonLightWeightSmallGrid"/>
   </CityStateTinyButton>
+  
+  <!-- =======================================================
+			Half Screens
+	============================================================ -->
+  <HalfScreenTitle  Style="FontFlair24" FontStyle="glow"		Color0="208,212,217,255"	Color1="0,0,0,200" SmallCaps="30" SmallCapsLeading="0" SmallCapsType="FirstWord"/>
+  <HalfScreenHeader Style="FontFlair14" Color0="208,212,217,255" SmallCaps="18" SmallCapsLeading="0" SmallCapsType="EveryWord"/>
+  <HalfScreenBody   Style="FontNormal14" Color="208,212,217,255"/>
+
+  <!-- =======================================================
+			Parchment
+	============================================================ -->
+  <ParchmentTitle  Style="FontFlair24" Color="25,25,25,255"	 SmallCaps="30" SmallCapsLeading="0" SmallCapsType="FirstWord"/>
+  <ParchmentHeader Style="FontFlair14" Color="25,25,25,255" SmallCaps="18" SmallCapsLeading="0" SmallCapsType="EveryWord"/>
+  <ParchmentBody   Style="FontNormal14" Color="40,40,40,255"/>
 
   <!-- =======================================================
 			Great People
@@ -2272,14 +2287,14 @@
 
 
   <Civilopedia_PageHeader Texture="Civilopedia_PageHeader" Size="732,58" />
-  <Civilopedia_PageHeaderCaption Anchor="C,C" Style="FontBoldFlair21" Color="58,56,56,255" />
+  <Civilopedia_PageHeaderCaption Anchor="C,C" Style="FontBoldFlair21" SmallCaps="24" SmallCapsLeading="0" SmallCapsType="EveryWord" Color="27,27,27,255"/>
 
   <Civilopedia_PageSubHeader Texture="Civilopedia_PageSubheader" SliceCorner="64,32" SliceTextureSize="128,58" Size="742,58" />
-  <Civilopedia_PageHeaderCaption  Anchor="C,C" Style="FontBoldFlair18" SmallCaps="16" SmallCapsLeading="0" SmallCapsType="EveryWord" Color="58,56,56,255" FontStyle="glow" />
+  <Civilopedia_PageHeaderCaption  Anchor="C,C" Style="FontBoldFlair18" SmallCaps="16" SmallCapsLeading="0" SmallCapsType="EveryWord" Color="27,27,27,255" FontStyle="glow" />
 
 
   <Civilopedia_PageFrame Style="Civilopedia_StatsFrame" />
-  <Civilopedia_StatsFrame Texture="Civilopedia_StatsFrame" SliceCorner="17,17" SliceTextureSize="34,34" />
+  <Civilopedia_StatsFrame Texture="Civilopedia_StatsFrame" SliceCorner="17,17" SliceTextureSize="34,34" Color="255,255,255,128"/>
 
   <Civilopedia_PageContentScrollPanel  Vertical="1" AutoScrollBar="1">
     <ScrollBar Anchor="R,C" AnchorSide="O,I"  Style="ScrollVerticalBar" Color="97,90,78,255">
@@ -2287,9 +2302,9 @@
     </ScrollBar>
   </Civilopedia_PageContentScrollPanel>
 
-  <Civilopedia_PageContentFooter  Size="parent,145" Anchor="L,B" Offset="0,0">
-    <Image Anchor="C,T" Texture="Controls_Compass" Size="193,122"  Color="97,90,78" />
-    <Grid Anchor="C,T" Offset="0,117" Texture="Controls_Div2" SliceCorner="27,4" SliceTextureSize="54,8" Size="parent,8" Color="97,90,78" />
+  <Civilopedia_PageContentFooter  Size="parent-20,145" Anchor="C,B" Offset="0,0">
+    <Image Anchor="C,T" Texture="Controls_Compass" Size="193,122"  Color="120,113,102,255" />
+    <Grid Anchor="C,T" Offset="0,117" Texture="Controls_Div2" SliceCorner="27,4" SliceTextureSize="54,8" Size="parent,8" Color="120,113,102,255" />
   </Civilopedia_PageContentFooter>
 
   <Civilopedia_PageTabButton >
@@ -2313,19 +2328,19 @@
   <Civilopedia_SearchEditBox Style="FontNormal16" Size="parent,16" MaxLength="40" String="LOC_TREE_SEARCH_W_DOTS"/>
 
   <Civilopedia_LeftColumnChapterHeader Texture="Civilopedia_TopicHeader" SliceCorner="64,21" SliceTextureSize="128,42" />
-  <Civilopedia_LeftColumnChapterHeaderCaption Anchor="C,C" Style="FontBoldFlair18" SmallCaps="16" SmallCapsLeading="0" SmallCapsType="EveryWord" Color="58,56,56,255" FontStyle="glow" />
-  <Civilopedia_LeftColumnChapterParagraph Style="FontNormalMedium16" Size="16" Color="58,56,56,255" />
+  <Civilopedia_LeftColumnChapterHeaderCaption Anchor="C,C" Style="FontBoldFlair18" SmallCaps="16" SmallCapsLeading="0" SmallCapsType="EveryWord" Color="27,27,27,255" FontStyle="glow" />
+  <Civilopedia_LeftColumnChapterParagraph Style="FontNormalMedium16" Size="16" Color="27,27,27,255" />
 
   <Civilopedia_RightColumnQuotePanel Anchor="C,T" Texture="Civilopedia_QuoteButton" SliceCorner="53,43" SliceTextureSize="102,84" Size="260,100" />
   <Civilopedia_RightColumnQuoteText Anchor="C,C" WrapWidth="190" Style="FontNormalMedium16" FontStyle="shadow" Size="16" Color0="201,193,188,255" Color1="0,0,0,128" />
 
-  <Civilopedia_RightColumnStatText Style="FontNormal16" Color="58,56,56,255" />
-  <Civilopedia_RightColumnStatSmallText Style="FontNormal12"  Color="58,56,56,255" />
-  <Civilopedia_RightColumnStatHeader Style="FontNormal18" Color="58,56,56,255" />
+  <Civilopedia_RightColumnStatText Style="FontNormal16" Color="27,27,27,255" />
+  <Civilopedia_RightColumnStatSmallText Style="FontNormal12"  Color="27,27,27,255" />
+  <Civilopedia_RightColumnStatHeader Style="FontNormal18" Color="27,27,27,255" />
 
   <Civilopedia_ChapterHeader Texture="Civilopedia_TopicHeader" SliceCorner="64,21" SliceTextureSize="128,42" />
-  <Civilopedia_ChapterHeaderCaption Anchor="C,C" Style="FontBoldFlair18" SmallCaps="16" SmallCapsLeading="0" SmallCapsType="EveryWord" Color="58,56,56,255" FontStyle="glow"/>
-  <Civilopedia_ChapterParagraph Style="FontNormalMedium16" Size="16" Color="58,56,56,255" />
+  <Civilopedia_ChapterHeaderCaption Anchor="C,C" Style="FontBoldFlair18" SmallCaps="16" SmallCapsLeading="0" SmallCapsType="EveryWord" Color="27,27,27,255" FontStyle="glow"/>
+  <Civilopedia_ChapterParagraph Style="FontNormalMedium16" Size="16" Color="0,0,0,255" />
 
   <!-- EXPERIMENTAL STYLE CLASS MODULES -->
 

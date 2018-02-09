@@ -4,10 +4,12 @@
 		<Row Name="ICON_ATLAS_FONT_ICON_BASELINE_4" Baseline="4" IconSize="22" IconsPerRow="11" IconsPerColumn="25" Filename="FontIcons.dds"/>
 		<Row Name="ICON_ATLAS_FONT_ICON_BASELINE_6" Baseline="6" IconSize="22" IconsPerRow="11" IconsPerColumn="25" Filename="FontIcons.dds"/>
 		<Row Name="ICON_ATLAS_FONT_ICON_BASELINE_8" Baseline="8" IconSize="22" IconsPerRow="11" IconsPerColumn="25" Filename="FontIcons.dds"/>
-	</IconTextureAtlases>
+    <Row Name="ICON_ATLAS_REPORT_ICON" IconSize="22" Baseline="4" IconsPerRow="1" IconsPerColumn="1" Filename="ReportsIcon.dds"/>
+  </IconTextureAtlases>
 
 	<IconDefinitions>
-		<Row Name="Housing" Atlas="ICON_ATLAS_FONT_ICON_BASELINE_6" Index="0"/>
+    <Row Name="Reports" Atlas="ICON_ATLAS_REPORT_ICON" Index="0" />
+    <Row Name="Housing" Atlas="ICON_ATLAS_FONT_ICON_BASELINE_6" Index="0"/>
 		<Row Name="Amenities" Atlas="ICON_ATLAS_FONT_ICON_BASELINE_6" Index="1"/>
 		<Row Name="Citizen" Atlas="ICON_ATLAS_FONT_ICON_BASELINE_6" Index="2"/>
 		<Row Name="TradeRoute" Atlas="ICON_ATLAS_FONT_ICON_BASELINE_6" Index="3"/>

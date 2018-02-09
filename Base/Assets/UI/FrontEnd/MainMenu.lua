@@ -2,6 +2,8 @@
 include("LobbyTypes"); --MPLobbyMode
 include("PopupDialog");
 
+include("PlayerSetupLogic"); -- For PlayNow
+
 -- ===========================================================================
 --	Members
 -- ===========================================================================
@@ -14,6 +16,7 @@ local m_hasSaves:boolean = false;
 local m_currentOptions:table = {};		--Track which main menu options are being displayed and selected. Indices follow the format of {optionControl:table, isSelected:boolean}
 local m_initialPause = 1.5;				--How long to wait before building the main menu options when the game first loads
 local m_internetButton:table = nil;		--Cache internet button so it can be updated when online status events fire
+local m_multiplayerButton:table = nil;	--Cache multiplayer button.
 local m_resumeButton:table = nil;		--Cache resume button so it can be updated when FileListQueryResults event fires
 local m_scenariosButton:table = nil;	--Cache scenarios button so it can be updated later.
 
@@ -88,7 +91,24 @@ function OnPlayCiv6()
 		local serverType : number = ServerType.SERVER_TYPE_NONE;
 		Network.LoadGame(save, serverType);
 	else
+
+		-- Reset the game configuration.
 		GameConfiguration.SetToDefaults();
+		-- Kludge:  SetToDefaults assigns the ruleset to be standard.
+		-- Clear this value so that the setup parameters code can guess the best 
+		-- default.
+		GameConfiguration.SetValue("RULESET", nil);
+
+		-- Many game setup values are driven by Lua-implemented parameter logic.
+
+		BuildHeadlessGameSetup();
+		RebuildPlayerParameters(true);
+		GameSetup_RefreshParameters();
+
+		-- Cleanup
+		ReleasePlayerParameters();
+		HideGameSetup();
+
 		Network.HostGame(ServerType.SERVER_TYPE_NONE);
 	end
 end
@@ -240,6 +260,16 @@ function UpdateInternetButton(buttonControl: table)
 			m_internetButton.ButtonLabel:SetColorByName( "ButtonDisabledCS" );
 		end
 	end
+end
+
+function UpdateMultiplayerButton(buttonControl: table)
+	if (buttonControl ~=nil) then
+		m_multiplayerButton = buttonControl;
+	end
+
+	m_multiplayerButton.Top:SetToolTipString(MultiplayerButtonTTStr);
+	m_multiplayerButton.ButtonLabel:SetText(Locale.Lookup("LOC_PLAY_MULTIPLAYER"));
+	m_multiplayerButton.OptionButton:SetEnabled(UI.HasFeature("Multiplayer"));
 end
 
 -- ===========================================================================
@@ -426,7 +456,7 @@ local m_BenchmarkSubMenu :table = {
 local m_preSaveMainMenuOptions :table = {	{label = "LOC_PLAY_CIVILIZATION_6",			callback = OnPlayCiv6}};  
 local m_defaultMainMenuOptions :table = {	
 								{label = "LOC_SINGLE_PLAYER",				callback = OnSinglePlayer,	tooltip = "LOC_MAINMENU_SINGLE_PLAYER_TT",	submenu = m_SinglePlayerSubMenu}, 
-								{label = "LOC_PLAY_MULTIPLAYER",			callback = OnMultiPlayer,	tooltip = "LOC_MAINMENU_MULTIPLAYER_TT",	submenu = m_MultiPlayerSubMenu},
+								{label = "LOC_PLAY_MULTIPLAYER",			callback = OnMultiPlayer,	tooltip = "LOC_MAINMENU_MULTIPLAYER_TT",	submenu = m_MultiPlayerSubMenu, buttonState = UpdateMultiplayerButton},
 								{label = "LOC_MAIN_MENU_OPTIONS",			callback = OnOptions,	tooltip = "LOC_MAINMENU_GAME_OPTIONS_TT"},
 								{label = "LOC_MAIN_MENU_ADDITIONAL_CONTENT",				callback = OnMods,	tooltip = "LOC_MAIN_MENU_ADDITIONAL_CONTENT_TT"},
 								{label = "LOC_MAIN_MENU_TUTORIAL",			callback = OnTutorial,	tooltip = "LOC_MAINMENU_TUTORIAL_TT"},
@@ -656,6 +686,7 @@ function BuildAllMenus()
 	m_resumeButton = nil;
 	m_internetButton = nil;
 	m_scenariosButton = nil;
+	m_multiplayerButton = nil;
 
 	-- WISHLIST: When we rebuild the menus, let's check to see if there are ANY saved games whatsoever.  
 	-- If none exist, then do not display the option in the submenu. (See: OnFileListQueryResults)
@@ -692,8 +723,9 @@ function OnShow()
 	UI.SetSoundStateValue("Game_Views", "Main_Menu");
 	LuaEvents.UpdateFiraxisLiveState();
 
-	if (Steam ~= nil) then
-		Steam.SetRichPresence("location", "LOC_PRESENCE_IN_SHELL");
+	local pFriends = Network.GetFriends();
+	if (pFriends ~= nil) then
+		pFriends:SetRichPresence("location", "LOC_PRESENCE_IN_SHELL");
 	end
 
 	local gameType = SaveTypes.SINGLE_PLAYER;
@@ -703,9 +735,6 @@ function OnShow()
 	g_LastFileQueryRequestID = nil;
 	local options = SaveLocationOptions.NORMAL + SaveLocationOptions.AUTOSAVE + SaveLocationOptions.QUICKSAVE + SaveLocationOptions.MOST_RECENT_ONLY + SaveLocationOptions.LOAD_METADATA ;
 	g_LastFileQueryRequestID = UI.QuerySaveGameList( saveLocation, gameType, options );
-
-	m_checkedCloudTurns = false;
-	UpdateCheckCloudTurns();
 end
 
 function OnHide()
@@ -747,20 +776,6 @@ end
 
 -- ===========================================================================
 function OnFiraxisLiveActivate(bActive)
-	UpdateCheckCloudTurns();
-end
-
-function UpdateCheckCloudTurns()
-	if(not m_checkedCloudTurns) then
-		local kandoConnected = FiraxisLive.IsFiraxisLiveLoggedIn();
-		if(kandoConnected) then
-			FiraxisLive.SetAutoCloudTurnChecks(true); -- continue polling the turn notification check in the future.
-			local started = FiraxisLive.CheckForCloudTurns();
-			if(started) then
-				m_checkedCloudTurns = true;
-			end
-		end
-	end
 end
 
 -- ===========================================================================

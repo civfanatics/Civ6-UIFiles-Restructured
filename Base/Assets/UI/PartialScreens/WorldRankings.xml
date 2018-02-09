@@ -448,28 +448,30 @@
 	<Instance Name="DominationTeamInstance">
 
 		<Grid ID="ButtonFrame" Size="482,auto" AutoSizePadding="0,3" Offset="-6,0" Texture="Controls_ListButton" SliceCorner="209,29" SliceTextureSize="417,51">
-			<!-- Team Info -->
-			<Grid ID="TeamButton" Size="parent,51" Texture="Controls_TeamButton" SliceCorner="209,29" SliceTextureSize="417,51">
-				<Image ID="TeamIconBacking" Offset="10,4" Size="36,36" Texture="CircleBacking36">
-					<Image ID="TeamIcon" Anchor="C,C" Size="28,28" Texture="Team28"/>
-					<Image ID="TeamRibbon" Anchor="C,C" Size="44,44" Offset="0,3" Texture="TeamRibbon44"/>
-				</Image>
-				<Label ID="TeamName" Offset="55,18" String="Team Name" Style="FontNormal18" FontStyle="shadow" Color="206,218,225,255" EffectColor="0,0,0,191"/>
+			<Stack StackGrowth="Down" StackPadding="0,4">
+				<!-- Team Info -->
+				<Grid ID="TeamButton" Size="parent,auto" MinSize="0,51" Texture="Controls_TeamButton" SliceCorner="209,29" SliceTextureSize="417,51">
+					<Image ID="TeamIconBacking" Offset="10,4" Size="36,36" Texture="CircleBacking36">
+						<Image ID="TeamIcon" Anchor="C,C" Size="28,28" Texture="Team28"/>
+						<Image ID="TeamRibbon" Anchor="C,C" Size="44,44" Offset="0,3" Texture="TeamRibbon44"/>
+					</Image>
+					<Label ID="TeamName" Offset="55,18" String="Team Name" Style="FontNormal18" FontStyle="shadow" Color="206,218,225,255" EffectColor="0,0,0,191"/>
 
-				<!-- Domination Info -->
-				<Label ID="CapitalsCaptured" Offset="19,5" Align="right" Anchor="R,T" Style="FontNormalMedium14" Color="206,218,225,255" String="CapitalsCaptured"/>
-				<Stack ID="CapitalsCapturedStack" Anchor="R,T" Offset="16,20" Padding="5" StackGrowth="Left" WrapWidth="240" WrapGrowth="bottom"/>
-			</Grid>
+					<!-- Domination Info -->
+					<Label ID="CapitalsCaptured" Offset="19,5" Align="right" Anchor="R,T" Style="FontNormalMedium14" Color="206,218,225,255" String="CapitalsCaptured"/>
+					<Stack ID="CapitalsCapturedStack" Anchor="R,T" Offset="16,20" Padding="5" StackGrowth="Left" WrapWidth="240" WrapGrowth="bottom"/>
+				</Grid>
 
-			<!-- Player Stack -->
-			<Stack ID="PlayerInstanceStack" Anchor="C,T" Offset="0,55" StackGrowth="Down" StackPadding="3"/>
+				<!-- Player Stack -->
+				<Stack ID="PlayerInstanceStack" Anchor="C,T" StackGrowth="Down" StackPadding="3"/>
+			</Stack>
 		</Grid>
 
 	</Instance>
 
 	<Instance Name="DominationInstance">
 
-		<GridButton	ID="ButtonBG" Size="470,54" Texture="Controls_ListButton" SliceCorner="209,29" SliceTextureSize="417,51">
+		<GridButton	ID="ButtonBG" Size="parent,auto" MinSize="0,54" AutoSizePadding="0,3" Texture="Controls_ListButton" SliceCorner="209,29" SliceTextureSize="417,51">
 			<MakeInstance Name="CivilizationIconInstance" ID="CivilizationIcon"/>
 			<Label ID="HasCapital" Offset="35,35" Style="FontNormalMedium14" Color="206,218,225,255" String="[ICON_Capital]"/>	
 			<Label ID="CapitalsCaptured" Offset="15,5" Align="right" Anchor="R,T" Style="FontNormalMedium14" Color="206,218,225,255" String="CapitalsCaptured"/>

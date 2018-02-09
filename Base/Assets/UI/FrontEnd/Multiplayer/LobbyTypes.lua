@@ -6,7 +6,7 @@ MPLobbyTypes = {
 	STANDARD_LAN = "STANDARD_LAN",
 	PITBOSS_INTERNET = "PITBOSS_INTERNET",
 	PITBOSS_LAN = "PITBOSS_LAN",
-	HOTSEAT = "HOTSEAT"
+	HOTSEAT = "HOTSEAT",
 };
 
 function ServerTypeForMPLobbyType(mpLobbyType : string)

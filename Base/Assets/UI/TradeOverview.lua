@@ -167,11 +167,30 @@ function ViewRoutesToCities()
 		end
 	end
 
-	-- Add routes to stack
+	-- Add civ routes to stack
+	local cityStateRoutes:table = {};
 	for playerID, routes in pairs(routesSortedByPlayer) do
-		CreatePlayerHeader(Players[playerID]);
+		local playerInfluence:table = Players[playerID]:GetInfluence();
+		if not playerInfluence:CanReceiveInfluence() then
+			CreatePlayerHeader(Players[playerID]);
 
-		for _, route in ipairs(routes) do
+			for i,route in ipairs(routes) do
+				AddRouteFromRouteInfo(route);
+			end
+		else
+			table.insert(cityStateRoutes, routes);
+		end
+	end
+
+	-- Add city state routes to stack
+	local haveAddedCityStateHeader:boolean = false;
+	for _,routes in ipairs(cityStateRoutes) do
+		if not haveAddedCityStateHeader then
+			haveAddedCityStateHeader = true;
+			CreateCityStateHeader();
+		end
+
+		for i,route in ipairs(routes) do
 			AddRouteFromRouteInfo(route);
 		end
 	end
@@ -267,6 +286,7 @@ end
 function AddChooseRouteButton( tradeUnit:table )
 	local simpleButtonInstance:table = m_SimpleButtonInstanceIM:GetInstance();
 	simpleButtonInstance.GridButton:SetText(Locale.Lookup("LOC_TRADE_OVERVIEW_CHOOSE_ROUTE"));
+	simpleButtonInstance.GridButton:SetDisabled(false);
 	simpleButtonInstance.GridButton:RegisterCallback( Mouse.eLClick, 
 		function()
 			SelectUnit( tradeUnit );
@@ -533,9 +553,7 @@ end
 
 -- ===========================================================================
 function PostRefresh()
-	-- Calculate Stack Sizess
-	Controls.HeaderStack:CalculateSize();
-	Controls.HeaderStack:ReprocessAnchoring();
+	-- Calculate Stack Sizes
 	Controls.BodyScrollPanel:CalculateSize();
 end
 
@@ -568,10 +586,12 @@ function CreatePlayerHeader(player:table)
 
 	-- Determine this player has a trade route with the local player
 	local hasTradeRoute:boolean = false;
+	local localPlayer = Game.GetLocalPlayer();
 	local playerCities:table = player:GetCities();
 	for i,city in playerCities:Members() do
-		if city:GetTrade():HasActiveTradingPost(Game.GetLocalPlayer()) then
+		if city:GetTrade():HasTradeRouteFrom(localPlayer) then
 			hasTradeRoute = true;
+			break;
 		end
 	end
 

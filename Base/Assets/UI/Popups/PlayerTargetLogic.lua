@@ -26,7 +26,8 @@ end
 -- Pulldown Population
 ----------------------------------------------------------------  
 -- editBoxControl [OPTIONAL] - edit box associated with the player target pulldown.  The editBoxControl's colorset will automatically update to the current player target type colorset.
-function PopulateTargetPull(pulldownControl :table, editBoxControl :table, pulldownEntriesTable: table, playerTargetData :table, selfOption :boolean, selectionFunction)
+-- iconControl [OPTIONAL] - Icon associated with the player target pulldown.  The icon will automatically update to the current player target type icon.
+function PopulateTargetPull(pulldownControl :table, editBoxControl :table, iconControl :table, pulldownEntriesTable: table, playerTargetData :table, selfOption :boolean, selectionFunction)
 	-- Populations the pulldown with the available player target options.
 
 	-- If still in observer mode, ignore.
@@ -106,6 +107,9 @@ function PopulateTargetPull(pulldownControl :table, editBoxControl :table, pulld
 			if(editBoxControl ~= nil) then
 				UpdatePlayerTargetEditBox(editBoxControl, playerTargetData);
 			end
+			if(iconControl ~= nil) then
+				UpdatePlayerTargetIcon(iconControl, playerTargetData);
+			end
 			if(selectionFunction ~= nil) then
 				selectionFunction(newTargetType, newTargetID);
 			end
@@ -121,6 +125,11 @@ function PopulateTargetPull(pulldownControl :table, editBoxControl :table, pulld
 	-- Set edit box color
 	if(editBoxControl ~= nil) then
 		UpdatePlayerTargetEditBox(editBoxControl, playerTargetData);
+	end
+
+	-- Set icon.
+	if(iconControl ~= nil) then
+		UpdatePlayerTargetIcon(iconControl, playerTargetData);
 	end
 
     pulldownControl:CalculateInternals();
@@ -206,6 +215,18 @@ function UpdatePlayerTargetPulldown(pulldownControl :table,  playerTargetData :t
 	end
 end
 
+function UpdatePlayerTargetIcon(iconControl:table,  playerTargetData :table)
+	if(iconControl ~= nil) then
+		if(playerTargetData.targetType == ChatTargetTypes.CHATTARGET_ALL) then
+			iconControl:SetText("[ICON_Global]");
+		elseif(playerTargetData.targetType == ChatTargetTypes.CHATTARGET_TEAM) then
+			iconControl:SetText("[ICON_Team]");
+		else
+			iconControl:SetText("[ICON_Whisper]");
+		end
+	end
+end
+
 function UpdatePlayerTargetEditBox(editBoxControl :table,  playerTargetData :table)
 	if(editBoxControl ~= nil) then
 		if( playerTargetData.targetType == ChatTargetTypes.CHATTARGET_TEAM ) then
@@ -219,9 +240,9 @@ function UpdatePlayerTargetEditBox(editBoxControl :table,  playerTargetData :tab
 end
 
 ---------------------------------------------------------------- 
--- Exteneral Event Handlers
+-- External Event Handlers
 ---------------------------------------------------------------- 
-function PlayerTarget_OnPlayerInfoChanged( playerID :number, pulldownControl :table, editBoxControl:table, pulldownEntriesTable: table, playerTargetData :table, selfOption :boolean, selectionFunction)
+function PlayerTarget_OnPlayerInfoChanged( playerID :number, pulldownControl :table, editBoxControl:table, iconControl:table, pulldownEntriesTable: table, playerTargetData :table, selfOption :boolean, selectionFunction)
 	-- Rebuild chat pulldown if the changed player altered their human status.A player was human if they had a pulldown entry.
 	local pPlayerCfg:table = PlayerConfigurations[playerID];
 	local rebuildPulldown :boolean = false;
@@ -242,6 +263,6 @@ function PlayerTarget_OnPlayerInfoChanged( playerID :number, pulldownControl :ta
 	end
 
 	if(rebuildPulldown) then
-		PopulateTargetPull(pulldownControl, editBoxControl, pulldownEntriesTable, playerTargetData, selfOption, selectionFunction);
+		PopulateTargetPull(pulldownControl, editBoxControl, iconControl, pulldownEntriesTable, playerTargetData, selfOption, selectionFunction);
 	end
 end

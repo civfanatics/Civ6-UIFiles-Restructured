@@ -385,6 +385,8 @@ PageLayouts["District" ] = function(page)
 	if(airSlots ~= 0) then
 		table.insert(stats, Locale.Lookup("LOC_TYPE_TRAIT_AIRSLOTS", airSlots));
 	end
+
+	local maintenance = district.Maintenance;
 	
 	-- Right Column
 	AddPortrait("ICON_" .. districtType);
@@ -517,6 +519,15 @@ PageLayouts["District" ] = function(page)
 			local t = Locale.Lookup("LOC_UI_PEDIA_BASE_COST", tonumber(district.Cost), yield.IconString, yield.Name);
 			s:AddLabel(t);
 			s:AddSeparator();
+		end
+
+		if(maintenance ~= 0) then
+			local yield = GameInfo.Yields["YIELD_GOLD"];
+			if(yield) then
+				s:AddHeader("LOC_UI_PEDIA_MAITENANCE_COST");
+				local t = Locale.Lookup("LOC_UI_PEDIA_BASE_COST", maintenance, yield.IconString, yield.Name );
+				s:AddLabel(t);
+			end
 		end
 
 	end);

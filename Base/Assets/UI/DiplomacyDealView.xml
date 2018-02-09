@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Context Style="FontNormal16" ColorSet="BodyTextCool" FontStyle="Shadow" Size="parent,parent" ConsumeMouse="1">
-
+	
+	<Include File="CivilizationIcon" />
   <Include File="PopupDialog"/>
 
   <!-- Containers for caching instances -->
@@ -83,11 +84,14 @@
           <Image Texture="Controls_Gradient" Size="parent,150" Anchor="L,T" Color="0,0,0,255" Offset="0,-20"/>
           <Image Texture="Controls_Gradient" Size="parent,100" Anchor="L,B" Color="0,0,0,255" Offset="0,0" FlipY="1"/>
 
-          <Grid Style="DiplomacyInfoWindowGrid" Size="parent,parent-120" Offset="0,100">
+          <Grid Style="DiplomacyInfoWindowGrid" Size="parent,parent-120" Offset="0,108">
             <!-- Content-Set-At-Runtime: Leader dialog area -Does not resize currently -Can accommodate up to 3 lines of text -->
             <Grid Style="DiplomacyWordBubbleRightGrid" Size="parent-20,88" AnchorSide="I,O" Anchor="C,T">
-              <Label ID="OtherPlayerBubbleName"    Style="HeaderSmallCaps" String="TEDDY ROOSEVELT SAYS:" Anchor="L,T" AnchorSide="I,O" Offset="-15,-40" Color0="GoldMetalDark"/>
-              <AlphaAnim ID="LeaderDialogFade" AlphaBegin="0" AlphaEnd="1" Cycle="Once" Size="parent,parent" Pause=".7" Speed="2">
+							<Stack Anchor="L,T" AnchorSide="I,O" Offset="-15,-40" StackGrowth="Right" StackPadding="8">
+								<MakeInstance Name="CivilizationIcon22" ID="OtherPlayerBubbleIcon"/>
+								<Label ID="OtherPlayerBubbleName" Anchor="L,C" Style="HeaderSmallCaps" Color0="GoldMetalDark"/>
+							</Stack>
+							<AlphaAnim ID="LeaderDialogFade" AlphaBegin="0" AlphaEnd="1" Cycle="Once" Size="parent,parent" Pause=".7" Speed="2">
                 <SlideAnim ID="LeaderDialogSlide" Start="0,20" End="0,0" Cycle="Once" Size="parent,parent" Pause=".7" Speed="2">
                   <Stack ID="LeaderDialogStack" Anchor="C,C" StackPadding="4">
                     <Label ID="LeaderDialog"  Style="BodyText18" String="LOC_DIPLO_DEAL_INTRO" WrapWidth="420" Anchor="C,C"/>
@@ -110,8 +114,8 @@
               <!-- Dynamic: Button Area - where we accept the deal-->
               <Grid Style="SubContainer4" Size="parent-14,95" Anchor="C,T" Offset="0,-3" Color="Dark_Gray">
                 <Stack ID="DealOptionsStack" StackGrowth="Right" Anchor="C,C" Padding="4" WrapWidth="500">
-                  <GridButton ID="ResumeGame" Style="ButtonLightWeight" Size="200,32" String="LOC_DIPLOMACY_DEAL_RESUME_GAME"/>
-                  <GridButton ID="RefuseDeal" Style="ButtonLightWeight" Size="200,32"/>
+									<GridButton ID="RefuseDeal" Style="ButtonLightWeight" Size="200,32"/>
+									<GridButton ID="ResumeGame" Style="ButtonLightWeight" Size="200,32" String="LOC_DIPLOMACY_DEAL_RESUME_GAME"/>
                   <GridButton ID="AcceptDeal" Style="ButtonConfirm" Size="200,41" String="LOC_DIPLOMACY_DEAL_ACCEPT_DEAL"/>
                   <GridButton ID="EqualizeDeal" Style="ButtonLightWeight" Size="200,32" String="LOC_DIPLOMACY_DEAL_WHAT_WOULD_IT_TAKE" ToolTip="LOC_DIPLOMACY_MAKE_DEAL_EQUITABLE_TOOLTIP"/>
                   <GridButton ID="DemandDeal" Style="ButtonRed" Size="200,41" String="LOC_DIPLOMACY_DEAL_DEMAND_DEAL"/>

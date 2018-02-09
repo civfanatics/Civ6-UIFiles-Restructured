@@ -74,6 +74,7 @@ hstructure NotificationType
 	m_IDs						: table;					-- The IDs related to this type of notificaiton
 	m_Group						: NotificationGroupType;	-- The group of the notification, can be nil
 	m_TypeName					: string;					-- Key for type of notification
+	m_IconName					: string;					-- Key for the primary icon of the notification
 	m_isAuto					: boolean;					-- If the notification auto re-adds based on per logic frame evaluation
 	m_Index						: number;					-- Current index of notification being looked at.
 	m_maxWidth					: number;					-- Largest width of message for this notification (stack).
@@ -177,6 +178,7 @@ function RegisterHandlers()
     g_notificationHandlers[NotificationTypes.SPY_ENEMY_KILLED]                      = MakeDefaultHandlers();
 	g_notificationHandlers[NotificationTypes.TECH_BOOST]							= MakeDefaultHandlers();
 	g_notificationHandlers[NotificationTypes.CIVIC_BOOST]							= MakeDefaultHandlers();
+	g_notificationHandlers[NotificationTypes.CITY_BESIEGED_BY_OTHER_PLAYER]			= MakeDefaultHandlers();
     
 	-- Custom function handlers for the "Activate" signal:	
 	g_notificationHandlers[DEBUG_NOTIFICATION_TYPE].Activate						= OnDebugActivate;
@@ -209,6 +211,7 @@ function RegisterHandlers()
 	g_notificationHandlers[NotificationTypes.BARBARIANS_SIGHTED].AddSound           = "ALERT_NEGATIVE";
 	g_notificationHandlers[NotificationTypes.CAPITAL_LOST].AddSound					= "ALERT_NEUTRAL";
 	g_notificationHandlers[NotificationTypes.TRADE_ROUTE_PLUNDERED].AddSound        = "ALERT_NEGATIVE";
+	g_notificationHandlers[NotificationTypes.CITY_BESIEGED_BY_OTHER_PLAYER].AddSound= "ALERT_NEGATIVE";
 	g_notificationHandlers[NotificationTypes.CITY_STARVING].AddSound			    = "ALERT_NEUTRAL";	
 	g_notificationHandlers[NotificationTypes.CITY_FOOD_FOCUS].AddSound			    = "ALERT_NEUTRAL";	
 	g_notificationHandlers[NotificationTypes.CITY_LOW_AMENITIES].AddSound			= "ALERT_NEUTRAL";	
@@ -387,7 +390,7 @@ end
 -- the UI.  The UI itself is not initialized.
 -- Ok if it already exists.
 -- ===========================================================================
-function AddNotificationEntry( playerID:number, typeName:string, notificationID:number, notificationGroupID:number )
+function AddNotificationEntry( playerID:number, typeName:string, notificationID:number, notificationGroupID:number, iconName:string )
 	
 	-- Obtain existing player table or create one if first time call is made.
 	local playerTable :table = m_notifications[playerID];
@@ -402,6 +405,7 @@ function AddNotificationEntry( playerID:number, typeName:string, notificationID:
 			m_IDs		= {notificationID},					-- list with 1 item
 			m_PlayerID	= playerID, 
 			m_TypeName	= typeName,
+			m_IconName	= iconName,
 			m_isAuto	= false,
 			m_Group		= nil,
 			m_Index		= 1,
@@ -677,7 +681,8 @@ function OnDefaultAddNotification( pNotification:table )
 	local playerID				:number				= pNotification:GetPlayerID();
 	local notificationID		:number				= pNotification:GetID();
  	local notificationGroupID	:number				= pNotification:GetGroup();
-	local notificationEntry		:NotificationType	= AddNotificationEntry(playerID, typeName, notificationID, notificationGroupID);
+ 	local notificationPrimaryIconName:string		= pNotification:GetIconName();
+	local notificationEntry		:NotificationType	= AddNotificationEntry(playerID, typeName, notificationID, notificationGroupID, notificationPrimaryIconName);
 	if (notificationEntry == nil) then
 		return;	-- Didn't add it for some reason.  It was either filtered out or possibly already in the list.
 	end
@@ -730,11 +735,18 @@ function OnDefaultAddNotification( pNotification:table )
 			notificationEntry.m_Instance.MouseOutArea:RegisterMouseExitCallback( function() OnMouseExitNotification( notificationEntry.m_Instance ); end );
 
 			--Set the notification icon
-			if(notificationEntry.m_TypeName ~= nil) then
-				local iconName :string = DATA_ICON_PREFIX .. notificationEntry.m_TypeName;
-				local textureOffsetX, textureOffsetY, textureSheet = IconManager:FindIconAtlas(iconName,40);
+			if (notificationEntry.m_IconName ~= nil) then
+				local textureOffsetX, textureOffsetY, textureSheet = IconManager:FindIconAtlas(notificationEntry.m_IconName,40);
 				if (textureOffsetX ~= nil) then
 					notificationEntry.m_Instance.Icon:SetTexture( textureOffsetX, textureOffsetY, textureSheet );
+				end
+			else
+				if(notificationEntry.m_TypeName ~= nil) then
+					local iconName :string = DATA_ICON_PREFIX .. notificationEntry.m_TypeName;
+					local textureOffsetX, textureOffsetY, textureSheet = IconManager:FindIconAtlas(iconName,40);
+					if (textureOffsetX ~= nil) then
+						notificationEntry.m_Instance.Icon:SetTexture( textureOffsetX, textureOffsetY, textureSheet );
+					end
 				end
 			end
 
@@ -1448,13 +1460,13 @@ end
 --	A notification was activated.  This asks for a specific notification ID
 --  in a notification entry. i.e. might not be the 'active' one.
 -- ===========================================================================
-function OnNotificationActivated( playerID:number, notificationID:number )
+function OnNotificationActivated( playerID:number, notificationID:number, activatedByUser:boolean )
 	if (playerID == Game.GetLocalPlayer()) then -- one of the ones we track?
 
 		local notificationEntry:NotificationType = GetNotificationEntry( playerID, notificationID );
 		if notificationEntry ~= nil then		
 			local handler = notificationEntry.m_kHandlers;
-			handler.Activate( notificationEntry, notificationID );
+			handler.Activate( notificationEntry, notificationID, activatedByUser );
 		end
 
 		RealizeNotificationSize(playerID, notificationID);
@@ -1466,6 +1478,7 @@ end
 --	All notifications are about to be refreshed
 -- ===========================================================================
 function OnNotificationRefreshRequested()
+	ClearNotifications();
 	Controls.ScrollStack:DestroyAllChildren();
 	m_genericItemIM:DestroyInstances();
 	m_lastStackSize = 0;

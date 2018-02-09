@@ -114,7 +114,7 @@ function RefreshOperatives()
 		for i=0,numCapturedSpies-1,1 do
 			local spyInfo:table = playerDiplomacy:GetNthCapturedSpy(player:GetID(), i);
 			if spyInfo and spyInfo.OwningPlayer == Game.GetLocalPlayer() then
-				AddCapturedOperative(spyInfo, i, player:GetID());
+				AddCapturedOperative(spyInfo, player:GetID());
 				numberOfSpies = numberOfSpies + 1;
 			end
 		end
@@ -138,7 +138,6 @@ function RefreshOperatives()
 	Controls.OperativeHeader:SetText(Locale.Lookup("LOC_ESPIONAGEOVERVIEW_OPERATIVES_SUBHEADER", numberOfSpies, playerDiplomacy:GetSpyCapacity()));
 
 	Controls.OperativeStack:CalculateSize();
-	Controls.OperativeStack:ReprocessAnchoring();
 end
 
 -- ===========================================================================
@@ -158,15 +157,13 @@ function RefreshCityActivity()
 	for i, player in ipairs(players) do
 		-- Ignore the local player since those cities were already added
 		if player:GetID() ~= localPlayer:GetID() then
-			local playerInfluence:table = player:GetInfluence();
-			-- Ignore city states (only they can receive influence)
-			if playerInfluence and not playerInfluence:CanReceiveInfluence() then
+			-- Only show full civs
+			if player:IsMajor() then
 				AddPlayerCities(player);
 			end
 		end
 	end
 
-	Controls.CityActivityStack:ReprocessAnchoring();
 	Controls.CityActivityScrollPanel:CalculateSize();
 end
 
@@ -191,7 +188,7 @@ function RefreshMissionHistory()
 		local spyInfo:table = playerDiplomacy:GetNthCapturedSpy(localPlayer:GetID(), i);
 		if spyInfo then
 			haveCapturedEnemyOperative = true;
-			AddCapturedEnemyOperative(spyInfo, i);
+			AddCapturedEnemyOperative(spyInfo);
 		end
 	end
 
@@ -227,7 +224,6 @@ function RefreshMissionHistory()
 	Controls.MissionHistoryScrollPanel:SetSizeY(desiredScrollPanelSizeY);
 
 	Controls.MissionHistoryScrollPanel:CalculateSize();
-	Controls.MissionHistoryTabContainer:ReprocessAnchoring();
 end
 
 -- ===========================================================================
@@ -281,14 +277,15 @@ function AddMisisonHistoryInstance(mission:table)
 		missionHistoryInstance.OperationIcon:SetHide(true);
 	end
 
-	local iconString:string = "ICON_" .. operationInfo.TargetDistrict;
-	textureOffsetX, textureOffsetY, textureSheet = IconManager:FindIconAtlas(iconString,32);
-	if textureSheet then
-		missionHistoryInstance.OperationDistrictIcon:SetTexture(textureOffsetX, textureOffsetY, textureSheet);
-	else
-		UI.DataError("Unable to find icon for district: " .. iconString);
+	if ( operationInfo.TargetDistrict ) then
+		local iconString:string = "ICON_" .. operationInfo.TargetDistrict;
+		textureOffsetX, textureOffsetY, textureSheet = IconManager:FindIconAtlas(iconString,32);
+		if textureSheet then
+			missionHistoryInstance.OperationDistrictIcon:SetTexture(textureOffsetX, textureOffsetY, textureSheet);
+		else
+			UI.DataError("Unable to find icon for district: " .. iconString);
+		end
 	end
-
 	-- Scale the operation and district icons to match the operation description
 	missionHistoryInstance.OperationIconGrid:SetSizeY(missionHistoryInstance.OperationDetailsContainer:GetSizeY());
 	missionHistoryInstance.OperationDistrictIconGrid:SetSizeY(missionHistoryInstance.OperationDetailsContainer:GetSizeY());
@@ -338,8 +335,8 @@ function AddCity(city:table)
 	cityInstance.BannerBase:RegisterCallback( Mouse.eLClick, function() LookAtCity(city:GetOwner(), city:GetID()); end );
     cityInstance.BannerBase:RegisterCallback(Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 
-	-- Update capital indicator
-	if city:IsCapital() then
+	-- Update capital indicator but never show it for city-states
+	if city:IsCapital() and Players[city:GetOwner()]:IsMajor() then
 		cityInstance.CityName:SetText("[ICON_Capital]" .. " " .. Locale.ToUpper(city:GetName()));
 	else
 		cityInstance.CityName:SetText(Locale.ToUpper(city:GetName()));
@@ -573,9 +570,11 @@ function AddOperative(spy:table)
 		operativeInstance.CityBanner:LocalizeAndSetToolTip("LOC_ESPIONAGEOVERVIEW_VIEW_CITY");
 		operativeInstance.CityBanner:RegisterCallback( Mouse.eLClick, function() LookAtCity(ownerCity:GetOwner(), ownerCity:GetID()); end );
         operativeInstance.CityBanner:RegisterCallback(Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
+		operativeInstance.CityBanner:SetHide(false);
+	else
+		operativeInstance.CityBanner:SetHide(true);
 	end
-	operativeInstance.CityBanner:SetHide(false);
-
+	
 	local operationType:number = spy:GetSpyOperation();
 	if operationType == -1 then
 		-- Awaiting Assignment
@@ -685,7 +684,7 @@ function AddOffMapOperative(spy:table)
 end
 
 ------------------------------------------------------------------------------------------------
-function AddCapturedOperative(spy:table, spyID:number, playerCapturedBy:number)
+function AddCapturedOperative(spy:table, playerCapturedBy:number)
 	local operativeInstance:table = m_OperativeIM:GetInstance();
 
 	-- Adjust texture offset
@@ -709,13 +708,18 @@ function AddCapturedOperative(spy:table, spyID:number, playerCapturedBy:number)
 		TruncateStringWithTooltip(operativeInstance.AskForTradeButton, MAX_BEFORE_TRUNC_ASK_FOR_TRADE, Locale.Lookup("LOC_ESPIONAGEOVERVIEW_ASK_FOR_TRADE"));
 		
 		-- Show the ask trade button, if there is no pending deal.
-		if (not DealManager.HasPendingDeal(Game.GetLocalPlayer(), capturingPlayerID)) then
-			operativeInstance.AskForTradeButton:SetDisabled(false);
-			operativeInstance.AskForTradeButton:RegisterCallback( Mouse.eLClick, function() OnAskForOperativeTradeClicked(playerCapturedBy, spyID); end );
-			operativeInstance.AskForTradeButton:SetToolTipString("");
-		else
+		local localPlayerID:number = Game.GetLocalPlayer();
+		local atWarWith:boolean = Players[localPlayerID]:GetDiplomacy():IsAtWarWith(playerCapturedBy);
+		if atWarWith then
+			operativeInstance.AskForTradeButton:SetDisabled(true);
+			operativeInstance.AskForTradeButton:SetToolTipString(Locale.Lookup("LOC_DIPLOPANEL_AT_WAR"));
+		elseif DealManager.HasPendingDeal(localPlayerID, playerCapturedBy) then
 			operativeInstance.AskForTradeButton:SetDisabled(true);
 			operativeInstance.AskForTradeButton:SetToolTipString(Locale.Lookup("LOC_DIPLOMACY_ANOTHER_DEAL_WITH_PLAYER_PENDING"));
+		else
+			operativeInstance.AskForTradeButton:SetDisabled(false);
+			operativeInstance.AskForTradeButton:RegisterCallback( Mouse.eLClick, function() OnAskForOperativeTradeClicked(playerCapturedBy, spy.NameIndex); end );
+			operativeInstance.AskForTradeButton:SetToolTipString("");
 		end
 	else
 		UI.DataError("Could not find player configuration for player ID: " .. tostring(playerCapturedBy));
@@ -761,11 +765,12 @@ function OnAskForOperativeTradeClicked(capturingPlayerID:number, capturedSpyID:n
 end
 
 ------------------------------------------------------------------------------------------------
-function AddCapturedEnemyOperative(spyInfo:table, spyID:number)
+function AddCapturedEnemyOperative(spyInfo:table)
 	local enemyOperativeInstance:table = m_EnemyOperativeIM:GetInstance();
 
 	-- Update spy name
-	enemyOperativeInstance.SpyName:SetText(Locale.ToUpper(spyInfo.Name));
+	local spyName:string = Locale.ToUpper(spyInfo.Name);
+	enemyOperativeInstance.SpyName:SetText(spyName);
 
 	-- Update owning civ spy icon
 	local backColor:number, frontColor:number  = UI.GetPlayerColors( spyInfo.OwningPlayer );
@@ -774,10 +779,21 @@ function AddCapturedEnemyOperative(spyInfo:table, spyID:number)
 
 	-- Update owning civ name
 	local owningPlayerConfig:table = PlayerConfigurations[spyInfo.OwningPlayer];
-	enemyOperativeInstance.CivName:SetText(Locale.Lookup(owningPlayerConfig:GetPlayerName()));
+	enemyOperativeInstance.CivName:SetText(Locale.Lookup(owningPlayerConfig:GetCivilizationDescription()));
 
-	-- Set button callback
-	enemyOperativeInstance.GridButton:RegisterCallback( Mouse.eLClick, function() OnAskForEnemyOperativeTradeClicked(spyInfo.OwningPlayer, spyID); end );
+	local pLocalPlayerDiplo:table = Players[Game.GetLocalPlayer()]:GetDiplomacy();
+	if pLocalPlayerDiplo and not pLocalPlayerDiplo:IsAtWarWith(spyInfo.OwningPlayer) then
+		-- If we're not at war with the spies owner allow trading for that spy
+		enemyOperativeInstance.OfferTradeText:SetHide(false);
+		enemyOperativeInstance.GridButton:SetDisabled(false);
+		enemyOperativeInstance.GridButton:RegisterCallback( Mouse.eLClick, function() OnAskForEnemyOperativeTradeClicked(spyInfo.OwningPlayer, spyInfo.NameIndex); end );
+		enemyOperativeInstance.GridButton:SetToolTipString("");
+	else
+		enemyOperativeInstance.OfferTradeText:SetHide(true);
+		enemyOperativeInstance.GridButton:SetDisabled(true);
+		enemyOperativeInstance.GridButton:ClearCallback( Mouse.eLClick );
+		enemyOperativeInstance.GridButton:SetToolTipString(Locale.Lookup("LOC_ESPIONAGE_SPY_TRADE_DISABLED_AT_WAR", spyName, Locale.Lookup(owningPlayerConfig:GetCivilizationShortDescription())));
+	end
 end
 
 ------------------------------------------------------------------------------------------------
@@ -860,6 +876,14 @@ function OnSpyAdded(spyOwner, spyUnitID)
 			if (m_selectedTab == EspionageTabs.OPERATIVES) then
 				RefreshOperatives();
 			end
+		end
+	end
+end
+
+function OnDiplomacyDealEnacted()
+	if (not ContextPtr:IsHidden()) then
+		if (m_selectedTab == EspionageTabs.MISSION_HISTORY) then
+			RefreshMissionHistory();
 		end
 	end
 end
@@ -948,6 +972,7 @@ function Initialize()
 	
 	Events.SpyAdded.Add( OnSpyAdded );
 	Events.SpyRemoved.Add( OnSpyRemoved );
+	Events.DiplomacyDealEnacted.Add( OnDiplomacyDealEnacted ); -- Folks may be trading captured spies, if they do we must update the panel
 
 	-- Hot-Reload Events
 	ContextPtr:SetInitHandler(OnInit);

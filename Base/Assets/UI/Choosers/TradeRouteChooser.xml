@@ -6,8 +6,8 @@
       <!-- Body container-->
       <Container Size="310,parent" ConsumeAllMouse="1">
         <!-- Top Panel -->
-        <Grid ID="TopGrid" Size="parent,173" Texture="DestinationChooser_CurrentSlot" SliceStart="0,0" SliceCorner="30,30" SliceSize="250,90" SliceTextureSize="308,173" >
-          <Container ID="CurrentSelectionContainer" Size="parent,parent" Offset="0,0">
+        <Grid ID="TopGrid" Size="parent,auto" MinSize="0,173" AutoSizePadding="0,8" Texture="DestinationChooser_CurrentSlot" SliceStart="0,0" SliceCorner="30,30" SliceSize="250,90" SliceTextureSize="308,173">
+          <Container ID="CurrentSelectionContainer" Size="parent,auto" Offset="0,0">
             <!-- Selected City -->
             <Grid								ID="BannerBase"						Anchor="C,T" Offset="0,12"		Size="270,33"								Texture="CityPanel_BannerBase"				SliceCorner="20,10" SliceSize="160,1" SliceTextureSize="199,33" Color="150,170,100,255">
               <Grid							ID="BannerDarker"					Anchor="L,T" Offset="4,2"			Size="parent-8,parent-10"		Texture="CityPanel_BannerDarker"			SliceCorner="95,10" SliceSize="1,1" SliceTextureSize="191,23" Color="0,0,0,100" />
@@ -17,34 +17,31 @@
 
               <Label						ID="TradingPostIcon"	Anchor="L,C" Offset="14,-4"	Style="FontNormal16" FontStyle="Shadow" String="[ICON_TradingPost]" Color="255,0,0,255" EffectColor="255,0,0,255" GradientColor="255,0,0,255" />
               <Label						ID="CityStateQuestIcon"	Anchor="L,C" Offset="-2,-12"	Style="FontNormal16" FontStyle="Shadow" String="[ICON_CityStateQuest]" Color="255,0,0,255" EffectColor="255,0,0,255" GradientColor="255,0,0,255" />
-              <Image						ID="DistenceToCityIcon"		Anchor="R,C" Offset="30,-4"	 Size="22,22" Icon="ICON_MOVES"	IconSize="22" Texture="Stats22.dds"/>
+              <Label          	ID="ChosenRouteTurns"				Anchor="R,C" Offset="30,-5"	Style="FontFlair16"	FontStyle="Stroke" EffectColor="0,0,0,25" String="[ICON_Turn]"/>
               <Label						ID="DistenceToCity"		    Anchor="R,C" Offset="16,-4"	Style="FontFlair16"	FontStyle="Stroke" EffectColor="0,0,0,25" />
               <Label Hidden="1"	ID="RouteTurns"				Anchor="R,C" Offset="14,-2"	Style="FontFlair16"	FontStyle="Stroke" EffectColor="0,0,0,25" String="[ICON_Turn]??" />
             </Grid>
 
-            <!-- Resource Information -->
-            <Grid	ID="DestinationResources" Size="279,35" Anchor="C,T"	Offset="0,60"		Texture="Controls_ItemContainerDestination" SliceCorner="6,2" SliceSize="2,31" SliceTextureSize="24,35" >
-              <!-- Column Background -->
-              <Box Size="53,parent" Offset="57,0" Color="0,0,0,22"/>
-              <Box Size="53,parent" Offset="161,0" Color="0,0,0,22"/>
-              
+            <!-- Destination Resource Information -->
+            <Box ID="DestinationResourcesLeftColumn" Size="53,35" Offset="77,62" Color="0,0,0,22"/>
+            <Box ID="DestinationResourcesRightColumn" Size="53,35" Offset="183,62" Color="0,0,0,22"/>
+            <Grid	ID="DestinationResources" Size="279,auto" MinSize="0,35" Anchor="C,T"	Offset="0,62"		Texture="Controls_ItemContainerDestination" SliceCorner="6,2" SliceSize="2,31" SliceTextureSize="24,35" >
               <Label ID="DestinationResourceHeader" Size="300,20" Anchor="L,T" Offset="2,-15" Style="FontNormal14" Color="0,0,0,150" TruncateWidth="279"/>
               <Stack ID="DestinationResourceList" Anchor="L,C" Offset="4,-1" StackGrowth="Right" WrapWidth="280" WrapGrowth="Bottom"/>
               <Label ID="DestinationReceivesNoBenefitsLabel" Anchor="C,C" Offset="-4,0" Style="FontNormal16" FontStyle="Shadow" EffectColor="Black" String="LOC_ROUTECHOOSER_NO_BENEFITS_FROM_ROUTE" Hidden="1"/>
             </Grid>
-          
-            <Grid	ID="OriginResources" Size="279,35" Anchor="C,T"	Offset="0,118"		Texture="Controls_ItemContainerOrigin" SliceCorner="14,2" SliceSize="3,31" SliceTextureSize="24,35" >
-              <!-- Column Background -->
-              <Box Size="53,parent" Offset="63,0" Color="0,0,0,22"/>
-              <Box Size="53,parent" Offset="167,0" Color="0,0,0,22"/>
-              
+
+            <!-- Origin Resource Information -->
+            <Box ID="OriginResourcesLeftColumn" Size="53,35" Offset="77,122" Color="0,0,0,22"/>
+            <Box ID="OriginResourcesRightColumn" Size="53,35" Offset="183,122" Color="0,0,0,22"/>
+            <Grid	ID="OriginResources" Size="279,auto" MinSize="0,35" Anchor="C,T"	Offset="0,122"		Texture="Controls_ItemContainerOrigin" SliceCorner="14,2" SliceSize="3,31" SliceTextureSize="24,35">
               <Label ID="OriginResourceHeader" Size="250,20" Anchor="L,T" Offset="10,-15" Style="FontNormal14" Color="0,0,0,150" TruncateWidth="279"/>
-              <Stack ID="OriginResourceList" Anchor="L,C" Offset="10,-1" StackGrowth="Right" WrapWidth="280" WrapGrowth="Bottom"/>
+              <Stack ID="OriginResourceList" Anchor="L,C" Offset="10,0" StackGrowth="Right" WrapWidth="280" WrapGrowth="Bottom"/>
               <Label ID="OriginReceivesNoBenefitsLabel" Anchor="C,C" Style="FontNormal16" FontStyle="Shadow" EffectColor="Black" String="LOC_ROUTECHOOSER_NO_BENEFITS_FROM_ROUTE" Hidden="1"/>
             </Grid>
           </Container>
 
-          <Container Size="parent, parent">
+          <Container Size="parent,auto" MinSize="0,173">
             <Label ID="StatusMessage" Size="300,50" Anchor="C,C" Style="FontNormal16" Color="0,0,0,150"/>
           </Container>
         </Grid>
@@ -144,41 +141,38 @@
 
   <!-- Instances -->
   <Instance				Name="RouteChoiceInstance">
-    <Container ID="Top"	Size="284,78" Offset="10,2">
-      <GridButton ID="Button" Size="parent,parent" Anchor="C,T"> 
+    <Container ID="Top"	Size="284,auto" Offset="10,2">
+      <GridButton ID="Button" Size="parent,auto" AutoSizePadding="0,-5" Anchor="C,T"> 
         <GridData Texture="DestinationChooser_Button" StateOffsetIncrement="0,76" SliceCorner="14,14" SliceSize="19,44" SliceTextureSize="48,76"/>
-
-        <!-- Selector Brace -->
-        <Grid ID="SelectorBrace" Size="parent+5,parent+5" Anchor="C,C" Texture="Controls_SelectorBrace" SliceCorner="29,29" SliceSize="2,2" SliceTextureSize="64,64"/>
         
-        <!-- City Banner -->
-        <Grid								ID="BannerBase"								Anchor="C,T" Offset="-1,4"		Size="280,33"								Texture="CityPanel_BannerBase"				SliceCorner="20,10" SliceSize="160,1" SliceTextureSize="199,33" Color="150,170,100,255">
-          <Grid							ID="BannerDarker"													Anchor="L,T" Offset="4,2"			Size="parent-8,parent-10"		Texture="CityPanel_BannerDarker"			SliceCorner="95,10" SliceSize="1,1" SliceTextureSize="191,23" Color="0,0,0,100" />
-          <Grid							ID="BannerLighter"													Anchor="L,T" Offset="4,2"			Size="parent-8,parent-10"		Texture="CityPanel_BannerLighter"			SliceCorner="95,10" SliceSize="1,1" SliceTextureSize="191,23" Color="255,255,255,255" />
-          <Grid																				Anchor="L,T" Offset="6,2"			Size="parent-10,parent-8"		Texture="CityPanel_BannerNone"				SliceCorner="70,10" SliceSize="1,1" SliceTextureSize="179,20" Color="255,0,0,255" />
-          <Label						ID="CityName"							Anchor="L,C" Offset="34,-2"		Style="FontFlair16"					FontStyle="Stroke" EffectColor="0,0,0,25" String="$CityName$" SmallCaps="20" SmallCapsType="EveryWord" TruncateWidth="220"/>
-          
-          <Label						ID="TradingPostIcon"	Anchor="L,C" Offset="10,-4"	Style="FontNormal16" FontStyle="Shadow" String="[ICON_TradingPost]" Color="255,0,0,255" EffectColor="255,0,0,255" GradientColor="255,0,0,255" />
-          <Label						ID="CityStateQuestIcon"	Anchor="L,C" Offset="-2,-12"	Style="FontNormal16" FontStyle="Shadow" String="[ICON_CityStateQuest]" Color="255,0,0,255" EffectColor="255,0,0,255" GradientColor="255,0,0,255" />
-          <Image						ID="DistenceToCityIcon"		Anchor="R,C" Offset="30,-4"	 Size="22,22" Icon="ICON_MOVES"	IconSize="22" Texture="Stats22.dds" TextureOffset="66,0"/>
-          <Label						ID="DistenceToCity"		    Anchor="L,C" Offset="252,-4"	Style="FontFlair16"	FontStyle="Stroke" EffectColor="0,0,0,25" />
-          <Label Hidden="1"	ID="RouteTurns"				Anchor="R,C" Offset="14,-2"	Style="FontFlair16"	FontStyle="Stroke" EffectColor="0,0,0,25" String="[ICON_Turn]??" />
-        </Grid>
+        <!-- Selector Brace -->
+        <Grid ID="SelectorBrace" Size="parent+5,auto" AutoSizePadding="0,5" Anchor="C,C" Texture="Controls_SelectorBrace" SliceCorner="29,29" SliceSize="2,2" SliceTextureSize="64,64">
+          <!-- City Banner -->
+          <Grid								ID="BannerBase"								Anchor="C,T" Offset="-1,8"		Size="280,33"								Texture="CityPanel_BannerBase"				SliceCorner="20,10" SliceSize="160,1" SliceTextureSize="199,33" Color="150,170,100,255">
+            <Grid							ID="BannerDarker"													Anchor="L,T" Offset="4,2"			Size="parent-8,parent-10"		Texture="CityPanel_BannerDarker"			SliceCorner="95,10" SliceSize="1,1" SliceTextureSize="191,23" Color="0,0,0,100" />
+            <Grid							ID="BannerLighter"													Anchor="L,T" Offset="4,2"			Size="parent-8,parent-10"		Texture="CityPanel_BannerLighter"			SliceCorner="95,10" SliceSize="1,1" SliceTextureSize="191,23" Color="255,255,255,255" />
+            <Grid																				Anchor="L,T" Offset="6,2"			Size="parent-10,parent-8"		Texture="CityPanel_BannerNone"				SliceCorner="70,10" SliceSize="1,1" SliceTextureSize="179,20" Color="255,0,0,255" />
+            <Label						ID="CityName"							Anchor="L,C" Offset="34,-2"		Style="FontFlair16"					FontStyle="Stroke" EffectColor="0,0,0,25" String="$CityName$" SmallCaps="20" SmallCapsType="EveryWord" TruncateWidth="220"/>
 
-        <!-- Resource Info -->
-        <Grid	Size="274,35" Anchor="C,B" Offset="-1,6" Texture="Controls_ItemContainer" SliceCorner="8,8" SliceTextureSize="16,16" >
-          <!-- Column Background -->
-          <Box Size="53,parent" Offset="58,0" Color="0,0,0,22"/>
-          <Box Size="53,parent" Offset="161,0" Color="0,0,0,22"/>
-          
-          <Stack ID="ResourceList" Anchor="L,C" Offset="5,0" StackGrowth="Right" WrapWidth="280" WrapGrowth="Bottom"/>
+            <Label						ID="TradingPostIcon"	Anchor="L,C" Offset="10,-4"	Style="FontNormal16" FontStyle="Shadow" String="[ICON_TradingPost]" Color="255,0,0,255" EffectColor="255,0,0,255" GradientColor="255,0,0,255" />
+            <Label						ID="CityStateQuestIcon"	Anchor="L,C" Offset="-2,-12"	Style="FontNormal16" FontStyle="Shadow" String="[ICON_CityStateQuest]" Color="255,0,0,255" EffectColor="255,0,0,255" GradientColor="255,0,0,255" />
+            <Label						ID="DistenceToCity"		    Anchor="L,C" Offset="252,-4"	Style="FontFlair16"	FontStyle="Stroke" EffectColor="0,0,0,25" />
+            <Label          	ID="RouteTurns"				Anchor="R,C" Offset="30,-5"	Style="FontFlair16"	FontStyle="Stroke" EffectColor="0,0,0,25" String="[ICON_Turn]" />
+          </Grid>
+
+          <!-- Resource Info -->
+          <Box ID="ResourceInfoLeftColumn" Size="53,32" Offset="64,38" Color="0,0,0,22"/>
+          <Box ID="ResourceInfoRightColumn" Size="53,32" Offset="168,38" Color="0,0,0,22"/>
+          <Grid	ID="ResourceInfoGrid" Size="274,auto" MinSize="0,32" Anchor="C,T" Offset="-1,38" Texture="Controls_ItemContainer" SliceCorner="8,8" SliceTextureSize="16,16" >
+            <Stack ID="ResourceList" Anchor="L,C" Offset="5,1" StackGrowth="Right" WrapWidth="280" WrapGrowth="Bottom"/>
+          </Grid>
         </Grid>
       </GridButton>
     </Container>
   </Instance>
 
   <Instance Name="ResourceEntryInstance">
-    <Container Size="52,18">
+    <Container ID="Top" Size="52,28">
       <Stack ID="ResourceEntryStack" Anchor="C,C" Offset="-2,0" StackGrowth="Right" >
         <Label ID="ResourceEntryIcon" Anchor="C,C" Size="0,0" Offset="0,0" Style="FontNormal12"/>
         <Label ID="ResourceEntryText" Size="50,10" Offset="0,0" Style="FontNormal14"/>
@@ -186,7 +180,7 @@
     </Container>
   </Instance>
 	<Instance Name="ReligionPressureEntryInstance">
-		<Container Size="56,18">
+		<Container ID="Top" Size="56,28">
 			<Stack ID="ResourceEntryStack" Anchor="C,C" Offset="-2,0" StackGrowth="Right" >
 				<Image ID="ReligionIconBacking" Anchor="C,C" Texture="Religion_FollowersSlot" Size="30,30">
 					<Image ID="ReligionIcon" Anchor="C,C" Size="22,22" IconSize="22"/>

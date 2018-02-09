@@ -88,7 +88,7 @@ end
 
 -- ===========================================================================
 function Resize()
-	Controls.ViewReports:SetSizeToText(20,11);
+	--Controls.ViewReports:SetSizeToText(9,9);
 	Controls.Backing:ReprocessAnchoring();
 	Controls.Backing2:ReprocessAnchoring();
 	Controls.RightContents:ReprocessAnchoring();	
@@ -189,7 +189,8 @@ function RefreshYields()
 	Controls.StaticInfoStack:CalculateSize();
 	Controls.InfoStack:CalculateSize();
 
-	RefreshResources();
+	Controls.YieldStack:RegisterSizeChanged( RefreshResources );
+	Controls.StaticInfoStack:RegisterSizeChanged( RefreshResources );
 end
 
 -- ===========================================================================
@@ -310,9 +311,11 @@ function RefreshResources()
 		m_kResourceIM:ResetInstances(); 
 		local pPlayerResources	=  Players[localPlayerID]:GetResources();
 		local yieldStackX		= Controls.YieldStack:GetSizeX();
+		local infoStackX		= Controls.StaticInfoStack:GetSizeX();
 		local metaStackX		= Controls.RightContents:GetSizeX();
 		local screenX, _:number = UIManager:GetScreenSizeVal();
-		local maxSize = screenX - yieldStackX - metaStackX - m_viewReportsX - META_PADDING;
+		local maxSize = screenX - yieldStackX - infoStackX - metaStackX - m_viewReportsX - META_PADDING;
+		if (maxSize < 0) then maxSize = 0; end
 		local currSize = 0;
 		local isOverflow = false;
 		local overflowString = "";

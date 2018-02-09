@@ -9,6 +9,7 @@
 ---------------------------------------------------------------- 
 
 
+
 ----------------------------------------------------------------  
 -- Globals
 ---------------------------------------------------------------- 
@@ -58,7 +59,6 @@ function OnOk()
 	Controls.PopupSlideIn:SetToBeginning();
 end
 
-
 -- ===========================================================================
 function OnMenu()
     UIManager:QueuePopup( LookUpControl( "/InGame/TopOptionsMenu" ), PopupPriority.Utmost );
@@ -73,6 +73,9 @@ function OnLocalPlayerTurnBegin()
 		bPlayerChanging = false;
 		BuildTurnControls();
 	end
+end
+
+function OnRemotePlayerTurnBegin( playerID :number)
 end
 
 function OnPlayerTurnDeactivated( ePlayer:number )
@@ -286,6 +289,7 @@ function Initialize()
 	--Events.LocalPlayerChanged.Add(OnLocalPlayerChanged);
 	-- changing to listen for TurnBegin so that on the initial turn, the first player will get this popup screen. this is consistent with Civ V's behavior.
 	Events.LocalPlayerTurnBegin.Add(OnLocalPlayerTurnBegin);
+	Events.RemotePlayerTurnBegin.Add( OnRemotePlayerTurnBegin );
 	Events.PlayerTurnDeactivated.Add(OnPlayerTurnDeactivated);
 	Events.LoadScreenClose.Add(OnLoadScreenClose);
 	Events.TeamVictory.Add(OnTeamVictory);

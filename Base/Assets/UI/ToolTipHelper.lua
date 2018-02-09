@@ -129,6 +129,7 @@ ToolTipHelper.GetBuildingToolTip = function(buildingHash, playerId, city)
 	-- <RequiredAdjacentDistrict>
 	local building = GameInfo.Buildings[buildingHash];
 	
+
 	local buildingType:string = "";
 	if (building ~= nil) then
 		buildingType = building.BuildingType;
@@ -269,6 +270,20 @@ ToolTipHelper.GetBuildingToolTip = function(buildingHash, playerId, city)
 	if(not Locale.IsNilOrWhitespace(description)) then
 		table.insert(toolTipLines, "[NEWLINE]" .. Locale.Lookup(description));	
 	end
+	
+	if playerId ~= nil then
+		local kPlayerCulture:table = Players[playerId]:GetCulture();
+		-- Determine the unlocked Policy, if any
+		if building.UnlocksGovernmentPolicy == true then
+			local slottounlock :number = kPlayerCulture:GetPolicyToUnlock(building.Index);
+			if (slottounlock ~= -1) then
+				local newpolicy = GameInfo.Policies[slottounlock];
+				if newpolicy ~= nil then
+					table.insert(toolTipLines, Locale.Lookup("LOC_TOOLTIP_UNLOCKS_POLICY_CARD", newpolicy.Name))
+				end
+			end
+		end
+	end
 
 	if district ~= nil and building.RegionalRange ~= 0 then
 		local extraRange = district:GetExtraRegionalRange();
@@ -344,6 +359,11 @@ ToolTipHelper.GetBuildingToolTip = function(buildingHash, playerId, city)
 		table.insert(reqLines, Locale.Lookup("LOC_TOOLTIP_BUILDING_REQUIRES_ADJACENT_DISTRICT", adjDistrict.Name));
 	end
 
+	local adjImprovement = GameInfo.Improvements[building.AdjacentImprovement];
+	if(adjImprovement) then
+		table.insert(reqLines, Locale.Lookup("LOC_TOOLTIP_BUILDING_REQUIRES_ADJACENT_DISTRICT", adjImprovement.Name));
+	end
+
 	local adjResource = GameInfo.Resources[building.AdjacentResource];
 	if(adjResource) then
 		table.insert(reqLines, Locale.Lookup("LOC_TOOLTIP_BUILDING_REQUIRES_ADJACENT_RESOURCE", adjResource.Name));
@@ -361,7 +381,7 @@ ToolTipHelper.GetBuildingToolTip = function(buildingHash, playerId, city)
 		table.insert(reqLines, Locale.Lookup("LOC_TOOLTIP_PLACEMENT_REQUIRES_NOT_LAKE"));
 	end
 
-	if(building.AdjacentToMountain == 1) then
+	if(building.AdjacentToMountain == true) then
 		table.insert(reqLines, Locale.Lookup("LOC_TOOLTIP_PLACEMENT_REQUIRES_ADJACENT_MOUNTAIN"));
 	end
 	if(building.Coast or building.MustBeAdjacentLand) then
@@ -501,7 +521,9 @@ ToolTipHelper.GetCivicToolTip = function(civicType, playerId)
 end
 
 -------------------------------------------------------------------------------
-ToolTipHelper.GetUnitToolTip = function(unitType)
+-- Get the tooltip for a given unit.  Formation and build queue are both required if you want to get
+-- the formation version of the tooltip.
+ToolTipHelper.GetUnitToolTip = function(unitType, formationType, pBuildQueue)
 
 	-- ToolTip Format
 	-- <Name>
@@ -514,7 +536,7 @@ ToolTipHelper.GetUnitToolTip = function(unitType)
 	local unitReference = GameInfo.Units[unitType];
 	local promotionClassReference = GameInfo.UnitPromotionClasses[unitReference.PromotionClass];
 
-	local name = unitReference.Name; --TODO: Replace with GameCore Query since Units can have custom names.
+	local nameLoc = Locale.ToUpper(unitReference.Name); --TODO: Replace with GameCore Query since Units can have custom names.
 	local promotionClass = "";
 	if (promotionClassReference ~= nil) then
 		promotionClass = promotionClassReference.Name;
@@ -525,11 +547,52 @@ ToolTipHelper.GetUnitToolTip = function(unitType)
 	local baseBombard = unitReference.Bombard;
 	local baseMoves = unitReference.BaseMoves;
 	local description = unitReference.Description;
+	local cost = unitReference.Cost or 0;
+	--local maintenance = unitReference.Maintenance or 0
+	local maintenance = UnitManager.GetUnitMaintenance(GameInfo.Units[unitType].Hash) or 0;
+
+	--If this is a specific military formation we need build queue to get correct production costs.
+	--The rest of this logic is copied from Unit_Instance:GetCombat functions because it is not exposed to the lua. 
+	if( formationType ~= nil and pBuildQueue ~= nil ) then
+
+		local strengthMod = 0;
+		if formationType == MilitaryFormationTypes.CORPS_MILITARY_FORMATION then
+			strengthMod = GlobalParameters.COMBAT_CORPS_STRENGTH_MODIFIER; 
+			cost = pBuildQueue:GetUnitCorpsCost( unitReference.Index );
+			maintenance = UnitManager.GetUnitCorpsMaintenance(GameInfo.Units[unitType].Hash);
+			
+			if unitReference.Domain == "DOMAIN_SEA" then
+				nameLoc = nameLoc .. " " .. Locale.Lookup("LOC_UNITFLAG_FLEET_SUFFIX");
+			else
+				nameLoc = nameLoc .. " " .. Locale.Lookup("LOC_UNITFLAG_CORPS_SUFFIX");
+			end
+		elseif formationType == MilitaryFormationTypes.ARMY_MILITARY_FORMATION then
+			strengthMod = GlobalParameters.COMBAT_ARMY_STRENGTH_MODIFIER;
+			cost = pBuildQueue:GetUnitArmyCost( unitReference.Index );
+			maintenance = UnitManager.GetUnitArmyMaintenance(GameInfo.Units[unitType].Hash);
+			
+			if unitReference.Domain == "DOMAIN_SEA" then
+				nameLoc = nameLoc .. " " .. Locale.Lookup("LOC_UNITFLAG_ARMADA_SUFFIX");
+			else
+				nameLoc = nameLoc .. " " .. Locale.Lookup("LOC_UNITFLAG_ARMY_SUFFIX");
+			end
+		end
+		
+		if baseCombat > 0 then
+			baseCombat = baseCombat + strengthMod;
+		end
+		if baseRangedCombat > 0 then
+			baseRangedCombat = baseRangedCombat + strengthMod;
+		end
+		if baseBombard > 0 then
+			baseBombard = baseBombard + strengthMod;
+		end
+	end
 	
 	-- Build ze tip!
 	-- Build the tool tip line by line.
 	local toolTipLines = {};
-	table.insert(toolTipLines, Locale.ToUpper(name));
+	table.insert(toolTipLines, nameLoc);
 
 	local replaces_unit;
 	local replaces = GameInfo.UnitReplaces[unitType];
@@ -547,7 +610,6 @@ ToolTipHelper.GetUnitToolTip = function(unitType)
 		table.insert(toolTipLines, Locale.Lookup("LOC_UNIT_PROMOTION_CLASS", promotionClass));
 	end
 
-	local cost = unitReference.Cost or 0;
 	if(cost ~= 0 and unitReference.MustPurchase == false and unitReference.CanTrain) then
 		local yield = GameInfo.Yields["YIELD_PRODUCTION"];
 		if(yield) then
@@ -555,7 +617,6 @@ ToolTipHelper.GetUnitToolTip = function(unitType)
 		end
 	end
 
-	local maintenance = unitReference.Maintenance or 0;
 	if(maintenance ~= 0) then
 		local yield = GameInfo.Yields["YIELD_GOLD"];
 		if(yield) then

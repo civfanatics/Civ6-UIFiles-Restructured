@@ -3,6 +3,7 @@
   <IconTextureAtlases>
     <Row Name="ICON_ATLAS_CITYSTATES" IconSize="22" IconsPerRow="8" IconsPerColumn="1" Filename="CityStates22.dds"/>
     <Row Name="ICON_ATLAS_CITYSTATES" IconSize="30" IconsPerRow="8" IconsPerColumn="1" Filename="CityStates30.dds"/>
+    <Row Name="ICON_ATLAS_CITYSTATES" IconSize="32" IconsPerRow="8" IconsPerColumn="1" Filename="CityStates32.dds"/>
     <Row Name="ICON_ATLAS_CITYSTATES" IconSize="36" IconsPerRow="8" IconsPerColumn="1" Filename="CityStates36.dds"/>
     <Row Name="ICON_ATLAS_CITYSTATES" IconSize="40" IconsPerRow="8" IconsPerColumn="1" Filename="CityStates40.dds"/>
     <Row Name="ICON_ATLAS_CITYSTATES" IconSize="44" IconsPerRow="8" IconsPerColumn="1" Filename="CityStates44.dds"/>

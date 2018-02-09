@@ -411,7 +411,7 @@ function OnLoadGameViewStateDone()
 		Input.SetActiveContext( InputContext.Ready );
 
 		-- If automation is running, continue on.
-		if (Automation.IsActive()) then
+		if (Automation.IsAutoStartEnabled()) then
 			OnActivateButtonClicked();
 		end
 	end    

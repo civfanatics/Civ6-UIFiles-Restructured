@@ -1439,12 +1439,7 @@ end
 --			based on their advisor settings
 -- ===========================================================================
 function IsAppropriate( item:TutorialItem )
-	if(m_tutorialLevel < item.TutorialLevel) then
-		return false;
-	end
-
-	return true;
-
+	return m_tutorialLevel > -1 and m_tutorialLevel <= item.TutorialLevel;
 end
 
 -- ===========================================================================

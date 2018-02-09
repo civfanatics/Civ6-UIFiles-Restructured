@@ -236,11 +236,27 @@ function RefreshSize()
 end
 
 -- ===========================================================================
+function ShowNextQueuedPopup()
+
+	-- Find first entry in table, display that, then remove it from the internal queue
+	for i, entry in ipairs(m_kQueuedPopups) do
+		ShowCompletedPopup(entry);
+		table.remove(m_kQueuedPopups, i);
+		break;
+	end
+
+	-- If no more popups are in the queue, close the whole context down.
+	if table.count(m_kQueuedPopups) == 0 then
+		m_isWaitingToShowPopup = false;
+	end
+end
+
+-- ===========================================================================
 function OnCivicCompleted( player:number, civic:number, isCanceled:boolean)
 	if player == Game.GetLocalPlayer() and (not m_isDisabledByTutorial) then
 		local civicCompletedEntry:table = { player=player, civic=civic, isCanceled=isCanceled };
 
-		if not m_isWaitingToShowPopup then
+		if not m_isWaitingToShowPopup and UI.CanShowPopup() then
 			ShowCompletedPopup(civicCompletedEntry);
 		else
 			-- Add to queue if already showing a tech/civic completed popup
@@ -254,7 +270,7 @@ function OnResearchCompleted( player:number, tech:number, isCanceled:boolean)
 	if player == Game.GetLocalPlayer() and (not m_isDisabledByTutorial) then
 		local techCompletedEntry:table = { player=player, tech=tech, isCanceled=isCanceled };
 
-		if not m_isWaitingToShowPopup then
+		if not m_isWaitingToShowPopup and UI.CanShowPopup() then
 			ShowCompletedPopup(techCompletedEntry);
 		else
 			-- Add to queue if already showing a tech/civic completed popup
@@ -270,17 +286,7 @@ function Close()
 	-- Dequeue popup from UI mananger (will re-queue if another is about to show).
 	UIManager:DequeuePopup( ContextPtr );
 
-	-- Find first entry in table, display that, then remove it from the internal queue
-	for i, entry in ipairs(m_kQueuedPopups) do
-		ShowCompletedPopup(entry);
-		table.remove(m_kQueuedPopups, i);
-		break;
-	end
-
-	-- If no more popups are in the queue, close the whole context down.
-	if table.count(m_kQueuedPopups) == 0 then
-		m_isWaitingToShowPopup = false;
-	end
+	ShowNextQueuedPopup();
 end
 
 -- ===========================================================================
@@ -359,6 +365,12 @@ function OnLocalPlayerTurnEnd()
 	end
 end
 
+------------------------------------------------------------------------------------------------
+function OnUIIdle()
+	if UI.CanShowPopup() then
+		ShowNextQueuedPopup();
+	end
+end
 -- ===========================================================================
 --	LUA Event
 --	Set cached values back after a hotload.
@@ -411,5 +423,6 @@ function Initialize()
 	Events.ResearchCompleted.Add(OnResearchCompleted);
 	Events.CivicCompleted.Add(OnCivicCompleted);
 	Events.LocalPlayerTurnEnd.Add( OnLocalPlayerTurnEnd );
+	Events.UIIdle.Add( OnUIIdle );
 end
 Initialize();

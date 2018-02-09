@@ -31,6 +31,28 @@ local sectionId = page.SectionId;
 		end
 	end
 
+	-- XP 1 Content
+	local minEra;
+	local maxEra;
+	local darkAge;
+	if(GameInfo.Policies_XP1) then
+		local row = GameInfo.Policies_XP1[policyType];
+		if(row) then
+			local minEraRow = GameInfo.Eras[row.MinimumGameEra];
+			if(minEraRow) then
+				minEra = minEraRow.Name;
+			end
+
+			local maxEraRow = GameInfo.Eras[row.MaximumGameEra];
+			if(maxEraRow) then
+				maxEra = maxEraRow.Name;
+			end
+
+			darkAge = row.RequiresDarkAge;
+		end
+
+	end
+
 	-- Right Column
 	AddPortrait("ICON_" .. policyType);
 
@@ -49,6 +71,20 @@ local sectionId = page.SectionId;
 
 	AddRightColumnStatBox("LOC_UI_PEDIA_REQUIREMENTS", function(s)
 		s:AddSeparator();
+
+		if(darkAge) then
+			s:AddLabel("LOC_UI_PEDIA_REQUIRES_DARK_AGE");
+		end
+
+		if(minEra) then
+			local t = Locale.Lookup("LOC_UI_PEDIA_MIN_ERA", minEra);
+			s:AddLabel(t);
+		end
+
+		if(maxEra) then
+			local t = Locale.Lookup("LOC_UI_PEDIA_MAX_ERA", maxEra);
+			s:AddLabel(t);
+		end
 
 		if(required_government) then
 			s:AddHeader("LOC_GOVERNMENT_NAME");
@@ -84,5 +120,18 @@ local sectionId = page.SectionId;
 		local chapter_body = GetChapterBody(sectionId, pageId, chapterId);
 
 		AddChapter(chapter_header, chapter_body);
+	end
+
+	-- If a government is required, duplicate it's chapter data in the policy.
+	if(required_government) then
+		local pageId = required_government.GovernmentType;
+		local chapters = GetPageChapters(page.PageLayoutId);
+		for i, chapter in ipairs(chapters) do
+			local chapterId = chapter.ChapterId;
+			local chapter_header = GetChapterHeader(sectionId, pageId, chapterId);
+			local chapter_body = GetChapterBody(sectionId, pageId, chapterId);
+
+			AddChapter(chapter_header, chapter_body);
+		end
 	end
 end

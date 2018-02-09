@@ -96,7 +96,6 @@ local m_NumBeliefsEarned	:number;
 local m_NumBeliefsEquipped	:number;
 local m_isHasProphet		:boolean;
 local m_SelectedBeliefs		:table;
-local m_ToggleReligionId;
 
 -- ===========================================================================
 function GetDisplayPlayerID()
@@ -656,7 +655,8 @@ function ChooseReligion()
 				religionInst.ReligionButton:SetSelected(true);
 				SetReligionIcon(Controls.PendingReligionImage, row.ReligionType, SIZE_RELIGION_ICON_HUGE, row.Color);
 
-				if(row.RequiresCustomName) then
+				local canChangeName = GameCapabilities.HasCapability("CAPABILITY_RENAME");
+				if(row.RequiresCustomName and canChangeName) then
 					Controls.ConfirmReligion:SetDisabled(true);
 					Controls.PendingReligionTitle:LocalizeAndSetText("LOC_UI_RELIGION_REQUIRES_NAME");
 					Controls.ChooseReligionName:SetDisabled(false);
@@ -784,7 +784,7 @@ function SelectReligionBeliefs()
 		local religionData:table = GameInfo.Religions[m_PlayerReligionType];
 		local civID:number = PlayerConfigurations[religion.Founder]:GetCivilizationTypeID();
 		local civName:string = Locale.Lookup(GameInfo.Civilizations[civID].Name);
-		local holyCity:table = ownerPlayer:GetCities():FindID(playerReligion:GetHolyCityID());
+		local holyCity:table = CityManager.GetCity(playerReligion:GetHolyCityID());
 		Controls.AddBeliefsReligionHolyCity:SetText(Locale.ToUpper(Locale.Lookup("LOC_UI_RELIGION_HOLY_CITY", holyCity:GetName())));
 
 		Controls.AddBeliefsReligionTitle:LocalizeAndSetText(Locale.ToUpper(religionData.Name));
@@ -973,7 +973,7 @@ function ViewReligion(religionType:number)
 	Controls.ViewReligion:SetHide(false);
 
 	if(m_SelectedReligion ~= nil and m_SelectedReligion.Instance ~= nil) then
-		m_SelectedReligion.Instance.ReligionButton:SetSelected(false);
+		m_SelectedReligion.Instance.ReligionButton:SetSelected(false);          
 	end
 	m_SelectedReligion = { ID = religionType };
 
@@ -991,7 +991,7 @@ function ViewReligion(religionType:number)
 	if religion.Founder == localPlayerID or localDiplomacy:HasMet(religion.Founder) or Game.GetLocalObserver() == PlayerTypes.OBSERVER then
 		local civName:string = Locale.Lookup(GameInfo.Civilizations[civID].Name);
 		Controls.ViewReligionFounder:SetText(Locale.ToUpper(Locale.Lookup("LOC_UI_RELIGION_FOUNDER_NAME", civName)));
-		local holyCity:table = ownerPlayer:GetCities():FindID(playerReligion:GetHolyCityID());
+		local holyCity:table = CityManager.GetCity(playerReligion:GetHolyCityID());
 		if holyCity ~= nil then
 			Controls.ViewReligionHolyCity:SetText(Locale.ToUpper(Locale.Lookup("LOC_UI_RELIGION_HOLY_CITY", holyCity:GetName())));
 		else
@@ -1407,8 +1407,15 @@ function Open()
 	end
 
 	UpdateData();
-	ContextPtr:SetHide(false);
-	UI.PlaySound("UI_Screen_Open");
+	if not UIManager:IsInPopupQueue(ContextPtr) then
+		-- Queue the screen as a popup, but we want it to render at a desired location in the hierarchy, not on top of everything.
+		local kParameters = {};
+		kParameters.RenderAtCurrentParent = true;
+		kParameters.InputAtCurrentParent = true;
+		kParameters.AlwaysVisibleInQueue = true;
+		UIManager:QueuePopup(ContextPtr, PopupPriority.Low, kParameters);
+		UI.PlaySound("UI_Screen_Open");
+	end
 
 	-- From ModalScreen_PlayerYieldsHelper
 	RefreshYields();
@@ -1425,9 +1432,9 @@ function Close()
 		UI.PlaySound("UI_Screen_Close");
 	end
 
-	ContextPtr:SetHide(true);
-	
-	LuaEvents.Religion_CloseReligion();
+	if UIManager:DequeuePopup(ContextPtr) then
+		LuaEvents.Religion_CloseReligion();
+	end
 end
 
 -- ===========================================================================
@@ -1528,20 +1535,6 @@ function OnGameDebugReturn( context:string, contextTable:table )
 end
 
 -- ===========================================================================
---	Input Hotkey Event
--- ===========================================================================
-function OnInputActionTriggered( actionId )
-	if actionId == m_ToggleReligionId and UI.QueryGlobalParameterInt("DISABLE_RELIGION_HOTKEY") ~= 1 then
-        UI.PlaySound("Play_UI_Click");
-		if(ContextPtr:IsHidden()) then
-			OnShowScreen();
-		else
-			OnClose();
-		end
-	end
-end
-
--- ===========================================================================
 --	Main INIT
 -- ===========================================================================
 function Initialize()
@@ -1578,11 +1571,6 @@ function Initialize()
 	Controls.ModalScreenClose:RegisterCallback(Mouse.eLClick, OnClose);
     Controls.ModalScreenClose:RegisterCallback(Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end); 
 
-	-- Hot Key Handling
-	m_ToggleReligionId = Input.GetActionId("ToggleReligion");
-	if m_ToggleReligionId ~= nil then
-		Events.InputActionTriggered.Add( OnInputActionTriggered );
-	end
 end
 Initialize();
 

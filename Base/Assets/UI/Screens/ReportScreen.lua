@@ -42,15 +42,16 @@ end
 --	VARIABLES
 -- ===========================================================================
 
+m_simpleIM = InstanceManager:new("SimpleInstance",			"Top",		Controls.Stack);				-- Non-Collapsable, simple
+m_tabIM = InstanceManager:new("TabInstance",				"Button",	Controls.TabContainer);
 local m_groupIM				:table = InstanceManager:new("GroupInstance",			"Top",		Controls.Stack);				-- Collapsable
-local m_simpleIM			:table = InstanceManager:new("SimpleInstance",			"Top",		Controls.Stack);				-- Non-Collapsable, simple
-local m_tabIM				:table = InstanceManager:new("TabInstance",				"Button",	Controls.TabContainer);
 local m_bonusResourcesIM	:table = InstanceManager:new("ResourceAmountInstance",	"Info",		Controls.BonusResources);
 local m_luxuryResourcesIM	:table = InstanceManager:new("ResourceAmountInstance",	"Info",		Controls.LuxuryResources);
 local m_strategicResourcesIM:table = InstanceManager:new("ResourceAmountInstance",	"Info",		Controls.StrategicResources);
 
-local m_tabs				:table;
-local m_kCityData			:table = nil;
+
+m_kCityData = nil;
+m_tabs = nil;
 local m_kCityTotalData		:table = nil;
 local m_kUnitData			:table = nil;	-- TODO: Show units by promotion class
 local m_kResourceData		:table = nil;
@@ -247,17 +248,47 @@ function GetData()
 	local pUnits :table = player:GetUnits(); 	
 	for i, pUnit in pUnits:Members() do
 		local pUnitInfo:table = GameInfo.Units[pUnit:GetUnitType()];
-		local TotalMaintenanceAfterDiscount:number = pUnitInfo.Maintenance - MaintenanceDiscountPerUnit;
+		local unitTypeKey = pUnitInfo.UnitType;
+		local TotalMaintenanceAfterDiscount:number = 0;
+		local unitMaintenance = 0;
+		local unitName :string = Locale.Lookup(pUnitInfo.Name);
+		local unitMilitaryFormation = pUnit:GetMilitaryFormation();
+		unitTypeKey = unitTypeKey .. unitMilitaryFormation;
+		if (pUnitInfo.Domain == "DOMAIN_SEA") then
+			if (unitMilitaryFormation == MilitaryFormationTypes.CORPS_FORMATION) then
+				unitName = unitName .. " " .. Locale.Lookup("LOC_HUD_UNIT_PANEL_FLEET_SUFFIX");
+				unitMaintenance = UnitManager.GetUnitCorpsMaintenance(pUnitInfo.Hash);
+			elseif (unitMilitaryFormation == MilitaryFormationTypes.ARMY_FORMATION) then
+				unitName = unitName .. " " .. Locale.Lookup("LOC_HUD_UNIT_PANEL_ARMADA_SUFFIX");
+				unitMaintenance = UnitManager.GetUnitArmyMaintenance(pUnitInfo.Hash);
+			else
+				unitMaintenance = UnitManager.GetUnitMaintenance(pUnitInfo.Hash);
+			end
+		else
+			if (unitMilitaryFormation == MilitaryFormationTypes.CORPS_FORMATION) then
+				unitName = unitName .. " " .. Locale.Lookup("LOC_HUD_UNIT_PANEL_CORPS_SUFFIX");
+				unitMaintenance = UnitManager.GetUnitCorpsMaintenance(pUnitInfo.Hash);
+			elseif (unitMilitaryFormation == MilitaryFormationTypes.ARMY_FORMATION) then
+				unitName = unitName .. " " .. Locale.Lookup("LOC_HUD_UNIT_PANEL_ARMY_SUFFIX");
+				unitMaintenance = UnitManager.GetUnitArmyMaintenance(pUnitInfo.Hash);
+			else
+				unitMaintenance = UnitManager.GetUnitMaintenance(pUnitInfo.Hash);
+			end
+		end
+
+		if (unitMaintenance > 0) then
+			TotalMaintenanceAfterDiscount = unitMaintenance - MaintenanceDiscountPerUnit; 
+		end
 		if TotalMaintenanceAfterDiscount > 0 then
-			if kUnitData[pUnitInfo.UnitType] == nil then
+			if kUnitData[unitTypeKey] == nil then
 				local UnitEntry:table = {};
-				UnitEntry.Name = pUnitInfo.Name;
+				UnitEntry.Name = unitName;
 				UnitEntry.Count = 1;
 				UnitEntry.Maintenance = TotalMaintenanceAfterDiscount;
-				kUnitData[pUnitInfo.UnitType] = UnitEntry;
+				kUnitData[unitTypeKey]= UnitEntry;
 			else
-				kUnitData[pUnitInfo.UnitType].Count = kUnitData[pUnitInfo.UnitType].Count + 1;
-				kUnitData[pUnitInfo.UnitType].Maintenance = kUnitData[pUnitInfo.UnitType].Maintenance + TotalMaintenanceAfterDiscount;
+				kUnitData[unitTypeKey].Count = kUnitData[unitTypeKey].Count + 1;
+				kUnitData[unitTypeKey].Maintenance = kUnitData[unitTypeKey].Maintenance + TotalMaintenanceAfterDiscount;
 			end
 		end
 	end

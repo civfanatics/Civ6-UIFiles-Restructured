@@ -32,8 +32,8 @@ function RefreshDisplay(highlightPlayerID:number)
 		end
 	end
 
-	local iTurnsOfPeace = GameInfo.GlobalParameters["DIPLOMACY_PEACE_MIN_TURNS"].Value;
-	local iTurnsOfWar = GameInfo.GlobalParameters["DIPLOMACY_WAR_MIN_TURNS"].Value;
+	local iTurnsOfPeace = Game.GetGameDiplomacy():GetMinPeaceDuration();
+	local iTurnsOfWar = Game.GetGameDiplomacy():GetMinPeaceDuration();
 
 	-- SCREEN TITLE
 	local szHeaderString = "City-State Relations for " .. Locale.Lookup(PlayerConfigurations[pLocalPlayer:GetID()]:GetCivilizationShortDescription());

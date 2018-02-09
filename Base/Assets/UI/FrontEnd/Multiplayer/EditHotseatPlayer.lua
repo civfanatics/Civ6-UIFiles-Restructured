@@ -162,7 +162,11 @@ function Initialize()
 
 	Controls.AcceptButton:RegisterCallback(Mouse.eLClick, OnAccept);
 	Controls.CancelButton:RegisterCallback(Mouse.eLClick, OnCancel);
-	Controls.HotseatPlayerNameEntry:RegisterStringChangedCallback(OnPlayerNameChanged);
+	local canChangeName = UI.HasFeature("TextEntry");
+	Controls.HotseatPlayerNameEntry:SetEnabled(canChangeName);
+	if canChangeName then
+		Controls.HotseatPlayerNameEntry:RegisterStringChangedCallback(OnPlayerNameChanged);
+	end
 	Controls.HotseatPasswordEntry:RegisterStringChangedCallback(UpdateHotseatPassword);
 	Controls.HotseatPasswordVerifyEntry:RegisterStringChangedCallback(UpdateHotseatPassword);
 

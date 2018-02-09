@@ -83,7 +83,7 @@
     <Stack ID="WildcardStack" StackGrowth="Right" StackPadding="2" WrapWidth="125" Offset="65,181"/>
   </Grid>
 
-  <Grid ID="OptionsPanel" Anchor="L,C" Offset="0,-278" Size="193,135" Texture="Controls_OptionPanel" SliceCorner="3,3" SliceSize="10,52" SliceTextureSize="16,64">
+  <Grid ID="OptionsPanel" ConsumeAllMouse="1" Anchor="L,C" Offset="0,-278" Size="193,135" Texture="Controls_OptionPanel" SliceCorner="3,3" SliceSize="10,52" SliceTextureSize="16,64">
     <Image Offset="-30,0" Size="240,59" Texture="Controls_HeaderBanner">
       <Label Anchor="C,T" Offset="0,8" Style="FontFlair16" Color0="38,39,32,255" String="LOC_TREE_OPTIONS" SmallCaps="20" SmallCapsType="EveryWord"/>
     </Image>
@@ -157,6 +157,9 @@
           <Image ID="AgreementKey" Texture="UnlockFrames" Size="38,38" TextureOffset="304,0">
             <Label ID="AgreementLabelKey" Offset="40,14" Style="TreeNodeText" String="LOC_CIVICS_KEY_AGREEMENT"/>
           </Image>
+					<Image ID="UnlockKey" Texture="UnlockFrames" Size="38,38" TextureOffset="494,0">
+						<Label ID="UnlockKeyLabelKey" Offset="40,14" Style="TreeNodeText" String="LOC_CIVICS_KEY_UNLOCK"/>
+					</Image>
           <Image ID="GovernmentIconKey" Texture="UnlockFrames" Size="38,38" TextureOffset="228,0">
             <Label ID="GovernmentIconLabelKey" Offset="40,14" Style="TreeNodeText" String="LOC_GOVERNMENT_NAME"/>
           </Image>
@@ -228,7 +231,7 @@
       <GridButton ID="NodeButton" Offset="0,-72" Size="420,140" Texture="CivicsTree_GearButton2" SliceCorner="79,79" SliceSize="1,1" SliceTextureSize="133,140" StateOffsetIncrement="0,140">
         <GridButton ID="OtherStates" Offset="0,0" Size="parent,parent" Texture="CivicsTree_GearButton2" SliceCorner="79,79" SliceSize="1,1" SliceTextureSize="133,140" NoStateChange="1"/>
         <Image ID="FillTexture" Offset="76,1" Size="311,135" Texture="CivicsTree_GearButton2Tile_Disabled" StretchMode="Tile"/>
-        <Stack ID="UnlockStack" Offset="72,25" StackGrowth="Right" WrapWidth="350" WrapGrowth="Down"/>
+        <Stack ID="UnlockStack" Offset="72,25" StackGrowth="Right" WrapWidth="320" WrapGrowth="Down"/>
         <Grid ID="BoostedBack" Offset="7,6" Anchor="L,B" Size="406,39" Texture="Controls_BoostSlotCivic" SliceCorner="28,26" SliceSize="1,1" SliceTextureSize="39,39"/>
         <Image ID="BoostIcon" Offset="10,7" Anchor="L,B" Texture="BoostTech"/> 
         <Label ID="BoostText" Offset="42,7" Anchor="L,B" Style="TreeBoostText" String="?BoostText"/>

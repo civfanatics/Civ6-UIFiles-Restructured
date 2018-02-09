@@ -144,17 +144,7 @@ function OnToggleLensList()
 	RealizeFlyouts(Controls.LensPanel);
 	Controls.LensButton:SetSelected( not Controls.LensPanel:IsHidden() );
 	if Controls.LensPanel:IsHidden() then
-        m_shouldCloseLensMenu = true;
-		Controls.ReligionLensButton:SetCheck(false);
-		Controls.ContinentLensButton:SetCheck(false);	
-		Controls.AppealLensButton:SetCheck(false);
-		Controls.GovernmentLensButton:SetCheck(false);
-		Controls.WaterLensButton:SetCheck(false);
-		Controls.OwnerLensButton:SetCheck(false);
-		Controls.TourismLensButton:SetCheck(false);
-		if UI.GetInterfaceMode() == InterfaceModeTypes.VIEW_MODAL_LENS then
-			UI.SetInterfaceMode(InterfaceModeTypes.SELECTION);
-		end
+		CloseLensList();
 	else
 		Controls.ReligionLensButton:SetHide(not GameCapabilities.HasCapability("CAPABILITY_LENS_RELIGION"));
 		Controls.AppealLensButton:SetHide(not GameCapabilities.HasCapability("CAPABILITY_LENS_APPEAL"));
@@ -163,6 +153,20 @@ function OnToggleLensList()
 		Controls.TourismLensButton:SetHide(not GameCapabilities.HasCapability("CAPABILITY_LENS_TOURISM"));
 		Controls.LensToggleStack:CalculateSize();
 		Controls.LensPanel:SetSizeY(Controls.LensToggleStack:GetSizeY() + LENS_PANEL_OFFSET);
+	end
+end
+
+function CloseLensList()
+	m_shouldCloseLensMenu = true;
+	Controls.ReligionLensButton:SetCheck(false);
+	Controls.ContinentLensButton:SetCheck(false);
+	Controls.AppealLensButton:SetCheck(false);
+	Controls.GovernmentLensButton:SetCheck(false);
+	Controls.WaterLensButton:SetCheck(false);
+	Controls.OwnerLensButton:SetCheck(false);
+	Controls.TourismLensButton:SetCheck(false);
+	if UI.GetInterfaceMode() == InterfaceModeTypes.VIEW_MODAL_LENS then
+		UI.SetInterfaceMode(InterfaceModeTypes.SELECTION);
 	end
 end
 
@@ -435,10 +439,10 @@ function SetOwingCivHexes()
 			local primaryColor, secondaryColor = UI.GetPlayerColors( player:GetID() );
 		
 			for _, pCity in cities:Members() do
-				local visibleCityPlots	:table = Map.GetCityPlots():GetVisiblePurchasedPlots(pCity);
+				local plots	:table = Map.GetCityPlots():GetPurchasedPlots(pCity);
 
-				if(table.count(visibleCityPlots) > 0) then
-					UILens.SetLayerHexesColoredArea( LensLayers.HEX_COLORING_OWING_CIV, localPlayer, visibleCityPlots, primaryColor );
+				if(table.count(plots) > 0) then
+					UILens.SetLayerHexesColoredArea( LensLayers.HEX_COLORING_OWING_CIV, localPlayer, plots, primaryColor );
 				end
 			end
 		end 
@@ -498,10 +502,10 @@ function SetGovernmentHexes()
 			end
 
 			for _, pCity in cities:Members() do
-				local visibleCityPlots:table = Map.GetCityPlots():GetVisiblePurchasedPlots(pCity);
+				local plots:table = Map.GetCityPlots():GetPurchasedPlots(pCity);
 			
-				if(table.count(visibleCityPlots) > 0) then
-					UILens.SetLayerHexesColoredArea( LensLayers.HEX_COLORING_GOVERNMENT, localPlayer, visibleCityPlots, GovernmentColor );
+				if(table.count(plots) > 0) then
+					UILens.SetLayerHexesColoredArea( LensLayers.HEX_COLORING_GOVERNMENT, localPlayer, plots, GovernmentColor );
 				end
 			end
 		end 
@@ -584,6 +588,10 @@ end
 function OnInputActionTriggered( actionId )
 	-- dont show panel if there is no local player
 	if (Game.GetLocalPlayer() == -1) then
+		return;
+	end
+
+	if UI.GetInterfaceMode() == InterfaceModeTypes.DISTRICT_PLACEMENT then
 		return;
 	end
 

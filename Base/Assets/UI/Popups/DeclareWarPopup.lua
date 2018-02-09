@@ -3,14 +3,19 @@
 include( "InstanceManager" );
 include( "DiplomacyStatementSupport" );
 include( "SupportFunctions" );				--DarkenLightenColor
+
 --	******************************************************************************************************
 --	CONSTANTS
 --	******************************************************************************************************
+local MIN_HEIGHT = 200;
 local CONSEQUENCE_TYPES = {WARMONGER = 1, DEFENSIVE_PACT = 2, CITY_STATE = 3, TRADE_ROUTE = 4, DEALS = 5 };
+
 --	******************************************************************************************************
 --	MEMBERS
 --	******************************************************************************************************
-local m_ConsequenceItemIM :table	= InstanceManager:new( "ConsequenceItem",  "Root" );
+local m_TargetCivIM:table = InstanceManager:new( "TargetCivilization", "Root", Controls.Targets);
+local m_ConsequenceItemIM:table = InstanceManager:new( "ConsequenceItem",  "Root" );
+
 --	******************************************************************************************************
 --	FUNCTIONS
 --	******************************************************************************************************
@@ -71,86 +76,95 @@ function DeclareWar(eAttackingPlayer:number, eDefendingPlayer:number, eWarType:n
 	end
 end
 
-function OnShow(eAttackingPlayer:number, eDefendingPlayer:number, eWarType:number, confirmCallbackFn)
-	local pLocalPlayer = Players[Game.GetLocalPlayer()];
-	local pSelectedPlayer = Players[eDefendingPlayer];
-	local consequences: table = {};
-	local kParams = {};
+-- This is necessary to maintain backwards compatibility since the signature for the OnShow function changed
+function OnShowSingleTarget(eAttackingPlayer:number, eDefendingPlayer:number, eWarType:number, confirmCallbackFn)
+	OnShow(eAttackingPlayer, {eDefendingPlayer}, eWarType, confirmCallbackFn);
+end
+
+function OnShow(eAttackingPlayer:number, kDefendingPlayers:table, eWarType:number, confirmCallbackFn)
+
+	local pAttacker = Players[eAttackingPlayer];
 
 	-- By default, confirming will do the DeclareWar function we define here. But client could pass in a custom function to call instead (ex. WMDs and ICBMs, which declare war differently).
 	if (confirmCallbackFn == nil) then
-		confirmCallbackFn = function() DeclareWar(eAttackingPlayer, eDefendingPlayer, eWarType); end;
+		confirmCallbackFn = function()
+			for i, eDefendingPlayer in ipairs(kDefendingPlayers) do
+				DeclareWar(eAttackingPlayer, eDefendingPlayer, eWarType);
+			end
+		end
 	end
+	
+	-- Populate targets
+	local iWarmongerPoints = -1;
+	m_TargetCivIM:ResetInstances();
+	
+--for i=1, 3 do -- DEBUG
+	for i, eDefendingPlayer in ipairs(kDefendingPlayers) do
+		local kParams = {};
+		kParams.WarState = eWarType;
+		bSuccess, tResults = DiplomacyManager.TestAction(eFromPlayer, eDefendingPlayer, DiplomacyActionTypes.SET_WAR_STATE, kParams);
 
-	-- Prepare data - Record warmongering consequences
-	kParams.WarState = eWarType;
-	local eFromPlayer = Game.GetLocalPlayer();
-	bSuccess, tResults = DiplomacyManager.TestAction(eFromPlayer, eDefendingPlayer, DiplomacyActionTypes.SET_WAR_STATE, kParams);
-	local defenderNameString : string;
-	local pDefenderCfg = PlayerConfigurations[ eDefendingPlayer ];
-	if(GameConfiguration.IsAnyMultiplayer() and pDefenderCfg:IsHuman()) then
-		defenderNameString = Locale.Lookup( pDefenderCfg:GetCivilizationShortDescription() ) .. " (" .. pDefenderCfg:GetPlayerName() .. ")";
-	else
-		defenderNameString = pDefenderCfg:GetCivilizationShortDescription();
+		local tmp = pAttacker:GetDiplomacy():ComputeDOWWarmongerPoints(eDefendingPlayer, kParams.WarState);
+		iWarmongerPoints = math.min(tmp, iWarmongerPoints); -- These are negative, pick the worst penalty and go with it
+
+		PopulateTargetInstance(m_TargetCivIM:GetInstance(), eDefendingPlayer);
 	end
-	local message = Locale.Lookup("LOC_DIPLO_WARNING_DECLARE_WAR_FROM_UNIT_ATTACK_INFO", defenderNameString)
-	local iconName = "ICON_"..pDefenderCfg:GetCivilizationTypeName();
+--end -- END DEBUG
 
-	local backColor, frontColor  = UI.GetPlayerColors( eDefendingPlayer );
-	local darkerBackColor = DarkenLightenColor(backColor,(-85),238);
-	local brighterBackColor = DarkenLightenColor(backColor,90,255);
-	Controls.CivIcon:SetIcon(iconName);
-	Controls.CircleBacking:SetColor(backColor);
-	Controls.CircleDarker:SetColor(darkerBackColor);
-	Controls.CircleLighter:SetColor(brighterBackColor);
-	Controls.CivIcon:SetColor(frontColor);
-
-	local iWarmongerPoints = pLocalPlayer:GetDiplomacy():ComputeDOWWarmongerPoints(eDefendingPlayer, kParams.WarState);
-	local szWarmongerLevel = pLocalPlayer:GetDiplomacy():GetWarmongerLevel(-iWarmongerPoints);
-	local szWarmongerString = Locale.Lookup("LOC_DIPLO_CHOICE_WARMONGER_INFO", szWarmongerLevel);
-	table.insert(consequences, {CONSEQUENCE_TYPES.WARMONGER, szWarmongerString});
-	-- Display data
 	Controls.WarConfirmAlpha:SetToBeginning();
 	Controls.WarConfirmAlpha:Play();
 	Controls.WarConfirmSlide:SetToBeginning();
 	Controls.WarConfirmSlide:Play();
-	Controls.Yes:RegisterCallback( Mouse.eLClick, function() confirmCallbackFn(); OnClose(); end );
-	Controls.Message:SetText(message);
-	m_ConsequenceItemIM:DestroyInstances();
-	for i=1,table.count(consequences) do
-		local rootStackControl;
-		if (consequences[i][1] == CONSEQUENCE_TYPES.WARMONGER) then
-			Controls.WarmongerContainer:SetHide(false);
-			rootStackControl = Controls.WarmongerStack;
-		elseif (consequences[i][1] == CONSEQUENCE_TYPES.DEFENSIVE_PACT) then
-			Controls.DefensivePactContainer:SetHide(false);
-			rootStackControl = Controls.DefensivePactStack;
-		elseif (consequences[i][1] == CONSEQUENCE_TYPES.CITY_STATE) then
-			Controls.CityStateContainer:SetHide(false);
-			rootStackControl = Controls.CityStateStack;
-		elseif (consequences[i][1] == CONSEQUENCE_TYPES.TRADE_ROUTE) then
-			Controls.TradeRouteContainer:SetHide(false);
-			rootStackControl = Controls.TradeRoutesStack;
-		elseif (consequences[i][1] == CONSEQUENCE_TYPES.DEALS) then
-			Controls.DealsContainer:SetHide(false);
-			rootStackControl = Controls.DealsStack;
-		else UI.DataError("Bad CONSEQUENCE_TYPE delivered to the consequence stack to be parsed.[NEWLINE]Types:[NEWLINE]CONSEQUENCE_TYPES = {WARMONGER = 1, DEFENSIVE_PACT = 2, CITY_STATE = 3, TRADE_ROUTE = 4, DEALS = 5 };[NEWLINE]Type Delivered: " .. tostring(consequences[i][1]));
-		end
-		if (rootStackControl ~= nil) then
-			local consequenceItem = m_ConsequenceItemIM:GetInstance(rootStackControl);
-			if (consequences[i][2] ~= nil) then
-				consequenceItem.Text:SetText(consequences[i][2]);
-			else UI.DataError("Consequence string was not initialized for a generated war consequence item.[NEWLINE]Types:[NEWLINE]CONSEQUENCE_TYPES = {WARMONGER = 1, DEFENSIVE_PACT = 2, CITY_STATE = 3, TRADE_ROUTE = 4, DEALS = 5 };[NEWLINE]Type Delivered: " .. tostring(consequences[i][1]));
-			end
-		end
-	end
-	if table.count(consequences) > 0 then
-		Controls.ConsequencesStack:SetHide(false);
-		Controls.ConsequencesStack:CalculateSize();
-		Controls.ConsequencesStack:ReprocessAnchoring();
-		Resize();
-	end
+	Controls.Yes:RegisterCallback(Mouse.eLClick, function() confirmCallbackFn(); OnClose(); end);
+	Controls.Message:SetText(Locale.Lookup("LOC_DIPLO_WARNING_DECLARE_WAR_FROM_UNIT_ATTACK_INFO_MULTIPLE"));
+
+	-- Populate warmonger consequences
+	m_ConsequenceItemIM:ResetInstances();
+	local consequenceItem = m_ConsequenceItemIM:GetInstance(Controls.WarmongerStack);
+	local szWarmongerLevel = pAttacker:GetDiplomacy():GetWarmongerLevel(-iWarmongerPoints);
+	consequenceItem.Text:SetText(Locale.Lookup("LOC_DIPLO_CHOICE_WARMONGER_INFO", szWarmongerLevel));
+
+	-- Calculate size
+	Controls.Targets:CalculateSize();
+	Controls.Contents:CalculateSize();
+
+	-- Show
+	Controls.Window:SetSizeY(MIN_HEIGHT + Controls.Contents:GetSizeY() + 10);
+	Controls.WarmongerContainer:SetHide(false);
+	Controls.ConsequencesStack:SetHide(false);
 	ContextPtr:SetHide(false);
+	Resize();
+end
+
+function PopulateTargetInstance(controls, ePlayer)
+	
+	local playerName : string;
+	local pPlayerCfg = PlayerConfigurations[ePlayer];
+	if(GameConfiguration.IsAnyMultiplayer() and pPlayerCfg:IsHuman()) then
+		playerName = Locale.Lookup( pPlayerCfg:GetCivilizationShortDescription() ) .. " (" .. pPlayerCfg:GetPlayerName() .. ")";
+	else
+		playerName = pPlayerCfg:GetCivilizationShortDescription();
+	end
+	
+	local iconName = "ICON_"..pPlayerCfg:GetCivilizationTypeName();
+
+	local backColor, frontColor = UI.GetPlayerColors( ePlayer );
+	local darkerBackColor = DarkenLightenColor(backColor,(-85),238);
+	local brighterBackColor = DarkenLightenColor(backColor,90,255);
+	controls.CivIcon:SetIcon(iconName);
+	controls.CircleBacking:SetColor(backColor);
+	controls.CircleDarker:SetColor(darkerBackColor);
+	controls.CircleLighter:SetColor(brighterBackColor);
+	controls.CivIcon:SetColor(frontColor);
+	
+	if controls.TargetName then
+		controls.TargetName:SetText(Locale.Lookup(playerName));
+	end
+
+	controls.PulseAnim:SetToBeginning();
+	controls.PulseAnim:Play();
+
+	return playerName;
 end
 
 --	Handle screen resize/ dynamic popup height
@@ -159,7 +173,7 @@ function Resize()
 	Controls.DropShadow:ReprocessAnchoring();
 end
 
-function OnUpdateUI( type:number, tag:string, iData1:number, iData2:number, strData1:string )   
+function OnUpdateUI( type:number, tag:string, iData1:number, iData2:number, strData1:string )
   if type == SystemUpdateUI.ScreenResize then
     Resize();
   end
@@ -186,11 +200,12 @@ end
 function Initialize()
 	ContextPtr:SetInputHandler( OnInputHandler, true );
 	Controls.No:RegisterCallback( Mouse.eLClick, OnClose );
-	LuaEvents.DiplomacyActionView_ConfirmWarDialog.Add(OnShow);
-	LuaEvents.CityStates_ConfirmWarDialog.Add(OnShow);
-	LuaEvents.Civ6Common_ConfirmWarDialog.Add(OnShow);
+	LuaEvents.DiplomacyActionView_ConfirmWarDialog.Add(OnShowSingleTarget);
+	LuaEvents.CityStates_ConfirmWarDialog.Add(OnShowSingleTarget);
+	LuaEvents.Civ6Common_ConfirmWarDialog.Add(OnShowSingleTarget);
 	LuaEvents.WorldInput_ConfirmWarDialog.Add(OnShow);
 	Events.SystemUpdateUI.Add( OnUpdateUI );
+	Events.LocalPlayerTurnEnd.Add( OnClose );
 	Resize();
 end
 Initialize();

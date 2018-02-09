@@ -35,13 +35,13 @@ function ParseInputChatString(chatText :string, playerTargetData :table)
 			parsedText = "";
 			printHelp = true;
 		elseif(token == "/t") then
-			parsedText = string.gsub(parsedText, token.." ", "", 1);
+			parsedText = string.gsub(parsedText, "/t%s*", "", 1);
 			if(playerTargetData.targetType ~= ChatTargetTypes.CHATTARGET_TEAM) then
 				playerTargetData.targetType = ChatTargetTypes.CHATTARGET_TEAM;
 				chatTargetChanged = true;
 			end
 		elseif(token == "/g") then
-			parsedText = string.gsub(parsedText, token.." ", "", 1);
+			parsedText = string.gsub(parsedText, "/g%s*", "", 1);
 			if(playerTargetData.targetType ~= ChatTargetTypes.CHATTARGET_ALL) then
 				playerTargetData.targetType = ChatTargetTypes.CHATTARGET_ALL;
 				chatTargetChanged = true;
@@ -49,7 +49,7 @@ function ParseInputChatString(chatText :string, playerTargetData :table)
 		elseif(token == "/w") then
 			parsedText, chatTargetChanged = WhisperCommand(chatText, playerTargetData);
 		elseif(token == "/r") then
-			parsedText = string.gsub(parsedText, token.." ", "", 1);
+			parsedText = string.gsub(parsedText, "/r%s*", "", 1);
 			if(m_lastWhisper ~= GetNoPlayerTargetID()) then
 				playerTargetData.targetType = ChatTargetTypes.CHATTARGET_PLAYER;
 				playerTargetData.targetID = m_lastWhisper;
@@ -83,7 +83,7 @@ function WhisperCommand(chatText :string, playerTargetData :table)
 	local bestMatchNameString : string = "";
 	local tokenIdx = 0;
 
-	parsedText = string.gsub(parsedText, "/w ", "", 1); -- Scrub /w command from parsed text.
+	parsedText = string.gsub(parsedText, "/w%s*", "", 1); -- Scrub /w command from parsed text.
 
 	-- Find the best player name match while using more and more of the chat text tokens as the match name.
 	for token in string.gmatch(parsedText, tokenPattern) do

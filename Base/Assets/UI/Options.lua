@@ -5,6 +5,13 @@ include("Civ6Common");
 include("InstanceManager");
 include("PopupDialog");
 
+
+-- Quick utility function to determine if Rise and Fall is installed.
+function HasExpansion1()
+	local xp1ModId = "1B28771A-C749-434B-9053-D1380C553DE9";
+	return Modding.IsModInstalled(xp1ModId);
+end
+
 -- ===========================================================================
 --	DEBUG 
 --	Toggle these for temporary debugging help.
@@ -1041,7 +1048,19 @@ function PopulateGraphicsOptions()
     -- Advanced Settings - Leaders
     -------------------------------------------------------------------------------
 
-	 -- Leader Quality
+	-- Update the Motion Blur checkbox when leader quality changes
+	local UpdateMotionBlurCheckbox = function(eLeaderQuality)
+		if UI.LeaderQualityAllowsMotionBlur(eLeaderQuality) then
+			local bEnabled = Options.GetGraphicsOption("Leaders", "EnableMotionBlur") ~= 0;
+			Controls.MotionBlurEnabledCheckbox:SetDisabled(false);
+			Controls.MotionBlurEnabledCheckbox:SetSelected(bEnabled);
+		else
+			Controls.MotionBlurEnabledCheckbox:SetSelected(false);
+			Controls.MotionBlurEnabledCheckbox:SetDisabled(true);
+		end
+	end
+
+	-- Leader Quality
     PopulateComboBox(Controls.LeaderQualityPullDown, leaderQuality_options, Options.GetGraphicsOption("Leaders", "Quality"), 
         function(option)
             Controls.PerformanceSlider:SetStepAndCall(performance_customStep);  -- It's enough to set just one of the Impact sliders to "custom", the logic sets the other one
@@ -1049,20 +1068,33 @@ function PopulateGraphicsOptions()
 			if (UI.LeaderQualityRequiresRestart(option)) then
 				_PromptRestartGame = true;
 			end
+			UpdateMotionBlurCheckbox(option);
 	    end
     );
     
+    -- Leader Motion Blur
+    PopulateCheckBox(Controls.MotionBlurEnabledCheckbox, Options.GetGraphicsOption("Leaders", "EnableMotionBlur"),
+        function(option)
+            Controls.MemorySlider:SetStepAndCall(memory_customStep);          -- It's enough to set just one of the Impact sliders to "custom", the logic sets the other one
+            Options.SetGraphicsOption("Leaders", "EnableMotionBlur", option); -- First set the sliders to "custom", then set the new value, otherwise ProcessExternally() will overwrite the new value with a preset
+        end
+    );
+
     -- Disable things we aren't allowed to change when game is running
     Controls.UIScalePulldown:SetDisabled( is_in_game or (not Options.IsUIUpscaleAllowed()) )
     Controls.FullScreenPullDown:SetDisabled( is_in_game )
     Controls.TerrainSynthesisCheckbox:SetDisabled( is_in_game )
     Controls.TerrainQualityPullDown:SetDisabled( is_in_game )
+	Controls.TerrainTextureResolutionCheckbox:SetDisabled( is_in_game )
+	Controls.TerrainShaderCheckbox:SetDisabled( is_in_game )
     Controls.TerrainSynthesisCheckbox:SetDisabled( is_in_game )
     Controls.AdapterPullDown:SetDisabled( is_in_game )
 
     -- Put resolution dropdown in the right state for current borderless setting
     AdjustResolutionPulldown( Options.GetAppOption("Video", "FullScreen") == BORDERLESS_OPTION, is_in_game )
 
+	-- Put leader motion blur checkbox in right state for current leader quality setting
+	UpdateMotionBlurCheckbox( Options.GetGraphicsOption("Leaders", "Quality") );
 end
 
 -------------------------------------------------------------------------------
@@ -1078,9 +1110,14 @@ function TemporaryHardCodedGoodness()
 
 	local tutorial_options = {
 		{"LOC_OPTIONS_DISABLED", -1},
-		{"LOC_OPTIONS_TUTORIAL_FAMILIAR_CIVILIZATION", 0},
-		{"LOC_OPTIONS_TUTORIAL_FAMILIAR_STRATEGY", 1}
+		{"LOC_OPTIONS_TUTORIAL_FAMILIAR_STRATEGY", 0},
+		{"LOC_OPTIONS_TUTORIAL_FAMILIAR_CIVILIZATION", 1},
 	};
+
+	local currentTutorialLevel = Options.GetUserOption("Gameplay", "TutorialLevel");
+	if(HasExpansion1() or currentTutorialLevel > 1) then
+		table.insert(tutorial_options, {"LOC_OPTIONS_TUTORIAL_NEW_TO_XP1", 2});
+	end
 
 	local autosave_settings = {
 		{"1", 1},
@@ -1200,11 +1237,18 @@ function TemporaryHardCodedGoodness()
     end
     );
 
+	Controls.HistoricMomentsAnimStack:SetHide(not HasExpansion1());
+	if HasExpansion1() then
+		PopulateCheckBox(Controls.HistoricMomentsAnimCheckbox, Options.GetUserOption("General", "PlayHistoricMomentAnimation"), function(option)
+			Options.SetUserOption("Interface", "PlayHistoricMomentAnimation", option and 1 or 0);
+		end);
+	end
+
 	PopulateEditBox(Controls.LANPlayerNameEdit, Options.GetUserOption("Multiplayer", "LANPlayerName"), function(option)
 		UserConfiguration.SetValue("LANPlayerName", option);
 		Options.SetUserOption("Multiplayer", "LANPlayerName", option);
 	end,
-	UserConfiguration.IsValueLocked("LANPlayerName"));	
+	UserConfiguration.IsValueLocked("LANPlayerName"));
 	
 
 	-- Interface
@@ -1383,14 +1427,16 @@ function InitializeKeyBinding()
 		local count = Input.GetActionCount();
 		for i = 0, count - 1, 1 do
 			local action = Input.GetActionId(i);
-			local info = {
-				action,
-				Locale.Lookup(Input.GetActionName(action)),
-				Locale.Lookup(Input.GetActionCategory(action)),
-				Input.GetGestureDisplayString(action, 0) or false,
-				Input.GetGestureDisplayString(action, 1) or false
-			};
-			table.insert(actions, info);
+			if(Input.GetActionEnabled(action)) then
+				local info = {
+					action,
+					Locale.Lookup(Input.GetActionName(action)),
+					Locale.Lookup(Input.GetActionCategory(action)),
+					Input.GetGestureDisplayString(action, 0) or false,
+					Input.GetGestureDisplayString(action, 1) or false
+				};
+				table.insert(actions, info);
+			end
 		end
 	
 		table.sort(actions, function(a, b)
@@ -1493,7 +1539,7 @@ end
 -------------------------------------------------------------------------------
 function OnShow()
     local isInGame = false;
-
+	RefreshKeyBinding();
 	UserConfiguration.SaveCheckpoint();
     PopulateGraphicsOptions();
     TemporaryHardCodedGoodness();

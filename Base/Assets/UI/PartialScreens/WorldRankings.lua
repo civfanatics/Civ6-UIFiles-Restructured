@@ -52,6 +52,7 @@ local SIZE_RELIGION_ICON_SMALL:number = 22;
 local SIZE_GENERIC_ITEM_MIN_Y:number = 54;
 local SIZE_SCORE_ITEM_DEFAULT:number = 54;
 local SIZE_SCORE_ITEM_DETAILS:number = 180;
+local SIZE_LOCAL_PLAYER_BORDER_PADDING:number = 9;
 local SIZE_STACK_DEFAULT:number = 225;
 local SIZE_HEADER_DEFAULT:number = 60;
 local SIZE_HEADER_MIN_Y:number = 46;
@@ -1031,7 +1032,8 @@ function PopulateScoreInstance(instance:table, playerData:table)
 
 	if(m_ShowScoreDetails) then
 		instance.ButtonBG:SetSizeY(SIZE_SCORE_ITEM_DETAILS);
-		
+		ResizeLocalPlayerBorder(instance, SIZE_SCORE_ITEM_DETAILS + SIZE_LOCAL_PLAYER_BORDER_PADDING);
+
 		local detailsText:string = "";
 		for i, category in ipairs(playerData.Categories) do
 			local categoryInfo:table = GameInfo.ScoringCategories[category.CategoryID];
@@ -1047,7 +1049,15 @@ function PopulateScoreInstance(instance:table, playerData:table)
 		instance.Details:SetHide(false);
 	else
 		instance.ButtonBG:SetSizeY(SIZE_SCORE_ITEM_DEFAULT);
+		ResizeLocalPlayerBorder(instance, SIZE_SCORE_ITEM_DEFAULT + SIZE_LOCAL_PLAYER_BORDER_PADDING);
 		instance.Details:SetHide(true);
+	end
+end
+
+function ResizeLocalPlayerBorder(instance:table, size:number)
+	local localPlayerBorder:table = instance.CivilizationIcon.LocalPlayer;
+	if localPlayerBorder and not localPlayerBorder:IsHidden() then
+		localPlayerBorder:SetSizeY(size);
 	end
 end
 
@@ -1303,90 +1313,78 @@ function PopulateScienceInstance(instance:table, pPlayer:table)
 	
 	-- Progress Data to be returned from function
 	local progressData = nil; 
-	local bHasMet = m_LocalPlayer == nil or m_LocalPlayer:GetDiplomacy():HasMet(playerID);
-	if (bHasMet == true or playerID == Game.GetLocalPlayer()) then
 
-		local bHasSpaceport:boolean = false;
-		for _,district in pPlayer:GetDistricts():Members() do
-			if (district ~= nil and district:IsComplete() and district:GetType() == SPACE_PORT_DISTRICT_INFO.Index) then
-				bHasSpaceport = true;
-				break;
-			end
-		end
-
-		local pPlayerStats:table = pPlayer:GetStats();
-		local pPlayerCities:table = pPlayer:GetCities();
-		local projectTotals:table = { 0, 0, 0 };
-		local projectProgresses:table = { 0, 0, 0 };
-		local finishedProjects:table = { {}, {}, {} };
-		for _, city in pPlayerCities:Members() do
-			local pBuildQueue:table = city:GetBuildQueue();
-
-			-- 1st milestone - satelite launch
-			for i, projectInfo in ipairs(EARTH_SATELLITE_PROJECT_INFOS) do
-				local projectCost:number = pBuildQueue:GetProjectCost(projectInfo.Index);
-				local projectProgress:number = projectCost;
-				if pPlayerStats:GetNumProjectsAdvanced(projectInfo.Index) == 0 then
-					projectProgress = pBuildQueue:GetProjectProgress(projectInfo.Index);
-				end
-				finishedProjects[1][i] = false;
-				if projectProgress ~= 0 then
-					projectTotals[1] = projectTotals[1] + projectCost;
-					projectProgresses[1] = projectProgresses[1] + projectProgress;
-					finishedProjects[1][i] = projectProgress == projectCost;
-				end
-			end
-
-			-- 2nd milestone - moon landing
-			for i, projectInfo in ipairs(MOON_LANDING_PROJECT_INFOS) do
-				local projectCost:number = pBuildQueue:GetProjectCost(projectInfo.Index);
-				local projectProgress:number = projectCost;
-				if pPlayerStats:GetNumProjectsAdvanced(projectInfo.Index) == 0 then
-					projectProgress = pBuildQueue:GetProjectProgress(projectInfo.Index);
-				end
-				finishedProjects[2][i] = false;
-				if projectProgress ~= 0 then
-					projectTotals[2] = projectTotals[2] + projectCost;
-					projectProgresses[2] = projectProgresses[2] + projectProgress;
-					finishedProjects[2][i] = projectProgress == projectCost;
-				end
-			end
-
-			-- 3rd milestone - mars landing
-			for i, projectInfo in ipairs(MARS_COLONY_PROJECT_INFOS) do
-				local projectCost:number = pBuildQueue:GetProjectCost(projectInfo.Index);
-				local projectProgress:number = projectCost;
-				if pPlayerStats:GetNumProjectsAdvanced(projectInfo.Index) == 0 then
-					projectProgress = pBuildQueue:GetProjectProgress(projectInfo.Index);
-				end
-				finishedProjects[3][i] = false;
-				if projectProgress ~= 0 then
-					projectTotals[3] = projectTotals[3] + projectCost;
-					projectProgresses[3] = projectProgresses[3] + projectProgress;
-					finishedProjects[3][i] = projectProgress == projectCost;
-				end
-			end
-		end
-
-		-- Save data to be returned
-		progressData = {};
-		progressData.playerID = playerID;
-		progressData.projectTotals = projectTotals;
-		progressData.projectProgresses = projectProgresses;
-		progressData.bHasSpaceport = bHasSpaceport;
-		progressData.finishedProjects = finishedProjects;
-
-		PopulateScienceProgressMeters(instance, progressData);
-	else -- Unmet civ
-		for i = 1, 3 do
-			instance["ObjBar_" .. i]:SetPercent(0);
-			instance["ObjFill_" .. i]:SetHide(true);
-			instance["ObjHidden_" .. i]:SetHide(false);
-			instance["ObjToggle_ON_" .. i]:SetHide(true);
-			instance["ObjToggle_ON_" .. i]:SetToolTipString("");
-			instance["ObjToggle_OFF_" .. i]:SetToolTipString("");
+	local bHasSpaceport:boolean = false;
+	for _,district in pPlayer:GetDistricts():Members() do
+		if (district ~= nil and district:IsComplete() and district:GetType() == SPACE_PORT_DISTRICT_INFO.Index) then
+			bHasSpaceport = true;
+			break;
 		end
 	end
+
+	local pPlayerStats:table = pPlayer:GetStats();
+	local pPlayerCities:table = pPlayer:GetCities();
+	local projectTotals:table = { 0, 0, 0 };
+	local projectProgresses:table = { 0, 0, 0 };
+	local finishedProjects:table = { {}, {}, {} };
+	for _, city in pPlayerCities:Members() do
+		local pBuildQueue:table = city:GetBuildQueue();
+
+		-- 1st milestone - satelite launch
+		for i, projectInfo in ipairs(EARTH_SATELLITE_PROJECT_INFOS) do
+			local projectCost:number = pBuildQueue:GetProjectCost(projectInfo.Index);
+			local projectProgress:number = projectCost;
+			if pPlayerStats:GetNumProjectsAdvanced(projectInfo.Index) == 0 then
+				projectProgress = pBuildQueue:GetProjectProgress(projectInfo.Index);
+			end
+			finishedProjects[1][i] = false;
+			if projectProgress ~= 0 then
+				projectTotals[1] = projectTotals[1] + projectCost;
+				projectProgresses[1] = projectProgresses[1] + projectProgress;
+				finishedProjects[1][i] = projectProgress == projectCost;
+			end
+		end
+
+		-- 2nd milestone - moon landing
+		for i, projectInfo in ipairs(MOON_LANDING_PROJECT_INFOS) do
+			local projectCost:number = pBuildQueue:GetProjectCost(projectInfo.Index);
+			local projectProgress:number = projectCost;
+			if pPlayerStats:GetNumProjectsAdvanced(projectInfo.Index) == 0 then
+				projectProgress = pBuildQueue:GetProjectProgress(projectInfo.Index);
+			end
+			finishedProjects[2][i] = false;
+			if projectProgress ~= 0 then
+				projectTotals[2] = projectTotals[2] + projectCost;
+				projectProgresses[2] = projectProgresses[2] + projectProgress;
+				finishedProjects[2][i] = projectProgress == projectCost;
+			end
+		end
+
+		-- 3rd milestone - mars landing
+		for i, projectInfo in ipairs(MARS_COLONY_PROJECT_INFOS) do
+			local projectCost:number = pBuildQueue:GetProjectCost(projectInfo.Index);
+			local projectProgress:number = projectCost;
+			if pPlayerStats:GetNumProjectsAdvanced(projectInfo.Index) == 0 then
+				projectProgress = pBuildQueue:GetProjectProgress(projectInfo.Index);
+			end
+			finishedProjects[3][i] = false;
+			if projectProgress ~= 0 then
+				projectTotals[3] = projectTotals[3] + projectCost;
+				projectProgresses[3] = projectProgresses[3] + projectProgress;
+				finishedProjects[3][i] = projectProgress == projectCost;
+			end
+		end
+	end
+
+	-- Save data to be returned
+	progressData = {};
+	progressData.playerID = playerID;
+	progressData.projectTotals = projectTotals;
+	progressData.projectProgresses = projectProgresses;
+	progressData.bHasSpaceport = bHasSpaceport;
+	progressData.finishedProjects = finishedProjects;
+
+	PopulateScienceProgressMeters(instance, progressData);
 
 	return progressData;
 end
@@ -1773,6 +1771,8 @@ end
 function PopulateDominationInstance(instance:table, playerData:table)
 	local pPlayer:table = Players[playerData.PlayerID];
 
+	instance.ButtonBG:RegisterSizeChanged( function() OnDominationButtonSizeChanged(instance); end );
+
 	PopulatePlayerInstanceShared(instance, playerData.PlayerID);
 
 	instance.HasCapital:SetHide(not playerData.HasOriginalCapital);
@@ -1792,6 +1792,12 @@ function PopulateDominationInstance(instance:table, playerData:table)
 	instance.CapitalsCaptured:SetText(Locale.Lookup("LOC_WORLD_RANKINGS_DOMINATION_SUMMARY", #playerData.CapturedCapitals));
 end
 
+-- ===========================================================================
+function OnDominationButtonSizeChanged( instance:table )
+	instance.CivilizationIcon.LocalPlayer:SetSizeY(instance.ButtonBG:GetSizeY() + SIZE_LOCAL_PLAYER_BORDER_PADDING);
+end
+
+-- ===========================================================================
 function RealizeDominationStackSize()
 	local _, screenY:number = UIManager:GetScreenSizeVal();
 

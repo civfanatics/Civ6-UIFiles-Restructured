@@ -44,13 +44,14 @@ end
 -------------------------------------------------
 -------------------------------------------------
 function IsFriendRequestValidPull(iPlayerID :number)
-	if(Network.GetTransportType() == TransportType.TRANSPORT_STEAM and iPlayerID ~= Game.GetLocalPlayer()) then
-		local playerSteamID = PlayerConfigurations[iPlayerID]:GetNetworkIdentifer();
-		if(playerSteamID ~= nil) then
-			local numFriends:number = Steam.GetFriendCount();
+	local pFriends = Network.GetFriends(Network.GetTransportType());
+	if(pFriends and iPlayerID ~= Game.GetLocalPlayer()) then
+		local playerNetworkID = PlayerConfigurations[iPlayerID]:GetNetworkIdentifer();
+		if(playerNetworkID ~= nil) then
+			local numFriends:number = pFriends:GetFriendCount();
 			for i:number = 0, numFriends - 1 do
-				local friend:table = Steam.GetFriendByIndex(i);
-				if friend.ID == playerSteamID then
+				local friend:table = pFriends:GetFriendByIndex(i);
+				if friend.ID == playerNetworkID then
 					return false;
 				end
 			end
@@ -153,8 +154,10 @@ function SendChat( text )
 			ValidatePlayerTarget(m_playerTarget);
 			UpdatePlayerTargetPulldown(Controls.ChatPull, m_playerTarget);
 			UpdatePlayerTargetEditBox(Controls.ChatEntry, m_playerTarget);
+			UpdatePlayerTargetIcon(Controls.ChatIcon, m_playerTarget);
 			UpdatePlayerTargetPulldown(Controls.ExpandedChatPull, m_playerTarget);
 			UpdatePlayerTargetEditBox(Controls.ExpandedChatEntry, m_playerTarget);
+			UpdatePlayerTargetIcon(Controls.ExpandedChatIcon, m_playerTarget);
 			PlayerTargetChanged(m_playerTarget);
 		end
 
@@ -413,7 +416,7 @@ function BuildPlayerList()
 	end
 
 	local inviteButtonContainer:table = nil;
-	if Network.GetTransportType() == TransportType.TRANSPORT_STEAM then
+	if Network.GetFriends(Network.GetTransportType()) ~= nil then
 		inviteButtonContainer = {};
 		ContextPtr:BuildInstanceForControl("InvitePlayerListEntry", inviteButtonContainer, Controls.PlayerListStack);
 		inviteButtonContainer.InviteButton:RegisterCallback(Mouse.eLClick, OnInviteButton);
@@ -474,8 +477,8 @@ end
 -------------------------------------------------
 -------------------------------------------------
 function OnChatPanelPlayerInfoChanged(playerID :number)
-	PlayerTarget_OnPlayerInfoChanged( playerID, Controls.ChatPull, Controls.ChatEntry, m_chatTargetEntries, m_playerTarget, false);
-	PlayerTarget_OnPlayerInfoChanged( playerID, Controls.ExpandedChatPull, Controls.ExpandedChatEntry, m_expandedChatTargetEntries, m_playerTarget, false);
+	PlayerTarget_OnPlayerInfoChanged( playerID, Controls.ChatPull, Controls.ChatEntry, Controls.ChatIcon, m_chatTargetEntries, m_playerTarget, false);
+	PlayerTarget_OnPlayerInfoChanged( playerID, Controls.ExpandedChatPull, Controls.ExpandedChatEntry, Controls.ExpandedChatIcon, m_expandedChatTargetEntries, m_playerTarget, false);
 	BuildPlayerList(); -- Player connection status might have changed.
 end
 
@@ -500,8 +503,8 @@ end
 -------------------------------------------------
 function ShowHideHandler( bIsHide, bIsInit )
 	if(not bIsHide) then 
-		PopulateTargetPull(Controls.ChatPull, Controls.ChatEntry, m_chatTargetEntries, m_playerTarget, false, OnCollapsedChatPulldownChanged);
-		PopulateTargetPull(Controls.ExpandedChatPull, Controls.ExpandedChatEntry, m_expandedChatTargetEntries, m_playerTarget, false, OnExpandedChatPulldownChanged);
+		PopulateTargetPull(Controls.ChatPull, Controls.ChatEntry, Controls.ChatIcon, m_chatTargetEntries, m_playerTarget, false, OnCollapsedChatPulldownChanged);
+		PopulateTargetPull(Controls.ExpandedChatPull, Controls.ExpandedChatEntry, Controls.ExpandedChatIcon, m_expandedChatTargetEntries, m_playerTarget, false, OnExpandedChatPulldownChanged);
 		LuaEvents.ChatPanel_OnShown();
 		PlayerTargetChanged(m_playerTarget); -- Communicate starting player target so map pin screen can filter its Send To Chat button.
 	end	
@@ -509,7 +512,6 @@ end
 ContextPtr:SetShowHideHandler( ShowHideHandler );
 
 function OnCollapsedChatPulldownChanged(newTargetType :number, newTargetID :number, tooltipText:string)
-	ChangeChatIcon(Controls.ChatIcon, newTargetType);
 	local textControl:table = Controls.ChatPull:GetButton():GetTextControl();
 	if tooltipText == nil then
 		local text:string = textControl:GetText();
@@ -521,7 +523,6 @@ function OnCollapsedChatPulldownChanged(newTargetType :number, newTargetID :numb
 	PlayerTargetChanged(m_playerTarget);
 end
 function OnExpandedChatPulldownChanged(newTargetType :number, newTargetID :number, tooltipText:string)
-	ChangeChatIcon(Controls.ExpandedChatIcon, newTargetType);
 	local textControl:table = Controls.ExpandedChatPull:GetButton():GetTextControl();
 	if tooltipText == nil then
 		local text:string = textControl:GetText();
@@ -531,16 +532,6 @@ function OnExpandedChatPulldownChanged(newTargetType :number, newTargetID :numbe
 		Controls.ExpandedChatPull:SetToolTipString(tooltipText);
 	end
 	PlayerTargetChanged(m_playerTarget);
-end
-
-function ChangeChatIcon(iconControl:table, targetType:number)
-	if(targetType == ChatTargetTypes.CHATTARGET_ALL) then
-		iconControl:SetText("[ICON_Global]");
-	elseif(targetType == ChatTargetTypes.CHATTARGET_TEAM) then
-		iconControl:SetText("[ICON_Team]");
-	else
-		iconControl:SetText("[ICON_Whisper]");
-	end
 end
 
 -------------------------------------------------
@@ -565,6 +556,13 @@ function OnUpdateUI( type )
 	if( type == SystemUpdateUI.ScreenResize ) then
 		AdjustScreenSize();
 	end
+end
+
+function SetDefaultPanelMode()
+	Controls.ChatPanel:SetHide(false);
+	Controls.ChatPanelBG:SetHide(false);
+	Controls.ExpandedChatPanel:SetHide(true);
+	Controls.ExpandedChatPanelBG:SetHide(true);
 end
 
 -- ===========================================================================
@@ -618,6 +616,8 @@ function Initialize()
 	end);
 
 	ContextPtr:SetInputHandler(InputHandler, true);
+
+	SetDefaultPanelMode();
 	AdjustScreenSize();
 end
 Initialize()

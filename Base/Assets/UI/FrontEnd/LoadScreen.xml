@@ -24,7 +24,7 @@
 							<Label														Anchor="C,T"									Style="FontFlair14"		String="{LOC_LOADING_JOIN_THE_WORLD_STAGE:upper}" SmallCapsType="EveryWord" SmallCaps="20" />
 							<Line															Start="0,0"	 End="470,0"			Width="2"							Color="200,200,200,100" />
 							<Label			ID="EraInfo"					Anchor="L,T" Offset="10,0"		WrapWidth="460"				Style="DawnText" String="$EraInfo$"  />
-							<Label			ID="LeaderName"				Anchor="C,T" Offset="0,10"		Style="FontFlair22"		String="$LeaderName" SmallCapsType="FirstOnly" SmallCaps="30" />
+							<Label			ID="LeaderName"				Anchor="C,T" Offset="0,10"		Style="FontFlair22"		String="$LeaderName" SmallCapsType="EveryWord" SmallCaps="30" />
 							<Label			ID="LeaderInfo"				Anchor="L,T" Offset="10,0"		WrapWidth="460"				Style="DawnText" String="$LeaderInfo$"  />
 							<Label														Anchor="C,T" Offset="0,10"		Style="FontFlair14"		String="{LOC_LOADING_FEATURES_ABILITIES:upper}" SmallCapsType="EveryWord" SmallCaps="20" />
 							<Line															Start="0,0"	 End="470,0"			Width="2"							Color="200,200,200,100" />

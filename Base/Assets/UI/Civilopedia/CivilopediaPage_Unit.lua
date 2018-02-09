@@ -233,6 +233,17 @@ PageLayouts["Unit" ] = function(page)
 			table.insert(routes, route);
 		end
 	end
+
+	local cost = tonumber(unit.Cost);
+	local maintenance = tonumber(unit.Maintenance);
+	local purchase_cost;
+	if(unit.PurchaseYield) then
+		if(unit.PurchaseYield == "YIELD_GOLD") then
+			purchase_cost = cost * GlobalParameters.GOLD_PURCHASE_MULTIPLIER * GlobalParameters.GOLD_EQUIVALENT_OTHER_YIELDS;
+		else
+			purchase_cost = cost *  GlobalParameters.GOLD_EQUIVALENT_OTHER_YIELDS
+		end
+	end
 	
 	-- Right Column!
 	AddPortrait("ICON_" .. unitType);
@@ -393,25 +404,25 @@ PageLayouts["Unit" ] = function(page)
 			local yield = GameInfo.Yields["YIELD_PRODUCTION"];
 			if(yield) then
 				s:AddHeader("LOC_UI_PEDIA_PRODUCTION_COST");
-				local t = Locale.Lookup("LOC_UI_PEDIA_BASE_COST", tonumber(unit.Cost), yield.IconString, yield.Name);
+				local t = Locale.Lookup("LOC_UI_PEDIA_BASE_COST", cost, yield.IconString, yield.Name);
 				s:AddLabel(t);
 			end
 		end
 
-		if(unit.PurchaseYield) then	
+		if(purchase_cost) then	
 			local y = GameInfo.Yields[unit.PurchaseYield];
 			if(y) then
 				s:AddHeader("LOC_UI_PEDIA_PURCHASE_COST");
-				local t = Locale.Lookup("LOC_UI_PEDIA_BASE_COST", tonumber(unit.Cost), y.IconString, y.Name);
+				local t = Locale.Lookup("LOC_UI_PEDIA_BASE_COST", purchase_cost, y.IconString, y.Name);
 				s:AddLabel(t);
 			end
 		end
 	
-		if(tonumber(unit.Maintenance) ~= 0) then
+		if(maintenance ~= 0) then
 			local yield = GameInfo.Yields["YIELD_GOLD"];
 			if(yield) then
 				s:AddHeader("LOC_UI_PEDIA_MAITENANCE_COST");
-				local t = Locale.Lookup("LOC_UI_PEDIA_BASE_COST", tonumber(unit.Maintenance), yield.IconString, yield.Name );
+				local t = Locale.Lookup("LOC_UI_PEDIA_BASE_COST", maintenance, yield.IconString, yield.Name );
 				s:AddLabel(t);
 			end
 		end

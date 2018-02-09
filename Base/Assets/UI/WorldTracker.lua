@@ -29,11 +29,11 @@ local STARTING_TRACKER_OPTIONS_OFFSET	:number = 75;
 --	VARIABLES
 -- ===========================================================================
 
-local m_hideAll					:boolean = false;
-local m_prevHideAll				:boolean = false;
-local m_hideChat				:boolean = false;
-local m_hideCivics				:boolean = false;
-local m_hideResearch			:boolean = false;
+m_hideAll					 = false;
+m_prevHideAll				 = false;
+m_hideChat					 = false;
+m_hideCivics				 = false;
+m_hideResearch				 = false;
 local m_dropdownExpanded		:boolean = false;
 local m_unreadChatMsgs			:number  = 0;		-- number of chat messages unseen due to the chat panel being hidden.
 
@@ -46,6 +46,8 @@ local m_lastResearchCompletedID	:number = -1;
 local m_currentCivicID			:number = -1;
 local m_lastCivicCompletedID	:number = -1;
 local m_TrackerAlwaysVisuallyCollapsed:boolean = false;	-- Once the launch bar extends past the width of the world tracker, we always show the collapsed version of the backing for the tracker element
+
+local m_needsRefresh			:boolean = false;
 
 function RealizeEmptyMessage()
 	if(m_hideChat and m_hideCivics and m_hideResearch) then
@@ -217,8 +219,11 @@ function UpdateCivicsPanel(hideCivics:boolean)
 			kCivicData.IsLastCompleted = true;
 		end
 	end
-	
-	RealizeCurrentCivic( ePlayer, kCivicData, m_civicsInstance, m_CachedModifiers, true );
+
+	for _,iconData in pairs(g_ExtraIconData) do
+		iconData:Reset();
+	end
+	RealizeCurrentCivic( ePlayer, kCivicData, m_civicsInstance, m_CachedModifiers );
 
 	-- No civic started (or finished)
 	if kCivicData == nil then
@@ -323,6 +328,7 @@ function OnBuildingChanged( plotX:number, plotY:number, buildingIndex:number, pl
 	end
 end
 
+-- ===========================================================================
 function FlushChanges()
 	if m_needsRefresh then
 		Refresh();
@@ -486,45 +492,14 @@ function Tutorial_ShowTrackerOptions()
 end
 
 -- ===========================================================================
---	Obtain the data from the DB that doesn't change
---	Base costs and relationships (prerequisites)
---	RETURN: A table of node data (techs/civics/etc...) with a prereq for each entry.
--- ===========================================================================
-function PopulateCachedModifiers()	
-	-- Build main item table.
-	for row:table in GameInfo.Civics() do
-		local entry:table	= {};
-		-- Look up and cache any civic modifiers we reward like envoys awarded
-		for civicModifier in GameInfo.CivicModifiers() do
-			if (row.CivicType == civicModifier.CivicType) then
-				for modifierType in GameInfo.Modifiers() do
-					if civicModifier.ModifierId == modifierType.ModifierId then
-						entry.ModifierId	= modifierType.ModifierId;
-						entry.ModifierType	= modifierType.ModifierType;
-					end
-				end
-				for modifierArguments in GameInfo.ModifierArguments() do
-					if civicModifier.ModifierId == modifierArguments.ModifierId then
-						entry.ModifierValue = modifierArguments.Value;
-					end
-				end
-			end
-		end
-
-		
-		m_CachedModifiers[row.CivicType] = entry;
-	end
-end
-
--- ===========================================================================
 function Initialize()
 	
 	if not GameCapabilities.HasCapability("CAPABILITY_WORLD_TRACKER") then
 		ContextPtr:SetHide(true);
 		return;
 	end
-
-	PopulateCachedModifiers();
+	
+	m_CachedModifiers = TechAndCivicSupport_BuildCivicModifierCache();
 
 	-- Create semi-dynamic instances; hack: change parent back to self for ordering:
 	ContextPtr:BuildInstanceForControl( "ResearchInstance", m_researchInstance, Controls.PanelStack );
@@ -596,7 +571,7 @@ function Initialize()
 	LuaEvents.TutorialGoals_Hiding.Add(					OnTutorialGoalsHiding );
 
 		-- InitChatPanel
-	if(GameConfiguration.IsNetworkMultiplayer()) then
+	if(GameConfiguration.IsNetworkMultiplayer() and UI.HasFeature("Chat")) then
 		UpdateChatPanel(false);
 	else
 		UpdateChatPanel(true);

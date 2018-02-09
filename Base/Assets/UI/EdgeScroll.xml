@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<Context>
+	<Container                                        Size="parent,parent">
+		<Container  ID="LeftScreenEdge"    Anchor="L,T" Size="2,parent" />
+		<Container  ID="RightScreenEdge"   Anchor="R,T" Size="2,parent" />
+		<Container  ID="TopScreenEdge"     Anchor="L,T" Size="parent,2" />
+		<Container  ID="BottomScreenEdge"  Anchor="L,B" Size="parent,2" />
+	</Container>
+</Context>

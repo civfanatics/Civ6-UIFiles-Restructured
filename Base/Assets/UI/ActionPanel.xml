@@ -49,7 +49,7 @@
     </AlphaAnim>		
     <AlphaAnim			ID="OverflowAlpha"								AlphaBegin="0" AlphaEnd="1" Speed="5" Cycle="Once" Pause=".6" Hidden="0">
       <SlideAnim		ID="OverflowSlide"								Anchor="L,T"										Size="parent,parent" Begin="-30,20" End="0,0" Cycle="Once" Speed="1" Function="OutQuint"  Pause=".6">
-        <Image			ID="OverflowCheckboxGroup"																	Anchor="L,B"	Offset="82,134"		Size="50,50" Color="0,0,0,255" Texture="Controls_Glow2" >
+        <Image			ID="OverflowCheckboxGroup"																	Anchor="L,B"	Offset="82,134"		Size="50,50" Color="0,0,0,255" Texture="Controls_Glow2" Hidden="1" >
           <CheckBox	ID="OverflowCheckbox"							Anchor="C,T"	ButtonTexture="Controls_ButtonPlus_Up" ButtonSize="36,36" UseSelectedTextures="1" CheckTexture="Controls_Bolt" CheckColor="0,0,0,0" />
         </Image>
       </SlideAnim>
@@ -62,17 +62,6 @@
     </Button>
   
 		<Image																						Anchor="R,B"																				Texture="ActionPanel_Gold2.dds" Offset="20,2" >
-
-			<Container ID="TurnTimerContainer" Size="148,147" Hidden="1">
-				<Container Size="138,41" Offset="12,-7" Anchor="C,B">
-					<Grid ID="TurnTimerLabelBG" Offset="0,0" Anchor="C,B" Size="40,41" Texture="UnitPanel_ActionGroupSlot" SliceCorner="5,0" SliceSize="2,41" SliceTextureSize="12,41"/>
-					<Label ID="TurnTimerLabel" Offset="0,7" Anchor="C,B" Style="ActionPanelText"/>
-				</Container>
-				<Container Size="138,138" Offset="14,-2" >
-					<Image ID="TurnTimerMeterBG" Anchor="C,C"	Texture="ActionPanel_MultiplayerTimerBacking"/>
-					<Meter ID="TurnTimerMeter" Anchor="C,C" Offset="0,-4"	Size="116,117" Texture="ActionPanel_MultiplayerTimerFill" Speed="0"/>
-				</Container>
-			</Container>
 			
 			<Image				ID="EraIndicator"																Offset="0,-15"	Rotate="90"						Texture="ActionPanel_EraIndicator"  />
       <FlipAnim FrameCount="17" Texture="ActionPanel_TurnProcessing" Columns="8" Anchor="R,B" Size="102,102" Offset="15,32" Stopped="0"/>
@@ -93,7 +82,15 @@
 			</BoxButton>
 
 			<AlphaAnim		ID="TutorialSlowTurnEnableAnim"			Anchor="R,B" Speed="0.5" Offset="-20,0" Size="180,220" AlphaStart="1" AlphaEnd="1" Cycle="Once" ConsumeAllMouse="1" Hidden="1" />
-			
+      <Container ID="TurnTimerContainer" Size="148,147" Hidden="1">
+        <Container Size="138,138" Offset="14,-2">
+          <Meter ID="TurnTimerMeter" Anchor="C,C" Offset="0,-4"	Size="95,95" Texture="ActionPanel_TurnTimerFill" Speed="0"/>
+        </Container>
+        <Container Size="138,41" Offset="7,-7" Anchor="C,C">
+          <Image ID="TurnTimerLabelBG" Offset="0,0" Anchor="C,C" Size="100,28" Texture="ActionPanel_TurnTimerFrame"/>
+          <Label ID="TurnTimerLabel" Anchor="C,C" Style="ActionPanelText"/>
+        </Container>
+      </Container>
 		</Image>
 		
 		<Tutorial	   			ID="TutNotificationPointer"	Style="TutorialContainer"			Anchor="L,T"	Offset="-40,0"	TriggerBy="TutorialNotificationPointer" >

@@ -33,7 +33,9 @@ local SIZE_BORDER_Y				:number = 60;
 --	Closes the immediate popup, will raise more if queued.
 -- ===========================================================================
 function Close()
-	UIManager:DequeuePopup( ContextPtr );
+	if UIManager:IsInPopupQueue(ContextPtr) then
+		UIManager:DequeuePopup( ContextPtr );
+	end
 end
 
 -- ===========================================================================

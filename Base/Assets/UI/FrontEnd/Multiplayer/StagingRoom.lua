@@ -3,7 +3,7 @@
 ----------------------------------------------------------------  
 include( "InstanceManager" );	--InstanceManager
 include( "PlayerSetupLogic" );
-include( "SteamUtilities" );
+include( "NetworkUtilities" );
 include( "ButtonUtilities" );
 include( "PlayerTargetLogic" );
 include( "ChatLogic" );
@@ -51,7 +51,7 @@ local g_everyoneReady = false;					-- Is everyone ready to play?
 local g_everyoneModReady = true;				-- Does everyone have the mods for this game?
 local g_humanRequiredFilled = true;				-- Are all the human required slots filled by humans?
 local g_duplicateLeaders = false;				-- Are there duplicate leaders blocking launch?
-												-- Note:  This only applies if No Duplicate Leaders parameter is set.
+												-- Note:  This only applies if No Duplicate Leaders parameter is set.		
 local g_viewingGameSummary = true;
 local g_hotseatNumHumanPlayers = 0;
 local g_hotseatNumAIPlayers = 0;
@@ -208,7 +208,6 @@ function OnGameConfigChanged()
 		RebuildTeamPulldowns();	-- NoTeams setting might have changed.
 
 		SetLocalReady(false);  -- unready so player can acknowledge the new settings.
-
 		CheckGameAutoStart();  -- Toggling "No Duplicate Leaders" can affect the start countdown.
 	end
 	OnMapMaxMajorPlayersChanged(MapConfiguration.GetMaxMajorPlayers());	
@@ -260,7 +259,7 @@ function OnPlayerInfoChanged(playerID)
 		UpdateReadyButton();
 		
 		-- Update chat target pulldown.
-		PlayerTarget_OnPlayerInfoChanged( playerID, Controls.ChatPull, Controls.ChatEntry, m_playerTargetEntries, m_playerTarget, false);
+		PlayerTarget_OnPlayerInfoChanged( playerID, Controls.ChatPull, Controls.ChatEntry, Controls.ChatIcon, m_playerTargetEntries, m_playerTarget, false);
 	end
 end
 
@@ -367,6 +366,7 @@ function SendChat( text )
 			ValidatePlayerTarget(m_playerTarget);
 			UpdatePlayerTargetPulldown(Controls.ChatPull, m_playerTarget);
 			UpdatePlayerTargetEditBox(Controls.ChatEntry, m_playerTarget);
+			UpdatePlayerTargetIcon(Controls.ChatIcon, m_playerTarget);
 		end
 
 		if(printHelp) then
@@ -706,8 +706,9 @@ end
 -- OnInviteButton
 -------------------------------------------------
 function OnInviteButton()
-	if (Steam ~= nil) then
-		Steam.ActivateInviteOverlay();
+	local pFriends = Network.GetFriends(Network.GetTransportType());
+	if pFriends ~= nil then
+		pFriends:ActivateInviteOverlay();
 	end
 end
 
@@ -745,7 +746,6 @@ function SetLocalReady(newReady)
 		CheckGameAutoStart();
 	end
 end
-
 
 -------------------------------------------------
 -- Update Teams valid status
@@ -796,6 +796,7 @@ function CheckGameAutoStart()
 
 		-- Count players and check to see if a human player isn't ready.
 		local totalPlayers = 0;
+		local totalHumans = 0;
 		local noDupLeaders = GameConfiguration.GetValue("NO_DUPLICATE_LEADERS");
 		local player_ids = GameConfiguration.GetMultiplayerPlayerIDs();
 		for i, iPlayer in ipairs(player_ids) do	
@@ -815,13 +816,20 @@ function CheckGameAutoStart()
 					startCountdown = false;
 					g_everyoneModReady = false;
 				end
-			elseif(curPlayerConfig:IsHumanRequired() == true) then
-				--A human required slot is not filled by a human.  Can't launch.
+			elseif(curPlayerConfig:IsHumanRequired() == true 
+				and GameConfiguration.GetGameState() == GameStateTypes.GAMESTATE_PREGAME) then
+				-- If this is a new game, all human required slots need to be filled by a human.  
+				-- NOTE: Human required slots do not need to be filled when loading a save.
 				startCountdown = false;
 				g_humanRequiredFilled = false;
 			end
 			if( (curSlotStatus == SlotStatus.SS_COMPUTER or curSlotStatus == SlotStatus.SS_TAKEN) and curIsFullCiv ) then
 				totalPlayers = totalPlayers + 1;
+				
+				if(curSlotStatus == SlotStatus.SS_TAKEN) then
+					totalHumans = totalHumans + 1;
+				end
+
 				if(iPlayer >= g_currentMaxPlayers) then
 					-- A player is occupying an invalid player slot for this map size.
 					print("CheckGameAutoStart: Can't start game because player " .. iPlayer .. " is in an invalid slot for this map size.");
@@ -838,7 +846,6 @@ function CheckGameAutoStart()
 						g_duplicateLeaders = true;
 					end
 				end
-
 			end
 		end
 
@@ -1791,17 +1798,17 @@ function OnShow()
 	
 	-- Fetch g_currentMaxPlayers because it might be stale due to loading a save.
 	g_currentMaxPlayers = math.min(MapConfiguration.GetMaxMajorPlayers(), 12);
-	
+
 	InitializeReadyUI();
 	ShowHideInviteButton();	
-	ShowHideEndGameButton();
 	RealizeGameSetup();
 	BuildPlayerList();
-	PopulateTargetPull(Controls.ChatPull, Controls.ChatEntry, m_playerTargetEntries, m_playerTarget, false, OnChatPulldownChanged);
+	PopulateTargetPull(Controls.ChatPull, Controls.ChatEntry, Controls.ChatIcon, m_playerTargetEntries, m_playerTarget, false, OnChatPulldownChanged);
 	ShowHideChatPanel();
 
-	if (Steam ~= nil) then
-		Steam.SetRichPresence("civPresence", Network.IsGameHost() and "LOC_PRESENCE_HOSTING_GAME" or "LOC_PRESENCE_IN_STAGING_ROOM");
+	local pFriends = Network.GetFriends();
+	if (pFriends ~= nil) then
+		pFriends:SetRichPresence("civPresence", Network.IsGameHost() and "LOC_PRESENCE_HOSTING_GAME" or "LOC_PRESENCE_IN_STAGING_ROOM");
 	end
 
 	UpdateFriendsList();
@@ -1814,20 +1821,9 @@ end
 ContextPtr:SetShowHandler(OnShow);
 
 function OnChatPulldownChanged(newTargetType :number, newTargetID :number)
-	ChangeChatIcon(Controls.ChatIcon, newTargetType);
 	local textControl:table = Controls.ChatPull:GetButton():GetTextControl();
 	local text:string = textControl:GetText();
 	Controls.ChatPull:SetToolTipString(text);
-end
-
-function ChangeChatIcon(iconControl:table, targetType:number)
-	if(targetType == ChatTargetTypes.CHATTARGET_ALL) then
-		iconControl:SetText("[ICON_Global]");
-	elseif(targetType == ChatTargetTypes.CHATTARGET_TEAM) then
-		iconControl:SetText("[ICON_Team]");
-	else
-		iconControl:SetText("[ICON_Whisper]");
-	end
 end
 
 -------------------------------------------------
@@ -1859,15 +1855,8 @@ end
 -------------------------------------------------
 -------------------------------------------------
 function ShowHideInviteButton()
-	local steamGame :boolean = Network.GetTransportType() == TransportType.TRANSPORT_STEAM;
-	Controls.InviteButton:SetHide( not steamGame );
-end
-
--------------------------------------------------
--------------------------------------------------
-function ShowHideEndGameButton()
-	local showEndGame :boolean = false;
-	Controls.EndGameButton:SetHide( not showEndGame);
+	local canInvite :boolean = Network.GetFriends(Network.GetTransportType()) ~= nil;
+	Controls.InviteButton:SetHide( not canInvite );
 end
 
 -------------------------------------------------
@@ -1882,7 +1871,7 @@ end
 -------------------------------------------------
 -------------------------------------------------
 function ShowHideChatPanel()
-	if(GameConfiguration.IsHotseat()) then
+	if(GameConfiguration.IsHotseat() or not UI.HasFeature("Chat")) then
 		Controls.ChatContainer:SetHide(true);
 	else
 		Controls.ChatContainer:SetHide(false);
@@ -2003,8 +1992,6 @@ function BuildGameState()
 		Controls.GameStateText:SetHide(true);
 	end
 
-	Controls.JoinCodeRoot:SetHide(true);
-
 	Controls.AdditionalContentStack:CalculateSize();
 	Controls.AdditionalContentStack:ReprocessAnchoring();
 
@@ -2088,8 +2075,9 @@ function UpdateFriendsList()
 
 	m_friendsIM:ResetInstances();
 	Controls.InfoContainer:SetHide(false);
-	local friends:table = GetSteamFriendsList();
-	local bCanInvite:boolean = not GameConfiguration.IsLANMultiplayer() and not GameConfiguration.IsHotseat();
+	local friends:table = GetFriendsList();
+	local bCanInvite:boolean = not GameConfiguration.IsLANMultiplayer() 
+								and not GameConfiguration.IsHotseat();
 
 	-- DEBUG
 	--for i = 1, 19 do
@@ -2134,7 +2122,6 @@ function UpdateFriendsList()
 		Controls.InviteButton:SetOffsetY(27);
 	end
 	Controls.InviteButton:ReprocessAnchoring();
-	Controls.InviteButton:SetHide(false);
 end
 
 function IsFriendInGame(friend:table)
@@ -2216,28 +2203,11 @@ function OnExitGame()
 	LuaEvents.Multiplayer_ExitShell();
 end
 
-function OnEndGame_Start()
-
-	-- Show killing game popup
-	m_kPopupDialog:Close(); -- clear out the popup incase it is already open.
-	m_kPopupDialog:AddText(	  Locale.Lookup("LOC_MULTIPLAYER_ENDING_GAME_PROMPT"));
-	m_kPopupDialog:Open();
-
-end
-
 function OnExitGameAskAreYouSure()
 	m_kPopupDialog:Close();	-- clear out the popup incase it is already open.
 	m_kPopupDialog:AddText(	  Locale.Lookup("LOC_GAME_MENU_QUIT_WARNING"));
 	m_kPopupDialog:AddButton( Locale.Lookup("LOC_COMMON_DIALOG_NO_BUTTON_CAPTION"), nil );
 	m_kPopupDialog:AddButton( Locale.Lookup("LOC_COMMON_DIALOG_YES_BUTTON_CAPTION"), OnExitGame, nil, nil, "PopupButtonInstanceRed" );
-	m_kPopupDialog:Open();
-end
-
-function OnEndGameAskAreYouSure()
-	m_kPopupDialog:Close(); -- clear out the popup incase it is already open.
-	m_kPopupDialog:AddText(	  Locale.Lookup("LOC_GAME_MENU_END_GAME_WARNING"));
-	m_kPopupDialog:AddButton( Locale.Lookup("LOC_COMMON_DIALOG_NO_BUTTON_CAPTION"), nil );
-	m_kPopupDialog:AddButton( Locale.Lookup("LOC_COMMON_DIALOG_YES_BUTTON_CAPTION"), OnEndGame_Start, nil, nil, "PopupButtonInstanceRed" );
 	m_kPopupDialog:Open();
 end
 
@@ -2259,8 +2229,6 @@ function Initialize()
 	Controls.ChatEntry:RegisterCommitCallback( SendChat );
 	Controls.InviteButton:RegisterCallback( Mouse.eLClick, OnInviteButton );
 	Controls.InviteButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
-	Controls.EndGameButton:RegisterCallback( Mouse.eLClick, OnEndGameAskAreYouSure );
-	Controls.EndGameButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);	
 	Controls.ReadyButton:RegisterCallback( Mouse.eLClick, OnReadyButton );
 	Controls.ReadyButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 	Controls.ReadyCheck:RegisterCallback( Mouse.eLClick, OnReadyButton );

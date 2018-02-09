@@ -272,9 +272,7 @@ function RefreshPlayerSlots()
 	end
 
 	Controls.NonLocalPlayersSlotStack:CalculateSize();
-	Controls.NonLocalPlayersSlotStack:ReprocessAnchoring();
 	Controls.NonLocalPlayersStack:CalculateSize();
-	Controls.NonLocalPlayersStack:ReprocessAnchoring();
 	Controls.NonLocalPlayersPanel:CalculateInternalSize();
 	Controls.NonLocalPlayersPanel:CalculateSize();
 
@@ -385,7 +383,6 @@ function OnAdvancedSetup()
 	Controls.LoadConfig:SetHide(false);
 	Controls.SaveConfig:SetHide(false);
 	Controls.ButtonStack:CalculateSize();
-	Controls.ButtonStack:ReprocessAnchoring();
 
 	m_AdvancedMode = true;
 end
@@ -394,6 +391,11 @@ end
 function OnDefaultButton()
 	print("Reseting Setup Parameters");
 	GameConfiguration.SetToDefaults();
+
+	-- Kludge:  SetToDefaults assigns the ruleset to be standard.
+	-- Clear this value so that the setup parameters code can guess the best 
+	-- default.
+	GameConfiguration.SetValue("RULESET", nil);
 	GameConfiguration.RegenerateSeeds();
 	return GameSetup_PlayerCountChanged();
 end
@@ -421,7 +423,6 @@ function OnBackButton()
 		Controls.LoadConfig:SetHide(true);
 		Controls.SaveConfig:SetHide(true);
 		Controls.ButtonStack:CalculateSize();
-		Controls.ButtonStack:ReprocessAnchoring();
 		
 		UpdateCivLeaderToolTip();					-- Need to make sure we update our placard/flyout card if we make a change in advanced setup and then come back
 		m_AdvancedMode = false;		
@@ -461,7 +462,6 @@ function Resize()
 		hideLogo = false;
 	end
 	Controls.LogoContainer:SetHide(hideLogo);
-	Controls.MainGrid:ReprocessAnchoring();
 end
 
 -- ===========================================================================

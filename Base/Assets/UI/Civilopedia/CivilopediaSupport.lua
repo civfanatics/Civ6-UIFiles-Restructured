@@ -23,6 +23,7 @@ local _LeftColumnHeaderBodyManager = InstanceManager:new("CivilopediaLeftColumnH
 
 local _RightColumnPortraitManager = InstanceManager:new("RightColumnPortrait", "Root", Controls.RightColumnStack);
 local _RightColumnTallPortraitManager = InstanceManager:new("RightColumnPortraitTall", "Root", Controls.RightColumnStack);
+local _RightColumnTallPortraitNoScalingManager = InstanceManager:new("RightColumnPortraitTallNoScaling", "Root", Controls.RightColumnStack);
 
 local _RightColumnQuoteManager = InstanceManager:new("RightColumnQuote", "Root", Controls.RightColumnStack);
 
@@ -39,6 +40,7 @@ local _RightColumnStatIconListManager = InstanceManager:new("RightColumnStatIcon
 _HasSection = {};
 _Sections = {};
 _PagesBySection = {};
+_PagesById = {};
 _PageGroupsBySection = {};
 _ChaptersByPageLayout = {};
 _ChapterOverrides = {};
@@ -106,6 +108,10 @@ function CacheData_FetchData()
 				end
 			
 				table.insert(_PagesBySection[sectionId], page);
+
+				local key = page.SectionId .. "::" .. page.PageId;
+				_PagesById[key] = page;
+
 			end
 		end
 	end
@@ -147,6 +153,7 @@ function CacheData_FetchData()
 				PageGroupId = row.PageGroupId,
 				PageLayoutId = row.PageLayoutId,
 				Name = row.Name,
+				TextKeyPrefix = row.TextKeyPrefix,
 				Tooltip = row.Tooltip,
 				SortIndex = row.SortIndex
 			};
@@ -181,6 +188,7 @@ function CacheData_FetchData()
 					PageLayoutId = row[q.PageLayoutIdColumn],
 					Name = row[q.NameColumn],
 					Tooltip = q.TooltipColumn and row[q.TooltipColumn],
+					TextKeyPrefix = q.TextKeyPrefixColumn and row[q.TextKeyPrefixColumn],
 					SortIndex = q.SortIndexColumn and row[q.SortIndexColumn] or q.SortIndex
 				};
 				AddPage(page);
@@ -378,6 +386,7 @@ function CacheData()
 	_HasSection = {};
 	_Sections = {};
 	_PagesBySection = {};
+	_PagesById = {};
 	_PageGroupsBySection = {};
 	_ChaptersByPageLayout = {};
 	_ChapterOverrides = {};
@@ -395,6 +404,20 @@ function PopulateSearchData()
 	-- Populate Full Text Search
 	local searchContext = "Civilopedia";
 	if(Search.CreateContext(searchContext, "[COLOR_LIGHTBLUE]", "[ENDCOLOR]", "...")) then
+	
+		local additional_search_terms = {};
+		if(GameInfo.CivilopediaPageSearchTermQueries) then
+			for q in GameInfo.CivilopediaPageSearchTermQueries() do
+				for i, row in ipairs(DB.Query(q.SQL)) do
+					local search_term = {
+						SectionId = q.SectionIdColumn and row[q.SectionIdColumn],
+						PageId = q.PageIdColumn and row[q.PageIdColumn],
+						Term = q.SearchTermColumn and row[q.SearchTermColumn],
+					};
+					table.insert(additional_search_terms,search_term);
+				end
+			end
+		end
 
 		for sectionId, v in pairs(_PagesBySection) do
 			for i, page in ipairs(v) do
@@ -408,6 +431,14 @@ function PopulateSearchData()
 						table.insert(terms, term);
 					end
 				end
+
+				for _, row in ipairs(additional_search_terms) do
+					if(row.SectionId == sectionId and row.PageId == pageId) then
+						local term = Locale.Lookup(row.Term);
+						table.insert(terms, term);
+					end
+				end
+
 				
 				Search.AddData(searchContext, sectionId .. "|" .. pageId, page.Title, "", terms);
 			end
@@ -440,14 +471,11 @@ end
 -- Returns the first page structure with the specified section id and page id.
 -------------------------------------------------------------------------------
 function GetPage(SectionId, PageId)
-	local pages = GetPages(SectionId);
-	for i, v in ipairs(pages) do
-		if(v.PageId == PageId) then
-			return v;
-		end
+	if(SectionId and PageId) then
+		local key = SectionId .. "::" .. PageId;
+		return _PagesById[key];	
 	end
 end
-
 
 -------------------------------------------------------------------------------
 -- Returns the first page group structure with the specified section id and 
@@ -543,10 +571,23 @@ end
 -- Returns the first found text key that conforms to the page search patterns.
 -------------------------------------------------------------------------------
 function FindPageTextKey(SectionId, PageId, Tag)
+
+	local suffix = "_" .. Tag;
+
 	local keys = {
-		"LOC_PEDIA_" .. SectionId .. "_PAGE_" .. PageId .. "_" .. Tag,
-		"LOC_PEDIA_PAGE_" .. PageId .. "_" .. Tag,
+		"LOC_PEDIA_" .. SectionId .. "_PAGE_" .. PageId .. suffix,
+		"LOC_PEDIA_PAGE_" .. PageId .. suffix,
+		"LOC_PEDIA_PAGE_" .. suffix
 	};
+
+	local page = GetPage(SectionId, PageId);
+	if(page) then
+		local prefix = page.TextKeyPrefix;
+		if(prefix) then
+			table.insert(keys, 1, prefix .. PageId .. suffix);
+			table.insert(keys, 2, prefix .. suffix);
+		end
+	end
 	
 	for i, key in ipairs(keys) do
 		if(Locale.HasTextKey(key)) then
@@ -562,11 +603,24 @@ end
 -------------------------------------------------------------------------------
 function FindChapterTextKey(SectionId, PageId, ChapterId, Tag)
 	if(SectionId and PageId and ChapterId and Tag) then
+
+		local suffix =  "_CHAPTER_" .. ChapterId .. "_" .. Tag;
+
 		local keys = {
-			"LOC_PEDIA_" .. SectionId .. "_PAGE_" .. PageId .. "_CHAPTER_" .. ChapterId .. "_" .. Tag,
-			"LOC_PEDIA_" .. SectionId .. "_PAGE_CHAPTER_" .. ChapterId .. "_" .. Tag,
-			"LOC_PEDIA_" .. "PAGE_CHAPTER_" .. ChapterId .. "_" .. Tag,
+			"LOC_PEDIA_" .. SectionId .. "_PAGE_" .. PageId .. suffix,
+			"LOC_PEDIA_" .. SectionId .. "_PAGE" .. suffix,
+			"LOC_PEDIA_PAGE_" .. PageId .. suffix,
+			"LOC_PEDIA_PAGE" .. suffix,
 		};
+
+		local page = GetPage(SectionId, PageId);
+		if(page) then
+			local prefix = page.TextKeyPrefix;
+			if(prefix) then
+				table.insert(keys, 1, prefix .. "_" .. PageId .. suffix);
+				table.insert(keys, 2, prefix .. suffix);
+			end
+		end
 		
 		for i, key in ipairs(keys) do
 			if(Locale.HasTextKey(key)) then
@@ -748,6 +802,7 @@ function ResetPageContent()
 	_LeftColumnHeaderBodyManager:ResetInstances();
 	_RightColumnPortraitManager:ResetInstances();
 	_RightColumnTallPortraitManager:ResetInstances();
+	_RightColumnTallPortraitNoScalingManager:ResetInstances();
 	_RightColumnQuoteManager:ResetInstances();
 	_RightColumnStatBoxManager:ResetInstances();
 	_RightColumnStatSeparatorManager:ResetInstances();
@@ -1298,9 +1353,21 @@ function AddIconHeaderBody(icon, header, body)
 	end
 end
 
+function AddImage(image)
+	if(image ~= nil) then
+		local instance = _RightColumnPortraitManager:GetInstance();
+		instance.PortraitIcon:SetTexture(image);
+		instance.PortraitIcon:SetColor(1,1,1);
+		instance.Root:SetHide(false);
+
+		-- Infer two-column layout.
+		_PageContentLayout = "two-column";
+	end
+end
+
 function AddPortrait(icon, color)
-	local instance = _RightColumnPortraitManager:GetInstance();
 	if(icon ~= nil) then
+		local instance = _RightColumnPortraitManager:GetInstance();
 		local success = instance.PortraitIcon:SetIcon(icon);
 		if(color) then
 			if(type(color) == "string") then
@@ -1312,6 +1379,28 @@ function AddPortrait(icon, color)
 			instance.PortraitIcon:SetColor(1,1,1);
 		end
 		instance.Root:SetHide(not success);
+
+		-- Infer two-column layout.
+		_PageContentLayout = "two-column";
+	end
+end
+
+function AddTallImage(image)
+	if(image ~= nil) then
+		local instance = _RightColumnTallPortraitManager:GetInstance();
+		instance.Root:SetTexture(image);
+		instance.Root:SetHide(false);
+
+		-- Infer two-column layout.
+		_PageContentLayout = "two-column";
+	end
+end
+
+function AddTallImageNoScale(image)
+	if(image ~= nil) then
+		local instance = _RightColumnTallPortraitNoScalingManager:GetInstance();
+		instance.PortraitIcon:SetTexture(image);
+		instance.Root:SetHide(false);
 
 		-- Infer two-column layout.
 		_PageContentLayout = "two-column";

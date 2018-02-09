@@ -41,12 +41,12 @@ function OnPopupOpen( uniqueStringName:string, options:table )
 		end
 	end
 	
-	UIManager:QueuePopup(ContextPtr, PopupPriority.Normal);
+	UIManager:PushModal(ContextPtr);
 	m_PopupDialog:Open();
 end
 
 function OnClosePopup()
-	UIManager:DequeuePopup(ContextPtr);
+	UIManager:PopModal(ContextPtr);
 	if m_PopupDialog:IsOpen() then
 		m_PopupDialog:Close();
 	end

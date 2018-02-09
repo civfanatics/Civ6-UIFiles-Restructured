@@ -2,6 +2,12 @@
 
 <Root>
 
+	<Instance Name="CivilizationIcon22" Size="22,22">
+		<Image ID="CivIconBacking" Size="22,22" Texture="CircleBacking22">
+			<Image ID="CivIcon" Size="22,22" Texture="CivSymbols22"/>
+		</Image>
+	</Instance>
+
   <Instance Name="CivilizationIcon30" Size="30,30">
     <Image ID="CivIconBacking" Size="30,30" Texture="CircleBacking30">
       <Image ID="CivIcon" Size="30,30" Texture="CivSymbols30"/>

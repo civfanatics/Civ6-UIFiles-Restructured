@@ -438,7 +438,6 @@ function SetSelected( index )
 	DismissCurrentSelected();
 
     g_iSelectedFileEntry = index;
-	local modsHidden = true;
     if( g_iSelectedFileEntry ~= -1 ) then
 
 		local fileEntryInstance = g_FileEntryInstanceList[ g_iSelectedFileEntry ];
@@ -499,11 +498,6 @@ function SetSelected( index )
 
 		Controls.Delete:SetHide( true );
     end
-	if(not modsHidden) then
-		Controls.GameInfoScrollPanel:SetSizeY(280);
-	else
-		Controls.GameInfoScrollPanel:SetSizeY(320);
-	end
 end
 
 -----------------------------------------------------------------------------------------------------------------------
@@ -752,12 +746,14 @@ function PopulateInspectorData(fileInfo, fileName, mod_errors)
 	Controls.InspectorTopArea:DoAutoSize();
 	Controls.InspectorTopArea:ReprocessAnchoring();
 
-
 	Controls.GameInfoStack:CalculateSize();
-	Controls.GameInfoStack:ReprocessAnchoring();
+	ResizeGameInfoScrollPanel();
 	Controls.GameInfoScrollPanel:CalculateSize();
-	Controls.GameInfoScrollPanel:ReprocessAnchoring();
+end
 
+----------------------------------------------------------------   
+function ResizeGameInfoScrollPanel()
+	Controls.GameInfoScrollPanel:SetSizeY(Controls.SelectedFile:GetSizeY() - Controls.SelectedFileStack:GetSizeY());
 end
 
 ----------------------------------------------------------------     
