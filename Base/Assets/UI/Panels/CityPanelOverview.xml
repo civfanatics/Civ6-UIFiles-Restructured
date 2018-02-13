@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Context  ColorSet="BodyTextCool" FontStyle="Shadow">
   
   <SlideAnim	  ID="OverviewSlide"	Anchor="L,T"									Size="300,parent"				Start="-330,27" End="0,27" Cycle="Once" Speed="3.5" Function="OutSine" Stopped="1" >

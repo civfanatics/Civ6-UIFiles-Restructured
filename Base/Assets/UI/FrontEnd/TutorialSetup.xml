@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Context Style="FontNormal14">
 
 	<Box ID="MainGrid" Size="1024,parent" Anchor="C,T" Color="9,44,72,240" IgnoreTutorial="1">

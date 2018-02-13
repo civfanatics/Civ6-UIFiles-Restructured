@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <!-- Top level context for WorldBuilder Civ6					-->
 <Context Name="WorldBuilder">
   <!--Order matters in this list regarding mouse priority and rendering -->

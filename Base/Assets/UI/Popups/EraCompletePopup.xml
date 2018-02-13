@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Context  ColorSet="BodyTextCool" FontStyle="Shadow">
   
 	<AlphaAnim				ID="EraPopupAnimation" AlphaBegin="0" AlphaEnd="1" Speed="0.5" Function="Root" Size="parent,parent" EndPause="9" Cycle="Once" >
