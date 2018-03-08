@@ -116,6 +116,7 @@ local m_lastTurnTickTime	: number	= 0;										-- When did we last make a tick 
 local m_numberVisibleBlockers	:number	= 0;
 local m_visibleBlockerTypes	: table		= {};
 local m_isSlowTurnEnable	: boolean	= false;									-- Tutorial: when active slow to allow clicks when turn raises.
+local m_unreadiedTurn		: boolean   = false;									-- Did the local player unready their turn during the current game turn?
 
 
 -- ===========================================================================
@@ -461,7 +462,8 @@ end
 function CheckAutoEndTurn( eCurrentEndTurnBlockingType:number )
 	local pPlayer = Players[Game.GetLocalPlayer()];
 	if pPlayer ~= nil then
-		if eCurrentEndTurnBlockingType == EndTurnBlockingTypes.NO_ENDTURN_BLOCKING 
+		if not m_unreadiedTurn -- If the player intentionally unreadied their turn, do not auto end turn.
+			and eCurrentEndTurnBlockingType == EndTurnBlockingTypes.NO_ENDTURN_BLOCKING 
 			and	(UserConfiguration.IsAutoEndTurn() and not UI.SkipNextAutoEndTurn())
 			-- In tactical phases, all units must have orders or used up their movement points.
 			and (not CheckUnitsHaveMovesState() and not CheckCityRangeAttackState()) then 
@@ -807,6 +809,11 @@ function OnLocalPlayerTurnEnd()
 end
 
 -- ===========================================================================
+function OnLocalPlayerTurnUnready()
+	m_unreadiedTurn = true;
+end
+
+-- ===========================================================================
 function OnRemotePlayerTurnEnd()
 	-- Refresh as the "Waiting for " player might have changed.
 	ContextPtr:RequestRefresh();
@@ -892,6 +899,14 @@ function OnInterfaceModeChanged(eOldMode:number, eNewMode:number)
 	if eOldMode == InterfaceModeTypes.VIEW_MODAL_LENS then
 		ContextPtr:SetHide(false);
 	end
+end
+
+-- ===========================================================================
+--	Game Event
+--	Game Turn Began
+-- ===========================================================================
+function OnTurnBegin()
+	m_unreadiedTurn = false;
 end
 
 -- ===========================================================================
@@ -1150,9 +1165,11 @@ function Initialize()
 	Events.EndTurnDirty.Add(				OnEndTurnDirty );
 	Events.InputActionTriggered.Add(		OnInputActionTriggered );
 	Events.InterfaceModeChanged.Add(		OnInterfaceModeChanged );
+	Events.TurnBegin.Add(					OnTurnBegin);	
 	Events.LocalPlayerChanged.Add(			OnLocalPlayerChanged );
 	Events.LocalPlayerTurnBegin.Add(		OnLocalPlayerTurnBegin );
 	Events.LocalPlayerTurnEnd.Add(			OnLocalPlayerTurnEnd );
+	Events.LocalPlayerTurnUnready.Add(		OnLocalPlayerTurnUnready );
 	Events.RemotePlayerTurnEnd.Add(			OnRemotePlayerTurnEnd );
 	Events.NotificationAdded.Add(			OnNotificationAdded );
 	Events.NotificationDismissed.Add(		OnNotificationDismissed );

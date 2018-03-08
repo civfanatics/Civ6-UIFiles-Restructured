@@ -79,6 +79,8 @@ local ms_DefaultMultiTurnGoldDuration = 30;
 
 local ms_bForceUpdateOnCommit = false;
 
+local MAX_DEAL_ITEM_EDIT_HEIGHT = 300;
+
 -- ===========================================================================
 function SetIconToSize(iconControl, iconName, iconSize)
 	if iconSize == nil then
@@ -732,16 +734,8 @@ function ReAttachValueEdit()
 		end			
 
 		Controls.ValueEditIconGrid:DoAutoSize();
-		Controls.ValueEditStack:ReprocessAnchoring();
 
-		-- Resize scroll panel to a maximum height of four agreement options
-		local maxSizeY:number = 240;
-		if Controls.ValueEditStack:GetSizeY() > maxSizeY then
-			Controls.ValueEditScrollPanel:SetSizeY(maxSizeY);
-		else
-			Controls.ValueEditScrollPanel:SetSizeY(Controls.ValueEditStack:GetSizeY());
-		end
-		Controls.ValueEditScrollPanel:CalculateSize();
+		ResizeValueEditScrollPanel();
 
 		Controls.ValueEditPopup:DoAutoSize();
 		Controls.ValueEditPopupBackground:SetHide(false);
@@ -1369,19 +1363,23 @@ function ShowAgreementOptionPopup(agreementType, agreementTurns)
 	end
 
 	Controls.ValueEditIconGrid:DoAutoSize();
-	Controls.ValueEditStack:ReprocessAnchoring();
 
-	-- Resize scroll panel to a maximum height of four agreement options
-	local maxSizeY:number = 240;
-	if Controls.ValueEditStack:GetSizeY() > maxSizeY then
-		Controls.ValueEditScrollPanel:SetSizeY(maxSizeY);
+	ResizeValueEditScrollPanel();
+
+	Controls.ValueEditPopup:DoAutoSize();
+	Controls.ValueEditPopupBackground:SetHide(false);
+end
+
+-- ===========================================================================
+function ResizeValueEditScrollPanel()
+	-- Resize scroll panel to a maximum height of five agreement options
+	Controls.ValueEditStack:CalculateSize();
+	if Controls.ValueEditStack:GetSizeY() > MAX_DEAL_ITEM_EDIT_HEIGHT then
+		Controls.ValueEditScrollPanel:SetSizeY(MAX_DEAL_ITEM_EDIT_HEIGHT);
 	else
 		Controls.ValueEditScrollPanel:SetSizeY(Controls.ValueEditStack:GetSizeY());
 	end
 	Controls.ValueEditScrollPanel:CalculateSize();
-
-	Controls.ValueEditPopup:DoAutoSize();
-	Controls.ValueEditPopupBackground:SetHide(false);
 end
 
 -- ===========================================================================
@@ -1658,14 +1656,17 @@ function PopulateAvailableCities(player : table, iconList : table)
 			-- What to do when double clicked/tapped.
 			icon.SelectButton:RegisterCallback( Mouse.eLClick, function() OnClickAvailableCity(player, type, subType); end );
 
-			icon.SelectButton:SetToolTipString( MakeCityToolTip(player, type) );
-			icon.SelectButton:ReprocessAnchoring();
+			-- Since we're ceding this city make sure to look for this city in the current owners city list
+			if entry.SubType == 1 then -- CitySubTypes:CEDE_OCCUPIED
+				icon.SelectButton:SetToolTipString( MakeCityToolTip(GetOtherPlayer(player), type) );
+			else
+				icon.SelectButton:SetToolTipString( MakeCityToolTip(player, type) );
+			end
 
 			iAvailableItemCount = iAvailableItemCount + 1;
 		end
 
 		iconList.ListStack:CalculateSize();
-		iconList.List:ReprocessAnchoring();
 	end
 
 	-- Hide if empty

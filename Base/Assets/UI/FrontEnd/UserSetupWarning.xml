@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Context ColorSet="Beige_Black" Style="FontNormal22" FontStyle="Shadow" Name="MainMenu" >
   <!-- Dialog Support -->
   <Include File="PopupDialog" />

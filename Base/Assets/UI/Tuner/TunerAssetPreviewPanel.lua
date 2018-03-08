@@ -89,6 +89,10 @@ LuaEvents.UIDebugModeEntered.Add(OnUIDebugModeEntered);
 -- Globals for Landmarks asset visualization
 g_SelectedEra = nil;
 g_SelectedCiv = nil;
+g_SelectedState = "Worked";
+g_SelectedPopulation = 0;
+g_SelectedDistrictIdx = 0;
+g_SelectedDistrictBaseName = nil;
+g_SelectedDistrictBldgName = nil;
 g_AddCitySpacing = true;
-g_BenchmarkLogName = "ap_frametimes";
 

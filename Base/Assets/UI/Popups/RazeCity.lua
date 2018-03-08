@@ -65,7 +65,6 @@ function OnOpen()
 	local bWipedOut = (originalOwnerPlayer:GetCities():GetCount() < 1);
 	local eLastTransferType = g_pSelectedCity:GetLastTransferType();
 
-	local iWarmongerPoints = localPlayer:GetDiplomacy():ComputeCityWarmongerPoints(g_pSelectedCity, eConqueredFrom);
 	if (eOriginalOwner ~= eOwnerBeforeOccupation and localPlayer:GetDiplomacy():CanLiberateCityTo(eOriginalOwner) and eOriginalOwner ~= eConqueredFrom) then
 		Controls.Button1:LocalizeAndSetText("LOC_RAZE_CITY_LIBERATE_FOUNDER_BUTTON_LABEL", PlayerConfigurations[eOriginalOwner]:GetCivilizationShortDescription());
 		szWarmongerString = Locale.Lookup("LOC_RAZE_CITY_LIBERATE_WARMONGER_EXPLANATION");
@@ -89,6 +88,7 @@ function OnOpen()
 		szWarmongerString = Locale.Lookup("LOC_RAZE_CITY_KEEP_EXPLANATION_TRADED");
 		Controls.Button3:LocalizeAndSetToolTip(szWarmongerString);
 	elseif (bWipedOut ~= true) then
+		local iWarmongerPoints = localPlayer:GetDiplomacy():ComputeCityWarmongerPoints(g_pSelectedCity, eConqueredFrom, false);
 		szWarmongerString = Locale.Lookup("LOC_RAZE_CITY_KEEP_WARMONGER_EXPLANATION", localPlayer:GetDiplomacy():GetWarmongerLevel(-iWarmongerPoints));
 		Controls.Button3:LocalizeAndSetToolTip("LOC_RAZE_CITY_KEEP_EXPLANATION", szWarmongerString);
 	else
@@ -99,7 +99,8 @@ function OnOpen()
 	Controls.Button4:LocalizeAndSetText("LOC_RAZE_CITY_RAZE_BUTTON_LABEL");
 	if (g_pSelectedCity:CanRaze()) then
 		if (bWipedOut ~= true) then
-			szWarmongerString = Locale.Lookup("LOC_RAZE_CITY_RAZE_WARMONGER_EXPLANATION", localPlayer:GetDiplomacy():GetWarmongerLevel(-iWarmongerPoints * 3));
+		local iWarmongerPoints = localPlayer:GetDiplomacy():ComputeCityWarmongerPoints(g_pSelectedCity, eConqueredFrom, true);
+			szWarmongerString = Locale.Lookup("LOC_RAZE_CITY_RAZE_WARMONGER_EXPLANATION", localPlayer:GetDiplomacy():GetWarmongerLevel(-iWarmongerPoints));
 			Controls.Button4:LocalizeAndSetToolTip("LOC_RAZE_CITY_RAZE_EXPLANATION", szWarmongerString);
 		else
 			szWarmongerString = Locale.Lookup("LOC_RAZE_CITY_RAZE_LAST_CITY_EXPLANATION");

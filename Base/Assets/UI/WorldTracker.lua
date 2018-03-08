@@ -390,8 +390,19 @@ end
 --	but an item deeper in the tree that was just boosted by a player action.
 -- ===========================================================================
 function OnResearchChanged( ePlayer:number, eTech:number )
-	local localPlayer = Game.GetLocalPlayer();
 	ResetOverflowArrow( m_researchInstance );
+
+	if ShouldUpdateResearchPanel(ePlayer, eTech) then
+		UpdateResearchPanel();
+	end
+end
+
+-- ===========================================================================
+--	This function was separated so behavior can be modified in mods/expasions
+-- ===========================================================================
+function ShouldUpdateResearchPanel(ePlayer:number, eTech:number)
+	local localPlayer = Game.GetLocalPlayer();
+	
 	if localPlayer ~= -1 and localPlayer == ePlayer then
 		local pPlayerTechs :table = Players[localPlayer]:GetTechs();
 		m_currentResearchID = pPlayerTechs:GetResearchingTech();
@@ -402,9 +413,10 @@ function OnResearchChanged( ePlayer:number, eTech:number )
 		end
 
 		if eTech == m_currentResearchID then
-			UpdateResearchPanel();
+			return true;
 		end
 	end
+	return false;
 end
 
 function OnResearchCompleted( ePlayer:number, eTech:number )

@@ -5,12 +5,12 @@ m_kPopupDialog = PopupDialog:new("FrontEndPopup");
 -------------------------------------------------
 -- Event Handler: FrontEndPopup
 -------------------------------------------------
-function OnFrontEndPopup( string )
+function OnFrontEndPopup(popupText :string, popupTitle :string)
 	UIManager:QueuePopup( ContextPtr, PopupPriority.Current );
 	
 	m_kPopupDialog:Close();
-	m_kPopupDialog:AddTitle("");
-	m_kPopupDialog:AddText(Locale.Lookup(string));
+	m_kPopupDialog:AddTitle(Locale.Lookup(popupTitle));
+	m_kPopupDialog:AddText(Locale.Lookup(popupText));
 	m_kPopupDialog:AddButton(Locale.Lookup("LOC_CLOSE"), OnPopupClose);
 	m_kPopupDialog:Open();
 end
@@ -25,6 +25,25 @@ function OnUserRequestClose()
 	m_kPopupDialog:AddButton(Locale.Lookup("LOC_CANCEL_BUTTON"), OnPopupClose);
 	m_kPopupDialog:AddButton(Locale.Lookup("LOC_OK_BUTTON"), ExitOK, nil, nil, "PopupButtonInstanceRed"); 
 	m_kPopupDialog:Open();
+end
+
+-- ===========================================================================
+function OnLaunchError(error:string)
+	UIManager:QueuePopup( ContextPtr, PopupPriority.Current );
+
+	m_kPopupDialog:Close();
+	m_kPopupDialog:AddText(error);
+	m_kPopupDialog:AddTitle(Locale.ToUpper(Locale.Lookup("LOC_GAME_START_ERROR_TITLE")));
+	m_kPopupDialog:AddButton(Locale.Lookup("LOC_CLOSE"), OnPopupClose);
+	m_kPopupDialog:AddButton(Locale.Lookup("LOC_GAME_START_VIEW_MODS"), OnDisableMods, nil, nil, "PopupButtonInstanceGreen" );
+	m_kPopupDialog:Open();
+end
+
+
+-- ===========================================================================
+function OnDisableMods()
+	OnPopupClose();
+	LuaEvents.MainMenu_ShowAdditionalContent();
 end
 
 -- ===========================================================================
@@ -62,10 +81,11 @@ end
 function Initialize()
 	ContextPtr:SetInputHandler( InputHandler );
 
-	-- Events.FrontEndPopup has 256 character limit.
+	-- Events.FrontEndPopup has 256 character limit for popupText and popupTitle.
 	-- LuaEvents.MultiplayerPopup should have unlimited character size.
 	Events.FrontEndPopup.Add( OnFrontEndPopup );
 	LuaEvents.MultiplayerPopup.Add( OnFrontEndPopup );
+	LuaEvents.MainMenu_LaunchError.Add( OnLaunchError );
 	LuaEvents.MainMenu_UserRequestClose.Add( OnUserRequestClose );
 end
 Initialize();

@@ -510,20 +510,20 @@ function OnAbandoned(eReason)
 		CheckLeaveGame();
 
 		if (eReason == KickReason.KICK_HOST) then
-			LuaEvents.MultiplayerPopup( "LOC_GAME_ABANDONED_KICKED" );
+			LuaEvents.MultiplayerPopup( "LOC_GAME_ABANDONED_KICKED", "LOC_GAME_ABANDONED_KICKED_TITLE" );
 		elseif (eReason == KickReason.KICK_NO_HOST) then
-			LuaEvents.MultiplayerPopup( "LOC_GAME_ABANDONED_HOST_LOSTED" );
+			LuaEvents.MultiplayerPopup( "LOC_GAME_ABANDONED_HOST_LOSTED", "LOC_GAME_ABANDONED_HOST_LOSTED_TITLE" );
 		elseif (eReason == KickReason.KICK_NO_ROOM) then
-			LuaEvents.MultiplayerPopup( "LOC_GAME_ABANDONED_ROOM_FULL" );
+			LuaEvents.MultiplayerPopup( "LOC_GAME_ABANDONED_ROOM_FULL", "LOC_GAME_ABANDONED_ROOM_FULL_TITLE" );
 		elseif (eReason == KickReason.KICK_VERSION_MISMATCH) then
-			LuaEvents.MultiplayerPopup( "LOC_GAME_ABANDONED_VERSION_MISMATCH" );
+			LuaEvents.MultiplayerPopup( "LOC_GAME_ABANDONED_VERSION_MISMATCH", "LOC_GAME_ABANDONED_VERSION_MISMATCH_TITLE" );
 		elseif (eReason == KickReason.KICK_MOD_ERROR) then
-			LuaEvents.MultiplayerPopup( "LOC_GAME_ABANDONED_MOD_ERROR" );
+			LuaEvents.MultiplayerPopup( "LOC_GAME_ABANDONED_MOD_ERROR", "LOC_GAME_ABANDONED_MOD_ERROR_TITLE" );
 		elseif (eReason == KickReason.KICK_MOD_MISSING) then
 			local modMissingErrorStr = Modding.GetLastModErrorString();
-			LuaEvents.MultiplayerPopup(modMissingErrorStr);
+			LuaEvents.MultiplayerPopup( modMissingErrorStr, "LOC_GAME_ABANDONED_MOD_MISSING_TITLE" );
 		else
-			LuaEvents.MultiplayerPopup( "LOC_GAME_ABANDONED_CONNECTION_LOST");
+			LuaEvents.MultiplayerPopup( "LOC_GAME_ABANDONED_CONNECTION_LOST", "LOC_GAME_ABANDONED_CONNECTION_LOST_TITLE");
 		end
 		LuaEvents.Multiplayer_ExitShell();
 	end

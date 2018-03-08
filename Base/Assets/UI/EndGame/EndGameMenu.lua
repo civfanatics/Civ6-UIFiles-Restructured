@@ -6,6 +6,11 @@ include("TeamSupport");
 include("PopupDialog");
 
 ---------------------------------------------------------------
+-- CONSTANTS
+----------------------------------------------------------------
+MAX_BUTTON_SIZE = 160;
+
+---------------------------------------------------------------
 -- Globals
 ----------------------------------------------------------------
 g_GraphVerticalMarkers = {
@@ -260,6 +265,7 @@ function OnNextPlayer()
 	UIManager:DequeuePopup( ContextPtr );
 	UI.RequestAction(ActionTypes.ACTION_ENDTURN);
 end
+TruncateStringWithTooltip(Controls.NextPlayerButton, MAX_BUTTON_SIZE, Locale.Lookup("LOC_UI_ENDGAME_MP_PLAYER_CHANGE_CONTINUE"));
 Controls.NextPlayerButton:RegisterCallback( Mouse.eLClick, OnNextPlayer );
 Controls.NextPlayerButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 
@@ -269,6 +275,7 @@ function OnMainMenu()
     UI.UnloadSoundBankGroup(5);
 	Events.ExitToMainMenu();
 end
+TruncateStringWithTooltip(Controls.MainMenuButton, MAX_BUTTON_SIZE, Locale.Lookup("LOC_UI_ENDGAME_MAIN_MENU"));
 Controls.MainMenuButton:RegisterCallback( Mouse.eLClick, OnMainMenu );
 Controls.MainMenuButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 
@@ -279,6 +286,7 @@ function OnBack()
 	UIManager:DequeuePopup( ContextPtr );
 	LuaEvents.EndGameMenu_OneMoreTurn();
 end
+TruncateStringWithTooltip(Controls.BackButton, MAX_BUTTON_SIZE, Locale.Lookup("LOC_UI_ENDGAME_EXTENDED_GAME"));
 Controls.BackButton:RegisterCallback( Mouse.eLClick, OnBack );
 Controls.BackButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 
@@ -377,6 +385,7 @@ function OnReplayMovie()
 		UI.ReleasePauseEvent();
 	end
 end
+TruncateStringWithTooltip(Controls.ReplayMovieButton, MAX_BUTTON_SIZE, Locale.Lookup("LOC_UI_ENDGAME_REPLAY_MOVIE"));
 Controls.ReplayMovieButton:RegisterCallback(Mouse.eLClick, OnReplayMovie);
 Controls.ReplayMovieButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 
@@ -422,6 +431,10 @@ ContextPtr:SetInputHandler( OnInputHandler, true );
 ----------------------------------------------------------------        
 ----------------------------------------------------------------        
 function ShowHideHandler( bIsHide, bIsInit )
+	 return OnShowHide( bIsHide, bIsInit );
+end
+
+function OnShowHide( bIsHide, bIsInit )
 
 	if( not bIsInit ) then
 	    if( not bIsHide ) then

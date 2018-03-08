@@ -59,13 +59,13 @@ end
 function OnJoinRoomFailed( iExtendedError)
 	if (not ContextPtr:IsHidden()) then
 		if iExtendedError == JoinGameErrorType.JOINGAME_ROOM_FULL then
-			LuaEvents.MultiplayerPopup( "LOC_MP_ROOM_FULL" );
+			LuaEvents.MultiplayerPopup( "LOC_MP_ROOM_FULL", "LOC_MP_ROOM_FULL_TITLE" );
 		elseif iExtendedError == JoinGameErrorType.JOINGAME_GAME_STARTED then
-			LuaEvents.MultiplayerPopup( "LOC_MP_ROOM_GAME_STARTED" );
+			LuaEvents.MultiplayerPopup( "LOC_MP_ROOM_GAME_STARTED", "LOC_MP_ROOM_GAME_STARTED_TITLE" );
 		elseif iExtendedError == JoinGameErrorType.JOINGAME_TOO_MANY_MATCHES then
-			LuaEvents.MultiplayerPopup( "LOC_MP_ROOM_TOO_MANY_MATCHES" );
+			LuaEvents.MultiplayerPopup( "LOC_MP_ROOM_TOO_MANY_MATCHES", "LOC_MP_ROOM_TOO_MANY_MATCHES_TITLE" );
 		else
-			LuaEvents.MultiplayerPopup( "LOC_MP_JOIN_FAILED" );
+			LuaEvents.MultiplayerPopup( "LOC_MP_JOIN_FAILED", "LOC_MP_JOIN_FAILED_TITLE" );
 		end
 		Network.LeaveGame();
 		UIManager:DequeuePopup( ContextPtr );
@@ -129,18 +129,18 @@ end
 function OnMultiplayerGameAbandoned(eReason)
 	if (not ContextPtr:IsHidden()) then
 		if (eReason == KickReason.KICK_HOST) then
-			LuaEvents.MultiplayerPopup( "LOC_GAME_ABANDONED_KICKED" );
+			LuaEvents.MultiplayerPopup( "LOC_GAME_ABANDONED_KICKED", "LOC_GAME_ABANDONED_KICKED_TITLE" );
 		elseif (eReason == KickReason.KICK_NO_ROOM) then
-			LuaEvents.MultiplayerPopup( "LOC_GAME_ABANDONED_ROOM_FULL" );
+			LuaEvents.MultiplayerPopup( "LOC_GAME_ABANDONED_ROOM_FULL", "LOC_GAME_ABANDONED_ROOM_FULL_TITLE" );
 		elseif (eReason == KickReason.KICK_VERSION_MISMATCH) then
-			LuaEvents.MultiplayerPopup( "LOC_GAME_ABANDONED_VERSION_MISMATCH" );
+			LuaEvents.MultiplayerPopup( "LOC_GAME_ABANDONED_VERSION_MISMATCH", "LOC_GAME_ABANDONED_VERSION_MISMATCH_TITLE" );
 		elseif (eReason == KickReason.KICK_MOD_ERROR) then
-			LuaEvents.MultiplayerPopup( "LOC_GAME_ABANDONED_MOD_ERROR" );
+			LuaEvents.MultiplayerPopup( "LOC_GAME_ABANDONED_MOD_ERROR", "LOC_GAME_ABANDONED_MOD_ERROR_TITLE" );
 		elseif (eReason == KickReason.KICK_MOD_MISSING) then
 			local modMissingErrorStr = Modding.GetLastModErrorString();
-			LuaEvents.MultiplayerPopup(modMissingErrorStr);
+			LuaEvents.MultiplayerPopup( modMissingErrorStr, "LOC_GAME_ABANDONED_MOD_MISSING_TITLE" );
 		else
-			LuaEvents.MultiplayerPopup( "LOC_GAME_ABANDONED_JOIN_FAILED" );
+			LuaEvents.MultiplayerPopup( "LOC_GAME_ABANDONED_JOIN_FAILED", "LOC_GAME_ABANDONED_JOIN_FAILED_TITLE" );
 		end
 		Network.LeaveGame();
 		UIManager:DequeuePopup( ContextPtr );	

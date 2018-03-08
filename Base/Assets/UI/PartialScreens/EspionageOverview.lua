@@ -138,6 +138,7 @@ function RefreshOperatives()
 	Controls.OperativeHeader:SetText(Locale.Lookup("LOC_ESPIONAGEOVERVIEW_OPERATIVES_SUBHEADER", numberOfSpies, playerDiplomacy:GetSpyCapacity()));
 
 	Controls.OperativeStack:CalculateSize();
+	Controls.OperativeScrollPanel:CalculateSize();
 end
 
 -- ===========================================================================

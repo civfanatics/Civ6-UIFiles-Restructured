@@ -19,6 +19,8 @@ local ms_eventID					 = 0;
 --	Closes the immediate popup, will raise more if queued.
 -- ===========================================================================
 function Close()
+
+	UI.ClearTemporaryPlotVisibility("NaturalWonder");
 	
 	-- Dequeue popup from UI mananger (will re-queue if another is about to show).
 	ShowNaturalWonderLens(false);
@@ -72,6 +74,16 @@ end
 -- ===========================================================================
 function ShowPopup( kData:table )
 	UIManager:QueuePopup( ContextPtr, PopupPriority.Medium );
+
+	local pPlot = Map.GetPlot(kData.plotx, kData.ploty);
+	if pPlot ~= nil then
+		local aPlots = pPlot:GetFeature():GetPlots();
+		-- Just in case the local player can't see all the plots, temporarily reveal them on the app side
+		-- This includes even single plot NWs, as the NW can be completely in mid-fog, if just the underlying map was revealed to the player.
+		-- This happens with city state captital reveals, etc.
+		UI.AddTemporaryPlotVisibility("NaturalWonder", aPlots, RevealedState.VISIBLE);
+	end
+
 	ShowNaturalWonderLens(true);
 	m_isWaitingToShowPopup = true;
 	m_eCurrentFeature = kData.Feature;

@@ -238,7 +238,11 @@ function SetupButtons()
 	local bIsMultiplayer = GameConfiguration.IsAnyMultiplayer();
 	local bCanSave = CanLocalPlayerSaveGame();
 	local bCanLoad = CanLocalPlayerLoadGame();
-	local bCanRestart = not GameConfiguration.IsNetworkMultiplayer();
+	local bCanRestart = not GameConfiguration.IsAnyMultiplayer() 
+					-- TTP 34989 - Only allow restarts in hotseat if this is not a loaded save.  
+					-- The restart mechanic uses the game configuration prior to the very beginning of the game.
+					-- This can be unexpected if the user changed the player types post launch. 
+					or (GameConfiguration.IsHotseat() and not GameConfiguration.IsSavedGame());
 	local bIsLocalPlayersTurn = IsLocalPlayerTurnActive();
 
 	Controls.QuickSaveButton:SetDisabled( not bCanSave );
@@ -299,25 +303,28 @@ function RefreshIconData()
 	Controls.CivBacking_Darker:SetColor(darkerBackColor);
 	Controls.CivIcon:SetColor(m_secondaryColor);
 
-	local leader:string = PlayerConfigurations[m_pPlayer:GetID()]:GetLeaderTypeName();
-	if GameInfo.CivilizationLeaders[leader] == nil then
-		UI.DataError("Banners found a leader \""..leader.."\" which is not/no longer in the game; icon may be whack.");
+	local pPlayerConfig:table = PlayerConfigurations[m_pPlayer:GetID()];
+
+	local leaderTypeName:string = pPlayerConfig:GetLeaderTypeName();
+	if leaderTypeName ~= nil then
+		local leaderIconName = ICON_PREFIX..leaderTypeName;
+		-- Set Leader Icon
+		Controls.LeaderIcon:SetIcon(leaderIconName);
+		local leaderTooltip = GameInfo.Leaders[leaderTypeName].Name;
+		Controls.LeaderIcon:SetToolTipString(Locale.Lookup(leaderTooltip));
 	else
-		if(GameInfo.CivilizationLeaders[leader].LeaderType ~= nil) then
-			local leaderIconName = ICON_PREFIX.. GameInfo.CivilizationLeaders[leader].LeaderType;
-			-- Set Leader Icon
-			Controls.LeaderIcon:SetIcon(leaderIconName);
-			local leaderTooltip = GameInfo.Leaders[leader].Name;
-			Controls.LeaderIcon:SetToolTipString(Locale.Lookup(leaderTooltip));
-		end
-		if(GameInfo.CivilizationLeaders[leader].CivilizationType ~= nil) then
-			local civTypeName = GameInfo.CivilizationLeaders[leader].CivilizationType
-			local civIconName = ICON_PREFIX..civTypeName;
-			-- Set Civ Icon
-			Controls.CivIcon:SetIcon(civIconName);
-			civTooltip = GameInfo.Civilizations[civTypeName].Name;
-			Controls.CivIcon:SetToolTipString(Locale.Lookup(civTooltip));
-		end
+		UI.DataError("Invalid type name returned by GetLeaderTypeName");
+	end
+
+	local civTypeName:string = pPlayerConfig:GetCivilizationTypeName();
+	if civTypeName ~= nil then
+		local civIconName = ICON_PREFIX..civTypeName;
+		-- Set Civ Icon
+		Controls.CivIcon:SetIcon(civIconName);
+		civTooltip = GameInfo.Civilizations[civTypeName].Name;
+		Controls.CivIcon:SetToolTipString(Locale.Lookup(civTooltip));
+	else
+		UI.DataError("Invalid type name returned by GetCivilizationTypeName");
 	end
 
 	-- Game difficulty

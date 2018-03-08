@@ -1225,17 +1225,11 @@ function CityBanner.UpdateName( self : CityBanner )
 			local cityName		:string = capitalIcon .. Locale.ToUpper(pCity:GetName());			
 
 			if not self:IsTeam() then
-				local leader:string = PlayerConfigurations[owner]:GetLeaderTypeName();
-				if leader ~= nil then
-					if GameInfo.CivilizationLeaders[leader] == nil then
-						UI.DataError("Banners found a leader \""..leader.."\" which is not/no longer in the game; icon may be whack.");
-					else
-						local civIconName	:string = "ICON_";
-						local civType		:string = GameInfo.CivilizationLeaders[leader].CivilizationType;
-						if civType ~= nil then
-							self.m_Instance.CivIcon:SetIcon(civIconName..civType);
-						end
-					end
+				local civType:string = PlayerConfigurations[owner]:GetCivilizationTypeName();
+				if civType ~= nil then
+					self.m_Instance.CivIcon:SetIcon("ICON_" .. civType);
+				else
+					UI.DataError("Invalid type name returned by GetCivilizationTypeName");
 				end
 			end
 

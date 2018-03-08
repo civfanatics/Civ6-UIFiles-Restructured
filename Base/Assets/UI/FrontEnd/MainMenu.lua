@@ -1,6 +1,5 @@
 ﻿include("InstanceManager");
 include("LobbyTypes"); --MPLobbyMode
-include("PopupDialog");
 
 include("PlayerSetupLogic"); -- For PlayNow
 
@@ -20,6 +19,7 @@ local m_multiplayerButton:table = nil;	--Cache multiplayer button.
 local m_resumeButton:table = nil;		--Cache resume button so it can be updated when FileListQueryResults event fires
 local m_scenariosButton:table = nil;	--Cache scenarios button so it can be updated later.
 
+
 -- ===========================================================================
 --	Constants
 -- ===========================================================================
@@ -29,7 +29,6 @@ local TRACK_PADDING = 40;				--The amount of Y pixels to add to the track on top
 -- ===========================================================================
 --	Globals
 -- ===========================================================================
-
 g_LastFileQueryRequestID = nil;			-- The file list ID used to determine whether the call-back is for us or not.
 g_MostRecentSave = nil;					-- The most recent single player save a user has (locally)
 
@@ -735,11 +734,21 @@ function OnShow()
 	g_LastFileQueryRequestID = nil;
 	local options = SaveLocationOptions.NORMAL + SaveLocationOptions.AUTOSAVE + SaveLocationOptions.QUICKSAVE + SaveLocationOptions.MOST_RECENT_ONLY + SaveLocationOptions.LOAD_METADATA ;
 	g_LastFileQueryRequestID = UI.QuerySaveGameList( saveLocation, gameType, options );
+
+	local error = Modding.GetLastLoadError();
+	if (not m_bHasShownError and error ~= nil) then
+		m_bHasShownError = true;
+
+		local error_string = Locale.Lookup("LOC_GAME_START_ERROR_DESC") .. "[NEWLINE][NEWLINE]" .. Locale.Lookup("LOC_GAME_START_ERROR_CODE", tostring(error));
+
+		LuaEvents.MainMenu_LaunchError(error_string);
+	end
 end
 
 function OnHide()
 	-- Set the pause to 0 as soon as we hide the main menu, so it loads in right 
 	-- away when we return from any screen.
+	m_bHasShownError = nil;
 	m_initialPause = 0;
 end
 
@@ -808,6 +817,7 @@ function Initialize()
 
 	-- LUA Events
 	LuaEvents.FileListQueryResults.Add( OnFileListQueryResults );
+	LuaEvents.MainMenu_ShowAdditionalContent.Add(OnMods);
 
 	BuildAllMenus();
 	UpdateMotD();

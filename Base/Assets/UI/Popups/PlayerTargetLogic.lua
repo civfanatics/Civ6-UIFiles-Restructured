@@ -58,12 +58,12 @@ function PopulateTargetPull(pulldownControl :table, editBoxControl :table, iconC
     -- Add To Team Entry
 	local localPlayer = PlayerConfigurations[iLocalPlayerID];
 	local localTeam = localPlayer:GetTeam();
-	if( localTeam ~= TeamTypes.NO_TEAM and GameConfiguration.GetTeamPlayerCount(localTeam, true) >= 1) then
-        local controlTable = {};
-        pulldownControl:BuildEntry( "InstanceOne", controlTable );
-        controlTable.Button:SetVoids( ChatTargetTypes.CHATTARGET_TEAM, localTeam );
-        local textControl = controlTable.Button:GetTextControl();
-        textControl:LocalizeAndSetText( "LOC_DIPLO_TO_TEAM" );
+	if( localTeam ~= TeamTypes.NO_TEAM and GameConfiguration.GetTeamPlayerCount(localTeam, true) > 1) then
+	        local controlTable = {};
+	        pulldownControl:BuildEntry( "InstanceOne", controlTable );
+	        controlTable.Button:SetVoids( ChatTargetTypes.CHATTARGET_TEAM, localTeam );
+	        local textControl = controlTable.Button:GetTextControl();
+	        textControl:LocalizeAndSetText( "LOC_DIPLO_TO_TEAM" );
 		if controlTable.ChatIcon ~= nil then controlTable.ChatIcon:SetText(CHAT_ICON_TEAM); end
 		if controlTable.ChatLabel ~= nil then controlTable.ChatLabel:LocalizeAndSetText("LOC_DIPLO_TO_TEAM"); end
 		pulldownEntriesTable[ChatTargetTypes.CHATTARGET_TEAM] = controlTable;

@@ -209,6 +209,8 @@ function GetSuzerainBonusText( playerID:number )
 	-- Diplomatic Bonus
 	text = text .. "[NEWLINE][NEWLINE]" .. Locale.Lookup("LOC_CITY_STATES_SUZERAIN_DIPLOMATIC_BONUS");
 	
+	local comma_separator = Locale.Lookup("LOC_GRAMMAR_COMMA_SEPARATOR");
+
 	-- Resources Available
 	local resourceIcons	:string = "";
 	local player = Players[playerID];
@@ -219,7 +221,7 @@ function GetSuzerainBonusText( playerID:number )
 			if (player:GetResources():HasResource(resource) or player:GetResources():HasExportedResource(resource)) then
 				local amount = player:GetResources():GetResourceAmount(resource) + player:GetResources():GetExportedResourceAmount(resource);
 				if (resourceIcons ~= "") then
-					resourceIcons = resourceIcons .. ", ";
+					resourceIcons = resourceIcons .. comma_separator;
 				end
 				resourceIcons = resourceIcons .. amount .. " [ICON_" .. resourceInfo.ResourceType .. "] " .. Locale.Lookup(resourceInfo.Name);
 			end
@@ -294,7 +296,7 @@ function GetRelationships( cityStateID:number )
 			local cityStateEntry:table = {};
 			
 			local pPlayerConfig:table = PlayerConfigurations[playerID];
-			cityStateEntry.PlayerIcon = "ICON_" .. GameInfo.CivilizationLeaders[pPlayerConfig:GetLeaderTypeName()].CivilizationType;
+			cityStateEntry.PlayerIcon = "ICON_" .. pPlayerConfig:GetCivilizationTypeName();
 			cityStateEntry.PlayerName = pPlayerConfig:GetCivilizationShortDescription();
 			cityStateEntry.TeamID = pPlayerConfig:GetTeam();
 			cityStateEntry.DiploState = GameInfo.DiplomaticStates[diploStateID].StateType;
@@ -665,7 +667,8 @@ function RealizeEnvoyChangeButtons()
 		local amount:number = m_kEnvoyChanges[iPlayer];
 		inst.EnvoyLessButton:SetHide( amount == nil or amount == 0 );
 		if m_kCityStates[iPlayer].isAlive then
-			if m_kCityStates[iPlayer].CanReceiveTokensFrom then 
+			-- Also check if we're not at war due to some edge cases where we can't receive tokens but aren't at war
+			if m_kCityStates[iPlayer].CanReceiveTokensFrom or not m_kCityStates[iPlayer].isAtWar then 
 				inst.EnvoyMoreButton:SetToolTipString( Locale.Lookup("LOC_CITY_STATES_ADD_AN_ENVOY") );
 				inst.EnvoyLessButton:SetToolTipString( Locale.Lookup("LOC_CITY_STATES_REMOVE_AN_ENVOY") );
 				inst.Envoy:SetToolTipString( nil );
@@ -1465,15 +1468,13 @@ function GetData()
 
 			local cityStateType	:string = GetCityStateType( iPlayer );
 
-			local leader	:string = PlayerConfigurations[iPlayer]:GetLeaderTypeName();
-			local civType	:string = GameInfo.CivilizationLeaders[leader].CivilizationType;
-
 			local iPlayerDiploState :number = pPlayer:GetDiplomaticAI():GetDiplomaticStateIndex( localPlayerID );
 			local diplomaticState	:string = nil;
 			if iPlayerDiploState ~= -1 then
 				diplomaticState = GameInfo.DiplomaticStates[iPlayerDiploState].StateType;
 			end
 
+			local pPlayerConfig:table = PlayerConfigurations[iPlayer];
 
 			local kCityState :table		= {
 				iPlayer					= pPlayer:GetID(),
@@ -1484,11 +1485,11 @@ function GetData()
 				CanReceiveTokensFrom	= pLocalPlayer:GetInfluence():CanGiveTokensToPlayer( iPlayer ),
 				ColorPrimary			= primaryColor,
 				ColorSecondary			= secondaryColor,
-				CivType					= civType,
+				CivType					= pPlayerConfig:GetCivilizationTypeName(),
 				DiplomaticState			= diplomaticState,
 				Government				= pPlayer:GetCulture():GetCurrentGovernment(),
 				Influence				= kInfluence,
-				Name					= PlayerConfigurations[iPlayer]:GetCivilizationShortDescription(),
+				Name					= pPlayerConfig:GetCivilizationShortDescription(),
 				isAlive					= pPlayer:IsAlive(),
 				isAtWar					= pLocalPlayer:GetDiplomacy():IsAtWarWith( iPlayer ),
 				isBonus1				= (envoyTokens >= NUM_ENVOY_TOKENS_FOR_FIRST_BONUS),	-- WARNING: Inferring game rules to set bonus thresholds.

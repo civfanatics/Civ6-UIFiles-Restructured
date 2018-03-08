@@ -908,6 +908,8 @@ end
 function OnToggleCivilopedia()
 	if(ContextPtr:IsHidden()) then 
 		OnOpenCivilopedia();
+		-- Set focus on search bar
+		Controls.SearchEditBox:TakeFocus();
 	else
 		OnClose();
 	end

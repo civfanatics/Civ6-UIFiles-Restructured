@@ -2089,14 +2089,12 @@ function ReadDistrictData( pDistrict:table )
 
 		m_primaryColor, m_secondaryColor  = UI.GetPlayerColors( pDistrict:GetOwner() );
 
-		local leader:string = PlayerConfigurations[pDistrict:GetOwner()]:GetLeaderTypeName();
-		if GameInfo.CivilizationLeaders[leader] == nil then
-			UI.DataError("Banners found a leader \""..leader.."\" which is not/no longer in the game; icon may be whack.");
+		local civTypeName:string = PlayerConfigurations[pDistrict:GetOwner()]:GetCivilizationTypeName();
+		if civTypeName ~= nil then
+			local civIconName = "ICON_"..civTypeName;
+			m_subjectData.CivIconName	= civIconName;
 		else
-			if(GameInfo.CivilizationLeaders[leader].CivilizationType ~= nil) then
-				local civIconName = "ICON_"..GameInfo.CivilizationLeaders[leader].CivilizationType;
-				m_subjectData.CivIconName	= civIconName;
-			end
+			UI.DataError("Invalid type name returned by GetCivilizationTypeName");
 		end
 		View(m_subjectData);
 	end
@@ -3320,14 +3318,12 @@ function ReadTargetData_District(pDistrict)
 
 	m_primaryColor, m_secondaryColor = UI.GetPlayerColors(districtOwner);
 
-	local leader:string = PlayerConfigurations[districtOwner]:GetLeaderTypeName();
-	if GameInfo.CivilizationLeaders[leader] == nil then
-		UI.DataError("Banners found a leader \""..leader.."\" which is not/no longer in the game; icon may be whack.");
+	local civTypeName:string = PlayerConfigurations[districtOwner]:GetCivilizationTypeName();
+	if civTypeName ~= nil then
+		local civIconName = "ICON_"..civTypeName;
+		m_targetData.CivIconName = civIconName;
 	else
-		if(GameInfo.CivilizationLeaders[leader].CivilizationType ~= nil) then
-			local civIconName = "ICON_"..GameInfo.CivilizationLeaders[leader].CivilizationType;
-			m_targetData.CivIconName	= civIconName;
-		end
+		UI.DataError("Invalid type name returned by GetCivilizationTypeName");
 	end
 end
 
@@ -3368,27 +3364,23 @@ function ReadTargetData_Plot(pkPlot)
 
 		--For now we are using the civ icon instead of the district icon since the district icon doesn't fit into the window very well
 		--m_targetData.IconName = "ICON_"..districtInfo.DistrictType;
-		local leader:string = PlayerConfigurations[owner]:GetLeaderTypeName();
-		if GameInfo.CivilizationLeaders[leader] == nil then
-			UI.DataError("Banners found a leader \""..leader.."\" which is not/no longer in the game; icon may be whack.");
+		local civTypeName:string = PlayerConfigurations[owner]:GetCivilizationTypeName();
+		if civTypeName ~= nil then
+			local civIconName = "ICON_"..civTypeName;
+			m_targetData.CivIconName = civIconName;
 		else
-			if(GameInfo.CivilizationLeaders[leader].CivilizationType ~= nil) then
-				local civIconName = "ICON_"..GameInfo.CivilizationLeaders[leader].CivilizationType;
-				m_targetData.CivIconName	= civIconName;
-			end
+			UI.DataError("Invalid type name returned by GetCivilizationTypeName");
 		end
 
 		m_targetData.HasImprovementOrDistrict = true;
 	else
 		-- Set the owning player civ icon
-		local leader:string = PlayerConfigurations[owner]:GetLeaderTypeName();
-		if GameInfo.CivilizationLeaders[leader] == nil then
-			UI.DataError("Banners found a leader \""..leader.."\" which is not/no longer in the game; icon may be whack.");
+		local civTypeName:string = PlayerConfigurations[owner]:GetCivilizationTypeName();
+		if civTypeName ~= nil then
+			local civIconName = "ICON_"..civTypeName;
+			m_targetData.CivIconName = civIconName;
 		else
-			if(GameInfo.CivilizationLeaders[leader].CivilizationType ~= nil) then
-				local civIconName = "ICON_"..GameInfo.CivilizationLeaders[leader].CivilizationType;
-				m_targetData.CivIconName	= civIconName;
-			end
+			UI.DataError("Invalid type name returned by GetCivilizationTypeName");
 		end
 	end
 end

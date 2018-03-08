@@ -222,7 +222,7 @@
             <Image				ID="Icon"			        Size="38,38" Texture="Wonders38" Anchor="C,C" ConsumeMouse="0"/>
           </Container>
           <Container														Size="parent-65,parent-15" Anchor="R,C" Offset="10,0">
-            <Label				ID="LabelText"				WrapWidth="160" String="?Industrial Zone" Style="WhiteSemiBold14"  Anchor="L,C"/>
+            <Label				ID="LabelText"				WrapWidth="120" String="?Industrial Zone" Style="WhiteSemiBold14"  Anchor="L,C"/>
           </Container>
           <Stack Anchor="R,C" StackGrowth="Down" Padding="-6">
             <Grid               ID="RecommendedIcon" SliceTextureSize="40,34" SliceCorner="22,15" Size="40,34" Hidden="1" Texture="Controls_AdvisorRecBacking" ToolTip="LOC_HUD_UNIT_PANEL_RECOMMENDED" Anchor="R,T">

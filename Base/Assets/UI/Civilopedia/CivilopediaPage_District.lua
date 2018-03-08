@@ -63,7 +63,9 @@ PageLayouts["District" ] = function(page)
 					table.insert(scratch, s);
 				end
 			end
-			return table.concat(scratch, ", ");
+
+			local comma_separator = Locale.Lookup("LOC_GRAMMAR_COMMA_SEPARATOR"); 
+			return table.concat(scratch, comma_separator);
 
 		else
 			return nil;

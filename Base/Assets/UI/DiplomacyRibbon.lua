@@ -62,6 +62,9 @@ function AddLeader(iconName : string, playerID : number, isUniqueLeader: boolean
 	m_uiLeadersByID[playerID] = instance;
 	leaderIcon:UpdateIcon(iconName, playerID, isUniqueLeader);
 	leaderIcon:RegisterCallback(Mouse.eLClick, function() OnLeaderClicked(playerID); end);
+
+	-- Returning these so mods can override them and modify the icons
+	return leaderIcon, instance;
 end
 
 -- ===========================================================================

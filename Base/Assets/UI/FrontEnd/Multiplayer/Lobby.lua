@@ -205,7 +205,7 @@ function ServerListingButtonClick()
 
 		local bSuccess, bPending = Network.JoinGame( g_SelectedServerID );
 		if(not bSuccess) then
-			LuaEvents.MultiplayerPopup( "LOC_GAME_ABANDONED_JOIN_FAILED" );
+			LuaEvents.MultiplayerPopup( "LOC_GAME_ABANDONED_JOIN_FAILED", "LOC_GAME_ABANDONED_JOIN_FAILED_TITLE" );
 		end
 	end
 end
@@ -585,6 +585,9 @@ end
 
 -- ===========================================================================
 function SortAndDisplayListings(resetSelection:boolean)
+	
+	table.sort(g_Listings, g_SortFunction);
+
 	g_InstanceManager:ResetInstances();
 	g_InstanceList = {};
 	

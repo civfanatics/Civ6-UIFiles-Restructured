@@ -16,10 +16,12 @@ local m_strEllipsis = Locale.Lookup("LOC_GENERIC_DOT_DOT_DOT");
 -- ===========================================================================
 function TruncateString(control, resultSize, longStr, trailingText)
 
+	local textControl = control;
+
 	-- Ensure this has the actual text control
 	if control.GetTextControl ~= nil then
-		control = control:GetTextControl();
-		UI.AssertMsg(control.SetTruncateWidth ~= nil, "Calling TruncateString with an unsupported control");
+		textControl = control:GetTextControl();
+		UI.AssertMsg(textControl.SetTruncateWidth ~= nil, "Calling TruncateString with an unsupported control");
 	end
 
 	-- TODO if trailingText is ever used, add a way to do it to TextControl
@@ -35,15 +37,20 @@ function TruncateString(control, resultSize, longStr, trailingText)
 		--trailingText could be added, right now its just an ellipsis but it could be arbitrary
 		--this would avoid the weird type shenanigans when truncating TextButtons, TextControls, etc
 
-	if(control ~= nil)then
-		control:SetTruncateWidth(resultSize);
-		control:SetText(longStr);
+	if textControl ~= nil then
+		textControl:SetTruncateWidth(resultSize);
+
+		if control.SetText ~= nil then
+			control:SetText(longStr);
+		else
+			textControl:SetText(longStr);
+		end
 	else
 		UI.AssertMsg(false, "Attempting to truncate a NIL control");
 	end
 
-	if control.IsTextTruncated ~= nil then
-		return control:IsTextTruncated();
+	if textControl.IsTextTruncated ~= nil then
+		return textControl:IsTextTruncated();
 	else
 		UI.AssertMsg(false, "Calling IsTextTruncated with an unsupported control");
 		return true;

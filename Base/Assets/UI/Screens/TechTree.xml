@@ -26,6 +26,10 @@
       <Image ID="ArtCornerGrungeBR" Anchor="R,B" Offset="0,33" Size="52,44" Texture="Parchment_CornerGrunge" FlipX="0" FlipY="0" Alpha="1.0"/>
     </ScrollPanel>
 
+    <ScrollPanel ID="LineScroller" Offset="0,0" Size="parent,parent" Vertical="0" ScrollBar="0">
+      <Container ID="LineForceSizeX" Size="1,1"/>
+    </ScrollPanel>
+
     <ScrollPanel ID="NodeScroller" Offset="0,0" Size="parent,parent" Vertical="0">
       <Image ID="TreeStart" Size="56,56" Texture="Tree_Start"/>
       <ScrollBar ID="TimelineScrollbar" Anchor="C,B" Offset="0,15" Size="12,8" Texture="Controls_TimeSlider" Vertical="0" StateOffsetIncrement="0,0" SliceCorner="6,0" SliceTextureSize="12,8">
@@ -190,32 +194,7 @@
 	<!-- ================================================================= -->
 		
 	<!-- Most important part of the tree, the actual nodes of content. -->
-	<Instance Name="NodeInstance">
-		<Container ID="Top" Size="370,1">
-			<GridButton ID="NodeButton" Offset="0,-74" Size="370,84" Texture="TechTree_GearButton" SliceCorner="77,45" SliceSize="2,1" SliceTextureSize="133,84" StateOffsetIncrement="0,84">
-				<GridButton ID="OtherStates" Offset="0,0" Size="parent,parent" Texture="TechTree_GearButton" SliceCorner="77,45" SliceSize="2,1" SliceTextureSize="133,84" NoStateChange="1"/>
-				<Image ID="FillTexture" Offset="76,1" Size="242,78" Texture="TechTree_GearButtonTile_Disabled" StretchMode="Tile"/>
-				<Stack ID="UnlockStack" Offset="72,22" StackGrowth="Right"/>									
-				<Grid ID="BoostedBack" Offset="7,6" Anchor="L,B" Size="357,39" Texture="Controls_BoostSlotTech" SliceCorner="28,26" SliceSize="1,1" SliceTextureSize="39,39"/>
-				<Image ID="BoostIcon" Offset="10,7" Anchor="L,B" Texture="BoostTech"/> 
-				<Label ID="BoostText" Offset="42,7" Anchor="L,B" Style="TreeBoostText" String="?BoostText"/>
-        <Stack Offset="68,8" StackGrowth="Right" StackPadding="4">
-          <Label ID="NodeName" Style="TreeNodeText" String="?NodeName"/>
-          <Image ID="RecommendedIcon" Offset="0,-8" Size="22,22" Texture="AdvisorRec22" ConsumeMouse="1" ToolTip="LOC_TECH_FILTER_RECOMMENDED">
-            <FlipAnim Texture="AdvisorRecAnim22" Size="26,26" Anchor="C,C" FrameCount="12" Columns="4" Speed="14" EndPause="3" Color="255,255,255,200"/>
-          </Image>
-        </Stack>
-        <Label ID="Turns" Offset="20,6" Anchor="R,T" Style="TreeTurnText" String="?Turns"/>				
-				<FlipAnim ID="GearAnim" Offset="4,-1" Size="34,38" Texture="Controls_Meter69_GearAnim" Speed="20" FrameCount="3" Columns="3" Hidden="1"/>
-				<Image ID="IconBacking" Offset="2,-2" Texture="Tree_Meter_GearBack"/>
-				<Meter ID="BoostMeter" Offset="2,-2" Size="68,68" Texture="TechTree_Meter_Boost" Follow="1"/>
-				<Meter ID="ProgressMeter" Offset="2,-2" Size="68,68" Texture="TechTree_Meter_Fill"/>											 
-				<Grid ID="FilteredOut" Offset="0,0" Size="370,84" Texture="Tree_FilterMask" SliceCorner="35,41" SliceSize="1,1" SliceTextureSize="50,81" NoStateChange="1" ConsumeMouseButton="1" ConsumeMouseOver="1" Color="35,33,31,150" Hidden="1"/>
-				<Image ID="Icon" Offset="15,12" Size="42,42" Texture="Tech42"/>												
-				<Image ID="Bolt" Offset="0,27" Texture="Controls_BoltOn"/>				
-			</GridButton>			
-		</Container>
-  </Instance>
+	<Include File="TechTreeNode"/>
 
 	<Instance Name="SearchResultInstance">
 		<Container ID="Root" Size="auto,auto">

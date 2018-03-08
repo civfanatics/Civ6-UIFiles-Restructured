@@ -102,7 +102,7 @@ end
 -- ===========================================================================
 --	Populate the list of research options.
 -- ===========================================================================
-function View( playerID:number, kData:table )	
+function View( playerID:number, kData:table )
 		
 	m_researchIM:ResetInstances();
 
@@ -230,6 +230,8 @@ function AddAvailableResearch( playerID:number, kData:table )
 	else
 		kItemInstance.RecommendedIcon:SetHide(true);
 	end
+
+	return kItemInstance;
 end
 
 -- ===========================================================================
@@ -336,6 +338,13 @@ end
 --	May be active or value boosted for an item further in the list.
 -- ===========================================================================
 function OnResearchChanged( ePlayer:number, eTech:number )
+	m_needsRefresh = ShouldRefreshWhenResearchChanges(ePlayer);
+end
+
+-- ===========================================================================
+--	This function was separated so behavior can be modified in mods/expasions
+-- ===========================================================================
+function ShouldRefreshWhenResearchChanges(ePlayer:number)
 	local localPlayer = Game.GetLocalPlayer();
 	if localPlayer ~= -1 and localPlayer == ePlayer then
 		local pPlayerTechs :table = Players[localPlayer]:GetTechs();
@@ -346,8 +355,9 @@ function OnResearchChanged( ePlayer:number, eTech:number )
 			m_lastCompletedID = -1;
 		end
 		
-		m_needsRefresh = true;
+		return true;
 	end
+	return false;
 end
 
 -- ===========================================================================
