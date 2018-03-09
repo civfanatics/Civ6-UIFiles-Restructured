@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Context xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="..\..\..\..\..\CivTech\Libs\ForgeUI\ForgeUI_Assets\Controls.xsd">
+
+	<Container Style="FullScreenVignetteConsumer"/>
+
+	<Container ID="GovernorPanelContainer" Anchor="C,C"	Size="parent,768" MinSize="1024,768">
+    <Image Size="parent,parent" Texture="Governors_BackgroundTile_ScreenFill" ConsumeMouse="1"/>
+    
+    <!-- Governor Header -->
+    <Grid	Size="parent,32" Offset="0,40" Texture="Governors_SubHeaderTile" SliceCorner="128,2" SliceTextureSize="0,40"/>
+    <Grid	Size="parent,40" Texture="Controls_SubHeader2" ConsumeMouse="1" SliceCorner="20,2" SliceTextureSize="40,40">
+      <Label Anchor="C,C"	Style="FontFlair24" FontStyle="glow" ColorSet="ShellHeader" SmallCaps="28" SmallCapsLeading="0" SmallCapsType="EveryWord" String="LOC_GOVERNORS_TITLE"/>
+    </Grid>
+
+    <Grid	Anchor="C,C" Size="parent+16,parent+16"	Style="ScreenFrame"/>
+
+    <!-- Governor Titles -->
+    <Stack Anchor="C,T" Offset="0,42" StackGrowth="Right">
+      <Container Size="auto,22" AutoSizePadding="30">
+        <Label ID="GovernorTitlesAvailable" Anchor="C,C" Style="FontFlair16" Color="230,230,230,255"/>
+      </Container>
+      <Container Size="auto,22" AutoSizePadding="30">
+        <Label ID="GovernorTitlesSpent" Anchor="C,C" Style="FontFlair16" Color="230,230,230,255"/>
+      </Container>
+    </Stack>
+
+    <!-- Governors -->
+		<ScrollPanel ID="GovernorInstanceScrollPanel" Anchor="C,T" Size="parent-8,auto" Offset="0,72" Vertical="0" AutoScrollBar="1">
+			<ScrollBar Anchor="C,B"	AnchorSide="O,O" Offset="0,4" Size="parent,8"	Style="ScrollHorizontalBar" Color="110,106,90,255">
+        <Thumb Style="ScrollThumbHAlt" Size="12,4" Color="110,106,90,255"/>
+      </ScrollBar>
+			<Stack ID="GovernorInstanceStack" Anchor="C,T" StackGrowth="Right" StackPadding="10"/>
+		</ScrollPanel>
+
+    <!-- Close Button -->
+    <Button	ID="ModalScreenClose" Anchor="R,T" Style="CloseButtonLarge" Offset="-8,-5"/>
+
+    <LuaContext FileName="DLC/Expansion1/UI/Additions/GovernorDetailsPanel" ID="DetailsPanel" Hidden="1"/>
+  </Container>
+
+	<!-- ==================================================================	-->
+	<!--	Instances														-->
+	<!-- ==================================================================	-->
+
+	<Instance	Name="GovernorInstance">
+		<Image ID="Content" Size="234,680" Texture="Governors_BackgroundTile_ColumnOff" StretchMode="Tile">
+      <Grid ID="GovernorColumns" Anchor="C,T" Size="parent,parent" Texture="Governors_Column_Off" SliceTextureSize="234,222" SliceCorner="99,75" SliceSize="1,1">
+      </Grid>
+			<Stack Anchor="C,T" Offset="0,4" StackPadding="6">
+        <Container Anchor="C,T" Size="parent,auto">
+					<Image Anchor="C,T" Offset="0,10" Size="188,201" Texture="Governors_PortraitFrame">
+						<Image ID="GovernorPortrait" Anchor="C,T" Offset="0,0" Texture="GovernorNormal_Ambassador" Size="206,208">
+							<Image ID="GovernorNeutralizedIndicator" Anchor="C,C" Offset="0,-10" Size="170,170" Texture="Governors_Neutralized"/>
+						</Image>
+					</Image>
+
+          <!--Transition Strength and Identity Pressure-->
+          <Grid Anchor="C,T" Size="parent-60,48" Offset="0,245" Texture="Governors_DataFrame" SliceCorner="10,10" SliceSize="8,8">
+            <Container Anchor="L,B" Size="auto,auto" Offset="20,3" ToolTip="LOC_GOVERNOR_TRANSITION_STRENGTH_TOOLTIP">
+              <Image Size="28,30" Texture="SelectionPanel_Stat" Color="70,70,70,200">
+                <Label Anchor="C,C" Offset="0,0" String="[Icon_Turn]"/>
+              </Image>
+              <Label ID="TransitionStrengthLabel" Anchor="L,C" Offset="32,-1" Style="FontFlair16" Color="235,235,235,230"/>
+            </Container>
+            <Container Anchor="R,B" Size="auto,auto" Offset="20,3" ToolTip="LOC_GOVERNOR_IDENTITY_PRESSURE_TOOLTIP">
+              <Image Size="28,30" Texture="SelectionPanel_Stat" Color="70,70,70,200">
+                <Image Anchor="C,C" Size="22,22" Icon="ICON_STAT_CULTURAL_FLAG" IconSize="22"/>
+              </Image>
+              <Label ID="IdentityPressureLabel" Anchor="L,C" Offset="32,-1" Style="FontFlair16" Color="225,225,225,230"/>
+            </Container>
+          </Grid>
+          
+          <!--Governor Name and Title-->
+          <Grid ID="NameButton" Anchor="C,T" Size="parent-28,58" Offset="0,201" Texture="Governors_NamePlaque" SliceCorner="20,25" SliceSize="17,7">
+            <Label ID="GovernorName"  Anchor="C,T" Offset="0,14" Style="FontFlair16" SmallCaps="20" SmallCapsType="EveryWord" FontStyle="Shadow"	Color0="225,225,225,255" Color1="0,0,0,50"/>
+            <Label ID="GovernorTitle" Anchor="C,B" Offset="0,9" Style="FontNormal14" FontStyle="Shadow"	Color0="240,240,240,255" Color1="0,0,0,50" />
+          </Grid>
+        </Container>
+
+        <!-- Promotions -->
+				<Stack Anchor="C,T" StackGrowth="Down" StackPadding="5">
+					<Label Anchor="C,T" Style="FontFlair14" SmallCaps="18" SmallCapsType="EveryWord" Color="235,235,235,255" String="LOC_GOVERNORS_SCREEN_ABILITIES"/>
+					<Stack ID="EarnedPromotionsStack" Anchor="C,T" Offset="0,0" StackPadding="5" StackGrowth="Down"/>
+					<Stack ID="AvailablePromotionsStack" Anchor="C,T" Offset="0,0" StackPadding="5" StackGrowth="Down"/>
+				</Stack>
+				
+        <!-- Status -->
+        <Container Anchor="C,T" Size="parent,65">
+          <Stack Anchor="C,C" StackGrowth="Down" StackPadding="2">
+            <Label ID="GovernorStatus" Anchor="C,T" Align="Center" Style="FontNormal14" WrapWidth="198"/>
+            <Label ID="GovernorStatusDetails" Anchor="C,T" Align="Center" Style="FontNormal14" WrapWidth="198" Color="200,200,200,255"/>
+          </Stack>
+        </Container>
+      </Stack>
+
+      <!-- Decorative Column Borders -->
+      <Box ID="FadeOutOverlay" Size="parent,parent" Color="0,0,0,100"/>
+      <Grid Size="parent-2,auto" AutoSizePadding="0,4" Anchor="C,B" Offset="0,0" Texture="Governors_DetailsFooterTile" SliceCorner="15,15" SliceSize="22,22">
+        <Stack Anchor="C,C" StackGrowth="Down" StackPadding="0">
+          <GridButton ID="GovernorDetailsButton" Size="parent-20,41" Style="FontNormal14" String="LOC_GOVERNORS_SCREEN_DETAILS" Texture="Controls_Button" SliceCorner="41,20" SliceTextureSize="80,41" StateOffsetIncrement="0,41"/>
+          <GridButton ID="AssignButton" Size="parent-20,41" Style="FontNormal14" String="LOC_GOVERNORS_SCREEN_BUTTON_ASSIGN_GOVERNOR" Texture="Controls_Button" SliceCorner="41,20" SliceTextureSize="80,41" StateOffsetIncrement="0,41"/>
+          <GridButton ID="AppointButton" Size="parent-20,41" Style="FontNormal14" String="LOC_GOVERNORS_SCREEN_BUTTON_APPOINT_GOVERNOR" Texture="Controls_Confirm" SliceCorner="41,20" SliceTextureSize="80,41" StateOffsetIncrement="0,41"/>
+        </Stack>
+      </Grid>
+		</Image>
+	</Instance>
+
+	<!-- ==================================================================	-->
+	<Instance Name="PromotionInstance">
+		<Grid ID="Button" Size="parent-40,28" Texture="Governors_DataFrame" SliceCorner="10,10" SliceSize="8,8">
+      <Image ID="PromotionIcon" Anchor="L,C" Offset="6,0" Size="24,24" IconSize="24" Icon="ICON_GOVERNOR_GENERIC_PROMOTION"/>
+			<Label ID="PromotionName" Anchor="L,C" Offset="34,0" Style="FontNormal14" String="Promotion Name" TruncateWidth="158"/>
+		</Grid>
+	</Instance>
+	
+</Context>

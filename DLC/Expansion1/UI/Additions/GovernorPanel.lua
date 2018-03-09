@@ -1,0 +1,547 @@
+-- ===========================================================================
+--	UI for managing and appointing Governors	
+-- ===========================================================================
+
+include("InstanceManager");
+include("TabSupport");
+include("SupportFunctions");
+include("Civ6Common"); --DifferentiateCivs
+include("ModalScreen_PlayerYieldsHelper");
+include("GovernorSupport");
+
+-- ===========================================================================
+--	CONSTANTS
+-- ===========================================================================
+local RELOAD_CACHE_ID:string = "GovernorPanel"; -- Must be unique (usually the same as the file name)
+
+m_GovernorApptAvailableHash = DB.MakeHash("NOTIFICATION_GOVERNOR_APPOINTMENT_AVAILABLE");
+m_GovernorOpportunityAvailableHash = DB.MakeHash("NOTIFICATION_GOVERNOR_OPPORTUNITY_AVAILABLE");
+m_GovernorPromotionAvailableHash = DB.MakeHash("NOTIFICATION_GOVERNOR_PROMOTION_AVAILABLE");
+
+local PANEL_MAX_WIDTH = 1720;
+
+-- ===========================================================================
+--	VARIABLES
+-- ===========================================================================
+local m_governorIM			:table = InstanceManager:new("GovernorInstance",	"Content",	Controls.GovernorInstanceStack);
+local m_governorPromotionIM :table = InstanceManager:new("PromotionInstance",	"Button");
+
+-- ===========================================================================
+function Refresh()
+
+	local pPlayer = Players[Game.GetLocalPlayer()];
+	if (pPlayer == nil) then
+		return;
+	end
+		
+	m_governorPromotionIM:ResetInstances();
+
+	--
+	-- display a list of governor candidates
+	--
+	m_governorIM:ResetInstances();
+
+	local playerGovernors = pPlayer:GetGovernors();
+	local governorPointsObtained = playerGovernors:GetGovernorPoints();
+	local governorPointsSpent = playerGovernors:GetGovernorPointsSpent();
+	local bCanAppoint = playerGovernors:CanAppoint();
+	local bCanPromote = playerGovernors:CanPromote();
+	local bHasGovernors, tGovernorList = playerGovernors:GetGovernorList();
+
+	Controls.GovernorTitlesAvailable:SetText(Locale.Lookup("LOC_GOVERNOR_GOVERNOR_TITLES_AVAILABLE", governorPointsObtained - governorPointsSpent));
+	Controls.GovernorTitlesSpent:SetText(Locale.Lookup("LOC_GOVERNOR_GOVERNOR_TITLES_SPENT", governorPointsSpent));
+
+	-- Add apointed governors
+	for i,appointedGovernor in ipairs(tGovernorList) do
+		local eGovernorType = appointedGovernor:GetType();
+		local governorDef = GameInfo.Governors[eGovernorType];
+
+		AddGovernorAppointed(playerGovernors, appointedGovernor, governorDef, bCanPromote);
+	end
+
+	-- Add appointable governors
+	for governorDef in GameInfo.Governors() do
+		local governorHash = governorDef.Hash;
+		if (not playerGovernors:HasGovernor(governorHash)) then
+			AddGovernorCandidate(governorDef, bCanAppoint);
+		end
+	end
+
+	Controls.GovernorInstanceStack:CalculateSize();
+	Controls.GovernorInstanceScrollPanel:CalculateSize();
+
+	if Controls.GovernorPanelContainer:GetSizeX() > PANEL_MAX_WIDTH then
+		Controls.GovernorPanelContainer:SetSizeX(PANEL_MAX_WIDTH);
+	end
+end
+
+-- ===========================================================================
+function AddGovernorShared(governor:table)
+
+	local pLocalPlayer = Players[Game.GetLocalPlayer()];
+	local pPlayerGovernors = pLocalPlayer:GetGovernors();
+	local turnsToEstablish = pPlayerGovernors:GetTurnsToEstablish(governor.Hash);
+
+	governorInstance = m_governorIM:GetInstance();
+
+	-- Update name, title, and portrait
+	governorInstance.GovernorName:SetText(Locale.ToUpper(governor.Name));
+	governorInstance.GovernorTitle:SetText(Locale.Lookup(governor.Title));
+	governorInstance.GovernorPortrait:SetTexture(governor.PortraitImage);
+
+	-- Update transition strength
+	governorInstance.TransitionStrengthLabel:SetText(turnsToEstablish);
+
+	-- Update identity pressure
+	governorInstance.IdentityPressureLabel:SetText(governor.IdentityPressure);
+
+	-- Return the governor instance
+	return governorInstance;
+end
+
+-- ===========================================================================
+function AddPromotionInstance( governorInstance:table, promotion:table, hasPromotion:boolean )
+
+	local promotionInstance = {};
+	if hasPromotion then
+		promotionInstance = m_governorPromotionIM:GetInstance(governorInstance.EarnedPromotionsStack);
+	else
+		promotionInstance = m_governorPromotionIM:GetInstance(governorInstance.AvailablePromotionsStack);
+	end
+
+	local hasModifier = false;
+	for row in GameInfo.GovernorPromotionModifiers() do
+		if(row.GovernorPromotionType == promotion.GovernorPromotionType) then
+			hasModifier = true;
+			break;
+		end
+	end
+
+	local sDescription = "";
+	if (not hasModifier) then
+		sDescription = sDescription .. "<NOT IMPLEMENTED>";
+	end
+	sDescription = sDescription .. Locale.Lookup(promotion.Description);
+
+	promotionInstance.PromotionName:SetText(Locale.Lookup(promotion.Name));
+	promotionInstance.Button:SetToolTipString(sDescription);
+	promotionInstance.Button:SetDisabled(true);
+
+	-- If this is our base ability use our governor specific promotion icon
+	if promotion.BaseAbility then
+		local iconName:string = "ICON_" .. promotion.GovernorType .. "_PROMOTION";
+		promotionInstance.PromotionIcon:SetIcon(iconName);
+	else
+		promotionInstance.PromotionIcon:SetIcon("ICON_GOVERNOR_GENERIC_PROMOTION");
+	end
+
+	-- Indicate if we have this promotion using vis states
+	if hasPromotion then
+		promotionInstance.Button:SetAlpha(1.0);
+	else
+		promotionInstance.Button:SetAlpha(0.5);
+	end
+end
+
+-- ===========================================================================
+function AddGovernorCandidate(governorDef:table, canAppoint:boolean)
+
+	local governorInstance:table = AddGovernorShared(governorDef);
+
+	-- Add all promotions this governor has
+	for promotion in GameInfo.GovernorPromotions() do
+		if promotion.GovernorType == governorDef.GovernorType then
+			AddPromotionInstance(governorInstance, promotion, promotion.BaseAbility);
+		end
+	end
+
+	-- Always use unassigned column/background for governor candidates
+	governorInstance.Content:SetTexture("Governors_BackgroundTile_ColumnOff");
+	governorInstance.GovernorColumns:SetTexture("Governors_Column_Off");
+
+	governorInstance.AssignButton:SetHide(true);
+	governorInstance.AppointButton:SetHide(false);
+
+	if canAppoint then
+		governorInstance.AppointButton:SetVoid1( governorDef.Index );
+		governorInstance.AppointButton:RegisterCallback( Mouse.eLClick, OnAppointGovernor );
+		governorInstance.AppointButton:SetDisabled(false);
+	else
+		governorInstance.AppointButton:SetDisabled(true);
+	end
+
+	SetGovernorStatus(governorInstance, governorDef);
+
+	-- Setup details button
+	governorInstance.GovernorDetailsButton:SetVoid1(governorDef.Index);
+	governorInstance.GovernorDetailsButton:RegisterCallback(Mouse.eLClick, OnNameButton);
+	governorInstance.GovernorDetailsButton:SetText(Locale.Lookup("LOC_GOVERNORS_SCREEN_VIEW_PROMOTIONS"));
+	governorInstance.GovernorDetailsButton:SetTexture("Controls_Button");
+
+	governorInstance.GovernorNeutralizedIndicator:SetHide(true);
+	governorInstance.FadeOutOverlay:SetHide(false);
+end
+
+-- ===========================================================================
+function SetGovernorStatus(governorInstance:table, governorDef:table, governor:table)
+	local status, statusDetails = GetGovernorStatus(governorDef, governor);
+	governorInstance.GovernorStatus:SetText(status);
+	governorInstance.GovernorStatusDetails:SetText(statusDetails);
+end
+
+-- ===========================================================================
+function AddGovernorAppointed(playerGovernors:table, governor:table, governorDefinition:table, canPromote:boolean)
+
+	local governorInstance:table = AddGovernorShared(governorDefinition);
+
+	-- Add all promotions this governor has
+	local hasAllPromotions:boolean = true;
+	for promotion in GameInfo.GovernorPromotions() do
+		if promotion.GovernorType == governorDefinition.GovernorType then
+			local hasPromotion:boolean = governor:HasPromotion(promotion.Hash);
+			AddPromotionInstance(governorInstance, promotion, hasPromotion);
+
+			if not hasPromotion then
+				hasAllPromotions = false;
+			end
+		end
+	end
+
+	governorInstance.AssignButton:SetHide(false);
+	governorInstance.AppointButton:SetHide(true);
+
+	-- Update assignment button
+	governorInstance.AssignButton:SetDisabled(false);
+	governorInstance.AssignButton:SetVoid1( governorDefinition.Index );
+	governorInstance.AssignButton:RegisterCallback(Mouse.eLClick, OnAssignButton);
+
+	SetGovernorStatus(governorInstance, governorDefinition, governor);
+
+	local pAssignedCity:table = governor:GetAssignedCity();
+	if pAssignedCity then
+		governorInstance.AssignButton:SetTexture("Controls_Button");
+		governorInstance.AssignButton:SetText(Locale.Lookup("LOC_GOVERNORS_SCREEN_BUTTON_REASSIGN_GOVERNOR"));
+		governorInstance.GovernorDetailsButton:SetVisState(0); -- Workaround for VisState breaking when switching textures
+
+		governorInstance.Content:SetTexture("Governors_BackgroundTile_ColumnOn");
+		governorInstance.GovernorColumns:SetTexture("Governors_Column_On");
+	else
+		governorInstance.AssignButton:SetText(Locale.Lookup("LOC_GOVERNORS_SCREEN_BUTTON_ASSIGN_GOVERNOR"));
+
+		-- If we have cities without any governors highlight the Assign buttons
+		if AnyCitiesWithoutAGovernor() then
+			governorInstance.AssignButton:SetTexture("Controls_Confirm");
+		else
+			governorInstance.AssignButton:SetTexture("Controls_Button");
+		end
+		governorInstance.GovernorDetailsButton:SetVisState(0); -- Workaround for VisState breaking when switching textures
+
+		governorInstance.Content:SetTexture("Governors_BackgroundTile_ColumnOff");
+		governorInstance.GovernorColumns:SetTexture("Governors_Column_Off");
+	end
+
+	-- Setup button to open governor details
+	if canPromote and not hasAllPromotions then
+		governorInstance.GovernorDetailsButton:SetTexture("Controls_Confirm");
+		governorInstance.GovernorDetailsButton:SetText(Locale.Lookup("LOC_GOVERNORS_SCREEN_PROMOTE"));
+		governorInstance.GovernorDetailsButton:SetVisState(0); -- Workaround for VisState breaking when switching textures
+	else
+		governorInstance.GovernorDetailsButton:SetTexture("Controls_Button");
+		governorInstance.GovernorDetailsButton:SetText(Locale.Lookup("LOC_GOVERNORS_SCREEN_VIEW_PROMOTIONS"));
+		governorInstance.GovernorDetailsButton:SetVisState(0); -- Workaround for VisState breaking when switching textures
+	end
+	governorInstance.GovernorDetailsButton:SetVoid1(governorDefinition.Index);
+	governorInstance.GovernorDetailsButton:RegisterCallback(Mouse.eLClick, OnNameButton);
+
+	local numOfNeutralizedTurns:number = governor:GetNeutralizedTurns();
+	if (numOfNeutralizedTurns > 0) then
+		governorInstance.AssignButton:SetDisabled(true);
+		governorInstance.GovernorNeutralizedIndicator:SetHide(false);
+		governorInstance.FadeOutOverlay:SetHide(false);
+	else
+		governorInstance.AssignButton:SetDisabled(false);
+		governorInstance.GovernorNeutralizedIndicator:SetHide(true);
+		governorInstance.FadeOutOverlay:SetHide(true);
+	end
+end
+
+-- ===========================================================================
+function AnyCitiesWithoutAGovernor()
+	local pLocalPlayerCities:table = Players[Game.GetLocalPlayer()]:GetCities();
+	for i,pCity in pLocalPlayerCities:Members() do
+		if pCity:GetAssignedGovernor() == nil then
+			return true;
+		end
+	end
+
+	return false;
+end
+
+-- ===========================================================================
+function OnNameButton( governorIndex:number )
+	LuaEvents.GovernorDetailsPanel_OpenDetails( governorIndex );
+	Controls.DetailsPanel:SetHide(false);
+end
+
+-- ===========================================================================
+function OnAssignButton( governorIndex:number )
+	LuaEvents.GovernorAssignmentChooser_RequestAssignment( governorIndex );
+	Close();
+end
+
+-- ===========================================================================
+function Close()
+	if Controls.DetailsPanel:IsVisible() then
+		Controls.DetailsPanel:SetHide(true);
+	end
+
+	if UIManager:DequeuePopup(ContextPtr) then
+		UI.PlaySound("UI_Screen_Close");
+		LuaEvents.GovernorPanel_Closed();
+	end
+end
+
+-- ===========================================================================
+function Open()
+	Refresh();
+	Controls.DetailsPanel:SetHide(true);
+	if not UIManager:IsInPopupQueue(ContextPtr) then
+		-- Queue the screen as a popup, but we want it to render at a desired location in the hierarchy, not on top of everything.
+		local kParameters = {};
+		kParameters.RenderAtCurrentParent = true;
+		kParameters.InputAtCurrentParent = true;
+		kParameters.AlwaysVisibleInQueue = true;
+		UIManager:QueuePopup(ContextPtr, PopupPriority.Low, kParameters);
+		UI.PlaySound("UI_Screen_Open");
+	end
+
+	LuaEvents.GovernorAssignmentChooser_Close();
+	
+	-- From Civ6_styles: FullScreenVignetteConsumer
+	Controls.ScreenAnimIn:SetToBeginning();
+	Controls.ScreenAnimIn:Play();
+	
+	LuaEvents.GovernorPanel_Opened();
+	ContextPtr:ChangeParent(ContextPtr:LookUpControl("/InGame/Screens"));
+end
+
+-- ===========================================================================
+function OnGovernorAppointed(playerID, governorID)
+	if ContextPtr:IsVisible() and playerID == Game.GetLocalPlayer() then
+		Refresh();
+		LuaEvents.GovernorAssignmentChooser_RequestAssignment( governorID );
+		Close();
+	end
+end
+
+-- ===========================================================================
+function OnAppointGovernor(eGovernor:number)
+	local pLocalPlayer = Players[Game.GetLocalPlayer()];
+	if (pLocalPlayer ~= nil) then
+		local kParameters:table = {};
+		kParameters[PlayerOperations.PARAM_GOVERNOR_TYPE] = eGovernor;
+		UI.RequestPlayerOperation(Game.GetLocalPlayer(), PlayerOperations.APPOINT_GOVERNOR, kParameters);
+
+		Refresh();
+	end
+end
+
+-- ===========================================================================
+function OnAssignToCity(eGovernor:number, cityID:number)
+	local pLocalPlayer = Players[Game.GetLocalPlayer()];
+	if (pLocalPlayer ~= nil) then
+		local kParameters:table = {};
+		kParameters[PlayerOperations.PARAM_GOVERNOR_TYPE] = eGovernor;
+		kParameters[PlayerOperations.PARAM_CITY_DEST] = cityID;
+		UI.RequestPlayerOperation(Game.GetLocalPlayer(), PlayerOperations.ASSIGN_GOVERNOR, kParameters);
+	end
+end
+
+-- ===========================================================================
+function OnPromoteGovernor(eGovernor:number, ePromotion:number)
+	local pLocalPlayer = Players[Game.GetLocalPlayer()];
+	if (pLocalPlayer ~= nil) then
+		local kParameters:table = {};
+		kParameters[PlayerOperations.PARAM_GOVERNOR_TYPE] = eGovernor;
+		kParameters[PlayerOperations.PARAM_GOVERNOR_PROMOTION_TYPE] = ePromotion;
+		UI.RequestPlayerOperation(Game.GetLocalPlayer(), PlayerOperations.PROMOTE_GOVERNOR, kParameters);
+	end
+end
+
+
+-- ===========================================================================
+function OnToggleGovernorPanel()
+	if ContextPtr:IsHidden() then
+		Open();
+	else
+		Close();
+	end
+end
+
+-- ===========================================================================
+function OnProcessNotification(playerID:number, notificationID:number, activatedByUser:boolean)
+	if playerID == Game.GetLocalPlayer() then -- Was it for us?
+		local pNotification = NotificationManager.Find(playerID, notificationID);
+		if (pNotification) then
+			if (pNotification:GetType() == m_GovernorApptAvailableHash or
+				pNotification:GetType() == m_GovernorOpportunityAvailableHash or
+				pNotification:GetType() == m_GovernorPromotionAvailableHash) then
+				-- Open/refresh Governor Panel when we catch a governor notification
+				Open();
+			end
+		end
+	end
+end
+
+-- ===========================================================================
+function OnProcessTurnBlocker( pNotification:table)
+	if (pNotification ~= nil) then
+		if (pNotification:GetPlayerID() ~= Game:GetLocalPlayer()) then
+			return;
+		end
+
+		local notificationType = pNotification:GetType();
+
+		if (pNotification:GetType() == m_GovernorApptAvailableHash or
+			pNotification:GetType() == m_GovernorOpportunityAvailableHash or
+			pNotification:GetType() == m_GovernorPromotionAvailableHash) then
+			-- Open/refresh Governor Panel when we catch a governor notification
+			Open();
+		end
+	end
+end
+
+-- ===========================================================================
+--	UI Event
+-- ===========================================================================
+function OnInit( isReload:boolean )
+	if isReload then		
+		LuaEvents.GameDebug_GetValues( RELOAD_CACHE_ID );	
+	end
+end
+
+-- =======================================================================================
+--	UI Event
+-- =======================================================================================
+function OnShutdown()
+	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "isVisible", ContextPtr:IsVisible());
+end
+
+-- ===========================================================================
+--	LUA Event
+--	Set cached values back after a hotload.
+-- ===========================================================================s
+function OnGameDebugReturn( context:string, contextTable:table )
+	if context ~= RELOAD_CACHE_ID then
+		return;
+	end
+
+	if contextTable["isVisible"] then
+		ContextPtr:SetHide(not contextTable["isVisible"]);
+	end
+
+	Refresh();
+end
+
+-- ===========================================================================
+--	UI Input Event Handler
+-- ===========================================================================
+function OnInputHandler( pInputStruct:table )
+
+	if ContextPtr:IsHidden() then return; end
+
+	local key = pInputStruct:GetKey();
+	local msg = pInputStruct:GetMessageType();
+	if msg == KeyEvents.KeyUp and key == Keys.VK_ESCAPE then 
+		Close();
+		return true;
+	end;
+	return false;
+end
+
+-- ===========================================================================
+function OnLocalPlayerTurnEnd()
+	if GameConfiguration.IsHotseat() and ContextPtr:IsVisible() then
+		Close();
+	end
+end
+
+-- ===========================================================================
+function OnGovernorAssigned(cityPlayer, cityID, ePlayer, eGovernor)
+
+	if ContextPtr:IsVisible() and ePlayer == Game.GetLocalPlayer() then
+		Refresh();
+	end
+end
+
+-- ===========================================================================
+function OnGovernorChanged(ePlayer, eGovernor)
+
+	if ContextPtr:IsVisible() and ePlayer == Game.GetLocalPlayer() then
+		Refresh();
+	end	
+end
+
+-- ===========================================================================
+function OnGovernorPointsChanged(ePlayer, iPointDelta)
+
+	if ContextPtr:IsVisible() and ePlayer == Game.GetLocalPlayer() then
+		Refresh();
+	end	
+end
+
+-- ===========================================================================
+function OnGovernorPromoted(ePlayer, eGovernor, ePromotion)
+
+	if ContextPtr:IsVisible() and ePlayer == Game.GetLocalPlayer() then
+		Refresh();
+	end	
+end
+
+-- ===========================================================================
+function OnLocalPlayerTurnBegin()
+
+	if ContextPtr:IsVisible() then
+		Refresh();
+	end	
+end
+-- ===========================================================================
+-- ===========================================================================
+function Initialize()
+
+	-- Start off hidden
+	ContextPtr:SetHide(true);
+	ContextPtr:SetInitHandler( OnInit );
+	ContextPtr:SetShutdown( OnShutdown );
+	ContextPtr:SetInputHandler( OnInputHandler, true );
+
+	-- Lua Events
+	LuaEvents.GameDebug_Return.Add( OnGameDebugReturn );
+
+
+	-- GAME EVENTS --
+	Events.GovernorAppointed.Add( OnGovernorAppointed );
+	Events.GovernorAssigned.Add( OnGovernorAssigned );
+	Events.GovernorChanged.Add( OnGovernorChanged );
+	Events.GovernorPointsChanged.Add( OnGovernorPointsChanged );
+	Events.GovernorPromoted.Add( OnGovernorPromoted );
+	Events.NotificationActivated.Add(OnProcessNotification);
+	Events.LocalPlayerTurnBegin.Add( OnLocalPlayerTurnBegin );	
+	Events.LocalPlayerTurnEnd.Add( OnLocalPlayerTurnEnd );	
+
+
+	-- UI EVENTS --
+	LuaEvents.GovernorPanel_Toggle.Add( OnToggleGovernorPanel );
+	LuaEvents.GovernorPanel_Close.Add( Close );
+	LuaEvents.GovernorPanel_Open.Add( Open );
+	LuaEvents.GovernorPanel_CancelAssignment.Add( Open );
+	LuaEvents.GovernorPanel_ClosedDetails.Add( Open );
+	LuaEvents.GovernorPanel_AssignDetails.Add( Close );
+
+	LuaEvents.ActionPanel_ActivateNotification.Add(	OnProcessTurnBlocker );
+
+	Controls.ModalScreenClose:RegisterCallback(Mouse.eLClick, Close);
+
+	Refresh();
+end
+Initialize();

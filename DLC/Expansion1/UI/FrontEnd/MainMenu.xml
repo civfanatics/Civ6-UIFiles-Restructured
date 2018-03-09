@@ -5,7 +5,7 @@
 	<Include File="PopupDialog" />
   
   <Stack                  ID="ShellMenuAndLogo" StackGrowth="Down" Anchor="C,C">
-    <Image ID="Logo"				Anchor="C,T"	Offset="0,0" Texture="MainLogo.dds" StretchMode="Auto"/>
+    <Image ID="Logo"				Anchor="C,T"	Offset="0,0" Texture="Shell_LogoEXP.dds" StretchMode="Auto"/>
     
     <SlideAnim            ID="SubMenuSlide" Begin="200,0"	End="0,0" Size="640,450" Anchor="C,T" Speed="2" Cycle="Once" Function="OutQuad" Stopped="1" FunctionPower="5" Hidden="0">
       <Stack              ID="ShellStack" StackGrowth="Right" StackPadding="20">

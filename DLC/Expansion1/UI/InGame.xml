@@ -18,7 +18,8 @@
 	<Container		ID="WorldViewControls"          Size="parent,parent">
 		<LuaContext ID="WorldViewIconsManager"			FileName="WorldViewIconsManager"/>
 		<LuaContext ID="DistrictPlotIconManager"		FileName="WorldView/DistrictPlotIconManager"/>
-		<LuaContext ID="PlotInfo"										FileName="WorldView/PlotInfo"/>
+    <LuaContext ID="SettlerInfluenceIconManager"		FileName="Additions/SettlerInfluenceIconManager"/>
+    <LuaContext ID="PlotInfo"										FileName="WorldView/PlotInfo"/>
 		<LuaContext ID="CityBannerManager"					FileName="CityBannerManager" />
 		<LuaContext ID="UnitFlagManager"						FileName="UnitFlagManager"/>
     <LuaContext ID="TourismBannerManager"				FileName="TourismBannerManager" />

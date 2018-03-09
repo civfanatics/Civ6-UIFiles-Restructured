@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Context>
+
+	<Include File="CivilizationIcon" />
+	
+	<Instance Name="RowDivider">
+		<Line Color="150,150,150,100" Anchor="C,T" Start="0,0" End="440,0" Width="2"/>
+	</Instance>
+	
+  <SlideAnim Style="RundownAnimBG">
+    <!-- ==================================================================	-->
+    <!--	Body																											        -->
+    <!-- ==================================================================	-->
+    <Container ID="BodyContainer" Anchor="C,T" Size="parent-20,parent-98" Offset="0,88">
+			<!-- Top Container -->
+			<Container ID="TopContainer" Size="parent,auto" Anchor="C,T">
+				<Stack Anchor="C,T" Offset="0,6" StackGrowth="Down" StackPadding="6">
+					<Label ID="EraName" Anchor="C,T" Size="parent,30" Style="WorldRankingsTitle" SmallCapsType="EveryWord"/>
+					<MakeInstance Name="RowDivider"/>
+					<Container ID="TimeToNextEraContainer" Anchor="C,T" Size="parent-52,30">
+						<Label Anchor="L,T" Offset="0,5" Style="HalfScreenHeader" String="LOC_ERAS_TURNS_TILL_NEXT_ERA"/>
+						<Stack Anchor="R,T" Offset="0,2" StackGrowth="Right" StackPadding="2">
+							<Label Style="FontNormal16" String="[ICON_Turn]"/>
+							<Label ID="TimeToNextEra" Style="FontFlair20"/>
+						</Stack>
+						<MakeInstance Anchor="C,B" Name="RowDivider"/>
+					</Container>
+					<!-- Player Portrait + Era Banner -->
+					<Container Anchor="C,T" Size="parent,80">
+
+						<Container ID="ScoreContainer" Offset="120,20" Size="parent-175,40">
+							<Label Anchor="L,T" String="LOC_ERAS_CURRENT_SCORE" Color0="208,212,217,255" Style="FontBoldFlair18" SmallCaps="26" SmallCapsLeading="0" SmallCapsType="EveryWord"/>
+							<Label ID="EraScoreValue" Anchor="R,T" Offset="-2,-8" String="9999" Style="FontBoldFlair26" Align="Right"/>
+						</Container>
+
+						<Grid ID="EraRibbon" Anchor="C,C" Offset="0,14" Size="parent-10,71" SliceCorner="48,12" SliceSize="188,38" SliceTextureSize="293,71" Texture="Controls_AgesBanner_Normal">
+							<Label ID="EraRibbonLabel" Anchor="L,C" Offset="116,2" Style="FontFlair14" SmallCaps="18" SmallCapsType="EveryWord"  FontStyle="shadow"	Color0="217,217,217,255"	Color1="36,36,36,255"  String="LOC_ERAS_CURRENT_AGE"/>
+							<Label ID="EraRibbonValue" Anchor="R,C" Offset="38,1" Style="FontFlair16" Align="right"  FontStyle="shadow"	Color0="217,217,217,255"	Color1="36,36,36,255" />
+						</Grid>
+
+						<Container ID="PlayerLeader" Anchor="L,C" Size="64,64" Offset="40,0" >
+							<Container ID="PlayerLeaderButton" Size="parent,parent">
+								<Image Anchor="C,C" Texture="CircleBacking64" Color="80,80,80"/>
+								<Image Anchor="C,C" ID="YouIndicator" Texture="Diplomacy_YouIndicatorLarge"/>
+								<Image ID="LeaderPortrait" Anchor="C,C" Size="64,64" Texture="Leaders55" />
+								<Image ID="TeamRibbon" Anchor="C,B" Offset="0,-8" Texture="TeamRibbon53" Size="64,64"/>
+							</Container>
+							<Image ID="CivIndicator" Anchor="R,T" Texture="CircleBacking22" Size="22,22" Offset="-5,-2">
+								<Image ID="CivIcon" Anchor="C,C" Texture="CivSymbols22" Size="22,22"/>
+							</Image>
+						</Container>
+					</Container>
+
+					<ScrollPanel Size="parent,56" Anchor="C,B" Vertical="1" AutoScrollBar="1">
+						<ScrollBar Anchor="R,T" Offset="8,-2" Style="ScrollVerticalBar" Size="8,parent+2"/>
+						<Stack ID="ScoreBreakdownStack" Anchor="L,T" Offset="0,0" Size="parent,auto" StackGrowth="Down" StackPadding="3"/>
+					</ScrollPanel>
+				</Stack>
+			</Container>
+
+			<!-- Bottom Scroll Panel -->
+			<ScrollPanel ID="BottomScrollPanel" Size="parent,parent" Anchor="C,B" Vertical="1" AutoScrollBar="1">
+				<ScrollBar ID="MainScrollBar" Anchor="R,T" Offset="8,-2" Style="ScrollVerticalBar" Size="8,parent+2"/>
+				<Stack Anchor="C,T" StackGrowth="Down" StackPadding="8">
+					<!-- Civ Icon Stack -->
+					<Container Size="parent,1"/>
+					<MakeInstance Name="RowDivider"/>
+					<Label Anchor="C,T" String="LOC_ERAS_CURRENT_AGE_BY_CIV" Style="HalfScreenHeader"/>
+					<MakeInstance Name="RowDivider"/>
+					<Stack ID="CivIconStack" Anchor="L,T" Offset="30,1" StackGrowth="Right" WrapWidth="440"/>
+					
+					<!-- Next Era Thresholds -->
+					<Stack ID="ThresholdStack" Anchor="C,T" StackGrowth="Down" StackPadding="8">
+						<MakeInstance Name="RowDivider"/>
+						<Label Anchor="C,C" Size="parent,40" String="LOC_ERAS_TO_EARN_AGE_NEXT_ERA" Style="HalfScreenHeader"/>
+						<MakeInstance Name="RowDivider"/>
+						<!-- Dark Age Threshold -->
+						<Container Anchor="C,T" Size="parent-50,auto">
+							<Label Anchor="L,C" Size="parent,40" String="LOC_ERA_REVIEW_HAVE_DARK_AGE_LABEL" Style="HalfScreenHeader"/>
+							<Label ID="DarkThreshold" Anchor="R,C" Size="parent,40" Offset="30,0" String="99-999" Style="FontBoldFlair21"  Align="Right"/>
+							<Label ID="DarkCheckmark" Anchor="R,C" Offset="4,2" String="[ICON_CheckSuccess]"/>
+						</Container>
+						<!-- Normal Age Threshold -->
+						<Container Anchor="C,T" Size="parent-50,auto">
+							<Label Anchor="L,C" Size="parent,40" String="LOC_ERA_REVIEW_HAVE_NORMAL_AGE_LABEL" Style="HalfScreenHeader"/>
+							<Label ID="NormalThreshold" Anchor="R,C" Size="parent,40" Offset="30,0" String="99-999" Style="FontBoldFlair21" Align="Right"/>
+							<Label ID="NormalCheckmark" Anchor="R,C" Offset="4,2" String="[ICON_CheckSuccess]"/>
+						</Container>
+						<!-- Golden Age Threshold -->
+						<Container Anchor="C,T" Size="parent-50,auto">
+							<Label Anchor="L,C" Size="parent,40" String="LOC_ERA_REVIEW_HAVE_GOLDEN_AGE_LABEL" Style="HalfScreenHeader"/>
+							<Label ID="GoldenThreshold" Anchor="R,C" Size="parent,40" Offset="30,0" String="1000+" Style="FontBoldFlair21" Align="Right"/>
+							<Label ID="GoldenCheckmark" Anchor="R,C" Offset="4,2" String="[ICON_CheckSuccess]"/>
+						</Container>
+					</Stack>
+					
+					<MakeInstance Name="RowDivider"/>
+					<Label ID="EraEffectsHeader" Anchor="C,C" Size="parent,40" Style="HalfScreenHeader" String="LOC_ERAS_EFFECTS_ACTIVE_THIS_AGE"/>
+					<MakeInstance Name="RowDivider"/>
+					<Label ID="EraEffects" Align="left" Offset="30,0" Style="HalfScreenBody" WrapWidth="440"/>
+				</Stack>
+			</ScrollPanel>
+    </Container>
+
+		<!-- Decorative Tab Ledge	-->
+    <Container Anchor="C,T" Offset="0,44"	Size="514,31">
+      <Grid Size="parent,parent" Texture="Controls_TabLedgeCaps"  SliceCorner="20,3" SliceSize="203,24" SliceTextureSize="243,31">
+        <Image Texture="Controls_TabLedgeFill" Size="parent-200,23" StretchMode="Tile" Anchor="C,C"/>
+      </Grid>
+    </Container>
+
+    <!-- ==================================================================	-->
+    <!--	Close Button																										  -->
+    <!-- ==================================================================	-->
+    <Button ID="CloseButton" Anchor="R,T" Offset="2,47" Style="CloseButtonSmall" />
+  </SlideAnim>
+
+  <!-- ==================================================================	-->
+  <!--	Instances																													-->
+  <!-- ==================================================================	-->
+
+  <Instance Name="CommemorationInstance">
+    <Container ID="Top" Size="parent,auto">
+      <Label ID="CommemorationTitle" Style="FontFlair14"/>
+      <Label ID="CommemorationDesc" Offset="0,22" Style="FontNormal14" WrapWidth="parent"/>
+    </Container>
+  </Instance>
+
+  <Instance Name="ScoreModifierInstance">
+    <Container ID="Top" Size="parent,auto">
+      <Label ID="ScoreModifierDesc" Anchor="L,C" Style="FontNormal14"/>
+      <Label ID="ScoreModifierValue" Anchor="R,C" Style="FontNormal14"/>
+    </Container>
+  </Instance>
+
+	<Instance Name="ScoreBreakdownItem">
+		<Container ID="TopControl" Anchor="C,T" Size="440,auto">
+			<Label ID="ScoreBreakdownTitle" Offset="20,0" Style="FontNormal14" Color="172,172,172,255"/>
+			<Label ID="ScoreBreakdownValue" Offset="26,0" Anchor="R,T" Style="FontFlair16" />
+		</Container>
+	</Instance>
+
+	<Instance Name="CivilizationIconAge" Size="36,36">
+		<Image ID="CivIconBacking" Size="36,36" Texture="CircleBacking36">
+			<Image ID="CivIcon" Size="36,36" Texture="CivSymbols36"/>
+			<Label ID="EraLabel" Anchor="R,B" Offset="-4,-2"/>
+		</Image>
+	</Instance>
+
+	<ToolTipType Name="CivTooltip" >
+		<Container Style="CivTooltip"/>
+	</ToolTipType>
+  
+</Context>

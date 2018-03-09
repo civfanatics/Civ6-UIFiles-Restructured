@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Context xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="..\..\..\..\..\CivTech\Libs\ForgeUI\ForgeUI_Assets\Controls.xsd">
+  <Include File="CivilizationIcon"/>
+
+	<ToolTipType Name="CivTooltip" >
+		<Grid ID="BG" Size="auto,auto" SliceCorner="10,10" SliceTextureSize="33,32" Texture="Controls_Tooltip" InnerPadding="25,25" InnerOffset="10,10" >
+			<Image ID="LeaderIcon" Offset="0,0" Size="55,55" Texture="Leaders55"/>
+			<Image ID="YouIndicator" Offset="0,0" Hidden="1" Size="55,55" Texture="Diplomacy_YouIndicatorSmall"/>
+			<Label ID="LeaderName" Anchor="L,C" Offset="65,0" Style="FontNormal16" Color="0,0,0,255"/>
+		</Grid>
+	</ToolTipType>
+	
+  <Container Size="auto,auto">
+    <ScrollPanel Size="auto,250" Vertical="1">
+      <Stack ID="CrisisStack"/>
+      <ScrollBar Anchor="R,C" AnchorSide="O,I" Style="ScrollVerticalBarHighContrast"/>
+    </ScrollPanel>
+  </Container>
+
+  <Instance Name="CrisisInstance">
+    <Container ID="RootControl" Size="auto, auto">
+      <GridButton	ID="MainPanel" Offset="0,0" Size="296,44" Texture="EmergenciesPanel_Frame_Invited" SliceCorner="66,0" SliceSize="42,42" SliceTextureSize="110,44" ConsumeMouseOver="1">
+        <Container Anchor="L,C" Offset="10,0" Size="38,38">
+          <MakeInstance Name="CivilizationIcon36" ID="CivilizationTargetIcon" Anchor="C,C"/>
+          <Image ID="TargetIcon" Anchor="C,C" Texture="EmergenciesPanel_Target" Color="255,0,0,255" Size="38,38" Offset="0,0" />
+        </Container>
+        <Label ID="CrisisTitle" Offset="58,7" Color="255,255,255,255" Style="PanelHeaderText" SmallCapsType="EveryWord"/>
+        <Label ID="CrisisProgress" Color="255,255,255,255" Offset="58,24" FontSize="12" Style="FontNormal10"/>
+        <Label ID="TurnsRemaining" Anchor="R,C" Offset="5,0" Color="102,109,115,255" String="??? [ICON_Turn]" Style="FontNormal12"/>
+        <Image ID="CompletedBox" Size="71,40" Offset="0,0" Anchor="R,C"/>
+      </GridButton>
+    </Container>
+  </Instance>
+</Context>

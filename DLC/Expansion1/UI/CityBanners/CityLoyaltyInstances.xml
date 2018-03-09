@@ -1,0 +1,133 @@
+<Include File="CityLoyaltyInstances">
+  <Include File="CivilizationIcon"/>
+
+  <Instance Name="LoyaltyInfo">
+    <Container ID="Top" Size="200,100" Anchor="C,B" AnchorSide="I,O">
+      <!--Compact Flyout-->
+      <GridButton ID="CulturalIdentityButton" Anchor="C,T" Size="188,31" Texture="Banner_DataFrame" NoStateChange="1" SliceCorner="23,6" SliceSize="76,15" SliceTextureSize="122,31">
+        <!--Owner Civ Icon-->
+        <Image ID="OwnerCivIconBacking" Anchor="L,C" Offset="6,0" Size="22,22" Texture="CircleBacking22">
+          <Image ID="OwnerCivIcon" Anchor="C,C" Offset="0,0" Size="22,22" IconSize="22" Icon="ICON_CIVILIZATION_AMERICA"/>
+        </Image>
+
+        <!--Cultural Influence Meter-->
+        <Stack Anchor="C,C" Offset="-4,0" StackGrowth="Right" StackPadding="-4,0">
+          <Label ID="LoyaltyPressureIcon" Style="FontNormal16"/>
+          <Container Anchor="L,C" Size="112,10">
+            <Image Anchor="R,C" Size="parent,parent" Color="255,0,0,255" Texture="Identity_LoyaltyMeterFill"/>
+            <TextureBar ID="LoyaltyFill" Anchor="L,C" Size="parent,parent" Color="0,255,0,255" Texture="Identity_LoyaltyMeterFill"/>
+          </Container>
+        </Stack>
+
+        <!--Must influential Civ Icon-->
+        <Image ID="TopCivIconBacking" Anchor="R,C" Offset="6,0" Size="22,22" Texture="CircleBacking22">
+          <Image ID="TopCivIcon" Anchor="C,C" Offset="0,0" Size="22,22" IconSize="22" Icon="ICON_CIVILIZATION_ARABIA"/>
+        </Image>
+
+        <Image Anchor="C,T" Offset="0,-2" Size="160,8" Style="Divider3Grid"/>
+      </GridButton>
+
+      <!--Extended Flyout-->
+      <GridButton ID="CulturalIdentityExpandedButton" Anchor="C,T" Size="260,120" Texture="Banner_DataFrameExtended" SliceCorner="19,9" SliceSize="53,4" Hidden="1">
+        <Stack ID="MainStack" StackGrowth="Down" Anchor="C,T">
+          <Container Anchor="C,T" Size="auto,auto">
+            <!--Owner Civ Icon-->
+            <Image ID="OwnerCivIconBackingExtended" Anchor="L,T" Offset="8,30" Size="22,22" Texture="CircleBacking22">
+              <Image ID="OwnerCivIconExtended" Anchor="C,C" Offset="0,0" Size="22,22" IconSize="22" Icon="ICON_CIVILIZATION_AMERICA"/>
+            </Image>
+
+            <!--Loyalty Label-->
+            <Label ID="LoyaltyPercentageLabel" Anchor="C,T" Offset="0,10" Style="FontNormal16" String="TEST..."/>
+
+            <!--Cultural Influence Meter-->
+            <Container Anchor="C,T" Offset="0,36" Size="112,10">
+              <Image Anchor="R,C" Size="parent,parent" Color="255,0,0,255" Texture="Identity_LoyaltyMeterFill"/>
+              <TextureBar ID="LoyaltyFillExtended" Anchor="L,C" Size="parent,parent" Color="0,255,0,255" Texture="Identity_LoyaltyMeterFill"/>
+            </Container>
+
+            <!--Must influential Civ Icon-->
+            <Image ID="TopCivIconBackingExtended" Anchor="R,T" Offset="8,30" Size="22,22" Texture="CircleBacking22">
+              <Image ID="TopCivIconExtended" Anchor="C,C" Offset="0,0" Size="22,22" IconSize="22" Icon="ICON_CIVILIZATION_ARABIA"/>
+            </Image>
+          </Container>
+
+          <!--Loyalty Modifier Breakdown-->
+          <Stack Anchor="C,B" Offset="0,6" StackGrowth="Down">
+            <Box Size="parent-6,1" Color="0,0,0,150"/>
+            <Stack Anchor="C,T" Offset="-3,0" StackGrowth="Right" StackPadding="4">
+              <Box Size="1,60" Color="0,0,0,150"/>
+              <!--Population-->
+              <Container ID="PopulationTop" Size="42,60" ToolTip="LOC_CULTURAL_IDENTITY_POPULATION_PRESSURE_TOOLTIP">
+                <Image Anchor="C,T" Offset="0,6" Size="22,22" IconSize="22" Icon="ICON_CITIZEN"/>
+                <Stack Anchor="C,B" Offset="-2,6" StackGrowth="Right" StackPadding="-6">
+                  <Label ID="PopulationPressureFontIcon" Style="FontNormal16"/>
+                  <Label ID="PopulationPressureValue" Style="FontNormal14"/>
+                </Stack>
+              </Container>
+              <Box Size="1,60" Color="0,0,0,150"/>
+              <!--Governors-->
+              <Container ID="GovernorTop" Size="42,60" ToolTip="LOC_CULTURAL_IDENTITY_GOVERNORS_PRESSURE_TOOLTIP">
+                <Image Anchor="C,T" Offset="0,6" Size="22,22" IconSize="22" Icon="ICON_STAT_GOVERNORS"/>
+                <Stack Anchor="C,B" Offset="-2,6" StackGrowth="Right" StackPadding="-6">
+                  <Label ID="GovernorPressureFontIcon" Style="FontNormal16"/>
+                  <Label ID="GovernorPressureValue" Style="FontNormal14"/>
+                </Stack>
+              </Container>
+              <Box Size="1,60" Color="0,0,0,150"/>
+              <!--Happiness-->
+              <Container ID="Happiness" Size="42,60" ToolTip="LOC_CULTURAL_IDENTITY_HAPPINESS_PRESSURE_TOOLTIP">
+                <Image Anchor="C,T" Offset="0,6" Size="22,22" IconSize="22" Icon="ICON_AMENITIES"/>
+                <Stack ID="HappinessModifierStack" Anchor="C,B" Offset="-2,6" StackGrowth="Right" StackPadding="-6">
+                  <Label ID="HappinessPressureFontIcon" Style="FontNormal16"/>
+                  <Label ID="HappinessPressureValue" Style="FontNormal14"/>
+                </Stack>
+              </Container>
+              <Box Size="1,60" Color="0,0,0,150"/>
+              <!--Other Buffs/Debuffs-->
+              <Container ID="OtherTop" Size="42,60" ToolTip="LOC_CULTURAL_IDENTITY_OTHER_PRESSURE_TOOLTIP">
+                <Image Anchor="C,T" Offset="0,6" Size="22,22" IconSize="22" Icon="ICON_STAT_OTHERS"/>
+                <Stack Anchor="C,B" Offset="-2,6" StackGrowth="Right" StackPadding="-6">
+                  <Label ID="OtherPressureFontIcon" Style="FontNormal16"/>
+                  <Label ID="OtherPressureValue" Style="FontNormal14"/>
+                </Stack>
+              </Container>
+              <Box Size="1,60" Color="0,0,0,150"/>
+              <!--City State inherent bonus-->
+              <Container ID="CityStateTop" Size="42,60" ToolTip="LOC_CULTURAL_IDENTITY_CITY_STATES_PRESSURE_TOOLTIP">
+                <Image Anchor="C,T" Offset="0,6" Size="22,22" IconSize="22" Icon="ICON_STAT_THEIR_CITIES"/>
+                <Stack ID="CityStateModifierStack" Anchor="C,B" Offset="-2,6" StackGrowth="Right" StackPadding="-6">
+                  <Label ID="CityStatePressureFontIcon" Style="FontNormal16"/>
+                  <Label ID="CityStatePressureValue" Style="FontNormal14"/>
+                </Stack>
+              </Container>
+              <!--Free Cities inherent bonus-->
+              <Container ID="FreeCityTop" Size="42,60" ToolTip="LOC_CULTURAL_IDENTITY_FREE_CITIES_PRESSURE_TOOLTIP">
+                <Image Anchor="C,T" Offset="0,6" Size="22,22" IconSize="22" Icon="ICON_STAT_INDEPENCE"/>
+                <Stack ID="FreeCityModifierStack" Anchor="C,B" Offset="-2,6" StackGrowth="Right" StackPadding="-6">
+                  <Label ID="FreeCityPressureFontIcon" Style="FontNormal16"/>
+                  <Label ID="FreeCityPressureValue" Style="FontNormal14"/>
+                </Stack>
+              </Container>
+            </Stack>
+          </Stack>
+          <Box Size="parent-6,1" Color="0,0,0,150"/>
+          <!-- Identity Breakdown -->
+          <Stack ID="IdentityBreakdownStack" Size="parent,auto" Offset="0,5" Anchor="L,T" Padding="5"/>
+        </Stack>
+      </GridButton>
+
+      <Image Anchor="C,T" Offset="0,-4" Size="23,15" Texture="Banner_DataFrameArrow"/>
+    </Container>
+  </Instance>
+
+  <Instance Name="InfluenceLineInstance">
+    <Box ID="Top" Anchor="C,C" Color="0,0,0,100" Size="parent-20,auto">
+      <Stack StackGrowth="Right" Padding="5">
+        <MakeInstance Name="CivilizationIcon30" ID="CivilizationIcon"/>
+        <Label ID="LineTitle" Anchor="C,C" Style="CityPanelTextSmall" TruncateWidth="160"/>
+      </Stack>
+      <Label ID="LineValue" Anchor="R,C" Style="CityPanelTextSmall" Offset="4,0"/>
+    </Box>
+  </Instance>
+
+</Include>

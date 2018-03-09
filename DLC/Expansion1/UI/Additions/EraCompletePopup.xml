@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Context  ColorSet="BodyTextCool" FontStyle="Shadow">
+  
+	<AlphaAnim				ID="EraPopupAnimation" AlphaBegin="0" AlphaEnd="1" Speed="0.7" Function="Root" Size="parent,parent" EndPause="2" Cycle="OneBounce" >
+		<Stack Anchor="C,C">
+			<AlphaAnim			ID="TopDecoAlpha" Size="auto,auto" Anchor="C,C" AlphaBegin="0" AlphaEnd="1" Speed="0.7" Function="Root" Cycle="OneBounce" EndPause="2">
+					<Image			ID="TopDecoImage" Anchor="C,C" Texture="Frame_EraRollover_Classical_Top"/>
+					<Image			ID="TopDecoFrame" Anchor="C,C" Texture="Frame_EraRollover_VanillaAge_Top"/>
+			</AlphaAnim>
+			<Grid								Style="Divider6Grid"														ConsumeMouse="0"						Size="800,150"		Color="0,0,0,150" Anchor="C,C">
+				<Image						ID="GradientT"	Anchor="L,T"	Texture="Controls_Gradient_HalfRadial" Size="parent,150"			Color="0,0,0,255" AnchorSide="I,O"/>
+				<Image						ID="GradientB"	Anchor="L,B"	Texture="Controls_Gradient_HalfRadial" Size="parent,150"			Color="0,0,0,255" AnchorSide="I,O" FlipY="1"/>
+				<Stack						Offset="0,20" Size="800,100">
+					<AlphaAnim			ID="HeaderAlpha" AlphaBegin="0" AlphaEnd="1" Speed="0.7" Function="Root" Cycle="OneBounce" Size="parent,parent" EndPause="1">
+						<Label					Anchor="C,T" Style="ShellHeader" String="{LOC_ERA_CHANGE_TITLE:upper}"/>
+						<SlideAnim		ID="HeaderSlide" Start="0,50" End="0,0" Speed="0.7" Cycle="Once" Size="parent,parent">
+							<Label			ID="EraCompletedHeader" Anchor="C,C" Style="ShellHeader"/>
+						</SlideAnim>
+					</AlphaAnim>
+				</Stack>
+			</Grid>
+			<AlphaAnim			ID="BottomDecoAlpha" Anchor="C,C" Size="auto,auto" AlphaBegin="0" AlphaEnd="1" Speed="0.7" Function="Root" Cycle="OneBounce" EndPause="2">
+					<Image			ID="BottomDecoImage" Anchor="C,C" Texture="Frame_EraRollover_Classical_Bottom"/>
+					<Image			ID="BottomDecoFrame" Anchor="C,C" Texture="Frame_EraRollover_VanillaAge_Bottom"/>
+			</AlphaAnim>
+		</Stack>
+  </AlphaAnim>
+</Context>

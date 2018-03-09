@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Context xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="..\..\..\..\..\CivTech\Libs\ForgeUI\ForgeUI_Assets\Controls.xsd">
+
+  <Include File="CivilizationIcon" />
+  
+	<Container Style="FullScreenVignetteConsumer" />
+
+	<Image ID="Background" Anchor="C,C" Size="508,668" Texture="Historian_BGParchment" StretchMode="Tile" ConsumeMouse="1">
+    <Box ID="ParchmentTint" Anchor="C,C" Size="parent,parent" Color="0,0,0,30"/>
+    <Grid Texture="Controls_Gradient"  Offset="-1,150" Anchor="C,B" Size="parent,150" SliceSize="1,1" SliceCorner="1,148" SliceTextureSize="1,1" Color="255,255,255,60"/>
+    <Grid Texture="Governors_DetailsFooterTile" Offset="-1,-46" Anchor="C,B" Size="parent,52" SliceSize="1,1" SliceCorner="18,2" SliceTextureSize="52,52" StretchMode="TileX"/>
+
+
+    <Container Anchor="C,T" Offset="0,-52" Size="auto,auto">
+			<Grid	ID="TitleBacking" Offset="0,2" Anchor="C,T" Size="parent,parent-2" Texture="Controls_SubHeader" SliceCorner="20,2" SliceTextureSize="22,22">
+				<Label	ID="Title" Style="EventPopupTitle" Anchor="C,C" Align="center" Offset="0,4"/>
+			</Grid>
+
+			<!-- Player Portrait + Era Banner -->
+			<Container Offset="10,75" Size="520,61">
+
+				<Container ID="ScoreContainer" Offset="120,14" Size="parent-175,40" d="0">
+					<Label ID="EraScoreLabel" Anchor="L,T" String="LOC_ERAS_CURRENT_SCORE" Color0="25,25,25,255" Style="FontBoldFlair18" SmallCaps="26" SmallCapsLeading="0" SmallCapsType="EveryWord"/>
+					<Label ID="EraScoreValue" Anchor="R,T" Offset="8,-8" String="9999" Style="FontBoldFlair26" Align="Right" Color="25,25,25,255"/>
+				</Container>
+				
+				<Grid ID="EraRibbon" Anchor="C,B" Offset="-6,-20" Size="500,71" SliceCorner="48,12" SliceSize="188,38" SliceTextureSize="293,71" Texture="Controls_AgesBanner_Normal">
+					<Label ID="EraRibbonLabel" String="LOC_ERAS_CURRENT_AGE" Anchor="L,C" Offset="116,2" Style="FontFlair14" SmallCaps="18" SmallCapsType="EveryWord"  FontStyle="shadow"	Color0="225,225,225,255"	Color1="36,36,36,255"/>
+					<Label ID="EraRibbonValue" String="[ICON_GLORY_NORMAL_AGE](999/999)" Anchor="R,C" Offset="38,1" Style="FontFlair16" Align="right"  FontStyle="shadow"	Color0="225,225,225,255"	Color1="36,36,36,255"/>
+				</Grid>
+				
+				<Container ID="PlayerLeader" Size="64,64" Offset="40,0" >
+					<Container ID="PlayerLeaderButton" Size="parent,parent">
+						<Image Anchor="C,C" Texture="CircleBacking64" Color="80,80,80"/>
+						<Image Anchor="C,C" ID="YouIndicator" Texture="Diplomacy_YouIndicatorLarge"/>
+						<Image ID="LeaderPortrait" Anchor="C,C" Size="64,64" Texture="Leaders55" />
+						<Image ID="TeamRibbon" Anchor="C,B" Offset="0,-8" Texture="TeamRibbon53" Size="53,53"/>
+					</Container>
+					<Image ID="CivIndicator" Anchor="R,T" Texture="CircleBacking22" Size="22,22" Offset="-5,-2">
+						<Image ID="CivIcon" Anchor="C,C" Texture="CivSymbols22" Size="22,22"/>
+					</Image>
+				</Container>
+			</Container>
+
+			<ScrollPanel Offset="0,150" Size="parent,44" Anchor="C,T" Vertical="1" AutoScrollBar="1">
+				<ScrollBar Anchor="R,T" Offset="8,-2" Style="ScrollVerticalBar" Size="8,parent+2"/>
+				<Stack ID="ScoreBreakdownStack" Anchor="L,T" Offset="0,0" Size="parent,auto" StackGrowth="Down" StackPadding="1"/>
+			</ScrollPanel>
+		</Container>
+		
+		<Grid Size="514,parent+104" Anchor="C,C" Style="WindowFrameAlpha" AutoSizePadding="0,58"/>
+		<Button ID="Close" Anchor="R,T" Style="CloseButtonLarge" Offset="-8,-55" />
+
+		<Container ID="ImageContainer" Offset="0,-42" Size="530,483" Anchor="C,C">
+			<Image ID="EraImage" Anchor="C,C" Offset="0,12" Size="456,332" Texture="Moment_Cultural" Color="255,255,255,40"/>
+		</Container>
+
+		<ScrollPanel ID="MainScroll" Anchor="L,T" Offset="15,145" Size="parent-33,parent-153" Vertical="1" AutoScrollBar="1" d="0">
+			<Stack ID="MainStack" Anchor="C,T" Offset="0,0" Size="parent,500" StackPadding="0" d="0">
+				<Container Size="parent,8"/>
+				<Line Color="0,0,0,60" Anchor="C,B" Offset="0,0" Start="0,0" End="475,0" Width="2"/>
+				<Container Size="parent,8"/>
+				<Label Anchor="C,C" Size="parent,40" String="LOC_ERAS_CURRENT_AGE_BY_CIV" Style="ParchmentHeader"/>
+				<Container Size="parent,8"/>
+				<Line Color="0,0,0,60" Anchor="C,B" Offset="0,0" Start="0,0" End="475,0" Width="2"/>
+				<Container Size="parent,8"/>
+				<Stack ID="CivIconStack" Anchor="C,T" Offset="0,0" Size="parent,auto" StackGrowth="Right" WrapWidth="470" d="0"/>
+				<Container Size="parent,10"/>
+
+				<!--Threshold Stack-->
+				<Stack ID="ThresholdStack" StackGrowth="Down" StackPadding="0">
+					<Line Color="0,0,0,60" Anchor="C,B" Offset="0,0" Start="0,0" End="475,0" Width="2"/>
+					<Container Size="parent,8"/>
+					<Label Anchor="C,C" Size="parent,40" String="LOC_ERAS_TO_EARN_AGE_NEXT_ERA" Style="ParchmentHeader"/>
+					<Container Size="parent,8"/>
+					<Line Color="0,0,0,60" Anchor="C,B" Offset="0,0" Start="0,0" End="475,0" Width="2"/>
+					<Container Size="parent,10"/>
+					<Container Size="parent,auto">
+						<Label ID="DarkLabel" Anchor="L,C" Size="parent,40" String="LOC_ERA_REVIEW_HAVE_DARK_AGE_LABEL" Style="ParchmentHeader"/>
+						<Label ID="DarkThreshold" Anchor="R,C" Size="parent,40" Offset="34,0" String="99-999" Style="FontBoldFlair21" Align="Right" Color="40,40,40,255"/>
+					</Container>
+					<Container Size="parent,10"/>
+					<Container Size="parent,auto">
+						<Label ID="NormalLabel" Anchor="L,C" Size="parent,40" String="LOC_ERA_REVIEW_HAVE_NORMAL_AGE_LABEL" Style="ParchmentHeader"/>
+						<Label ID="NormalThreshold" Anchor="R,C" Size="parent,40" Offset="34,0" String="99-999" Style="FontBoldFlair21" Align="Right" Color="40,40,40,255"/>
+					</Container>
+					<Container Size="parent,10"/>
+					<Container Size="parent,auto">
+						<Label ID="GoldenLabel" Anchor="L,C" Size="parent,40" String="LOC_ERA_REVIEW_HAVE_GOLDEN_AGE_LABEL" Style="ParchmentHeader"/>
+						<Label ID="GoldenThreshold" Anchor="R,C" Size="parent,40" Offset="34,0" String="1000+" Style="FontBoldFlair21" Align="Right" Color="40,40,40,255"/>
+					</Container>
+					<Container Size="parent,10"/>
+				</Stack>
+				
+				<Line Color="0,0,0,60" Anchor="C,B" Offset="0,0" Start="0,0" End="475,0" Width="2"/>
+				<Container Size="parent,8"/>
+				<Label Anchor="C,C" Size="parent,40" String="LOC_ERAS_EFFECTS_ACTIVE_THIS_AGE" Style="ParchmentHeader"/>
+				<Container Size="parent,8"/>
+				<Line Color="0,0,0,60" Anchor="C,B" Offset="0,0" Start="0,0" End="475,0" Width="2"/>
+				<Container Size="parent,8"/>
+				<Label ID="EraEffects" Anchor="L,C" Align="left" Offset="0,0" Style="ParchmentBody" WrapWidth="470" />
+			</Stack>
+			<ScrollBar ID="MainScrollBar" Anchor="R,T" AnchorSide="O,I" Offset="0,0" Style="ScrollVerticalBarAlt" Size="8,parent-10"/>
+		</ScrollPanel>
+		
+		<GridButton ID="Continue" Style="MainButton" Anchor="C,B" Size="200,41" Offset="0,-41" String="LOC_CONTINUE"/>
+	</Image>
+
+  <Instance Name="ScoreBreakdownItem">
+    <Container ID="TopControl" Anchor="C,T" Size="440,auto">
+      <Label ID="ScoreBreakdownTitle" Offset="0,0" Style="ParchmentBody"/>
+      <Label ID="ScoreBreakdownValue" Offset="20,0" Anchor="R,T" Style="FontFlair16" Color="25,25,25,255"/>
+    </Container>
+  </Instance>
+
+	<Instance Name="CivilizationIconAge" Size="36,36">
+		<Image ID="CivIconBacking" Size="36,36" Texture="CircleBacking36">
+			<Image ID="CivIcon" Size="36,36" Texture="CivSymbols36"/>
+			<Label ID="EraLabel" Anchor="R,B" Offset="-4,-2"/>
+		</Image>
+	</Instance>
+
+  <ToolTipType Name="CivTooltip" >
+    <Container Style="CivTooltip"/>
+  </ToolTipType>
+  
+</Context>
