@@ -520,6 +520,10 @@
 						 CheckTexture="Controls_CheckmarkBlue" CheckSize="19,18" CheckOffset="2,2"
 									 />
 
+	<CheckBoxPopupControl Style="BodyTextDark14" TextOffset="-10,0" ButtonTexture="Shell_ButtonControl" ButtonSize="22,22"
+					 CheckTexture="Controls_CheckmarkBlue" CheckSize="19,18" CheckOffset="2,2"
+									 />
+
   <!-- *********************************************************************************** -->
   <!-- Buttons -->
 

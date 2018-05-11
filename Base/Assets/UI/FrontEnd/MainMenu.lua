@@ -241,6 +241,38 @@ end
 --	Because few other buttons in the shell function in this way, using a special 
 --	variable to save this control (instead of a more general solution).
 -- ===========================================================================
+function UpdateAIBenchmark(buttonControl)
+	if (buttonControl ~= nil) then
+		m_aiButton = buttonControl;
+	end
+	
+	if(m_aiButton ~= nil) then
+
+		local allowed = false;
+		local modId = "02A8BDDE-67EA-4D38-9540-26E685E3156E";
+		local modHandle = Modding.GetModHandle(modId);
+		if(modHandle ~= nil) then
+			local modInfo = Modding.GetModInfo(modHandle);
+			if(modInfo.Allowance ~= false) then
+				allowed = true;
+			end
+		end
+
+		local aiButtonTooltip = Locale.Lookup("LOC_BENCHMARK_AI_TT");
+
+		if(allowed) then
+			m_aiButton.OptionButton:SetDisabled(false);
+			m_aiButton.Top:SetToolTipString(aiButtonTooltip);
+			m_aiButton.ButtonLabel:SetColorByName( "ButtonCS" );
+		else
+			aiButtonTooltip = aiButtonTooltip .. "[NEWLINE]" .. Locale.Lookup("LOC_BENCHMARK_AI_TT_ERROR");
+			m_aiButton.OptionButton:SetDisabled(true);
+			m_aiButton.Top:SetToolTipString(aiButtonTooltip);
+			m_aiButton.ButtonLabel:SetColorByName( "ButtonDisabledCS" );
+		end
+	end
+end
+
 function UpdateInternetButton(buttonControl: table)
 	if (buttonControl ~=nil) then
 		m_internetButton = buttonControl;
@@ -441,7 +473,7 @@ local m_MultiPlayerSubMenu :table = {
 
 local m_BenchmarkSubMenu :table = {
 								{label = "LOC_BENCHMARK_GRAPHICS",			callback = OnGraphicsBenchmark,	tooltip = "LOC_BENCHMARK_GRAPHICS_TT"},
-								{label = "LOC_BENCHMARK_AI",				callback = OnAIBenchmark,		tooltip = "LOC_BENCHMARK_AI_TT"},
+								{label = "LOC_BENCHMARK_AI",				callback = OnAIBenchmark,		tooltip = "LOC_BENCHMARK_AI_TT", buttonState = UpdateAIBenchmark},
 							};
 
 -- ===========================================================================

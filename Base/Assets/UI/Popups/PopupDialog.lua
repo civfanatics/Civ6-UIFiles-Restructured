@@ -45,11 +45,13 @@ PopupDialog.TOP_CONTROL_ROW				= "Row";
 PopupDialog.TOP_CONTROL_TEXT			= "Text";
 PopupDialog.TOP_CONTROL_BUTTON			= "Button";
 PopupDialog.TOP_CONTROL_COUNTDOWN		= "Anim";
+PopupDialog.TOP_CONTROL_CHECK			= "Check"
 
 PopupDialog.DEFAULT_INSTANCE_ROW		= "PopupRowInstance";
 PopupDialog.DEFAULT_INSTANCE_TEXT		= "PopupTextInstance";
 PopupDialog.DEFAULT_INSTANCE_BUTTON		= "PopupButtonInstance";
 PopupDialog.DEFAULT_INSTANCE_COUNTDOWN	= "PopupCountDownInstance";
+PopupDialog.DEFAULT_INSTANCE_CHECK		= "PopupCheckboxInstance";
 
 -- Strings for doing PopupDialog:ActivateCommand on default popups
 PopupDialog.COMMAND_CANCEL				= "_CMD_CANCEL";
@@ -250,6 +252,34 @@ function PopupDialog:AddCountDown(  startValue:number, callback:ifunction  )
 end
 
 -- ===========================================================================
+--	Assumes instance has a top level control of <Anim> with a <Label> inside. 
+function PopupDialog:AddCheckBox( label, checked, callback  )
+	
+	if self:IsOpen() then
+		UI.DataError("Called AddCheckBox on an already opened PopupDialog, ID: " .. self.ID);
+	end
+
+	self.RowInstance = nil;	-- Reset for first/new row of buttons later on.
+	local pInstance = self.CheckBoxIM:GetInstance();
+	if(pInstance.Check.GetTextButton) then
+		pInstance.Check:GetTextButton():SetText( label );
+	elseif(pInstance.Check.SetText) then
+		pInstance.Check:SetText( label );
+	end
+
+	pInstance.Check:SetCheck(checked == true);
+	
+	if(callback) then
+		-- Use custom wrapper function to include checked state in function arguments.
+		pInstance.Check:RegisterCallback(Mouse.eLClick, function() callback(pInstance.Check:IsChecked()); end); 
+	else
+		pInstance.Check:ClearCallback(Mouse.eLClick);
+	end
+	
+	table.insert(self.PopupControls, { Type = "Check", Control = pInstance.Check, Callback = callback });
+end
+
+-- ===========================================================================
 function PopupDialog:SetSize( width:number, height:number )
 	if self:IsOpen() then
 		UI.DataError("Called SetSize on an already opened PopupDialog, ID: " .. self.ID);
@@ -302,6 +332,11 @@ function PopupDialog:Reset()
 	if self.CountDownIM then
 		self.CountDownIM:ResetInstances();
 	end
+
+	if(self.CheckBoxIM) then
+		self.CheckBoxIM:ResetInstances();
+	end
+
 	self.Controls.PopupStack:CalculateSize();
 
 	self.RowInstance = nil;
@@ -339,7 +374,7 @@ end
 --			rowInstanceName			Name of the instance to create a row for buttons
 --			rowTopControlName		Name of the top control in the row instance.
 -- ===========================================================================
-function PopupDialog:SetInstanceNames( buttonInstanceName:string, buttonTopControlName:string, textInstanceName:string, textTopControlName:string, rowInstanceName:string, rowTopControlName:string, countDownInstanceName:string, countDownTopControlName:string )
+function PopupDialog:SetInstanceNames( buttonInstanceName:string, buttonTopControlName:string, textInstanceName:string, textTopControlName:string, rowInstanceName:string, rowTopControlName:string, countDownInstanceName:string, countDownTopControlName:string, checkboxInstanceName)
 	
 	-- Look for default named items if explicit ones aren't passed in.
 	self.RowTopControlName = rowTopControlName and rowTopControlName or PopupDialog.TOP_CONTROL_ROW;
@@ -353,6 +388,7 @@ function PopupDialog:SetInstanceNames( buttonInstanceName:string, buttonTopContr
 	self.TextIM = InstanceManager:new(textInstanceName and textInstanceName or PopupDialog.DEFAULT_INSTANCE_TEXT, textTopControlName, self.Controls.PopupStack);
 	self.RowStackIM = InstanceManager:new(rowInstanceName and rowInstanceName or PopupDialog.DEFAULT_INSTANCE_ROW, self.RowTopControlName, self.Controls.PopupStack);
 	self.CountDownIM = InstanceManager:new(countDownInstanceName and countDownInstanceName or PopupDialog.DEFAULT_INSTANCE_COUNTDOWN, countDownTopControlName, self.Controls.PopupStack);
+	self.CheckBoxIM = InstanceManager:new(checkboxInstanceName and checkboxInstanceName or PopupDialog.DEFAULT_INSTANCE_CHECK, PopupDialog.TOP_CONTROL_CHECK, self.Controls.PopupStack);
 end
 
 -- ===========================================================================

@@ -1,4 +1,4 @@
-﻿<GameInfo>
+<GameInfo>
   <IconTextureAtlases>
     <Row Name="ICON_ATLAS_UNIT_ACTIONS" IconSize="38" IconsPerRow="8" IconsPerColumn="12" Filename="UnitActions38.dds"/>
 		<Row Name="ICON_ATLAS_UNIT_ACTIONS" IconSize="50" IconsPerRow="8" IconsPerColumn="12" Filename="UnitActions50.dds"/>

@@ -45,5 +45,9 @@
 		</AlphaAnim>
 	</Instance>
 
+	<Instance				Name="PopupCheckboxInstance">
+		<CheckBox			ID="Check"		Anchor="C,T"		Style="CheckBoxPopupControl"  Size="340,24" />
+	</Instance>
+
 </Root>
 

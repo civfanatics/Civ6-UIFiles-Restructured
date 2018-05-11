@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <GameInfo>
 	<IconTextureAtlases>
-    <Row Name="ICON_ATLAS_DIPLOACTIONS" IconSize="22" IconsPerRow="4" IconsPerColumn="4" Filename="Agreements22"/>
-    <Row Name="ICON_ATLAS_DIPLOACTIONS" IconSize="38" IconsPerRow="4" IconsPerColumn="4" Filename="Agreements38"/>
-    <Row Name="ICON_ATLAS_DIPLOACTIONS" IconSize="50" IconsPerRow="4" IconsPerColumn="4" Filename="Agreements50"/>
+    <Row Name="ICON_ATLAS_DIPLOACTIONS" IconSize="22" IconsPerRow="4" IconsPerColumn="5" Filename="Agreements22"/>
+    <Row Name="ICON_ATLAS_DIPLOACTIONS" IconSize="38" IconsPerRow="4" IconsPerColumn="5" Filename="Agreements38"/>
+    <Row Name="ICON_ATLAS_DIPLOACTIONS" IconSize="50" IconsPerRow="4" IconsPerColumn="5" Filename="Agreements50"/>
 	</IconTextureAtlases>
 	<IconDefinitions>
     <Row Name="ICON_DIPLOACTION_RESIDENT_EMBASSY"         Atlas="ICON_ATLAS_DIPLOACTIONS"   Index="14"/>

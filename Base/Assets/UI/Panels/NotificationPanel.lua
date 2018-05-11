@@ -178,6 +178,8 @@ function RegisterHandlers()
     g_notificationHandlers[NotificationTypes.SPY_ENEMY_KILLED]                      = MakeDefaultHandlers();
 	g_notificationHandlers[NotificationTypes.TECH_BOOST]							= MakeDefaultHandlers();
 	g_notificationHandlers[NotificationTypes.CIVIC_BOOST]							= MakeDefaultHandlers();
+	g_notificationHandlers[NotificationTypes.TECH_DISCOVERED]						= MakeDefaultHandlers();
+	g_notificationHandlers[NotificationTypes.CIVIC_DISCOVERED]						= MakeDefaultHandlers();
 	g_notificationHandlers[NotificationTypes.CITY_BESIEGED_BY_OTHER_PLAYER]			= MakeDefaultHandlers();
     
 	-- Custom function handlers for the "Activate" signal:	
@@ -203,6 +205,8 @@ function RegisterHandlers()
 	g_notificationHandlers[NotificationTypes.DISCOVER_CONTINENT].Activate			= OnDiscoverContinentActivateNotification;
 	g_notificationHandlers[NotificationTypes.TECH_BOOST].Activate					= OnTechBoostActivateNotification;
 	g_notificationHandlers[NotificationTypes.CIVIC_BOOST].Activate					= OnCivicBoostActivateNotification;
+	g_notificationHandlers[NotificationTypes.TECH_DISCOVERED].Activate				= OnTechDiscoveredActivateNotification;
+	g_notificationHandlers[NotificationTypes.CIVIC_DISCOVERED].Activate				= OnCivicDiscoveredActivateNotification;
 
 	-- Sound to play when added
 	g_notificationHandlers[NotificationTypes.SPY_KILLED].AddSound			        = "ALERT_NEGATIVE";	
@@ -705,7 +709,10 @@ function OnDefaultAddNotification( pNotification:table )
 	-- Only add a visual entry for this notification if:
 	-- It is not a blocking type (otherwise assume the ActionPanel is displaying it)
 	-- It is the first notification entry in a group
-	if ( table.count(notificationEntry.m_IDs)==1 and pNotification:GetEndTurnBlocking() == EndTurnBlockingTypes.NO_ENDTURN_BLOCKING ) then
+	-- The icon is displayable in the current mode.
+	if ( table.count(notificationEntry.m_IDs)==1 
+		and pNotification:GetEndTurnBlocking() == EndTurnBlockingTypes.NO_ENDTURN_BLOCKING
+		and pNotification:IsIconDisplayable() ) then
 
 		notificationEntry.m_Instance		= m_genericItemIM:GetInstance();
 		notificationEntry.m_InstanceManager = m_genericItemIM;
@@ -1329,6 +1336,36 @@ function OnCivicBoostActivateNotification( notificationEntry : NotificationType,
 			local civicSource = pNotification:GetValue("CivicSource"); 
 			if(civicIndex ~= nil and civicProgress ~= nil and civicSource ~= nil) then
 				LuaEvents.NotificationPanel_ShowCivicBoost(notificationEntry.m_PlayerID, civicIndex, civicProgress, civicSource);
+			end
+		end
+	end
+end
+
+-- =======================================================================================
+-- Tech Discovered Handlers
+-- =======================================================================================
+function OnTechDiscoveredActivateNotification( notificationEntry : NotificationType, notificationID : number )
+	if (notificationEntry ~= nil and notificationEntry.m_PlayerID == Game.GetLocalPlayer()) then
+		local pNotification :table = GetActiveNotificationFromEntry(notificationEntry, notificationID);
+		if pNotification ~= nil then
+			local techIndex = pNotification:GetValue("TechIndex");
+			if(techIndex ~= nil) then
+				LuaEvents.NotificationPanel_ShowTechDiscovered(notificationEntry.m_PlayerID, techIndex);
+			end
+		end
+	end
+end
+
+-- =======================================================================================
+-- Civic Discovered Handlers
+-- =======================================================================================
+function OnCivicDiscoveredActivateNotification( notificationEntry : NotificationType, notificationID : number )
+	if (notificationEntry ~= nil and notificationEntry.m_PlayerID == Game.GetLocalPlayer()) then
+		local pNotification :table = GetActiveNotificationFromEntry(notificationEntry, notificationID);
+		if pNotification ~= nil then
+			local civicIndex = pNotification:GetValue("CivicIndex");
+			if(civicIndex ~= nil) then
+				LuaEvents.NotificationPanel_ShowCivicDiscovered(notificationEntry.m_PlayerID, civicIndex);
 			end
 		end
 	end

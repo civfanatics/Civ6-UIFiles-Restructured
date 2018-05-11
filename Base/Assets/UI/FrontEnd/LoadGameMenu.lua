@@ -102,7 +102,7 @@ function OnShow()
 	Controls.AutoCheck:SetSelected(false);
 	Controls.CloudCheck:SetSelected(false);
 
-	local cloudEnabled = UI.AreCloudSavesEnabled() and not GameConfiguration.IsAnyMultiplayer();
+	local cloudEnabled = UI.AreCloudSavesEnabled() and not GameConfiguration.IsAnyMultiplayer() and g_FileType ~= SaveFileTypes.GAME_CONFIGURATION;
 	Controls.CloudCheck:SetHide(not cloudEnabled);
 	
 	local autoSavesDisabled = (g_GameType == SaveTypes.WORLDBUILDER_MAP);

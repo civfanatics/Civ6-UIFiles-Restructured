@@ -30,7 +30,7 @@ g_GraphHorizontalMarkers = {
 };
 
 -- Custom popup setup
-local m_kPopupDialog = PopupDialog:new( "EndGameMenu" );
+m_kPopupDialog = PopupDialog:new( "EndGameMenu" );
 
 local g_HasPlayerPortrait;	-- Whether or not a player portrait has been set.
 local g_Movie;				-- The movie which has been set.

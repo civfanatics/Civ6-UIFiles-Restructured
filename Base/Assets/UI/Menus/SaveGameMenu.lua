@@ -141,7 +141,7 @@ function OnShow()
 
 	UpdateActionButtonState();
 
-	local cloudEnabled = UI.AreCloudSavesEnabled() and not GameConfiguration.IsAnyMultiplayer();
+	local cloudEnabled = UI.AreCloudSavesEnabled() and not GameConfiguration.IsAnyMultiplayer() and g_FileType ~= SaveFileTypes.GAME_CONFIGURATION;
 	Controls.CloudCheck:SetHide(not cloudEnabled);
 
 	local cloudSavesVisible = Controls.CloudCheck:IsVisible();

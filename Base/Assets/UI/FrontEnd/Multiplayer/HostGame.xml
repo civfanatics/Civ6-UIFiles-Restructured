@@ -54,9 +54,9 @@
         </ScrollPanel>
       </Grid>
 			<!-- TODO: Add contents of mods screen into the ParametersStack (in the SecondaryParametersStack, or in its own ModsStack)  -->
-			<GridButton ID="ModsButton"			Anchor="L,B" Offset="5,5" Style="MainButton" String="LOC_MAIN_MENU_MODS"/>
-			<GridButton ID="LoadButton"			Anchor="C,B" Offset="0,5" Size="260,38" Style="MainButton" String="LOC_LOAD_GAME"/>
-			<GridButton ID="ConfirmButton"	Anchor="R,B" Offset="5,5" Style="ButtonConfirm" String="LOC_MULTIPLAYER_CONFIRM_SETTINGS" ToolTip="LOC_MULTIPLAYER_HOST_GAME_TT"/>
+			<GridButton ID="ModsButton"			Anchor="L,B" Offset="5,5" Size="260,41" Style="MainButton" String="LOC_MAIN_MENU_MODS"/>
+			<GridButton ID="LoadButton"			Anchor="C,B" Offset="0,5" Size="260,41" Style="MainButton" String="LOC_LOAD_GAME"/>
+			<GridButton ID="ConfirmButton"	Anchor="R,B" Offset="5,5" Size="260,41" Style="ButtonConfirm" String="LOC_MULTIPLAYER_CONFIRM_SETTINGS" ToolTip="LOC_MULTIPLAYER_HOST_GAME_TT"/>
 		</Container>
   </Box>
 

@@ -646,6 +646,7 @@ function MapSize_ValueChanged(p)
 		participatingCount = math.clamp(participatingCount, 0, mpMaxSupportedPlayers);
 	end
 
+	print("Setting participating layer count to " .. tonumber(participatingCount));
 	local playerCountChange = GameConfiguration.SetParticipatingPlayerCount(participatingCount);
 	Network.BroadcastGameConfig(true);
 

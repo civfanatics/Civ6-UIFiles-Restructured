@@ -11,6 +11,11 @@ function OnOpen()
 	local pkArchaeologist = localPlayer:GetUnits():GetNextExtractingArchaeologist();
 	local iIndex = Map.GetPlotIndex(pkArchaeologist:GetX(), pkArchaeologist:GetY());
 	local kObject = Game.GetArtifactAtPlot(iIndex);
+
+	if kObject == nil then
+		return;
+	end
+
 	g_ActingPlayerID = kObject.ActingPlayerID;
 	g_TargetPlayerID = kObject.TargetPlayerID;
 

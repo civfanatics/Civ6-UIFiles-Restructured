@@ -165,7 +165,7 @@ function SetupParameters:UpdateParameters(parameters)
 	--end
 
 	if(self.Refreshing == true) then
-		error("Refresh inception! This is bad");
+	--	error("Refresh inception! This is bad");
 	end
 
 	self.Refreshing = true;
@@ -1463,6 +1463,8 @@ function SetupParameters:Parameter_SyncConfigurationValues(parameter)
 						return self:Parameter_SyncAuxConfigurationValues(parameter);
 					end
 				end
+
+				print("Cannot find config_value in domain - " .. parameter.ConfigurationId .. " - " .. tostring(config_value));
 			end
 		end
 
@@ -1479,6 +1481,7 @@ function SetupParameters:Parameter_SyncConfigurationValues(parameter)
 			-- blech! get the first value.
 			local first_value = parameter.Values[1];
 			if(first_value) then
+				print("Defaulting to first value - " .. parameter.ConfigurationId);
 				parameter.Value = first_value;
 				return true;
 			else
