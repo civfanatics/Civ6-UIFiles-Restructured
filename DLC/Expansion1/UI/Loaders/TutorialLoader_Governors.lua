@@ -589,6 +589,12 @@ function TutorialLoader:CreateTutorialItems(AddToListener:ifunction)
 			UI.PlaySound("Stop_LOC_TUTORIAL_GOV_DISTRICT_3c")
 			LuaEvents.AdvisorPopup_ClearActive( advisorInfo );
 		end );
+	item:AddAdvisorButton("LOC_ADVISOR_BUTTON_TELL_ME_MORE",
+		function(advisorInfo)
+			LuaEvents.Advisor_GovernmentOpenPolicies();
+			LuaEvents.AdvisorPopup_ClearActive(advisorInfo)
+			UI.PlaySound("Stop_LOC_TUTORIAL_GOV_DISTRICT_2a")
+		end);
 	item:SetIsDoneFunction(
 		function()
 			return false;

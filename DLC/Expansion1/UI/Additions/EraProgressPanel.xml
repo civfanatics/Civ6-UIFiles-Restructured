@@ -50,11 +50,6 @@
 							</Image>
 						</Container>
 					</Container>
-
-					<ScrollPanel Size="parent,56" Anchor="C,B" Vertical="1" AutoScrollBar="1">
-						<ScrollBar Anchor="R,T" Offset="8,-2" Style="ScrollVerticalBar" Size="8,parent+2"/>
-						<Stack ID="ScoreBreakdownStack" Anchor="L,T" Offset="0,0" Size="parent,auto" StackGrowth="Down" StackPadding="3"/>
-					</ScrollPanel>
 				</Stack>
 			</Container>
 

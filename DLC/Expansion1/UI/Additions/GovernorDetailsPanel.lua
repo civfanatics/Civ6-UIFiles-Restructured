@@ -86,10 +86,11 @@ function Refresh()
 
 	-- Create the promotion button instances and fill the promotion matrix
 	m_PromotionIM:ResetInstances();
-	for promotion in GameInfo.GovernorPromotions() do
-		if promotion.GovernorType == pGovernorDef.GovernorType then
+	for promotionSet in GameInfo.GovernorPromotionSets() do
+		if promotionSet.GovernorType == pGovernorDef.GovernorType then
+			local promotion = GameInfo.GovernorPromotions[promotionSet.GovernorPromotion];
 			if promotion.BaseAbility then
-				local iconName:string = "ICON_" .. promotion.GovernorType .. "_PROMOTION";
+				local iconName:string = "ICON_" .. pGovernorDef.GovernorType .. "_PROMOTION";
 				Controls.BaseAbilityIcon:SetIcon(iconName);
 				Controls.BaseAbilityLabel:SetText(Locale.Lookup(promotion.Description));
 			else

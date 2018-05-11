@@ -90,7 +90,7 @@ function ViewPanelCitizensGrowth( data:table )
 		Controls.HousingMultiplier:SetText( Locale.ToNumber( data.HousingMultiplier));
 		local growthModifier =  math.max(1 + (data.HappinessGrowthModifier/100) + data.OtherGrowthModifiers, 0); -- This is unintuitive but it's in parity with the logic in City_Growth.cpp
 		iModifiedFood = Round(data.FoodSurplus * growthModifier, 2);
-		total = iModifiedFood * data.HousingMultiplier;		
+		total = iModifiedFood * data.HousingMultiplier;
 		Controls.TurnsUntilBornLost:SetText( Locale.Lookup("LOC_HUD_CITY_TURNS_UNTIL_CITIZEN_BORN", data.TurnsUntilGrowth));
 		Controls.FoodSurplusDeficitLabel:LocalizeAndSetText("LOC_HUD_CITY_TOTAL_FOOD_SURPLUS");
 	else
@@ -99,7 +99,7 @@ function ViewPanelCitizensGrowth( data:table )
 		Controls.OtherGrowthBonuses:LocalizeAndSetText("LOC_HUD_CITY_NOT_APPLICABLE");
 		Controls.HousingMultiplier:LocalizeAndSetText("LOC_HUD_CITY_NOT_APPLICABLE");
 		iModifiedFood = data.FoodSurplus;
-		total = iModifiedFood;		
+		total = iModifiedFood;
 
 		Controls.TurnsUntilBornLost:SetText( Locale.Lookup("LOC_HUD_CITY_TURNS_UNTIL_CITIZEN_LOST", math.abs(data.TurnsUntilGrowth)));
 		Controls.FoodSurplusDeficitLabel:LocalizeAndSetText("LOC_HUD_CITY_TOTAL_FOOD_DEFICIT");

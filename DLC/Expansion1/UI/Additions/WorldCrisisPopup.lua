@@ -98,6 +98,14 @@ function OnCrisisReceived(playerTarget, emergencyType)
 	local ownerController = CivilizationIcon:AttachInstance(Controls.CivilizationTargetIcon);
 	ownerController:UpdateIconFromPlayerID(crisisData.targetPlayer);
 
+	local localDiplomacy:table =  Players[crisisData.targetPlayer]:GetDiplomacy();
+	local leaderName:string = PlayerConfigurations[crisisData.targetPlayer]:GetLeaderTypeName();
+	local iconName:string = "ICON_" .. leaderName;
+
+	--Build and update
+	local ownerLeader = LeaderIcon:AttachInstance(Controls.LeaderTargetIcon);
+	ownerLeader:UpdateIcon(iconName, crisisData.targetPlayer, true);
+
 	--Populate our bottom block of data
 	PopulateDynamicStack(m_RewardsManagers, crisisData.rewardsDetails);
 	Controls.RewardsDetailsStack:CalculateSize();
@@ -285,7 +293,7 @@ function FetchData(playerTarget, emergencyType)
 		titleString				= Locale.ToUpper(Locale.Lookup(cachedValue.HasBegun and (cachedValue.TurnsLeft< 0 and "LOC_EMERGENCY_COMPLETED" or "LOC_EMERGENCY_ONGOING") or 
 												"LOC_EMERGENCY_PENDING", cachedValue.NameText)),
 		trinketString			= cachedValue.DescriptionText,
-		crisisTargetTitle		= Locale.Lookup("LOC_EMERGENCY_TARGET", PlayerConfigurations[cachedValue.TargetID]:GetLeaderName()),
+		crisisTargetTitle		= Locale.Lookup("LOC_EMERGENCY_TARGET", cachedValue.HasBegun and cachedValue.TargetCityName or PlayerConfigurations[cachedValue.TargetID]:GetLeaderName()),
 		crisisTrinketTitle		= cachedValue.TurnsLeft < 0 and "" or cachedValue.GoalDescription,
 		crisisDetails			= crisisDetails,
 		timeRemaining			= cachedValue.TurnsLeft,

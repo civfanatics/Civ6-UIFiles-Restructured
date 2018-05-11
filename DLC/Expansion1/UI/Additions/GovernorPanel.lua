@@ -100,7 +100,7 @@ function AddGovernorShared(governor:table)
 end
 
 -- ===========================================================================
-function AddPromotionInstance( governorInstance:table, promotion:table, hasPromotion:boolean )
+function AddPromotionInstance( governorInstance:table, governorDefinition:table, promotion:table, hasPromotion:boolean )
 
 	local promotionInstance = {};
 	if hasPromotion then
@@ -129,7 +129,7 @@ function AddPromotionInstance( governorInstance:table, promotion:table, hasPromo
 
 	-- If this is our base ability use our governor specific promotion icon
 	if promotion.BaseAbility then
-		local iconName:string = "ICON_" .. promotion.GovernorType .. "_PROMOTION";
+		local iconName:string = "ICON_" .. governorDefinition.GovernorType .. "_PROMOTION";
 		promotionInstance.PromotionIcon:SetIcon(iconName);
 	else
 		promotionInstance.PromotionIcon:SetIcon("ICON_GOVERNOR_GENERIC_PROMOTION");
@@ -149,9 +149,10 @@ function AddGovernorCandidate(governorDef:table, canAppoint:boolean)
 	local governorInstance:table = AddGovernorShared(governorDef);
 
 	-- Add all promotions this governor has
-	for promotion in GameInfo.GovernorPromotions() do
+	for promotion in GameInfo.GovernorPromotionSets() do
 		if promotion.GovernorType == governorDef.GovernorType then
-			AddPromotionInstance(governorInstance, promotion, promotion.BaseAbility);
+			local promotionDef = GameInfo.GovernorPromotions[promotion.GovernorPromotion];
+			AddPromotionInstance(governorInstance, governorDef, promotionDef, promotion.BaseAbility);
 		end
 	end
 
@@ -196,10 +197,11 @@ function AddGovernorAppointed(playerGovernors:table, governor:table, governorDef
 
 	-- Add all promotions this governor has
 	local hasAllPromotions:boolean = true;
-	for promotion in GameInfo.GovernorPromotions() do
+	for promotion in GameInfo.GovernorPromotionSets() do
 		if promotion.GovernorType == governorDefinition.GovernorType then
-			local hasPromotion:boolean = governor:HasPromotion(promotion.Hash);
-			AddPromotionInstance(governorInstance, promotion, hasPromotion);
+			local promotionDef = GameInfo.GovernorPromotions[promotion.GovernorPromotion];
+			local hasPromotion:boolean = governor:HasPromotion(DB.MakeHash(promotion.GovernorPromotion));
+			AddPromotionInstance(governorInstance, governorDefinition, promotionDef, hasPromotion);
 
 			if not hasPromotion then
 				hasAllPromotions = false;
@@ -293,6 +295,14 @@ end
 function Close()
 	if Controls.DetailsPanel:IsVisible() then
 		Controls.DetailsPanel:SetHide(true);
+	end
+
+	local localPlayerID = Game.GetLocalPlayer();
+	if (localPlayerID ~= -1) then
+		local localPlayer = Players[localPlayerID];
+		if (localPlayer ~= nil and localPlayer:GetGovernors() ~= nil and not localPlayer:GetGovernors():HasTitleBeenConsidered()) then
+			localPlayer:GetGovernors():SetTitleConsidered(true);
+		end
 	end
 
 	if UIManager:DequeuePopup(ContextPtr) then

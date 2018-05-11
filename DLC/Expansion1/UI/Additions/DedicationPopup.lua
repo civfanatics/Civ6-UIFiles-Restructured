@@ -11,14 +11,20 @@ include("InstanceManager");
 
 local RELOAD_CACHE_ID:string = "DedicationPopup"; -- Must be unique (usually the same as the file name)
 
+local HEROIC_AGE:number = 1;
+local GOLDEN_AGE:number = 2;
+local DARK_AGE:number = 3;
+local NORMAL_AGE:number = 4;
+
 -- ===========================================================================
 --	VARIABLES
 -- ===========================================================================
 
+local m_CurrentAge:number = -1;
 local m_PreviewEraIndex:number = -1;
 local m_CurrentEraIndex:number = -1;
 local m_SelectedCommemorationTypes:table = {};
-local m_CommemorationInstanceManager:table = InstanceManager:new("Commemoration", "TopControl", Controls.CommemorationsStack);
+local m_CommemorationInstanceManager:table = InstanceManager:new("Commemoration", "SelectCheck", Controls.CommemorationsStack);
 
 -- ===========================================================================
 function OnGameEraChanged(prevEraIndex:number, newEraIndex:number)
@@ -26,6 +32,7 @@ function OnGameEraChanged(prevEraIndex:number, newEraIndex:number)
 	m_PreviewEraIndex = prevEraIndex;
 	m_CurrentEraIndex = newEraIndex;
 	local localPlayerID:number = Game.GetLocalPlayer();
+	local gameEras:table = Game.GetEras();
 
 	-- Ignore during first turn, or if playing as an observer
 	if	localPlayerID == PlayerTypes.NONE or m_CurrentEraIndex == 0 or
@@ -33,13 +40,23 @@ function OnGameEraChanged(prevEraIndex:number, newEraIndex:number)
 		return;
 	end
 
+	-- Determine the age type
+	if (gameEras:HasHeroicGoldenAge(localPlayerID)) then
+		m_CurrentAge = HEROIC_AGE;
+	elseif (gameEras:HasGoldenAge(localPlayerID)) then
+		m_CurrentAge = GOLDEN_AGE;
+	elseif (gameEras:HasDarkAge(localPlayerID)) then
+		m_CurrentAge = DARK_AGE;
+	else
+		m_CurrentAge = NORMAL_AGE;
+	end
+
 	if m_CurrentEraIndex > 0 then
 		local currentEraName:string = GameInfo.Eras[m_CurrentEraIndex].Name;
-		local gameEras:table = Game.GetEras();
 		local historyManager:table= Game.GetHistoryManager();
 		local commemorateChoices:table = gameEras:GetPlayerCommemorateChoices(localPlayerID);
 
-		Controls.Description:SetText(Locale.Lookup("LOC_ERA_COMMEMORATION_POPUP_DEDICATION_SUBHEADER", Locale.Lookup(currentEraName)));
+		Controls.Title:SetText(Locale.ToUpper(Locale.Lookup("LOC_ERA_COMMEMORATION_POPUP_DEDICATION_SUBHEADER", Locale.Lookup(currentEraName))));
 
 		m_CommemorationInstanceManager:ResetInstances();
 
@@ -61,15 +78,27 @@ function OnGameEraChanged(prevEraIndex:number, newEraIndex:number)
 
 		Controls.CommemorationsScroller:SetScrollValue(0);
 
-		-- Update the age achieved label
-		if (gameEras:HasHeroicGoldenAge(localPlayerID)) then
-			Controls.AgeAchieved:SetText(Locale.Lookup("LOC_DEDICATION_POPUP_HEROIC_AGE_ACHIEVED"));
-		elseif (gameEras:HasGoldenAge(localPlayerID)) then
-			Controls.AgeAchieved:SetText(Locale.Lookup("LOC_DEDICATION_POPUP_GOLDEN_AGE_ACHIEVED"))
-		elseif (gameEras:HasDarkAge(localPlayerID)) then
-			Controls.AgeAchieved:SetText(Locale.Lookup("LOC_DEDICATION_POPUP_DARK_AGE_ACHIEVED"))
+		-- Update control styles
+		if m_CurrentAge == HEROIC_AGE then
+			Controls.AgeAchieved:SetText(Locale.ToUpper(Locale.Lookup("LOC_DEDICATION_POPUP_HEROIC_AGE_ACHIEVED")));
+			Controls.PopupBackground:SetTexture("Ages_ParchmentHeroic");
+			Controls.PopupFrame:SetTexture("Ages_FrameHeroic");
+			Controls.HeroicFrameGlow:SetHide(false);
+		elseif m_CurrentAge == GOLDEN_AGE then
+			Controls.AgeAchieved:SetText(Locale.ToUpper(Locale.Lookup("LOC_DEDICATION_POPUP_GOLDEN_AGE_ACHIEVED")));
+			Controls.PopupBackground:SetTexture("Ages_ParchmentGolden");
+			Controls.PopupFrame:SetTexture("Ages_FrameGolden");
+			Controls.HeroicFrameGlow:SetHide(true);
+		elseif m_CurrentAge == DARK_AGE then
+			Controls.AgeAchieved:SetText(Locale.ToUpper(Locale.Lookup("LOC_DEDICATION_POPUP_DARK_AGE_ACHIEVED")));
+			Controls.PopupBackground:SetTexture("Ages_ParchmentDark");
+			Controls.PopupFrame:SetTexture("Ages_FrameDark");
+			Controls.HeroicFrameGlow:SetHide(true);
 		else
-			Controls.AgeAchieved:SetText(Locale.Lookup("LOC_DEDICATION_POPUP_NORMAL_AGE_ACHIEVED"))
+			Controls.AgeAchieved:SetText(Locale.ToUpper(Locale.Lookup("LOC_DEDICATION_POPUP_NORMAL_AGE_ACHIEVED")));
+			Controls.PopupBackground:SetTexture("Ages_ParchmentNormal");
+			Controls.PopupFrame:SetTexture("Ages_FrameNormal");
+			Controls.HeroicFrameGlow:SetHide(true);
 		end
 	elseif m_CurrentEraIndex < 0 then
 		UI.DataError("Error in PrideCommemorationPopup: Invalid Previous Era.");
@@ -91,7 +120,7 @@ function CreateCommemoration(commemorationInfo:table)
 	if (commemorationInfo ~= nil and commemorationInfo.CategoryDescription ~= nil) then
 		categoryText = Locale.Lookup(commemorationInfo.CategoryDescription);
 	end
-	instance.MomentCategory:SetText(categoryText);
+	instance.MomentCategory:SetText(Locale.ToUpper(categoryText));
 	local bonusText:string = "";
 	local localPlayerID:number = Game.GetLocalPlayer();
 	if (localPlayerID ~= PlayerTypes.NONE) then
@@ -113,6 +142,17 @@ function CreateCommemoration(commemorationInfo:table)
 			end
 		end
 	end
+
+	if m_CurrentAge == HEROIC_AGE then
+		instance.SelectCheck:SetTexture("Ages_ButtonComHeroic");
+	elseif m_CurrentAge == GOLDEN_AGE then
+		instance.SelectCheck:SetTexture("Ages_ButtonComGolden");
+	elseif m_CurrentAge == DARK_AGE then
+		instance.SelectCheck:SetTexture("Ages_ButtonComDark");
+	else
+		instance.SelectCheck:SetTexture("Ages_ButtonComNormal");
+	end
+
 	instance.MomentBonuses:SetText(bonusText);
 	instance.SelectCheck:SetSelected(false);
 	instance.SelectCheck:RegisterCallback(Mouse.eLClick, function() OnCommemorationSelected(instance, commemorationInfo.Index) end);
@@ -243,14 +283,11 @@ function Initialize()
 	ContextPtr:SetShutdown( OnShutdown );
 	ContextPtr:SetInputHandler( OnInputHandler, true );
 
-	Controls.ModalBG:SetHide(true);
-	Controls.ModalScreenClose:RegisterCallback(Mouse.eLClick, OnClose);
+	Controls.CloseButton:RegisterCallback(Mouse.eLClick, OnClose);
 	Controls.Confirm:RegisterCallback(Mouse.eLClick, OnConfirm);
 
 	-- Lua Events
 	LuaEvents.GameDebug_Return.Add(OnGameDebugReturn);
 	LuaEvents.DedicationPopup_Show.Add(OnGameEraChanged);
-
-	Controls.ModalScreenTitle:SetText(Locale.ToUpper("LOC_ERA_COMMEMORATION_POPUP_DEDICATION"));
 end
 Initialize();

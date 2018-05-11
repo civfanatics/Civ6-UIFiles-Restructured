@@ -55,7 +55,7 @@ local DATA_ILLUSTRATIONS_MAP:table = {
 --	VARIABLES
 -- ===========================================================================
 local m_CurrentEra:number = -1;
-local m_ScreenWidth:number = UIManager:GetScreenSizeVal();
+local m_ScreenWidth:number = -1;
 local m_MomentStackInstance:table = nil;
 local m_CachedIllustrations:table = {}; -- 3D table indexed by [MomentIllustrationType][MomentDataType][GameDataType]
 
@@ -170,6 +170,11 @@ function DisplayTimeline(showAnim:boolean)
 	-- Never show 
 	if GameConfiguration.IsHotseat() and not m_isLocalPlayerTurn then
 		return;
+	end
+
+	-- Ensure screen width is valid and up to date
+	if m_ScreenWidth <= 0 then
+		m_ScreenWidth = UIManager:GetScreenSizeVal();
 	end
 
 	showAnim = showAnim and Options.GetUserOption("Interface", "PlayHistoricMomentAnimation") ~= 0;
@@ -294,6 +299,7 @@ function AddMoment(momentData:table, isNewMoment:boolean)
 
 		if isNewMoment then
 			instance.Root:Play();
+			UI.PlaySound("Pride_Moment_Anim");
 		end
 	else
 		UI.DataError("No data was found on Moments table for Moment { ID='" .. tostring(momentData.ID) .. "', Type='" .. tostring(momentData.Type) .. "' }");

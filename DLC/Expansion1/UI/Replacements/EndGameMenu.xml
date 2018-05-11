@@ -186,6 +186,7 @@
 		<Stack Anchor="C,B"  Offset="0,31" Padding="4" StackGrowth="Right" ID="ButtonStack">
 			<GridButton ID="ReplayMovieButton" Style="MainButton" String="LOC_UI_ENDGAME_REPLAY_MOVIE" SizeToText="40,28"/>
 			<GridButton ID="HistoricMoments" Style="MainButton" String="LOC_END_GAME_MENU_HISTORIAN_BUTTON" SizeToText="40,28"/>
+			<GridButton ID="ExportHistoricMoments" Style="MainButton" String="LOC_END_GAME_MENU_EXPORT_HISTORIAN_BUTTON" SizeToText="40,28"/>
 			<GridButton ID="MainMenuButton" Style="MainButton" String="LOC_UI_ENDGAME_MAIN_MENU" SizeToText="40,28"/>
 			<GridButton ID="NextPlayerButton" Style="MainButton" String="LOC_UI_ENDGAME_MP_PLAYER_CHANGE_CONTINUE" SizeToText="40,28"/>
 			<GridButton ID="BackButton" Style="MainButton" String="LOC_UI_ENDGAME_EXTENDED_GAME" SizeToText="40,28"/>

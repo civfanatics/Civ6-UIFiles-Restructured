@@ -61,15 +61,23 @@ function CheckGameEraChanged()
 	if eraTable:HasHeroicGoldenAge(localPlayer) then
 		Controls.TopDecoFrame:SetTexture("Frame_EraRollover_HeroAge_Top");
 		Controls.BottomDecoFrame:SetTexture("Frame_EraRollover_HeroAge_Bottom");
+		Controls.FrameL:SetTexture("EraRollover_TextFrame_HeroicAgeL");
+		Controls.FrameR:SetTexture("EraRollover_TextFrame_HeroicAgeR");
 	elseif eraTable:HasGoldenAge(localPlayer) then
 		Controls.TopDecoFrame:SetTexture("Frame_EraRollover_GoldenAge_Top");
 		Controls.BottomDecoFrame:SetTexture("Frame_EraRollover_GoldenAge_Bottom");
+		Controls.FrameL:SetTexture("EraRollover_TextFrame_GoldenAgeL");
+		Controls.FrameR:SetTexture("EraRollover_TextFrame_GoldenAgeR");
 	elseif eraTable:HasDarkAge(localPlayer) then
 		Controls.TopDecoFrame:SetTexture("Frame_EraRollover_DarkAge_Top");
 		Controls.BottomDecoFrame:SetTexture("Frame_EraRollover_DarkAge_Bottom");
+		Controls.FrameL:SetTexture("EraRollover_TextFrame_DarkAgeL");
+		Controls.FrameR:SetTexture("EraRollover_TextFrame_DarkAgeR");
 	else
 		Controls.TopDecoFrame:SetTexture("Frame_EraRollover_VanillaAge_Top");
 		Controls.BottomDecoFrame:SetTexture("Frame_EraRollover_VanillaAge_Bottom");
+		Controls.FrameL:SetTexture("EraRollover_TextFrame_NormalAgeL");
+		Controls.FrameR:SetTexture("EraRollover_TextFrame_NormalAgeR");
 	end
 end
 
@@ -97,27 +105,18 @@ function OnShow()
 	Controls.EraPopupAnimation:SetToBeginning();
 	Controls.EraPopupAnimation:Play();
 	
-	Controls.HeaderAlpha:SetToBeginning();
-	Controls.HeaderAlpha:Play();
 
-	Controls.HeaderSlide:SetBeginVal(0,50);
+	Controls.HeaderSlide:SetBeginVal(0,100);
 	Controls.HeaderSlide:SetEndVal(0,0);
 	Controls.HeaderSlide:SetToBeginning();
 	Controls.HeaderSlide:Play();
 
-	Controls.TopDecoAlpha:SetToBeginning();
-	Controls.TopDecoAlpha:Play();
-	Controls.BottomDecoAlpha:SetToBeginning();
-	Controls.BottomDecoAlpha:Play();
+
 end
 
 -- ===========================================================================
 function OnHeaderAnimationComplete()
-	Controls.HeaderSlide:SetBeginVal(0,0);
-	Controls.HeaderSlide:SetEndVal(0,-50);
-	Controls.HeaderSlide:SetToBeginning();
-	Controls.HeaderSlide:SetPauseTime(1);
-	Controls.HeaderSlide:Play();
+	--Outro animation deprecated
 end
 
 -- ===========================================================================

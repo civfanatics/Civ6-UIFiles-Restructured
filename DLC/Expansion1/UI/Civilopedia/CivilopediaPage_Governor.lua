@@ -17,12 +17,15 @@ PageLayouts["Governor" ] = function(page)
 
 	-- Get some info!
 	local titles = {};
-	for row in GameInfo.GovernorPromotions() do
+	for row in GameInfo.GovernorPromotionSets() do
 		if(row.GovernorType == governorType) then
-			table.insert(titles, Locale.Lookup(row.Name));
+			local promotion = GameInfo.GovernorPromotions[row.GovernorPromotion];
+			if(promotion) then
+				table.insert(titles, Locale.Lookup(promotion.Name));
+			end
 		end
 	end
-	table.sort(titles);
+	table.sort(titles, function(a,b) return Locale.Compare(a,b) == -1; end);
 
 	-- Right Column!
 	AddTallImageNoScale(governor.PortraitImage);
@@ -31,7 +34,7 @@ PageLayouts["Governor" ] = function(page)
 		if(#titles > 0) then
 			s:AddHeader("LOC_UI_PEDIA_TITLES");
 			for _, title in ipairs(titles) do
-				s:AddLabel("[ICON_BULLET]" .. title, title.GovernorPromotionType);
+				s:AddLabel("[ICON_BULLET]" .. title);
 			end
 
 			s:AddSeparator();

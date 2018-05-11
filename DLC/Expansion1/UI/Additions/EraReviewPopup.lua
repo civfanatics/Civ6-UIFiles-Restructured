@@ -38,7 +38,6 @@ local m_PreviousEraIndex:number = -1;
 local m_CurrentEraIndex:number = -1;
 
 local m_CivilizationIconIM:table = InstanceManager:new("CivilizationIconAge", "CivIconBacking", Controls.CivIconStack);
-local m_ScoreBreakdownInstanceManager:table = InstanceManager:new("ScoreBreakdownItem", "TopControl", Controls.ScoreBreakdownStack);
 
 function OnGameEraChanged(prevEraIndex:number, newEraIndex:number)
 	--If prevEra is -1 we just started a fresh game
@@ -53,46 +52,50 @@ function OnGameEraChanged(prevEraIndex:number, newEraIndex:number)
 	m_CurrentEraIndex = newEraIndex;
 
 	Controls.Title:SetText(Locale.ToUpper(Locale.Lookup("LOC_ERA_REVIEW_POPUP_TITLE", GameInfo.Eras[m_CurrentEraIndex].Name)));
-	Controls.TitleBacking:SetSizeY(math.max(60, Controls.Title:GetSizeY() + 20));
 	Controls.EraImage:SetTexture(ERA_ILLUSTRATIONS[m_CurrentEraIndex]);
 
 	local gameEras:table = Game.GetEras();
 	local score	= gameEras:GetPlayerCurrentScore(m_LocalPlayerID);
-	local prevDarkAgeThreshold = gameEras:GetPlayerPreviousDarkAgeThreshold(m_LocalPlayerID);
 	local prevGoldenAgeThreshold = gameEras:GetPlayerPreviousGoldenAgeThreshold(m_LocalPlayerID);
-	local darkAgeThreshold = gameEras:GetPlayerDarkAgeThreshold(m_LocalPlayerID);
-	local goldenAgeThreshold = gameEras:GetPlayerGoldenAgeThreshold(m_LocalPlayerID);
-
-	if gameEras:GetCurrentEra() == gameEras:GetFinalEra() then
-		Controls.ThresholdStack:SetHide(true);
-	else
-		Controls.DarkThreshold:SetText("0 - " .. (darkAgeThreshold - 1));
-		Controls.DarkThreshold:SetToolTipString(GetDarkAgeThresholdTooltip(m_LocalPlayerID));
-		Controls.NormalThreshold:SetText(darkAgeThreshold .. " - " .. (goldenAgeThreshold - 1));
-		Controls.GoldenThreshold:SetText(goldenAgeThreshold .. "+");
-		Controls.GoldenThreshold:SetToolTipString(GetGoldenAgeThresholdTooltip(m_LocalPlayerID));
-		Controls.ThresholdStack:SetHide(false);
-	end
 
 	if gameEras:HasHeroicGoldenAge(m_LocalPlayerID) then
-		Controls.EraRibbon:SetTexture("Controls_AgesBanner_Heroic");
-		Controls.EraRibbonValue:SetText(Locale.Lookup("LOC_ERAS_HEROIC") .. " ([ICON_GLORY_SUPER_GOLDEN_AGE]" .. score .. "/" .. prevGoldenAgeThreshold .. " )");
+		Controls.EraRibbon:SetTexture("Ages_BannerLongHeroic");
+		Controls.Background:SetTexture("Ages_ParchmentHeroic");
+		Controls.WindowFrame:SetTexture("Ages_FrameHeroic");
+		Controls.EraRibbonText:SetColorByName("Black");
+		Controls.EraRibbonValue:SetColorByName("Black");
+		Controls.HeroicFlare:SetHide(false);
+		Controls.EraRibbonValue:SetText(Locale.Lookup("LOC_ERAS_HEROIC") .. " [ICON_GLORY_SUPER_GOLDEN_AGE]");
 		Controls.EraEffects:SetText(Locale.Lookup("LOC_ERA_REVIEW_HAVE_HEROIC_AGE_EFFECT"));
 	elseif gameEras:HasGoldenAge(m_LocalPlayerID) then
-		Controls.EraRibbon:SetTexture("Controls_AgesBanner_Golden");
-		Controls.EraRibbonValue:SetText(Locale.Lookup("LOC_ERAS_GOLDEN") .. " ([ICON_GLORY_GOLDEN_AGE]" .. score .. "/" .. prevGoldenAgeThreshold .. " )");
+		Controls.EraRibbon:SetTexture("Ages_BannerLongGolden");
+		Controls.Background:SetTexture("Ages_ParchmentGolden");
+		Controls.WindowFrame:SetTexture("Ages_FrameGolden");
+		Controls.EraRibbonText:SetColorByName("White_Black");
+		Controls.EraRibbonValue:SetColorByName("White_Black");
+		Controls.HeroicFlare:SetHide(true);
+		Controls.EraRibbonValue:SetText(Locale.Lookup("LOC_ERAS_GOLDEN") .. " [ICON_GLORY_GOLDEN_AGE]");
 		Controls.EraEffects:SetText(Locale.Lookup("LOC_ERA_REVIEW_HAVE_GOLDEN_AGE_EFFECT"));
 	elseif gameEras:HasDarkAge(m_LocalPlayerID) then
-		Controls.EraRibbon:SetTexture("Controls_AgesBanner_Dark");
-		Controls.EraRibbonValue:SetText(Locale.Lookup("LOC_ERAS_DARK") .. " ([ICON_GLORY_DARK_AGE]" .. score .. "/" .. prevGoldenAgeThreshold .. " )");
+		Controls.EraRibbon:SetTexture("Ages_BannerLongDark");
+		Controls.Background:SetTexture("Ages_ParchmentDark");
+		Controls.WindowFrame:SetTexture("Ages_FrameDark");
+		Controls.EraRibbonText:SetColorByName("White_Black");
+		Controls.EraRibbonValue:SetColorByName("White_Black");
+		Controls.HeroicFlare:SetHide(true);
+		Controls.EraRibbonValue:SetText(Locale.Lookup("LOC_ERAS_DARK") .. " [ICON_GLORY_DARK_AGE]");
 		Controls.EraEffects:SetText(Locale.Lookup("LOC_ERA_REVIEW_HAVE_DARK_AGE_EFFECT"));
 	else
-		Controls.EraRibbon:SetTexture("Controls_AgesBanner_Normal");
-		Controls.EraRibbonValue:SetText(Locale.Lookup("LOC_ERAS_NORMAL") .. " ([ICON_GLORY_NORMAL_AGE]" .. score .. "/" .. prevGoldenAgeThreshold .. " )");
+		Controls.EraRibbon:SetTexture("Ages_BannerLongNormal");
+		Controls.Background:SetTexture("Ages_ParchmentNormal");
+		Controls.WindowFrame:SetTexture("Ages_FrameNormal");
+		Controls.EraRibbonText:SetColorByName("White_Black");
+		Controls.EraRibbonValue:SetColorByName("White_Black");
+		Controls.HeroicFlare:SetHide(true);
+		Controls.EraRibbonValue:SetText(Locale.Lookup("LOC_ERAS_NORMAL") .. " [ICON_GLORY_NORMAL_AGE]");
 		Controls.EraEffects:SetText(Locale.Lookup("LOC_ERA_REVIEW_HAVE_NORMAL_AGE_EFFECT"));
 	end
 
-	PopulateScoreBreakdown();
 	PopulateLocalPlayerIcon();
 	PopulateCivilizationIcons();
 
@@ -206,29 +209,6 @@ function sortBreakdownInverse(a,b)
 	local _, bVal = next(b);
 	local result = aVal < bVal;
 	return result;
-end
-
-function PopulateScoreBreakdown()
-	m_ScoreBreakdownInstanceManager:ResetInstances();
-	local gameEras:table = Game.GetEras();
-	local breakdowns = {};
-	table.insert(breakdowns, gameEras:GetPlayerPreviousEraScoreBreakdown(Game.GetLocalPlayer()));
-	local score = gameEras:GetPlayerPreviousScore(Game.GetLocalPlayer());
-	local hasAny = false;
-
-	for i,breakdownTable in ipairs(breakdowns) do
-		for j,innerTable in ipairs(breakdownTable) do
-			local scoreSource,scoreValue = next(innerTable);
-			if (scoreValue ~= 0) then
-				local instance = m_ScoreBreakdownInstanceManager:GetInstance();
-				TruncateStringWithTooltip(instance.ScoreBreakdownTitle, 350, scoreSource);
-				instance.ScoreBreakdownValue:SetText(scoreValue);
-				hasAny = true;
-			end
-		end
-	end
-
-	Controls.EraScoreValue:SetText(score);
 end
 
 function OnShow()

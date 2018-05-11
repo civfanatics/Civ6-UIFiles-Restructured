@@ -53,7 +53,6 @@ local m_EraData:table = {
 };
 
 local m_CivilizationIconIM:table = InstanceManager:new("CivilizationIconAge", "CivIconBacking", Controls.CivIconStack);
-local m_ScoreBreakdownInstanceManager:table = InstanceManager:new("ScoreBreakdownItem", "TopControl", Controls.ScoreBreakdownStack);
 
 -- ===========================================================================
 function GetData()
@@ -211,7 +210,7 @@ function Refresh()
 		Controls.TimeToNextEra:SetText(m_EraData.NextEraMinTurn .. " - " .. m_EraData.NextEraMaxTurn);
 	end
 
-	local eraRibbonText:string = m_EraData.ShortAgeName .. " (" .. m_EraData.CurrentEraIcon .. m_EraData.CurrentEraScore .. "/" .. m_EraData.NextEraThreshold .. " )";
+	local eraRibbonText:string = m_EraData.ShortAgeName .. " " .. m_EraData.CurrentEraIcon;
 	Controls.EraRibbonValue:SetText(eraRibbonText);
 	Controls.EraRibbon:SetTexture(m_EraData.EraRibbonTexture);
 
@@ -246,8 +245,6 @@ function Refresh()
 		Controls.GoldenThreshold:SetToolTipString(m_EraData.GoldenAgeThresholdTooltip);
 		Controls.ThresholdStack:SetHide(false);
 	end
-
-	PopulateScoreBreakdown();
 
 	Controls.EraEffects:SetText(m_EraData.AgeEffects);
 end
@@ -310,25 +307,6 @@ function AddPlayerEraIcon(playerID:number, eraIcon:string)
 	civIcon:SetLeaderTooltip(playerID);
 	civIcon:UpdateLeaderTooltip(playerID);
 	instance.EraLabel:SetText(eraIcon);
-end
-
--- ===========================================================================
-function PopulateScoreBreakdown()
-	m_ScoreBreakdownInstanceManager:ResetInstances();
-
-	local hasAny = false;
-	for i,breakdownTable in ipairs(m_EraData.ScoreBreakdown) do
-		for scoreSource,scoreValue in pairs(breakdownTable) do
-			if (scoreValue ~= 0) then
-				local instance = m_ScoreBreakdownInstanceManager:GetInstance();
-				TruncateStringWithTooltip(instance.ScoreBreakdownTitle, 350, scoreSource);
-				instance.ScoreBreakdownValue:SetText(scoreValue);
-				hasAny = true;
-			end
-		end
-	end
-
-	Controls.ScoreBreakdownStack:SetShow(hasAny);
 end
 
 -- ===========================================================================

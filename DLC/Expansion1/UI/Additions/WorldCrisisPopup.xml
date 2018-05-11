@@ -31,6 +31,9 @@
               <Stack Anchor="C,T" StackGrowth="Right" Padding="5">
                 <Label ID="CrisisTargetTitle" Anchor="C,T" Style="EventPopupTitle" FontStyle="glow" Offset="0,10"  SmallCapsType="EveryWord" FontSize="22" Color0="225,225,225,250" Color1="255,255,255,45"/>
               </Stack>
+              <Container Size="auto,auto" Offset="20,0" Anchor="R,C">
+                <MakeInstance Name="LeaderIcon45" ID="LeaderTargetIcon" Anchor="C,C"/>
+              </Container>
             </Box>
             <Label ID="CrisisTrinketTitle" Style="EventPopupDescriptionBold" Align="center" Offset="0,12" Anchor="C,T" WrapWidth="545" FontSize="15" Color="225,225,225,250"/>
             <Line Color="150,153,157,35" Anchor="C,L" Offset="0,9" Start="0,0" End="554,0" Width="2"/>

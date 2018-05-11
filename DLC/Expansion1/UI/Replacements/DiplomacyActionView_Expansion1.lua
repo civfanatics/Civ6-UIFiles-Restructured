@@ -336,19 +336,37 @@ end
 
 -- ===========================================================================
 function AreThereEmergenciesForPlayer( playerID:number )
+	local localPlayerID:number = Game.GetLocalPlayer();
+
 	local crisisData = Game.GetEmergencyManager():GetEmergencyInfoTable(playerID);
 	for _, crisis in ipairs(crisisData) do
 		if crisis.HasBegun then
-			-- Are we the target?
-			if crisis.TargetID == playerID then
-				return true;
+			local involvesLocalPlayer:boolean = false;
+			local involvesSelectedPlayer:boolean = false;
+			
+			-- Is the local player the target?
+			if crisis.TargetID == localPlayerID then
+				involvesLocalPlayer = true;
 			end
 
-			-- Are we a member?
+			-- Is the selected player the target?
+			if crisis.TargetID == playerID then
+				involvesSelectedPlayer = true;
+			end
+
+			-- Check to see if the selected player and local player are members
 			for i, memberID in ipairs(crisis.MemberIDs) do
-				if memberID == playerID then
-					return true;
+				if memberID == localPlayerID then
+					involvesLocalPlayer = true;
 				end
+				if memberID == playerID then
+					involvesSelectedPlayer = true;
+				end
+			end
+
+			-- Only return true if both the selected player and local player are involved
+			if involvesLocalPlayer and involvesSelectedPlayer then
+				return true;
 			end
 		end
 	end
