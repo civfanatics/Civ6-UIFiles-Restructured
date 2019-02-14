@@ -1,97 +1,109 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Context xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="..\..\..\..\..\CivTech\Libs\ForgeUI\ForgeUI_Assets\Controls.xsd">
+<Context xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="..\..\..\..\..\..\CivTech\Libs\ForgeUI\ForgeUI_Assets\Controls.xsd">
   <Include File="LeaderIcon"/>
   <Include File="CivilizationIcon"/>
-  <Container Style="FullScreenVignetteConsumer" />
-  <Grid ID="DropShadow" Size="595,730" Anchor="C,C" Offset="0,0" Style="DropShadow2" Color="255,255,255,200">
-    <Grid ID="Window" Size="parent-5,parent+8" Anchor="C,C" Offset="0,0" SizePadding="0,20" Style="EventPopupFrame">
-      <!-- Title -->
-      <Container ID="TitleContainer" Size="parent,parent">
-        <Grid Style="EventPopupTitleBar" Size="parent-34,70" Offset="0,18" Anchor="C,T">
-          <Image ID="TitleIcon" Size="56,56" Offset="12,0" Anchor="L,C"/>
-          <Label ID="TitleString" Style="EventPopupTitle" SmallCapsType="EveryWord" Align="center" Anchor="C,C" WrapWidth="450" TruncateWidth="500" TruncatedTooltip="1"/>
-        </Grid>
-      </Container>
+  <Include File="WorldCrisisInstances"/>
 
-      
-      <Stack ID="BaseStack" Anchor="C,T" Offset="0,100" Padding="0">
-        <!-- Flavor Stinger -->
-        <Label ID="TrinketString" Align="Center" WrapWidth="545" Anchor="C,T" Style="EventPopupDescription"/>
-        <Line Color="150,153,157,60" Anchor="C,L" Offset="0,10" Start="0,0" End="554,0" Width="2"/>
-        <Image ID="CrisisBG" Size="553,359" Anchor="C,C" Texture="EMERGENCY_SETTLED_CITY_BG1">
-        <Line Color="150,153,157,60" Anchor="C,L" Offset="0,361" Start="0,0" End="554,0" Width="2"/>
-          <!-- Crisis Details -->
-          <Image ID="CrisisIcon" Size="56,56" Offset="12,0"/>
-          <Stack Anchor="C,T" Offset="0,10">
-            <Box ID="CrisisDetailTitleBar" Color="232,68,9,0" Size="557,35">
-              <Container ID="CivilizationIconContainer" Size="auto,auto" Offset="20,0" Anchor="L,C">
-                <MakeInstance Name="CivilizationIcon36" ID="CivilizationTargetIcon" Anchor="C,C"/>
-                <Image ID="TargetIcon" Texture="Emergency_Target44" Color="255,0,0,255" Size="44,44" Anchor="C,C"/>
+	<SlideAnim ID="AnimSoundOnShow"	Anchor="L,C" Start="-500,27" End="0,27" Cycle="Once" Speed="4" Stopped="1" />
+
+	<SlideAnim ID="SlideOnShow"	Anchor="L,C" Size="595,760" Start="-500,27" End="0,27" Cycle="Once" Speed="3.5" Function="OutSine" Stopped="1">
+    <Grid ID="DropShadow" Size="595,760" Anchor="C,C" Offset="0,-27" Style="DropShadow2" Color="255,255,255,200">
+      <Grid ID="Window" Size="parent-5,parent+8" Anchor="C,C" Offset="0,0" SizePadding="0,20" Style="EventPopupFrame">
+        <!-- Title -->
+        <Container ID="TitleContainer" Size="parent,parent">
+          <Grid Style="EventPopupTitleBar" Size="parent-34,40" Offset="0,18" Anchor="C,T">
+            <Label ID="TitleString" Style="EventPopupTitle" Offset="0,2" SmallCapsType="EveryWord" Align="center" Anchor="C,C" WrapWidth="500" FontSize="18" TruncateWidth="500" TruncatedTooltip="1"/>
+          </Grid>
+        </Container>
+
+
+        <Stack ID="BaseStack" Anchor="C,T" Offset="0,47" Padding="0">
+          <!-- Flavor Stinger -->
+          <Line Color="150,153,157,60" Anchor="C,L" Offset="0,10" Start="0,0" End="554,0" Width="2"/>
+          <Image ID="CrisisBG" Size="553,523" Anchor="C,C" Texture="EMERGENCY_SETTLED_CITY_BG1">
+            <Line Color="150,153,157,60" Anchor="C,L" Offset="0,523" Start="0,0" End="554,0" Width="2"/>
+            <!-- Crisis Details -->
+            <Image ID="CrisisIcon" Size="56,56" Offset="12,0"/>
+            <Stack Anchor="C,T" Offset="0,10">
+              <Container ID="CrisisDetailTitleBar" Color="232,68,9,0" Offset="0,-7" Size="557,auto">
+                <Container ID="CivilizationIconContainer" Size="55,55" Offset="20,3" Anchor="L,C">
+                  <Container Size="45,45">
+                    <MakeInstance Name="LeaderIcon45" ID="LeaderTargetIcon"/>
+                  </Container>
+                  <Image ID="TargetIcon" Texture="Emergency_Target44" Color="255,0,0,255" Size="55,55" Anchor="C,C"/>
+                </Container>
+                <Image ID="NoTargetIcon" Size="56,56" Offset="12,0" Anchor="L,C" Hidden="1"/>
+                <Container Anchor="C,T" Offset="0,10" Size="auto,44" Padding="6">
+                  <Stack Anchor="C,C" Padding="6">
+                    <Label ID="CrisisTargetTitle" Anchor="C,T" Style="EventPopupTitle" FontStyle="glow"  SmallCapsType="EveryWord" FontSize="22" Color0="225,225,225,250" Color1="255,255,255,45" TruncateWidth="375" TruncatedTooltip="1"/>
+                    <Label ID="CrisisTargetTitle2" Anchor="C,T" Style="EventPopupTitle" SmallCaps="16" FontStyle="glow"  SmallCapsType="EveryWord" FontSize="14" Color0="225,225,225,250" Color1="255,255,255,45"/>
+                  </Stack>
+                </Container>
+                  
               </Container>
-              <Stack Anchor="C,T" StackGrowth="Right" Padding="5">
-                <Label ID="CrisisTargetTitle" Anchor="C,T" Style="EventPopupTitle" FontStyle="glow" Offset="0,10"  SmallCapsType="EveryWord" FontSize="22" Color0="225,225,225,250" Color1="255,255,255,45"/>
-              </Stack>
-              <Container ID="LeaderIconContainer" Size="auto,auto" Offset="20,0" Anchor="R,C">
-                <MakeInstance Name="LeaderIcon45" ID="LeaderTargetIcon" Anchor="C,C"/>
-              </Container>
-            </Box>
-            <Label ID="CrisisTrinketTitle" Style="EventPopupDescriptionBold" Align="center" Offset="0,12" Anchor="C,T" WrapWidth="545" FontSize="15" Color="225,225,225,250"/>
-            <Line Color="150,153,157,35" Anchor="C,L" Offset="0,9" Start="0,0" End="554,0" Width="2"/>
-            <ScrollPanel ID="CrisisDetailScrollPanel" Anchor="L,T" Offset="11,1" Size="parent-21,141" Vertical="1">
-              <Stack ID="CrisisDetailsStack" Anchor="C,T" Offset="0,6" Size="parent,auto" Padding="7"/>
-              <ScrollBar Anchor="R,C" AnchorSide="O,I" Style="ScrollVerticalBarHighContrast"/>
-            </ScrollPanel>
-          </Stack>
-          <Stack Size="auto,auto" Offset="0,15" Anchor="C,B">
-            <Line Color="150,153,157,35" Anchor="C,L" Offset="0,6" Start="0,0" End="554,0" Width="2"/>
-            <Label ID="CrisisDuration" Align="center" Offset="0,2" Anchor="C,T" WrapWidth="470" Style="EventPopupDescriptionBold" Color="190,190,190,250"/>
-            <Line Color="150,153,157,35" Anchor="C,L" Offset="0,4" Start="0,0" End="554,0" Width="2"/>
-            <Label Style="FontFlair16" Align="center" Anchor="C,T" Offset="0,3" SmallCapsType="EveryWord" SmallCaps="22" FontSize="18" String="LOC_EMERGENCY_PARTICIPANTS" FontStyle="glow" Color0="225,225,225,250" Color1="255,255,255,70"/>
-            <Box ID="LeaderBar" Offset="0,10" Anchor="C,T" Color="232,68,9,0" Size="557,35">
-              <ScrollPanel ID="LeaderBarScrollPanel" Anchor="L,T" Offset="11,1" Size="parent-21,155" Vertical="0">
-                <Stack ID="LeaderIconStack" Offset="0,-8" Anchor="C,T" Padding="5" StackGrowth="Right"/>
+              <Label ID="TrinketString" Align="left" WrapWidth="545" Anchor="L,T" Offset="10,12" Style="EventPopupDescription" Color="255,255,255,170"/>
+              <Line Color="150,153,157,35" Anchor="C,T" Offset="0,9" Start="0,0" End="554,0" Width="2"/>
+              <Label ID="CrisisTrinketTitle" Style="EventPopupDescription" Align="left" Offset="10,12" Anchor="L,T" WrapWidth="545" FontSize="15" Color="255,255,255,170"/>
+              <ScrollPanel ID="CrisisDetailScrollPanel" Anchor="L,T" Offset="11,1" Size="parent-21,220" Vertical="1">
+                <Stack ID="VictorStack" Anchor="C,C" Padding="6" Hidden="1">
+                  <Label ID="VictorTitle" Anchor="C,T" Style="EventPopupTitle" FontStyle="glow"  SmallCapsType="EveryWord" FontSize="22" Color0="225,225,225,250" Color1="255,255,255,45" TruncateWidth="375" TruncatedTooltip="1"/>
+                  <Label ID="VictorTier" Anchor="C,T" Style="EventPopupTitle" SmallCaps="16" FontStyle="glow"  SmallCapsType="EveryWord" FontSize="14" Color0="225,225,225,250" Color1="255,255,255,45"/>
+                </Stack>
+                <Stack ID="CrisisDetailsStack" Anchor="C,T" Offset="0,6" Size="parent,auto" Padding="7"/>
+                <ScrollBar Anchor="R,C" AnchorSide="O,I" Style="ScrollVerticalBarHighContrast"/>
               </ScrollPanel>
-            </Box>
-          </Stack>
-        </Image>
-        <Grid Texture="Controls_FrameDeco"	SliceCorner="35,35"	SliceTextureSize="70,70" MinSize="70,70" InnerPadding="10,10" Anchor="C,T" Offset="0,20" Size="parent-46,129">
-          <ScrollPanel ID="EmergencyDetailScrollPanel" Anchor="L,T" Offset="11,1" Size="parent-21,parent-1" Vertical="1" AutoScrollBar="1">
-            <Stack ID="RewardsDetailsStack" Anchor="C,T" Padding="7" Offset="0,10" Size="parent,auto"/>
-            <ScrollBar Anchor="R,C" Offset="-4,0" AnchorSide="O,I" Style="ScrollVerticalBarHighContrast" Size="11,90"/>
-          </ScrollPanel>
-        </Grid>
-      </Stack>
+              <Line Color="150,153,157,35" Anchor="C,T" Offset="0,6" Start="0,0" End="554,0" Width="2"/>
+            </Stack>
+            <Stack Size="auto,auto" Offset="0,34" Padding="9" Anchor="C,B">
+              <Label ID="CrisisDuration" Align="center" Offset="0,2" Anchor="C,T" WrapWidth="470" Style="EventPopupDescriptionBold" Color="190,190,190,250"/>
+              <Container Size="parent,36" Anchor="C,T">
+                <Image Texture="CompetitionMembers" Size="48,48" Anchor="L,C" Offset="0,1"/>
+                <Stack Offset="0,2" Anchor="C,C" Padding="3">
+                  <Label ID="MemberLabel" Style="FontFlair16" Align="center" Anchor="C,C" Offset="0,3" SmallCapsType="EveryWord" SmallCaps="22" FontSize="18" String="LOC_EMERGENCY_PARTICIPANTS" FontStyle="glow" Color0="225,225,225,250" Color1="255,255,255,70"/>
+                  <Label ID="PlayerPlaceLabel"  Align="center" Anchor="C,C" WrapWidth="465" Style="EventPopupDescription" FontSize="15" Color="255,255,255,170"/>
+                </Stack>
+              </Container>
+              <Box ID="LeaderBar" Offset="0,10" Anchor="C,T" Color="232,68,9,0" Size="557,35">
+                <ScrollPanel ID="LeaderBarScrollPanel" Anchor="L,T" Offset="11,10" Size="parent-21,155" Vertical="0">
+                  <Stack ID="LeaderIconStack" Offset="0,-8" Anchor="C,T" Padding="9" StackGrowth="Right"/>
+                </ScrollPanel>
+              </Box>
+            </Stack>
+          </Image>
+          <Grid Texture="Controls_FrameDeco"	SliceCorner="35,35"	SliceTextureSize="70,70" MinSize="70,70" InnerPadding="10,10" Anchor="C,T" Offset="0,3" Size="parent-46,122">
+            <ScrollPanel ID="EmergencyDetailScrollPanel" Anchor="L,T" Offset="15,10" Size="parent-29,parent-16" Vertical="1" AutoScrollBar="1">
+              <Stack ID="RewardsDetailsStack" Anchor="C,T" Padding="7" Offset="0,0" Size="parent,auto"/>
+              <ScrollBar Anchor="R,C" Offset="-4,0" AnchorSide="O,I" Style="ScrollVerticalBarHighContrast" Size="11,90"/>
+            </ScrollPanel>
+          </Grid>
+        </Stack>
 
 
-      <!-- Buttons -->
-      <Button ID="CloseButton" Anchor="R,T" Offset="0,0" Style="CloseButtonSmall"/>
-      <Stack ID="DecisionStack" Anchor="C,B" Offset="0,30" Size="auto,36" Padding="5" StackGrowth="Right">
-        <GridButton ID="JoinButton" Style="MainButton" Size="200,41" String="LOC_EMERGENCY_JOIN"/>
-        <GridButton ID="RejectButton" Style="MainButton" Size="200,41" String="LOC_EMERGENCY_REJECT"/>
-        <GridButton ID="OKButton" Style="MainButton" Size="200,41" String="LOC_OK" Hidden="1"/>
-      </Stack>
+        <!-- Buttons -->
+        <Button ID="CloseButton" Anchor="R,T" Offset="0,0" Style="CloseButtonSmall"/>
+        <Stack ID="DecisionStack" Anchor="C,B" Offset="0,18" Size="auto,36" Padding="5" StackGrowth="Right">
+          <GridButton ID="JoinButton" Style="MainButton" Size="200,41" String="LOC_EMERGENCY_JOIN"/>
+          <GridButton ID="RejectButton" Style="MainButton" Size="200,41" String="LOC_EMERGENCY_REJECT"/>
+          <GridButton ID="OKButton" Style="MainButton" Size="200,41" String="{LOC_OK:upper}" Hidden="1"/>
+        </Stack>
+      </Grid>
     </Grid>
-  </Grid>
+  </SlideAnim>
 
   <!-- ==================================================================	-->
   <!--	Instances															                            -->
   <!-- ==================================================================	-->
-  <Instance Name="LeftAlignText">
-    <Stack ID="RootStack" Anchor="L,T" Offset="12,0" Padding="3" StackGrowth="Right">
-      <Label ID="IconString" Align="left" Anchor="L,T" WrapWidth="500" FontSize="15" Color="190,190,190,250"/>
-      <Label ID="Root" Align="left" Anchor="L,T" WrapWidth="465" Style="EventPopupDescription" FontSize="15" Color="255,255,255,170"/>
-    </Stack>
-  </Instance>
-
-  <Instance Name="CenterAlignText">
-    <Label ID="Root" Align="center" Anchor="C,T" WrapWidth="375" Style="EventPopupDescriptionBold" FontSize="15" Color="225,225,225,250"/>
-  </Instance>
-
-  <Instance Name="CenterAlignLargeText">
-    <Label ID="Root" Align="center" Anchor="C,T" WrapWidth="375" Style="EventPopupTitle"  SmallCapsType="EveryWord" SmallCaps="21" FontSize="18" Color="190,190,190,250"/>
-  </Instance>
-
-  <Instance Name="CenterAlignSoloText">
-    <Label ID="Root" Align="center" Anchor="C,C" WrapWidth="375" Style="EventPopupTitle" FontStyle="glow" SmallCapsType="EveryWord" SmallCaps="28" FontSize="24" Color0="208,208,208,250" Color1="255,255,255,80"/>
+  <Instance Name="LeaderButton">
+    <Container ID="Root" Size="auto,50">
+      <Grid ID="ScoreContainer" Offset="0,-4" Anchor="C,B" AutoSizePadding="0,2" Size="35,36" InnerPadding="0,3" Texture="Controls_ItemContainer2" SliceCorner="11,5" SliceTextureSize="22,22">
+        <Label ID="ScoreLabel" WrapWidth="110" Anchor="C,B" Style="FontNormal12" ColorSet="BodyTextCool" FontStyle="Stroke" TruncateHeight="65"/>
+      </Grid>
+      <Container Anchor="C,T" Size="parent,auto">
+        <Container Anchor="C,C" Size="auto,32">
+          <MakeInstance ID="Icon" Name="LeaderIcon32"/>
+        </Container>
+        <Image ID="YouIndicator" Anchor="C,T" Size="35,10" Texture="Controls_YouArrowSmall" Hidden="1"/>
+      </Container>
+    </Container>
   </Instance>
 </Context>

@@ -35,5 +35,7 @@ function IsListenerAbleToProcessOnNonPlayerTurn( listenerName:string )
 		or listenerName == "TargetEmergencySuccess"
 		or listenerName == "EmergencyFailure"
 		or listenerName == "EmergencyTrigger"
-		or listenerName == "EmergencySuccess";
+		or listenerName == "EmergencySuccess"
+		or listenerName == "WorldCongressStage3"
+		or listenerName == "WorldCongressFinished";
 end

@@ -69,7 +69,9 @@ function Refresh()
 	for governorDef in GameInfo.Governors() do
 		local governorHash = governorDef.Hash;
 		if (not playerGovernors:HasGovernor(governorHash)) then
-			AddGovernorCandidate(governorDef, bCanAppoint);
+			if (playerGovernors:CanEverAppointGovernor(governorHash)) then		--XP2+ only
+				AddGovernorCandidate(governorDef, bCanAppoint);
+			end
 		end
 	end
 

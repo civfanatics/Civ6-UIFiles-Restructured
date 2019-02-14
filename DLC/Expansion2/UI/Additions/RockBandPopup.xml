@@ -1,0 +1,62 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Context Hidden="0">
+
+  <Container Style="FullScreenVignetteConsumer" />
+
+  <Grid ID="PopupDrowShadowGrid" Anchor="C,C" Offset="0,0"  Size="298,540" AutoSizePadding="50,50"	Style="DropShadow" >
+    <Image ID="PopupBackgroundImage" Anchor="C,C"  Size="parent-6,parent-8" AutoSizePadding="-10,-10" Texture="Parchment_Pattern"	StretchMode="Tile" ConsumeMouse="1">
+        <Image ID="PopupWatermark" Anchor="C,C" Texture="RB_Watermark"  />
+      <Grid Size="parent-10, parent-58" Anchor="C,B" Offset="-1,5" Texture="Controls_SubContainer4" SliceCorner="8,8" SliceTextureSize="18,18" Color="92,86,85,105"/>
+        <Grid	Size="parent,50" Texture="Controls_SubHeader2" ConsumeMouse="1" SliceCorner="20,2" SliceTextureSize="40,40"/>
+        <Grid ID="PopupFrameGrid" Anchor="C,C"  Size="parent+10,parent+10" Offset="0,0" Style="WindowFrameAlpha">
+        <!-- Corner Icons -->
+        <Button	ID="CloseButton"		Texture="Controls_CloseLarge" Size="44,44" Anchor="R,T"	Offset="-5,-5"/>
+
+        <Label ID="HeaderLabel" String="{LOC_ROCK_CONCERT_RESULTS:upper}" Anchor="C,T" Align="C,C" Color="210,210,210,255" Offset="0,20" Style="FontFlair20" FontSize="16" SmallCaps="20" SmallCapsType="EveryWord" />
+
+        <Stack Padding="15" Anchor="C,T" Offset="0,80">
+          <Label ID="TierTitle" Anchor="C,T" Align="C,C" Color="38,35,31,255" Style="FontFlair20" FontSize="24" SmallCaps="28" SmallCapsType="EveryWord" />
+          <Stack ID="StarMeter" StackGrowth="Right" Padding="2" Anchor="C,C"/>
+          <Label ID="TierLevel" Anchor="C,T" Align="C,C" Color="38,35,31,255" Style="FontNormal16"   />
+          <Label ID="TierDescription" Anchor="C,T" Align="C,C" Color="51,47,42,255" Style="FontNormal14"   WrapWidth="275"/>
+          <Line Color="92,86,85,105" Anchor="C,C" Start="0,0" End="258,0" Width="2"/>
+          <Stack Padding="4" StackGrowth="Right" Anchor="L,C" Offset="15,0">
+            <Image ID="GeneratedTourismIcon" Texture="Tourism_DomesticSmall" Size="22,21" Anchor="C,C"/>
+            <Label ID="TourismTotal" Align="C,C" Color="51,47,42,255" Style="FontNormal18" Offset="8,2" />
+            <Label String="{LOC_ROCK_CONCERT_RESULT_TOURISM:upper}" Anchor="L,C" Color="51,47,42,255" Style="FontNormal14" />
+          </Stack>
+          <Line Color="92,86,85,105" Anchor="C,C" Start="0,0" End="258,0" Width="2"/>
+          <Stack Padding="4" StackGrowth="Right" Anchor="L,C" Offset="15,0">
+            <Image Texture="RockBand_Album" Size="25,22" Anchor="C,C"/>
+            <Label ID="AlbumsSold" Align="C,C" Color="51,47,42,255" Style="FontNormal18" Offset="8,2" />
+            <Label String="{LOC_ROCK_CONCERT_RESULT_ALBUMS:upper}" Anchor="L,C" Color="51,47,42,255" Style="FontNormal14" />
+          </Stack>
+          <Line ID="PromotionLine" Color="92,86,85,105" Anchor="C,C" Start="0,0" End="258,0" Width="2"/>
+          <Stack ID="PromotionGroup" Padding="4" StackGrowth="Right" Anchor="L,C" Offset="15,0">
+            <Image Texture="PromotionsSmall" Size="35,35" TextureOffset="32,0" Anchor="L,C" />
+            <Label String="{LOC_ROCK_CONCERT_RESULT_PROMOTION:upper}" Anchor="L,C" Color="51,47,42,255" Offset="8,0" Style="FontNormal14" d="3" />
+          </Stack>
+          <Line ID="LevelUpLine" Color="92,86,85,105" Anchor="C,C" Start="0,0" End="258,0" Width="2"/>
+          <Stack ID="LevelUpGroup" Padding="4" StackGrowth="Right" Anchor="L,C" Offset="15,0">
+            <Image Texture="RockBand_Level" Size="38,38" Anchor="L,C">
+              <Label ID="RockBandLevel" String="$0$" Style="PanelText" Anchor="C,C" Offset="8,4"/>
+            </Image>
+            <Label String="{LOC_ROCK_CONCERT_RESULT_LEVEL_UP:upper}" Anchor="L,C" Color="51,47,42,255" Style="FontNormal14"  />
+          </Stack>
+          <Line ID="DiedLine" Color="92,86,85,105" Anchor="C,C" Start="0,0" End="258,0" Width="2"/>
+          <Stack ID="DiedGroup" Padding="4" StackGrowth="Right" Anchor="L,C" Offset="15,0">
+            <Image Texture="RockBand_Lost" Size="40,38" Anchor="L,C" />
+            <Label String="{LOC_ROCK_CONCERT_RESULT_UNIT_LOST:upper}" Anchor="L,C" Color="167,56,58,255" Style="FontNormal14" />
+          </Stack>
+        </Stack>
+      </Grid>
+    </Image>
+  </Grid>
+
+  <Instance Name="StarInstance">
+    <Container ID="Root" Size="auto,auto">
+      <Image ID="Icon" Texture="RB_StarMeter_Off" Size="27,28" Anchor="C,C"/>
+    </Container>
+  </Instance>
+
+</Context>

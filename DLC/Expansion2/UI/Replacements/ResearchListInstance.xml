@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--Use like this: <Include File="ResearchListInstance"/>-->
+<Root xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="..\..\..\..\..\CivTech\Libs\ForgeUI\ForgeUI_Assets\Controls.xsd">
+
+	<Instance				Name="ResearchListInstance">
+		<Container      ID="TopContainer" Size="276,90" >
+			<GridButton		ID="Top"															Offset="0,10"	Size="276,80"	Texture="ResearchPanel_ChooserButton"	StateOffsetIncrement="0,80" SliceCorner="73,62" SliceTextureSize="102,80" >
+				<Meter			ID="BoostMeter"												Offset="2,2"	Size="44,44"	Texture="ResearchPanel_ChooserBoostMeter" Follow="1">
+					<Box															Anchor="C,T"								Size="1,5"		Color="91,208,251,255"  />
+				</Meter>
+				<Meter			ID="ProgressMeter"										Offset="2,2"	Size="44,44"	Texture="ResearchPanel_ChooserMeter" Follow="1"/>
+				<Image			ID="Icon"															Offset="9,9"	Size="30,30"	Texture="Tech30" />
+				<Image			ID="IconCanBeBoosted"		Anchor="L,B"	Offset="-4,-8" 							Texture="ResearchPanel_BoostIconAvailable.dds" />
+				<Label			ID="BoostLabel"					Anchor="L,B"	Offset="28,5"								Color0="150,150,150,155" Style="FontNormal12" />
+				<Image			ID="IconHasBeenBoosted"	Anchor="L,B"	Offset="-4,-8"							Texture="ResearchPanel_BoostIconBoosted.dds" />
+				<Stack Anchor="L,T" Offset="48,5" StackGrowth="Right" StackPadding="4">
+					<Label			ID="TechName"					Style="FontNormal14" FontStyle="Stroke" ColorSet="BodyTextCool" Color1="0,0,0,100"/>
+					<Image      ID="RecommendedIcon"  Offset="0,-4" Size="22,22" Texture="AdvisorRec22" ConsumeMouse="1" ToolTip="LOC_TECH_FILTER_RECOMMENDED" Hidden="1">
+						<FlipAnim       Texture="AdvisorRecAnim22"  Size="26,26" Anchor="C,C" FrameCount="12" Columns="4" Speed="14" EndPause="3" Color="255,255,255,200"/>
+					</Image>
+				</Stack>
+				<Label			ID="TurnsLeft"					Anchor="L,B"	Offset="4,18"								Style="FontNormal12" String="[ICON_Turn]" />
+				<Image      ID="QueueBadge"                       Offset="-22,-18"  Size="54,58" Texture="Tree_QueueBadge.dds" Hidden="1"/>
+				<Label      ID="NodeNumber"						            Offset="-22,-2" Style="FontFlair12" String="99" Hidden="1"/>
+				<Stack			ID="UnlockStack"											Offset="46,22"							StackGrowth="Right" StackPadding="-1" />
+				<Button   ID="UnlockPageTurner"   Anchor="R,B"   Offset="18, 28"  Size ="19,23" Hidden="1" >
+					<Image  ID="PageTurnerImage"    Anchor="C,C"   Offset="0,0"     Size="parent,parent"  Texture="Controls_ArrowButtonRight" FlipX="false"/>
+				</Button>
+			</GridButton>
+			<GridButton ID="Alliance" Anchor="L,T" Offset="-10,-54" Size="25,25" Texture="XP1_TechTree_AllianceFrame" SliceTextureSize="25,25" NoStateChange="1">
+				<Image ID="AllianceIcon" Anchor="C,C" Size="23,23" Texture="Diplomacy_RelationshipPips" Icon="ICON_RELATIONSHIP_SUZERAIN"/>
+			</GridButton>
+		</Container>
+	</Instance>
+
+</Root>

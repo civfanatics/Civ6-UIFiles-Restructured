@@ -35,7 +35,7 @@ function Realize()
 	for _, crisis in ipairs(crisisData) do
 		local crisisInstance:table = m_CrisisIM:GetInstance();
 
-		local MAX_BEFORE_TEXT_TRUNC:number = 210;
+		local MAX_BEFORE_TEXT_TRUNC:number = 200;
 		TruncateStringWithTooltip(crisisInstance.CrisisTitle, MAX_BEFORE_TEXT_TRUNC, Locale.ToUpper(Locale.Lookup(crisis.NameText)))
 		
 		local goalsCompleted:number = 0;
@@ -46,7 +46,8 @@ function Realize()
 		end
 
 		if ( crisis.HasBegun) then
-			crisisInstance.CrisisProgress:SetText(crisis.TargetID ~= playerID and ("(" .. goalsCompleted .. "/" .. goalsTotal .. ") " .. crisis.ShortGoalDescription) or ("[" .. goalsTotal - goalsCompleted .. "/" .. goalsTotal .. "] " .. crisis.TargetShortGoalDescription));
+			local progressString:string = goalsTotal > 0 and "(" .. goalsCompleted .. "/" .. goalsTotal .. ") " or "";
+			crisisInstance.CrisisProgress:SetText(crisis.TargetID ~= playerID and (progressString .. crisis.ShortGoalDescription) or ("(" .. goalsTotal - goalsCompleted .. "/" .. goalsTotal .. ") " .. crisis.TargetShortGoalDescription));
 		else
 			crisisInstance.CrisisProgress:SetText(Locale.Lookup("LOC_EMERGENCY_PENDING_SHORT_DESCRIPTION"));
 		end
@@ -59,13 +60,34 @@ function Realize()
 		end);
 
 		--Set target
-		local ownerController = CivilizationIcon:AttachInstance(crisisInstance.CivilizationTargetIcon);
-		ownerController:UpdateIconFromPlayerID(crisis.TargetID);
-		ownerController:SetLeaderTooltip(crisis.TargetID);
+		local kEmergencyDefinition:table = GameInfo.EmergencyAlliances[boxedCrisis.EmergencyType];
+		local kEmergencyMetadata:table = GameInfo.Emergencies_XP2[kEmergencyDefinition.EmergencyType];
+		local bIsHostile:boolean = kEmergencyMetadata.Hostile;
+		local bNoTarget:boolean = kEmergencyMetadata.NoTarget;
+
+		if bNoTarget then
+			crisisInstance.CivilizationTargetIcon.CivIconBacking:SetHide(true);
+			crisisInstance.NoTargetIcon:SetHide(false);
+			crisisInstance.NoTargetIcon:SetIcon("ICON_" .. GameInfo.EmergencyAlliances[boxedCrisis.EmergencyType].EmergencyType);
+		else
+			local ownerController = CivilizationIcon:AttachInstance(crisisInstance.CivilizationTargetIcon);
+			ownerController:UpdateIconFromPlayerID(crisis.TargetID);
+			ownerController:SetLeaderTooltip(crisis.TargetID);
+			crisisInstance.CivilizationTargetIcon.CivIconBacking:SetHide(false);
+		end
+
+		--Set hostility target
+		crisisInstance.TargetIcon:SetShow(bIsHostile);
 
 		--Set completed
 		if (crisis.TurnsLeft < 0) then
-			crisisInstance.CompletedBox:SetTexture(((goalsCompleted == goalsTotal and crisis.TargetID ~= playerID) or (crisis.TargetID == playerID and goalsCompleted ~= goalsTotal)) and "EmergenciesPanel_EndWin" or "EmergenciesPanel_EndFail");
+			local endIcon:string = "EmergenciesPanel_EndFail";
+			if (goalsCompleted == goalsTotal and crisis.TargetID ~= playerID) or 
+				(crisis.TargetID == playerID and goalsCompleted ~= goalsTotal) or
+				(crisis.TargetID == playerID and not bIsHostile) then 
+					endIcon = "EmergenciesPanel_EndWin";
+			end
+			crisisInstance.CompletedBox:SetTexture(endIcon);
 			crisisInstance.TurnsRemaining:SetText("");
 			crisisInstance.CompletedBox:SetHide(false);
 		else
@@ -74,9 +96,15 @@ function Realize()
 
 		--Set the mode of the crisis
 		if crisis.TargetID == playerID then
-			crisisInstance.MainPanel:SetTexture("EmergenciesPanel_Frame_Targeted");
-			crisisInstance.CrisisTitle:SetColor(COLOR_TARGETED_PRIMARY);
-			crisisInstance.CrisisProgress:SetColor(COLOR_TARGETED_SECONDARY);
+			if bIsHostile then
+				crisisInstance.MainPanel:SetTexture("EmergenciesPanel_Frame_Targeted");
+				crisisInstance.CrisisTitle:SetColor(COLOR_TARGETED_PRIMARY);
+				crisisInstance.CrisisProgress:SetColor(COLOR_TARGETED_SECONDARY);
+			else
+				crisisInstance.MainPanel:SetTexture("EmergenciesPanel_Frame_Targeted_Aid");
+				crisisInstance.CrisisTitle:SetColor(COLOR_JOINED_PRIMARY);
+				crisisInstance.CrisisProgress:SetColor(COLOR_JOINED_SECONDARY);
+			end
 		elseif crisis.HasBegun then
 			crisisInstance.MainPanel:SetTexture("EmergenciesPanel_Frame_Joined");
 			crisisInstance.CrisisTitle:SetColor(COLOR_JOINED_PRIMARY);

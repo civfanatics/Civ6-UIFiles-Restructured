@@ -231,6 +231,40 @@ PageLayouts["Unit" ] = function(page)
 			end
 		end
 	end
+	
+	local resourceMaintenanceResource = {};
+	local resourceMaintenanceAmount = {};
+	
+	local iResourceCost = 0
+	for row in GameInfo.Units_XP2() do
+		if(row.UnitType == unitType) then
+			if(row.ResourceMaintenanceAmount ~= 0 and row.ResourceMaintenanceType ~= nil) then
+				table.insert(resourceMaintenanceResource, row.ResourceMaintenanceType);
+				table.insert(resourceMaintenanceAmount, row.ResourceMaintenanceAmount);
+			end
+			
+			if (row.ResourceCost ~= 0) then
+				iResourceCost = iResourceCost + row.ResourceCost;
+			end
+		end
+	end
+
+	local tourism_buildings = {};
+	local tourism_value = {};
+	for row in GameInfo.Units_XP2() do
+		if(row.UnitType == unitType) then
+			if(row.TourismBombPossible) then
+				for row2 in GameInfo.Building_TourismBombs_XP2() do
+					local building = GameInfo.Buildings[row2.BuildingType];
+					if(building) then
+						table.insert(tourism_buildings, {"ICON_" .. building.BuildingType, building.Name, building.BuildingType});
+						table.insert(tourism_value, {row2.TourismBombValue});
+					end
+				end
+			end
+		end
+	end
+
 
 	local improvements = {};
 	for row in GameInfo.Improvement_ValidBuildUnits() do
@@ -321,6 +355,20 @@ PageLayouts["Unit" ] = function(page)
 			end
 		end
 
+		local iMaxLevel : number = 0;
+		if (GameInfo.Units["UNIT_SPY"] ~= nil) then
+			if (unitType == GameInfo.Units["UNIT_SPY"].UnitType) then
+				iMaxLevel = GlobalParameters.ESPIONAGE_MAX_LEVEL - 1;
+			end
+		elseif (GameInfo.Units["UNIT_ROCK_BAND"] ~= nil) then
+			if (unitType == GameInfo.Units["UNIT_ROCK_BAND"].UnitType) then
+				iMaxLevel = GlobalParameters.ROCK_BAND_MAX_LEVEL - 1;
+			end
+		end
+		if(iMaxLevel > 0) then
+			s:AddLabel(Locale.Lookup("LOC_TYPE_TRAIT_MAX_PROMOTIONS", iMaxLevel));
+		end
+
 		if(unit.BaseMoves ~= 0 and not unit.IgnoreMoves) then
 			s:AddIconNumberLabel({"ICON_MOVES", nil,"MOVEMENT_1"}, unit.BaseMoves, "LOC_UI_PEDIA_MOVEMENT_POINTS");
 		end
@@ -366,12 +414,26 @@ PageLayouts["Unit" ] = function(page)
 			s:AddLabel(Locale.Lookup("LOC_TYPE_TRAIT_AIRSLOTS", airSlots));
 		end
 
+		for row in GameInfo.Units_XP2() do
+			if(row.UnitType == unitType) then
+				if(row.TourismBombPossible) then
+					local tourismWonders = GlobalParameters.TOURISM_BOMB_WONDER_ADDITIONAL or 0;
+					if(tourismWonders ~= 0) then
+						s:AddLabel(Locale.Lookup("LOC_UI_PEDIA_UNIT_ROCK_BAND_TOURISM_WONDERS", tourismWonders));
+					end
+				end
+			end
+		end
+
 		s:AddSeparator();
 	end);
 
 	AddRightColumnStatBox("LOC_UI_PEDIA_REQUIREMENTS", function(s)
 		s:AddSeparator();
-		if(unit.PrereqTech or unit.PrereqCivic or unit.PrereqDistrict or unit.StrategicResource or #requires_buildings > 0) then
+		
+		
+		
+		if(unit.PrereqTech or unit.PrereqCivic or unit.PrereqDistrict or (unit.StrategicResource and iResourceCost > 0) or #requires_buildings > 0 or #resourceMaintenanceAmount > 0) then
 			if(unit.PrereqDistrict ~= nil) then
 				local district = GameInfo.Districts[unit.PrereqDistrict];
 				if(district) then
@@ -395,15 +457,7 @@ PageLayouts["Unit" ] = function(page)
 					s:AddIconLabel({"ICON_" .. technology.TechnologyType, technology.Name, technology.TechnologyType}, technology.Name);
 				end
 			end
-
-			if(unit.StrategicResource ~= nil) then
-				local resource = GameInfo.Resources[unit.StrategicResource];
-				if(resource) then
-					s:AddHeader("LOC_RESOURCE_NAME");
-					s:AddIconLabel({"ICON_" .. resource.ResourceType, resource.Name, resource.ResourceType}, resource.Name);
-				end
-			end
-
+			
 			if(#requires_buildings > 0) then
 				s:AddHeader("LOC_BUILDING_NAME");		
 				for i,v in ipairs(requires_buildings) do
@@ -423,6 +477,16 @@ PageLayouts["Unit" ] = function(page)
 			end
 		end
 
+		local bResourceHeader = false;
+			
+		if(unit.StrategicResource ~= nil and iResourceCost > 0) then
+			local resource = GameInfo.Resources[unit.StrategicResource];
+			if(resource) then
+				local t = Locale.Lookup("LOC_UI_PEDIA_RESOURCE_COST", iResourceCost, "[ICON_" .. resource.ResourceType .. "]", resource.Name);
+				s:AddLabel(t);
+			end
+		end
+			
 		if(purchase_cost) then	
 			local y = GameInfo.Yields[unit.PurchaseYield];
 			if(y) then
@@ -440,8 +504,30 @@ PageLayouts["Unit" ] = function(page)
 				s:AddLabel(t);
 			end
 		end
-		s:AddSeparator();
+
+		if(#resourceMaintenanceAmount > 0) then
+			for i,v in ipairs(resourceMaintenanceResource) do
+				local resource = GameInfo.Resources[resourceMaintenanceResource[i]];
+				if(resource) then
+					local t = Locale.Lookup("LOC_UI_PEDIA_RESOURCE_MAINTENANCE_AMOUNT", resourceMaintenanceAmount[i], "[ICON_" .. resource.ResourceType .. "]", resource.Name);
+					s:AddLabel(t);
+				end
+			end
+		end
 	end);
+
+	if(#tourism_buildings > 0) then
+		AddRightColumnStatBox("LOC_UI_PEDIA_UNIT_ROCK_BAND_TOURISM_BUILDING_HEADER", function(s)
+			for i,v in ipairs(tourism_buildings) do
+				if(tourism_buildings[i]) then
+					local t = Locale.Lookup("LOC_UI_PEDIA_UNIT_ROCK_BAND_TOURISM_BUILDING", v[2]);
+					s:AddIconNumberLabel({v[1], nil, nil}, tourism_value[i][1], t);
+				end
+			end
+
+			s:AddSeparator();
+		end);
+	end
 
 	AddRightColumnStatBox("LOC_UI_PEDIA_USAGE", function(s)
 		s:AddSeparator();

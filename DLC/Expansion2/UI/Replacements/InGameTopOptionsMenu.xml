@@ -32,7 +32,7 @@
 
               <Image        ID="CompassDeco" Size="193,122" Texture="Controls_Compass" Color="41,74,108,100" Anchor="C,B"/>
               <Stack				ID="MainStack"						Anchor="C,T" Offset="-1,5" Padding="0" StackGrowth="Bottom"  >
-                <Container Size="20,40"/>
+                <Container Size="20,20"/>
                 <GridButton ID="ReturnButton"		      Anchor="C,T" Style="PauseMenuButton" String="{LOC_GAME_MENU_RETURN_TO_GAME:upper}" ToolTip="LOC_GAME_MENU_RETURN_TO_GAME_TOOLTIP" />
                 <Container Size="20,20"/>
                 <GridButton ID="RestartGameButton"		Anchor="C,T" Style="PauseMenuButton" Size="250,36" String="{LOC_GAME_MENU_RESTART:upper}" ToolTip="LOC_GAME_MENU_RESTART_TOOLTIP"/>
@@ -49,18 +49,18 @@
                 <GridButton ID="ExitGameButton"				Anchor="C,T" Style="PauseMenuButton" Size="250,36" String="{LOC_GAME_MENU_EXIT_TO_DESKTOP:upper}" ToolTip="LOC_GAME_MENU_EXIT_TO_DESKTOP_TOOLTIP" />
 
                 <Container Size="20,20"/>
-								
-								<!-- Mods Stack -->
-								<Grid						ID="ModsInUse"				Anchor="C,T"	Style="DecoFrame" Size="parent-25,100" Hidden="1">
-									<Label				ID="ModsInUseHeader"	Anchor="C,T" Offset="0,5" Style="BlueGlow" FontSize="14" String="{LOC_GAME_MENU_MODS_IN_USE:upper}" />
-									<Grid Style="Divider6Grid"											Size="parent,2" Color="41,74,108,255" Offset="0,20"/>
-									<ScrollPanel	ID="ModListings"			Anchor="L,T"	Offset="10,22" Size="parent-20,parent-24" Vertical="1" AutoScrollBar="1" >
-										<Stack			ID="ModListingsStack"	Anchor="L,T" StackGrowth="Bottom" />
-										<ScrollBar Style="Slider_Blue"		Anchor="R,C" AnchorSide="O,I" Offset="-2,0" />
-									</ScrollPanel>
-								</Grid>
-								<Container Size="20,20"/>
-							</Stack>
+
+                <!-- Mods Stack -->
+                <Grid						ID="ModsInUse"				Anchor="C,T"	Style="DecoFrame" Size="parent-25,100" Hidden="1">
+                  <Label				ID="ModsInUseHeader"	Anchor="C,T" Offset="0,5" Style="BlueGlow" FontSize="14" String="{LOC_GAME_MENU_MODS_IN_USE:upper}" />
+                  <Grid Style="Divider6Grid"											Size="parent,2" Color="41,74,108,255" Offset="0,20"/>
+                  <ScrollPanel	ID="ModListings"			Anchor="L,T"	Offset="10,22" Size="parent-20,parent-24" Vertical="1" AutoScrollBar="1" >
+                    <Stack			ID="ModListingsStack"	Anchor="L,T" StackGrowth="Bottom" />
+                    <ScrollBar Style="Slider_Blue"		Anchor="R,C" AnchorSide="O,I" Offset="-2,0" />
+                  </ScrollPanel>
+                </Grid>
+                <Container Size="20,20"/>
+              </Stack>
             </Grid>
 
             <Container ID="GameDetails" Size="parent,105" Anchor="C,B">
@@ -82,7 +82,7 @@
                 </Stack>
                 <Box Color="30,125,182,50" Size="parent,2" Anchor="L,B"/>
               </Box>
-              <Label ID="VersionLabel" Style="FontNormal14"	Color="102,122,145" Anchor="C,B" Offset="0,10" String="Mod Title" />
+              <Label ID="VersionLabel" Style="FontNormal14"	Color="102,122,145" Anchor="C,B" Offset="0,10" String="0.0.0.0" />
             </Container>
           </Grid>
         </Box>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Context xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="..\..\..\..\..\..\CivTech\Libs\ForgeUI\ForgeUI_Assets\Controls.xsd">
+  <Include File="LeaderIcon"/>
+  <Include File="CivilizationIcon"/>
+  <Container Style="FullScreenVignetteConsumer" />
+  <Container Style="WorldCongressFrame" Size="parent,parent"/>
+  <Container ID="MainWindow" Style="WorldCongressIntroBanner" Size="360,parent" Anchor="C,T">
+    <Label ID="Title" Offset="0,-222" String="LOC_WORLD_CONGRESS_INTRO_TITLE" Style="EventPopupTitle" Anchor="C,C" WrapWidth="parent-20"/>
+    <Stack Anchor="C,C" Offset="0,222" Padding="20">
+      <Label ID="Body1" String="LOC_WORLD_CONGRESS_INTRO_BODY_1" Style="WhiteSemiBold14" Anchor="C,C" Align="Center" WrapWidth="parent-20"/>
+      <Label ID="Body2" String="LOC_WORLD_CONGRESS_INTRO_BODY_2" Style="WhiteSemiBold14" Anchor="C,C" Align="Center" WrapWidth="parent-20"/>
+    </Stack>
+    <GridButton ID="AcceptButton" Style="MainButton" Size="250,41" Anchor="C,B" Offset="0,16" String="LOC_WORLD_CONGRESS_INTRO_ACCEPT"/>
+  </Container>
+</Context>

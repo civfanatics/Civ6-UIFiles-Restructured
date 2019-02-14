@@ -3,11 +3,11 @@
   
 	<AlphaAnim				ID="EraPopupAnimation" AlphaBegin="0" AlphaEnd="1" Speed="0.8"  Size="parent,parent" Cycle="OneBounce" EndPause="2" Stopped="1">
 		<Stack Anchor="C,C" Size="parent,320">
-        <SlideAnim		ID="HeaderSlide" Speed="0.8" Cycle="Once" EndPause="4" Size="parent,parent">
-			    <Grid								Style="Divider6Grid"														ConsumeMouse="0"						Size="1024,94"		Color="0,0,0,150" Anchor="C,C">
+        <SlideAnim		ID="HeaderSlide" Speed="0.8" Cycle="Once" EndPause="4" Stopped="1" Size="parent,parent" >
+			    <Grid								Style="Divider6Grid"																					   		 Size="1024,94"		Color="0,0,0,150" Anchor="C,C">
 				    <Image						ID="GradientT"	Anchor="L,T"	Texture="Controls_Gradient_HalfRadial" Size="parent,94"			Color="0,0,0,255" AnchorSide="I,O"/>
 				    <Image						ID="GradientB"	Anchor="L,B"	Texture="Controls_Gradient_HalfRadial" Size="parent,94"			Color="0,0,0,255" AnchorSide="I,O" FlipY="1"/>
-            <Container		ID="TextFrame" Size="parent,parent">
+            <Container				ID="TextFrame" Size="parent,parent">
               <Grid	          ID="FrameL"  Anchor="L,C"  Texture="EraRollover_TextFrame_NormalAgeL.dds" SliceCorner="70,60" SliceSize="1,1" SliceTextureSize="140,120" Size="512,142"/>
               <Grid	          ID="FrameR"  Anchor="R,C"  Texture="EraRollover_TextFrame_NormalAgeR.dds" SliceCorner="70,60" SliceSize="1,1" SliceTextureSize="140,120" Size="512,142"/>
             </Container>

@@ -43,4 +43,7 @@ function LateInitialize()
 	BASE_LateInitialize();
 	Events.LocalPlayerTurnBegin.Add( OnLocalPlayerTurnBegin );
 	OnLocalPlayerTurnBegin();
+	if not XP1_LateInitialize then
+		RefreshYields();
+	end
 end

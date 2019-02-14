@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Include File="CongressButton" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="..\..\..\..\..\..\CivTech\Libs\ForgeUI\ForgeUI_Assets\Controls.xsd">
+  <Instance Name="CongressButton">
+    <Container			ID="Top"																			Size="68,68">
+      <Button		    ID="Button"											Offset="0,0"	Size="parent,parent">
+        <Image			ID="IconBacking"								Anchor="C,C"											Texture="Tree_Meter_GearBack" />
+        <Meter			ID="ProgressMeter"							Anchor="C,C"			Size="68,68"		Texture="TechTree_Meter_Fill" />
+        <Image			ID="Icon"												Anchor="C,C"											Texture="LaunchBar_Hook_WCOn" />
+        <Image			ID="Bolt"												Offset="0,27"											Texture="Controls_BoltOn" />
+      </Button>
+    </Container>
+  </Instance>
+</Include>

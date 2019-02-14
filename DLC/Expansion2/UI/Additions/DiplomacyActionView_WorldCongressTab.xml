@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Context>
+  <Include File="CivilizationIcon"/>
+
+  <Instance Name="GrievanceInstance">
+    <Container	ID="Top" Size="parent,auto" >
+      <Container Offset="0,0" Size="auto,auto" >
+        <Label	ID="Turn"			Anchor="R,T" Style="FontNormal16"	ColorSet="BodyTextCool" String="$Turn"/>
+      </Container>
+      <Stack Offset="70,0" Size="auto,auto" StackGrowth="Right" Padding="3">
+        <MakeInstance Name="CivilizationIcon22" ID="Initiator" Offset="0,-3"/>
+        <Label		ID="Description" Style="FontNormal16"	ColorSet="BodyTextCool" String="$Description" WrapWidth="350"/>
+      </Stack>
+      <Container Offset="440,0" Size="40,auto" >
+        <Label	ID="Amount"	Offset="5,0"	Anchor="R,T" Style="FontNormal16"	ColorSet="BodyTextCool" WrapWidth="42" String="$Amount"/>
+      </Container>
+    </Container>
+  </Instance>
+
+  <Stack Size="parent,auto" Padding="5">
+    <Line	Start="5,0"	 End="490,0" Width="2" Color="200,200,200,100" />
+    <Label Anchor="C,T" Style="HeaderSmallCaps" Color="150,150,150,255" Align="center" String="LOC_GRIEVANCE_LOG_TITLE"/>
+    <Line	Start="5,0"	 End="490,0" Width="2" Color="200,200,200,100" />
+    <Container Size="parent,auto">
+      <Container Size="190,60" Offset="17,0">
+        <Container Size="parent,35" Anchor="C,T" Offset="0,-5">
+          <Label Anchor="C,C" Style="FontNormal11" Color0="164,164,164,255" String="LOC_GRIEVANCE_LOG_AGAINST_YOU"/>
+        </Container>
+        <Stack ID="AgainstYouStack" Anchor="C,B" Offset="0,3"	StackGrowth="Right">
+          <Image ID="AgainstYouIcon" Color="255,15,15,255" Offset="0,0" Icon="ICON_STAT_GRIEVANCE" Size="26,26" Hidden="1"/>
+          <Label ID="AgainstYouValue" Style="FontFlair18" FontStyle="glow" Color0="208,212,217,255"	Color1="0,0,0,200" FontSize="28" String="0"/>
+          <Label	ID="AgainstYouPerTurn" Offset="2,-2" Style="FontNormal14" FontStyle="Stroke" String="0" Hidden="1"/>
+        </Stack>
+      </Container>
+      <Container Size="190,60" Anchor="R,T" Offset="17,0">
+        <Container Size="parent,35" Anchor="C,T" Offset="0,-5">
+          <Label Anchor="C,C" Style="FontNormal11" Color0="164,164,164,255" String="LOC_GRIEVANCE_LOG_AGAINST_THEM" WrapWidth="175" Align="c"/>
+        </Container>
+        <Stack ID="AgainstThemStack" Anchor="C,B" Offset="0,3"	StackGrowth="Right">
+          <Image ID="AgainstThemIcon" Offset="0,0" Icon="ICON_STAT_GRIEVANCE" Size="26,26" Hidden="1"/>
+          <Label ID="AgainstThemValue" Style="FontFlair18" FontStyle="glow" Color0="208,212,217,255" Color1="0,0,0,200" FontSize="28" String="0"/>
+          <Label	ID="AgainstThemPerTurn" Offset="2,0" Style="FontNormal14" FontStyle="Stroke" String="0" Hidden="1"/>
+        </Stack>
+      </Container>
+    </Container>
+    <Line	Start="5,0"	 End="490,0" Width="2" Color="200,200,200,100" />
+    <Label ID="WorldFavorite" Anchor="C,T" Style="FontNormal16" Align="center" String="LOC_GRIEVANCE_LOG_WORLD_FAVORS_NONE"/>
+    <Line	Start="5,0"	 End="490,0" Width="2" Color="200,200,200,100" />
+    <Label ID="GrievanceDescription" Anchor="C,T" Style="FontNormal14"  Color0="164,164,164,255" String="LOC_GRIEVANCE_LOG_HISTORY" WrapWidth="420" Align="c"/>
+    <Line	Start="5,0"	 End="490,0" Width="2" Color="200,200,200,100" />
+    
+    <Container			ID="ListHeader" Size="auto,auto">
+      <Container								Size="45,auto">
+        <TextButton ID="TurnTextButton"				Style="FontNormal14" Anchor="R,T"										String="LOC_DIPLOACTION_INTEL_TURN" />
+        <Label																	Style="FontNormal14" Offset="79,0"									String="LOC_DIPLOACTION_INTEL_REASON" />
+        <TextButton		ID="GrievanceTextButton"	Style="FontNormal14" Offset="465,0"									String="[ICON_STAT_GRIEVANCE]" />
+      </Container>
+    </Container>
+
+  <Stack			ID="MainGrievanceTabStack"	StackGrowth="Bottom" InnerPadding="8,8" Offset="0,0">
+    <Stack		ID="GrievanceStack"					StackGrowth="Bottom" StackPadding="12" />
+  </Stack>
+
+  <Container ID="NoGrievances" Size="parent-4,180">
+    <Label Anchor="C,C" Align="Center" WordWrap="300" Style="FontNormal20" ColorSet="StatGoodCS" String="LOC_DIPLOACTION_INTEL_NO_GRIEVANCES" />
+  </Container>
+  </Stack>
+
+</Context>

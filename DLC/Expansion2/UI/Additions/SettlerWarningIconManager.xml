@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Context Layer="WorldAnchor" >
+
+  <Container ID="PlotWarningContainer"/>
+
+  <Instance Name="WarningInstance">
+    <WorldAnchor ID="Anchor" Anchor="C,C" Size="2,2">
+      <Stack ID="IconStack" Anchor="C,C" Offset="0,-30" StackGrowth="Right" StackPadding="0"/>
+    </WorldAnchor>
+  </Instance>
+
+  <Instance Name="IconInstance">
+    <Image ID="Icon" Anchor="C,C" Size="36,36" IconSize="36" Icon="ICON_ENVIRONMENTAL_EFFECTS_FLOODED"/>
+  </Instance>
+
+</Context>

@@ -1,0 +1,69 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<Context Name="RockBandMoviePopup">
+
+  <!-- Darken the screen -->
+  <Box Color="0,0,0,0" Size="parent,parent" ConsumeMouse="1"/>
+  <Image ID="VignetteRB" Texture="Controls_Vignette" Size="500,500"   Color="0,0,0,255" Anchor="R,B"/>
+  <Image ID="VignetteRT" Texture="Controls_Vignette" Size="500,500"   Color="0,0,0,255" Anchor="R,T" FlipY="1"/>
+  <Image ID="VignetteLT" Texture="Controls_Vignette" Size="500,500"   Color="0,0,0,255" Anchor="L,T" FlipY="1" FlipX="1"/>
+  <Image ID="VignetteLB" Texture="Controls_Vignette" Size="500,500"   Color="0,0,0,255" Anchor="L,B" FlipX="1"/>
+  <Image ID="GradientL" Texture="Controls_GradientSmall" Size="20,parent"  Color="0,0,0,255" Anchor="L,T" Rotate="270"/>
+  <Image ID="GradientR" Texture="Controls_GradientSmall" Size="20,parent"  Color="0,0,0,255" Anchor="R,T" Rotate="90"/>
+  <Image ID="GradientT" Texture="Controls_Gradient" Size="parent,150"  Color="0,0,0,255" Anchor="L,T" FlipY="1"/>
+  <Image ID="GradientB" Texture="Controls_Gradient" Size="parent,150"  Color="0,0,0,255" Anchor="L,B"/>
+  <Image ID="GradientB2" Texture="Controls_Gradient" Size="parent,150"  Color="0,0,0,255" Anchor="L,B"/>
+
+  <AlphaAnim ID="HeaderAlpha" Size="parent,parent" AlphaBegin="0" AlphaEnd="1" Speed=".2" Cycle="Once" Function="OutQuint" FunctionPower="10">
+    <SlideAnim ID="HeaderSlide" Size="parent,parent" Start="0,-200" End="0,0" Speed=".5" Cycle="Once" Function="OutQuint" FunctionPower="10">
+      <Grid ID="HeaderGrid" Texture="Controls_LensHeaderSmall" SliceTextureSize="71,49" SliceCorner="20,24" Size="parent,49" Color="255,255,255,200">
+        <Image ID="HeaderDropshadow" Texture="Controls_GradientSmall" Size="parent,22"  Color="0,0,0,255" Anchor="L,B" AnchorSide="I,O"/>
+        <Label ID="RockBandHeader" String="{LOC_ROCK_CONCERT_HEADER:upper}" Style="FontFlair24" SmallCaps="30" SmallCapsType="EveryWord" FontStyle="glow" ColorSet="WonderHeader" Anchor="C,C"/>
+        <Button ID="Close" Texture="Controls_CloseButtonAlt" Size="32,32" Anchor="R,C" Offset="2,0"/>
+      </Grid>
+    </SlideAnim>
+  </AlphaAnim>
+
+  <AlphaAnim ID="QuoteAlpha" Size="parent,parent" AlphaBegin="0" AlphaEnd="1" Speed=".2" Cycle="Once" Function="OutQuint" FunctionPower="10">
+    <SlideAnim ID="QuoteSlide" Size="parent,parent" Start="0,200" End="0,0" Speed=".5" Cycle="Once" Function="OutQuint" FunctionPower="10">
+      <Container ID="QuoteContainer" Size="parent,auto" Anchor="L,B" AutoSizePadding="0,10">
+        <Grid ID="RibbonDropShadow" Style="DropShadow3" Size="parent,auto" Anchor="L,C" InnerPadding="0,30" Color="0,0,0,150">
+          <Box ID="RibbonBox" Color="17,29,36,200" Size="parent,45" Anchor="L,C">
+            <Box Color="27,39,46,255" Size="parent,1"/>
+            <Image ID="DecoMap" Texture="Controls_DecoMapScale" Size="parent,4" StretchMode="Tile"  Color="36,49,59,255" Anchor="L,B" Offset="0,1"/>
+            <Stack ID="RockBandNameContainer" Size="auto,85" Anchor="C,C" Offset="0,0" StackGrowth="Right" Padding="20">
+              <Image Anchor="L,C" Texture="Controls_CircleBacking68" Size="68,68" Color="193,201,206">
+                <Image ID="RockBandIcon" Icon="ICON_UNIT_ROCK_BAND" Size="64,64" Anchor="C,C"/>
+                <Image Texture="RockBand_Level" Size="38,38" Offset="-17,-5" Anchor="R,T">
+                  <Label ID="RockBandLevel" String="$0$" Style="PanelText" SmallCaps="16" Anchor="C,C" Offset="0,4"/>
+                </Image>
+              </Image>
+              <Grid ID="RockBandNameGrid" Style="SubContainerFill" Size="415,70" Color="14,21,26,255" Anchor="R,C">
+                <Stack Padding="5" Anchor="C,C">
+                  <Label Anchor="C,C" String="{LOC_ROCK_CONCERT_PERFORMANCE_BY:upper}" Style="WindowHeader" FontSize="14" SmallCaps="16" Color0="214,225,228,255" Color1="214,225,228,80" WrapWidth="parent-100"/>
+                  <Label ID="RockBandName" Anchor="C,C" Style="WindowHeader" Color0="214,225,228,255" Color1="214,225,228,80"/>
+                </Stack>
+              </Grid>
+            </Stack>
+          </Box>
+        </Grid>
+      </Container>
+    </SlideAnim>
+  </AlphaAnim>
+
+
+  <Box																				Anchor="C,T"								Size="parent,parent"			Color="0,0,0,50"		ConsumeAllMouse="1" Hidden="1">
+    <Grid							ID="DropShadow"					Anchor="C,C" Offset="0,-20" Size="600,auto"				Style="DropShadow"			>
+      <Grid						ID="Window"							Anchor="C,C"							 Size="parent-100,auto"	Style="WindowFrameTitle" InnerPadding="0,50">
+        <Label				ID="PopupTitle"					Anchor="C,T" Offset="0,-10"												Style="HeaderFont"										String="{LOC_UI_FEATURE_NATURAL_WONDER_DISCOVERY:upper}" />
+        <Stack				ID="WindowContentStack" Anchor="C,T" Offset="0,30"	StackGrowth="Down"		Padding="10">
+          <Label			ID="Name"								Anchor="C,T"								Align="center"				Style="FontFlair26" WrapWidth="400"			String="$Name$" FontStyle="Shadow" Color0="255,255,255,255" Color1="0,0,0,200" />
+          <Label			ID="Quote"							Anchor="C,T"								Align="center"				Style="BodyFont"		WrapWidth="400"			String="$Quote$"/>
+          <Label			ID="Description"				Anchor="C,T"								Align="center"				Style="BodyFont16"	WrapWidth="400"			String="$Description$"/>
+          <Label															Anchor="C,T"								Align="center"				Style="BodyFont16"	WrapWidth="400"			String="LOC_FEATURE_NATURAL_WONDER_DESCRIPTION" />
+          <GridButton ID="ContinueButton"			Anchor="C,T"								Size="200,41"					Style="MainButton"	FontStyle="Shadow"	String="LOC_CONTINUE"/>
+        </Stack>
+      </Grid>
+    </Grid>
+  </Box>
+</Context>

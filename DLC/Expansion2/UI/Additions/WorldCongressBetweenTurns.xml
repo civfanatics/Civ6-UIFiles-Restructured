@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Context xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="..\..\..\..\..\..\CivTech\Libs\ForgeUI\ForgeUI_Assets\Controls.xsd">
+
+	<Include File="LeaderIcon"/>
+	<Container Style="FullScreenVignetteConsumer" />
+  <Container Style="WorldCongressFrame" Size="parent,parent"/>
+
+  <AlphaAnim ID="TimerAnim" Cycle="Once" Function="Root" Speed="1" /> <!-- We really should have a way to create simple timers in Forge... -->
+
+  <Container ID="MainWindow" Style="WorldCongressIntroBanner" Size="376,parent" Anchor="C,T">
+    <!-- Title -->
+    <Label ID="Title" Size="parent,auto" Offset="0,-220" String="LOC_WORLD_CONGRESS_BETWEEN_TURNS_TITLE" Style="EventPopupTitle" SmallCapsType="EveryWord" Align="center" Anchor="C,C"/>
+    <ScrollPanel ID="PlayersScrollPanel" Anchor="C,T" Offset="-372,90" Size="auto,parent-173" Style="ScrollPanelHighContrast">
+      <Stack ID="PlayersStack" Size="auto,auto" Padding="5"/>
+      <ScrollBar Anchor="R,C" AnchorSide="O,I" Offset="0,0" Style="ScrollVerticalBarHighContrast"/>
+    </ScrollPanel>
+    <!-- Data -->
+    <Grid Anchor="C,C" Offset="0,220" Size="parent,auto">
+      <Label ID="Status" Style="EventPopupDescriptionBold" Anchor="C,T"  WrapWidth="parent-20" String="LOC_WORLD_CONGRESS_BETWEEN_TURNS_WAITING" Align="Center"/>
+      <Label Style="WhiteSemiBold14" Anchor="C,T" Offset="0,55" WrapWidth="parent-20" String="LOC_WORLD_CONGRESS_BETWEEN_TURNS_DESCRIPTION" Align="Center" />
+    </Grid>
+  </Container>
+  
+  <Button ID="HideButton" Anchor="R,T" Offset="0,0" Style="CloseButtonSmall"/>
+  
+	<!-- ==================================================================	-->
+	<!--	Instances																													-->
+	<!-- ==================================================================	-->
+	<Instance Name="PlayerInstance">
+    <Container ID="Top" Size="240,70">
+      <SlideAnim ID="SlideAnim" Size="240,60" Begin="-100,0" End="0,0" Speed="4" Cycle="Once" Function="OutQuad" Stopped="1" FunctionPower="1">
+        <AlphaAnim ID="AlphaAnim" Size="240,60" AlphaBegin="0" AlphaEnd="1" Cycle="Once" Function="Root" Speed="4" >
+          <Grid ID="BG" Size="240,60" Style="EventPopupEffectsDeco">
+            <Container Anchor="L,C" Offset="6,0" Size="auto,auto">
+              <MakeInstance ID="LeaderIcon" Name="LeaderIcon45"/>
+            </Container>
+            <Label ID="Label" Anchor="L,C" Offset="64,0" WrapWidth="166" Style="FontNormalMedium14" FontStyle="Stroke" EffectColor="0,0,0,200" String="LOC_WORLD_CONGRESS_BETWEEN_TURNS_WAITING"/>
+          </Grid>
+        </AlphaAnim>
+      </SlideAnim>
+    </Container>
+	</Instance>
+
+</Context>

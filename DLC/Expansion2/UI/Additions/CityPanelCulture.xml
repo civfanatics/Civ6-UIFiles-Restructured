@@ -50,7 +50,7 @@
 
       <!-- Cultural Identity Effects -->
       <Grid	ID="CulturalIdentityEffectBox" Texture="CityPanel_StatPanelSubContainer" SliceCorner="7,7" SliceSize="1,1" SliceTextureSize="16,16" InnerPadding="4,2" Anchor="C,T" Size="260,55">
-        <Label ID="CulturalIdentityEffectLabel" Offset="16,0" Anchor="C,C" Style="CityPanelTextSmall" WrapWidth="200"/>
+        <Label ID="CulturalIdentityEffectLabel" Offset="4,0" Anchor="C,C" Style="CityPanelTextSmall" WrapWidth="200"/>
       </Grid>
 
       <!-- Identity Breakdown -->

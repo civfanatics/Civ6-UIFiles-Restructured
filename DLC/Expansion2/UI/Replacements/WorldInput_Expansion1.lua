@@ -137,6 +137,7 @@ function OnInterfaceModeLeave_PriorityTarget(eNewMode:number)
 	UILens.ClearLayerHexes(g_HexColoringMovement);
 end
 
+
 -- ===========================================================================
 --	OVERRIDE
 -- ===========================================================================

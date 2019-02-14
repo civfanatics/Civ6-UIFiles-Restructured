@@ -52,3 +52,4 @@ function RealizeFilterTabs()
     BASE_RealizeFilterTabs();
     CreatePolicyTabButton("LOC_GOVT_FILTER_DARK", FilterDarkPolicies);
 end
+

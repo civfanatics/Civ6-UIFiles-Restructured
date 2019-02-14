@@ -3,7 +3,7 @@
 
 	<Container Style="FullScreenVignetteConsumer" />
 
-	<Box						ID="Main"						Anchor="C,C"									Size="1024,759"						Color="11,27,40,255">
+	<Box						ID="Main"						Anchor="C,C"									Size="1024,789"						Color="11,27,40,255">
 		<Grid															Anchor="C,C"									Size="parent+9,parent+9"	Style="WindowFrameTopOnly" />
 		<Button				ID="CloseButton"		Anchor="R,T"	Offset="-3,-1"	Size="44,44"																			Texture="Controls_CloseLarge"  />
 		<Image														Anchor="C,T"									Size="parent,44"					Color="61,112,154,255"	Texture="Controls_Gradient_HalfRadial"  />
@@ -19,7 +19,7 @@
 			<Image													Anchor="C,T"	Offset="0,4"		Size="parent-8,22"				Color="0,0,0,255" Texture="Controls_GradientSmall" />
 			<Container	ID="TabContainer"									Offset="0,0"		Size="parent,34" />
 			<Grid														Anchor="C,B"	Offset="0,0"		Size="parent-6,8"					Style="Divider3Grid" />
-
+      
       <SlideAnim	ID="TabAnim"				Begin="0,0" End="0,0" Cycle="Once" Speed="3.5" Function="OutQuint" Size="67,68">
         <Image		ID="TabArrow"				Texture="Controls_TabSelectArrow" Size="42,11"/>
       </SlideAnim>
@@ -126,11 +126,11 @@
 		<Container		ID="BottomResourceTotals"	Anchor="C,B"	Offset="0,0"		Size="parent-6,100" >
 			<Grid																	Anchor="C,T"	Offset="0,0"		Size="parent,8"							Style="Divider3Grid" />
 			<Image																Anchor="C,B"	Offset="0,2"		Size="parent,parent"				Texture="Controls_Gradient" Color="255,255,255,32">
-				<Grid			ID="StrategicGrid"											Offset="5,10"		Size="parent-515,40"				Style="SubContainer4"				Color="36,50,62,255" InnerPadding="2,2">
+				<Grid			ID="StrategicGrid"											Offset="5,10"		Size="parent-515,46"				Style="SubContainer4"				Color="36,50,62,255" InnerPadding="2,2">
 					<Label																					Offset="5,0"																Style="ReportResourceText"	String="LOC_HUD_REPORTS_STRATEGICS" />
-					<Stack	ID="StrategicResources"		Anchor="L,C"	Offset="150,0"	WrapWidth="340"	WrapGrowth="Down"	StackGrowth="Right" />
+					<Stack ID="StrategicResources"		Anchor="L,C"	Offset="110,0"	WrapWidth="400"	WrapGrowth="Down"	StackGrowth="Right" Padding="1"/>
 				</Grid>				
-				<Grid			ID="BonusGrid"													Offset="510,10"	Size="parent-515,40"				Style="SubContainer4"				Color="36,50,62,255" InnerPadding="2,2">
+				<Grid			ID="BonusGrid"													Offset="510,10"	Size="parent-515,46"				Style="SubContainer4"				Color="36,50,62,255" InnerPadding="2,2">
 					<Label																					Offset="5,0"																Style="ReportResourceText"	String="LOC_HUD_REPORTS_BONUSES" />
 					<Stack	ID="BonusResources"				Anchor="L,C"	Offset="150,0"	WrapWidth="340"	WrapGrowth="Down"	StackGrowth="Right" />
 				</Grid>
@@ -348,7 +348,7 @@
 					<Image		Size="parent,24" Offset="0,-2" Texture="Controls_GradientSmall" FlipY="1" Color="Tourism,150" />
 					<Label		ID="Tourism"												Style="ReportHeaderText"		String="[ICON_Tourism]0" Color="Tourism"  />
 				</Container>
-				<Box																						Offset="1,0"	Size="2,22"	Color="46,70,95,128" />				
+				<Box																						Offset="1,0"	Size="2,22"	Color="46,70,95,128" />
 			</Stack>
 			<Grid					Style="DividerGrid" Offset="-10,22" Size="parent,8" Color="47,63,76,255" />
 		</Container>
@@ -633,7 +633,7 @@
 
 	<!-- Resource-->
 	<Instance					Name="ResourceAmountInstance">
-      <Label					ID="Info" Style="ReportResourceText" String="00" />
+      <Label					ID="Info" Anchor="L,T" Style="ReportResourceText" String="00" />
 	</Instance>
 
 

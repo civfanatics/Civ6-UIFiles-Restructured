@@ -53,6 +53,20 @@ local sectionId = page.SectionId;
 
 	end
 
+	local policy_exclusivegovernments = {};
+	for row in GameInfo.Policy_GovernmentExclusives_XP2() do
+		if(row.PolicyType == policyType) then
+			table.insert(policy_exclusivegovernments, row.GovernmentType);
+		end
+	end
+	
+	local policy_unlockedgovernment = {};
+	for row in GameInfo.Governments() do
+		if(row.PolicyToUnlock == policyType) then
+			table.insert(policy_unlockedgovernment, row.GovernmentType);
+		end
+	end
+	
 	-- Right Column
 	AddPortrait("ICON_" .. policyType);
 
@@ -86,11 +100,6 @@ local sectionId = page.SectionId;
 			s:AddLabel(t);
 		end
 
-		if(required_government) then
-			s:AddHeader("LOC_GOVERNMENT_NAME");
-			s:AddIconLabel({"ICON_" .. required_government.GovernmentType, required_government.Name, required_government.GovernmentType}, required_government.Name);
-		end
-
 		if(policy.PrereqCivic ~= nil) then
 			local civic = GameInfo.Civics[policy.PrereqCivic];
 			if(civic) then
@@ -106,7 +115,26 @@ local sectionId = page.SectionId;
 				s:AddIconLabel({"ICON_" .. tech.TechnologyType, tech.Name, tech.TechnologyType}, tech.Name);
 			end
 		end
-
+		
+		if(#policy_exclusivegovernments > 0) then
+			s:AddHeader("LOC_GOVERNMENT_NAME");
+			for i,v in ipairs(policy_exclusivegovernments) do
+				local government = GameInfo.Governments[v];
+				s:AddIconLabel({"ICON_" .. government.GovernmentType, government.Name, government.GovernmentType}, government.Name);
+			end
+		end
+		
+		if(#policy_unlockedgovernment > 0) then
+			if(#policy_exclusivegovernments == 0) then
+				s:AddHeader("LOC_GOVERNMENT_NAME");
+			end
+			s:AddLabel("LOC_UI_PEDIA_REQUIRES_NOT_GOVERNMENT");
+			for i,v in ipairs(policy_unlockedgovernment) do
+				local government = GameInfo.Governments[v];
+				s:AddIconLabel({"ICON_" .. government.GovernmentType, government.Name, government.GovernmentType}, government.Name);
+			end
+		end
+		
 		s:AddSeparator();
 	end);
 

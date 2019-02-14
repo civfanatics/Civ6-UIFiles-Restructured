@@ -42,7 +42,17 @@ function Refresh(selectedPlayerID:number)
 	local selectedPlayerDiplomaticAI = selectedPlayer:GetDiplomaticAI();
 	-- What do they think of us?
 	local iState :number = selectedPlayerDiplomaticAI:GetDiplomaticStateIndex(localPlayerID);
-	local relationshipString:string = Locale.Lookup(GameInfo.DiplomaticStates[iState].Name);
+--	local relationshipString:string = Locale.Lookup(GameInfo.DiplomaticStates[iState].Name);
+	local iGrievancesOnThem = localPlayer:GetDiplomacy():GetGrievancesAgainst(selectedPlayerID);
+	local relationshipString:string;
+	if iGrievancesOnThem > 0 then
+		relationshipString = Locale.Lookup("LOC_DIPLOMACY_GRIEVANCES_WITH_THEM", GameInfo.DiplomaticStates[iState].Name, iGrievancesOnThem);
+	elseif iGrievancesOnThem < 0 then
+		relationshipString = Locale.Lookup("LOC_DIPLOMACY_GRIEVANCES_WITH_US", GameInfo.DiplomaticStates[iState].Name, -iGrievancesOnThem);
+	else
+		relationshipString = Locale.Lookup("LOC_DIPLOMACY_GRIEVANCES_NONE", GameInfo.DiplomaticStates[iState].Name);
+	end
+
 	-- Add team name to relationship text for our own teams
 	if localPlayer:GetTeam() == selectedPlayer:GetTeam() then
 		relationshipString = "(" .. Locale.Lookup("LOC_WORLD_RANKINGS_TEAM", localPlayer:GetTeam()) .. ") " .. relationshipString;
@@ -106,7 +116,7 @@ function Refresh(selectedPlayerID:number)
 	if allianceType ~= -1 then
         Controls.RelationshipText:SetToolTipString(Locale.Lookup("LOC_DIPLOACTION_EXPIRES_IN_X_TURNS", localPlayerDiplomacy:GetAllianceTurnsUntilExpiration(selectedPlayerID)));
 
-		-- Alliance Type
+        -- Alliance Type
 		local iAllianceType = GameInfo.Alliances[allianceType];
 		Controls.AllianceTypeText:SetText(Locale.Lookup(iAllianceType.Name));
 

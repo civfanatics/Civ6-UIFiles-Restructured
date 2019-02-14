@@ -94,6 +94,7 @@ function GetGovernorStatus(governorDef:table, governor:table)
 	end
 end
 
+
 -- ===========================================================================
 function AnyCitiesWithoutAGovernor()
 	local pLocalPlayerCities:table = Players[Game.GetLocalPlayer()]:GetCities();

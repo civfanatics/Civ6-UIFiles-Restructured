@@ -1,160 +1,227 @@
 -- Copyright 2017-2018, Firaxis Games
+
 include("InstanceManager");
 include("LeaderIcon");
 include("CivilizationIcon");
-
+include("WorldCrisisSupport");
 
 -- ===========================================================================
---	DEBUG
+--	CONSTANTS
 -- ===========================================================================
-local debugForceRaiseCrisis = false;			-- (false) when true forces a crisis popup to occur.
+local RELOAD_CACHE_ID:string = "WorldCrisisPopup";
 
+local TIER_REWARD_STRINGS:table = {};
+TIER_REWARD_STRINGS[1] = "LOC_SCORED_COMPETITION_YOU_EARNED_GOLD";
+TIER_REWARD_STRINGS[2] = "LOC_SCORED_COMPETITION_YOU_EARNED_SILVER";
+TIER_REWARD_STRINGS[3] = "LOC_SCORED_COMPETITION_YOU_EARNED_BRONZE";
+
+local TIER_RIM_NAMES:table = {};
+TIER_RIM_NAMES[1] = {rim="Controls_CircleRim40_Gold", arrow="Controls_YouArrowSmall_Gold"};
+TIER_RIM_NAMES[2] = {rim="Controls_CircleRim40_Silver", arrow="Controls_YouArrowSmall_Silver"};
+TIER_RIM_NAMES[3] = {rim="Controls_CircleRim40_Bronze", arrow="Controls_YouArrowSmall_Bronze"};
+TIER_RIM_NAMES[4] = {rim="Controls_CircleRim40_None", arrow="Controls_YouArrowSmall_None"};
+
+local BG_PREFIX:string = "XP2_BG_";
 
 -- ===========================================================================
 --	MEMBERS
 -- ===========================================================================
-local RELOAD_CACHE_ID:string = "WorldCrisisPopup";
-
 local m_targetPlayerID	:number = -1;
 local m_emergencyType	:number = -1;
 local m_isAnswerRequired:boolean = false;
-
-local m_LeaderIM:table = InstanceManager:new("LeaderIcon45", "SelectButton", Controls.LeaderIconStack);
-local m_kCrisisManagers:table = {
-	left		= InstanceManager:new("LeftAlignText", "RootStack", Controls.CrisisDetailsStack),
-	center		= InstanceManager:new("CenterAlignText", "Root", Controls.CrisisDetailsStack),
-	large		= InstanceManager:new("CenterAlignLargeText", "Root", Controls.CrisisDetailsStack),
-	solo		= InstanceManager:new("CenterAlignSoloText", "Root", Controls.CrisisDetailsStack)
-};
-local m_kRewardsManagers:table = {
-	left		= InstanceManager:new("LeftAlignText", "RootStack", Controls.RewardsDetailsStack),
-	center		= InstanceManager:new("CenterAlignText", "Root", Controls.RewardsDetailsStack),
-	large		= InstanceManager:new("CenterAlignLargeText", "Root", Controls.RewardsDetailsStack),
-	solo		= InstanceManager:new("CenterAlignSoloText", "Root", Controls.RewardsDetailsStack)
-};
-
+local m_LeaderIM		:table = InstanceManager:new("LeaderButton", "Root", Controls.LeaderIconStack);
 
 
 -- ===========================================================================
-function OnCrisisReceived(targetPlayerID, emergencyType)
-	
+--	FUNCTIONS
+-- ===========================================================================
+
+
+-- ===========================================================================
+--	Game Event
+-- ===========================================================================
+function OnEmergencyAvailable( targetPlayerID:number, emergencyType:number, startingTurn:number )
+
+	local localPlayerID	:number = Game.GetLocalPlayer();
+	if localPlayerID == -1 then return; end -- Autoplay		
+
 	m_targetPlayerID = targetPlayerID;
 	m_emergencyType = emergencyType;
-	local crisisData:table = FetchData( emergencyType );
-	if (not crisisData) then
-		return
-	end
-	--Clear the stacks
-	m_kCrisisManagers.left:ResetInstances();
-	m_kCrisisManagers.center:ResetInstances();
-	m_kCrisisManagers.large:ResetInstances();
-	m_kCrisisManagers.solo:ResetInstances();
-	m_kRewardsManagers.left:ResetInstances();
-	m_kRewardsManagers.center:ResetInstances();
-	m_kRewardsManagers.large:ResetInstances();
-	m_kRewardsManagers.solo:ResetInstances();
 
-	--Set the icon for the emergency
-	Controls.TitleIcon:SetIcon("ICON_" .. GameInfo.EmergencyAlliances[emergencyType].EmergencyType);
+	local kData				:table = nil;	
+	local bPlayerisTarget	:boolean = localPlayerID == m_targetPlayerID;
+	local kEmergencyInfo	:table = Game.GetEmergencyManager():GetEmergencyInfoTable(localPlayerID);
+	
+	if kEmergencyInfo == nil then
+		UI.DataError("No emeregency data for local player "..tostring(localPlayerID).." but EmergencyAvailable was raised.  Assign @tyler.berry");
+		return;
+	end	
+
+	if kEmergencyInfo and table.count(kEmergencyInfo) > 0 then
+		for _, kEmergency in ipairs(kEmergencyInfo) do
+			if kEmergency.EmergencyType == emergencyType and kEmergency.TargetID == m_targetPlayerID then
+				kData = ProcessEmergency_WorldCrisisPopup(kEmergency, localPlayerID);
+				break;
+			end
+		end
+	end
+	
+	if kData then
+		ShowEmergency( kData );
+	else
+		UI.DataError("Failed to find emergency data for target "..tostring(targetPlayerID)..", emergency " .. tostring(emergencyType) .. ".  Assign @tyler.berry");
+	end
+end
+
+-- ===========================================================================
+--	LUA Event
+-- ===========================================================================
+function OnShowEmergency( kData: table )
+	if kData == nil then
+		UI.DataError("No data was passed to OnShowEmergency()");
+		return;
+	end
+	ShowEmergency( kData );
+end
+
+-- ===========================================================================
+function ShowEmergency( kData: table )
+
+	local localPlayerID:number = Game.GetLocalPlayer();
+	local emergencyType:number = kData.emergencyType;
+
+	--Clear the stacks
+	ResetEmergencyInstances();
 
 	--Do we need input?
-	Controls.JoinButton:SetHide(not crisisData.inputRequired);
-	Controls.RejectButton:SetHide(not crisisData.inputRequired);
-	Controls.OKButton:SetHide(crisisData.inputRequired);
-	m_isAnswerRequired = crisisData.inputRequired;
+	Controls.JoinButton:SetHide(not kData.inputRequired);
+	Controls.RejectButton:SetHide(not kData.inputRequired);
+	Controls.OKButton:SetHide(kData.inputRequired);
+	m_isAnswerRequired = kData.inputRequired;
+
+	--Only show target if we are hostile
+	Controls.TargetIcon:SetShow(GameInfo.Emergencies_XP2[emergencyType].Hostile);
 
 	--Title and subtitles
-	Controls.TitleString:SetText(crisisData.titleString);
-	Controls.TrinketString:SetText(crisisData.trinketString);
-	Controls.CrisisTargetTitle:SetText(Locale.ToUpper(crisisData.crisisTargetTitle));
-	Controls.CrisisTrinketTitle:SetText(crisisData.crisisTrinketTitle);
+	Controls.TitleString:SetText(Locale.Lookup(kData.titleString));
+	Controls.TrinketString:SetText(kData.trinketString);
+	Controls.CrisisTargetTitle2:SetText(kData.targetCityName);
+	Controls.CrisisTargetTitle2:SetHide(kData.targetCityName == "");
+	Controls.CrisisTrinketTitle:SetText(kData.crisisTrinketTitle);
+	Controls.CrisisTrinketTitle:SetHide(kData.crisisTrinketTitle == "");
 
 	--Populate our initial data block
-	PopulateDynamicStack(m_kCrisisManagers, crisisData.crisisDetails);
-	Controls.CrisisDetailsStack:CalculateSize();
+	PopulateWorldCrisisText(g_kCrisisManagers, kData.crisisDetails, Controls.CrisisDetailsStack, true);
 
 	--Turns remaining
-	local bgSuffix = "_BG3";
-	if (crisisData.timeRemaining > 0) then
-		if (crisisData.timeRemaining == 1) then
+	local bgColor:string = "Emergency_Default";
+	if (kData.timeRemaining > 0) then
+		if (kData.timeRemaining == 1) then
 			Controls.CrisisDuration:SetText(Locale.Lookup("LOC_EMERGENCY_NO_TURNS_REMAINING"));
 		else
-			Controls.CrisisDuration:SetText(Locale.Lookup("LOC_EMERGENCY_TURNS_REMAINING", crisisData.timeRemaining));
+			Controls.CrisisDuration:SetText(Locale.Lookup("LOC_EMERGENCY_TURNS_REMAINING", kData.timeRemaining));
 		end
-        UI.PlaySound("ScoredCompetition_open");
+		bgColor = "Emergency_In_Progress";
+		Controls.VictorStack:SetHide(true);
+		Controls.CrisisDetailsStack:SetHide(false);
 	else
-		Controls.CrisisDuration:SetText(Locale.Lookup("LOC_EMERGENCY_TURNS_OVER"));
-        UI.PlaySound("ScoredCompetition_close");
-
-		--Set alternate backgrounds if the emergency is over
-		local isTarget :boolean = Game.GetLocalPlayer() == m_targetPlayerID;
-		if (not crisisData.crisisSuccess and isTarget) or (crisisData.crisisSuccess and not isTarget) then
-			--Good news
-			bgSuffix = "_BG2";
+		Controls.VictorStack:SetHide(false);
+		Controls.CrisisDetailsStack:SetHide(true);
+		if GameInfo.Emergencies_XP2[emergencyType].Hostile then
+			local isTarget :boolean =  localPlayerID == m_targetPlayerID;
+			if (not kData.crisisSuccess and isTarget) then
+				Controls.VictorTitle:SetText(Locale.Lookup("LOC_SCORED_COMPETITION_YOU_WIN"));
+				Controls.VictorTier:SetText(Locale.Lookup("LOC_SCORED_COMPETITION_YOU_EARNED_TARGET"));
+				bgColor = "Emergency_Gold";
+			elseif not kData.crisisSuccess then
+				Controls.VictorTitle:SetText(Locale.Lookup("LOC_SCORED_COMPETITION_TARGET_WINS"));
+				Controls.VictorTier:SetText(Locale.Lookup("LOC_SCORED_COMPETITION_YOU_EARNED_NONE"));
+				bgColor = "Emergency_Failed";
+			else
+				Controls.VictorTitle:SetText(Locale.Lookup("LOC_SCORED_COMPETITION_MEMBERS_WIN"));
+				Controls.VictorTier:SetText(Locale.Lookup(isTarget and "LOC_SCORED_COMPETITION_YOU_EARNED_NONE" or "LOC_SCORED_COMPETITION_YOU_EARNED_MEMBER"));
+				bgColor = isTarget and "Emergency_Gold" or "Emergency_Failed";
+			end
 		else
-			--Bad news
-			bgSuffix = "_BG1";
+			for playerTierID:number,tierValue:number in pairs(kData.memberTiers) do
+				local bIsLocalPlayer:boolean = playerTierID == localPlayerID;
+				--Find first place
+				if tierValue == 1 then
+					if bIsLocalPlayer then
+						Controls.VictorTitle:SetText(Locale.Lookup("LOC_SCORED_COMPETITION_YOU_WIN"));
+					else
+						local winnerName:string = GetPlayerName(playerTierID);
+						Controls.VictorTitle:SetText(Locale.Lookup("LOC_SCORED_COMPETITION_LEADER_WINS", winnerName));
+					end
+				end
+			
+				if bIsLocalPlayer then
+					Controls.VictorTier:SetText(Locale.Lookup(tierValue > 0 and TIER_REWARD_STRINGS[tierValue] or "LOC_SCORED_COMPETITION_YOU_EARNED_NONE"));
+					if tierValue == 1 then
+						bgColor = "Emergency_Gold";
+					elseif tierValue == 2 then
+						bgColor = "Emergency_Silver";
+					elseif tierValue == 3 then
+						bgColor = "Emergency_Bronze"
+					end
+				end
+			end
 		end
 	end
 
 	--Background
-	Controls.CrisisBG:SetTexture(GameInfo.EmergencyAlliances[emergencyType].EmergencyType .. bgSuffix);
+	Controls.CrisisBG:SetTexture(BG_PREFIX .. GameInfo.EmergencyAlliances[emergencyType].EmergencyType);
+	Controls.CrisisBG:SetColorByName(bgColor);
+
+	--Place in the competition
+	Controls.PlayerPlaceLabel:SetHide(kData.targetPlayer == localPlayerID);
+	Controls.PlayerPlaceLabel:SetText(kData.placeString);
 
 	--Target assignment
-	if crisisData.targetPlayer >= 0 then
-		local localDiplomacy:table =  Players[crisisData.targetPlayer]:GetDiplomacy();
-		local leaderName:string = PlayerConfigurations[crisisData.targetPlayer]:GetLeaderTypeName();
+	if kData.targetPlayer >= 0 then
+		local localDiplomacy:table =  Players[kData.targetPlayer]:GetDiplomacy();
+		local leaderName:string = PlayerConfigurations[kData.targetPlayer]:GetLeaderTypeName();
 		local iconName:string = "ICON_" .. leaderName;
 
 		--Build and update
 		local ownerLeader = LeaderIcon:AttachInstance(Controls.LeaderTargetIcon);
-		ownerLeader:UpdateIcon(iconName, crisisData.targetPlayer, true);
-
-		local ownerController = CivilizationIcon:AttachInstance(Controls.CivilizationTargetIcon);
-		ownerController:UpdateIconFromPlayerID(crisisData.targetPlayer);
+		ownerLeader:UpdateIcon(iconName, kData.targetPlayer, true);
+		Controls.LeaderTargetIcon.Relationship:SetHide(true);
+		Controls.CrisisTargetTitle:SetText(Locale.ToUpper(kData.crisisTargetTitle));
+		Controls.NoTargetIcon:SetHide(true);
+		Controls.CivilizationIconContainer:SetHide(false);
+	else
+		Controls.CrisisTargetTitle:LocalizeAndSetText(Locale.ToUpper(kData.nameText));	
+		Controls.CivilizationIconContainer:SetHide(true);
+		Controls.NoTargetIcon:SetIcon("ICON_" .. GameInfo.EmergencyAlliances[emergencyType].EmergencyType);
+		Controls.NoTargetIcon:SetHide(false);
 	end
-	Controls.LeaderIconContainer:SetHide(crisisData.targetPlayer < 0);
-	Controls.CivilizationIconContainer:SetHide(crisisData.targetPlayer < 0);
+
+	--Assign our Member list
+	if GameInfo.Emergencies_XP2[emergencyType].Hostile then
+		Controls.MemberLabel:SetText(Locale.ToUpper(Locale.Lookup("LOC_EMERGENCY_PARTICIPANTS")));
+	else
+		Controls.MemberLabel:SetText(Locale.ToUpper(Locale.Lookup("LOC_EMERGENCY_COMPETING_PARTICIPANTS")));
+	end
 
 	--Populate our bottom block of data
-	PopulateDynamicStack(m_kRewardsManagers, crisisData.rewardsDetails);
-	Controls.RewardsDetailsStack:CalculateSize();
+	PopulateWorldCrisisText(g_kRewardsManagers, kData.rewardsDetails, Controls.RewardsDetailsStack, true);
+	PopulateLeaderBar(kData.participantPlayers, kData.participantScores, kData.memberTiers);
 
-	PopulateLeaderBar(crisisData.participantPlayers);
-	UIManager:QueuePopup(ContextPtr, PopupPriority.Low);
+	UIManager:QueuePopup(ContextPtr, PopupPriority.Low, { DelayShow = true });
 end
 
 -- ===========================================================================
-function PopulateDynamicStack(instManagers:table, data:table)
-	--Spit in our complex strings based on the model we built
-	for _, line in ipairs(data) do
-		local inst;
-		if line.align == "left" then
-			inst = instManagers.left:GetInstance();
-		elseif line.align == "center" then
-			inst = instManagers.center:GetInstance();
-		elseif line.align == "large" then
-			inst = instManagers.large:GetInstance();
-		elseif line.align == "solo" then
-			--We add two empty lines with a single space in them to force the 'solo' alignment to be centered on
-			--the X and Y axis
-			for i=0, 3, 1 do 
-				local tmp = instManagers.left:GetInstance();
-				tmp.Root:SetText(" ");
-				tmp.IconString:SetText("");
-			end
-			inst = instManagers.solo:GetInstance();
-		end
-		
-		if line.icon then
-			inst.IconString:SetText(line.icon);
-		end
-		inst.Root:SetText(line.string);
-	end
+function OnShow()
+	Controls.AnimSoundOnShow:SetToBeginning();	
+	Controls.SlideOnShow:SetToBeginning();
+	Controls.AnimSoundOnShow:Play();	
+	Controls.SlideOnShow:Play();	
+	UI.PlaySound("ScoredCompetition_open");
 end
 
 -- ===========================================================================
-function PopulateLeaderBar(kParticipantPlayers:table)
+function PopulateLeaderBar( kParticipantPlayers:table, kParticipantScores:table, kMemberTiers:table)
 	m_LeaderIM:ResetInstances();
 	
 	--Add our leaders
@@ -178,12 +245,33 @@ function PopulateLeaderBar(kParticipantPlayers:table)
 			end
 
 			--Build and update
-			local leaderIcon = LeaderIcon:GetInstance(m_LeaderIM);
-			leaderIcon:UpdateIcon(iconName, playerID, isUniqueLeader[leaderName]);
+			local uiLeaderInstance:table = m_LeaderIM:GetInstance();
+			local kLeaderIconManager, uiLeaderIcon = LeaderIcon:AttachInstance(uiLeaderInstance.Icon);
+			kLeaderIconManager:UpdateIcon(iconName, playerID, isUniqueLeader[leaderName]);
+			uiLeaderInstance.ScoreLabel:SetText(kParticipantScores[playerID]);
+			uiLeaderInstance.YouIndicator:SetHide(playerID ~= localPlayerID);
+			uiLeaderInstance.Icon.YouIndicator:SetHide(false);
+			
+			local tierIndex:number = kMemberTiers[playerID];
+			if tierIndex > 0 then
+				uiLeaderInstance.Icon.YouIndicator:SetTexture(TIER_RIM_NAMES[tierIndex].rim);
+				uiLeaderInstance.YouIndicator:SetTexture(TIER_RIM_NAMES[tierIndex].arrow);
+			else
+				uiLeaderInstance.Icon.YouIndicator:SetTexture(TIER_RIM_NAMES[4].rim);
+				uiLeaderInstance.YouIndicator:SetTexture(TIER_RIM_NAMES[4].arrow);
+			end
 		end
 	end
 end
 
+-- ===========================================================================
+--	UI Callback
+-- ===========================================================================
+function OnDoneCloseAnim()
+	if Controls.SlideOnShow:IsReversing() then
+		UIManager:DequeuePopup(ContextPtr);
+	end
+end
 
 -- ===========================================================================
 function Close()
@@ -193,14 +281,23 @@ function Close()
 		kParameters[PlayerOperations.PARAM_EMERGENCY_TYPE] = m_emergencyType;
 		UI.RequestPlayerOperation(Game.GetLocalPlayer(), PlayerOperations.ACCEPT_EMERGENCY, kParameters);
 	end
-	UIManager:DequeuePopup(ContextPtr);
+	local offsetx = Controls.SlideOnShow:GetOffsetX();
+	if(offsetx ~= 0) then
+		Controls.SlideOnShow:SetToEnd();
+	end
+	Controls.SlideOnShow:Reverse();	
+	UI.PlaySound("ScoredCompetition_close");
 end
 
+-- ===========================================================================
+--	UI Callback
 -- ===========================================================================
 function OnClose()
 	Close();
 end
 
+-- ===========================================================================
+--	UI Callback
 -- ===========================================================================
 function OnJoinClicked()
 	-- Send a command saying that we've seen this emergency
@@ -213,6 +310,8 @@ function OnJoinClicked()
 end
 
 -- ===========================================================================
+--	UI Callback
+-- ===========================================================================
 function OnRejectClicked()
 	-- Send a command saying we reject it
 	local kParameters:table = {};
@@ -221,111 +320,6 @@ function OnRejectClicked()
 	UI.RequestPlayerOperation(Game.GetLocalPlayer(), PlayerOperations.REJECT_EMERGENCY, kParameters);
 
 	Close();
-end
-
--- ===========================================================================
-function FetchData( emergencyType )
-	--TODO: Follow this data model to provide for the emergency popuP
-	local localPlayerID:number = Game.GetLocalPlayer();
-	local bPlayerisTarget:boolean = localPlayerID == m_targetPlayerID;
-	local cachedData:table = Game.GetEmergencyManager():GetEmergencyInfoTable(localPlayerID);
-	if (cachedData[0] == nil ) then
-		return nil
-	end
-	
-	local cachedValue = nil;
-	for _, emergency in ipairs(cachedData) do
-		if emergency.EmergencyType == emergencyType and emergency.TargetID == m_targetPlayerID then
-			cachedValue = emergency;
-		end
-	end
-	
-	if cachedValue == nil then
-		return nil;
-	end
-
-	local crisisDetails: table = {};
-	-- Fill out goals, if things have started
-	if (cachedValue.TurnsLeft < 0) then
-		table.insert(crisisDetails, {align="solo", string=Locale.ToUpper(Locale.Lookup(cachedValue.bSuccess and "LOC_EMERGENCY_COMPLETE_MEMBERS_WIN" or "LOC_EMERGENCY_COMPLETE_TARGET_WIN")),})
-	else
-		if next(cachedValue.GoalsTable) ~= nil then
-			table.insert(crisisDetails, {align="center", string=Locale.Lookup("LOC_EMERGENCY_COMPLETE_THESE_GOALS"),})
-			local GoalsTable : table = bPlayerisTarget and cachedValue.TargetGoalsTable or cachedValue.GoalsTable
-			for dataIndex, line in ipairs(GoalsTable) do
-				if line.Name ~= "" then
-					local linevalue :table = {align="left",}
-					if line.Completed then
-						linevalue["icon"] = bPlayerisTarget and "[ICON_CheckFail]" or "[ICON_Checkmark]"
-					else
-						linevalue["icon"] = "[ICON_Bolt]"
-					end
-					linevalue["string"] = line.Name
-					table.insert(crisisDetails, linevalue)
-				end
-			end
-		else
-			table.insert(crisisDetails, {align="left", string=Locale.Lookup("LOC_EMERGENCY_PENDING_EXPLANATION", cachedValue.TentativeDescription),})
-		end
-	end
-	if (cachedValue.TurnsLeft >= 0) then
-		-- Fill out temporary buffs
-		if next(cachedValue.BuffsText) ~= nill then
-			table.insert(crisisDetails, {align="center", string=Locale.Lookup("LOC_EMERGENCY_BUFFS_EXPLANATION"),})
-			for dataIndex, line in ipairs(cachedValue.BuffsText) do
-				local linevalue :table = {align="left",}
-				linevalue["string"] = line
-				linevalue["icon"] = "[ICON_Bolt]"
-				table.insert(crisisDetails, linevalue)
-			end
-		end
-		if (cachedValue.ExtraBuffs ~= "") then
-			table.insert(crisisDetails, {align="left", string=cachedValue.ExtraBuffs,})
-		end 
-	end
-
-	local rewardsDetails : table = {};
-
-	if next(cachedValue.MemberRewardsText) ~= {} and (cachedValue.bSuccess or cachedValue.TurnsLeft >= 0) then
-		table.insert(rewardsDetails, {align="center", string=Locale.Lookup(cachedValue.TurnsLeft >= 0 and "LOC_EMERGENCY_MEMBER_REWARDS_EXPLANATION" or "LOC_EMERGENCY_MEMBERS_HAVE_WON_REWARDS"),})
-		for dataIndex, line in ipairs(cachedValue.MemberRewardsText) do
-			local linevalue :table = {align="left",}
-			linevalue["string"] = line
-			linevalue["icon"] = "[ICON_Bolt]"
-			table.insert(rewardsDetails, linevalue)
-		end
-	end
-	if (cachedValue.ExtraRewards ~= "") and (cachedValue.bSuccess or cachedValue.TurnsLeft >= 0) then
-		table.insert(rewardsDetails, {align="left", string=cachedValue.ExtraRewards,})
-	end 
-	if next(cachedValue.TargetRewardsText) ~= {} and (not cachedValue.bSuccess or cachedValue.TurnsLeft >= 0)  then
-		table.insert(rewardsDetails, {align="center", string=Locale.Lookup(cachedValue.TurnsLeft >= 0 and "LOC_EMERGENCY_TARGET_REWARDS_EXPLANATION" or "LOC_EMERGENCY_TARGET_HAS_WON_REWARDS"),})
-		for dataIndex, line in ipairs(cachedValue.TargetRewardsText) do
-			local linevalue :table = {align="left",}
-			linevalue["string"] = line
-			linevalue["icon"] = "[ICON_Bolt]"
-			table.insert(rewardsDetails, linevalue)
-		end
-	end
-
-	local leaderName:string = GameConfiguration.IsAnyMultiplayer() and PlayerConfigurations[cachedValue.TargetID]:GetPlayerName() or PlayerConfigurations[cachedValue.TargetID]:GetLeaderName();
-	local crisisData:table = {
-		targetPlayer			= cachedValue.TargetID,
-		emergencyType			= cachedValue.EmergencyType,
-		crisisSuccess			= cachedValue.bSuccess,
-		inputRequired			= not cachedValue.HasBegun,
-		participantPlayers		= cachedValue.MemberIDs,
-		titleString				= Locale.ToUpper(Locale.Lookup(cachedValue.HasBegun and (cachedValue.TurnsLeft< 0 and "LOC_EMERGENCY_COMPLETED" or "LOC_EMERGENCY_ONGOING") or 
-												"LOC_EMERGENCY_PENDING", cachedValue.NameText)),
-		trinketString			= cachedValue.DescriptionText,
-		crisisTargetTitle		= Locale.Lookup("LOC_EMERGENCY_TARGET", cachedValue.HasBegun and cachedValue.TargetCityName or leaderName),
-		crisisTrinketTitle		= cachedValue.TurnsLeft < 0 and "" or cachedValue.GoalDescription,
-		crisisDetails			= crisisDetails,
-		timeRemaining			= cachedValue.TurnsLeft,
-		rewardsDetails			= rewardsDetails,
-	};
-
-	return crisisData;
 end
 
 -- ===========================================================================
@@ -348,6 +342,7 @@ end
 --	UI EVENT
 -- ===========================================================================
 function OnShutdown()
+	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "isVisible", not ContextPtr:IsHidden());
 	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "m_targetPlayerID", m_targetPlayerID);
 	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "m_emergencyType", m_emergencyType);
 end
@@ -357,21 +352,14 @@ end
 --	Reload support
 -- ===========================================================================
 function OnGameDebugReturn(context:string, contextTable:table)
-	if context == RELOAD_CACHE_ID then
-		local targetPlayer = nil;
-		local emergencyType = nil;
+	if context ~= RELOAD_CACHE_ID then
+		return;
+	end
 		
-		if contextTable["m_targetPlayerID"] ~= nil then			
-			targetPlayer = contextTable["m_targetPlayerID"];
-		end
-		
-		if contextTable["m_emergencyType"] ~= nil then			
-			emergencyType = contextTable["m_emergencyType"];
-		end
-		
-		if targetPlayer and emergencyType then
-			OnCrisisReceived(targetPlayer, emergencyType);
-		end
+	if contextTable["isVisible"] then
+		local targetPlayer	:number = contextTable["m_targetPlayerID"];
+		local emergencyType :number = contextTable["m_emergencyType"]
+		OnEmergencyAvailable(targetPlayer, emergencyType);
 	end
 end
 
@@ -389,21 +377,20 @@ function Initialize()
 
 	ContextPtr:SetInitHandler(OnInit);
 	ContextPtr:SetInputHandler( OnInputHandler, true );
+	ContextPtr:SetShowHandler(OnShow);
 	ContextPtr:SetShutdown(OnShutdown);
 
-	Controls.JoinButton:RegisterCallback(Mouse.eLClick, OnJoinClicked);
-	Controls.RejectButton:RegisterCallback(Mouse.eLClick, OnRejectClicked);
-	Controls.OKButton:RegisterCallback(Mouse.eLClick, OnClose);
-	Controls.CloseButton:RegisterCallback(Mouse.eLClick, OnClose);
-	
-	Events.EmergencyAvailable.Add(OnCrisisReceived);
+	Controls.JoinButton:RegisterCallback( Mouse.eLClick, OnJoinClicked );
+	Controls.RejectButton:RegisterCallback( Mouse.eLClick, OnRejectClicked );
+	Controls.OKButton:RegisterCallback( Mouse.eLClick, OnClose );
+	Controls.CloseButton:RegisterCallback( Mouse.eLClick, OnClose );
+	Controls.SlideOnShow:RegisterEndCallback( OnDoneCloseAnim );
+
+	Events.EmergencyAvailable.Add(OnEmergencyAvailable);
 	
 	LuaEvents.GameDebug_Return.Add(OnGameDebugReturn);	
-	LuaEvents.NotificationPanel_EmergencyClicked.Add( OnCrisisReceived );
-	LuaEvents.WorldCrisisTracker_EmergencyClicked.Add( OnCrisisReceived );
-
-	if debugForceRaiseCrisis then
-		OnCrisisReceived();
-	end
+	LuaEvents.WorldCongress_ShowEmergency.Add( OnEmergencyAvailable );
+	LuaEvents.WorldCrisisTracker_EmergencyClicked.Add( OnEmergencyAvailable );
+	LuaEvents.NotificationPanel_EmergencyClicked.Add( OnEmergencyAvailable );
 end
 Initialize();

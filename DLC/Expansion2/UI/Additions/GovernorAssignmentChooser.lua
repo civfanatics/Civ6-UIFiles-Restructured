@@ -1,14 +1,13 @@
 -- ===========================================================================
 --	Governor Assignment Chooser side-panel
---	Copyright 2018, Firaxis Games
+--	Copyright 2017-2018, Firaxis Games
 -- ===========================================================================
 
 include("InstanceManager");
 include("SupportFunctions");
-include("Colors");
 include("GovernorSupport");
 include("PopupDialog");
-
+include("Colors");
 
 -- ===========================================================================
 --	CONSTANTS
@@ -174,14 +173,44 @@ function RefreshBottomPanel()
 						local bDisabled:boolean = false;
 						local sFailureText = "";
 						local playerGovernors = localPlayer:GetGovernors();
-						if (playerGovernors:CanAssignGovernor(m_SelectedGovernorDef.Hash, city) == false) then
-							bDisabled = true;
-							-- we're making the assumption here that the only reason this failed is because the player is at war with this city-state
-							sFailureText = Locale.Lookup("LOC_DIPLOMACY_AT_WAR_WITH_CS");
+						local bCanAssign, results = playerGovernors:CanAssignGovernor(m_SelectedGovernorDef.Hash, city, true);
+						bDisabled = not bCanAssign;
+						if (results ~= nil) then
+							local pFailureReasons : table = results[PlayerOperationResults.FAILURE_REASONS];
+							if pFailureReasons ~= nil and table.count( pFailureReasons ) > 0 then
+								-- Collect them all!
+								for i,v in ipairs(pFailureReasons) do
+									sFailureText = sFailureText .. "[NEWLINE]" .. Locale.Lookup(v);
+								end
+							end
 						end
 						AddCityInstance(city, bDisabled, sFailureText);
 					end
 				end
+			end
+		end
+	end
+	-----
+	if (m_SelectedGovernor ~= nil and m_SelectedGovernor:CanAssignToMajorCiv()) then
+		for i, pMajor in ipairs(PlayerManager.GetAliveMajors()) do
+			local playerDiplomacy = localPlayer:GetDiplomacy();
+			if ( playerDiplomacy:HasMet(pMajor:GetID()) ) then
+				local pCapital = pMajor:GetCities():GetCapitalCity();
+				local bDisabled:boolean = false;
+				local sFailureText = "";
+				local playerGovernors = localPlayer:GetGovernors();
+				local bCanAssign, results = playerGovernors:CanAssignGovernor(m_SelectedGovernorDef.Hash, pCapital, true);
+				bDisabled = not bCanAssign;
+				if (results ~= nil) then
+					local pFailureReasons : table = results[PlayerOperationResults.FAILURE_REASONS];
+					if pFailureReasons ~= nil and table.count( pFailureReasons ) > 0 then
+						-- Collect them all!
+						for i,v in ipairs(pFailureReasons) do
+							sFailureText = sFailureText .. "[NEWLINE]" .. Locale.Lookup(v);
+						end
+					end
+				end
+				AddCityInstance(pCapital, bDisabled, sFailureText);
 			end
 		end
 	end
@@ -317,17 +346,11 @@ function OnSelectCity( owner:number, cityID:number )
 end
 
 -- ===========================================================================
-function OnRequestAssignment( governorIndex:number, playerID:number, cityID:number )
+function OnRequestAssignment( governorIndex:number )
 
 	SetSelectedGovernor(governorIndex);
-
-	if playerID ~= nil and cityID ~= nil then
-		m_SelectedCityOwner = playerID;
-		m_SelectedCityID = cityID;
-	else
-		m_SelectedCityOwner = -1;
-		m_SelectedCityID = -1;
-	end
+	m_SelectedCityOwner = -1;
+	m_SelectedCityID = -1;
 
 	Open();
 end
@@ -382,14 +405,24 @@ end
 
 -- ===========================================================================
 function OnConfirm()
-	local pCity = CityManager.GetCity(m_SelectedCityOwner, m_SelectedCityID);
-	if pCity ~= nil and pCity:GetAssignedGovernor() ~= nil then
-		-- If this city already has an assigned governor popup a popup dialog to confirm the replacement
-		local popup:table = PopupDialogInGame:new( "GovernorAssignmentReplaceConfirm" );
-		popup:ShowYesNoDialog( Locale.Lookup("LOC_GOVERNOR_ASSIGNMENT_CONFIRM_REPLACEMENT"), function() ConfirmedAssignment(); LuaEvents.GovernorPanel_Open(); end );
-	else
-		ConfirmedAssignment();
-		LuaEvents.GovernorPanel_Close();
+	local localPlayerID = Game.GetLocalPlayer();
+	if (localPlayerID ~= nil) then
+		local pCity = CityManager.GetCity(m_SelectedCityOwner, m_SelectedCityID);
+		if pCity ~= nil and pCity:GetAssignedGovernor() ~= nil then
+			local pAssignedGovernor = pCity:GetAssignedGovernor();
+			local governorOwner = pAssignedGovernor:GetOwner();
+			if (pAssignedGovernor:GetOwner() == localPlayerID) then
+				-- If this city already has an assigned governor popup a popup dialog to confirm the replacement
+				local popup:table = PopupDialogInGame:new( "GovernorAssignmentReplaceConfirm" );
+				popup:ShowYesNoDialog( Locale.Lookup("LOC_GOVERNOR_ASSIGNMENT_CONFIRM_REPLACEMENT"), function() ConfirmedAssignment(); LuaEvents.GovernorPanel_Open(); end );
+			else
+				ConfirmedAssignment();
+				LuaEvents.GovernorPanel_Close();
+			end
+		else
+			ConfirmedAssignment();
+			LuaEvents.GovernorPanel_Close();
+		end
 	end
 end
 
@@ -521,7 +554,7 @@ function Initialize()
 	-- Game Events
 	Events.CityAddedToMap.Add( OnCityAddedToMap );
 	Events.LoadGameViewStateDone.Add( OnLoadGameViewStateDone );
-	Events.LocalPlayerTurnEnd.Add( OnLocalPlayerTurnEnd );		
+	Events.LocalPlayerTurnEnd.Add( OnLocalPlayerTurnEnd );	
 
 	-- Lua Events	
 	LuaEvents.DiploBasePopup_HideUI.Add( OnDiploBasePopup_HideUI );

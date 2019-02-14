@@ -25,7 +25,7 @@
 				</Grid>
 				<Image																								Offset="4,50"		Size="76,76"					Texture="CityStateOverview"/>
 				<Grid						ID="TitleBG"						Anchor="R,T"	Offset="-50,-2"	Size="600,74"					Texture="Controls_BannerHeaderRed" SliceCorner="371,0" SliceSize="1,74" SliceTextureSize="426,74">
-					<Label				ID="Title"							Anchor="L,T"	Offset="42,15"	Style="WorldRankingsTitle" />
+					<Label				ID="Title"							Anchor="L,T"	Offset="42,15"	Style="WorldRankingsTitle" TruncateWidth="260" TruncatedTooltip="1"/>
 				</Grid>
 				<Container			ID="AllCityStates"																		Size="parent,parent" >
 					<Button				ID="CloseListButton"		Anchor="R,T"	Offset="0,56"		Style="CloseButtonSmall" />
@@ -224,7 +224,7 @@
 				<Label		ID="BonusTextSuzerain"		Anchor="R,T"	Offset="4,2"													Style="FontNormal12"								String="4" />
 				<Image		ID="BonusIconSuzerain"		Anchor="L,B"	Offset="2,0"		Size="26,26"					Texture="EnvoyBonuses26"						TextureOffset="156,0"	/>
 				<Label		ID="SuzerainLabel"				Anchor="L,B"	Offset="32,14"												Style="FontNormal12"								String="LOC_CITY_STATES_SUZERAIN" />
-				<Label		ID="Suzerain"							Anchor="L,B"	Offset="32,2"													Style="FontNormal12"								String="LOC_CITY_STATES_NONE" />
+				<Label		ID="Suzerain"							Anchor="L,B"	Offset="32,2"													Style="FontNormal12"								String="LOC_CITY_STATES_NONE" TruncateWidth="70"/>
 			</Container>
 
 			<Button			ID="LookAtButton"					Hidden="1" Anchor="R,C"	Offset="10,-7"		Size="23,31"					Texture="Controls_ShowMe"					StateOffsetIncrement="0,0"	ToolTip="LOC_CITY_STATES_LOOK_AT" />

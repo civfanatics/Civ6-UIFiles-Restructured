@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<Context>
+
+	<!-- Instead of doing labels in the overlay, UI controls can be rendered in the 3D world -->
+	<!--
+	<Instance Name="LabelInstance">
+		<WorldAnchor ID="Anchor" Scaling="1" UnitsPerPixel="0.2" Billboard="0">
+			<Grid ID="Background" Anchor="C,C" Size="auto,auto" AutoSizePadding="8,8" Texture="Banner_FrameBase" SliceTextureSize="113,41" SliceCorner="18,7" SliceSize="76,27">
+				<Label ID="LabelText" Style="FontNormal50" FontStyle="stroke" GenerateMips="1" Color0="255,255,255,255"	Color1="0,0,0,200" FontSize="64" String="TEST" Anchor="C,C" KerningAdjustment="8"/>
+			</Grid>
+		</WorldAnchor>
+	</Instance>
+	-->
+
+</Context>

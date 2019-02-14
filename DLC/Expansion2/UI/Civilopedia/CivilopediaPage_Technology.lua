@@ -1,5 +1,5 @@
 -- ===========================================================================
---	Civilopedia - Technology Page Layout
+--	Civilopedia - Technology Page Layout (XP2 override)
 -- ===========================================================================
 
 PageLayouts["Technology" ] = function(page)
@@ -9,27 +9,57 @@ PageLayouts["Technology" ] = function(page)
 	SetPageHeader(page.Title);
 	SetPageSubHeader(page.Subtitle);
 
-	local tech = GameInfo.Technologies[pageId];
+	-- Find live node that matches page id
+	local tech		:table = nil;			-- From DB (static data, doesn't change)
+	local pLiveTech	:table = nil;	-- From engine (live data changes per player)
+	local techNodes	:table = Game.GetTechs():GetActiveTechNodes();
+	for _,v in ipairs(techNodes) do
+		local kFullNode:table = GameInfo.Technologies[v.TechType];
+		if kFullNode.TechnologyType == pageId then
+			tech = kFullNode;
+			pLiveTech = v;
+		end
+	end
+	
 	if(tech == nil) then
 		return;
 	end
-	local techType = tech.TechnologyType;
+	local techType = tech.TechnologyType;	-- named id, same as pageId
 
 	local required_techs = {};
 	local leadsto = {};
 
-	for row in GameInfo.TechnologyPrereqs() do
-		if(row.Technology == techType) then
-			local c = GameInfo.Technologies[row.PrereqTech];
-			if(c) then
-				table.insert(required_techs, {"ICON_" .. c.TechnologyType, c.Name, c.TechnologyType});
+	local ePlayer			:number = Game.GetLocalPlayer();
+	local pPlayerTechManager:table = Players[ePlayer]:GetTechs();
+
+	-- What was required for this tech.
+	local show_prereqs = true;
+	if(GameInfo.Technologies_XP2) then
+		local tech_xp2 = GameInfo.Technologies_XP2[techType];
+		if(tech_xp2 and tech_xp2.RandomPrereqs == true) then
+			show_prereqs = false;
+		end
+	end
+
+	if(show_prereqs) then
+		for __,prereqTechIndex in ipairs(pLiveTech.PrereqTechTypes) do
+			local pPreReqLive :table = techNodes[prereqTechIndex];
+			local kPreReqData :table = GameInfo.Technologies[prereqTechIndex];
+			if pPlayerTechManager:IsTechRevealed(pPreReqLive) then
+				table.insert(required_techs, {"ICON_" .. kPreReqData.TechnologyType, kPreReqData.Name, kPreReqData.TechnologyType});
 			end
 		end
+	end
 
-		if(row.PrereqTech == techType) then
-			local c = GameInfo.Technologies[row.Technology];
-			if(c) then
-				table.insert(leadsto, {"ICON_" .. c.TechnologyType, c.Name, c.TechnologyType});
+	-- Build list of what more advanced technologies require this to be unlocked.
+	for _,v in ipairs(techNodes) do
+		for _,prereqTechIndex in ipairs(v.PrereqTechTypes) do
+			if prereqTechIndex == pLiveTech.TechType then		
+				if pPlayerTechManager:IsTechRevealed(v.TechType) then		
+					local kFutureTech :table = GameInfo.Technologies[v.TechType];
+					table.insert(leadsto, {"ICON_" .. kFutureTech.TechnologyType, kFutureTech.Name, kFutureTech.TechnologyType});
+				end
+				break
 			end
 		end
 	end

@@ -4,19 +4,19 @@
   <Container ID="Top" Size="auto,auto" AutoSizePadding="0,2">
     <Image Offset="20,10" Size="22,22" IconSize="22" Icon="ICON_RELATIONSHIP"/>
     <Label Offset="60,10" Style="FontNormal16" String="LOC_DIPLOMACY_OVERVIEW_OUR_RELATIONSHIP"/>
-    <Stack ID="AllianceStack" Offset="214,6" StackGrowth="Down" StackPadding="0">
+    <Stack ID="AllianceStack" Offset="218,6" StackGrowth="Down" StackPadding="0">
       <!-- Relationship Status -->
-      <Container Size="200,26">
+      <Container Size="200,auto">
         <Button ID="RelationshipIcon" Offset="0,0" Style="DiplomacyRelationshipPips" Disabled="1"/>
-        <Label ID="RelationshipText" Offset="36,5" Style="FontNormal16" WrapWidth="140" String="RelationshipText"/>
+        <Label ID="RelationshipText" Offset="36,5" Style="FontNormal16" WrapWidth="230" String="RelationshipText"/>
       </Container>
       <!-- Alliance Type -->
-      <Container ID="AllianceTypeContainer" Size="200,26">
+      <Container ID="AllianceTypeContainer" Size="200,auto">
         <Image Offset="4,4" Size="16,16" IconSize="16" Icon="ICON_STATS_GENERIC_MODIFIER"/>
         <Label ID="AllianceTypeText" Offset="36,5" Style="FontNormal16" String="Alliance"/>
       </Container>
       <!-- Alliance Level -->
-      <Container ID="AllianceLevelContainer" Size="200,26">
+      <Container ID="AllianceLevelContainer" Size="200,auto">
         <Image Offset="4,4" Size="16,16" IconSize="16" Icon="ICON_STATS_GENERIC_MODIFIER"/>
         <Label ID="AllianceLevelText" Offset="36,5" Style="FontNormal16" String="Alliance"/>
       </Container>

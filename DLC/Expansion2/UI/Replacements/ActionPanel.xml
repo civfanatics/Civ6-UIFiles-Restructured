@@ -2,14 +2,13 @@
 
 <Context>
   <Stack							ID="NotificationStack"		Anchor="R,B" Offset="57,50" StackGrowth="Up" />
-
-	<Container																		Anchor="R,B"									Size="190,215" >
+  <Container																		Anchor="R,B"									Size="190,215" >
     <Image																			Anchor="R,B" Offset="-7,25"		Texture="ActionPanel_LittleGear.dds" />
     <Image																			Anchor="R,B" Offset="0,-6"	Texture="ActionPanel_WoodenRim.dds" ConsumeAllMouse="1" Size="177,183"/>
-		<Container				ID="EraToolTipArea1"			Anchor="R,B" Offset="0,45"		Size="30,105" />
-		<Container				ID="EraToolTipArea2"			Anchor="R,B" Offset="30,135"	Size="42,36"	/>
-		
-    <FlipAnim					ID="TickerAnim"						Anchor="R,B" Offset="0,-14"		Size="52,60" Texture="ActionPanel_ClickerAnim" FrameCount="10" Columns="5" Speed="30" Cycle="OneBounce"/>
+		<Container				ID="EraToolTipArea1"			Anchor="R,B" Offset="0,40"		Size="32,110" />
+		<Container				ID="EraToolTipArea2"			Anchor="R,B" Offset="32,140"	Size="35,30"	/>
+
+		<FlipAnim					ID="TickerAnim"						Anchor="R,B" Offset="0,-14"		Size="52,60" Texture="ActionPanel_ClickerAnim" FrameCount="10" Columns="5" Speed="30" Cycle="OneBounce"/>
     
     <AlphaAnim				ID="OverflowHandleAlpha"	AlphaBegin="0" AlphaEnd="1" Speed="5" Cycle="Once" Pause=".6" Hidden="1">
       <SlideAnim			ID="OverflowHandleSlide"	Anchor="L,T"									Size="parent,parent" Begin="-30,20" End="0,0" Cycle="Once" Speed="1" Function="OutQuint" Pause=".6">
@@ -82,11 +81,11 @@
         </Container>
       </Container>
 
-			<Container			ID="EraContainer"						Offset="2,-15">
+			<Container			ID="EraContainer"						Offset="2,-15">				
 				<Image				ID="EraIndicator" Rotate="0" Texture="ActionPanel_EraIndicator" />
 			</Container>
-
-			<Image				ID="DarkAgeShadow" Hidden="true"  Offset="5,20"	Texture="ActionPanel_EffectDark_Globe" Anchor="R,B" />
+			
+      <Image				ID="DarkAgeShadow" Hidden="true"  Offset="5,20"	Texture="ActionPanel_EffectDark_Globe" Anchor="R,B" />
       <FlipAnim ID="GoldenAgeAnimation" FrameCount="120" Texture="ActionPanel_EffectGolden_Globe" Columns="11" Speed="30" Anchor="R,B" Size="224,224" Offset="-47,-31" Stopped="0"/>
       <FlipAnim ID="TurnAgeAnimation" FrameCount="17" Texture="ActionPanel_TurnProcessing" Columns="8" Anchor="R,B" Size="102,102" Offset="15,32" Stopped="0"/>
 			<BoxButton				ID="EndTurnButton"								Anchor="R,B"	Offset="11,28"	Size="108,108"				Color="0,0,0,0" NoStateChange="1">
@@ -102,8 +101,8 @@
 				</AlphaAnim>
 				<AlphaAnim	ID="EndTurnButtonEndTurnAlpha"		Anchor="C,C"									Size="parent,parent"  Cycle="Once" Speed="1" AlphaStart=".4" AlphaEnd="0" Hidden="1" >
 					<Image																			Anchor="C,C"																				Texture="ActionPanel_EndTurnFlash.dds" />
-				</AlphaAnim>				
-			</BoxButton>
+				</AlphaAnim>
+			</BoxButton>      
 
 			<AlphaAnim		ID="TutorialSlowTurnEnableAnim"			Anchor="R,B" Speed="0.5" Offset="-20,0" Size="180,220" AlphaStart="1" AlphaEnd="1" Cycle="Once" ConsumeAllMouse="1" Hidden="1" />
       <Container ID="TurnTimerContainer" Size="148,147" Hidden="1">
@@ -234,7 +233,7 @@
     <GridButton		ID="TurnBlockerButton"																						Size="210,50"	Style="ButtonLightWeight" >
       <Stack			StackGrowth="Right">
         <Image																						Size="50,50" Texture="ActionPanel_Notification2">
-          <Image ID="TurnBlockerIcon" Size="40,40" Anchor="C,C" Texture="Notifications40"/>
+          <Image	ID="TurnBlockerIcon" Size="40,40" Anchor="C,C" Texture="Notifications40"/>
         </Image>
         <Label		ID="TurnBlockerLabel"								Anchor="L,C" WrapWidth="150"	String="LOC_META_331_HEAD"  Style="ActionPanelText" FontStyle="None" />
       </Stack>
@@ -245,7 +244,7 @@
 		<Image				ID="PipImage" Texture="ActionPanel_EraPip" StretchMode="auto" />
 	</Instance>
 
-	<!-- Dialog Support -->
+		<!-- Dialog Support -->
 	<Include File="PopupDialog" />
 	<MakeInstance Name="PopupDialog" />
 	

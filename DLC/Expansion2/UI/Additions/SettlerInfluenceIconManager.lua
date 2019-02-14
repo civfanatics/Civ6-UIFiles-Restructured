@@ -11,19 +11,18 @@ include("SupportFunctions");
 local PADDING_X :number = 18;
 local PADDING_Y :number = 16;
 
-
--- ===========================================================================
---	MEMBERS
--- ===========================================================================
-local m_PlotBonusIM	:table = InstanceManager:new( "PlotYieldBonusInstance",	"Anchor", Controls.PlotBonusContainer );
-local m_MapIcons	:table = {};
-
 local m_UnitsMilitary : number = UILens.CreateLensLayerHash("Units_Military");
 local m_DistrictsCampus : number = UILens.CreateLensLayerHash("Districts_Campus");
 local m_MovementPath : number = UILens.CreateLensLayerHash("Movement_Path");
 local m_MovementZoneOfControl : number = UILens.CreateLensLayerHash("Movement_Zone_Of_Control");
 local m_AdjacencyBonusDistricts : number = UILens.CreateLensLayerHash("Adjacency_Bonus_Districts");
 local m_HexColoringWaterAvail : number = UILens.CreateLensLayerHash("Hex_Coloring_Water_Availablity");
+
+-- ===========================================================================
+--	MEMBERS
+-- ===========================================================================
+local m_PlotBonusIM	:table = InstanceManager:new( "PlotYieldBonusInstance",	"Anchor", Controls.PlotBonusContainer );
+local m_MapIcons	:table = {};
 
 -- ===========================================================================
 function RealizeIconStack(instance:table)
@@ -115,7 +114,7 @@ function RealizeInfluenceTiles()
 			instance.PrereqIcon:SetHide(false);
 
 			local x,y = instance.BonusText:GetSizeVal();
-			instance.PlotBonus:SetSizeVal( x+PADDING_X, y+PADDING_Y );			
+			instance.PlotBonus:SetSizeVal( x+PADDING_X, y+PADDING_Y );
 
             -- apply an adjustment to prevent overlapping resource icons
             instance.PlotBonus:SetOffsetY(-48);

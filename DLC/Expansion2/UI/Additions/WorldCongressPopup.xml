@@ -1,0 +1,621 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Context xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="..\..\..\..\..\..\CivTech\Libs\ForgeUI\ForgeUI_Assets\Controls.xsd">
+
+  <Include File="PopupDialog"/>
+  <Include File="LeaderIcon"/>
+  <Include File="CivilizationIcon"/>
+  <Include File="WorldCrisisInstances_WorldCongress"/>
+
+  <Stack ID="BGRight" Size="auto,parent" StackGrowth="Right" Padding="0" ConsumeMouseOver="1"/>
+  <Stack ID="BGLeft" Anchor="R,T" Size="auto,parent" StackGrowth="Left" Padding="0" ConsumeMouseOver="1"/>
+  
+  <Container Style="WorldCongressFrame" Size="parent,parent" ConsumeMouseOver="1"/>
+
+  <Container ID="Root" Anchor="C,T" Size="auto,parent" ConsumeMouseOver="1">
+    
+    <!-- Leaders List -->
+    <Container ID="CongressMembers" Offset="6,0" Style="WorldCongressBanner" Size="360,parent">
+      <Container ID="TitleContainerCongress" Offset="0,88" Size="parent,parent" Anchor="L,T">
+        <Label ID="CongressString" Offset="0,20" Style="EventPopupTitle" String="{LOC_WORLD_CONGRESS_MEMBERS:upper}" SmallCapsType="EveryWord" Align="center" Anchor="C,T" WrapWidth="parent-20"/>
+        <Box Anchor="C,T" Offset="0,-10" Size="parent-12,1" Color="102,91,63"/>
+        <Box Anchor="C,T" Offset="0,70" Size="parent-12,1" Color="102,91,63"/>
+        <ScrollPanel ID="LeaderRibbonScroll" Vertical="1" AutoScrollBar="1" Size="parent,parent-165" Offset="0,73">
+          <Stack Anchor="C,T" ID="LeaderStack" StackGrowth="Right" Offset="0,3" Padding="7" WrapWidth="360"/>
+          <ScrollBar Style="WCScrollBar" Anchor="L,T" Offset="-25,0">
+            <Thumb Style="WCScrollBarThumb"/>
+          </ScrollBar>
+        </ScrollPanel>
+      </Container>
+    </Container>
+		
+		<Box ID="DescriptionBG" Offset="0,72" Size="parent,1" Color="24,26,27,255"/>
+
+    <Container ID="DataContainer" Offset="0,72" Size="parent,parent">
+      <Stack ID="DataStack" Size="parent,auto" >
+
+        <!-- Phase Description Text -->
+        <Stack Size="auto,auto" Padding="0">
+          <Box ID="ReviewTabsContainer" Size="parent,42" Color="24,26,27,255">
+            <Stack Anchor="C,T" Size="auto,auto" Padding="0" Offset="0,-15">
+              <Image Anchor="C,C"	Size="auto,27" Texture="Controls_TabLedge2_Fill" StretchMode="Tile" />
+              <Grid Anchor="C,T" Size="auto,61" Texture="Controls_TabLedge2"  SliceCorner="194,18" SliceSize="52,26" SliceTextureSize="438,61">
+                <Stack ID="ReviewTabs" Anchor="C,T" Size="auto,34" Offset="0,14" StackGrowth="Right" Padding="10">
+                  <Container Size="20,1"/>
+									<Container ID="LastResults" Size="auto,41">
+										<GridButton ID="LastResultsButton" Style="WCTabButton" Size="parent,34" String="LOC_WORLD_CONGRESS_LAST_SESSION_RESULTS" SizeToText="20,0" MinSize="1,34"/>
+										<GridButton ID="LastResultsSelected" Style="WCTabButtonSelected" Size="parent,34" String="LOC_WORLD_CONGRESS_LAST_SESSION_RESULTS" SizeToText="20,0" MinSize="1,34"/>
+									</Container>
+                  <Container ID="CurrentEffects" Size="auto,41">
+                    <GridButton ID="CurrentEffectsButton" Style="WCTabButton" Size="parent,34" String="LOC_WORLD_CONGRESS_ACTIVE_EFFECTS" SizeToText="20,0" MinSize="1,34"/>
+                    <GridButton ID="CurrentEffectsSelected" Style="WCTabButtonSelected" Size="parent,34" String="LOC_WORLD_CONGRESS_ACTIVE_EFFECTS" SizeToText="20,0" MinSize="1,34"/>
+                  </Container>
+                  <Container ID="AvailableProposals" Size="auto,41">
+                    <GridButton ID="AvailableProposalsButton" Style="WCTabButton" Size="parent,34" String="LOC_WORLD_CONGRESS_AVAILABLE_PROPOSALS" SizeToText="20,0" MinSize="1,34"/>
+                    <GridButton ID="AvailableProposalsSelected" Style="WCTabButtonSelected" Size="parent,34" String="LOC_WORLD_CONGRESS_AVAILABLE_PROPOSALS" SizeToText="20,0" MinSize="1,34"/>
+                  </Container>
+                  <Container Size="20,1"/>
+                </Stack>
+              </Grid>
+            </Stack>
+          </Box>
+          <Grid ID="DescriptionContainer" Size="parent,auto" Texture="WC_SubHeader" SliceCorner="9,14" SliceSize="1,1" SliceTextureSize="18,28" MinSize="18,28">
+            <Stack Anchor="C,T" Size="parent,auto">
+              <Container Size="1,20"/>
+              <Label ID="Description" Align="center" Anchor="C,C" Style="WCProposalDescription"/>
+              <Container Size="1,20"/>
+            </Stack>
+          </Grid>
+        </Stack>
+
+        <!-- Stage 1 & 2, Phase 1: Propose / Vote on Resolutions -->
+        <Container			ID="ResolutionContainer" Size="parent,parent" >
+          
+          <Grid ID="ResolutionBG" Texture="WC_WindowFrame" Size="parent,parent-128" SliceCorner="22,20" SliceSize="2,2" SliceTextureSize="58,42"/>
+          
+          <ScrollPanel	ID="ResolutionScroll"		 Style="WCScrollPanel" Offset="10,0">
+            <Stack			ID="ResolutionStack"		 Size="parent,auto" Padding="10" />
+            <ScrollBar Style="WCScrollBar">
+              <Thumb Style="WCScrollBarThumb"/>
+            </ScrollBar>
+          </ScrollPanel>
+        </Container>
+
+				<!-- Stage 4 or Phase 3: Review Selections -->
+				<Container ID="ReviewContainer" Size="parent,parent">
+
+					<!-- This needs to render underneath window frame, but only in Summary / Review -->
+          <Box ID="ReviewBG" Color="24,26,27,255" Size="parent,parent-128">
+            <Grid Texture="WC_WindowFrame" Size="parent,parent" SliceCorner="22,20" SliceSize="2,2" SliceTextureSize="58,42"/>
+            <Label ID="EmptyLabel" Anchor="C,C" Style="WhiteSemiBold18" Align="center" WrapWidth="650"/>
+          </Box>
+
+          <ScrollPanel ID="ReviewScroll" Style="WCScrollPanel" Offset="10,0">
+						<!-- Resolutions -->					
+            <Stack Padding="10" Size="parent,auto">
+              <!-- Resolution Category header (this should be a CategoryTitle header) -->
+							<Grid ID="ReviewResolutionTitle" Size="parent,auto" Texture="WC_CategoryFrame" SliceCorner="8,8" SliceSize="34,34" SliceTextureSize="50,50" MinSize="50,50" Offset="0,10">
+                <Container Anchor="C,C" Size="parent,auto">
+                  <Image Icon="ICON_STAT_RESOLUTIONS" Size="32,32" Anchor="L,C" Offset="17,0" Color="224,215,201,255"/>
+                  <Label String="{LOC_WORLD_CONGRESS_PROPOSAL_SUBMISSION_WORLD_EVENT_RESOLUTIONS:upper}" Anchor="C,C" Style="WCProposalTitle" Offset="0,2"/>
+                  <Label ID="ReviewResolutionFavor" Anchor="R,C" Offset="20,0" Style="WCProposalFavor"/>
+                </Container>
+              </Grid>
+              <!-- Content Stacks -->
+							<Stack ID="ReviewResolutionStack" Size="parent,auto" Padding="10"/>
+              <Stack ID="ReviewProposalStack" Anchor="C,T" Padding="10" Size="parent,auto" />
+              <Stack/>
+              <Container Size="1,1" />
+            </Stack>
+            <ScrollBar Style="WCScrollBar">
+              <Thumb Style="WCScrollBarThumb"/>
+            </ScrollBar>
+          </ScrollPanel>
+        </Container>
+			</Stack>
+    </Container>
+
+    <!-- Navigation Buttons -->
+    <Stack ID="ButtonStack" Anchor="C,B" Size="auto,41" Offset="0,16" StackGrowth="Right" Padding="10">
+      <GridButton ID="PrevButton" Style="MainButton" Size="200,41" String="LOC_WORLD_CONGRESS_PREV"/>
+      <GridButton ID="NextButton" Style="MainButton" Size="200,41" String="LOC_WORLD_CONGRESS_NEXT"/>
+      <GridButton ID="PassButton" Style="ButtonConfirm" Size="200,41" String="LOC_WORLD_CONGRESS_PASS"/>
+      <GridButton ID="AcceptButton" Style="ButtonConfirm" Size="200,41" String="LOC_WORLD_CONGRESS_SUBMIT"/>
+      <GridButton ID="ReturnButton" Style="ButtonConfirm" Size="200,41" String="LOC_WORLD_CONGRESS_RETURN"/>
+    </Stack>
+
+    <!-- Title -->
+    <Container ID="TitleContainer" Size="parent,40" Offset="0,14">
+      <Label ID="Title" Style="EventPopupTitle" SmallCapsType="EveryWord" Align="center" Anchor="C,C"/>
+      <Label ID="WorkingFavor" Anchor="R,C" Style="WCProposalFavorTitle" Offset="40,0" />
+    </Container>
+  </Container>
+
+  <!-- Diplo / WC Buttons -->
+  <Container ID="TabContainer" Offset="0,-5" ConsumeMouseOver="1">
+    <Grid ID="LaunchBarDropShadow" Offset="0,7" Size="310,60" Texture="Controls_Glow2" SliceCorner="25,25" SliceTextureSize="50,50" Color="0,0,0,200"/>
+    <Image ID="LaunchBackingTile" Offset="5,6" Size="200,41" Texture="LaunchBar_Backing_Tile" StretchMode="Tile"/>
+    <Grid ID="LaunchBacking" Offset="-64,-28" Size="350,77" Texture="LaunchBar_BackingLeft_Backing" SliceCorner="114,32" SliceSize="1,1" SliceTextureSize="226,77"/>
+    
+    <Stack ID="TabBar" StackGrowth="Right" Padding="3" Offset="10,5">
+      <Button ID="WCButton" Anchor="L,C" Size="49,49" Texture="LaunchBar_Hook_GovernmentButton" Style="ButtonNormalText" StateOffsetIncrement="0,49" Selected="1" ToolTip="LOC_TOOLTIP_CONGRESS_CONGRESS_BUTTON">
+        <Image Texture="LaunchBar_Hook_WCOn" Size="38,38" Anchor="C,C"/>
+      </Button>
+      <Button ID="DiploButton" Anchor="L,C" Size="49,49" Texture="LaunchBar_Hook_GovernmentButton" Style="ButtonNormalText" StateOffsetIncrement="0,49" ToolTip="LOC_TOOLTIP_DIPLOMACY_CONGRESS_BUTTON">
+        <Image Texture="LaunchBar_Hook_Diplomacy" Size="38,38" Anchor="C,C"/>
+      </Button>
+    </Stack>
+  </Container>
+  <Button ID="HideButton" Anchor="R,T" Offset="0,0" Style="CloseButtonSmall"/>
+
+  <!-- Dialog Support -->
+  <MakeInstance Name="PopupDialog" />
+
+  <!-- ==================================================================	-->
+  <!--	Instances																													-->
+  <!-- ==================================================================	-->
+  <Instance Name="LeaderButton">
+    <Container ID="Root" Size="105,100">
+      <Grid ID="FavorContainer" Anchor="C,T" Offset="6,27" Size="60,64" Texture="Controls_TitleBarDark" SliceStart="0,20" SliceCorner="12,0" SliceSize="18,1" SliceTextureSize="42,14"/>
+      <Grid ID="GrievanceContainer" Anchor="C,T" Offset="6,27" Size="60,81" Texture="Controls_TitleBarDark" SliceStart="0,20" SliceCorner="12,0" SliceSize="18,1" SliceTextureSize="42,14"/>
+      <Stack Anchor="C,T" Size="auto,auto" Offset="5,72" Padding="5">
+        <Label ID="FavorLabel" WrapWidth="110" Anchor="C,T" Style="FontNormal12" ColorSet="BodyTextCool" FontStyle="Stroke" TruncateHeight="65"/>
+        <Label ID="GrievanceLabel" WrapWidth="110" Anchor="C,C" Style="FontNormal12" ColorSet="BodyTextCool" FontStyle="Stroke" TruncateHeight="65"/>
+      </Stack>
+      <Container Anchor="C,T" Size="55,55">
+        <MakeInstance ID="Icon" Name="LeaderIcon55"/>
+      </Container>
+      <Label ID="AttentionIndicator" String="[ICON_New]" Anchor="R,T" AnchorSide="O,O" Offset="-30,-28" Hidden="1"/>
+    </Container>
+  </Instance>
+
+  <Instance Name="LeaderBanner">
+    <Container ID="Root" Size="380,parent">
+       <Image ID="Top" Anchor="L,B" Size="380,489" Texture="WC_BGBannerTop" StretchMode="TileY" FlipY="0"/>
+       <Image ID="Center" Size="380,978" Texture="WC_BGBanner">
+         <Container Anchor="C,C" Size="256,256">
+           <MakeInstance Name="CivilizationIcon256"/>
+         </Container>
+        <Image ID="CivIconBG" Anchor="C,C" Texture="CircleBacking256" Color="0,0,0,87"/>
+       </Image>
+       <Image ID="Bottom" Size="380,489" Texture="WC_BGBannerBottom" StretchMode="TileY"/>
+    </Container>
+  </Instance>
+  
+  <Instance Name="VotingWidget">
+    <Grid	ID="Root" Size="64,60" Texture="WC_CounterSlot" SliceCorner="12,12" SliceTextureSize="30,30">
+      <GridButton		ID="DownButton"	 Anchor="L,C"	Offset="0,0" Size="64,68" StateOffsetIncrement="0,54" SliceCorner="20,25" SliceSize="14,4" SliceTextureSize="54,54" Texture="WC_ProposalButton" AnchorSide="O,I">
+        <Stack Anchor="C,C" Offset="0,5" Padding="0" MinSize="64,auto">
+          <Image Anchor="C,C" Size="22,22" Icon="ICON_STAT_VOTE_DOWN"/>
+          <Label ID="DownCost" Anchor="C,C" Offset="0,2" Style="WCProposalFavor"/>
+        </Stack>
+      </GridButton>
+      <GridButton		ID="UpButton"	 Anchor="R,C"	Offset="0,0" Size="64,68" StateOffsetIncrement="0,54" SliceCorner="20,25" SliceSize="14,4" SliceTextureSize="54,54" Texture="WC_ProposalButton" AnchorSide="O,I">
+        <Stack Anchor="C,C" Offset="0,5" Padding="0" MinSize="64,auto">
+          <Image Anchor="C,C" Size="22,22" Icon="ICON_STAT_VOTE_UP"/>
+          <Label ID="UpCost" Offset="0,2" Anchor="C,C" Style="WCProposalFavor"/>
+        </Stack>
+      </GridButton>
+      <Label ID="Label" Anchor="C,C" Offset="0,-3" Align="C" Size="100,50" Style="WCProposalVotes" String="0" />
+      <Stack Anchor="C,C" Size="64,auto" Offset="0,17" Padding="0">
+        <Label ID="Cost" Style="WCProposalFavor" String="0 [ICON_Favor]"/>
+      </Stack>
+    </Grid>
+  </Instance>
+
+  <Instance Name="EmergencyInfo">
+    <Stack ID="Root" Size="auto,auto">
+      <Stack Anchor="C,T" Offset="20,0" Size="auto,auto" Padding="7">
+        <Label ID="CrisisTrinketTitle" Style="EventPopupDescription" Align="left" Offset="10,12" WrapWidth="545" FontSize="15" Color="255,255,255,170"/>
+        <Stack ID="CrisisDetailsStack" Anchor="C,T" Offset="0,6" Size="parent,auto" Padding="7"/>
+        <!--<Label ID="CrisisDuration" Align="center" Offset="0,2" Anchor="C,T" WrapWidth="470" Style="EventPopupDescriptionBold" Color="190,190,190,250"/>-->
+        <Stack ID="RewardsDetailsStack" Anchor="C,T" Padding="7" Offset="0,10" Size="parent,auto"/>
+      </Stack>
+
+      <Container Size="1,15"/>
+    </Stack>
+  </Instance>
+
+  <Instance Name="ResolutionChoice">
+    <Stack ID="Root" Anchor="C,T" Size="parent,auto" Padding="2">
+      <Label ID="Target" Size="parent,auto" Offset="50,0" Style="WCProposalHeader" String="LOC_WORLD_CONGRESS_DELIBERATION_PROPOSED_TARGET"/>
+			<Container Size="1,4"/>
+			<PullDown ID="Pulldown" Offset="48,0" AutoFlip="1" ScrollThreshold="375" Size="528,24" SpaceForScroll="0" AutoSizePopup="1">
+				<ButtonData>
+					<GridButton Size="194,28" Style="FontNormal14" FontStyle="glow" Color0="208,212,217,255" Color1="16,43,67,100">
+						<GridData Texture="WC_DropDownControl" StateOffsetIncrement="0,24"	SliceCorner="10,12"	SliceSize="1,1"		SliceTextureSize="45,24" />
+					</GridButton>
+				</ButtonData>
+				<GridData Offset="0,24" Texture="Controls_DropdownPanel" InnerPadding="3,6" SliceCorner="10,10" SliceTextureSize="22,22"/>
+				<ScrollPanelData Anchor="C,C" Vertical="1" Size="parent,parent" AutoScrollBar="1" >
+					<ScrollBar Style="Slider_Blue" Anchor="R,C" AnchorSide="O,I"   />
+				</ScrollPanelData>
+				<StackData StackGrowth="Bottom" Anchor="C,T"/>
+				<InstanceData Name="InstanceOne">
+					<GridButton ID="Button" Size="536,24" Texture="WC_ButtonControl" SliceCorner="12,6" SliceTextureSize="45,24"  StateOffsetIncrement="0,24" Style="FontNormal14" FontStyle="glow" Color0="208,212,217,255"	Color1="16,43,67,100"/>
+				</InstanceData>
+			</PullDown>
+			
+      <!-- PlayerPulldown is a copy of Basic_LocalPlayerPulldown from AdvancedSetup -->
+      <PullDown ID="PlayerPulldown" Offset="48,0" Size="528,62" AutoFlip="1" AutoSizePopup="1" ScrollThreshold="375" SpaceForScroll="0">
+        <ButtonData>
+          <GridButton  Size="325,62" Style="TabFont" TextAnchor="L,C" TextOffset="110,0" WrapWidth="200">
+            <Container Size="auto,auto" Anchor="L,C" Offset="7,0">
+              <MakeInstance ID="CivIcon" Name="CivilizationIcon44"/>
+            </Container>
+            <Container Size="auto,auto" Anchor="L,C" Offset="52,0">
+              <MakeInstance ID="LeaderIcon" Name="LeaderIcon45"/>
+            </Container>
+            <GridData Texture="WC_DropDownControlLarge" StateOffsetIncrement="0,45"	SliceCorner="10,15" SliceTextureSize="45,45" />
+          </GridButton>
+        </ButtonData>
+        <GridData Offset="0,56" Texture="Controls_DropdownPanel" InnerPadding="3,6" SliceCorner="10,10" SliceTextureSize="22,22"/>
+        <ScrollPanelData Anchor="C,C" Vertical="1" Size="parent,parent" AutoScrollBar="1" >
+          <ScrollBar Style="Slider_Blue" Anchor="R,C" AnchorSide="O,I"   />
+        </ScrollPanelData>
+        <StackData StackGrowth="Bottom" Anchor="C,T"/>
+        <InstanceData Name="InstanceOne">
+					<GridButton ID="Button" Size="536,62" Texture="WC_ButtonControl" SliceCorner="12,6" SliceTextureSize="45,24"  StateOffsetIncrement="0,24" Style="TabFont" Anchor="L,T" FontStyle="glow">
+            <Container Size="auto,auto" Anchor="L,C" Offset="7,0">
+              <MakeInstance ID="CivIcon" Name="CivilizationIcon44"/>
+            </Container>
+            <Container Size="auto,auto" Anchor="L,C" Offset="52,0">
+              <MakeInstance ID="LeaderIcon" Name="LeaderIcon45"/>
+            </Container>
+          </GridButton>
+        </InstanceData>
+      </PullDown>
+    </Stack>
+  </Instance>
+
+  <Instance Name="ResolutionItem">
+    <Grid ID="Root" Anchor="C,T" Size="630,auto" Texture="WC_ProposalFrameOpen_Normal" SliceCorner="25,70" SliceSize="1,1" SliceTextureSize="52,104">
+      <Stack Anchor="C,T" Size="parent,auto" Padding="2">
+        <Container ID="TitleContainer" Anchor="C,T" Size="parent,75" AutoSizePadding="0,5">
+          <Image ID="Icon" Icon="ICON_PROPOSAL_RESOLUTION" Size="36,36" Offset="15,15"/>
+          <Stack Size="parent,auto" Anchor="L,C" Offset="60,-2" Padding="5">
+            <Label ID="Title" Anchor="L,C" WrapWidth="300" Style="WCProposalTitle"/>
+            <Label ID="Description" Anchor="C,T" Style="WCProposalBody" Align="C"/>
+          </Stack>
+        </Container>
+        <Label ID="Outcome" Offset="55,0" Style="WCProposalHeader" String="LOC_WORLD_CONGRESS_SELECT_AN_OUTCOME"/>
+        <Container Size="1,2"/>
+        <Box ID="Line" Anchor="C,T" Size="parent-12,1" Color="102,91,63"/>
+				<Grid ID="Choice1Slot" Anchor="C,T" Offset="0,5" Size="parent-28,auto" Texture="WC_ProposalSlot_Off" SliceCorner="25,25" SliceSize="1,1" SliceTextureSize="52,52">
+					<Stack Anchor="L,T" Size="parent,auto" Padding="2">
+						<Container Size="1,5"/>
+						<Container Anchor="C,T" Size="parent+28,auto">
+							<Label Style="WCChoiceLabel" Anchor="L,C" Offset="32,0" String="A:"/>
+							<Label ID="Effect1" Style="WCProposalBody" Anchor="L,C" Offset="62,0" WrapWidth="parent-307"/>
+							<Container Anchor="R,T" Offset="105,5" Size="auto,75">
+								<MakeInstance ID="Vote1" Name="VotingWidget"/>
+							</Container>
+							<Grid ID="FavoredContainer" Anchor="R,T" Offset="42,75" Size="190,22" Texture="Controls_SubContainerFill" SliceCorner="11,11" SliceSize="0,0" Color="0,0,0,178">
+								<Stack Anchor="C,C" StackGrowth="Right" Padding="5">
+									<Image Anchor="C,C" Size="22,22" Texture="WC_PlayerPreference"/>
+									<Label ID="FavoredLabel" Anchor="C,C" Style="WCProposalBody" Align="C"/>
+								</Stack>
+							</Grid>
+						</Container>
+						<Container ID="Choice1Container" Offset="0,-11" Size="parent,65">
+							<MakeInstance ID="Choice1" Name="ResolutionChoice"/>
+						</Container>
+					</Stack>
+				</Grid>
+				<Grid ID="Choice2Slot" Anchor="C,T" Size="parent-28,auto" Texture="WC_ProposalSlot_Off" SliceCorner="25,25" SliceSize="1,1" SliceTextureSize="52,52">
+					<Stack Anchor="L,T" Size="parent,auto" Padding="2">
+						<Container Size="1,5"/>
+						<Container Anchor="C,T" Size="parent+28,auto">
+							<Label Style="WCChoiceLabel" Anchor="L,C" Offset="32,0" String="B:"/>
+							<Label ID="Effect2" Anchor="L,C" Style="WCProposalBody" Offset="62,0" WrapWidth="parent-307"/>
+							<Container Anchor="R,T" Offset="105,5" Size="auto,75">
+								<MakeInstance ID="Vote2" Name="VotingWidget"/>
+							</Container>
+							<Grid ID="DisfavoredContainer" Anchor="R,T" Offset="42,75" Size="190,22" Texture="Controls_SubContainerFill" SliceCorner="11,11" SliceSize="0,0" Color="0,0,0,178">
+								<Stack Anchor="C,C" StackGrowth="Right" Padding="5">
+									<Image Anchor="C,C" Size="22,22" Texture="WC_PlayerPreference"/>
+									<Label ID="DisfavoredLabel" Anchor="C,C" Style="WCProposalBody" Align="C"/>
+								</Stack>
+							</Grid>
+						</Container>
+						<Container ID="Choice2Container" Offset="0,-11" Size="parent,65">
+							<MakeInstance ID="Choice2" Name="ResolutionChoice"/>
+						</Container>
+					</Stack>
+				</Grid>
+        <Container Size="1,12"/>
+      </Stack>
+    </Grid>
+  </Instance>
+
+  <Instance Name="ProposalTitle">
+    <Grid ID="Root" Size="parent,auto" Texture="WC_CategoryFrame" SliceCorner="8,8" SliceSize="34,34" SliceTextureSize="50,50" MinSize="50,50" Offset="0,10">
+      <Stack Anchor="C,C" Size="parent,auto" Padding="2" >
+        <Container Anchor="C,T" Size="parent,auto">
+          <Image ID="Icon" Size="32,32" Anchor="L,C" Offset="15,0" Color="224,215,201,255"/>
+          <Label ID="Title" Anchor="C,C" Style="WCProposalTitle" Offset="0,2"/>
+          <Label ID="Cost" Anchor="R,C" Style="WCProposalFavor" Offset="20,0"/>
+        </Container>
+      </Stack>
+    </Grid>
+  </Instance>
+
+  <Instance Name="ProposalItem">
+    <Grid ID="Root" Anchor="C,T" Size="630,auto" Texture="WC_ProposalFrameOpen_Normal" SliceCorner="25,70" SliceSize="1,1" SliceTextureSize="52,104" MinSize="52,104">
+      <Stack Anchor="C,T" Size="parent,auto">
+        <Container Size="parent,auto" AutoSizePadding="0,5">
+          <Container Offset="0,5" Size="parent,auto">
+            <Container ID="TargetContainer" Anchor="L,C" Offset="6,0" Size="55,55">
+							<Container Size="44,44" Offset="8,8">
+								<MakeInstance ID="LeaderIcon" Name="LeaderIconTarget32"/>
+							</Container>
+              <Image ID="TypeIcon" Size="38,38" Anchor="C,C" Color="224,215,201,255"/>
+            </Container>
+            <Container Offset="62,0" Anchor="L,C" Size="auto,parent">
+              <Label ID="Title" Style="WCProposalTitle" Offset="0,-12" Anchor="L,C" />
+              <Label ID="Description" Offset="0,12" Anchor="L,C" Style="WCProposalBody" WrapWidth="parent-303" TruncateHeight="40" TruncatedTooltip="1"/>
+            </Container>
+            <Button ID="EmergencyButton" Anchor="R,C" Offset="13,0" Size="28,28" Texture="WC_ViewButton" StateOffsetIncrement="0,28"/>
+            <Container Anchor="R,T" Offset="107,2" Size="auto,auto">
+              <MakeInstance ID="Vote" Name="VotingWidget"/>
+            </Container>
+          </Container>
+        </Container>
+        <Container ID="EmergencyContainer" Size="auto,auto">
+          <MakeInstance ID="Emergency" Name="EmergencyInfo"/>
+        </Container>
+      </Stack>
+    </Grid>
+  </Instance>
+
+  <Instance Name="EmergencyProposalItem">
+    <Grid ID="Root" Anchor="C,T" Size="630,auto" Texture="WC_ProposalFrame_Normal" SliceCorner="23,29" SliceSize="4,15" SliceTextureSize="52,74" MinSize="52,100">
+			<Stack>
+				<Container Anchor="C,T" Offset="0,20" Size="630,auto">
+					<Container ID="TargetContainer" Anchor="L,C" Offset="10,0" Size="55,55">
+						<Container Offset="4,8">
+							<MakeInstance ID="LeaderIcon" Name="LeaderIconTarget32"/>
+						</Container>
+						<Image ID="TypeIcon" Size="36,36" Anchor="C,C"/>
+					</Container>
+					<Label ID="Title" Style="WCProposalTitle" Offset="62,-12" Anchor="L,C"/>
+					<Label ID="Description" Style="WCProposalBody" Offset="62,12" WrapWidth="parent-160" Anchor="L,C"/>
+					<Label ID="Cost" Anchor="C,B" Style="WCProposalFavor" Offset="0,10"/>
+					<GridButton	ID="SelectBox" Anchor="R,C" Offset="42,0"	Size="54,54" StateOffsetIncrement="0,54" SliceCorner="8,8" SliceTextureSize="54,54" Texture="WC_ProposalButton">
+						<Image ID="SelectCheck" Anchor="C,C" Texture="WC_ProposalCheck_Off"/>
+					</GridButton>
+					<Container ID="ButtonCheckContainer" Offset="10,0" Size="25,60" MinSize="25,60" Anchor="R,C">
+						<Button	ID="ExpandButton" Anchor="C,C" Size="28,28" Texture="WC_ExpandButton" StateOffsetIncrement="0,28"/>
+					</Container>
+				</Container>
+				<Container Size="1,10"/>
+				<Stack ID="EmergencyContainer" Size="parent,auto" Offset="0,-2">
+					<Box ID="Line" Size="parent-12,1" Anchor="C,C" Color="36,38,39"/>
+					<MakeInstance ID="Emergency" Name="EmergencyInfo"/>
+				</Stack>
+			</Stack>
+    </Grid>
+  </Instance>
+
+  <Instance Name="ReviewResolution">
+    <Grid ID="Root" Anchor="C,T" Size="parent,auto" Texture="WC_ProposalFrameOpen_Review" SliceCorner="25,74" SliceSize="1,1" SliceTextureSize="52,104">
+			<Stack Size="parent,auto" Offset="10,5" StackGrowth="Left" Padding="5" Anchor="R,T">
+        <Container ID="ButtonCheckContainer" Size="25,60" MinSize="25,60">
+          <Button	ID="ExpandButton" Anchor="C,C" Size="28,28" Texture="WC_ExpandButton" StateOffsetIncrement="0,28"/>
+        </Container>
+        <Box ID="Line1" Size="1,62" Color="36,38,39"/>
+        <Container ID="CostContainer" Offset="0,-5" Size="50,60" MinSize="50,60">
+          <Label ID="Cost" Anchor="C,C" Offset="0,3" Style="WCProposalFavor"/>
+          <Label ID="TurnsLeft" Anchor="C,C" Offset="0,5" Style="WhiteSemiBold14"/>
+        </Container>
+        <Box ID="Line2" Size="1,62" Color="36,38,39"/>
+        <Container Offset="0,-5" Size="50,60" MinSize="50,60">
+          <Container Anchor="C,C" Offset="0,-3" Size="auto,auto">
+            <Stack ID="UpVoteStack" Size="auto,parent" StackGrowth="Right" Padding="5">
+              <Label ID="UpVoteIcon" Style="EventPopupTitle" Size="auto,22" String="LOC_WORLD_CONGRESS_B_VOTES"/>
+              <Label ID="UpVoteLabel" Style="WCProposalVotes" String=""/>
+            </Stack>
+          </Container>
+        </Container>
+        <Box ID="Line3" Size="1,62" Color="36,38,39"/>
+        <Container Offset="0,-5" Size="50,60" MinSize="50,60">
+          <Container Anchor="C,C" Offset="0,-3" Size="auto,auto">
+            <Stack ID="DownVoteStack" Size="auto,parent" StackGrowth="Right" Padding="5">
+				      <Label ID="DownVoteIcon" Style="EventPopupTitle" Size="auto,22" String="LOC_WORLD_CONGRESS_A_VOTES"/>
+				      <Label ID="DownVoteLabel" Style="WCProposalVotes" String=""/>
+            </Stack>
+          </Container>
+        </Container>
+        <Box ID="Line4" Size="1,62" Color="36,38,39"/>
+      </Stack>
+      <Stack>
+				<Container Size="parent,auto">
+					<Image ID="IconNew" Texture="Controls_New" Offset="-5,-5" ToolTip="LOC_WORLD_CONGRESS_TT_NEW_RESOLUTION"/>
+          <Stack Padding="2" StackGrowth="Right" Offset="62,30">
+					  <Label ID="Title" Style="WCProposalTitle" TruncatedTooltip="1" TruncateWidth="270"/>
+            <Label ID="Status" Style="WCProposalTitle"/>
+          </Stack>
+					<Stack Offset="62,75" Padding="20" Size="parent,auto">
+						<Stack StackGrowth="Down" Padding="5">
+							<Label ID="ChoiceLabel" Anchor="L,C" Style="WCProposalHeader" WrapWidth="parent-10"/>
+							<Label ID="Description" Anchor="L,C" Style="WCProposalBody" WrapWidth="parent-110"/>
+						</Stack>
+						<Stack StackGrowth="Down" Padding="5">
+							<Label ID="TargetLabel" Anchor="L,C" Style="WCProposalHeader" WrapWidth="parent-20" String="LOC_WORLD_CONGRESS_REVIEW_PROPOSAL_TARGET"/>
+							<Label ID="ChosenThing" Style="WCProposalBody" WrapWidth="parent-20"/>
+						</Stack>
+						<Container Size="1,1"/>
+					</Stack>
+					<Container ID="TargetContainer" Anchor="L,T" Offset="15,15" Size="36,36">
+						<MakeInstance ID="LeaderIcon" Name="LeaderIcon32"/>
+					</Container>
+					<Image ID="TypeIcon" Offset="15,15" Icon="ICON_PROPOSAL_RESOLUTION" Size="36,36"/>
+				</Container>
+				<ScrollPanel ID="VoterScroll" Size="parent,auto" FullClip="1" >
+					<Stack ID="VoterStack" Size="parent,auto"/>
+				</ScrollPanel>
+			</Stack>
+		</Grid>
+  </Instance>
+
+  <Instance Name="ReviewProposal">
+		<Grid ID="Root" Anchor="C,T" Size="parent,auto" Texture="WC_ProposalFrame_Review" SliceCorner="23,29" SliceSize="4,15" SliceTextureSize="52,74" MinSize="52,84">
+			<Stack Size="parent,auto" Offset="10,5" StackGrowth="Left" Padding="5" Anchor="R,T">
+        <Container ID="ButtonCheckContainer" Anchor="C,C" Size="25,60" MinSize="25,60">
+          <Button	ID="ExpandButton" Anchor="C,C" Size="28,28" Texture="WC_ExpandButton" StateOffsetIncrement="0,28"/>
+        </Container>
+        <Box ID="Line1" Size="1,76" Color="36,38,39"/>
+        <Container ID="CostContainer" Offset="0,5" Size="50,60" MinSize="50,60">
+          <Label ID="Cost" Anchor="C,C" Offset="0,3" Style="WCProposalFavor"/>
+          <Label ID="TurnsLeft" Anchor="C,C" Offset="0,3" Style="WhiteSemiBold14"/>
+        </Container>
+        <Box ID="Line2" Size="1,76" Color="36,38,39"/>
+        <Button ID="EmergencyButton" Anchor="C,C" Size="28,28" Texture="WC_ViewButton" StateOffsetIncrement="0,28"/>
+        <Container Offset="0,3" Size="50,60" MinSize="50,60">
+          <Container Anchor="C,C" Offset="0,-3" Size="auto,auto">
+            <Stack ID="UpVoteStack" Size="auto,parent" StackGrowth="Right" Padding="5">
+              <Image ID="UpVoteIcon" Size="22,22" Icon="ICON_STAT_VOTE_UP"/>
+              <Label ID="UpVoteLabel" Style="WCProposalVotes" String=""/>
+            </Stack>
+          </Container>
+        </Container>
+        <Box ID="Line3" Size="1,76" Color="36,38,39"/>
+        <Container Offset="0,3" Size="50,60" MinSize="50,60">
+          <Container Anchor="C,C" Offset="0,-3" Size="auto,auto">
+            <Stack ID="DownVoteStack" Size="auto,parent" StackGrowth="Right" Padding="5">
+              <Image ID="DownVoteIcon" Size="22,22" Icon="ICON_STAT_VOTE_DOWN"/>
+				      <Label ID="DownVoteLabel" Style="WCProposalVotes" String=""/>
+            </Stack>
+          </Container>
+        </Container>
+        <Box ID="Line4" Size="1,76" Color="36,38,39"/>
+      </Stack>
+      <Stack Size="parent,84">
+				<Container Size="parent,84">
+					<Image ID="IconNew" Texture="Controls_New" Offset="-5,-5" ToolTip="LOC_WORLD_CONGRESS_TT_NEW_PROPOSAL"/>
+					<Stack Size="parent,84" Anchor="L,C" Offset="62,0" Padding="5">
+						<Container Size="1,5"/>
+            <Stack Padding="3" StackGrowth="Right">
+              <Label ID="Title" Style="WCProposalTitle" Anchor="L,T" TruncatedTooltip="1" TruncateWidth="270"/>
+              <Label ID="Status" Style="WCProposalTitle" Anchor="L,T"/>
+            </Stack>
+						<Label ID="Description" Style="WCProposalBody" WrapWidth="parent-285" TruncateHeight="54" TruncatedTooltip="1"/>
+						<Container Size="1,5"/>
+					</Stack>
+					<Container ID="TargetContainer" Size="45,45" Offset="10,15">
+						<Container Offset="3,5" Size="32,32">
+							<MakeInstance ID="LeaderIcon" Name="LeaderIconTarget32"/>
+						</Container>
+						<Image ID="TypeIcon" Size="36,36" Anchor="C,C"/>
+					</Container>
+				</Container>
+        <Stack ID="EmergencyContainer" Size="parent,auto" Offset="0,-2">
+          <Box Size="parent-12,1" Anchor="C,C" Color="36,38,39"/>
+          <MakeInstance ID="Emergency" Name="EmergencyInfo"/>
+        </Stack>
+        <ScrollPanel ID="VoterScroll" Size="parent,auto" FullClip="1" >
+					<Stack ID="VoterStack" Size="parent,auto"/>
+				</ScrollPanel>
+			</Stack>
+		</Grid>
+  </Instance>
+	
+	<Instance Name="ProposalVoter">
+		<Container ID="Root" Anchor="C,T" Size="parent,62" MinSize="52,62">
+      <Stack Size="parent,auto" Offset="10,0" StackGrowth="Left" Padding="5" Anchor="R,T">
+        <Container ID="ButtonCheckContainer" Size="25,60" MinSize="25,60"/>
+        <Box ID="Line1" Size="1,62" Color="36,38,39"/>
+        <Container Offset="0,-5" Size="50,60" MinSize="50,60">
+          <Container Anchor="C,C" Offset="0,-3" Size="auto,auto">
+            <Stack ID="UpVoteStack" Size="auto,parent" StackGrowth="Right" Padding="5">
+              <Image ID="UpVoteIcon" Size="22,22" Icon="ICON_STAT_VOTE_UP"/>
+              <Label ID="UpVoteLabel" Style="WCProposalVotes" String=""/>
+            </Stack>
+          </Container>
+        </Container>
+        <Box ID="Line2" Size="1,62" Color="36,38,39"/>
+        <Container Offset="0,-5" Size="50,60" MinSize="50,60">
+          <Container Anchor="C,C" Offset="0,-3" Size="auto,auto">
+            <Stack ID="DownVoteStack" Size="auto,parent" StackGrowth="Right" Padding="5">
+              <Image ID="DownVoteIcon" Size="22,22" Icon="ICON_STAT_VOTE_DOWN"/>
+              <Label ID="DownVoteLabel" Style="WCProposalVotes" String=""/>
+            </Stack>
+          </Container>
+        </Container>
+        <Box ID="Line3" Size="1,62" Color="36,38,39"/>
+      </Stack>
+			<Box Size="parent-6,1" Anchor="C,T" Color="36,38,39,255"/>
+      <Stack Anchor="L,C" Size="parent,auto" Offset="62,0" StackGrowth="Down" Padding="2">
+			  <Label ID="Title" Style="WCProposalBody" Anchor="L,C"/>
+			  <Label ID="Reason" Style="WCProposalBody" Anchor="L,C" Color="COLOR_RED" WrapWidth="parent-225"/>
+      </Stack>
+			<Container ID="TargetContainer" Anchor="L,C" Size="38,38" Offset="15,0">
+				<MakeInstance ID="LeaderIcon" Name="LeaderIcon32"/>
+				<Image ID="TypeIcon" Size="36,36" Anchor="C,C"/>
+			</Container>
+		</Container>
+	</Instance>
+
+  <Instance Name="ReviewOutcome">
+    <Container ID="Root" Anchor="C,T" Size="parent,auto" MinSize="52,62">
+      <Box Anchor="C,T" Size="parent-6,1" Color="36,38,39,255"/>
+      <Stack Anchor="L,C" Offset="62,0" Padding="5" Size="parent,auto">
+        <Container Size="1,5"/>
+        <Stack StackGrowth="Down" Padding="5">
+          <Label ID="ChoiceLabel" Anchor="L,C" Style="WCProposalHeader" WrapWidth="parent-20"/>
+          <Label ID="Description" Anchor="L,C" Style="WCProposalBody" WrapWidth="parent-200"/>
+        </Stack>
+        <Container Size="1,5"/>
+      </Stack>
+    </Container>
+  </Instance>
+
+	<Instance Name="ResolutionVoter">
+		<Container ID="Root" Anchor="C,T" Size="parent,62" MinSize="52,62">
+      <Stack Size="parent,auto" Offset="10,0" StackGrowth="Left" Padding="5" Anchor="R,T">
+        <Container ID="ButtonCheckContainer" Size="25,60" MinSize="25,60"/>
+        <Box ID="Line1" Size="1,62" Color="36,38,39"/>
+        <Container ID="CostContainer" Offset="0,-5" Size="50,60" MinSize="50,60"/>
+        <Box ID="Line2" Size="1,62" Color="36,38,39"/>
+        <Container Offset="0,-5" Size="50,60" MinSize="50,60">
+          <Container Anchor="C,C" Offset="0,-3" Size="auto,auto">
+            <Stack ID="UpVoteStack" Size="auto,parent" StackGrowth="Right" Padding="5">
+              <Label ID="UpVoteIcon" Style="EventPopupTitle" Size="auto,22" String="LOC_WORLD_CONGRESS_B_VOTES"/>
+              <Label ID="UpVoteLabel" Style="WCProposalVotes" String=""/>
+            </Stack>
+          </Container>
+        </Container>
+        <Box ID="Line3" Size="1,62" Color="36,38,39"/>
+        <Container Offset="0,-5" Size="50,60" MinSize="50,60">
+          <Container Anchor="C,C" Offset="0,-3" Size="auto,auto">
+            <Stack ID="DownVoteStack" Size="auto,parent" StackGrowth="Right" Padding="5">
+              <Label ID="DownVoteIcon" Style="EventPopupTitle" Size="auto,22" String="LOC_WORLD_CONGRESS_A_VOTES"/>
+              <Label ID="DownVoteLabel" Style="WCProposalVotes" String=""/>
+            </Stack>
+          </Container>
+        </Container>
+        <Box ID="Line4" Size="1,62" Color="36,38,39"/>
+      </Stack>
+			<Box Anchor="C,T" Size="parent-6,1" Color="36,38,39,255"/>
+			<Stack Offset="62,-5" Anchor="L,C" Padding="5" Size="parent,auto">
+				<Container Size="1,5"/>
+				<Label ID="ChoiceLabel" Anchor="L,C" Style="WCProposalHeader" WrapWidth="parent-20"/>
+				<Stack StackGrowth="Right" Padding="5">
+					<Label ID="TargetLabel" Anchor="L,C" Style="WCProposalHeader" WrapWidth="parent-20" String="LOC_WORLD_CONGRESS_REVIEW_VOTER_TARGET"/>
+					<Label ID="ChosenThing" Style="WCProposalBody" WrapWidth="parent-20"/>
+				</Stack>
+			</Stack>
+			<Container ID="TargetContainer" Anchor="L,C" Size="45,45" Offset="15,5">
+				<MakeInstance ID="LeaderIcon" Name="LeaderIcon32"/>
+				<Image ID="TypeIcon" Size="36,36" Anchor="C,C"/>
+			</Container>
+		</Container>
+	</Instance>
+
+  <Instance Name="VerticalPadding1px">
+    <Container ID="Root" Size="1,1"/>
+  </Instance>
+  <Instance Name="VerticalPaddingReview">
+    <Container ID="Root" Size="1,3"/>
+  </Instance>
+
+</Context>

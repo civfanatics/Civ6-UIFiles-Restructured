@@ -16,6 +16,13 @@ local sectionId = page.SectionId;
 
 	local governmentType = government.GovernmentType;
 
+	local policy_exclusivegovernments = {};
+	for row in GameInfo.Policy_GovernmentExclusives_XP2() do
+		if(row.GovernmentType == governmentType) then
+			table.insert(policy_exclusivegovernments, row.PolicyType);
+		end
+	end
+	
 	-- Right Column
 	-- AddPortrait("ICON_" .. governmentType);
 
@@ -29,7 +36,15 @@ local sectionId = page.SectionId;
 				s:AddIconLabel({"ICON_" .. civic.CivicType, civic.Name, civic.CivicType}, civic.Name);
 			end
 		end
-
+		
+		if(#policy_exclusivegovernments > 0) then
+			s:AddHeader("LOC_UI_PEDIA_MADE_EXCLUSIVE_GOVENMENT");
+			for i,v in ipairs(policy_exclusivegovernments) do
+				local policy = GameInfo.Policies[v];
+				s:AddIconLabel({"ICON_" .. policy.PolicyType, policy.Name, policy.PolicyType}, policy.Name);
+			end
+		end
+		
 		s:AddSeparator();
 	end);
 

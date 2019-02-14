@@ -27,8 +27,19 @@ local sectionId = page.SectionId;
 	end
 
 	-- Traders can build all routes, but this isn't really conveyed anywhere via data.
+	local trader_can_build = true;
+	local route_xp2 = nil;
+	if(GameInfo.Routes_XP2 ~= nil) then
+		route_xp2 = GameInfo.Routes_XP2[routeType];
+	end
+	if(route_xp2) then
+		trader_can_build = not route_xp2.BuildOnlyWithUnit;
+	end
+
+	if(trader_can_build) then
 	local trader = GameInfo.Units["UNIT_TRADER"]
-	table.insert(built_by, trader);
+		table.insert(built_by, trader);
+	end
 
 	table.sort(built_by, function(a,b) return Locale.Compare(Locale.Lookup(a.Name), Locale.Lookup(b.Name)) == -1; end);
 
@@ -56,10 +67,18 @@ local sectionId = page.SectionId;
 			if(era) then
 				s:AddHeader("LOC_ERA_NAME");
 				s:AddLabel(era.Name);
+				s:AddSeparator();
 			end
 		end
 
-		s:AddSeparator();
+		if(route_xp2 ~= nil and route_xp2.PrereqTech ~= nil) then
+			local technology = GameInfo.Technologies[route_xp2.PrereqTech];
+			if(technology) then
+				s:AddHeader("LOC_TECHNOLOGY_NAME");
+				s:AddIconLabel({"ICON_" .. technology.TechnologyType, technology.Name, technology.TechnologyType}, technology.Name);
+				s:AddSeparator();
+			end
+		end
 	end);
 
 	AddRightColumnStatBox("LOC_UI_PEDIA_USAGE", function(s)

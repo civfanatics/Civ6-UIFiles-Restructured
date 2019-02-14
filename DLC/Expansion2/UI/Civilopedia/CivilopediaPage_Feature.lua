@@ -15,6 +15,8 @@ PageLayouts["Feature" ] = function(page)
 	end
 	local featureType = feature.FeatureType;
 
+	local feature_xp2 = GameInfo.Features_XP2 and GameInfo.Features_XP2[featureType];
+
 	-- Get some info!
 	local yield_changes = {};
 	for row in GameInfo.Feature_YieldChanges() do
@@ -37,8 +39,22 @@ PageLayouts["Feature" ] = function(page)
 		table.insert(traits, Locale.Lookup("LOC_UI_PEDIA_TERRAIN_IMPASSABLE"));
 	end
 
+	if(feature_xp2 and feature_xp2.Volcano) then
+		table.insert(traits, Locale.Lookup("LOC_UI_PEDIA_MAY_ERUPT"));
+	end
+
+
 	if(tonumber(feature.MovementChange)> 0) then
 		table.insert(traits, Locale.Lookup("LOC_UI_PEDIA_MOVEMENT_CHANGE", tonumber(feature.MovementChange)));
+	end
+
+	if(GameInfo.RandomEvent_Yields) then
+		for row in GameInfo.RandomEvent_Yields() do
+			if(row.FeatureType == featureType) then
+				table.insert(traits, Locale.Lookup("LOC_UI_PEDIA_ADDITIONAL_FERTILITY"));
+				break;
+			end
+		end
 	end
 
 	table.sort(traits, function(a,b) return Locale.Compare(a,b) == -1; end);

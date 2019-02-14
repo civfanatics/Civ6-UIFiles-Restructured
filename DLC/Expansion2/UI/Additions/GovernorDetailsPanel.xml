@@ -97,8 +97,6 @@
         <Image Texture="Governors_PromotionScreen_DecoRight" Size="184,42" Color="0,0,0,50"/>
       </Stack>
     </Image>
-
-    <Button	ID="CloseButton" Anchor="R,T" Style="CloseButtonLarge" Offset="-8,-5"/>
   </Image>
 
   <Instance Name="PromotionInstance">

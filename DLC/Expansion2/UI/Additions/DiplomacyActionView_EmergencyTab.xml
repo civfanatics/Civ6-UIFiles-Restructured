@@ -8,7 +8,7 @@
 				<Label ID="EmergencyNameLabel" Style="FontNormal16" Offset="44,4"/>
 				<Label ID="EmergencyGoalsLabel" Style="FontNormal14" Offset="44,0" Color0="164,164,164,255" WrapWidth="355"/>
 			</Stack>
-      <Stack Anchor="R,t" Offset="6,4" StackGrowth="Right">
+      <Stack Anchor="R,T" Offset="6,4" StackGrowth="Right">
         <Label ID="EmergencyTurnsIcon" Style="FontNormal16" String="[ICON_TURN]"/>
         <Label ID="EmergencyTurnsLabel" Style="FontNormal16"/>
       </Stack>

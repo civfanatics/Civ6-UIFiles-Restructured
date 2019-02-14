@@ -22,6 +22,7 @@
       <GridButton	ID="MainPanel" Offset="0,0" Size="296,44" Texture="EmergenciesPanel_Frame_Invited" SliceCorner="66,0" SliceSize="42,42" SliceTextureSize="110,44" ConsumeMouseOver="1">
         <Container Anchor="L,C" Offset="10,0" Size="38,38">
           <MakeInstance Name="CivilizationIcon36" ID="CivilizationTargetIcon" Anchor="C,C"/>
+          <Image ID="NoTargetIcon" Anchor="C,C" Size="36,36" Hidden="1"/>
           <Image ID="TargetIcon" Anchor="C,C" Texture="EmergenciesPanel_Target" Color="255,0,0,255" Size="38,38" Offset="0,0" />
         </Container>
         <Label ID="CrisisTitle" Offset="58,7" Color="255,255,255,255" Style="PanelHeaderText" SmallCapsType="EveryWord"/>

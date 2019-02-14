@@ -220,6 +220,15 @@ local sectionId = page.SectionId;
 		end
 	end
 
+	for row in GameInfo.Building_YieldChangesBonusWithPower() do
+		if(row.BuildingType == buildingType) then
+			local yield = GameInfo.Yields[row.YieldType];
+			if(yield) then
+				table.insert(stats, Locale.Lookup("LOC_TYPE_TRAIT_YIELD_POWER_ENHANCEMENT", row.YieldChange, yield.IconString, yield.Name));
+			end
+		end
+	end
+
 	for row in GameInfo.Building_YieldDistrictCopies() do
 		if(row.BuildingType == buildingType) then
 			local from = GameInfo.Yields[row.OldYieldType];
@@ -237,6 +246,12 @@ local sectionId = page.SectionId;
 	local entertainment = building.Entertainment or 0;
 	if(entertainment ~= 0) then
 		table.insert(stats, Locale.Lookup("LOC_TYPE_TRAIT_AMENITY_ENTERTAINMENT", entertainment));
+	end
+
+	for row in GameInfo.Buildings_XP2() do
+		if(row.BuildingType == buildingType and row.EntertainmentBonusWithPower ~= nil and row.EntertainmentBonusWithPower ~= 0) then
+			table.insert(stats, Locale.Lookup("LOC_TYPE_TRAIT_AMENITY_ENTERTAINMENT_POWER_ENHANCEMENT", row.EntertainmentBonusWithPower));
+		end
 	end
 
 	local citizens = building.CitizenSlots or 0;
@@ -333,6 +348,21 @@ local sectionId = page.SectionId;
 
 			s:AddLabel(obsolete_era.Name);
 			s:AddSeparator();
+		end
+
+		local tourismBomb = 0;
+		for row in GameInfo.Building_TourismBombs_XP2() do
+			if(row.BuildingType == buildingType) then
+				tourismBomb = tourismBomb + row.TourismBombValue;
+			end
+		end
+
+		if(isWonder) then
+			tourismBomb = tourismBomb + GlobalParameters.TOURISM_BOMB_WONDER_ADDITIONAL;
+		end
+
+		if(tourismBomb ~= 0) then
+			table.insert(stats, Locale.Lookup("LOC_UI_PEDIA_TOURISM_BOMB_VALUE_BUILDING", tourismBomb));
 		end
 
 		if(#stats > 0) then
@@ -482,6 +512,14 @@ local sectionId = page.SectionId;
 			if(yield) then
 				s:AddHeader("LOC_UI_PEDIA_MAITENANCE_COST");
 				local t = Locale.Lookup("LOC_UI_PEDIA_BASE_COST", tonumber(building.Maintenance), yield.IconString, yield.Name );
+				s:AddLabel(t);
+			end
+		end
+
+		for row in GameInfo.Buildings_XP2() do
+			if(row.BuildingType == buildingType and row.RequiredPower ~= nil and row.RequiredPower ~= 0) then
+				s:AddHeader("LOC_UI_PEDIA_POWER_COST");
+				local t = Locale.Lookup("LOC_UI_PEDIA_BASE_POWER_LOAD", tonumber(row.RequiredPower));
 				s:AddLabel(t);
 			end
 		end

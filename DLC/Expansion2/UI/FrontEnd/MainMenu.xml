@@ -5,14 +5,14 @@
 	<Include File="PopupDialog" />
   
   <Stack                  ID="ShellMenuAndLogo" StackGrowth="Down" Anchor="C,C">
-    <Image ID="Logo"				Anchor="C,T"	Offset="0,0" Texture="Shell_LogoEXP.dds" StretchMode="Auto"/>
+    <Image ID="Logo"				Anchor="C,T"	Offset="0,0" Texture="Shell_LogoEXP2.dds" StretchMode="Auto"/>
     
-    <SlideAnim            ID="SubMenuSlide" Begin="200,0"	End="0,0" Size="640,450" Anchor="C,T" Speed="2" Cycle="Once" Function="OutQuad" Stopped="1" FunctionPower="5" Hidden="0">
+    <SlideAnim            ID="SubMenuSlide" Begin="200,0"	End="0,0" Size="640,450" Anchor="C,T" Speed="2" Cycle="Once" Function="OutQuad" Stopped="1" FunctionPower="5" >
       <Stack              ID="ShellStack" StackGrowth="Right" StackPadding="20">
         <Container Size="300,400">
           <ScrollPanel	  ID="MainMenuClip" Anchor="L,C"	Size="400,450" FullClip="1" Disabled="1">
-            <Image Texture="Controls_DivVertical" Size="14,20" StretchMode="None" AnchorSide="I,O" Anchor="T,L" Color="90,139,190"/>
-            <SlideAnim	  ID="MainButtonTrackAnim" Begin="0,-390"	End="0,-20" Size="parent,parent" Speed="1" Pause=".5" Cycle="Once" Function="Root" Stopped="1">
+            <Image Texture="Controls_DivVertical" Size="14,20" StretchMode="None" AnchorSide="I,O" Anchor="T,L" Color="90,139,190" />
+						<SlideAnim	  ID="MainButtonTrackAnim" Begin="0,-390"	End="0,-20" Size="parent,parent" Speed="1" Pause=".5" Cycle="Once" Function="Root" Stopped="1">
               <Grid         ID="MainButtonTrack" Style="DividerVertical" Size="14,390" Color="90,139,190"/>
             </SlideAnim>
             <ScrollPanel    ID="MainButtonClip" Anchor="L,T" Offset="9,0"	Size="parent-10,parent" FullClip="1" Disabled="1">

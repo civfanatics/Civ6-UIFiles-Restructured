@@ -20,6 +20,14 @@ PageLayouts["HistoricMoment" ] = function(page)
 		eraScore = 0;
 	end
 
+	local obsoleteEra;
+	if(moment.ObsoleteEra and moment.ObsoleteEra ~= "NO_ERA") then
+		local era = GameInfo.Eras[moment.ObsoleteEra];
+		if(era) then
+			obsoleteEra = era.Name;
+		end
+	end
+
 	local minEra;
 	if(moment.MinimumGameEra) then
 		local era = GameInfo.Eras[moment.MinimumGameEra];
@@ -45,6 +53,12 @@ PageLayouts["HistoricMoment" ] = function(page)
 		if(eraScore ~= nil) then
 			local t = Locale.Lookup("LOC_UI_PEDIA_ERA_SCORE", tonumber(eraScore));
 			s:AddLabel(t);
+			s:AddSeparator();
+		end
+
+		if(obsoleteEra) then
+			s:AddHeader("LOC_UI_PEDIA_MADE_REMOVED_IF");
+			s:AddLabel(obsoleteEra);
 			s:AddSeparator();
 		end
 	end);

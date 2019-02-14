@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Include File="WorldCrisisInstances" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="..\..\..\..\..\..\CivTech\Libs\ForgeUI\ForgeUI_Assets\Controls.xsd">
+
+  <!-- ==================================================================	-->
+  <!--	Instances															                            -->
+  <!-- ==================================================================	-->
+  <Instance Name="LeftAlignText">
+    <Stack ID="RootStack" Anchor="L,T" Offset="-5,0" Padding="3" StackGrowth="Right">
+      <Label ID="IconString" Align="left" Anchor="L,T" WrapWidth="505" FontSize="15" Color="190,190,190,250"/>
+      <Label ID="Root" Align="left" Anchor="L,T" WrapWidth="465" Style="WCProposalBody"/>
+    </Stack>
+  </Instance>
+
+  <Instance Name="CenterAlignText">
+    <Label ID="Root" Align="left" Anchor="L,T" WrapWidth="505" Style="WCProposalHeader"/>
+  </Instance>
+
+  <Instance Name="CenterAlignLargeText">
+    <Label ID="Root" Align="left" Anchor="L,T" WrapWidth="375" Style="WCProposalBody"/>
+  </Instance>
+
+  <Instance Name="CenterAlignSoloText">
+    <Label ID="Root" Align="center" Anchor="C,C" WrapWidth="375" Style="WCProposalBody"/>
+  </Instance>
+
+</Include>

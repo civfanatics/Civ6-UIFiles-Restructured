@@ -45,11 +45,12 @@ PageLayouts["Resource" ] = function(page)
 		if(row.ResourceType == resourceType) then
 			local improvement = GameInfo.Improvements[row.ImprovementType];
 			if(improvement) then
-				table.insert(improvements, {{improvement.Icon, improvement.Name, improvement.ImprovementType}, improvement.Name});
+				table.insert(improvements, {{improvement.Icon, improvement.Name, improvement.ImprovementType}, Locale.Lookup(improvement.Name)});
 			end
 			
 		end
 	end
+	table.sort(improvements, function(a,b) return Locale.Compare(a[2],b[2]) < 0; end);
 
 	local harvests = {};
 	for row in GameInfo.Resource_Harvests() do
@@ -57,6 +58,89 @@ PageLayouts["Resource" ] = function(page)
 			table.insert(harvests, row);
 		end
 	end
+	
+	local buildings = {};
+	for row in GameInfo.Buildings_XP2() do
+		if(row.ResourceTypeConvertedToPower == resourceType) then
+			if(row.BuildingType ~= nil) then
+				local building = GameInfo.Buildings[row.BuildingType];
+				if(building) then
+					table.insert(buildings, {{"ICON_" .. building.BuildingType , building.Name, building.BuildingType}, Locale.Lookup(building.Name)});
+				end
+			end
+		end
+	end
+	table.sort(buildings, function(a,b) return Locale.Compare(a[2],b[2]) < 0; end);
+	
+	local unique_projects = {};
+	local projects = {};
+	for row in GameInfo.Projects() do
+		if(row.PrereqResource == resourceType) then
+			local projectType = row.ProjectType;
+			if(projectType ~= nil) then
+				local project = GameInfo.Projects[projectType];
+				if(project) then
+					table.insert(projects, {{"ICON_" .. projectType, project.Name, projectType}, Locale.Lookup(project.Name)});
+					unique_projects[projectType] = true;
+				end
+			end
+		end
+	end
+	
+	for row in GameInfo.Project_ResourceCosts() do
+		if(row.ResourceType == resourceType) then
+			local projectType = row.ProjectType;
+			if(projectType ~= nil) then
+				local project = GameInfo.Projects[projectType];
+				if(project and not unique_projects[projectType]) then
+					table.insert(projects, {{"ICON_" .. projectType, project.Name, projectType}, Locale.Lookup(project.Name)});
+					unique_projects[projectType] = true;
+				end
+			end
+		end
+	end
+	table.sort(projects, function(a,b) return Locale.Compare(a[2],b[2]) < 0; end);
+	
+	local routes = {};
+	for row in GameInfo.Route_ResourceCosts() do
+		if(row.ResourceType == resourceType) then
+			if(row.RouteType ~= nil) then
+				local route = GameInfo.Routes[row.RouteType];
+				if(route) then
+					table.insert(routes, {{"ICON_" .. route.RouteType, route.Name, route.RouteType}, Locale.Lookup(route.Name)});
+				end
+			end
+		end
+	end
+	table.sort(routes, function(a,b) return Locale.Compare(a[2],b[2]) < 0; end);
+	
+	local unique_units = {}; -- used for dupe checking.
+	local units = {};
+	for row in GameInfo.Units() do
+		if(row.StrategicResource == resourceType) then
+			if(row.UnitType ~= nil) then
+				local unit = GameInfo.Units[row.UnitType];
+				if(unit) then
+					unique_units[unit.UnitType] = true;
+					table.insert(units, {{"ICON_" .. unit.UnitType, unit.Name, unit.UnitType}, Locale.Lookup(unit.Name)});
+				end
+			end
+		end
+	end
+	
+	for row in GameInfo.Units_XP2() do
+		if(row.ResourceMaintenanceType == resourceType) then
+			local unitType = row.UnitType;
+			if(unitType ~= nil) then
+				local unit = GameInfo.Units[unitType];
+				if(unit and not unique_units[unitType]) then
+					table.insert(units, {{"ICON_" .. unitType, unit.Name, unitType}, Locale.Lookup(unit.Name)});
+				end
+			end
+		end
+	end
+
+	table.sort(units, function(a,b) return Locale.Compare(a[2],b[2]) < 0; end);
 
 
 	-- Woo boy.  Let me explain what's about  to happen.
@@ -135,6 +219,17 @@ PageLayouts["Resource" ] = function(page)
 			s:AddLabel(Locale.Lookup("LOC_TYPE_TRAIT_HAPPINESS", resource.Happiness));
 		end
 
+		local kConsumption:table = GameInfo.Resource_Consumption[resource.ResourceType];
+		if (kConsumption ~= nil) then
+			if (kConsumption.Accumulate) then
+				local iExtraction = kConsumption.ImprovedExtractionRate;
+				if (iExtraction > 0) then
+					local resourceIcon = "[ICON_" .. resource.ResourceType .. "]";
+					s:AddLabel(Locale.Lookup("LOC_RESOURCE_ACCUMULATION_WHEN_IMPROVED", iExtraction, resourceIcon, resource.Name));
+				end
+			end
+		end
+
 		s:AddSeparator();
 	end);
 	
@@ -181,11 +276,7 @@ PageLayouts["Resource" ] = function(page)
 				s:AddSeparator();
 			end
 		end
-	end);
-
-	AddRightColumnStatBox("LOC_UI_PEDIA_USAGE", function(s)
-		s:AddSeparator();
-
+		
 		if(#creators > 0) then
 			s:AddHeader("LOC_UI_PEDIA_CREATED_BY");
 			for i,v in ipairs(creators) do
@@ -193,6 +284,10 @@ PageLayouts["Resource" ] = function(page)
 			end
 			s:AddSeparator();
 		end
+	end);
+
+	AddRightColumnStatBox("LOC_UI_PEDIA_USAGE", function(s)
+		s:AddSeparator();
 
 		if(#improvements > 0) then
 			s:AddHeader("LOC_UI_PEDIA_IMPROVED_BY");
@@ -216,9 +311,41 @@ PageLayouts["Resource" ] = function(page)
 					end
 				end	
 			end
-
 			s:AddSeparator();	
 		end
+		
+		if(#buildings > 0) then
+			s:AddHeader(Locale.Lookup("LOC_UI_PEDIA_RESOURCES_BUILDINGS", #buildings));
+			for i,v in ipairs(buildings) do
+				s:AddIconLabel(v[1], v[2]);
+			end
+			s:AddSeparator();
+		end
+		
+		if(#projects > 0) then
+			s:AddHeader(Locale.Lookup("LOC_UI_PEDIA_RESOURCES_PROJECTS", #projects));
+			for i,v in ipairs(projects) do
+				s:AddIconLabel(v[1], v[2]);
+			end
+			s:AddSeparator();
+		end
+		
+		if(#routes > 0) then
+			s:AddHeader(Locale.Lookup("LOC_UI_PEDIA_RESOURCES_ROUTES", #routes));
+			for i,v in ipairs(routes) do
+				s:AddIconLabel(v[1], v[2]);
+			end
+			s:AddSeparator();
+		end
+		
+		if(#units > 0) then
+			s:AddHeader(Locale.Lookup("LOC_UI_PEDIA_RESOURCES_UNITS", #units));
+			for i,v in ipairs(units) do
+				s:AddIconLabel(v[1], v[2]);
+			end
+			s:AddSeparator();
+		end
+
 	end);
 
 	-- Left Column!

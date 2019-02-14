@@ -1,0 +1,93 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Context>
+    <Stack ID="TabStack" StackPadding="8">
+      <!-- Header -->
+      <Grid	ID="HeaderGrid"																		Anchor="L,T"									Size="parent,24"		Style="DivHeader">
+        <Container Size="parent,24">
+          <Image Texture="Controls_Gradient_HalfRadial" Size="parent, 120" FlipY="1" Anchor="C,T" Color="72,103,130,255"/>
+        </Container>
+        <Label																	Anchor="C,C" Offset="5,0"													Style="CityPanelSubPanelTitle" String="LOC_CITY_PANEL_POWER_HEADER" />
+      </Grid>
+
+      <!-- Power Status -->
+      <Stack Offset="20,0" StackGrowth="Right">
+        <Stack Anchor="C,T" StackGrowth="Right" StackPadding="10">
+          <Grid Size="125,55" Style="CityPanelSubPanelContainer">
+            <Stack Anchor="C,C" StackGrowth="Right" StackPadding="6">
+              <Stack StackPadding="2">
+                <Label ID="ConsumingPowerLabel" Anchor="C,T" Style="CityPanelText"/>
+                <Label Anchor="C,T" Style="CityPanelText" String="LOC_POWER_PANEL_OF"/>
+                <Label ID="RequiredPowerLabel" Anchor="C,T" Style="CityPanelText"/>
+              </Stack>
+            </Stack>
+          </Grid>
+          <Grid Size="125,55" Style="CityPanelSubPanelContainer">
+            <Image Anchor="L,C" AnchorSide="O,I" Texture="Controls_ThereforeArrow" Offset="-10,0"/>
+            <Stack Anchor="C,C" StackGrowth="Right" StackPadding="6">
+              <Stack StackPadding="2">
+                <Label Anchor="C,T" Style="FontNormal16" String="LOC_POWER_PANEL_STATUS"/>
+                <Label ID="PowerStatusNameLabel" Anchor="C,T" Style="CityPanelText" WrapWidth="120"/>
+              </Stack>
+            </Stack>
+          </Grid>
+        </Stack>
+      </Stack>
+
+      <!-- Powered Status Effects -->
+      <Grid	ID="PowerStatusDescriptionBox" Texture="CityPanel_StatPanelSubContainer" SliceCorner="7,7" SliceSize="1,1" SliceTextureSize="16,16" InnerPadding="4,2" Anchor="C,T" Size="260,55">
+        <Label ID="PowerStatusDescriptionLabel" Offset="4,0" Anchor="C,C" Style="CityPanelTextSmall" WrapWidth="200"/>
+      </Grid>
+      
+
+      <!-- Breakdown -->
+      <Stack Padding="4" Anchor="C,T" Offset="0,6">
+        <Grid	ID="ConsumedTitle" Anchor="C,T" Size="parent,24" Style="DivHeader">
+          <Container Size="parent,24">
+            <Image Texture="Controls_Gradient_HalfRadial" Size="parent,120" FlipY="1" Anchor="C,T" Color="72,103,130,255"/>
+          </Container>
+          <Label Anchor="C,C" Offset="5,0" Style="CityPanelSubPanelTitle" FontSize="14" String="LOC_POWER_PANEL_CONSUMED_POWER" />
+        </Grid>
+        <Grid ID="ConsumedBreakdownBox" Anchor="C,T" Size="260,230" Style="CityPanelSubPanelContainer">
+          <Stack ID="ConsumedPowerBreakdownStack" Offset="5,10" Anchor="L,T" Padding="5"/>
+        </Grid>
+        <Grid	ID="RequiredTitle" Anchor="C,T" Size="parent,24" Style="DivHeader">
+          <Container Size="parent,24">
+            <Image Texture="Controls_Gradient_HalfRadial" Size="parent,120" FlipY="1" Anchor="C,T" Color="72,103,130,255"/>
+          </Container>
+          <Label Anchor="C,C" Offset="5,0" Style="CityPanelSubPanelTitle" FontSize="14" String="LOC_POWER_PANEL_REQUIRED_POWER" />
+        </Grid>
+        <Grid ID="RequiredBreakdownBox" Anchor="C,T" Size="260,230" Style="CityPanelSubPanelContainer">
+          <Stack ID="RequiredPowerBreakdownStack" Offset="5,10" Anchor="L,T" Padding="5"/>
+        </Grid>
+        <Grid	ID="GeneratedTitle" Anchor="C,T" Size="parent,24" Style="DivHeader">
+          <Container Size="parent,24">
+            <Image Texture="Controls_Gradient_HalfRadial" Size="parent,120" FlipY="1" Anchor="C,T" Color="72,103,130,255"/>
+          </Container>
+          <Label Anchor="C,C" Offset="5,0" Style="CityPanelSubPanelTitle" FontSize="14" String="LOC_POWER_PANEL_GENERATED_POWER" />
+        </Grid>
+        <Grid ID="GeneratedBreakdownBox" Anchor="C,T" Size="260,230" Style="CityPanelSubPanelContainer">
+          <Stack ID="GeneratedPowerBreakdownStack" Offset="5,10" Anchor="L,T" Padding="5"/>
+        </Grid>
+      </Stack>
+      
+      <!-- Advisor -->
+      <Container ID="PowerAdvisor" Offset="15,0" Size="parent-29,auto" >
+        <Image Anchor="R,T" Size="64,64" Texture="Advisors64"/>
+        <Grid Offset="3,0" Size="parent-64,auto" Style="AdvisorWordBubble" Color="255,255,255,50" InnerPadding="5,15">
+          <Label ID="PowerAdvice" Anchor="C,C" Offset="-20,0" WrapWidth="parent-40" Style="CityPanelTextSmall"  String="LOC_HUD_CITY_ADVISOR_TRY_IMPROVING" />
+        </Grid>
+      </Container>
+
+      <!-- Spacer -->
+      <Container Size="5,2"/>
+    </Stack>
+
+  <!-- Population Line Item Instance -->
+  <Instance Name="PowerLineInstance">
+    <Grid ID="Top" Size="250,auto"		Texture="CityPanel_StatPanelLineItem" SliceCorner="7,7" SliceSize="1,1" SliceTextureSize="16,16" MinSize="16,16">
+      <Label ID="LineTitle" Anchor="L,T" Offset="0,2" Style="CityPanelTextSmall" WrapWidth="parent-20"/>
+      <Label ID="LineValue" Anchor="R,T" Offset="0,2" Style="CityPanelTextSmall"/>
+    </Grid>
+  </Instance>
+  
+</Context>

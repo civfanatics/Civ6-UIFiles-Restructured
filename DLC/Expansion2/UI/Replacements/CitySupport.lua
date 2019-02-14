@@ -228,7 +228,7 @@ function GetProductionInfoOfCity( pCity:table, productionHash:number )
 		local eMilitaryFormationType :number = pBuildQueue:GetCurrentProductionTypeModifier();
 		productionName	= Locale.Lookup(unitDef.Name);
 		description		= unitDef.Description;
-		tooltip			= ToolTipHelper.GetUnitToolTip(hash);
+		tooltip			= ToolTipHelper.GetUnitToolTip(hash, eMilitaryFormationType, pBuildQueue);
 		progress		= pBuildQueue:GetUnitProgress(unitDef.Index);
 		prodTurnsLeft	= pBuildQueue:GetTurnsLeft(unitDef.UnitType, eMilitaryFormationType);		
 		kIcons			= { iconName, prefixOnlyIconName, eraOnlyIconName, fallbackIconName, "ICON_"..unitDef.UnitType.."_PORTRAIT"}
@@ -531,6 +531,7 @@ function GetCityData( pCity:table )
 	data.AmenitiesFromGovernors			= pCityGrowth:GetAmenitiesFromGovernors();
 	data.AmenitiesFromDistricts			= pCityGrowth:GetAmenitiesFromDistricts();
 	data.AmenitiesFromNaturalWonders			= pCityGrowth:GetAmenitiesFromNaturalWonders();
+	data.AmenitiesFromTraits			= pCityGrowth:GetAmenitiesFromTraits();
 	data.AmenityAdvice					= pCity:GetAmenityAdvice();
 	data.CityWallHPPercent				= (wallHitpoints-currentWallDamage) / wallHitpoints;
 	data.CityWallCurrentHP				= wallHitpoints-currentWallDamage;
@@ -600,7 +601,7 @@ function GetCityData( pCity:table )
 					Name		= GameInfo.Buildings[building.BuildingType].Name, 
 					Citizens	= kPlot:GetWorkerCount(),
 					isPillaged	= pCityBuildings:IsPillaged(type),
-					Maintenance	= GameInfo.Buildings[building.BuildingType].Maintenance			--Expense in gold
+					Maintenance	= pCityBuildings:GetBuildingMaintenance(type),
 				});
 			end
 		end

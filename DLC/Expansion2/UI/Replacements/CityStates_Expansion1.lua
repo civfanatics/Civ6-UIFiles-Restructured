@@ -61,7 +61,7 @@ function AddCityStateRow( kCityState:table )
 		
 		local tooltip = Locale.Lookup("LOC_CITY_STATE_PANEL_HAS_AMBASSADOR_TOOLTIP");
 		local localPlayerID:number = Game.GetLocalPlayer();
-		local pLocalPlayerDiplomacy = Players[localPlayerID]:GetDiplomacy();
+		local pLocalPlayerDiplomacy:table = Players[localPlayerID]:GetDiplomacy();
 		for playerID, playerHasAmbassador in pairs(ambassadorData.Ambassadors) do
 			local playerConfig = PlayerConfigurations[playerID];
 			if (playerID == localPlayerID or pLocalPlayerDiplomacy:HasMet(playerID)) then
@@ -88,13 +88,12 @@ function AddInfluenceRow(cityStateID:number, playerID:number, influence:number, 
 	local localPlayerID:number = Game.GetLocalPlayer();
 	local playerHasAmbassador:boolean = m_CityStateGovernors[cityStateID] and m_CityStateGovernors[cityStateID].Ambassadors[playerID] or false;
 	kItem.AmbassadorIcon:SetHide(not playerHasAmbassador);
-	local pLocalPlayerDiplomacy = Players[localPlayerID]:GetDiplomacy();
+	local pLocalPlayerDiplomacy:table = Players[localPlayerID]:GetDiplomacy();
 	local playerName:string = Locale.Lookup("LOC_LOYALTY_PANEL_UNMET_CIV");
 	if (playerID == localPlayerID or pLocalPlayerDiplomacy:HasMet(playerID)) then
 		playerName = playerConfig:GetPlayerName();
 	end
 	kItem.AmbassadorIcon:SetToolTipString(Locale.Lookup("LOC_CITY_STATE_PANEL_CIV_AMBASSADOR_TOOLTIP", playerName));
-
 
 	return kItem;
 end

@@ -10,7 +10,7 @@
   <Instance Name="EmergencyRowEntryInstance">
     <Container ID="EmergencyRowEntryTop" Size="parent,16">
       <Image ID="EmergencyIcon" Offset="8,0" Size="16,16" IconSize="16" Icon="ICON_STATS_GENERIC_MODIFIER"/>
-      <Label ID="EmergencyName" Offset="38,0" Style="FontNormal16"/>
+      <Label ID="EmergencyName" Offset="38,0" Style="FontNormal16" TruncateWidth="220"/>
     </Container>
   </Instance>
   

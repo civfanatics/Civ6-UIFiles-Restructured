@@ -397,6 +397,7 @@ function AddIntelEmergency(tabContainer:table)
 
 	m_EmergencyTabContext:SetHide(false);
 
+
 	-- Create tab button
 	local tabButtonInstance:table = CreateTabButton();
 	tabButtonInstance.Button:RegisterCallback( Mouse.eLClick, function() ShowPanel(tabAnchor.Anchor); end );

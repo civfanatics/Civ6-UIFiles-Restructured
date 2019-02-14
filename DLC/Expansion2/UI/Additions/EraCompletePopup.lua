@@ -24,6 +24,7 @@ local ERA_DECO:table = {
 	"Frame_EraRollover_Modern",
 	"Frame_EraRollover_Atomic",
 	"Frame_EraRollover_Information",
+	"Frame_EraRollover_Future",
 };
 
 -- ===========================================================================
@@ -268,5 +269,6 @@ function Initialize()
 		Events.LocalPlayerTurnBegin.Add( OnCheckGameEraChanged );
 		m_isLockMode = true;
 	end
+
 end
 Initialize();

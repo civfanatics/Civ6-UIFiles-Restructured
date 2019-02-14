@@ -91,20 +91,21 @@ function TutorialLoader:Initialize(TutorialCheck:ifunction)
 
 	------------------
 	Events.CulturalIdentityCityConverted.Add(function(player, cityID, fromPlayer)
-		local ePlayer = Game.GetLocalPlayer();
-		local bRevealed = false;
+		local ePlayer :number = Game.GetLocalPlayer();
+		if (ePlayer == -1) then return; end		-- Autoplay
+
+		local isRevealed :boolean = false;
 
 		local pCity = CityManager.GetCity(player, cityID);
 		if (pCity ~= nil) then
 			local localPlayerVis:table = PlayersVisibility[Game.GetLocalPlayer()];
 			if localPlayerVis:IsRevealed(pCity:GetX(), pCity:GetY()) then
 				m_CityID = { Player = player, CityID = cityID };
-				bRevealed = true;
+				isRevealed = true;
 			end			
 		end
-
 		
-		if(bRevealed == true) then
+		if isRevealed then
 			if (fromPlayer == ePlayer) then
 				if (not Players[player]:IsMajor()) then
 					TutorialCheck("LostLoyaltyToIndependent");
@@ -302,7 +303,7 @@ function TutorialLoader:CreateTutorialItems(AddToListener:ifunction)
 
 	-- First, delete deprecated items.
 	TutorialItem.RemoveItem("RESEARCH_AGREEMENTS_UNLOCKED");
-	
+
 	-- Local player scout unit added to map
 	local item:TutorialItem = TutorialItem:new("GOVERNORS_INTRO");
 	item:SetRaiseEvents("GovernorsIntro");
@@ -332,7 +333,7 @@ function TutorialLoader:CreateTutorialItems(AddToListener:ifunction)
 	-- ===========================================================================
 	item = TutorialItem:new("FIRST_GOVERNOR_APPOINTMENT");
 	item:SetRaiseEvents("FirstGovernorAppointment");
-	item:SetTutorialLevel(TutorialLevel.LEVEL_NEW_TO_XP1);
+	item:SetTutorialLevel(TutorialLevel.LEVEL_EXPERIENCED_PLAYER);
 	item:SetIsEndOfChain(true);
 	item:SetIsQueueable(true);
 	item:SetShowPortrait(true);
