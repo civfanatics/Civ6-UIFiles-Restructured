@@ -57,7 +57,7 @@ end
 -- ===========================================================================
 function AddEmergencyTabEntry( crisis:table, parentControl:table )
 	local entryInst:table = ms_EmergencyTabEntryIM:GetInstance( parentControl );
-	entryInst.EmergencyNameLabel:SetText(crisis.NameText);
+	entryInst.EmergencyNameLabel:LocalizeAndSetText(crisis.NameText);
 	entryInst.EmergencyGoalsLabel:SetText(crisis.GoalDescription);
 
 	-- If TurnsLeft < 0 emergency is completed so label it as such

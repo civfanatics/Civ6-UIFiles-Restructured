@@ -5,9 +5,10 @@
 include("InstanceManager");
 include("TabSupport");
 include("SupportFunctions");
-include("Civ6Common"); --DifferentiateCivs
+include("Civ6Common");
 include("ModalScreen_PlayerYieldsHelper");
 include("GovernorSupport");
+include("PopupDialog");
 
 -- ===========================================================================
 --	CONSTANTS
@@ -35,6 +36,11 @@ local m_GovernorIndex:number = -1;
 
 local m_SelectedPromotion:number = -1;
 
+-- Player ID and City ID sent by City Banner to be used to auto select a city when opening the assignment chooser
+local m_CityBannerPlayerID:number = -1;
+local m_CityBannerCityID:number = -1;
+
+local m_TopPanelConsideredHeight:number = 0;
 -- ===========================================================================
 function Refresh()
 	if m_GovernorIndex == -1 then
@@ -64,15 +70,25 @@ function Refresh()
 		local pAssignedCity:table = pGovernor:GetAssignedCity();
 		if pAssignedCity then
 			Controls.AssignButtonLabel:SetText(Locale.Lookup("LOC_GOVERNORS_SCREEN_BUTTON_REASSIGN_GOVERNOR"));
+		
+			SetButtonTexture(Controls.AssignButton, "Controls_Button");
 		else
 			Controls.AssignButtonLabel:SetText(Locale.Lookup("LOC_GOVERNORS_SCREEN_BUTTON_ASSIGN_GOVERNOR"));
+
+			-- If we have cities without any governors highlight the Assign buttons
+			if AnyCitiesWithoutAGovernor() then
+				SetButtonTexture(Controls.AssignButton, "Controls_Confirm");
+			else
+				SetButtonTexture(Controls.AssignButton, "Controls_Button");
+			end
 		end
-		Controls.AssignButton:SetVoid1(pGovernorDef.Index);
-		Controls.AssignButton:RegisterCallback( Mouse.eLClick, OnAssignGovernor );
+		
+		Controls.AssignButton:RegisterCallback( Mouse.eLClick, function() OnAssignGovernor(pGovernorDef.Index, m_CityBannerPlayerID, m_CityBannerCityID); end );
 		local bCanAssign:boolean = pPlayerGovernors:HasGovernor(pGovernorDef.Hash) and pGovernor:GetNeutralizedTurns() == 0;
 		Controls.AssignButton:SetDisabled(not bCanAssign);
 	else
 		Controls.AssignButtonLabel:SetText(Locale.Lookup("LOC_GOVERNORS_SCREEN_BUTTON_APPOINT_GOVERNOR"));
+		SetButtonTexture(Controls.AssignButton, "Controls_Confirm");
 		Controls.AssignButton:SetVoid1(pGovernorDef.Index);
 		Controls.AssignButton:RegisterCallback( Mouse.eLClick, OnAppointGovernor );
 		local bCanAppoint:boolean = pPlayerGovernors:CanAppoint();
@@ -115,16 +131,19 @@ function Refresh()
 					elseif m_SelectedPromotion == promotion.Index then
 						promotionInst.PromotionButton:SetDisabled(false);
 						promotionInst.PromotionButton:SetSelected(true);
+						promotionInst.PromotionButton:SetVisState(5);
 						promotionInst.PromotionButton:SetVoid1(m_GovernorIndex);
 						promotionInst.PromotionButton:SetVoid2(promotion.Index);
 						promotionInst.PromotionButton:RegisterCallback( Mouse.eLClick, OnPromoteGovernor );
 					elseif not canEarnPromotion then
 						promotionInst.PromotionButton:SetDisabled(true);
 						promotionInst.PromotionButton:SetSelected(false);
+						promotionInst.PromotionButton:SetVisState(3);
 						promotionInst.PromotionButton:ClearCallback( Mouse.eLClick );
 					else
 						promotionInst.PromotionButton:SetDisabled(false);
 						promotionInst.PromotionButton:SetSelected(false);
+						promotionInst.PromotionButton:SetVisState(0);
 						promotionInst.PromotionButton:SetVoid1(m_GovernorIndex);
 						promotionInst.PromotionButton:SetVoid2(promotion.Index);
 						promotionInst.PromotionButton:RegisterCallback( Mouse.eLClick, OnPromoteGovernor );
@@ -186,7 +205,7 @@ function Refresh()
 
 	if m_SelectedPromotion ~= -1 then
 		Controls.ConfirmButton:SetHide(false);
-		Controls.BackButton:SetHide(true);		
+		Controls.BackButton:SetHide(false);		
 	else
 		Controls.ConfirmButton:SetHide(true);
 		Controls.BackButton:SetHide(false);
@@ -211,8 +230,8 @@ function OnAppointGovernor( eGovernor:number )
 end
 
 -- ===========================================================================
-function OnAssignGovernor( eGovernor:number )
-	LuaEvents.GovernorAssignmentChooser_RequestAssignment( eGovernor );
+function OnAssignGovernor( eGovernor:number, playerID:number, cityID:number )
+	LuaEvents.GovernorAssignmentChooser_RequestAssignment( eGovernor, playerID, cityID );
 	Close();
 	LuaEvents.GovernorPanel_AssignDetails();
 end
@@ -249,13 +268,23 @@ end
 
 -- ===========================================================================
 function OnBack()
-	Close();
-	LuaEvents.GovernorPanel_ClosedDetails();
+	if m_SelectedPromotion ~= -1 then
+		local popup:table = PopupDialogInGame:new( "GovernorPromotionCancel" );
+		popup:ShowYesNoDialog(Locale.Lookup("LOC_GOVERNORS_CANCEL_PROMOTE_PROMPT"), function() Close(); LuaEvents.GovernorPanel_ClosedDetails(); end );
+	else
+		Close();
+		LuaEvents.GovernorPanel_ClosedDetails();
+	end
 end
 
 -- ===========================================================================
-function OnOpenDetails( governorIndex:number )
+function OnOpenDetails( governorIndex:number, playerID:number, cityID:number )
 	m_GovernorIndex = governorIndex;
+
+	-- Player ID and City ID sent by City Banner to be used to auto select a city when opening the assignment chooser
+	m_CityBannerPlayerID = playerID;
+	m_CityBannerCityID = cityID;
+
 	Open();
 end
 
@@ -314,6 +343,11 @@ function OnInputHandler( pInputStruct:table )
 	if msg == KeyEvents.KeyUp and key == Keys.VK_ESCAPE then 
 		OnBack();
 		return true;
+	elseif msg == KeyEvents.KeyUp and key == Keys.VK_RETURN then
+		if m_SelectedPromotion ~= -1 then
+			OnConfirm();
+		end
+		return true;
 	end;
 	return false;
 end
@@ -353,5 +387,8 @@ function Initialize()
 	-- Control Events
 	Controls.ConfirmButton:RegisterCallback( eLClick, OnConfirm );
 	Controls.BackButton:RegisterCallback( eLClick, OnBack );
+	Controls.CloseButton:RegisterCallback( eLClick, OnBack );
+
+	m_TopPanelConsideredHeight = Controls.Vignette:GetSizeY() - TOP_PANEL_OFFSET;
 end
 Initialize();

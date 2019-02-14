@@ -1,14 +1,28 @@
---[[
--- Created by Sam Batista on Aug 02 2017
--- Copyright (c) Firaxis Games
---]]
+-- Copyright 2017-2018, Firaxis Games
+
 -- ===========================================================================
 -- INCLUDE BASE FILE
 -- ===========================================================================
 include("DiplomacyActionView");
 
+
 -- ===========================================================================
---	CONTEXTS
+--	CACHE BASE FUNCTIONS
+--	Do not make cache functions local so overriden functions can check these names.
+-- ===========================================================================
+BASE_GetInitialStatementOptions = GetInitialStatementOptions;
+BASE_GetStatementButtonTooltip = GetStatementButtonTooltip;
+BASE_GetWarType = GetWarType;
+BASE_IsWarChoice = IsWarChoice;
+BASE_OnSelectConversationDiplomacyStatement = OnSelectConversationDiplomacyStatement;
+BASE_OnSelectInitialDiplomacyStatement = OnSelectInitialDiplomacyStatement;
+BASE_PopulateIntelPanels = PopulateIntelPanels;
+BASE_PopulateLeader = PopulateLeader;
+BASE_ShouldAddTopLevelStatementOption = ShouldAddTopLevelStatementOption;
+
+
+-- ===========================================================================
+--	MEMBERS
 -- ===========================================================================
 local m_AllianceRowContext = nil;
 local m_EmergencyRowContext = nil;
@@ -16,18 +30,6 @@ local m_EmergencyRowContext = nil;
 local m_AllianceTabContext = nil;
 local m_EmergencyTabContext = nil;
 
-
--- ===========================================================================
---	CACHE BASE FUNCTIONS
--- ===========================================================================
-BASE_GetWarType = GetWarType;
-BASE_IsWarChoice = IsWarChoice;
-BASE_GetStatementButtonTooltip = GetStatementButtonTooltip;
-BASE_GetInitialStatementOptions = GetInitialStatementOptions;
-BASE_ShouldAddTopLevelStatementOption = ShouldAddTopLevelStatementOption;
-BASE_OnSelectInitialDiplomacyStatement = OnSelectInitialDiplomacyStatement;
-BASE_OnSelectConversationDiplomacyStatement = OnSelectConversationDiplomacyStatement;
-BASE_PopulateLeader = PopulateLeader;
 
 -- ===========================================================================
 --	OVERRIDE BASE FUNCTIONS
@@ -115,8 +117,8 @@ function GetInitialStatementOptions(parsedStatements, rootControl)
 end
 
 -- ===========================================================================
-function ShouldAddTopLevelStatementOption(pActionDef)
-	return pActionDef.UIGroup ~= "ALLIANCES";
+function ShouldAddTopLevelStatementOption(uiGroup)
+	return uiGroup ~= "ALLIANCES";
 end
 
 -- ===========================================================================
@@ -134,7 +136,7 @@ function OnSelectInitialDiplomacyStatement(key)
 		elseif key == "CHOICE_DECLARE_IDEOLOGICAL_WAR" then
 			DiplomacyManager.RequestSession(ms_LocalPlayerID, ms_SelectedPlayerID, "DECLARE_IDEOLOGICAL_WAR");
 
-		elseif key == "CHOICE_ALLIANCE_RELIGIOUS" then
+		elseif key == "CHOICE_ALLIANCE_RELIGIOUS" or key == "CHOICE_ALLIANCE_RELIGIOUS_TEAM" then
 				-- Clear the outgoing deal, if we have nothing pending, so the user starts out with an empty deal.
 				if (not DealManager.HasPendingDeal(ms_LocalPlayerID, ms_SelectedPlayerID)) then
 					DealManager.ClearWorkingDeal(DealDirection.OUTGOING, ms_LocalPlayerID, ms_SelectedPlayerID);
@@ -151,7 +153,7 @@ function OnSelectInitialDiplomacyStatement(key)
 				end
 				DiplomacyManager.RequestSession(ms_LocalPlayerID, ms_SelectedPlayerID, "MAKE_DEAL");
 
-		elseif key == "CHOICE_ALLIANCE_RESEARCH" then
+		elseif key == "CHOICE_ALLIANCE_RESEARCH" or key == "CHOICE_ALLIANCE_RESEARCH_TEAM" then
 				-- Clear the outgoing deal, if we have nothing pending, so the user starts out with an empty deal.
 				if (not DealManager.HasPendingDeal(ms_LocalPlayerID, ms_SelectedPlayerID)) then
 					DealManager.ClearWorkingDeal(DealDirection.OUTGOING, ms_LocalPlayerID, ms_SelectedPlayerID);
@@ -168,7 +170,7 @@ function OnSelectInitialDiplomacyStatement(key)
 				end
 				DiplomacyManager.RequestSession(ms_LocalPlayerID, ms_SelectedPlayerID, "MAKE_DEAL");
 
-		elseif key == "CHOICE_ALLIANCE_CULTURAL" then
+		elseif key == "CHOICE_ALLIANCE_CULTURAL" or key == "CHOICE_ALLIANCE_CULTURAL_TEAM" then
 				-- Clear the outgoing deal, if we have nothing pending, so the user starts out with an empty deal.
 				if (not DealManager.HasPendingDeal(ms_LocalPlayerID, ms_SelectedPlayerID)) then
 					DealManager.ClearWorkingDeal(DealDirection.OUTGOING, ms_LocalPlayerID, ms_SelectedPlayerID);
@@ -185,7 +187,7 @@ function OnSelectInitialDiplomacyStatement(key)
 				end
 				DiplomacyManager.RequestSession(ms_LocalPlayerID, ms_SelectedPlayerID, "MAKE_DEAL");
 
-		elseif key == "CHOICE_ALLIANCE_ECONOMIC" then
+		elseif key == "CHOICE_ALLIANCE_ECONOMIC" or key == "CHOICE_ALLIANCE_ECONOMIC_TEAM" then
 				-- Clear the outgoing deal, if we have nothing pending, so the user starts out with an empty deal.
 				if (not DealManager.HasPendingDeal(ms_LocalPlayerID, ms_SelectedPlayerID)) then
 					DealManager.ClearWorkingDeal(DealDirection.OUTGOING, ms_LocalPlayerID, ms_SelectedPlayerID);
@@ -202,7 +204,7 @@ function OnSelectInitialDiplomacyStatement(key)
 				end
 				DiplomacyManager.RequestSession(ms_LocalPlayerID, ms_SelectedPlayerID, "MAKE_DEAL");
 
-		elseif key == "CHOICE_ALLIANCE_MILITARY" then
+		elseif key == "CHOICE_ALLIANCE_MILITARY" or key == "CHOICE_ALLIANCE_MILITARY_TEAM" then
 			-- Clear the outgoing deal, if we have nothing pending, so the user starts out with an empty deal.
 			if (not DealManager.HasPendingDeal(ms_LocalPlayerID, ms_SelectedPlayerID)) then
 				DealManager.ClearWorkingDeal(DealDirection.OUTGOING, ms_LocalPlayerID, ms_SelectedPlayerID);
@@ -289,29 +291,28 @@ function PopulateIntelOverview(overviewInstance:table)
 		AddIntelOverviewDivider(overviewInstance);
 	end
 	AddOverviewOtherRelationships(overviewInstance);
-
-	-- Refresh contexts
-	LuaEvents.DiploScene_RefreshOverviewRows(GetSelectedPlayerID());
-
-	overviewInstance.IntelOverviewStack:CalculateSize();
-	overviewInstance.IntelOverviewStack:ReprocessAnchoring();
 end
 
 -- ===========================================================================
-local m_fnBasePopulateIntelPanels = PopulateIntelPanels;
-function PopulateIntelPanels(tabContainer:table)
-	m_fnBasePopulateIntelPanels( tabContainer );
-	AddIntelAlliance(tabContainer);
-	AddIntelEmergency(tabContainer);
+function PopulateIntelPanels( kTabContainer:table )
+	
+	BASE_PopulateIntelPanels( kTabContainer );
+	AddIntelAlliance( kTabContainer );
+	AddIntelEmergency( kTabContainer );
 
-	-- Refresh contexts
-	LuaEvents.DiploScene_RefreshTabs(GetSelectedPlayerID());
+	-- Refresh contexts (if this isn't being called from an override.)
+	if XP1_PopulateIntelPanels == nil then
+		LuaEvents.DiploScene_RefreshTabs(GetSelectedPlayerID());
+	end
 end
 
 -- ===========================================================================
 function AddIntelAlliance(tabContainer:table)
 	-- Don't show the alliance tab if we're in a team with the selected player
 	if ms_SelectedPlayer:GetTeam() == ms_LocalPlayer:GetTeam() then
+		if m_AllianceTabContext then
+			m_AllianceTabContext:SetHide(true);
+		end
 		return;
 	end
 
@@ -323,13 +324,15 @@ function AddIntelAlliance(tabContainer:table)
 		m_AllianceTabContext:ChangeParent(tabAnchor.Anchor);
 	end
 
+	m_AllianceTabContext:SetHide(false);
+
 	-- Create tab button
 	local tabButtonInstance:table = CreateTabButton();
 	tabButtonInstance.Button:RegisterCallback( Mouse.eLClick, function() ShowPanel(tabAnchor.Anchor); end );
 	tabButtonInstance.Button:SetToolTipString(Locale.Lookup("LOC_DIPLOACTION_ALLIANCE_TAB_TOOLTIP"));
 	tabButtonInstance.ButtonIcon:SetIcon("ICON_STAT_ALLIANCES");
 
-	-- Cacahe references to the button instance and header text on the panel instance
+	-- Cache references to the button instance and header text on the panel instance
 	tabAnchor.Anchor.m_ButtonInstance = tabButtonInstance;
 	tabAnchor.Anchor.m_HeaderText = Locale.ToUpper("LOC_DIPLOACTION_INTEL_REPORT_ALLIANCE");
 end
@@ -378,6 +381,9 @@ end
 function AddIntelEmergency(tabContainer:table)
 	-- Only show the emergency tab is the local player is the target or a member of any emergencies
 	if not AreThereEmergenciesForPlayer(GetSelectedPlayerID()) then
+		if m_EmergencyTabContext then
+			m_EmergencyTabContext:SetHide(true);
+		end
 		return;
 	end
 
@@ -388,6 +394,8 @@ function AddIntelEmergency(tabContainer:table)
 	else
 		m_EmergencyTabContext:ChangeParent(tabAnchor.Anchor);
 	end
+
+	m_EmergencyTabContext:SetHide(false);
 
 	-- Create tab button
 	local tabButtonInstance:table = CreateTabButton();

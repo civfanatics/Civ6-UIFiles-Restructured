@@ -1,12 +1,11 @@
---[[
--- Created by Tyler Berry, Aug 17 2017
--- Copyright (c) Firaxis Games
---]]
+--	Copyright 2017-2018, Firaxis Games
 include("InstanceManager");
 include("CivilizationIcon");
+include("SupportFunctions");
+
 
 -- ===========================================================================
--- Constants
+--	CONSTANTS
 -- ===========================================================================
 local COLOR_TARGETED_PRIMARY = RGBAValuesToABGRHex		(	 1,	.176, .207,	1);
 local COLOR_TARGETED_SECONDARY = RGBAValuesToABGRHex	( .384, .411, .447, 1);
@@ -17,19 +16,27 @@ local COLOR_INVITED_SECONDARY = RGBAValuesToABGRHex		( .415, .427, .450, 1);
 
 
 -- ===========================================================================
--- Instant Managers
+--	MEMBERS
 -- ===========================================================================
-local m_CrisisInstManager = InstanceManager:new( "CrisisInstance", "RootControl", Controls.CrisisStack);
+local m_CrisisIM :table = InstanceManager:new( "CrisisInstance", "RootControl", Controls.CrisisStack);
 
-function OnTurnBegin()
-	m_CrisisInstManager:ResetInstances();
+
+-- ===========================================================================
+--	FUNCTIONS
+-- ===========================================================================
+
+
+-- ===========================================================================
+function Realize()
+	m_CrisisIM:ResetInstances();
 	local playerID = Game.GetLocalPlayer();
 	local crisisData = Game.GetEmergencyManager():GetEmergencyInfoTable(playerID);
 
-	--TODO: Test this and fill with living data
 	for _, crisis in ipairs(crisisData) do
-		local crisisInstance:table = m_CrisisInstManager:GetInstance();
-		crisisInstance.CrisisTitle:SetText(Locale.ToUpper(crisis.NameText));
+		local crisisInstance:table = m_CrisisIM:GetInstance();
+
+		local MAX_BEFORE_TEXT_TRUNC:number = 210;
+		TruncateStringWithTooltip(crisisInstance.CrisisTitle, MAX_BEFORE_TEXT_TRUNC, Locale.ToUpper(Locale.Lookup(crisis.NameText)))
 		
 		local goalsCompleted:number = 0;
 		local goalsTotal:number = 0;
@@ -48,7 +55,7 @@ function OnTurnBegin()
 		--Register click
 		local boxedCrisis:table = crisis;
 		crisisInstance.MainPanel:RegisterCallback(Mouse.eLClick, function()
-			LuaEvents.EmergencyClicked(boxedCrisis.TargetID, boxedCrisis.EmergencyType);
+			LuaEvents.WorldCrisisTracker_EmergencyClicked(boxedCrisis.TargetID, boxedCrisis.EmergencyType);
 		end);
 
 		--Set target
@@ -82,15 +89,24 @@ function OnTurnBegin()
 	end
 end
 
+-- ===========================================================================
+function OnEmergencyEvent()
+	Realize();
+end
+
+-- ===========================================================================
+--	Initialize
+-- ===========================================================================
 function Initialize()
 	ContextPtr:SetHide(false);
 	ContextPtr:SetAutoSize(true);
 
 	--Events
-	Events.EmergencyAvailable.Add(OnTurnBegin);
-	Events.EmergenciesUpdated.Add(OnTurnBegin);
-	Events.EmergencyRejected.Add(OnTurnBegin);
-	Events.LocalPlayerChanged.Add(OnTurnBegin);
-	OnTurnBegin();
+	Events.EmergencyAvailable.Add( OnEmergencyEvent );
+	Events.EmergenciesUpdated.Add( OnEmergencyEvent );
+	Events.EmergencyRejected.Add( OnEmergencyEvent );
+	Events.LocalPlayerChanged.Add( OnEmergencyEvent );
+	
+	Realize();
 end
 Initialize();

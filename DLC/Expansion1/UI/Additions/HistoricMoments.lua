@@ -1,9 +1,10 @@
---[[
--- Created by Samuel Batista on Friday Apr 14 2017
--- Copyright (c) Firaxis Games
---]]
+-- Copright 2017-2018, Firaxis Games
+-- Full screen timeline of historic moments.
 
 include("InstanceManager");
+include("GameCapabilities");
+include("ModalScreen_PlayerYieldsHelper");
+include("PopupPriorityLoader_", true);
 
 -- ===========================================================================
 --	CONSTANTS
@@ -20,6 +21,7 @@ local AUTO_SHOW_INTEREST_LEVEL:number = 3;
 
 local DATA_FIELD_NUM_INSTANCES:string = "DATA_FIELD_NUM_INSTANCES";
 local HISTORIC_MOMENT_HASH:number = DB.MakeHash("NOTIFICATION_PRIDE_MOMENT_RECORDED");
+
 
 local DATA_TYPE_MAP:table = {
 	[MomentDataTypes.MOMENT_DATA_BELIEF]					= function(i) return GameInfo.Beliefs[i].BeliefType end,
@@ -55,9 +57,11 @@ local DATA_ILLUSTRATIONS_MAP:table = {
 --	VARIABLES
 -- ===========================================================================
 local m_CurrentEra:number = -1;
+local m_CurrentMoment:number = -1;
 local m_ScreenWidth:number = -1;
 local m_MomentStackInstance:table = nil;
 local m_CachedIllustrations:table = {}; -- 3D table indexed by [MomentIllustrationType][MomentDataType][GameDataType]
+local m_TopPanelConsideredHeight:number = 0;
 
 local m_SmallMomentIM:table = InstanceManager:new("SmallMoment", "Root");
 local m_LargeMomentIM:table = InstanceManager:new("LargeMoment", "Root", Controls.TimelineStack);
@@ -71,7 +75,7 @@ local m_SmallMomentStackIM:table = InstanceManager:new("SmallMomentStack", "Root
 local m_EraLabelIM:table = InstanceManager:new("EraLabel", "Root", Controls.TimelineStack);
 local m_TimelinePaddingIM:table = InstanceManager:new("TimelinePadding", "Root", Controls.TimelineStack);
 
-local m_lastPercent         :number = 0.1;
+local m_lastPercent         :number = -1;
 
 local m_isLocalPlayerTurn	:boolean = true;
 local m_isOpenFromEndGame	:boolean = false;
@@ -81,8 +85,31 @@ local m_kQueuedPopups		: table	 = {};
 -- Cause nil access on DATA_ILLUSTRATIONS_MAP to return m_LargeIllustrationIM
 setmetatable(DATA_ILLUSTRATIONS_MAP, { __index = function() return m_LargeIllustrationIM end });
 
+
 -- ===========================================================================
 --	FUNCTIONS
+-- ===========================================================================
+function GetPopupPriority()
+	return m_isOpenFromEndGame and PopupPriority.Current or PopupPriority.Medium;
+end
+
+-- ===========================================================================
+function GetPopupParameters()
+	if m_isOpenFromEndGame then	
+		return {
+			RenderAtCurrentParent = true;
+			InputAtCurrentParent = true;
+			AlwaysVisibleInQueue = true;
+		}
+	end	
+	return {
+		RenderAtCurrentParent = true;
+		InputAtCurrentParent = true;
+		AlwaysVisibleInQueue = true;
+		DelayShow = true;				-- Adding Delay fixed: TTP 43014: The camera will become stuck in place if the user triggers the First Suzerain historical moment and reveals a Natural Wonder with auto end turn on in game. 
+	}
+end
+
 -- ===========================================================================
 function DebugMomentData(momentData:table)
 	local debugInfo:string = "(Turn = " .. momentData.Turn .. ", GameEra = " .. momentData.GameEra .. ", ActingPlayer = " .. momentData.ActingPlayer .. ", ExtraData = ";
@@ -97,8 +124,8 @@ end
 
 -- ===========================================================================
 function ShowNewTimelineMoment(popupData:table)
+	m_CurrentMoment = popupData.momentID;
 	DisplayTimeline(popupData.showAnim);
-	UI.PlaySound("UI_Screen_Open");
 	local localPlayerID:number = Game.GetLocalPlayer();
 	local pPlayerConfig:table = PlayerConfigurations[localPlayerID];
 	Controls.ModalScreenTitle:SetText(Locale.ToUpper(Locale.Lookup("LOC_HISTORY_NEW_MOMENT", pPlayerConfig:GetCivilizationDescription())));
@@ -111,7 +138,6 @@ function OnProcessNotification(playerID:number, notificationID:number, activated
 		if pNotification and pNotification:GetType() == HISTORIC_MOMENT_HASH then
 			local momentID = pNotification:GetValue("MomentID");
 			if momentID then
-
 				local popupData = {};
 				popupData.showAnim = true;
 				popupData.momentID = momentID;
@@ -127,17 +153,15 @@ function OnProcessNotification(playerID:number, notificationID:number, activated
 						return;
 					end
 
-					UI.PlaySound("Pride_Moment");
-
 					-- If this is not an appropriate time, queue this.
-
-					if not UI.CanShowPopup() then
+					if not UI.CanShowPopup(GetPopupPriority()) then
 						-- Add to queue
 						table.insert(m_kQueuedPopups, popupData);
 						return;
 					end
 				end
-				
+
+				UI.PlaySound("Pride_Moment");
 				ShowNewTimelineMoment(popupData);
 
 			else
@@ -179,15 +203,14 @@ function DisplayTimeline(showAnim:boolean)
 
 	showAnim = showAnim and Options.GetUserOption("Interface", "PlayHistoricMomentAnimation") ~= 0;
 
-	local localPlayerID:number = Game.GetLocalPlayer();
-	local allPrideMoments:table = Game.GetHistoryManager():GetAllMomentsData(localPlayerID, MIN_INTEREST_LEVEL);
-
 	ResetTimeline();
 
+	local localPlayerID:number = Game.GetLocalPlayer();
 	local pPlayerConfig:table = PlayerConfigurations[localPlayerID];
 	Controls.ModalScreenTitle:SetText(Locale.ToUpper(Locale.Lookup("LOC_HISTORY_TIMELINE_TITLE", pPlayerConfig:GetCivilizationDescription())));
 
-	local numPrideMoments = #allPrideMoments;
+	local allPrideMoments:table = Game.GetHistoryManager():GetAllMomentsData(localPlayerID, MIN_INTEREST_LEVEL);
+	local numPrideMoments:number = table.count(allPrideMoments);
 	if numPrideMoments > 0 then
 		for i, momentData in ipairs(allPrideMoments) do
 
@@ -197,7 +220,11 @@ function DisplayTimeline(showAnim:boolean)
 				AddEraSeparator(momentData.GameEra);
 			end
 
-			AddMoment(momentData, showAnim and i == numPrideMoments);
+			AddMoment(momentData, showAnim and (m_CurrentMoment < 0 and i == numPrideMoments or momentData.ID == m_CurrentMoment));
+
+			if m_CurrentMoment ~= -1 and momentData.ID == m_CurrentMoment then
+				break;
+			end
 		end
 
 		-- Add padding at the end of stack to keep last moment centered
@@ -205,6 +232,7 @@ function DisplayTimeline(showAnim:boolean)
 		if Controls.TimelineStack:GetSizeX() > MIN_WIDTH_FOR_PADDING then
 			AddPadding((m_ScreenWidth / 2) - (MOMENT_WIDTH / 2) - TIMELINE_STACK_X_OFFSET_SCROLL);
 		end
+		RealizeStackSize();
 
 		Controls.EmptyTimelineMessage:SetHide(true);
 	else
@@ -216,7 +244,6 @@ function DisplayTimeline(showAnim:boolean)
 	Controls.ScreenAnimIn:Play();
 	LuaEvents.GovPan_PostOpen();
 
-	RealizeStackSize();
 	Show();
 end
 
@@ -342,27 +369,14 @@ end
 
 -- ===========================================================================
 function OnScroll(scrollPanel, scrollAmount)
-	local stuckOffset:number = 0;
-	local scrollSize:number = scrollPanel:GetSizeX();
-	local stackSize:number = Controls.TimelineStack:GetSizeX();
-	if stackSize > m_ScreenWidth then
-		stackSize = stackSize + TIMELINE_STACK_X_OFFSET_SCROLL;
-		stuckOffset = scrollAmount * (stackSize - scrollSize);
-	end
-
-	Controls.BG:SetOffsetX(stuckOffset);
-	Controls.Ink:SetOffsetX(stuckOffset);
-	Controls.BGWheel:SetOffsetX(BG_WHEEL_X_OFFSET + stuckOffset);
-
-	if scrollAmount==0 or scrollAmount==1.0 then 
-        if m_lastPercent == scrollAmount then
-            return;
-        end
+	if scrollAmount == 0 or scrollAmount == 1.0 then
+		if m_lastPercent == scrollAmount then
+			return;
+		end
 		UI.PlaySound("UI_TechTree_ScrollTick_End"); 
-	else 
+	else
 		UI.PlaySound("UI_TechTree_ScrollTick"); 
-	end 
-
+	end
 	m_lastPercent = scrollAmount;
 end
 
@@ -374,15 +388,13 @@ function RealizeStackSize()
 	local shouldScroll:boolean = stackSizeX > m_ScreenWidth;
 	local bgSize:number = math.max(stackSizeX + TIMELINE_STACK_X_OFFSET_SCROLL, m_ScreenWidth);
 
-	Controls.BG:SetSizeX(m_ScreenWidth);
-	Controls.Ink:SetSizeX(m_ScreenWidth);
 	Controls.TopPattern:SetSizeX(bgSize);
 	Controls.BottomPattern:SetSizeX(bgSize);
 
 	Controls.TimelineStack:SetAnchor(shouldScroll and "L,C" or "C,C");
 	Controls.TimelineStack:SetOffsetX(shouldScroll and TIMELINE_STACK_X_OFFSET_SCROLL or TIMELINE_STACK_X_OFFSET_NO_SCROLL);
 	Controls.TimelineScroller:HideScrollBar(not shouldScroll);
-
+	
 	if shouldScroll then
 		Controls.TimelineScroller:SetScrollValue(1);
 	end
@@ -405,14 +417,24 @@ end
 function Show()
 	if ContextPtr:IsHidden() then
 		UI.PlaySound("UI_Screen_Open");
-		-- Queue the screen as a popup, but we want it to render at a desired location in the hierarchy, not on top of everything.
-		local kParameters = {};
-		kParameters.RenderAtCurrentParent = true;
-		kParameters.InputAtCurrentParent = true;
-		kParameters.AlwaysVisibleInQueue = true;
-		UIManager:QueuePopup(ContextPtr, m_isOpenFromEndGame and PopupPriority.High or PopupPriority.Low, kParameters);
-		if not m_isOpenFromEndGame then
-			ContextPtr:ChangeParent(ContextPtr:LookUpControl("/InGame/Screens"));
+
+		local priority		:number= GetPopupPriority();
+		local kParameters	:table = GetPopupParameters();
+		UIManager:QueuePopup(ContextPtr, priority, kParameters);
+
+		-- Change our parent to be 'Screens' when raised from an active game so the navigational hooks draw on top of it
+		ContextPtr:ChangeParent(ContextPtr:LookUpControl("/InGame/" .. (m_isOpenFromEndGame and "AdditionalUserInterfaces" or "Screens")));
+
+		-- From ModalScreen_PlayerYieldsHelper
+		if not RefreshYields() then
+			Controls.Vignette:SetSizeY(m_TopPanelConsideredHeight);
+		end
+		
+		-- From ModalScreen_PlayerYieldsHelper
+		if not RefreshYields() then
+			Controls.Vignette:SetSizeY(m_TopPanelConsideredHeight);
+		else
+			Controls.YieldsContainer:SetHide(m_isOpenFromEndGame);
 		end
 		LuaEvents.HistoricMoments_Opened();
 	end
@@ -466,9 +488,11 @@ function CacheMomentIllustrations()
 end
 
 -- ===========================================================================
-function ToggleHistoricMomentsScreen()
+function ToggleHistoricMomentsScreen(showAnim:boolean)
 	if ( ContextPtr:IsHidden() ) then
-		DisplayTimeline();
+		m_isOpenFromEndGame = false;
+		m_CurrentMoment = -1;
+		DisplayTimeline(showAnim);
 	else
 		Close()
 	end
@@ -478,6 +502,7 @@ end
 function ToggleFromEndGame(parentControl)
 	if ( ContextPtr:IsHidden() ) then
 		m_isOpenFromEndGame = true;
+		m_CurrentMoment = -1;
 		DisplayTimeline();
 	else
 		Close()
@@ -487,7 +512,7 @@ end
 -- ===========================================================================
 function OnUIIdle()
 	-- The UI is idle, are we waiting to show a popup?
-	if UI.CanShowPopup() then
+	if UI.CanShowPopup(GetPopupPriority()) then
 		ShowNextQueuedPopup();
 	end
 end
@@ -506,29 +531,40 @@ function OnLocalPlayerTurnEnd()
 end
 
 -- ===========================================================================
+function OnEndGame()
+	if UIManager:IsInPopupQueue(ContextPtr) then
+		UIManager:DequeuePopup(ContextPtr)
+	end
+end
+
+-- ===========================================================================
 function Initialize()
 	ContextPtr:SetHide(true);
 	ContextPtr:SetInputHandler(OnInputHandler, true);
 	
 	Controls.Close:RegisterCallback(Mouse.eLClick, Close);
 	Controls.TimelineScroller:RegisterScrollCallback(OnScroll);
-	Controls.TimelineStack:RegisterSizeChanged(RealizeStackSize);
 
 	Events.SystemUpdateUI.Add( OnUpdateUI );
 	Events.NotificationActivated.Add(OnProcessNotification);
-	Events.LocalPlayerTurnBegin.Add( OnLocalPlayerTurnBegin );	
+	Events.LocalPlayerTurnBegin.Add( OnLocalPlayerTurnBegin );
 	Events.LocalPlayerTurnEnd.Add( OnLocalPlayerTurnEnd );
+	Events.TeamVictory.Add(OnEndGame);
 	Events.UIIdle.Add( OnUIIdle );
 
 	LuaEvents.PrideMoments_ToggleTimeline.Add(ToggleHistoricMomentsScreen);
-	LuaEvents.PrideMoments_OpenFromEndGame.Add(ToggleFromEndGame);
+	LuaEvents.Advisor_ToggleTimeline.Add(ToggleHistoricMomentsScreen);
+	LuaEvents.EndGameMenu_OpenHistoricMoments.Add(ToggleFromEndGame);
 	LuaEvents.HistoricMoments_Close.Add(Close);
+	
+	LuaEvents.ShowEndGame.Add(OnEndGame);
 
 	CacheMomentIllustrations();
-end
-Initialize();
 
--- ===========================================================================
--- DEBUG (should always be commented out)
--- ===========================================================================
---DisplayTimeline();
+	m_TopPanelConsideredHeight = Controls.Vignette:GetSizeY() - TOP_PANEL_OFFSET;
+
+	--DisplayTimeline();	-- DEBUG (should always be commented out)
+end
+if HasCapability("CAPABILITY_HISTORIC_MOMENTS") then
+	Initialize();
+end

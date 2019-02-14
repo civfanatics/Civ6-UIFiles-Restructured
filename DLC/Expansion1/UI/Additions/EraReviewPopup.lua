@@ -39,7 +39,15 @@ local m_CurrentEraIndex:number = -1;
 
 local m_CivilizationIconIM:table = InstanceManager:new("CivilizationIconAge", "CivIconBacking", Controls.CivIconStack);
 
-function OnGameEraChanged(prevEraIndex:number, newEraIndex:number)
+function OnShowEraReviewPopup()
+	local gameEras:table = Game.GetEras();
+	if (gameEras == nil) then
+		return;
+	end
+
+	local currentEraIndex:number = gameEras:GetCurrentEra();
+	local prevEraIndex:number = currentEraIndex - 1;
+
 	--If prevEra is -1 we just started a fresh game
 	if prevEraIndex == -1 then
 		return;
@@ -49,7 +57,7 @@ function OnGameEraChanged(prevEraIndex:number, newEraIndex:number)
 	if m_LocalPlayerID < 0 then return; end
 
 	m_PreviousEraIndex = prevEraIndex;
-	m_CurrentEraIndex = newEraIndex;
+	m_CurrentEraIndex = currentEraIndex;
 
 	Controls.Title:SetText(Locale.ToUpper(Locale.Lookup("LOC_ERA_REVIEW_POPUP_TITLE", GameInfo.Eras[m_CurrentEraIndex].Name)));
 	Controls.EraImage:SetTexture(ERA_ILLUSTRATIONS[m_CurrentEraIndex]);
@@ -172,29 +180,43 @@ function PopulateCivilizationIcons()
 	end
 
 	for i,playerID in ipairs(heroicPlayers) do
-		AddPlayerEraIcon(playerID, "[ICON_GLORY_SUPER_GOLDEN_AGE]");
+		AddPlayerEraIcon(playerID, "[ICON_GLORY_SUPER_GOLDEN_AGE]", "LOC_ERA_PROGRESS_HEROIC_AGE");
 	end
 	for i,playerID in ipairs(goldenPlayers) do
-		AddPlayerEraIcon(playerID, "[ICON_GLORY_GOLDEN_AGE]");
+		AddPlayerEraIcon(playerID, "[ICON_GLORY_GOLDEN_AGE]", "LOC_ERA_PROGRESS_GOLDEN_AGE");
 	end
 	for i,playerID in ipairs(normalPlayers) do
-		AddPlayerEraIcon(playerID, "[ICON_GLORY_NORMAL_AGE]");
+		AddPlayerEraIcon(playerID, "[ICON_GLORY_NORMAL_AGE]", "LOC_ERA_PROGRESS_NORMAL_AGE");
 	end
 	for i,playerID in ipairs(darkPlayers) do
-		AddPlayerEraIcon(playerID, "[ICON_GLORY_DARK_AGE]");
+		AddPlayerEraIcon(playerID, "[ICON_GLORY_DARK_AGE]", "LOC_ERA_PROGRESS_DARK_AGE");
 	end
 	for i,playerID in ipairs(unmetPlayers) do
-		AddPlayerEraIcon(playerID, "");
+		AddPlayerEraIcon(playerID, "", "");
 	end
 end
 
 -- ===========================================================================
-function AddPlayerEraIcon(playerID:number, eraIcon:string)
+function AddPlayerEraIcon(playerID:number, eraIcon:string, eraTooltip:string)
 	local civIcon, instance = CivilizationIcon:GetInstance(m_CivilizationIconIM);
 	civIcon:UpdateIconFromPlayerID(playerID);
 	civIcon:SetLeaderTooltip(playerID);
 	civIcon:UpdateLeaderTooltip(playerID);
 	instance.EraLabel:SetText(eraIcon);
+
+	if eraTooltip ~= "" then
+		instance.EraLabel:SetToolTipString(Locale.Lookup(eraTooltip));
+	end
+
+	local iTeamID:number = Players[playerID]:GetTeam();
+	if #Teams[iTeamID] > 1 then
+		local teamRibbonName:string = TEAM_RIBBON_PREFIX .. tostring(iTeamID);
+		instance.TeamRibbon:SetIcon(teamRibbonName);
+		instance.TeamRibbon:SetHide(false);
+		instance.TeamRibbon:SetColor(GetTeamColor(iTeamID));
+	else
+		instance.TeamRibbon:SetHide(true);
+	end
 end
 
 function sortBreakdown(a,b) 
@@ -212,7 +234,7 @@ function sortBreakdownInverse(a,b)
 end
 
 function OnShow()
-	UIManager:QueuePopup(ContextPtr, PopupPriority.High);
+	UIManager:QueuePopup(ContextPtr, PopupPriority.MediumHigh);
 end
 
 function OnClose()
@@ -221,7 +243,7 @@ end
 
 function OnContinue()
 	UIManager:DequeuePopup(ContextPtr);
-	LuaEvents.DedicationPopup_Show(m_PreviousEraIndex, m_CurrentEraIndex);
+	LuaEvents.EraReviewPopup_MakeDedication(m_PreviousEraIndex, m_CurrentEraIndex);
 end
 
 -- ===========================================================================
@@ -262,7 +284,7 @@ function OnInputHandler( pInputStruct:table )
 end
 
 function Initialize()
-	--OnGameEraChanged(0, 1); -- DEBUG
+	--OnShowEraReviewPopup(); -- DEBUG
 	ContextPtr:SetHide(true); -- PRODUCTION
 
 	ContextPtr:SetInitHandler( OnInit );
@@ -272,7 +294,7 @@ function Initialize()
 	Controls.Close:RegisterCallback(Mouse.eLClick, OnClose);
 	Controls.Continue:RegisterCallback(Mouse.eLClick, OnContinue);
 
-	LuaEvents.EraReviewPopup_Show.Add(OnGameEraChanged);
+	LuaEvents.EraReviewPopup_Show.Add(OnShowEraReviewPopup);
 	LuaEvents.GameDebug_Return.Add(OnGameDebugReturn);
 end
 Initialize();

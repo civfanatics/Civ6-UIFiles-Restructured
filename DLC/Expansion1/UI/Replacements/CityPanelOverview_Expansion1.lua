@@ -1,7 +1,5 @@
---[[
--- Created by Tyler Berry, Aug 15 2017
--- Copyright (c) Firaxis Games
---]]
+-- Copyright 2017-2018, Firaxis Games
+
 -- ===========================================================================
 -- Base File
 -- ===========================================================================
@@ -11,54 +9,30 @@ include("CityPanelOverview");
 -- Cached Base Functions
 -- ===========================================================================
 BASE_HideAll = HideAll;
-BASE_PopulateTabs = PopulateTabs;
 BASE_ViewPanelCitizensGrowth = ViewPanelCitizensGrowth;
 BASE_View = View;
 BASE_ViewPanelAmenities = ViewPanelAmenities;
+BASE_LateInitialize = LateInitialize;
+
 
 -- ===========================================================================
 -- New Members
 -- ===========================================================================
 local m_CulturePanel = nil;
-local m_ButtonInstance = nil;
-local m_ButtonColor = "DarkBlue";
+local m_uiCultureTabInstance = nil;
 local m_ToolTip = "LOC_HUD_CITY_CULTURE_TOOLTIP";
 
-------------------------------------------------------------------------------------------------
--- Code related to the a new tab: Cultural Identity
-------------------------------------------------------------------------------------------------
+
+-- ===========================================================================
 function HideAll()
 	BASE_HideAll();
-	if m_ButtonInstance then
-		m_ButtonInstance.Button:SetSelected(false);
-		m_ButtonInstance.Icon:SetColorByName("White");
+	if m_uiCultureTabInstance then
+		m_uiCultureTabInstance.Button:SetSelected(false);
+		m_uiCultureTabInstance.Icon:SetColorByName("White");
+		if m_CulturePanel then
+			m_CulturePanel:SetHide(true);
+		end
 	end
-end
-
-function PopulateTabs()
-	BASE_PopulateTabs();
-	if m_ButtonInstance == nil then
-		m_ButtonInstance = m_kTabButtonIM:GetInstance();
-		m_ButtonInstance.Icon:SetIcon("ICON_STAT_GOVERNOR");
-		m_ButtonInstance.Button:SetToolTipString(Locale.Lookup(m_ToolTip));
-
-		m_tabs.AddTab(m_ButtonInstance.Button, function()
-			HideAll();
-			
-			-- Context has to be shown before CityPanelTabRefresh to ensure a proper Refresh
-			m_CulturePanel:SetHide(false);
-
-			m_ButtonInstance.Button:SetSelected(true);
-			m_ButtonInstance.Icon:SetColorByName(m_ButtonColor);
-			UI.PlaySound("UI_CityPanel_ButtonClick");
-			Controls.PanelDynamicTab:SetHide(false);
-			
-			RefreshCulturalIdentityPanel();
-		end);
-		m_tabs.CenterAlignTabs(0);
-	end
-	m_tabs.SelectTab( Controls.HealthButton );
-	m_tabs.AddAnimDeco(Controls.TabAnim, Controls.TabArrow);
 end
 
 function ViewPanelCitizensGrowth( data:table )
@@ -91,7 +65,12 @@ function ViewPanelCitizensGrowth( data:table )
 		local growthModifier =  math.max(1 + (data.HappinessGrowthModifier/100) + data.OtherGrowthModifiers, 0); -- This is unintuitive but it's in parity with the logic in City_Growth.cpp
 		iModifiedFood = Round(data.FoodSurplus * growthModifier, 2);
 		total = iModifiedFood * data.HousingMultiplier;
-		Controls.TurnsUntilBornLost:SetText( Locale.Lookup("LOC_HUD_CITY_TURNS_UNTIL_CITIZEN_BORN", data.TurnsUntilGrowth));
+		if data.Occupied then
+			total = iModifiedFood * data.OccupationMultiplier;
+			Controls.TurnsUntilBornLost:SetText( Locale.Lookup("LOC_HUD_CITY_GROWTH_OCCUPIED"));
+		else
+			Controls.TurnsUntilBornLost:SetText( Locale.Lookup("LOC_HUD_CITY_TURNS_UNTIL_CITIZEN_BORN", data.TurnsUntilGrowth));
+		end
 		Controls.FoodSurplusDeficitLabel:LocalizeAndSetText("LOC_HUD_CITY_TOTAL_FOOD_SURPLUS");
 	else
 		-- In a deficit, no bonuses or multipliers apply
@@ -111,40 +90,62 @@ function ViewPanelCitizensGrowth( data:table )
 	Controls.CitizensStarving:SetHide( data.TurnsUntilGrowth > -1);
 end
 
+-- ===========================================================================
 function View(data)
 	BASE_View(data);
-	if m_tabs.selectedControl == m_ButtonInstance.Button then
+	if GetSelectedTabButton() == m_uiCultureTabInstance.Button then
 		RefreshCulturalIdentityPanel();
 	end
 end
 
+-- ===========================================================================
 function RefreshCulturalIdentityPanel()
 	SetDesiredLens("Loyalty");
 	LuaEvents.CityPanelTabRefresh();
 end
 
+-- ===========================================================================
 function OnToggleLoyaltyTab()
-	if m_ButtonInstance then
-		ToggleOverviewTab(m_ButtonInstance.Button);
+	if m_uiCultureTabInstance then
+		ToggleOverviewTab(m_uiCultureTabInstance.Button);
 	end
 end
 
+-- ===========================================================================
 function ViewPanelAmenities(data:table)
 	BASE_ViewPanelAmenities(data);
 
-	kInstance = m_kAmenitiesIM:GetInstance();
+	kInstance = g_kAmenitiesIM:GetInstance();
 	kInstance.Amenity:SetText( Locale.Lookup("LOC_HUD_CITY_AMENITIES_LOST_FROM_GOVERNORS") );
 	kInstance.AmenityYield:SetText( Locale.ToNumber(data.AmenitiesFromGovernors) );
-	
-	
 end
 
-function Initialize()
-	m_CulturePanel = ContextPtr:LoadNewContext("CityPanelCulture", Controls.PanelDynamicTab);
-	m_CulturePanel:SetSizeX(Controls.PanelDynamicTab:GetSizeX());
-	m_CulturePanel:SetSizeY(Controls.PanelDynamicTab:GetSizeY());
-	LuaEvents.CityPanel_ToggleOverviewLoyalty.Add( OnToggleLoyaltyTab );
-	PopulateTabs();
-end
-Initialize();
 -- ===========================================================================
+function OnSelectCultureTab()
+	HideAll();
+		
+	-- Context has to be shown before CityPanelTabRefresh to ensure a proper Refresh
+	m_CulturePanel:SetHide(false);
+
+	m_uiCultureTabInstance.Button:SetSelected(true);
+	m_uiCultureTabInstance.Icon:SetColorByName("DarkBlue");
+	UI.PlaySound("UI_CityPanel_ButtonClick");
+	Controls.PanelDynamicTab:SetHide(false);
+			
+	RefreshCulturalIdentityPanel();
+end
+
+-- ===========================================================================
+function LateInitialize()
+	BASE_LateInitialize();
+
+	m_CulturePanel = ContextPtr:LoadNewContext("CityPanelCulture", Controls.PanelDynamicTab);
+	m_CulturePanel:SetSize( Controls.PanelDynamicTab:GetSize() );
+	LuaEvents.CityPanel_ToggleOverviewLoyalty.Add( OnToggleLoyaltyTab );
+
+	m_uiCultureTabInstance = GetTabButtonInstance();
+	m_uiCultureTabInstance.Icon:SetIcon("ICON_STAT_GOVERNOR");
+	m_uiCultureTabInstance.Button:SetToolTipString(Locale.Lookup(m_ToolTip));
+
+	AddTab(m_uiCultureTabInstance.Button, OnSelectCultureTab );
+end

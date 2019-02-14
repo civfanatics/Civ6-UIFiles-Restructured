@@ -3,7 +3,7 @@
 	<Instance Name="ReligionInfo">
 		<!-- Religion Info Dropdown -->
 		<Container ID="ReligionInfoContainer" Anchor="C,B" AnchorSide="I,O" Offset="0,-2" Size="200,200">
-			<GridButton ID="ReligionInfoButton" Anchor="C,T" Size="auto,auto" MinSize="160,0" AutoSizePadding="0,2" Texture="Banner_DataFrame" NoStateChange="1" SliceCorner="23,14" SliceSize="76,3" SliceTextureSize="122,31">
+			<GridButton ID="ReligionInfoButton" Anchor="C,T" Size="auto,auto" MinSize="160,31" AutoSizePadding="0,2" Texture="Banner_DataFrame" NoStateChange="1" SliceCorner="23,14" SliceSize="76,3" SliceTextureSize="122,31">
 				<Stack Anchor="C,C" Offset="0,2" StackGrowth="Down" StackPadding="0">
 					<Stack ID="ReligionInfoIconStack" Anchor="C,T" StackGrowth="Right" StackPadding="6"/>
 					<Stack ID="ReligionConversionTurnsStack" Anchor="C,T" StackGrowth="Right" StackPadding="4">
@@ -59,11 +59,11 @@
 	</Instance>
 	
 	<Instance Name="HolySiteIcon">
-		<WorldAnchor ID="Anchor" Size="22,22">
+		<ZoomAnchor ID="Anchor" Size="22,22" ZoomOffsetNear="0,0,0" ZoomOffsetFar="0,0,-20">
 			<Grid ID="HolySiteBacking" Style="DistrictBonusBack" Size="auto,default" AutoSizePadding="8,0">
 				<Label ID="HolySiteLabel" Anchor="C,C" Style="FontNormal16" Text="TextLabel" Offset="-2,-1" FontStyle="Glow" Color="208,212,217,255" EffectColor="88,144,191,100"/>
 			</Grid>
-		</WorldAnchor>
+		</ZoomAnchor>
 	</Instance>
 
 	<Instance Name="ReligionFollowers">

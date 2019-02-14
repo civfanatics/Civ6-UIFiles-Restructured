@@ -13,11 +13,13 @@ include("ModalLensPanel");
 BASE_OnLensLayerOn = OnLensLayerOn;
 BASE_ShowPoliticalLensKey = ShowPoliticalLensKey;
 
+local m_CulturalIdentityLens : number = UILens.CreateLensLayerHash("Cultural_Identity_Lens");
+
 -- ===========================================================================
 -- Members
 -- ===========================================================================
 function OnLensLayerOn( layerNum:number )
-	if layerNum == LensLayers.CULTURAL_IDENTITY_LENS then
+	if layerNum == m_CulturalIdentityLens then
 		Controls.LensText:SetText(Locale.ToUpper(Locale.Lookup("LOC_HUD_CULTURAL_IDENTITY_LENS")));
 		Controls.KeyPanel:SetHide(true);
 	else

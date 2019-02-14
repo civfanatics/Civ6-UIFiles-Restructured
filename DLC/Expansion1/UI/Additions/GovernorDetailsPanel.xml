@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Context xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="..\..\..\..\..\CivTech\Libs\ForgeUI\ForgeUI_Assets\Controls.xsd">
 
-	<Container Style="FullScreenVignetteConsumer" Size="parent,697"/>
+	<Container ID="Vignette" Style="FullScreenVignetteConsumer" Size="parent,697"/>
 
 	<Image ID="MainContainer" Anchor="C,C" Offset="0,37" Size="900,700" Texture="Governors_BackgroundTile_ColumnOff" StretchMode="Tile">
     <!-- Decorative Column Borders -->
@@ -97,6 +97,8 @@
         <Image Texture="Governors_PromotionScreen_DecoRight" Size="184,42" Color="0,0,0,50"/>
       </Stack>
     </Image>
+
+    <Button	ID="CloseButton" Anchor="R,T" Style="CloseButtonLarge" Offset="-8,-5"/>
   </Image>
 
   <Instance Name="PromotionInstance">

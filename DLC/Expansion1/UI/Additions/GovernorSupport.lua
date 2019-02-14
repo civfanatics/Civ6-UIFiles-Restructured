@@ -93,3 +93,21 @@ function GetGovernorStatus(governorDef:table, governor:table)
 		return Locale.Lookup("LOC_GOVERNORS_SCREEN_GOVERNOR_CANDIDATE"), "";
 	end
 end
+
+-- ===========================================================================
+function AnyCitiesWithoutAGovernor()
+	local pLocalPlayerCities:table = Players[Game.GetLocalPlayer()]:GetCities();
+	for i,pCity in pLocalPlayerCities:Members() do
+		if pCity:GetAssignedGovernor() == nil then
+			return true;
+		end
+	end
+
+	return false;
+end
+
+-- ===========================================================================
+function SetButtonTexture(control:table, texture:string)
+	control:SetTexture(texture);
+	control:SetVisState(0); -- Workaround for VisState breaking when switching textures
+end

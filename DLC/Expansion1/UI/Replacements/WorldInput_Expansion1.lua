@@ -1,11 +1,17 @@
 --[[
--- Created by Brian Feldges, last modified by Sam Batista on Aug 02 2017
--- Copyright (c) Firaxis Games
+-- Copyright (c) 2017-2018 Firaxis Games
 --]]
 -- ===========================================================================
 -- INCLUDE BASE FILE
 -- ===========================================================================
 include("WorldInput");
+
+
+-- ===========================================================================
+--	CACHE BASE FUNCTIONS
+-- ===========================================================================
+BASE_LateInitialize			= LateInitialize;
+
 
 ------------------------------------------------------------------------------------------------
 -- Code related to the Unit's 'Airdrop' mode
@@ -54,16 +60,16 @@ function OnInterfaceModeChange_UnitParadrop(eNewMode)
 
 		-- Highlight the plots available to airdrop to
 		if (table.count(g_targetPlots) ~= 0) then
-			UILens.ToggleLayerOn(LensLayers.HEX_COLORING_MOVEMENT);
-			UILens.SetLayerHexesArea(LensLayers.HEX_COLORING_MOVEMENT, Game.GetLocalPlayer(), g_targetPlots);
+			UILens.ToggleLayerOn(g_HexColoringMovement);
+			UILens.SetLayerHexesArea(g_HexColoringMovement, Game.GetLocalPlayer(), g_targetPlots);
 		end
 	end
 end
 --------------------------------------------------------------------------------------------------
 function OnInterfaceModeLeave_UnitParadrop(eNewMode:number)
 	UIManager:SetUICursor(CursorTypes.NORMAL);
-	UILens.ToggleLayerOff(LensLayers.HEX_COLORING_MOVEMENT);
-	UILens.ClearLayerHexes(LensLayers.HEX_COLORING_MOVEMENT);
+	UILens.ToggleLayerOff(g_HexColoringMovement);
+	UILens.ClearLayerHexes(g_HexColoringMovement);
 end
 
 
@@ -119,20 +125,25 @@ function OnInterfaceModeChange_PriorityTarget(eNewMode)
 
 		-- Highlight the plots available to attack a priority target
 		if (table.count(g_targetPlots) ~= 0) then
-			UILens.ToggleLayerOn(LensLayers.HEX_COLORING_MOVEMENT);
-			UILens.SetLayerHexesArea(LensLayers.HEX_COLORING_MOVEMENT, Game.GetLocalPlayer(), g_targetPlots);
+			UILens.ToggleLayerOn(g_HexColoringMovement);
+			UILens.SetLayerHexesArea(g_HexColoringMovement, Game.GetLocalPlayer(), g_targetPlots);
 		end
 	end
 end
 --------------------------------------------------------------------------------------------------
 function OnInterfaceModeLeave_PriorityTarget(eNewMode:number)
 	UIManager:SetUICursor(CursorTypes.NORMAL);
-	UILens.ToggleLayerOff(LensLayers.HEX_COLORING_MOVEMENT);
-	UILens.ClearLayerHexes(LensLayers.HEX_COLORING_MOVEMENT);
+	UILens.ToggleLayerOff(g_HexColoringMovement);
+	UILens.ClearLayerHexes(g_HexColoringMovement);
 end
 
 -- ===========================================================================
-function Initialize()
+--	OVERRIDE
+-- ===========================================================================
+function LateInitialize()
+
+	BASE_LateInitialize();
+
 	InterfaceModeMessageHandler[InterfaceModeTypes.PARADROP] = {};
 	InterfaceModeMessageHandler[InterfaceModeTypes.PARADROP][INTERFACEMODE_ENTER]= OnInterfaceModeChange_UnitParadrop;
 	InterfaceModeMessageHandler[InterfaceModeTypes.PARADROP][INTERFACEMODE_LEAVE] = OnInterfaceModeLeave_UnitParadrop;
@@ -150,4 +161,3 @@ function Initialize()
 		InterfaceModeMessageHandler[InterfaceModeTypes.PRIORITY_TARGET][MouseEvents.PointerUp] = OnMousePriorityTargetEnd;
 	end
 end
-Initialize();

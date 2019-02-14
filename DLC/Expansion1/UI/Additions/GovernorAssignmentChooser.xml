@@ -94,7 +94,7 @@
       <Container ID="BodyContainer" Size="310,parent-54" ConsumeAllMouse="1">
         
         <!-- Bottom Panel -->
-        <Grid ID="BottomGrid" Size="parent-2,parent-268" Offset="0,220" Texture="Controls_ContainerBlue" SliceStart="0,0" SliceCorner="3,3" SliceSize="9,9" SliceTextureSize="16,16" ConsumeAllMouse="1">
+        <Grid ID="BottomGrid" Size="parent-2,parent-268" Offset="0,220" Texture="Controls_ContainerBlue" SliceStart="0,0" SliceCorner="3,3" SliceSize="9,9" SliceTextureSize="16,16" >
 
           <!-- Destination List -->
           <ScrollPanel ID="AssignmentChoiceScrollPanel" Anchor="C,T" Offset="2,7" Size="parent,parent-10" Vertical="1" AutoScrollBar="1">
@@ -154,8 +154,8 @@
       </Container>
 
       <!-- Header container-->
-      <Grid Size="322,60" Offset="3,-25" Style="HeaderBannerLeft" ConsumeAllMouse="1">
-        <Label ID="Header_OriginText" Size="200, 50" Offset="0,8" Anchor="C,T" Style="FontFlair14" Color0="0,59,77,255" SmallCaps="18" SmallCapsType="FirstOnly" String="{LOC_GOVERNOR_ASSIGN_GOVERNOR_TO:upper}"/>
+      <Grid Size="322,60" Offset="3,-25" Style="HeaderBannerLeft" >
+        <Label ID="Header_OriginText" Size="260, 50" Offset="-8,9" Anchor="C,T" Style="FontFlair14" Color0="0,59,77,255" SmallCaps="18" SmallCapsType="FirstOnly" String="{LOC_GOVERNOR_ASSIGN_GOVERNOR_TO:upper}" TruncateWidth="240" TruncatedTooltip="1"/>
         <Button ID="Header_CloseButton" Size="32,32" Offset="10,-2" Anchor="R,T" Texture="Controls_CloseButtonAlt"/>
       </Grid>
       

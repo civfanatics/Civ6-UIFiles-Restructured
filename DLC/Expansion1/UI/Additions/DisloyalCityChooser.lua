@@ -4,7 +4,7 @@ local g_pSelectedCity;
 
 function OnKeepButton()
 	local tParameters = {};
-	tParameters[UnitOperationTypes.PARAM_FLAGS] = 2;
+	tParameters[UnitOperationTypes.PARAM_FLAGS] = CityDestroyDirectives.KEEP;
 	if (CityManager.CanStartCommand( g_pSelectedCity, CityCommandTypes.DESTROY, tParameters)) then
 		CityManager.RequestCommand( g_pSelectedCity, CityCommandTypes.DESTROY, tParameters);
 	end
@@ -12,7 +12,7 @@ function OnKeepButton()
 end
 function OnRejectButton()
 	local tParameters = {};
-	tParameters[UnitOperationTypes.PARAM_FLAGS] = 4;
+	tParameters[UnitOperationTypes.PARAM_FLAGS] = CityDestroyDirectives.REJECT;
 	if (CityManager.CanStartCommand( g_pSelectedCity, CityCommandTypes.DESTROY, tParameters)) then
 		UI.DeselectAllCities();
 		CityManager.RequestCommand( g_pSelectedCity, CityCommandTypes.DESTROY, tParameters);

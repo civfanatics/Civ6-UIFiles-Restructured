@@ -6,11 +6,11 @@ function GetLoyaltyPressureIconTooltip(loyaltyPerTurn:number, playerID:number)
 	local pPlayerConfig:table = PlayerConfigurations[playerID];
 
 	if loyaltyPerTurn > 0 then
-		loyaltyPressureIconTooltip = Locale.Lookup("LOC_LOYALTY_IS_RISING_BY_X_TT", Locale.Lookup(pPlayerConfig:GetCivilizationDescription()), Round(loyaltyPerTurn, 1));
+		loyaltyPressureIconTooltip = Locale.Lookup("LOC_LOYALTY_IS_RISING_BY_X_TT", pPlayerConfig:GetCivilizationDescription(), Round(loyaltyPerTurn, 1));
 	elseif loyaltyPerTurn < 0 then
-		loyaltyPressureIconTooltip = Locale.Lookup("LOC_LOYALTY_IS_DROPPING_BY_X_TT", Locale.Lookup(pPlayerConfig:GetCivilizationDescription()), Round(loyaltyPerTurn, 1))
+		loyaltyPressureIconTooltip = Locale.Lookup("LOC_LOYALTY_IS_DROPPING_BY_X_TT", pPlayerConfig:GetCivilizationDescription(), Round(loyaltyPerTurn, 1))
 	else
-		loyaltyPressureIconTooltip = Locale.Lookup("LOC_LOYALTY_IS_NOT_CHANGING_TT", Locale.Lookup(pPlayerConfig:GetCivilizationDescription()));
+		loyaltyPressureIconTooltip = Locale.Lookup("LOC_LOYALTY_IS_NOT_CHANGING_TT", pPlayerConfig:GetCivilizationDescription());
 	end
 
 	return loyaltyPressureIconTooltip;

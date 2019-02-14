@@ -1,13 +1,13 @@
---[[
--- Created by Samuel Batista on 11/30/2017
--- Copyright (c) Firaxis Games
---]]
-
+-- Copyright 2017-2018 (c) Firaxis Games
 
 -- ===========================================================================
 --	CONSTANTS
 -- ===========================================================================
-local NUM_PAGES = 9;
+local RULESET_TYPE		:string = "RULESET_EXPANSION_1";
+local OPTIONS_SEEN_KEY	:string = "HasSeenXP1FeaturesScreen";
+local OPTIONS_HIDE_KEY	:string = "HideXP1FeaturesScreen";
+
+local MIN_TUTORIAL_LEVEL = TutorialLevel.LEVEL_NEW_TO_XP1;
 
 local INTRO_ILLUSTRATIONS:table = {
 	"XP1Intro_Diagram_1",
@@ -20,6 +20,8 @@ local INTRO_ILLUSTRATIONS:table = {
 	"XP1Intro_Diagram_8",
 	"XP1Intro_Diagram_9",
 };
+
+local NUM_PAGES = #INTRO_ILLUSTRATIONS;
 
 local INTRO_DESCRIPTIONS:table = {
 	"LOC_TUTORIAL_XP1_INTRO_WELCOME",
@@ -53,6 +55,9 @@ local CONTINUE_BUTTON_TEXT = Locale.Lookup("LOC_XP1_INTRO_CONTINUE");
 -- ===========================================================================
 local m_PageIndex:number = 1;
 
+
+
+-- ===========================================================================
 function Realize()
 	Controls.Illustration:SetTexture(INTRO_ILLUSTRATIONS[m_PageIndex]);
 	Controls.Description:SetText(Locale.Lookup(INTRO_DESCRIPTIONS[m_PageIndex]));
@@ -70,22 +75,26 @@ function Realize()
 	Controls.ButtonStack:CalculateSize();
 end
 
+-- ===========================================================================
 function OnShow()
 	m_PageIndex = 1;
 	Realize();
-	ContextPtr:SetHide(false);
+	UIManager:QueuePopup(ContextPtr, PopupPriority.TutorialHigh);
 end
 
+-- ===========================================================================
 function OnShowFromMenu()
-	OnShow();
+	m_PageIndex = 1;
+	Realize();
 	UIManager:QueuePopup(ContextPtr, PopupPriority.Current);
 end
 
+-- ===========================================================================
 function OnClose()
-	UIManager:DequeuePopup(ContextPtr);
-	ContextPtr:SetHide(true);
+	UIManager:DequeuePopup(ContextPtr);	
 end
 
+-- ===========================================================================
 function OnNext()
 	if m_PageIndex >= NUM_PAGES then
 		OnClose();
@@ -95,22 +104,33 @@ function OnNext()
 	end
 end
 
+-- ===========================================================================
 function OnPrevious()
 	m_PageIndex = math.max(1, m_PageIndex - 1);
 	Realize();
 end
 
+-- ===========================================================================
 function OnLoadGameViewStateDone()
 
-	local hasSeenXP1FeaturesScreen =  Options.GetUserOption("Tutorial", "HasSeenXP1FeaturesScreen");
-	local showScreen = (UserConfiguration.TutorialLevel() == TutorialLevel.LEVEL_NEW_TO_XP1  or hasSeenXP1FeaturesScreen == 0);
+	local isRuleSet		:boolean = GameConfiguration.GetRuleSet() == RULESET_TYPE;
+	local isAutoPlayMode:boolean = (Game.GetLocalPlayer() == -1);
+	local hasSeenScreen	:boolean = Options.GetUserOption("Tutorial", OPTIONS_SEEN_KEY) == 1;
+	local hideScreen	:boolean =  Options.GetUserOption("Tutorial", OPTIONS_HIDE_KEY) == 1;
+	local showScreen	:boolean = isRuleSet
+						and not GameConfiguration.IsNetworkMultiplayer()
+						and not isAutoPlayMode
+						and (not hasSeenScreen or UserConfiguration.TutorialLevel() <= MIN_TUTORIAL_LEVEL ) 
+						and not hideScreen;
+
 	if showScreen and Game.GetCurrentGameTurn() == GameConfiguration.GetStartTurn() then
-		Options.SetUserOption("Tutorial", "HasSeenXP1FeaturesScreen", 1);
+		Options.SetUserOption("Tutorial", OPTIONS_SEEN_KEY, 1);
 		Options.SaveOptions();
 		OnShow();
 	end
 end
 
+-- ===========================================================================
 function OnInput( pInputStruct:table )
 	local key = pInputStruct:GetKey();
 	local type = pInputStruct:GetMessageType();
@@ -120,25 +140,33 @@ function OnInput( pInputStruct:table )
 	return true; -- consume all input
 end
 
+-- ===========================================================================
 function HideIfVisible()
 	if ContextPtr:IsVisible() then
 		OnClose();
 	end
 end
 
-function Initialize()
-	
 
-	ContextPtr:SetHide(true);
+-- ===========================================================================
+function Initialize()
 	ContextPtr:SetInputHandler( OnInput, true );
 
 	Controls.Close:RegisterCallback(Mouse.eLClick, OnClose);
 	Controls.Next:RegisterCallback(Mouse.eLClick, OnNext);
 	Controls.Previous:RegisterCallback(Mouse.eLClick, OnPrevious);
-	
+
+	local hideScreen =  Options.GetUserOption("Tutorial", OPTIONS_HIDE_KEY) == 1
+	Controls.DontShowAgain:SetCheck(hideScreen);
+	Controls.DontShowAgain:RegisterCheckHandler(function(bCheck)
+		local value = bCheck and 1 or 0;
+		Options.SetUserOption("Tutorial", OPTIONS_HIDE_KEY, value);
+		Options.SaveOptions();
+	end);
+
 	Events.LoadGameViewStateDone.Add( OnLoadGameViewStateDone );
 
-	LuaEvents.ExpansionIntro_Show.Add( OnShowFromMenu );
+	LuaEvents.InGameTopOptionsMenu_ShowExpansionIntro.Add( OnShowFromMenu );
 	LuaEvents.DiplomacyActionView_HideIngameUI.Add( HideIfVisible );
 end
 Initialize();

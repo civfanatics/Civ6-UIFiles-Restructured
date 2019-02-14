@@ -1,9 +1,7 @@
---[[
--- Created by Samuel Batista on Friday Apr 19 2017
--- Copyright (c) Firaxis Games
---]]
+-- Copyright 2017-2018, Firaxis Games
 
 include("InstanceManager");
+
 
 -- ===========================================================================
 --	CONSTANTS
@@ -67,7 +65,7 @@ function OnGameEraChanged(prevEraIndex:number, newEraIndex:number)
 		local selectionsAllowed:number = gameEras:GetPlayerNumAllowedCommemorations(localPlayerID);
 
 		if m_CommemorationInstanceManager.m_iAllocatedInstances > 0 and selectionsAllowed > 0 then
-			OnShow();
+			ShowPopup();
 			m_SelectedCommemorationTypes = {};
 			Controls.Confirm:SetDisabled(true);
 			Controls.CommemorationsStack:CalculateSize();
@@ -101,7 +99,7 @@ function OnGameEraChanged(prevEraIndex:number, newEraIndex:number)
 			Controls.HeroicFrameGlow:SetHide(true);
 		end
 	elseif m_CurrentEraIndex < 0 then
-		UI.DataError("Error in PrideCommemorationPopup: Invalid Previous Era.");
+		UI.DataError("DedicationPopup has an invalid current era index: "..tostring(m_CurrentEraIndex));
 		OnClose();
 	end
 
@@ -219,8 +217,8 @@ function OnConfirm()
 end
 
 -- ===========================================================================
-function OnShow()
-	UIManager:QueuePopup(ContextPtr, PopupPriority.High);
+function ShowPopup()
+	UIManager:QueuePopup(ContextPtr, PopupPriority.MediumHigh);
 end
 
 -- ===========================================================================
@@ -242,8 +240,8 @@ end
 -- ===========================================================================
 function OnShutdown()
 	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "isVisible", not ContextPtr:IsHidden());
-	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "prevEraIndex", m_PreviewEraIndex);
-	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "nextEraIndex", m_CurrentEraIndex);
+	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "m_PreviewEraIndex", m_PreviewEraIndex);
+	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "m_CurrentEraIndex", m_CurrentEraIndex);
 end
 
 -- ===========================================================================
@@ -255,8 +253,12 @@ function OnGameDebugReturn(context:string, contextTable:table)
 		if contextTable["isVisible"] ~= nil then			
 			ContextPtr:SetHide(not contextTable["isVisible"]);
 		end
-		if contextTable["prevEraIndex"]	~= nil and contextTable["nextEraIndex"]	~= nil then
-			OnGameEraChanged(contextTable["prevEraIndex"], contextTable["nextEraIndex"]);
+
+		m_PreviewEraIndex = contextTable["m_PreviewEraIndex"];
+		m_CurrentEraIndex = contextTable["m_CurrentEraIndex"];
+
+		if m_CurrentEraIndex >= 0 then
+			OnGameEraChanged(m_PreviewEraIndex, m_CurrentEraIndex);
 		end
 	end
 end
@@ -288,6 +290,6 @@ function Initialize()
 
 	-- Lua Events
 	LuaEvents.GameDebug_Return.Add(OnGameDebugReturn);
-	LuaEvents.DedicationPopup_Show.Add(OnGameEraChanged);
+	LuaEvents.EraReviewPopup_MakeDedication.Add(OnGameEraChanged);
 end
 Initialize();

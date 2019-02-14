@@ -51,7 +51,7 @@ end
 -- ===========================================================================
 function AddEmergencyRowEntry( crisis:table )
 	local entryInst:table = ms_EmergencyRowEntryIM:GetInstance( Controls.EmergencyStack );
-	entryInst.EmergencyName:SetText(crisis.NameText);
+	entryInst.EmergencyName:LocalizeAndSetText(crisis.NameText);
 	entryInst.EmergencyRowEntryTop:SetToolTipString(crisis.DescriptionText);
 end
 

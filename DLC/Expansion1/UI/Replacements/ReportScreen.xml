@@ -19,11 +19,10 @@
 			<Image													Anchor="C,T"	Offset="0,4"		Size="parent-8,22"				Color="0,0,0,255" Texture="Controls_GradientSmall" />
 			<Container	ID="TabContainer"									Offset="0,0"		Size="parent,34" />
 			<Grid														Anchor="C,B"	Offset="0,0"		Size="parent-6,8"					Style="Divider3Grid" />
-		</Container>
-		<Container												Anchor="C,T"	Offset="0,44"		Size="parent,36">
-			<SlideAnim	ID="TabAnim"				Begin="0,0" End="0,0" Cycle="Once" Speed="3.5" Function="OutQuint" Size="67,68">
-				<Image		ID="TabArrow"				Texture="Controls_TabSelectArrow" Size="42,11"/>
-			</SlideAnim>
+
+      <SlideAnim	ID="TabAnim"				Begin="0,0" End="0,0" Cycle="Once" Speed="3.5" Function="OutQuint" Size="67,68">
+        <Image		ID="TabArrow"				Texture="Controls_TabSelectArrow" Size="42,11"/>
+      </SlideAnim>
 		</Container>
 
 		<ScrollPanel	ID="Scroll"												Offset="4,84"		Size="parent-8,parent-188"				Vertical="1" AutoScrollBar="1" >
@@ -96,28 +95,28 @@
 					</Container>
 					<Container Size="6,1" />
 					<Grid																					 Offset="0,-4"	Size="94,29"	Style="YieldBacking" Color="24,156,216,150">
-						<Label													Anchor="L,C"															String="[ICON_ScienceLarge]"/>
+						<Label													Anchor="L,C"								FontSize="16"	String="[ICON_ScienceLarge]"/>
 						<Label		ID="ScienceBalance"		Anchor="C,C"															Style="ReportEndTotalText" ColorSet="ResScienceLabelCS" FontStyle="Stroke" String="0"/>
 					</Grid>
 					<Container Size="9,1" />
 					<Grid																					 Offset="0,-4"	Size="94,30"	Style="YieldBacking" Color="254,42,237,100">
-						<Label													Anchor="L,C"															String="[ICON_CultureLarge]"/>
+						<Label													Anchor="L,C"								FontSize="16"	String="[ICON_CultureLarge]"/>
 						<Label		ID="CultureBalance"		Anchor="C,C"															Style="ReportEndTotalText" ColorSet="ResCultureLabelCS" FontStyle="Stroke" String="0"/>
 					</Grid>
 					<Container Size="9,1" />
 					<Grid																					 Offset="0,-4"	Size="94,30"	Style="YieldBacking" Color="181,116,102,150" >
-						<Label													Anchor="L,C"															String="[ICON_TourismLarge]"/>
+						<Label													Anchor="L,C"								FontSize="16"	String="[ICON_TourismLarge]"/>
 						<Label		ID="TourismBalance"		Anchor="C,C"															Style="ReportEndTotalText" ColorSet="ResTourismLabelCS" String="0"	/>
 					</Grid>
 				</Stack>
 
 				<Stack																					 Offset="-4,85"	  StackGrowth="Right" Padding="4">
 					<Grid																													Size="101,26"	Style="YieldBacking" Color="185,176,70,150">
-						<Label													Anchor="L,C"															String="[ICON_GoldLarge]"/>
+						<Label													Anchor="L,C"								FontSize="16"	String="[ICON_GoldLarge]"/>
 						<Label		ID="GoldBalance"			Anchor="C,C"															Style="ReportEndTotalText" ColorSet="ResGoldLabelCS" String="0"	/>
 					</Grid>
 					<Grid																													Size="101,26"	Style="YieldBacking" Color="99,114,159,200"	>
-						<Label													Anchor="L,C"															String="[ICON_FaithLarge]"/>
+						<Label													Anchor="L,C"								FontSize="16"	String="[ICON_FaithLarge]"/>
 						<Label		ID="FaithBalance"			Anchor="C,C"															Style="ReportEndTotalText" ColorSet="ResFaithLabelCS" String="0" />
 					</Grid>
 				</Stack>

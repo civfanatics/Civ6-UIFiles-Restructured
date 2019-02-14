@@ -2,27 +2,41 @@ include("InstanceManager");
 include("SupportFunctions");
 include("CivilizationIcon");
 include("LoyaltySupport");
+include("EspionageViewManager");
 
 local m_kPopulationGraphIM:table = InstanceManager:new( "PopulationGraphInstance",	"Top", Controls.PopulationGraphStack );
 local m_kIdentityBreakdownIM:table = InstanceManager:new( "CulturalIdentityLineInstance",	"Top", Controls.IdentityBreakdownStack );
 local m_kPlayerPresenceBreakdownIM:table = InstanceManager:new( "InfluenceLineInstance",	"Top", Controls.InfluenceStack );
+
+local m_kEspionageViewManager = EspionageViewManager:CreateManager();
+
 -- ===========================================================================
 function OnRefresh()
 	if ContextPtr:IsHidden() then
 		return;
 	end
 	
-	local localPlayerID = Game.GetLocalPlayer();
-	local pPlayer = Players[localPlayerID];
+	local playerID = Game.GetLocalPlayer();
+	local pPlayer = Players[playerID];
 	if (pPlayer == nil) then
 		return;
 	end
+
 	local pCity = UI.GetHeadSelectedCity();
 	if (pCity == nil) then
+		pCity = m_kEspionageViewManager:GetEspionageViewCity();
+		if pCity == nil then
+			return;
+		end
+	else
+		m_kEspionageViewManager:ClearEspionageViewCity();
+	end
+
+	if pPlayer == nil or pCity == nil then
 		return;
 	end
 
-	local pPlayerConfig = PlayerConfigurations[localPlayerID];
+	local pPlayerConfig = PlayerConfigurations[playerID];
 	local kPlayerGovernors = pPlayer:GetGovernors();
 	local pCulturalIdentity = pCity:GetCulturalIdentity();
 	
@@ -91,22 +105,22 @@ function OnRefresh()
 	Controls.LoyaltyFill:SetPercent(loyaltyPercent);
 
 	-- Update loyalty percentage string
-	Controls.LoyaltyPressureIcon:SetToolTipString(GetLoyaltyPressureIconTooltip(loyaltyPerTurn, localPlayerID));
+	Controls.LoyaltyPressureIcon:SetToolTipString(GetLoyaltyPressureIconTooltip(loyaltyPerTurn, playerID));
 	Controls.LoyaltyPressureIcon:SetText(loyaltyFontIcon);
 
 	local potentialNewOwner = pCulturalIdentity:GetPotentialTransferPlayer();
 	if potentialNewOwner ~= -1 then
 		local ownerController = CivilizationIcon:AttachInstance(Controls.CivilizationOwner);
-		ownerController:UpdateIconFromPlayerID(localPlayerID);
+		ownerController:UpdateIconFromPlayerID(playerID);
 
-		local ownerCivIconTooltip:string = Locale.Lookup("LOC_LOYALTY_CITY_IS_LOYAL_TO_TT", Locale.Lookup(pPlayerConfig:GetCivilizationDescription()));
+		local ownerCivIconTooltip:string = Locale.Lookup("LOC_LOYALTY_CITY_IS_LOYAL_TO_TT", pPlayerConfig:GetCivilizationDescription());
 		Controls.CivilizationOwner.CivIconBacking:SetToolTipString(ownerCivIconTooltip);
 
 		local rivalController = CivilizationIcon:AttachInstance(Controls.CivilizationRival);
 		rivalController:UpdateIconFromPlayerID(potentialNewOwner);
 
 		local pNewOwnerConfig = PlayerConfigurations[potentialNewOwner];
-		local newOwnerCivIconTooltip:string = Locale.Lookup("LOC_LOYALTY_CITY_IS_LOYAL_TO_TT", Locale.Lookup(pNewOwnerConfig:GetCivilizationDescription()));
+		local newOwnerCivIconTooltip:string = Locale.Lookup("LOC_LOYALTY_CITY_WILL_FALL_TO_TT", pNewOwnerConfig:GetCivilizationDescription());
 		Controls.CivilizationRival.CivIconBacking:SetToolTipString(newOwnerCivIconTooltip);
 	else
 		Controls.CivilizationOwner.CivIconBacking:SetHide(true);
@@ -149,7 +163,12 @@ function OnRefresh()
 	Controls.CulturalIdentityEffectBox:SetSizeY(Controls.CulturalIdentityEffectLabel:GetSizeY() + 15);
 
 	-- Loyalty Advisor
-	Controls.CulturalIdentityAdvice:SetText(pCity:GetLoyaltyAdvice());
+	if m_kEspionageViewManager:IsEspionageView() then
+		Controls.CulturalIdentityAdvisor:SetHide(true);
+	else
+		Controls.CulturalIdentityAdvice:SetText(pCity:GetLoyaltyAdvice());
+		Controls.CulturalIdentityAdvisor:SetHide(false);
+	end
 
 	--Diplomatic Presence
 	local identitiesInCity = pCulturalIdentity:GetPlayerIdentitiesInCity();
@@ -224,6 +243,12 @@ function OnRefresh()
 end
 
 -- ===========================================================================
+function OnShowEnemyCityOverview( ownerID:number, cityID:number)
+	m_kEspionageViewManager:SetEspionageViewCity( ownerID, cityID );
+	OnRefresh();
+end
+
+-- ===========================================================================
 function OnTabStackSizeChanged()
 	-- Manually resize the context to fit the child stack
 	ContextPtr:SetSizeX(Controls.TabStack:GetSizeX());
@@ -266,6 +291,7 @@ function Initialize()
 	Events.CityLoyaltyChanged.Add( OnRefresh );
 
 	LuaEvents.CityPanelCulture_ToggleLoyalty.Add( OnToggleLoyaltyPanel );
+	LuaEvents.CityBannerManager_ShowEnemyCityOverview.Add( OnShowEnemyCityOverview );
 
 	Controls.TabStack:RegisterSizeChanged( OnTabStackSizeChanged );
 end

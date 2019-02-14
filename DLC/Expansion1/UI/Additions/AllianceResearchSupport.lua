@@ -46,17 +46,19 @@ end
 function HasMaxLevelResearchAlliance(playerID)
 	local localPlayerID = Game.GetLocalPlayer();
 	
-	if playerID ~= localPlayerID then
+	if (localPlayerID ~= -1 and playerID ~= localPlayerID) then
 		local localPlayer = Players[localPlayerID];
-		local localPlayerDiplomacy = localPlayer:GetDiplomacy();
-		local allianceLevel = localPlayerDiplomacy:GetAllianceLevel(playerID);
+		if(localPlayer) then
+			local localPlayerDiplomacy = localPlayer:GetDiplomacy();
+			local allianceLevel = localPlayerDiplomacy:GetAllianceLevel(playerID);
 
-		if allianceLevel == MAX_ALLIANCE_LEVEL then
-			local allianceType = localPlayerDiplomacy:GetAllianceType(playerID);
+			if allianceLevel == MAX_ALLIANCE_LEVEL then
+				local allianceType = localPlayerDiplomacy:GetAllianceType(playerID);
 
-			-- If the player we're allied with changes their current research we need to refresh our tech list
-			if allianceType ~= -1 and GameInfo.Alliances[allianceType].AllianceType == "ALLIANCE_RESEARCH" then
-				return true;
+				-- If the player we're allied with changes their current research we need to refresh our tech list
+				if allianceType ~= -1 and GameInfo.Alliances[allianceType].AllianceType == "ALLIANCE_RESEARCH" then
+					return true;
+				end
 			end
 		end
 	end

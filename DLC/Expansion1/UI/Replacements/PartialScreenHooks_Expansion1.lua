@@ -1,13 +1,11 @@
--- ===========================================================================
--- INCLUDE BASE FILE
--- ===========================================================================
 include("PartialScreenHooks");
 
 -- ===========================================================================
--- CACHE BASE FUNCTIONS
+--	CACHE BASE FUNCTIONS
 -- ===========================================================================
-BASE_AddScreenHooks = AddScreenHooks;
-BASE_IsPartialScreenOpen = IsPartialScreenOpen;
+BASE_IsPartialScreenOpen	= IsPartialScreenOpen;
+BASE_LateInitialize			= LateInitialize;
+
 
 -- ===========================================================================
 --	VARIABLES
@@ -30,9 +28,18 @@ end
 
 -- ===========================================================================
 function AddScreenHooks()
-	BASE_AddScreenHooks();
+	AddCityStateHook();
+	AddTradeHook();
+	AddEspionageHook();
+	AddEraHook();
+	AddReportsHook();
+end
 
-	AddScreenHook("LaunchBar_Hook_Era", "LOC_PARTIALSCREEN_ERA_PROGRESS_TOOLTIP", OnToggleEraProgress);
+-- ===========================================================================
+function AddEraHook()
+	if HasCapability("CAPABILITY_ERAS") then
+		AddScreenHook("EraProgressPanel","LaunchBar_Hook_Era", "LOC_PARTIALSCREEN_ERA_PROGRESS_TOOLTIP", OnToggleEraProgress);
+	end
 end
 
 -- ===========================================================================
@@ -58,9 +65,9 @@ function OnEraProgressPanelClose()
 end
 
 -- ===========================================================================
-function Initialize()
+function LateInitialize()
+	BASE_LateInitialize();
 	LuaEvents.EraProgressPanel_Open.Add( OnEraProgressPanelOpen );
 	LuaEvents.EraProgressPanel_Close.Add( OnEraProgressPanelClose );
 	LuaEvents.PartialScreenHooks_Expansion1_ToggleEraProgress.Add( OnToggleEraProgress );
 end
-Initialize();

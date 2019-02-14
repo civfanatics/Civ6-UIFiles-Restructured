@@ -1,10 +1,8 @@
---[[
--- Copyright (c) 2017 Firaxis Games
---]]
--- ===========================================================================
--- INCLUDE BASE FILE
--- ===========================================================================
+-- Copyright 2017-2018, Firaxis Games
 include("ActionPanel");
+
+BASE_OnRefresh = OnRefresh;
+BASE_LateInitialize = LateInitialize;
 
 local governorAppointmentString:string = Locale.Lookup("LOC_ACTION_PANEL_GOVERNOR_APPOINTMENT");
 local governorAppointmentTooltip:string = Locale.Lookup("LOC_ACTION_PANEL_GOVERNOR_APPOINTMENT_TOOLTIP");
@@ -27,17 +25,11 @@ g_kMessageInfo[EndTurnBlockingTypes.ENDTURN_BLOCKING_EMERGENCY_NEEDS_ATTENTION]	
 g_kMessageInfo[EndTurnBlockingTypes.ENDTURN_BLOCKING_COMMEMORATION_AVAILABLE]	= {Message = commemorationAvailableString,	ToolTip = commemorationAvailableTooltip	, Icon="ICON_NOTIFICATION_COMMEMORATION_AVAILABLE"			};
 
 
-BASE_OnRefresh = OnRefresh; 
-
-function GetDisplayEra()
-	if (Game ~= nil and Game.GetEras() ~= nil) then
-		return Game.GetEras():GetCurrentEra() + 1; -- Engine is 0 Based
-	end
-	return 1;
-end
-
+-- ===========================================================================
 function OnRefresh()
+
 	BASE_OnRefresh();
+
 	local ePlayer = Game.GetLocalPlayer();
 	if ePlayer == PlayerTypes.NONE then
 		return;
@@ -46,8 +38,9 @@ function OnRefresh()
 	local gameEras = Game.GetEras();
 	local score	= gameEras:GetPlayerCurrentScore(ePlayer);
 	local detailsString = Locale.Lookup("LOC_ERA_SCORE_HEADER") .. " " .. score;
+	local isFinalEra:boolean = gameEras:GetCurrentEra() == gameEras:GetFinalEra();
 
-	if (gameEras:GetCurrentEra() ~= gameEras:GetFinalEra()) then
+	if not isFinalEra then
 		detailsString = detailsString .. Locale.Lookup("LOC_DARK_AGE_THRESHOLD_TEXT", gameEras:GetPlayerDarkAgeThreshold(ePlayer));
 		detailsString = detailsString .. Locale.Lookup("LOC_GOLDEN_AGE_THRESHOLD_TEXT", gameEras:GetPlayerGoldenAgeThreshold(ePlayer));
 	end
@@ -128,7 +121,7 @@ function OnRefresh()
 	Controls.TurnAgeAnimation:Play();
 
 	--Are we in the last age
-	if GameInfo.Eras[gameEras:GetCurrentEra()].EraType == "ERA_INFORMATION" then
+	if isFinalEra then
 		Controls.TurnTimerMeterBG:SetHide(true);
 		Controls.TurnTimerMeterGolden:SetHide(true);
 		Controls.TurnTimerMeterNormal:SetHide(true);
@@ -171,29 +164,45 @@ function OnRefresh()
 	
 	Controls.AgeButtonBG:SetToolTipString(detailsString);
 
-	-- Set the era rotation and tooltip.
-	local displayEra = GetDisplayEra();
-	Controls.EraIndicator:Rotate( ERA_DEGREES[displayEra] );
-	for _,era in pairs(g_kEras) do
-		if era.Index == displayEra then
-			local description:string = Locale.Lookup("LOC_GAME_ERA_DESC", era.Description );
-			local turnsTill = gameEras:GetNextEraCountdown() + 1; -- 0 turns remaining is the last turn, shift by 1 to make sense to non-programmers
+	RealizeEraIndicator();
+end
+
+-- ===========================================================================
+-- Set the era rotation and tooltip.
+-- ===========================================================================
+function RealizeEraIndicator()
+	local displayEra:number = 1;
+	if (Game ~= nil and Game.GetEras() ~= nil) then
+		displayEra = Game.GetEras():GetCurrentEra() + 1; -- Engine is 0 Based
+	else
+		UI.DataError("Unable to obtain eras from Game object while realizing ActionPanel.");
+		return;
+	end
+	
+	local gameEras :table = Game.GetEras();
+	for _,kEra in pairs(g_kEras) do
+		if kEra.Index == displayEra then
+			local description:string = Locale.Lookup("LOC_GAME_ERA_DESC", kEra.Description );
+			local turnsTill :number = gameEras:GetNextEraCountdown() + 1;	-- 0 turns remaining is the last turn, shift by 1 to make sense to non-programmers
 			if turnsTill > 0 then
 				 description = description .. "[NEWLINE][NEWLINE]" .. Locale.Lookup("LOC_GLORY_HUD_ERA_ENDS_IN", turnsTill);
 			end
 			Controls.EraToolTipArea1:SetToolTipString( description );
 			Controls.EraToolTipArea2:SetToolTipString( description );
+			Controls.EraIndicator:Rotate( kEra.Degree + 90 );	-- 0 degree in art points "left"
 			break;
 		end		
 	end
 end
 
+-- ===========================================================================
 function OnAgeButtonClicked()
 	LuaEvents.PartialScreenHooks_Expansion1_ToggleEraProgress();
 end
 
-function Initialize()
-	ContextPtr:SetRefreshHandler(OnRefresh);
+-- ===========================================================================
+function LateInitialize()
+	BASE_LateInitialize();
 	Controls.AgeButtonBG:RegisterCallback( Mouse.eLClick, OnAgeButtonClicked )
+	ContextPtr:SetRefreshHandler(OnRefresh);
 end
-Initialize();

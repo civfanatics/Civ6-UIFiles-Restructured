@@ -1,33 +1,38 @@
--------------------------------------------------------------------------------
--- GOVERNOR ASSIGNMENT CHOOSER
--------------------------------------------------------------------------------
+-- ===========================================================================
+--	Governor Assignment Chooser side-panel
+--	Copyright 2018, Firaxis Games
+-- ===========================================================================
 
 include("InstanceManager");
 include("SupportFunctions");
+include("Colors");
 include("GovernorSupport");
 include("PopupDialog");
+
 
 -- ===========================================================================
 --	CONSTANTS
 -- ===========================================================================
-local RELOAD_CACHE_ID:string = "GovernerAssignmentChooser"; -- Must be unique (usually the same as the file name)
-local DATA_FIELD_CITY_ID:string = "CITY_ID"; -- Stores CityID inside instance table (needed to update selection brace)
-local DATA_FIELD_OWNER_ID:string = "OWNER_ID"; -- Stores CityID inside instance table (needed to update selection brace)
+local RELOAD_CACHE_ID		:string = "GovernerAssignmentChooser"; -- Must be unique (usually the same as the file name)
+local DATA_FIELD_CITY_ID	:string = "CITY_ID"; -- Stores CityID inside instance table (needed to update selection brace)
+local DATA_FIELD_OWNER_ID	:string = "OWNER_ID"; -- Stores CityID inside instance table (needed to update selection brace)
+
 
 -- ===========================================================================
---	VARIABLES
+--	MEMBERS
 -- ===========================================================================
+local m_AssignmentChoiceIM		:table = InstanceManager:new("AssignmentChoiceInstance", "Top", Controls.AssignmentChoiceStack);
 
-local m_AssignmentChoiceIM:table = InstanceManager:new("AssignmentChoiceInstance", "Top", Controls.AssignmentChoiceStack);
+local m_GovPromotionIM			:table = InstanceManager:new("PromotionInstance", "Top");
 
-local m_GovPromotionIM:table = InstanceManager:new("PromotionInstance", "Top");
+local m_SelectedGovernorID		:number = -1;
+local m_SelectedGovernor		:table = nil;
+local m_SelectedGovernorDef		:table = nil;
 
-local m_SelectedGovernorID:number = -1;
-local m_SelectedGovernor:table = nil;
-local m_SelectedGovernorDef:table = nil;
+local m_SelectedCityOwner		:number = -1;
+local m_SelectedCityID			:number = -1;
+local m_isLoadComplete          :boolean = false;
 
-local m_SelectedCityOwner:number = -1;
-local m_SelectedCityID:number = -1;
 
 -- ===========================================================================
 function Refresh()
@@ -115,7 +120,7 @@ function AddGovernorInstance(governorInst:table, governor:table, governorDef:tab
 
 		-- PromotionsgovernorInst
 		for promotion in GameInfo.GovernorPromotions() do
-			if promotion.GovernorType == governorDef.GovernorType and governor:HasPromotion(promotion.Hash) then
+			if governor:HasPromotion(promotion.Hash) then
 				local instance:table = m_GovPromotionIM:GetInstance(governorInst.GovernorPromotionStack);
 				if promotion.BaseAbility then
 					instance.PromotionIcon:SetIcon("ICON_" .. governorDef.GovernorType .. "_PROMOTION");
@@ -305,17 +310,24 @@ function OnSelectCity( owner:number, cityID:number )
 	local pCity = CityManager.GetCity(owner, cityID);
 	if (pCity ~= nil) then
 		UI.LookAtPlot(pCity:GetX(), pCity:GetY());
+		UILens.SetActive("Loyalty");	-- May have been turned off by other map selection.
 	end
 
 	Refresh();
 end
 
 -- ===========================================================================
-function OnRequestAssignment( governorIndex:number )
+function OnRequestAssignment( governorIndex:number, playerID:number, cityID:number )
 
 	SetSelectedGovernor(governorIndex);
-	m_SelectedCityOwner = -1;
-	m_SelectedCityID = -1;
+
+	if playerID ~= nil and cityID ~= nil then
+		m_SelectedCityOwner = playerID;
+		m_SelectedCityID = cityID;
+	else
+		m_SelectedCityOwner = -1;
+		m_SelectedCityID = -1;
+	end
 
 	Open();
 end
@@ -465,38 +477,56 @@ end
 
 
 -- ===========================================================================
+--	EVENT
+-- ===========================================================================
+function OnCityAddedToMap( playerID: number, cityID : number, cityX : number, cityY : number )	
+	-- Only needs to make a refresh after a city added if it's happening while
+	-- game is running.  (Ignore during the load of a save game when map is rebuilt.)
+	if not ContextPtr:IsHidden() and m_isLoadComplete then
+		Refresh();
+	end
+end
+
+
+-- ===========================================================================
 function OnLocalPlayerTurnEnd()
 	if GameConfiguration.IsHotseat() and ContextPtr:IsVisible() then
 		OnCancel();
 	end
 end
 
+
 -- ===========================================================================
---	Setup
+--	The loading screen has completed
+-- ===========================================================================
+function OnLoadGameViewStateDone()
+    m_isLoadComplete = true;
+end
+
+
 -- ===========================================================================
 function Initialize()
 
-	-- Start off hidden
-	ContextPtr:SetHide(true);
+	-- Context Callbacks
 	ContextPtr:SetInitHandler( OnInit );
 	ContextPtr:SetShutdown( OnShutdown );
 	ContextPtr:SetInputHandler( OnInputHandler, true );
 
-	-- Game Events
-	Events.LocalPlayerTurnEnd.Add( OnLocalPlayerTurnEnd );
-
-	-- Lua Events
-	LuaEvents.GameDebug_Return.Add( OnGameDebugReturn );
-
-	-- Context Events
-	LuaEvents.GovernorAssignmentChooser_RequestAssignment.Add( OnRequestAssignment );
-	LuaEvents.GovernorAssignmentChooser_Close.Add( OnClose );
-	LuaEvents.DiploBasePopup_HideUI.Add( OnDiploBasePopup_HideUI );
-
-	-- Control Events
+	-- Control Callbacks
 	Controls.ConfirmButton:RegisterCallback( eLClick, OnConfirm );
 	Controls.ConfirmButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 	Controls.CancelButton:RegisterCallback( eLClick, OnCancel );
 	Controls.Header_CloseButton:RegisterCallback( eLClick, OnClose );
+
+	-- Game Events
+	Events.CityAddedToMap.Add( OnCityAddedToMap );
+	Events.LoadGameViewStateDone.Add( OnLoadGameViewStateDone );
+	Events.LocalPlayerTurnEnd.Add( OnLocalPlayerTurnEnd );		
+
+	-- Lua Events	
+	LuaEvents.DiploBasePopup_HideUI.Add( OnDiploBasePopup_HideUI );
+	LuaEvents.GameDebug_Return.Add( OnGameDebugReturn );
+	LuaEvents.GovernorAssignmentChooser_RequestAssignment.Add( OnRequestAssignment );
+	LuaEvents.GovernorAssignmentChooser_Close.Add( OnClose );
 end
 Initialize();

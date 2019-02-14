@@ -1,8 +1,20 @@
+-- Copyright 2018, Firaxis Games
 include("GovernmentScreen");
 
 BASE_GetPolicyBGTexture = GetPolicyBGTexture;
 BASE_PopulateLivePlayerData = PopulateLivePlayerData;
+BASE_RealizeFilterTabs = RealizeFilterTabs;
 
+-- ===========================================================================
+function FilterDarkPolicies(policy)
+    local policyDef = GameInfo.Policies_XP1[policy.PolicyHash];
+    if policyDef ~= nil and policyDef.RequiresDarkAge then
+        return true;
+    end
+    return false;
+end
+
+-- ===========================================================================
 function GetPolicyBGTexture(policyType)
 	local expansionPolicy = GameInfo.Policies_XP1[policyType];
 	if expansionPolicy and expansionPolicy.RequiresDarkAge then
@@ -11,6 +23,7 @@ function GetPolicyBGTexture(policyType)
 	return BASE_GetPolicyBGTexture(policyType);
 end
 
+-- ===========================================================================
 function PopulateLivePlayerData( ePlayer:number )
 	
 	if ePlayer == -1 then
@@ -32,4 +45,10 @@ function PopulateLivePlayerData( ePlayer:number )
 			end
 		end
 	end 
+end
+
+-- ===========================================================================
+function RealizeFilterTabs()
+    BASE_RealizeFilterTabs();
+    CreatePolicyTabButton("LOC_GOVT_FILTER_DARK", FilterDarkPolicies);
 end

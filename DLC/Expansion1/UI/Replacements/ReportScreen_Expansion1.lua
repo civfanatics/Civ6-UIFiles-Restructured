@@ -1,12 +1,8 @@
---[[
--- Copyright (c) 2017 Firaxis Games
---]]
--- ===========================================================================
--- INCLUDE BASE FILE
--- ===========================================================================
+-- Copyright 2017-2018, 2017 Firaxis Games
 include("ReportScreen");
 
-
+-- ===========================================================================
+-- Override base game
 function ViewCityStatusPage()
 
 	ResetTabForNewPageContent();
@@ -30,7 +26,11 @@ function ViewCityStatusPage()
 		elseif kCityData.HousingMultiplier <= 0.5 then
 			status = "LOC_HUD_REPORTS_STATUS_SLOWED";
 		else
-			status = "LOC_HUD_REPORTS_STATUS_NORMAL";
+			if kCityData.HappinessGrowthModifier > 0 then
+				status = "LOC_HUD_REPORTS_STATUS_ACCELERATED";
+			else
+				status = "LOC_HUD_REPORTS_STATUS_NORMAL";
+			end
 		end
 		pCityInstance.GrowthRateStatus:SetText( Locale.Lookup(status) );
 
@@ -43,11 +43,11 @@ function ViewCityStatusPage()
 		pCityInstance.WarWeariness:SetText( (warWearyValue==0) and "0" or "-"..tostring(warWearyValue) );
 
 		-- Loyalty
-		local pCulturalIdentity = kCityData.City:GetCulturalIdentity();
-		local currentLoyalty = pCulturalIdentity:GetLoyalty();
-		local maxLoyalty = pCulturalIdentity:GetMaxLoyalty();
-		local loyaltyPerTurn:number = pCulturalIdentity:GetLoyaltyPerTurn();
-		local loyaltyFontIcon:string = loyaltyPerTurn >= 0 and "[ICON_PressureUp]" or "[ICON_PressureDown]";
+		local pCulturalIdentity	:table = kCityData.City:GetCulturalIdentity();
+		local currentLoyalty	:number = pCulturalIdentity:GetLoyalty();
+		local maxLoyalty		:number = pCulturalIdentity:GetMaxLoyalty();
+		local loyaltyPerTurn	:number = pCulturalIdentity:GetLoyaltyPerTurn();
+		local loyaltyFontIcon	:string = loyaltyPerTurn >= 0 and "[ICON_PressureUp]" or "[ICON_PressureDown]";
 		pCityInstance.Loyalty:SetText(loyaltyFontIcon .. " " .. Round(currentLoyalty, 1) .. "/" .. maxLoyalty);
 
 		local pAssignedGovernor = kCityData.City:GetAssignedGovernor();
@@ -73,18 +73,3 @@ function ViewCityStatusPage()
 	Controls.BottomResourceTotals:SetHide( true );
 	Controls.Scroll:SetSizeY( Controls.Main:GetSizeY() - 88);
 end
-
-
-function Initialize()
-
-	m_tabIM:ResetInstances();
-	m_tabs = CreateTabs( Controls.TabContainer, 42, 34, 0xFF331D05 );
-	AddTabSection( "LOC_HUD_REPORTS_TAB_YIELDS",		ViewYieldsPage );
-	AddTabSection( "LOC_HUD_REPORTS_TAB_RESOURCES",		ViewResourcesPage );
-	AddTabSection( "LOC_HUD_REPORTS_TAB_CITY_STATUS",	ViewCityStatusPage );	
-
-	m_tabs.SameSizedTabs(50);
-	m_tabs.CenterAlignTabs(-10);	
-end
-Initialize();
-

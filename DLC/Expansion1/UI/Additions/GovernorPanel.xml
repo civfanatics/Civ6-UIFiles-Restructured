@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Context xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="..\..\..\..\..\CivTech\Libs\ForgeUI\ForgeUI_Assets\Controls.xsd">
 
-	<Container Style="FullScreenVignetteConsumer"/>
+	<Container ID="Vignette" Style="FullScreenVignetteConsumer"/>
 
 	<Container ID="GovernorPanelContainer" Anchor="C,C"	Size="parent,768" MinSize="1024,768">
     <Image Size="parent,parent" Texture="Governors_BackgroundTile_ScreenFill" ConsumeMouse="1"/>
@@ -31,6 +31,9 @@
       </ScrollBar>
 			<Stack ID="GovernorInstanceStack" Anchor="C,T" StackGrowth="Right" StackPadding="10"/>
 		</ScrollPanel>
+
+    <!-- Modal screen controls are in a separate container because of the custom BG inside the scroll panel -->
+    <Grid ID="YieldsContainer" Style="YieldContainerStyle"/>
 
     <!-- Close Button -->
     <Button	ID="ModalScreenClose" Anchor="R,T" Style="CloseButtonLarge" Offset="-8,-5"/>

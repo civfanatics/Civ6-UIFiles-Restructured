@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Context  ColorSet="BodyTextCool" FontStyle="Shadow">
   
-	<AlphaAnim				ID="EraPopupAnimation" AlphaBegin="0" AlphaEnd="1" Speed="0.8"  Size="parent,parent" Cycle="OneBounce" EndPause="2">
+	<AlphaAnim				ID="EraPopupAnimation" AlphaBegin="0" AlphaEnd="1" Speed="0.8"  Size="parent,parent" Cycle="OneBounce" EndPause="2" Stopped="1">
 		<Stack Anchor="C,C" Size="parent,320">
         <SlideAnim		ID="HeaderSlide" Speed="0.8" Cycle="Once" EndPause="4" Size="parent,parent">
 			    <Grid								Style="Divider6Grid"														ConsumeMouse="0"						Size="1024,94"		Color="0,0,0,150" Anchor="C,C">

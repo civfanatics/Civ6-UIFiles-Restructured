@@ -1,13 +1,13 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Context xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="..\..\..\..\..\CivTech\Libs\ForgeUI\ForgeUI_Assets\Controls.xsd">
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Context xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="..\..\..\..\..\..\CivTech\Libs\ForgeUI\ForgeUI_Assets\Controls.xsd">
 
-	<Container Style="FullScreenVignetteConsumer"/>
+	<Container ID="Vignette" Style="FullScreenVignetteConsumer"/>
 
 	<Container Anchor="C,C" Size="parent,768">
 
-		<Grid																														  Size="parent,40"						Texture="Controls_SubHeader2" ConsumeMouse="1" SliceCorner="20,2" SliceTextureSize="40,40">
-			<Label				ID="ModalScreenTitle" Anchor="C,C"								Style="FontFlair24" FontStyle="glow" ColorSet="ShellHeader" SmallCaps="28" SmallCapsLeading="0" SmallCapsType="EveryWord"/>
-		</Grid>
+    <Grid																														  Size="parent,40"						Texture="Controls_SubHeader2" ConsumeMouse="1" SliceCorner="20,2" SliceTextureSize="40,40">
+      <Label				ID="ModalScreenTitle" Anchor="C,C"								Style="FontFlair24" FontStyle="glow" ColorSet="ShellHeader" SmallCaps="28" SmallCapsLeading="0" SmallCapsType="EveryWord"/>
+    </Grid>
 
 		<!-- Moved the scrollbar backing out of the ScrollPanel so it's visible when the ScrollPanel is empty -->
 		<Container Anchor="C,B" Offset="0,0" Size="parent,38">
@@ -15,18 +15,18 @@
 			<Image Anchor="C,C" Offset="0,0" Size="parent-108,32" Texture="Controls_TimelineTile" StretchMode="Tile" />
 		</Container>
 
-		<ScrollPanel ID="TimelineScroller" Anchor="L,T" Offset="0,40" Size="parent,692" AutoScrollBar="0">
-			<Image ID="BG" Size="parent,692" Texture="Historian_BGParchment" StretchMode="Tile"/>
-			<Image ID="Ink" Size="parent,692" Texture="Historian_BGInk" StretchMode="Tile"/>
+    <Container Anchor="L,T" Offset="0,40" Size="parent,692">
+      <Image ID="BG" Size="parent,692" Texture="Historian_BGParchment" StretchMode="Tile"/>
+      <Image ID="Ink" Size="parent,692" Texture="Historian_BGInk" StretchMode="Tile"/>
+      <Image ID="BGWheel" Anchor="L,C" Offset="100,0" Size="776,692" Texture="Historian_BGWheel"/>
+    </Container>
 
-			<Image ID="BGWheel" Anchor="L,C" Offset="100,0" Size="776,692" Texture="Historian_BGWheel"/>
+		<ScrollPanel ID="TimelineScroller" Anchor="L,T" Offset="0,40" Size="parent,692" AutoScrollBar="0">
       <Image ID="TopPattern" Anchor="L,T" Size="parent,51" Texture="Historian_BGPattern" StretchMode="Tile"/>
       <Image ID="BottomPattern" Anchor="L,B" Size="parent,51" Texture="Historian_BGPattern" StretchMode="Tile"/>
-
 			<Stack ID="TimelineStack" Anchor="C,C" Size="auto, parent" Offset="50,0" StackGrowth="Right" StackPadding="50"/>
-
-			<ScrollBar Anchor="C,B" Offset="0,-22" Gutter="30" Size="parent,8" Texture="Controls_TimeSlider" SliceCorner="6,0" SliceTextureSize="12,8" >
-				<Thumb Size="63,36" Offset="0,-10" Texture="Controls_TimeSlider" StateOffsetIncrement="0,0" SliceCorner="22,18" SliceSize="19,1" SliceTextureSize="63,36"/>
+			<ScrollBar Anchor="C,B" Offset="0,-22" Gutter="18" Size="parent,8" Texture="Controls_TimeSlider" SliceCorner="6,0" SliceTextureSize="12,8" >
+				<Thumb Size="63,36" Offset="0,-10" Texture="Controls_TimeSlider" StateOffsetIncrement="0,0" SliceCorner="22,18" SliceSize="19,1" SliceTextureSize="63,36" MinSize="63,36"/>
 			</ScrollBar>
 		</ScrollPanel>
 
@@ -37,8 +37,11 @@
 
 		<!-- Message displayed when the timeline is opened before receiving any historic moments -->
 		<Label ID="EmptyTimelineMessage" Anchor="C,C" Style="TreeEraBigText" Color="90,79,42,255" String="LOC_MOMENT_NO_MOMENTS_TO_SHOW"/>
+    
+    <!-- Modal screen controls are in a separate container because of the custom BG inside the scroll panel -->
+    <Grid ID="YieldsContainer" Style="YieldContainerStyle"/>
 
-		<Button ID="Close" Anchor="R,T" Style="CloseButtonLarge" Offset="0,0"/>
+		<Button ID="Close" Anchor="R,T" Style="CloseButtonLarge" Offset="-8,-5"/>
 	</Container>
 	
 	<Instance Name="SmallMoment">

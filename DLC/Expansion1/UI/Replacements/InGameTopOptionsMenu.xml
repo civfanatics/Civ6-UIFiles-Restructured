@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Context  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="..\..\..\..\..\CivTech\Libs\ForgeUI\ForgeUI_Assets\Controls.xsd"
 					ColorSet="Beige_Black" Style="FontNormal16" FontStyle="Shadow" >
 
@@ -8,7 +8,18 @@
   <AlphaAnim        ID="PauseWindowClose"  AlphaBegin="0"  AlphaEnd="1"  Speed="3" Function="Root" Cycle="Once" Stopped="1"/>
 
   <AlphaAnim        ID="AlphaIn"      Size="parent,parent"  AlphaBegin="0"  AlphaEnd="1"  Speed="9" Function="Root" Cycle="Once">
-    <SlideAnim      ID="SlideIn"      Size="parent,parent"  Start="0,-20"   End="0,0"     Speed="9" Function="Root" Cycle="Once">
+		<Box																	Color="21,46,75,150" Size="parent,parent" ConsumeMouse="1">
+			<Image															Texture="Controls_Vignette" Size="500,500"   Color="0,0,0,255" Anchor="R,B"/>
+			<Image															Texture="Controls_Vignette" Size="500,500"   Color="0,0,0,255" Anchor="R,T" FlipY="1"/>
+			<Image															Texture="Controls_Vignette" Size="500,500"   Color="0,0,0,255" Anchor="L,T" FlipY="1" FlipX="1"/>
+			<Image															Texture="Controls_Vignette" Size="500,500"   Color="0,0,0,255" Anchor="L,B" FlipX="1"/>
+			<Image															Texture="Controls_Gradient" Size="150,parent"  Color="0,0,0,255" Anchor="L,T" Rotate="90"/>
+			<Image															Texture="Controls_Gradient" Size="150,parent"  Color="0,0,0,255" Anchor="R,T" Rotate="270"/>
+			<Image															Texture="Controls_Gradient" Size="parent,150"  Color="0,0,0,255" Anchor="L,T" FlipY="1"/>
+			<Image															Texture="Controls_Gradient" Size="parent,150"  Color="0,0,0,255" Anchor="L,B"/>
+		</Box>
+
+		<SlideAnim      ID="SlideIn"      Size="parent,parent"  Start="0,-20"   End="0,0"     Speed="9" Function="Root" Cycle="Once">
       <Grid         ID="PauseWindow"  Size="auto,auto"              Anchor="C,C" Offset="0,0" Style="DropShadow2"     Color="255,255,255,200" AutoSizePadding="25,25" ConsumeMouse="1">
         <Box Color="21,46,75,200" Size="290,auto" Anchor="C,C" AutoSizePadding="10,-5">
           <Grid Size="300,auto" Anchor="C,C" Style="WindowFrameAlpha" AutoSizePadding="0,58">
@@ -28,26 +39,28 @@
                 <GridButton ID="QuickSaveButton"			Anchor="C,T" Style="PauseMenuButton" Size="250,36" String="{LOC_GAME_MENU_QUICK_SAVE:upper}" ToolTip="LOC_GAME_MENU_QUICK_SAVE_TOOLTIP" />
                 <GridButton ID="SaveGameButton"				Anchor="C,T" Style="PauseMenuButton" Size="250,36" String="{LOC_GAME_MENU_SAVE:upper}" ToolTip="LOC_GAME_MENU_SAVE_TOOLTIP" />
                 <GridButton ID="LoadGameButton"				Anchor="C,T" Style="PauseMenuButton" Size="250,36" String="{LOC_GAME_MENU_LOAD:upper}" ToolTip="LOC_GAME_MENU_LOAD_TOOLTIP" />
-								<GridButton ID="RiseAndFall"					Anchor="C,T" Style="PauseMenuButton" Size="250,36" String="{LOC_GAME_MENU_NEW_FEATURES:upper}" ToolTip="LOC_GAME_MENU_NEW_FEATURES_TOOLTIP" />
+								<GridButton ID="ExpansionNewFeatures"	Anchor="C,T" Style="PauseMenuButton" Size="250,36" String="{LOC_GAME_MENU_NEW_FEATURES:upper}" ToolTip="LOC_GAME_MENU_NEW_FEATURES_TOOLTIP" />
                 <GridButton ID="OptionsButton"				Anchor="C,T" Style="PauseMenuButton" Size="250,36" String="{LOC_GAME_MENU_OPTIONS:upper}" ToolTip="LOC_GAME_MENU_OPTIONS_TOOLTIP"/>
-                <GridButton ID="RetireButton"				Anchor="C,T" Style="PauseMenuButton" Size="250,36" String="{LOC_GAME_MENU_RETIRE:upper}" ToolTip="LOC_GAME_MENU_RETIRE_TOOLTIP"/>
-                <GridButton ID="RestartButton"				Anchor="C,T" Style="PauseMenuButton" Size="250,36" String="{LOC_GAME_MENU_RESTART:upper}" ToolTip="LOC_GAME_MENU_RESTART_TOOLTIP"/>
+                <GridButton ID="RetireButton"					Anchor="C,T" Style="PauseMenuButton" Size="250,36" String="{LOC_GAME_MENU_RETIRE:upper}" ToolTip="LOC_GAME_MENU_RETIRE_TOOLTIP"/>
+								<GridButton ID="PBCDeleteButton"			Anchor="C,T" Style="PauseMenuButton" Size="250,36" String="{LOC_GAME_MENU_PBC_DELETE:upper}" ToolTip="LOC_GAME_MENU_PBC_DELETE_TOOLTIP"/>
+								<GridButton ID="PBCQuitButton"				Anchor="C,T" Style="PauseMenuButton" Size="250,36" String="{LOC_GAME_MENU_PBC_QUIT:upper}" ToolTip="LOC_GAME_MENU_PBC_QUIT_TOOLTIP"/>
+								<GridButton ID="RestartButton"				Anchor="C,T" Style="PauseMenuButton" Size="250,36" String="{LOC_GAME_MENU_RESTART:upper}" ToolTip="LOC_GAME_MENU_RESTART_TOOLTIP"/>
                 <GridButton ID="MainMenuButton"				Anchor="C,T" Style="PauseMenuButton" Size="250,36" String="{LOC_GAME_MENU_EXIT_TO_MAIN:upper}" ToolTip="LOC_GAME_MENU_EXIT_TO_MAIN_TOOLTIP" />
                 <GridButton ID="ExitGameButton"				Anchor="C,T" Style="PauseMenuButton" Size="250,36" String="{LOC_GAME_MENU_EXIT_TO_DESKTOP:upper}" ToolTip="LOC_GAME_MENU_EXIT_TO_DESKTOP_TOOLTIP" />
 
                 <Container Size="20,20"/>
-
-                <!-- Mods Stack -->
-                <Grid						ID="ModsInUse"				Anchor="C,T"	Style="DecoFrame" Size="parent-50,80" Hidden="1">
-                  <Label		ID="ModsInUseHeader"	Anchor="C,T" Offset="0,5" Style="BlueGlow" FontSize="14" String="{LOC_GAME_MENU_MODS_IN_USE:upper}" />
-                  <Grid Style="Divider6Grid" Size="parent,2" Color="41,74,108,255" Offset="0,20"/>
-                  <ScrollPanel	ID="ModListings"			Anchor="L,T"	Offset="10,22" Size="parent-20,parent-24" Vertical="1" AutoScrollBar="1">
-                    <Stack			ID="ModListingsStack"	Anchor="L,T" StackGrowth="Bottom" Padding="0"/>
-                    <ScrollBar Style="Slider_Blue" Anchor="R,C" AnchorSide="O,I"/>
-                  </ScrollPanel>
-                </Grid>
-                <Container Size="20,40"/>
-              </Stack>
+								
+								<!-- Mods Stack -->
+								<Grid						ID="ModsInUse"				Anchor="C,T"	Style="DecoFrame" Size="parent-25,100" Hidden="1">
+									<Label				ID="ModsInUseHeader"	Anchor="C,T" Offset="0,5" Style="BlueGlow" FontSize="14" String="{LOC_GAME_MENU_MODS_IN_USE:upper}" />
+									<Grid Style="Divider6Grid"											Size="parent,2" Color="41,74,108,255" Offset="0,20"/>
+									<ScrollPanel	ID="ModListings"			Anchor="L,T"	Offset="10,22" Size="parent-20,parent-24" Vertical="1" AutoScrollBar="1" >
+										<Stack			ID="ModListingsStack"	Anchor="L,T" StackGrowth="Bottom" />
+										<ScrollBar Style="Slider_Blue"		Anchor="R,C" AnchorSide="O,I" Offset="-2,0" />
+									</ScrollPanel>
+								</Grid>
+								<Container Size="20,20"/>
+							</Stack>
             </Grid>
 
             <Container ID="GameDetails" Size="parent,105" Anchor="C,B">
@@ -81,7 +94,7 @@
   <MakeInstance Name="PopupDialog" />
 
 	<Instance Name="ModInstance">
-		<Label ID="ModTitle" Style="FontNormal14"	Color="102,122,145" Anchor="L,T" Offset="5,0" WrapWidth="205" String="Mod Title" />
+		<Label ID="ModTitle" Style="FontNormal14"	Color="102,122,145" Anchor="L,T" Offset="5,0" WrapWidth="225" String="Mod Title" />
 	</Instance>
 
 	<LuaContext FileName="LoadGameMenu" ID="LoadGameMenu" Hidden="1" />

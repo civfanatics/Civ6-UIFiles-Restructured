@@ -1,148 +1,6 @@
 -- Requires InstanceManager
 include("SupportFunctions");
 
--------------------------------------------------------------------
--- Color Utilities
--------------------------------------------------------------------
-local function ColorIsWhite(color)
-	return color.Red == 1 and color.Blue == 1 and color.Green == 1;
-end
-
-local function ColorIsBlack(color)
-	return color.Red == 0 and color.Blue == 0 and color.Green == 0;
-end
-
-local function GetBrightness(c)
-	local r = c.Red;
-	if(r <= 0.03928) then
-		r = r / 12.92;
-	else
-		r = ((r + 0.055) / 1.055)^2.4;
-	end
-	
-	r = r * 0.2126;
-	
-	local g = c.Green
-	if(g <= 0.03928) then
-		g = g / 12.92;
-	else
-		g = ((g + 0.055) / 1.055)^2.4;
-	end
-	
-	g = g * 0.7152;
-	
-	local b = c.Blue;
-	if(b <= 0.03928) then
-		b = b / 12.92;
-	else
-		b = ((b + 0.055) / 1.055)^2.4;
-	end
-	
-	b = b * 0.0722;
-	
-	return r + g + b;
-
-end
-
-local function HSLFromColor(r,g,b)
-		
-	local h,s,l;
-	
-	local minV = math.min(r,g,b);
-	local maxV = math.max(r,g,b);
-
-	l = (maxV + minV) / 2;
-
-	if(minV == maxV) then
-		h = 0;
-		s = 0;
-	else
-		if(l < 0.5) then
-			s = (maxV - minV) / (maxV + minV);
-		else
-			s = (maxV - minV) / (2 - maxV - minV); 
-		end
-		
-		if(r == maxV) then
-			h = (g - b)/(maxV - minV);
-		elseif(g == maxV) then
-			h = 2 + (b - r)/(maxV - minV);
-		elseif(b == maxV) then
-			h = 4 + (r - g)/(maxV - minV);
-		end
-	end
-	
-	return h,s,l;
-end
-
-local function ColorFromHSL(hue, sat, lum)
-	local function Clamp(value, minValue, maxValue)
-		if (value < minValue) then return minValue;
-		elseif(value > maxValue) then return maxValue;
-		else return value;
-		end
-	end
-
-	hue = Clamp(hue, 0, 1.0);
-	sat = Clamp(sat, 0, 1.0);
-	lum = Clamp(lum, 0, 1.0);
-
-    local r = 0;
-    local g = 0
-    local b = 0;
-  
-  
-    if (lum == 0) then
-        r = 0;
-        g = 0;
-        b = 0;
-        
-    elseif (sat == 0) then
-        r = lum;
-        g = lum;
-        b = lum;
-        
-	else
-        local temp1;
-        if(lum < 0.5) then 
-			temp1 = lum * (1 + sat) 
-		else 
-			temp1 = lum + sat - lum * sat; 
-		end
-        
-        local temp2 = 2.0 * lum - temp1;
-
-        local t3 = { hue + 1 / 3, hue, hue - 1 / 3 };
-        local clr = {0, 0, 0};
-        for i, t in ipairs(t3) do
-        
-            if (t < 0) then
-                t = t + 1;
-            end
-            
-            if (t > 1) then
-                t = t - 1;
-            end
-
-            if (6 * t < 1) then
-                clr[i] = temp2 + (temp1 - temp2) * t * 6;
-            elseif (2 * t < 1) then
-                clr[i] = temp1;
-            elseif (3 * t < 2) then
-                clr[i] = (temp2 + (temp1 - temp2) * ((2 / 3) - t) * 6);
-            else
-                clr[i] = temp2;
-            end
-        end
-        
-        r = clr[1];
-        g = clr[2];
-        b = clr[3];
-    end
-    
-    return {Red = r, Green = g, Blue = b, Alpha = 1};
-end
-
 ---------------------------------------------------------------
 -- Globals
 ----------------------------------------------------------------
@@ -271,7 +129,7 @@ function ReplayGraphDrawGraph()
 				local color = g_PlayerGraphColors[i];
 
 				local pDataSet = Controls.ResultsGraph:CreateDataSet(v.Name);
-				pDataSet:SetColor(UI.GetColorValue(color.Type));
+				pDataSet:SetColor(color);
 				pDataSet:SetWidth(2.0);
 				pDataSet:SetVisible(not isHidden);
 
@@ -304,96 +162,92 @@ function ReplayGraphRefresh()
 		local colorDistances = {};
 		local pow = math.pow;
 		function ColorDistance(color1, color2)
+			
 			local distance = nil;
-			local colorDistanceTable = colorDistances[color1.Type];
+			local colorDistanceTable = colorDistances[color1];
 			if(colorDistanceTable == nil) then
 				colorDistanceTable = {
-					[color1.Type] = 0;	--We can assume the distance of a color to itself is 0.
+					[color1] = 0;	--We can assume the distance of a color to itself is 0.
 				};
-						
-				colorDistances[color1.Type] = colorDistanceTable
+				
+				colorDistances[color1] = colorDistanceTable
 			end
-					
-			local distance = colorDistanceTable[color2.Type];
+			
+			local distance = colorDistanceTable[color2];
 			if(distance == nil) then
-
-				local c1:table, c2:table;
-
-				if color1.Color then
-					c1 = UIManager:ParseColorString(color1.Color);
-				else
-					c1 = { color1.Red * 255, color1.Green * 255, color1.Blue * 255 };
-				end
-
-				if color2.Color then
-					c2 = UIManager:ParseColorString(color2.Color);
-				else
-					c2 = { color2.Red * 255, color2.Green * 255, color2.Blue * 255 };
-				end
+				local c1 = {UI.GetColorChannels(color1)};
+				local c2 = {UI.GetColorChannels(color2)};
 
 				local r2 = pow(c1[1] - c2[1], 2);
 				local g2 = pow(c1[2] - c2[2], 2);
 				local b2 = pow(c1[3] - c2[3], 2);	
-						
+				
 				distance = r2 + g2 + b2;
-				colorDistanceTable[color2.Type] = distance;
+				colorDistanceTable[color2] = distance;
 			end
-					
+			
 			return distance;
 		end
 				
 		local colorNotUnique = {};
-		local colorBlack = { Type = "COLOR_BLACK", Red = 0, Green = 0, Blue = 0, Alpha = 1 };
-		local function IsUniqueColor(color)
-			if(colorNotUnique[color.Type]) then
+		local colorBlack = UI.GetColorValue("COLOR_BLACK");
+		local function IsUniqueColor(color, unique_cache)
+		
+			if(unique_cache[color]) then
 				return false;
 			end
-					
+			
 			local blackThreshold = 5000;
 			local differenceThreshold = 3000;
-							
+					
 			local distanceAgainstBlack = ColorDistance(color, colorBlack);
 			if(distanceAgainstBlack > blackThreshold) then
 				for i, v in pairs(g_PlayerGraphColors) do
 					local distanceAgainstOtherPlayer = ColorDistance(color, v);
 					if(distanceAgainstOtherPlayer < differenceThreshold) then
 						-- Return false if the color is too close to a color that's already being used
-						colorNotUnique[color.Type] = true;
+						unique_cache[color] = true;
 						return false;
 					end
 				end
 
 				-- Return true if the color is far enough away from black and other colors being used
-				colorNotUnique[color.Type] = true;	
+				unique_cache[color] = true;	
 				return true;
 			end
-					
+			
 			-- Return false if color is too close to black
-			colorNotUnique[color.Type] = true;
+			unique_cache[color] = true;
 			return false;
 		end
 					
-		local function DetermineGraphColor(playerColor)
-			if(IsUniqueColor(GameInfo.Colors[playerColor.PrimaryColor])) then
-				return GameInfo.Colors[playerColor.PrimaryColor];
-			elseif(IsUniqueColor(GameInfo.Colors[playerColor.SecondaryColor])) then
-				return GameInfo.Colors[playerColor.SecondaryColor];
+		local function DetermineGraphColor(primaryColor, secondaryColor, unique_cache)
+
+			if(IsUniqueColor(primaryColor, unique_cache)) then
+				return primaryColor;
+			elseif(IsUniqueColor(secondaryColor, unique_cache)) then
+				return secondaryColor;
 			else
-				for color in GameInfo.Colors() do
-					-- Ensure we only use unique and opaque colors
-					if(IsUniqueColor(color)) then
-						local parsedColor = UIManager:ParseColorString(color.Color);
-						if parsedColor[4] == 255 then
+				local colors = UI.GetColors();
+
+				for i, color in ipairs(colors) do
+					local value = color[2];
+
+					local r,g,b,a = UI.GetColorChannels(value);
+
+					if a == 255 then
+						-- Ensure we only use unique and opaque colors
+						if(IsUniqueColor(value, unique_cache)) then
 							return color;
 						end
 					end
 				end
 			end
 										
-			--error("Could not find a unique color");
-			return GameInfo.Colors[playerColor.PrimaryColor];
+			return primaryColor;
 		end
 
+		local unique_color_cache = {};
 		g_PlayerGraphColors = {};
 		g_GraphLegendInstanceManager:ResetInstances();
 		for i, player in ipairs(g_PlayerInfos) do
@@ -403,10 +257,10 @@ function ReplayGraphRefresh()
 			local graphLegendInstance = g_GraphLegendInstanceManager:GetInstance();
 					
 			--IconHookup( civ.PortraitIndex, 32, civ.IconAtlas, graphLegendInstance.LegendIcon );
-			local color = DetermineGraphColor(player.PlayerColor);
+			local color = DetermineGraphColor(player.PrimaryColor, player.SecondaryColor, unique_color_cache);
 			g_PlayerGraphColors[i] = color;
 		
-			graphLegendInstance.LegendIcon:SetColor(UI.GetColorValue(color.Type));
+			graphLegendInstance.LegendIcon:SetColor(color);
 							
 			if(player.Name ~= nil) then
 				TruncateStringWithTooltip(graphLegendInstance.LegendName, graphLegendInstance.GraphLegend:GetSizeX() - 52, Locale.Lookup(player.Name));
@@ -517,14 +371,12 @@ function ReplayInitialize()
 		local playerConfig = PlayerConfigurations[player_num];
 		if(player and playerConfig and playerConfig:IsParticipant() and player:WasEverAlive() and not player:IsBarbarian() and not player:IsFreeCities()) then
 
-			local color = GameInfo.PlayerColors[playerConfig:GetColor()];
-			if(color == nil) then
-				color = GameInfo.PlayerColors[1];
-			end
-
+			local primary, secondary = UI.GetPlayerColors(player:GetID());
+		
 			local playerInfo = {
 				Id = player:GetID(),
-				PlayerColor = color,
+				PrimaryColor = primary,
+				SecondaryColor = secondary,
 				Name = playerConfig:GetPlayerName(),
 				Civilization = playerConfig:GetCivilizationTypeName(),
 				IsMinor = not player:IsMajor(),

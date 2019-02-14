@@ -49,6 +49,7 @@ local m_EraData:table = {
 	DarkAgeThresholdTooltip = "";
 	GoldenAgeThreshold = 0;
 	GoldenAgeThresholdTooltip = "";
+	NextGoldenAgeName = "";
 	FinalEraReached = false;
 };
 
@@ -63,7 +64,7 @@ function GetData()
 
 	m_EraData.PlayerID = Game.GetLocalPlayer();
 
-	m_EraData.CurrentEraName = Locale.ToUpper(currentEraDef.Name);
+	m_EraData.CurrentEraName = currentEraDef.Name;
 	m_EraData.CurrentEraScore = pGameEras:GetPlayerCurrentScore(m_EraData.PlayerID);
 
 	-- Combine previous era scores
@@ -124,7 +125,7 @@ function GetData()
 	-- Determine which era we'll currently have next
 	if m_EraData.CurrentEraScore >= m_EraData.GoldenAgeThreshold then
 		m_EraData.NextEraType = ERA_TYPE_GOLDEN_AGE;
-	elseif m_EraData.CurrentEraScore > m_EraData.DarkAgeThreshold then
+	elseif m_EraData.CurrentEraScore >= m_EraData.DarkAgeThreshold then
 		m_EraData.NextEraType = ERA_TYPE_NORMAL_AGE;
 	else
 		m_EraData.NextEraType = ERA_TYPE_DARK_AGE;
@@ -140,6 +141,7 @@ function GetData()
 		m_EraData.AgeName = Locale.Lookup("LOC_ERA_PROGRESS_HEROIC_AGE");
 		m_EraData.ShortAgeName = Locale.Lookup("LOC_ERAS_HEROIC");
 		m_EraData.AgeEffects = Locale.Lookup("LOC_ERA_TT_HAVE_HEROIC_AGE_EFFECT");
+		m_EraData.NextGoldenAgeName = Locale.Lookup("LOC_ERA_REVIEW_HAVE_GOLDEN_AGE_LABEL");
 	elseif pGameEras:HasGoldenAge(m_EraData.PlayerID) then
 		-- Golden
 		m_EraData.CurrentEraType = ERA_TYPE_GOLDEN_AGE;
@@ -150,6 +152,7 @@ function GetData()
 		m_EraData.AgeName = Locale.Lookup("LOC_ERA_PROGRESS_GOLDEN_AGE");
 		m_EraData.ShortAgeName = Locale.Lookup("LOC_ERAS_GOLDEN");
 		m_EraData.AgeEffects = Locale.Lookup("LOC_ERA_TT_HAVE_GOLDEN_AGE_EFFECT");
+		m_EraData.NextGoldenAgeName = Locale.Lookup("LOC_ERA_REVIEW_HAVE_GOLDEN_AGE_LABEL");
 	elseif pGameEras:HasDarkAge(m_EraData.PlayerID) then
 		-- Dark
 		m_EraData.CurrentEraType = ERA_TYPE_DARK_AGE;
@@ -160,6 +163,7 @@ function GetData()
 		m_EraData.AgeName = Locale.Lookup("LOC_ERA_PROGRESS_DARK_AGE");
 		m_EraData.ShortAgeName = Locale.Lookup("LOC_ERAS_DARK");
 		m_EraData.AgeEffects = Locale.Lookup("LOC_ERA_TT_HAVE_DARK_AGE_EFFECT");
+		m_EraData.NextGoldenAgeName = Locale.Lookup("LOC_ERA_REVIEW_HAVE_HEROIC_AGE_LABEL");
 	else
 		-- Normal
 		m_EraData.CurrentEraType = ERA_TYPE_NORMAL_AGE;
@@ -170,6 +174,7 @@ function GetData()
 		m_EraData.AgeName = Locale.Lookup("LOC_ERA_PROGRESS_NORMAL_AGE");
 		m_EraData.ShortAgeName = Locale.Lookup("LOC_ERAS_NORMAL");
 		m_EraData.AgeEffects = Locale.Lookup("LOC_ERA_TT_HAVE_NORMAL_AGE_EFFECT");
+		m_EraData.NextGoldenAgeName = Locale.Lookup("LOC_ERA_REVIEW_HAVE_GOLDEN_AGE_LABEL");
 	end
 
 	-- Add dedications to the age effects
@@ -238,9 +243,14 @@ function Refresh()
 	if (m_EraData.FinalEraReached) then
 		Controls.ThresholdStack:SetHide(true);
 	else
-		Controls.DarkThreshold:SetText("0 - " .. (m_EraData.DarkAgeThreshold - 1));
+		local darkAgeThresholdForDisplay = m_EraData.DarkAgeThreshold - 1;
+		if (darkAgeThresholdForDisplay < 0) then
+			darkAgeThresholdForDisplay = 0;
+		end
+		Controls.DarkThreshold:SetText("0 - " .. (darkAgeThresholdForDisplay));
 		Controls.DarkThreshold:SetToolTipString(m_EraData.DarkAgeThresholdTooltip);
 		Controls.NormalThreshold:SetText(m_EraData.DarkAgeThreshold .. " - " .. (m_EraData.GoldenAgeThreshold - 1));
+		Controls.GoldenLabel:SetText(m_EraData.NextGoldenAgeName);
 		Controls.GoldenThreshold:SetText(m_EraData.GoldenAgeThreshold .. "+");
 		Controls.GoldenThreshold:SetToolTipString(m_EraData.GoldenAgeThresholdTooltip);
 		Controls.ThresholdStack:SetHide(false);
@@ -307,6 +317,16 @@ function AddPlayerEraIcon(playerID:number, eraIcon:string)
 	civIcon:SetLeaderTooltip(playerID);
 	civIcon:UpdateLeaderTooltip(playerID);
 	instance.EraLabel:SetText(eraIcon);
+
+	local iTeamID:number = Players[playerID]:GetTeam();
+	if #Teams[iTeamID] > 1 then
+		local teamRibbonName:string = TEAM_RIBBON_PREFIX .. tostring(iTeamID);
+		instance.TeamRibbon:SetIcon(teamRibbonName);
+		instance.TeamRibbon:SetHide(false);
+		instance.TeamRibbon:SetColor(GetTeamColor(iTeamID));
+	else
+		instance.TeamRibbon:SetHide(true);
+	end
 end
 
 -- ===========================================================================
@@ -369,6 +389,7 @@ function Open()
 		return
 	end
 
+	LuaEvents.MinimapPanel_CloseAllLenses();
 	m_AnimSupport.Show();
 	Refresh();
 	UI.PlaySound("CityStates_Panel_Open");
@@ -422,9 +443,14 @@ function OnInterfaceModeChanged(eOldMode:number, eNewMode:number)
 end
 
 -- ===========================================================================
+function LateInitialize()
+end
+
+-- ===========================================================================
 --	UI EVENT
 -- ===========================================================================
-function OnInit(isReload:boolean)
+function OnInit( isReload:boolean )	
+	LateInitialize();
 	if isReload then
 		LuaEvents.GameDebug_GetValues(RELOAD_CACHE_ID);
 	end
@@ -471,7 +497,6 @@ end
 
 -- ===========================================================================
 function Initialize()
-	ContextPtr:SetHide(true);
 
 	-- Control Events
 	Controls.CloseButton:RegisterCallback(Mouse.eLClick, OnClose);

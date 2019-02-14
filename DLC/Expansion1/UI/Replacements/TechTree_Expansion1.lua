@@ -15,17 +15,25 @@ BASE_View = View;
 BASE_PopulateNode = PopulateNode;
 BASE_ShouldUpdateWhenResearchChanges = ShouldUpdateWhenResearchChanges;
 
+
 -- ===========================================================================
---	OVERRIDE BASE FUNCTIONS
+--	OVERRIDE Base
 -- ===========================================================================
 function View(playerTechData)
 	CalculateAllianceResearchBonus();
 	BASE_View(playerTechData);
 end
 
+-- ===========================================================================
+--	OVERRIDE Base
+-- ===========================================================================
 function PopulateNode(node, playerTechData)
 	BASE_PopulateNode(node, playerTechData);
+	UpdateAllianceIcon(node);
+end
 
+-- ===========================================================================
+function UpdateAllianceIcon(node)
 	local techID = GameInfo.Technologies[node.Type].Index;
 	if AllyHasOrIsResearchingTech(techID) then
 		node.AllianceIcon:SetToolTipString(GetAllianceIconToolTip());
@@ -36,6 +44,9 @@ function PopulateNode(node, playerTechData)
 	end
 end
 
+-- ===========================================================================
+--	OVERRIDE Base
+-- ===========================================================================
 function ShouldUpdateWhenResearchChanges(ePlayer)
 	return BASE_ShouldUpdateWhenResearchChanges(ePlayer) or HasMaxLevelResearchAlliance(ePlayer);
 end

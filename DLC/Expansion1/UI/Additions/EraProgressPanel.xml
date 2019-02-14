@@ -62,7 +62,7 @@
 					<MakeInstance Name="RowDivider"/>
 					<Label Anchor="C,T" String="LOC_ERAS_CURRENT_AGE_BY_CIV" Style="HalfScreenHeader"/>
 					<MakeInstance Name="RowDivider"/>
-					<Stack ID="CivIconStack" Anchor="L,T" Offset="30,1" StackGrowth="Right" WrapWidth="440"/>
+					<Stack ID="CivIconStack" Anchor="L,T" Offset="30,1" StackGrowth="Right" StackPadding="6" WrapWidth="440"/>
 					
 					<!-- Next Era Thresholds -->
 					<Stack ID="ThresholdStack" Anchor="C,T" StackGrowth="Down" StackPadding="8">
@@ -81,9 +81,9 @@
 							<Label ID="NormalThreshold" Anchor="R,C" Size="parent,40" Offset="30,0" String="99-999" Style="FontBoldFlair21" Align="Right"/>
 							<Label ID="NormalCheckmark" Anchor="R,C" Offset="4,2" String="[ICON_CheckSuccess]"/>
 						</Container>
-						<!-- Golden Age Threshold -->
+						<!-- Golden/Heroic Age Threshold -->
 						<Container Anchor="C,T" Size="parent-50,auto">
-							<Label Anchor="L,C" Size="parent,40" String="LOC_ERA_REVIEW_HAVE_GOLDEN_AGE_LABEL" Style="HalfScreenHeader"/>
+							<Label ID="GoldenLabel" Anchor="L,C" Size="parent,40" String="LOC_ERA_REVIEW_HAVE_GOLDEN_AGE_LABEL" Style="HalfScreenHeader"/>
 							<Label ID="GoldenThreshold" Anchor="R,C" Size="parent,40" Offset="30,0" String="1000+" Style="FontBoldFlair21" Align="Right"/>
 							<Label ID="GoldenCheckmark" Anchor="R,C" Offset="4,2" String="[ICON_CheckSuccess]"/>
 						</Container>
@@ -138,6 +138,7 @@
 	<Instance Name="CivilizationIconAge" Size="36,36">
 		<Image ID="CivIconBacking" Size="36,36" Texture="CircleBacking36">
 			<Image ID="CivIcon" Size="36,36" Texture="CivSymbols36"/>
+      <Image ID="TeamRibbon" Size="44,44" Offset="0,-4" Anchor="C,B" Texture="TeamRibbon44"/>
 			<Label ID="EraLabel" Anchor="R,B" Offset="-4,-2"/>
 		</Image>
 	</Instance>

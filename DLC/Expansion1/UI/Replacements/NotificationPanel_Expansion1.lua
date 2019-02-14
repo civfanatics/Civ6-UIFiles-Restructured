@@ -1,10 +1,9 @@
---[[
--- Copyright (c) 2017 Firaxis Games
---]]
--- ===========================================================================
--- INCLUDE BASE FILE
--- ===========================================================================
+-- Copyright 2017-2018, Firaxis Games
+
 include("NotificationPanel");
+
+BASE_RegisterHandlers = RegisterHandlers;
+
 
 -- ===========================================================================
 -- CACHE BASE FUNCTIONS
@@ -37,10 +36,10 @@ function OnConsiderEmergency( notificationEntry )
 			local eEmergencyTarget :number = pNotification:GetValue( "PARAM_PLAYER0" );
 			local eEmergencyType :number = pNotification:GetValue( "PARAM_PLAYER1" );
 			if (eEmergencyTarget ~= nil and eEmergencyType ~= nil) then
-				LuaEvents.EmergencyClicked(eEmergencyTarget, eEmergencyType);
+				LuaEvents.NotificationPanel_EmergencyClicked(eEmergencyTarget, eEmergencyType);
 			else
 				local eEmergencyTable :table = Game.GetEmergencyManager():GetNextBlockingEmergency(Game.GetLocalPlayer());
-				LuaEvents.EmergencyClicked(eEmergencyTable.eTarget, eEmergencyTable.eEmergencyType);
+				LuaEvents.NotificationPanel_EmergencyClicked(eEmergencyTable.eTarget, eEmergencyTable.eEmergencyType);
 			end
 		end
 	end
@@ -54,7 +53,7 @@ function OnCommemorate( notificationEntry )
 			if currentEra <= 0 then
 				UI.AssertMsg(false, "Attempting to commemorate first era, this should not happen.");
 			else
-				LuaEvents.EraReviewPopup_Show(currentEra - 1, currentEra);
+				LuaEvents.EraReviewPopup_Show();
 			end
 		end
 	end
@@ -92,11 +91,13 @@ function OnForeignCityBecameFreeCityNotification( notificationEntry, notificatio
 	end
 end
 
-function Initialize()
+-- ===========================================================================
+function RegisterHandlers()
+	
+	BASE_RegisterHandlers();
+
 	g_notificationHandlers[NotificationTypes.CONSIDER_DISLOYAL_CITY]							= MakeDefaultHandlers();
-	g_notificationHandlers[NotificationTypes.CONSIDER_DISLOYAL_CITY].Activate					= OnConsiderDisloyalCityNotification;
 	g_notificationHandlers[NotificationTypes.CITY_LOSING_CULTURAL_IDENTITY]						= MakeDefaultHandlers();
-	g_notificationHandlers[NotificationTypes.CITY_LOSING_CULTURAL_IDENTITY].Activate			= OnCityLosingCulturalIdentityNotification;
 	g_notificationHandlers[NotificationTypes.SPY_FABRICATE_SCANDAL]								= MakeDefaultHandlers();
 	g_notificationHandlers[NotificationTypes.SPY_ENEMY_FABRICATE_SCANDAL]						= MakeDefaultHandlers();
 	g_notificationHandlers[NotificationTypes.SPY_FOMENT_UNREST]									= MakeDefaultHandlers();
@@ -104,18 +105,22 @@ function Initialize()
 	g_notificationHandlers[NotificationTypes.SPY_NEUTRALIZE_GOVERNOR]							= MakeDefaultHandlers();
 	g_notificationHandlers[NotificationTypes.SPY_ENEMY_NEUTRALIZE_GOVERNOR]						= MakeDefaultHandlers();
 	g_notificationHandlers[NotificationTypes.EMERGENCY_DECLARED]								= MakeDefaultHandlers();
-	g_notificationHandlers[NotificationTypes.EMERGENCY_DECLARED].Activate						= OnConsiderEmergency;
 	g_notificationHandlers[NotificationTypes.EMERGENCY_FAILED]									= MakeDefaultHandlers();
 	g_notificationHandlers[NotificationTypes.EMERGENCY_SUCCEEDED]								= MakeDefaultHandlers();
 	g_notificationHandlers[NotificationTypes.EMERGENCY_NEEDS_ATTENTION]							= MakeDefaultHandlers();
-	g_notificationHandlers[NotificationTypes.EMERGENCY_NEEDS_ATTENTION].Activate				= OnConsiderEmergency;
 	g_notificationHandlers[NotificationTypes.COMMEMORATION_AVAILABLE]							= MakeDefaultHandlers();
-	g_notificationHandlers[NotificationTypes.COMMEMORATION_AVAILABLE].Activate					= OnCommemorate;
 	g_notificationHandlers[NotificationTypes.QUEST_RECORDED]									= MakeDefaultHandlers();
-	g_notificationHandlers[NotificationTypes.QUEST_RECORDED].Activate							= OnDedicate;
 	g_notificationHandlers[NotificationTypes.PRIDE_MOMENT_RECORDED]								= MakeDefaultHandlers();
-	g_notificationHandlers[NotificationTypes.PRIDE_MOMENT_RECORDED].Activate					= OnPrideMomentActivate;
 	g_notificationHandlers[NotificationTypes.FOREIGN_CITY_BECAME_FREE_CITY]						= MakeDefaultHandlers();
+
+	g_notificationHandlers[NotificationTypes.CONSIDER_DISLOYAL_CITY].Activate					= OnConsiderDisloyalCityNotification;
+	g_notificationHandlers[NotificationTypes.CITY_LOSING_CULTURAL_IDENTITY].Activate			= OnCityLosingCulturalIdentityNotification;
+	g_notificationHandlers[NotificationTypes.EMERGENCY_DECLARED].Activate						= OnConsiderEmergency;
+	g_notificationHandlers[NotificationTypes.EMERGENCY_FAILED].Activate							= OnConsiderEmergency;
+	g_notificationHandlers[NotificationTypes.EMERGENCY_SUCCEEDED].Activate						= OnConsiderEmergency;
+	g_notificationHandlers[NotificationTypes.EMERGENCY_NEEDS_ATTENTION].Activate				= OnConsiderEmergency;
+	g_notificationHandlers[NotificationTypes.COMMEMORATION_AVAILABLE].Activate					= OnCommemorate;
+	g_notificationHandlers[NotificationTypes.QUEST_RECORDED].Activate							= OnDedicate;
+	g_notificationHandlers[NotificationTypes.PRIDE_MOMENT_RECORDED].Activate					= OnPrideMomentActivate;
 	g_notificationHandlers[NotificationTypes.FOREIGN_CITY_BECAME_FREE_CITY].Activate			= OnForeignCityBecameFreeCityNotification;
 end
-Initialize();

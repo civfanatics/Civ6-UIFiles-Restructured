@@ -1,7 +1,8 @@
---[[
--- Created by Samuel Batista, Nov 21 2017
--- Copyright (c) Firaxis Games
---]]
+-- ===========================================================================
+--	Great People Popup XP1
+--	Copyright 2017-2018 (c) Firaxis Games
+-- ===========================================================================
+
 
 -- ===========================================================================
 -- Base File
@@ -15,7 +16,7 @@ BASE_GetPatronizeWithGoldTT = GetPatronizeWithGoldTT;
 BASE_GetPatronizeWithFaithTT = GetPatronizeWithFaithTT;
 
 -- ===========================================================================
--- OVERRIDE FUNCTIONS
+--	OVERRIDE 
 -- ===========================================================================
 function GetPatronizeWithGoldTT(kPerson)
 	local localPlayer = Players[Game.GetLocalPlayer()];
@@ -25,6 +26,9 @@ function GetPatronizeWithGoldTT(kPerson)
 	return BASE_GetPatronizeWithGoldTT(kPerson);
 end
 
+-- ===========================================================================
+--	OVERRIDE 
+-- ===========================================================================
 function GetPatronizeWithFaithTT(kPerson)
 	local localPlayer = Players[Game.GetLocalPlayer()];
 	if (localPlayer:GetGreatPeoplePoints():IsNoPatronageWith(GameInfo.Yields["YIELD_FAITH"].Index)) then

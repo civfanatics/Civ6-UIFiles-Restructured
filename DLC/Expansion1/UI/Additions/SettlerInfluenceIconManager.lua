@@ -18,6 +18,13 @@ local PADDING_Y :number = 16;
 local m_PlotBonusIM	:table = InstanceManager:new( "PlotYieldBonusInstance",	"Anchor", Controls.PlotBonusContainer );
 local m_MapIcons	:table = {};
 
+local m_UnitsMilitary : number = UILens.CreateLensLayerHash("Units_Military");
+local m_DistrictsCampus : number = UILens.CreateLensLayerHash("Districts_Campus");
+local m_MovementPath : number = UILens.CreateLensLayerHash("Movement_Path");
+local m_MovementZoneOfControl : number = UILens.CreateLensLayerHash("Movement_Zone_Of_Control");
+local m_AdjacencyBonusDistricts : number = UILens.CreateLensLayerHash("Adjacency_Bonus_Districts");
+local m_HexColoringWaterAvail : number = UILens.CreateLensLayerHash("Hex_Coloring_Water_Availablity");
+
 -- ===========================================================================
 function RealizeIconStack(instance:table)
 	instance.IconStack:CalculateSize();
@@ -66,10 +73,10 @@ end
 -- ===========================================================================
 function LayerToString( layerNum:number )
 	local out:string;
-	if		layerNum == LensLayers.Units_Military			then out = "Units_Military";
-	elseif	layerNum == LensLayers.Districts_Campus			then out = "Districts_Campus";
-	elseif	layerNum == LensLayers.Movement_Path			then out = "Movement_Path";
-	elseif	layerNum == LensLayers.Movement_Zone_Of_Control	then out = "Movement_Zone_Of_Control";
+	if		layerNum == m_UnitsMilitary			then out = "Units_Military";
+	elseif	layerNum == m_DistrictsCampus		then out = "Districts_Campus";
+	elseif	layerNum == m_MovementPath			then out = "Movement_Path";
+	elseif	layerNum == m_MovementZoneOfControl	then out = "Movement_Zone_Of_Control";
 	end
 	out = out .. "("..tostring(layerNum)..")";
 	return out;
@@ -88,7 +95,7 @@ end
 -- ===========================================================================
 function RealizeInfluenceTiles()
 
-	local isLayerOn:boolean = UILens.IsLayerOn(LensLayers.HEX_COLORING_WATER_AVAILABLITY);
+	local isLayerOn:boolean = UILens.IsLayerOn(m_HexColoringWaterAvail);
 	if not isLayerOn then
 		return;
 	end
@@ -109,6 +116,11 @@ function RealizeInfluenceTiles()
 
 			local x,y = instance.BonusText:GetSizeVal();
 			instance.PlotBonus:SetSizeVal( x+PADDING_X, y+PADDING_Y );			
+
+            -- apply an adjustment to prevent overlapping resource icons
+            instance.PlotBonus:SetOffsetY(-48);
+            instance.PrereqIcon:SetOffsetY(-48);
+
 			RealizeIconStack(instance);	
 		end
 	end
@@ -119,7 +131,7 @@ end
 --	Initialize / hotload support
 -- ===========================================================================
 function OnInit( isHotLoad:boolean )
-	if isHotLoad and UILens.IsLayerOn(LensLayers.ADJACENCY_BONUS_DISTRICTS) then
+	if isHotLoad and UILens.IsLayerOn(m_AdjacencyBonusDistricts) then
 		Realize2dArtForDistrictPlacement(); 
 	end
 end
@@ -141,7 +153,7 @@ end
 --	Gamecore Event
 -- ===========================================================================
 function OnLensLayerOn( layerNum:number )	
-	if not (layerNum==LensLayers.HEX_COLORING_WATER_AVAILABLITY) then 
+	if not (layerNum==m_HexColoringWaterAvail) then 
 		return; 
 	end
 	RealizeInfluenceTiles();
@@ -152,7 +164,7 @@ end
 -- ===========================================================================
 function OnLensLayerOff( layerNum:number )
 	
-	if not (layerNum==LensLayers.HEX_COLORING_WATER_AVAILABLITY) then 
+	if not (layerNum==m_HexColoringWaterAvail) then 
 		return; 
 	end
 

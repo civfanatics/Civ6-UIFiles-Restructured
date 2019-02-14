@@ -42,7 +42,7 @@
 				  <Container Size="parent,8"/>
 				  <Line Color="0,0,0,60" Anchor="C,B" Offset="0,0" Start="0,0" End="475,0" Width="2"/>
 				  <Container Size="parent,8"/>
-				  <Stack ID="CivIconStack" Anchor="C,T" Offset="0,0" Size="parent,auto" StackGrowth="Right" WrapWidth="470" d="0"/>
+				  <Stack ID="CivIconStack" Anchor="C,T" Offset="0,0" Size="parent,auto" StackGrowth="Right" StackPadding="6" WrapWidth="470" d="0"/>
 				  <Container Size="parent,10"/>
 				
 				  <Line Color="0,0,0,60" Anchor="C,B" Offset="0,0" Start="0,0" End="475,0" Width="2"/>
@@ -79,6 +79,7 @@
 	<Instance Name="CivilizationIconAge" Size="36,36">
 		<Image ID="CivIconBacking" Size="36,36" Texture="CircleBacking36">
 			<Image ID="CivIcon" Size="36,36" Texture="CivSymbols36"/>
+      <Image ID="TeamRibbon" Size="44,44" Offset="0,-4" Anchor="C,B" Texture="TeamRibbon44"/>
 			<Label ID="EraLabel" Anchor="R,B" Offset="-4,-2"/>
 		</Image>
 	</Instance>

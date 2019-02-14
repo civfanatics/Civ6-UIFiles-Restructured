@@ -4,7 +4,7 @@
   <Instance Name="LoyaltyInfo">
     <Container ID="Top" Size="200,100" Anchor="C,B" AnchorSide="I,O">
       <!--Compact Flyout-->
-      <GridButton ID="CulturalIdentityButton" Anchor="C,T" Size="188,31" Texture="Banner_DataFrame" NoStateChange="1" SliceCorner="23,6" SliceSize="76,15" SliceTextureSize="122,31">
+      <GridButton ID="CulturalIdentityButton" Anchor="C,T" Size="188,31" Texture="Banner_DataFrame" NoStateChange="1" SliceCorner="23,6" SliceSize="76,15" SliceTextureSize="122,31" ConsumeMouseOver="1">
         <!--Owner Civ Icon-->
         <Image ID="OwnerCivIconBacking" Anchor="L,C" Offset="6,0" Size="22,22" Texture="CircleBacking22">
           <Image ID="OwnerCivIcon" Anchor="C,C" Offset="0,0" Size="22,22" IconSize="22" Icon="ICON_CIVILIZATION_AMERICA"/>
@@ -28,7 +28,7 @@
       </GridButton>
 
       <!--Extended Flyout-->
-      <GridButton ID="CulturalIdentityExpandedButton" Anchor="C,T" Size="260,120" Texture="Banner_DataFrameExtended" SliceCorner="19,9" SliceSize="53,4" Hidden="1">
+      <GridButton ID="CulturalIdentityExpandedButton" Anchor="C,T" Size="260,120" Texture="Banner_DataFrameExtended" SliceCorner="19,9" SliceSize="53,4" Hidden="1" ConsumeMouseOver="1">
         <Stack ID="MainStack" StackGrowth="Down" Anchor="C,T">
           <Container Anchor="C,T" Size="auto,auto">
             <!--Owner Civ Icon-->

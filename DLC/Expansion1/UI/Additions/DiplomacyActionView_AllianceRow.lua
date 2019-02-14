@@ -47,6 +47,20 @@ function Refresh(selectedPlayerID:number)
 	if localPlayer:GetTeam() == selectedPlayer:GetTeam() then
 		relationshipString = "(" .. Locale.Lookup("LOC_WORLD_RANKINGS_TEAM", localPlayer:GetTeam()) .. ") " .. relationshipString;
 	end
+
+    if(localPlayerDiplomacy:IsPromiseMade(selectedPlayer:GetID(), PromiseTypes.DONT_SETTLE_NEAR_ME)) then
+        relationshipString = relationshipString .. "[NEWLINE]" .. Locale.Lookup("LOC_DIPLOACTION_KEEP_PROMISE_DONT_SETTLE_TOO_NEAR_NAME");
+    end
+    if(localPlayerDiplomacy:IsPromiseMade(selectedPlayer:GetID(), PromiseTypes.DONT_SPY_ON_ME)) then
+        relationshipString = relationshipString .. ",[NEWLINE]" .. Locale.Lookup("LOC_DIPLOACTION_KEEP_PROMISE_DONT_SPY_NAME") .. " ";
+    end
+    if(localPlayerDiplomacy:IsPromiseMade(selectedPlayer:GetID(), PromiseTypes.DONT_DIG_UP_MY_ARTIFACTS)) then
+        relationshipString = relationshipString .. ",[NEWLINE]" .. Locale.Lookup("LOC_DIPLOACTION_KEEP_PROMISE_DONT_DIG_ARTIFACTS_NAME") .. " ";
+    end
+    if(localPlayerDiplomacy:IsPromiseMade(selectedPlayer:GetID(), PromiseTypes.DONT_CONVERT_MY_CITIES)) then
+        relationshipString = relationshipString .. ",[NEWLINE]" .. Locale.Lookup("LOC_DIPLOACTION_KEEP_PROMISE_DONT_CONVERT_NAME") .. " ";
+    end
+
 	Controls.RelationshipText:SetText( relationshipString );
 
 	local localPlayerDiplomacy = localPlayer:GetDiplomacy();
@@ -90,6 +104,8 @@ function Refresh(selectedPlayerID:number)
 	-- Show alliance information if we have an alliance
 	local allianceType = localPlayerDiplomacy:GetAllianceType(selectedPlayerID);
 	if allianceType ~= -1 then
+        Controls.RelationshipText:SetToolTipString(Locale.Lookup("LOC_DIPLOACTION_EXPIRES_IN_X_TURNS", localPlayerDiplomacy:GetAllianceTurnsUntilExpiration(selectedPlayerID)));
+
 		-- Alliance Type
 		local iAllianceType = GameInfo.Alliances[allianceType];
 		Controls.AllianceTypeText:SetText(Locale.Lookup(iAllianceType.Name));
