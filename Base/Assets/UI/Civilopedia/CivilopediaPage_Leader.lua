@@ -114,7 +114,7 @@ local sectionId = page.SectionId;
 
 	local unique_abilities = {};
 	for i, trait in ipairs(traits) do
-		if(not_ability[trait.TraitType] ~= true and not trait.InternalOnly) then
+		if(not_ability[trait.TraitType] ~= true and not trait.InternalOnly and trait.Name ~= nil and trait.Description ~= nil) then
 			table.insert(unique_abilities, trait);
 		end
 	end

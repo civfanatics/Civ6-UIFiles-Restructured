@@ -3,22 +3,30 @@
 	<Container						ID="IconContainer" />
 
 	<Instance							Name="IconSetInstance">
-		<WorldAnchor				ID="Anchor">
-      <Image						ID="ImprovementRecommendationBackground" Anchor="C,B" Size="36,46" Offset="0,20" Texture="BuilderRecommendation" Hidden="1">
-        <Image					ID="ImprovementRecommendationIcon" Anchor="C,C" Size="38,38" Texture="UnitActions38" ConsumeMouseOver="1"/>
+		<WorldAnchor				ID="Anchor" Scaling="1" UnitsPerPixel="0.06" Billboard="1">
+			
+			<!-- TODO this could be set up as an empty stack that has elements added and removed from it instead of having 9 controls in every instance that are mostly hidden -->
+			
+      <Image						ID="ImprovementRecommendationBackground" Anchor="C,B" Size="184,236" Offset="0,90" Texture="BuilderRecommendation" Hidden="1">
+        <Image					ID="ImprovementRecommendationIcon" Anchor="C,C" Size="256,256" ConsumeMouseOver="1"/>
       </Image>
+			
 			<Stack						ID="IconStack"					StackGrowth="Right"		Anchor="C,C">
-				<Container															Size="64,64">
-					<Image				ID="ResourceIcon"				Size="64,64"					/>	<!-- Do not set default or when resources on/off are toggle this will show on improvement only plots too! -->
+				
+				<Container															Size="256,256">
+					<Image				ID="ResourceIcon"				Size="256,256"					/>	<!-- Do not set default or when resources on/off are toggle this will show on improvement only plots too! -->
 					<AlphaAnim		ID="AlphaAnim"					AlphaStart="0"				AlphaEnd="1" Cycle="Once" Speed="1.5">
-						<Image			ID="NextResourceIcon"		Size="64,64"					/>
+						<Image			ID="NextResourceIcon"		Size="256,256"					/>
 					</AlphaAnim>
 				</Container>
-				<Container			ID="RecommendationIcon" Size="50,50">
-					<Image				ID="RecommendationIconTexture"	Anchor="C,C" Size="43,43" Texture="Resources"/>
+				
+				<Container			ID="RecommendationIcon" Size="256,256">
+					<Image				ID="RecommendationIconTexture"	Anchor="C,C" Size="256,256"/>
 					<Label				ID="RecommendationIconText" Style="FontNormalBold16" Anchor="R,B"/>
 				</Container>
+				
 			</Stack>
+			
 		</WorldAnchor>
 	</Instance>
 </Context>

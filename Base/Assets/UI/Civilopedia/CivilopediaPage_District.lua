@@ -292,6 +292,11 @@ PageLayouts["District" ] = function(page)
 
 				local key = (row.TilesRequired > 1) and "LOC_TYPE_TRAIT_ADJACENT_BONUS_PER" or "LOC_TYPE_TRAIT_ADJACENT_BONUS";
 
+				-- Exception - Adjacent river gold bonuses can only be gained once
+				if row.AdjacentRiver == true then
+					key = "LOC_TYPE_TRAIT_ADJACENT_BONUS_ONCE";
+				end
+
 				local value = Locale.Lookup(key, row.YieldChange, yield.IconString, yield.Name, row.TilesRequired, object);
 
 				if(row.PrereqCivic or row.PrereqTech) then

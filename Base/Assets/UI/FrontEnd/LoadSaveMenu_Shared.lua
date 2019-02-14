@@ -1,4 +1,6 @@
 include( "SupportFunctions" );
+include( "Colors") ;
+
 ----------------------------------------------------------------        
 -- Shared code for the LoadGameMenu and the SaveGameMenu
 ----------------------------------------------------------------        
@@ -31,6 +33,7 @@ g_CurrentGameMetaData = nil
 
 g_FilenameIsValid = false;
 
+g_DontUpdateFileName = false;
 ----------------------------------------------------------------        
 -- File Name Handling
 ----------------------------------------------------------------
@@ -215,6 +218,9 @@ end
 function InitializeDirectoryBrowsing()
 	g_CurrentDirectoryPath = "";
 	g_CurrentDirectorySegments = {};
+
+	-- both load and save call this function on init, so clear this here
+	g_DontUpdateFileName = false;
 end
 
 ---------------------------------------------------------------------------
@@ -223,8 +229,8 @@ function SetupDirectoryBrowsePulldown()
 	if directoryPullDown ~= nil then
 		directoryPullDown:ClearEntries();
 
-		if g_ShowCloudSaves or g_GameType ~= SaveTypes.WORLDBUILDER_MAP then
-			-- Only have directory browsing for WorldBuilder Maps
+		if g_ShowCloudSaves or ((g_GameType ~= SaveTypes.WORLDBUILDER_MAP) and (g_GameType ~= SaveTypes.TILED_MAP)) then
+			-- Only have directory browsing for WorldBuilder Maps or Tiled map import
 			directoryPullDown:SetHide(true);
 		else
 			directoryPullDown:SetHide(false);
@@ -309,7 +315,11 @@ end
 function UpdateGameType()
 	-- Updates the gameType from the game configuration. 
 	if(GameConfiguration.IsWorldBuilderEditor()) then
-		g_GameType = SaveTypes.WORLDBUILDER_MAP;
+        if (MapConfiguration.GetScript() == "WBImport.lua") and (g_MenuType == LOAD_GAME) then
+            g_GameType = SaveTypes.TILED_MAP;
+        else
+            g_GameType = SaveTypes.WORLDBUILDER_MAP;
+        end
 	else
 		g_GameType = Network.GetGameConfigurationSaveType();
 	end
@@ -329,7 +339,7 @@ function UpdateGameType()
 	end
 
 	-- Set some strings that change whether this is a Game State or Configuration operation
-	if g_GameType == SaveTypes.WORLDBUILDER_MAP then
+	if g_GameType == SaveTypes.WORLDBUILDER_MAP or g_GameType == SaveTypes.TILED_MAP then
 		Controls.NoGames:LocalizeAndSetText( "{LOC_NO_SAVED_MAPS:upper}" );
 	else
 		if g_FileType == SaveFileTypes.GAME_CONFIGURATION then
@@ -346,6 +356,8 @@ function UpdateGameType()
 		else
 			Controls.WindowHeader:LocalizeAndSetText( "{LOC_LOAD_MAP:upper}" );
 		end
+    elseif g_GameType == SaveTypes.TILED_MAP then
+            Controls.WindowHeader:LocalizeAndSetText( "{LOC_LOAD_TILED:upper}" );
 	elseif g_FileType == SaveFileTypes.GAME_CONFIGURATION then
 		if g_MenuType == SAVE_GAME then
 			Controls.WindowHeader:LocalizeAndSetText( "{LOC_SAVE_CONFIG:upper}" );
@@ -365,11 +377,20 @@ end
 
 ----------------------------------------------------------------        
 ---------------------------------------------------------------- 
-function GetDisplayName(file, isDirectory)
-	if isDirectory == nil or isDirectory == false then		
-		return Path.GetFileNameWithoutExtension(file);
+function GetDisplayName(entry:table)
+
+	if entry.IsDirectory == nil or entry.IsDirectory == false then		
+		if entry.DisplayName ~= nil and #entry.DisplayName > 0 then
+			return entry.DisplayName
+		else
+			if entry.Location == SaveLocations.LOCAL_STORAGE then
+				return Path.GetFileNameWithoutExtension(entry.Name);
+			else
+				return entry.Name;
+			end
+		end
 	else
-		return file;
+		return entry.Name;
 	end
 end
 
@@ -386,6 +407,8 @@ function UpdateActionButtonText(isDirectory)
 			else
 				Controls.ActionButton:LocalizeAndSetText( "LOC_LOAD_MAP" );
 			end
+        elseif g_GameType == SaveTypes.TILED_MAP then
+            Controls.ActionButton:LocalizeAndSetText( "LOC_LOAD_TILED" );
 		else
 			if g_FileType == SaveFileTypes.GAME_CONFIGURATION then
 				if g_MenuType == SAVE_GAME then
@@ -465,7 +488,7 @@ function SetSelected( index )
 			Controls.Delete:SetHide( false );
 		else
 			-- Selected a save game
-			local displayName = GetDisplayName(kSelectedFile.Name); 
+			local displayName = GetDisplayName(kSelectedFile); 
 
 			local mods = kSelectedFile.RequiredMods or {};
 			local mod_errors = Modding.CheckRequirements(mods, g_GameType);
@@ -515,7 +538,9 @@ function PopulateInspectorData(fileInfo, fileName, mod_errors)
 
 	local name = fileInfo.DisplayName or fileName;
 	if(name ~= nil) then
-		Controls.FileName:SetText(name);
+		if not g_DontUpdateFileName then
+			Controls.FileName:SetText(name);
+		end
 	else
 		-- Set default file data for save game...
 		local defaultFileName: string = "";
@@ -532,12 +557,14 @@ function PopulateInspectorData(fileInfo, fileName, mod_errors)
 				if (localPlayer ~= -1) then
 					local player = Players[localPlayer];
 					local playerConfig = PlayerConfigurations[player:GetID()];
-					local strDate = Calendar.MakeYearStr(turnNumber, GameConfiguration.GetCalendarType(), GameConfiguration.GetGameSpeedType(), false);
+					local strDate = Calendar.MakeYearStr(turnNumber);
 					defaultFileName = Locale.ToUpper( Locale.Lookup(playerConfig:GetLeaderName())).." "..turnNumber.. " ".. strDate;
 				end
 			end
 		end
-		Controls.FileName:SetText(defaultFileName);
+		if not g_DontUpdateFileName then
+			Controls.FileName:SetText(defaultFileName);
+		end
 	end
 		
 	-- Preview image
@@ -558,13 +585,9 @@ function PopulateInspectorData(fileInfo, fileName, mod_errors)
 
 			local m_secondaryColor = fileInfo.HostBackgroundColorValue;
 			local m_primaryColor = fileInfo.HostForegroundColorValue;
-			local darkerBackColor = DarkenLightenColor(m_primaryColor,(-85),100);
-			local brighterBackColor = DarkenLightenColor(m_primaryColor,90,255);
 
 			-- Icon colors
-			Controls.CivBacking_Base:SetColor(m_primaryColor);
-			Controls.CivBacking_Lighter:SetColor(brighterBackColor);
-			Controls.CivBacking_Darker:SetColor(darkerBackColor);
+			Controls.CivIconBacking:SetColor(m_primaryColor);
 			Controls.CivIcon:SetColor(m_secondaryColor);
 		end
 
@@ -588,9 +611,7 @@ function PopulateInspectorData(fileInfo, fileName, mod_errors)
 			Controls.CivIcon:SetIcon("ICON_CIVILIZATION_UNKNOWN")
 		end
 	else
-		Controls.CivBacking_Base:SetColorByName("LoadSaveGameInfoIconBackingBase");
-		Controls.CivBacking_Darker:SetColorByName("LoadSaveGameInfoIconBackingDarker");
-		Controls.CivBacking_Lighter:SetColorByName("LoadSaveGameInfoIconBackingLighter");
+		Controls.CivIconBacking:SetColorByName("LoadSaveGameInfoIconBackingBase");
 		Controls.CivIcon:SetColorByName("White");			
 
 		Controls.CivIcon:SetIcon("ICON_CIVILIZATION_UNKNOWN");
@@ -804,7 +825,7 @@ function RebuildFileList()
 		if(v.IsQuicksave) then
 			v.DisplayName = Locale.Lookup("LOC_LOADSAVE_QUICK_SAVE");
 		else
-			v.DisplayName = GetDisplayName(v.Name, v.IsDirectory);
+			v.DisplayName = GetDisplayName(v);
 		end
 	
 		v.LastModified = UI.GetSaveGameModificationTimeRaw(v);
@@ -843,6 +864,7 @@ function RebuildFileList()
 
 	function per_batch()
 		Controls.FileListEntryStack:CalculateSize();
+        Controls.ScrollPanel:SetScrollValue(0.0);
 		Controls.ScrollPanel:CalculateSize();
 		Controls.FileListEntryStack:ReprocessAnchoring();
 	end
@@ -857,73 +879,6 @@ function RebuildFileList()
 	
 	Controls.NoGames:SetHide( #g_FileList > 0 );
 	
-		
-	--	WISHLIST: I want to sort the actual list of instances, instead of just the display.  This would allow me to animate these instances with the
-	--	same cascading effect as the main menu. Also it would allow me to auto-select the first item in the save list.
-	--	***************************************************************************************************************************************************
-	--	table.sort(g_FileEntryInstanceList, "How in the heck can I do this?");
-	--	for i=0,table.count(g_FileEntryInstanceList) do
-	--		local controlTable = g_FileEntryInstanceList[i];
-	--		-- Set the animation behaviors and sounds
-	--		controlTable.LabelAlphaAnim:SetToBeginning();
-	--		controlTable.LabelAlphaAnim:Play();
-	--		-- The label begin its alpha animation slightly after the flag begins to fly out
-	--		controlTable.LabelAlphaAnim:SetPauseTime(pauseAccumulator + .2);
-	--		
-	--		-- Define a custom animation curve and sounds for the button flag - this function is called for every frame
-	--		controlTable.FlagAnim:RegisterAnimCallback(function() 
-	--													local progress :number = controlTable.FlagAnim:GetProgress();
-	--													if(not controlTable.FlagAnim:IsReversing() and progress <.1) then 
-	--														UI.PlaySound("Main_Menu_Panel_Expand_Top_Level");				
-	--													elseif(not controlTable.FlagAnim:IsReversing() and progress >.65) then 
-	--														controlTable.FlagAnim:SetSpeed(.9);
-	--													end													
-	--													if(controlTable.FlagAnim:IsReversing() and progress > .2) then
-	--														controlTable.FlagAnim:SetProgress( 0.2 );
-	--														controlTable.FlagAnim:Stop();																									
-	--													elseif(controlTable.FlagAnim:IsReversing() and progress < .03) then
-	--														controlTable.FlagAnim:SetSpeed(.4);	-- Right after the flag animation has bounced, slow it down dramatically
-	--													end
-	--												end);
-	--		-- Will not be called due to "Bounce" cycle being used: option.FlagAnim:RegisterEndCallback( function() print("done!"); end ); 
-	--		controlTable.FlagAnim:SetPauseTime(pauseAccumulator);
-	--		controlTable.FlagAnim:SetSpeed(4);
-	--		controlTable.FlagAnim:SetToBeginning();
-	--		controlTable.FlagAnim:Play();
-	--		-- Accumulate a pause so that the flags appear one at a time
-	--		pauseAccumulator = pauseAccumulator + PAUSE_INCREMENT;
-	--	end
-	--	-- Auto Select the first item
-	--	if( g_FileEntryInstanceList[ 1 ] ~= nil) then
-	--		SetSelected(1);
-	--	end
-
-	--for i, v in ipairs(g_FileList) do
-	--	local controlTable = g_FileEntryInstanceManager:GetInstance();
-	--	g_FileEntryInstanceList[i] = controlTable;
-	--	    
-	--	local displayName = GetDisplayName(v.Name); 
-	--        
-	--	TruncateString(controlTable.ButtonText, controlTable.Button:GetSizeX(), displayName);
-	--	         
-	--	controlTable.Button:SetVoid1( i );
-	--	controlTable.Button:RegisterCallback( Mouse.eLClick, SetSelected );
-	--	controlTable.Button:RegisterCallback( Mouse.eLDblClick, 
-	--		function()
-	--			SetSelected(i);
-	--			OnActionButton();
-	--		end
-	--	 );
-	--		
-	--	local high, low = UI.GetSaveGameModificationTimeRaw(v);
-	--		
-	--	g_SortTable[ tostring( controlTable.InstanceRoot ) ] = {Title = displayName, LastModified = {High = high, Low = low} };
-	--	Controls.NoGames:SetHide( true );
-	--end
-		
-	--Controls.FileListEntryStack:CalculateSize();
-    --Controls.ScrollPanel:CalculateSize();
-    --Controls.FileListEntryStack:ReprocessAnchoring();
 end
 
 ----------------------------------------------------------------        
@@ -958,10 +913,10 @@ function UpdateActionButtonState()
 	Controls.ActionButton:SetHide(false);
 	if(not bIsValid) then
 		-- Set the reason for the control being disabled.
-		if (bAtMaximumSaves) then
-			Controls.ActionButton:SetToolTipString(Locale.Lookup("LOC_SAVE_AT_MAXIMUM_CLOUD_SAVES_TOOLTIP"));
-		elseif (bWaitingForFileList) then
+		if (bWaitingForFileList) then
 			Controls.ActionButton:SetToolTipString(Locale.Lookup("LOC_SAVE_WAITING_FOR_CLOUD_SAVE_LIST_TOOLTIP"));
+		elseif (bAtMaximumSaves) then
+			Controls.ActionButton:SetToolTipString(Locale.Lookup("LOC_SAVE_AT_MAXIMUM_CLOUD_SAVES_TOOLTIP"));
 		elseif (not g_FilenameIsValid) then
 			Controls.ActionButton:SetToolTipString(Locale.Lookup("LOC_SAVE_INVALID_FILE_NAME_TOOLTIP"));
 		else
@@ -1032,7 +987,7 @@ function SetupFileList()
 		end
 	end
 
-	if (g_GameType == SaveTypes.WORLDBUILDER_MAP) then
+	if ((g_GameType == SaveTypes.WORLDBUILDER_MAP) or (g_GameType == SaveTypes.TILED_MAP)) then
 		saveLocationOptions = SaveLocationOptions.DIRECTORIES;
 	end
 
@@ -1072,4 +1027,9 @@ function LoadSaveMenu_OnHide()
 	g_FileList = nil;
 	g_CurrentGameMetaData = nil;
 	g_LastFileQueryRequestID = 0;
+end
+
+----------------------------------------------------------------        
+function SetDontUpdateFileName( newValue )
+	g_DontUpdateFileName = newValue;
 end

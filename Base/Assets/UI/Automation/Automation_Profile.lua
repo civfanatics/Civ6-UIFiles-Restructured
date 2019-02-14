@@ -1,6 +1,7 @@
 
 local UNIQUE_ERAS = { "ERA_ANCIENT", "ERA_CLASSICAL", "ERA_INDUSTRIAL", "ERA_MODERN" };
 local SUMMARY_PATH_BASE = "C:\\Temp\\";
+local TEST_SAVE_NAME = "./Empty Map.Civ6Save";
 
 function SetSummaryFile( strFileName ) AutoProfiler.SetFilePath( SUMMARY_PATH_BASE .. strFileName ); end
 
@@ -10,14 +11,19 @@ function ForEachPassableLandHex( fnPerHex )
 	local maptype = Map.GetMapSize();
 	local mapx = GameInfo.Maps[maptype].GridWidth;
 	local mapy = GameInfo.Maps[maptype].GridHeight;
+	local nPlaced = 0;
+	local nTotal = 0;
 	for y = 0, mapy-1, 1 do
 		for x = 0, mapx-1, 1 do
 			local plot = Map.GetPlot(x, y);
 			if ( not plot:IsImpassable() and not plot:IsWater() ) then
 				fnPerHex( x, y );
+				nPlaced = nPlaced + 1;
 			end
+			nTotal = nTotal + 1;
 		end
 	end
+	return nPlaced / nTotal;
 end
 function ForEachHex( fnPerHex )
 	local maptype = Map.GetMapSize();
@@ -28,11 +34,12 @@ function ForEachHex( fnPerHex )
 			fnPerHex( x, y );
 		end
 	end
+	return 1.0;
 end
 
 -- ////////////////////////////////////////////////////////////////////////////////
 function City_BuildTestList( tTestList )
-	table.insert( tTestList, { name = "EMPTY_MAP", prepare = function() SetSummaryFile( "cities.csv" ); ResetView(); end; } );
+	table.insert( tTestList, { name = "EMPTY_MAP", prepare = function() AutoProfiler.AddColumn( "FillRatio" ); SetSummaryFile( "cities.csv" ); ResetView(); end; } );
 
 	for tCiv in GameInfo.Civilizations() do
 		local strNameCiv = string.sub( tCiv.CivilizationType, 14 ); -- remove "CIVILIZATION_"
@@ -41,7 +48,8 @@ function City_BuildTestList( tTestList )
 			table.insert(tTestList, {
 				prepare = function()
 						ResetView();
-						ForEachPassableLandHex( function(x, y) AssetPreview.SpoofCityAt( x, y, tCiv.Index, GameInfo.Eras[strEra].Index, 22 ); end );
+						local fillratio = ForEachPassableLandHex( function(x, y) AssetPreview.SpoofCityAt( x, y, tCiv.Index, GameInfo.Eras[strEra].Index, 22 ); end );
+						AutoProfiler.AddColumn( tostring( fillratio ) );
 					end,
 				name = strNameCiv .. "_" .. strNameEra
 			});
@@ -51,17 +59,25 @@ end
 
 -- ////////////////////////////////////////////////////////////////////////////////
 function District_BuildTestList( tTestList )
-	table.insert( tTestList, { name = "EMPTY_MAP", prepare = function() SetSummaryFile( "districts.csv" ); ResetView(); end; } );
+	table.insert( tTestList, { name = "EMPTY_MAP", prepare = function() 
+			AutoProfiler.AddColumn( "FillRatio" );
+			AutoProfiler.AddColumn( "District" );
+			AutoProfiler.AddColumn( "State" );
+			SetSummaryFile( "districts.csv" );
+			ResetView();
+			end;
+		} );
 	
 	local nDistricts = AssetPreview.GetDistrictCount();
 	for idxDistrict = 0, nDistricts-1, 1 do
 		local strDistrictName = string.sub( AssetPreview.GetDistrictName(idxDistrict), 10); -- remove "DISTRICT_"
 		
 		local PrepareTest = function( strState, props )
+			ResetView();
+			local fillratio = ForEachPassableLandHex( function(x, y) AssetPreview.SpoofDistrictBaseAt( x, y, props.civ, props.era, props.appeal, 0, strState, idxDistrict, props.index ); end );
+			AutoProfiler.AddColumn( tostring( fillratio ) );
 			AutoProfiler.AddColumn( strDistrictName );
 			AutoProfiler.AddColumn( strState );
-			ResetView();
-			ForEachPassableLandHex( function(x, y) AssetPreview.SpoofDistrictBaseAt( x, y, props.civ, props.era, props.appeal, 0, strState, idxDistrict, props.index ); end );
 		end
 
 		local tDistrictBases = AssetPreview.GetDistrictBaseList(idxDistrict);
@@ -77,7 +93,15 @@ end
 
 -- ////////////////////////////////////////////////////////////////////////////////
 function Building_BuildTestList( tTestList )
-	table.insert( tTestList, { name = "EMPTY_MAP", prepare = function() SetSummaryFile( "herobuildings.csv" ); ResetView(); end; } );
+	table.insert( tTestList, { name = "EMPTY_MAP", prepare = function()
+			AutoProfiler.AddColumn( "FillRatio" );
+			AutoProfiler.AddColumn( "District" );
+			AutoProfiler.AddColumn( "Building" );
+			AutoProfiler.AddColumn( "State" );
+			SetSummaryFile( "herobuildings.csv" ); 
+			ResetView(); 
+			end; 
+		} );
 	
 	local nDistricts = AssetPreview.GetDistrictCount();
 	local tBuildingSet = {};
@@ -85,11 +109,12 @@ function Building_BuildTestList( tTestList )
 		local strDistrictName = string.sub( AssetPreview.GetDistrictName(idxDistrict), 10); -- remove "DISTRICT_"
 	
 		local PrepareTest = function( strState, props )
+			ResetView();
+			local fillratio = ForEachPassableLandHex(function(x, y) AssetPreview.SpoofBuildingAt( x, y, props.civ, props.era, props.appeal, strState, idxDistrict, props.bldg ); end);
+			AutoProfiler.AddColumn( tostring( fillratio ) );
 			AutoProfiler.AddColumn(strDistrictName);
 			AutoProfiler.AddColumn(string.sub(props.bldgname, 10)); -- remove "BUILDING_"
 			AutoProfiler.AddColumn(strState);
-			ResetView();
-			ForEachPassableLandHex(function(x, y) AssetPreview.SpoofBuildingAt( x, y, props.civ, props.era, props.appeal, strState, idxDistrict, props.bldg ); end);
 		end
 		
 		local tBuildings = AssetPreview.GetDistrictBuildingList(idxDistrict);
@@ -105,18 +130,27 @@ end
 
 -- ////////////////////////////////////////////////////////////////////////////////
 function Landmark_BuildTestList( tTestList )
-	table.insert( tTestList, { name = "EMPTY_MAP", prepare = function() SetSummaryFile( "landmarks.csv" ); ResetView(); end; } );
+	table.insert( tTestList, { name = "EMPTY_MAP", prepare = function()
+			AutoProfiler.AddColumn( "FillRatio" );
+			AutoProfiler.AddColumn( "Landmark" );
+			AutoProfiler.AddColumn( "Resource" );
+			AutoProfiler.AddColumn( "State" );
+			SetSummaryFile( "landmarks.csv" );
+			ResetView();
+			end;
+		} );
 	
 	local nLandmarks = AssetPreview.GetLandmarkCount();
 	for idxLandmark = 0, nLandmarks-1, 1 do
 		local strLandmarkName = AssetPreview.GetLandmarkName(idxLandmark);
 		
 		local PrepareTest = function( strState, props, reshash, resname )
+			ResetView();
+			local fillratio = ForEachPassableLandHex( function(x, y) AssetPreview.SpoofLandmarkAt( x, y, props.civ, props.era, props.appeal, reshash, strState, idxLandmark, props.variant ); end );
+			AutoProfiler.AddColumn( tostring( fillratio ) );
 			AutoProfiler.AddColumn( strLandmarkName );
 			AutoProfiler.AddColumn( string.gsub( resname, "RESOURCE_", "") );
 			AutoProfiler.AddColumn( strState );
-			ResetView();
-			ForEachPassableLandHex( function(x, y) AssetPreview.SpoofLandmarkAt( x, y, props.civ, props.era, props.appeal, reshash, strState, idxLandmark, props.variant ); end );
 		end
 
 		local tLandmarkAssets = AssetPreview.GetLandmarkAssetList(idxLandmark);
@@ -132,17 +166,25 @@ end
 
 -- ////////////////////////////////////////////////////////////////////////////////
 function Unit_BuildTestList( tTestList )
-	table.insert( tTestList, { name = "EMPTY_MAP", prepare = function() SetSummaryFile( "units.csv" ); ResetView(); end; } );
+	table.insert( tTestList, { name = "EMPTY_MAP", prepare = function() 
+			AutoProfiler.AddColumn( "FillRatio" );
+			AutoProfiler.AddColumn( "Unit" );
+			AutoProfiler.AddColumn( "Culture" );
+			SetSummaryFile( "units.csv" );
+			ResetView();
+			end;
+		} );
 	
 	local tUnits = AssetPreview.GetUnitList();
 	for strName,props in pairs(tUnits) do
 		local strPrintableName = string.gsub( strName, "UNIT_", "" );
 		
 		local PrepareTest = function( strCulture, nCultureHash )
+			ResetView();
+			local fillratio = ForEachHex( function(x, y) AssetPreview.SpoofUnitAt( x, y, nCultureHash, props.hash); end );
+			AutoProfiler.AddColumn( tostring( fillratio ) );
 			AutoProfiler.AddColumn( strPrintableName );
 			AutoProfiler.AddColumn( strCulture );
-			ResetView();
-			ForEachHex( function(x, y) AssetPreview.SpoofUnitAt( x, y, nCultureHash, props.hash); end );
 		end
 
 		for strCultName,nCultHash in pairs(props.cultures) do
@@ -157,13 +199,16 @@ local m_TestList = {};
 local m_CurrentTestIndex = 1;
 
 function OnGameLoad()
-	AutoProfiler.SetAutomated( true );
+	Automation.SetAutoStartEnabled( true );
 	AutoProfiler.SetLookAtCount( 20 );
 	AutoProfiler.SetLookAtFrames( 100 );
-	AutoProfiler.SetCameraZoom(1);
-	Automation.SetAutoStartEnabled( true );
+	AutoProfiler.SetCameraZoom( 1 );
+	AutoProfiler.SetGPUStallThreshold( 1 );
+	AutoProfiler.SetWaitForTerrain( false );
 	AutoProfiler.RunCommand( "toggle vfx" );
 	AutoProfiler.RunCommand( "toggle clutter" );
+	AutoProfiler.RunCommand( "toggle terrain update" );
+	AutoProfiler.RunCommand( "toggle ui" );
 	
 	print( "==================== Preparing tests ====================");
 	local prev = 0;
@@ -207,6 +252,10 @@ function OnBenchmarkFinished()
 end
 LuaEvents.AutoProfilerBenchmarkFinished.Add( OnBenchmarkFinished );
 
-
+function OnMainMenu()
+	Network.LoadGame(TEST_SAVE_NAME, ServerType.SERVER_TYPE_NONE);
+	LuaEvents.AutomationMainMenuStarted.Remove( OnMainMenu );
+end
+LuaEvents.AutomationMainMenuStarted.Add( OnMainMenu );
 
 

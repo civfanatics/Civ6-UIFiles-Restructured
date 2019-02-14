@@ -3,11 +3,13 @@
 -- ===========================================================================
 
 include( "Civ6Common" );
+include( "Colors") ;
 include( "SupportFunctions" ); --DarkenLightenColor
 include( "InputSupport" );
 include( "InstanceManager" );
 include( "PopupDialog" );
 include( "LocalPlayerActionSupport" );
+include("PopupPriorityLoader_", true);
 
 
 -- ===========================================================================
@@ -24,10 +26,14 @@ local m_isSimpleMenu	: boolean = false;
 local m_isLoadingDone   : boolean = false;
 local m_isRetired		: boolean = false;
 local m_isEndGameOpen	: boolean = false;
+local m_isNeedRestoreOptions		: boolean = false;
+local m_isNeedRestoreSaveGameMenu	: boolean = false;
+local m_isNeedRestoreLoadGameMenu	: boolean = false;
+
 
 -- State variable to track that the menu is in the process of being closed and 
 -- prevent duplicate calls.
-local m_isClosing = nil;
+local m_isClosing		: boolean = false;
 
 
 -- ===========================================================================
@@ -59,8 +65,8 @@ function OnRetireGame()
 			else
 				if (not m_kPopupDialog:IsOpen()) then
 					m_kPopupDialog:AddText(	  Locale.Lookup("LOC_GAME_MENU_RETIRE_WARNING"));
-					m_kPopupDialog:AddButton( Locale.Lookup("LOC_COMMON_DIALOG_NO_BUTTON_CAPTION"), nil );
 					m_kPopupDialog:AddButton( Locale.Lookup("LOC_COMMON_DIALOG_YES_BUTTON_CAPTION"), OnReallyRetire, nil, nil, "PopupButtonInstanceRed" );
+					m_kPopupDialog:AddButton( Locale.Lookup("LOC_COMMON_DIALOG_NO_BUTTON_CAPTION"), nil );
 					m_kPopupDialog:Open();
 				end
 			end
@@ -77,12 +83,53 @@ end
 function OnRestartGame()
 	if (not m_kPopupDialog:IsOpen()) then
 		m_kPopupDialog:AddText(	  Locale.Lookup("LOC_GAME_MENU_RESTART_WARNING"));
-		m_kPopupDialog:AddButton( Locale.Lookup("LOC_COMMON_DIALOG_NO_BUTTON_CAPTION"), nil );
 		m_kPopupDialog:AddButton( Locale.Lookup("LOC_COMMON_DIALOG_YES_BUTTON_CAPTION"), OnReallyRestart, nil, nil, "PopupButtonInstanceRed" );
+		m_kPopupDialog:AddButton( Locale.Lookup("LOC_COMMON_DIALOG_NO_BUTTON_CAPTION"), nil );
 		m_kPopupDialog:Open();
 	end
 end
 
+-- ===========================================================================
+function DoPBCDelete()
+	Network.CloudKillGame();
+
+	-- Show killing game popup
+	m_kPopupDialog:Close(); -- clear out the popup incase it is already open.
+	m_kPopupDialog:AddText(	  Locale.Lookup("LOC_GAME_MENU_DELETE_GAME_STARTED"));
+	m_kPopupDialog:Open();
+
+	-- Next step is in OnCloudGameKilled.
+end
+
+function OnPBCDeleteButton()
+	if (not m_kPopupDialog:IsOpen()) then
+		m_kPopupDialog:AddText(	  Locale.Lookup("LOC_GAME_MENU_PBC_DELETE_WARNING"));
+		m_kPopupDialog:AddButton( Locale.Lookup("LOC_COMMON_DIALOG_YES_BUTTON_CAPTION"), DoPBCDelete, nil, nil, "PopupButtonInstanceRed" );
+		m_kPopupDialog:AddButton( Locale.Lookup("LOC_COMMON_DIALOG_NO_BUTTON_CAPTION"), nil );
+		m_kPopupDialog:Open();
+	end
+end
+
+-- ===========================================================================
+function DoPBCQuit()
+	Network.CloudQuitGame();
+
+	-- Show quitting game popup
+	m_kPopupDialog:Close(); -- clear out the popup incase it is already open.
+	m_kPopupDialog:AddText(	  Locale.Lookup("LOC_GAME_MENU_QUITING_GAME_STARTED"));
+	m_kPopupDialog:Open();
+
+	-- Next step is in OnCloudGameQuit.
+end
+
+function OnPBCQuitButton()
+	if (not m_kPopupDialog:IsOpen()) then
+		m_kPopupDialog:AddText(	  Locale.Lookup("LOC_GAME_MENU_PBC_QUIT_WARNING"));
+		m_kPopupDialog:AddButton( Locale.Lookup("LOC_COMMON_DIALOG_YES_BUTTON_CAPTION"), DoPBCQuit, nil, nil, "PopupButtonInstanceRed" );
+		m_kPopupDialog:AddButton( Locale.Lookup("LOC_COMMON_DIALOG_NO_BUTTON_CAPTION"), nil );
+		m_kPopupDialog:Open();
+	end
+end
 
 -- ===========================================================================
 function OnExitGame()
@@ -95,11 +142,28 @@ function OnExitGame()
 end
 
 -- ===========================================================================
+function OnCancelExit()
+	if m_isNeedRestoreOptions then Controls.Options:SetHide( false); end
+	if m_isNeedRestoreSaveGameMenu then Controls.SaveGameMenu:SetHide( false); end
+	if m_isNeedRestoreLoadGameMenu then Controls.LoadGameMenu:SetHide( false ); end
+end
+
+-- ===========================================================================
 function OnExitGameAskAreYouSure()
 	if (not m_kPopupDialog:IsOpen()) then
+
+		-- Menus that may be up; same prioritiy as in-game menu which is 
+		-- problematic for raising a non-content, non-queue "popup" message
+		m_isNeedRestoreOptions = UIManager:IsInPopupQueue(Controls.Options);
+		m_isNeedRestoreSaveGameMenu = UIManager:IsInPopupQueue(Controls.SaveGameMenu);
+		m_isNeedRestoreLoadGameMenu = UIManager:IsInPopupQueue(Controls.LoadGameMenu);
+		Controls.Options:SetHide( true );
+		Controls.SaveGameMenu:SetHide( true );
+		Controls.LoadGameMenu:SetHide( true );
+
 		m_kPopupDialog:AddText(	  Locale.Lookup("LOC_GAME_MENU_QUIT_WARNING"));
-		m_kPopupDialog:AddButton( Locale.Lookup("LOC_COMMON_DIALOG_NO_BUTTON_CAPTION"), nil );
 		m_kPopupDialog:AddButton( Locale.Lookup("LOC_COMMON_DIALOG_YES_BUTTON_CAPTION"), OnExitGame, nil, nil, "PopupButtonInstanceRed" );
+		m_kPopupDialog:AddButton( Locale.Lookup("LOC_COMMON_DIALOG_NO_BUTTON_CAPTION"), OnCancelExit );
 		m_kPopupDialog:Open();
 	end
 end
@@ -109,8 +173,8 @@ function OnMainMenu()
 	ms_ExitToMain = true;
 	if (not m_kPopupDialog:IsOpen()) then
 		m_kPopupDialog:AddText(	  Locale.Lookup("LOC_GAME_MENU_EXIT_WARNING"));
-		m_kPopupDialog:AddButton( Locale.Lookup("LOC_COMMON_DIALOG_NO_BUTTON_CAPTION"), OnNo );
 		m_kPopupDialog:AddButton( Locale.Lookup("LOC_COMMON_DIALOG_YES_BUTTON_CAPTION"), OnYes, nil, nil, "PopupButtonInstanceRed" );
+		m_kPopupDialog:AddButton( Locale.Lookup("LOC_COMMON_DIALOG_NO_BUTTON_CAPTION"), OnNo );
 		m_kPopupDialog:Open();
 	end
 end
@@ -132,12 +196,14 @@ end
 
 -- ===========================================================================
 function OnOptions()
-	UIManager:QueuePopup(Controls.Options, PopupPriority.Current);	
+	Controls.PauseWindow:SetHide(true);
+	UIManager:QueuePopup(Controls.Options, PopupPriority.Current);
 end
 
 -- ===========================================================================
 function OnLoadGame()
 	if (CanLocalPlayerLoadGame()) then 
+		Controls.PauseWindow:SetHide(true);
 		LuaEvents.InGameTopOptionsMenu_SetLoadGameServerType(ServerType.SERVER_TYPE_NONE);
 		UIManager:QueuePopup(Controls.LoadGameMenu, PopupPriority.Current);	
 	end
@@ -146,16 +212,19 @@ end
 -- ===========================================================================
 function OnSaveGame()
 	if (CanLocalPlayerSaveGame()) then 
+		Controls.PauseWindow:SetHide(true);
 		UIManager:QueuePopup(Controls.SaveGameMenu, PopupPriority.Current);	
 	end
 end
 
 -- ===========================================================================
-function CloseImmediately()
-	m_isClosing = nil;
-	LuaEvents.InGameTopOptionsMenu_Close();
-	UIManager:DequeuePopup( ContextPtr );
-	UI.SetSoundStateValue("Game_Views", "Normal_View");
+function CloseImmediately()	
+	if UIManager:IsInPopupQueue( ContextPtr ) then
+		LuaEvents.InGameTopOptionsMenu_Close();
+		UIManager:DequeuePopup( ContextPtr );
+		UI.SetSoundStateValue("Game_Views", "Normal_View");
+	end	
+	m_isClosing = false;	
 end
 
 -- ===========================================================================
@@ -198,7 +267,7 @@ end
 
 -- ===========================================================================
 function ShutdownAfterClose()
-	m_isClosing = nil;
+	m_isClosing = false;
 	UIManager:DequeuePopup( ContextPtr );
 	UI.SetSoundStateValue("Game_Views", "Normal_View");
 	UI.PlaySound("UI_Pause_Menu_On");
@@ -269,6 +338,18 @@ function SetupButtons()
 				bAlreadyWon = true;
 			end
 		end
+	end
+
+	if(GameConfiguration.IsPlayByCloud()) then
+		if(Network.IsGameHost()) then
+			Controls.PBCDeleteButton:SetHide(false);
+		else
+			Controls.PBCDeleteButton:SetHide(true);
+		end
+		Controls.PBCQuitButton:SetHide(false);
+	else
+		Controls.PBCDeleteButton:SetHide(true);
+		Controls.PBCQuitButton:SetHide(true);
 	end
 
 	Controls.RetireButton:SetHide(m_isSimpleMenu or bIsAutomation or bIsMultiplayer or bAlreadyWon);
@@ -417,7 +498,7 @@ end
 function OnOpenInGameOptionsMenu()
 	-- Don't show pause menu if the player has retired (forfeit) from the game - fixes TTP 20129
 	if not m_isRetired then 
-		UIManager:QueuePopup( ContextPtr, PopupPriority.Utmost );
+		UIManager:QueuePopup( ContextPtr, PopupPriority.InGameTopOptionsMenu, { AlwaysVisibleInQueue = true } );
 	end
 end
 
@@ -427,7 +508,7 @@ end
 -- ===========================================================================
 function OnShow()
 
-	if(m_isClosing) then
+	if m_isClosing then
 		print("Show was requested on menu that is in the midst of closing.");
 		return;
 	end
@@ -459,7 +540,7 @@ function OnShow()
 	SetupButtons();
 
 	-- Do not deselect all as on-rails scenarios (e.g., tutorials) may get out of sync.	
-
+	Controls.PauseWindow:SetHide(false);
 end
 
 -- ===========================================================================
@@ -468,7 +549,46 @@ function OnLoadGameViewStateDone()
 end
 
 -- ===========================================================================
-function OnPlayerTurnActivationChanged()
+function OnCloudGameQuit( matchID, success )
+	if(success) then
+		-- On success, indicate success and exit to main menu.
+		m_kPopupDialog:Close();
+		m_kPopupDialog:AddText(	  Locale.Lookup("LOC_GAME_MENU_QUITING_GAME_SUCCESS"));
+		m_kPopupDialog:Open();
+
+		ms_ExitToMain = true;
+		OnYes( );
+	else
+		--Show error prompt.
+		m_kPopupDialog:Close();
+		m_kPopupDialog:AddText(	  Locale.Lookup("LOC_GAME_MENU_QUITING_GAME_FAIL"));
+		m_kPopupDialog:AddButton( Locale.Lookup("LOC_GAME_MENU_QUITING_GAME_FAIL_ACCEPT") );
+		m_kPopupDialog:Open();
+	end
+end
+
+-- ===========================================================================
+function OnCloudGameKilled( matchID, success )
+	if(success) then
+		-- On success, indicate success and exit to main menu.
+		m_kPopupDialog:Close();
+		m_kPopupDialog:AddText(	  Locale.Lookup("LOC_GAME_MENU_DELETE_GAME_SUCCESS"));
+		m_kPopupDialog:Open();
+
+		ms_ExitToMain = true;
+		OnYes( );
+	else
+		--Show error prompt.
+		m_kPopupDialog:Close();
+		m_kPopupDialog:AddText(	  Locale.Lookup("LOC_GAME_MENU_DELETE_GAME_FAIL"));
+		m_kPopupDialog:AddButton( Locale.Lookup("LOC_GAME_MENU_DELETE_GAME_FAIL_ACCEPT") );
+		m_kPopupDialog:Open();
+	end
+end
+
+-- ===========================================================================
+-- Generic handler for event that should trigger a refresh of the Setup Buttons.
+function EventRefreshButtons()
 	if (not ContextPtr:IsHidden()) then
 		SetupButtons();
 	end
@@ -478,11 +598,11 @@ end
 function OnRequestClose()
 	-- End Game Screen handles this
 	if m_isEndGameOpen then return end
-	if m_isLoadingDone then
+	if m_isLoadingDone and (Benchmark.IsEnabled()==false) then
 		-- Only handle the message if popup queuing is active (diplomacy is not up)
 		if UIManager:IsPopupQueueDisabled()==false then
 			if (ContextPtr:IsHidden() ) then
-				UIManager:QueuePopup( ContextPtr, PopupPriority.Utmost );
+				UIManager:QueuePopup( ContextPtr, PopupPriority.Utmost, { AlwaysVisibleInQueue = true } );
 			end
 			OnExitGameAskAreYouSure();
 		end
@@ -492,11 +612,21 @@ function OnRequestClose()
 end
 
 -- ===========================================================================
+function OnInit( isReload:boolean )
+	if isReload then
+		if not ContextPtr:IsHidden() then
+			OnShow();
+		end
+	end
+end
+
+-- ===========================================================================
 function Initialize()
 
+	ContextPtr:SetInitHandler( OnInit );
 	ContextPtr:SetInputHandler( OnInput, true );
 	ContextPtr:SetShowHandler( OnShow );
-
+	
 	Controls.ExitGameButton:RegisterCallback( Mouse.eLClick, OnExitGameAskAreYouSure );
 	Controls.ExitGameButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 	Controls.LoadGameButton:RegisterCallback( Mouse.eLClick, OnLoadGame );
@@ -511,6 +641,10 @@ function Initialize()
 	Controls.RetireButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 	Controls.RestartButton:RegisterCallback( Mouse.eLClick, OnRestartGame );
 	Controls.RestartButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
+	Controls.PBCDeleteButton:RegisterCallback( Mouse.eLClick, OnPBCDeleteButton );
+	Controls.PBCDeleteButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
+	Controls.PBCQuitButton:RegisterCallback( Mouse.eLClick, OnPBCQuitButton );
+	Controls.PBCQuitButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 	Controls.ReturnButton:RegisterCallback( Mouse.eLClick, OnReturn );
 	Controls.ReturnButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 	Controls.SaveGameButton:RegisterCallback( Mouse.eLClick, OnSaveGame );
@@ -519,6 +653,8 @@ function Initialize()
 	Controls.PauseWindowClose:RegisterEndCallback( ShutdownAfterClose );
 
 	LuaEvents.InGame_OpenInGameOptionsMenu.Add( OnOpenInGameOptionsMenu );
+	LuaEvents.PlayerChange_OpenInGameOptionsMenu.Add( OnOpenInGameOptionsMenu );
+	LuaEvents.PausePanel_OpenInGameOptionsMenu.Add( OnOpenInGameOptionsMenu );
 
 	LuaEvents.TutorialUIRoot_SimpleInGameMenu.Add( OnSimpleInGameMenu );
 	LuaEvents.DiplomacyActionView_HideIngameUI.Add( CloseImmediately );
@@ -526,13 +662,27 @@ function Initialize()
 	LuaEvents.EndGameMenu_Shown.Add( function() m_isEndGameOpen = true; end );
 	LuaEvents.EndGameMenu_OneMoreTurn.Add( function() m_isEndGameOpen = false; end );
 
-	Events.PlayerTurnActivated.Add( OnPlayerTurnActivationChanged );
-	Events.PlayerTurnDeactivated.Add( OnPlayerTurnActivationChanged );
+	Events.PlayerTurnActivated.Add( EventRefreshButtons );
+	Events.PlayerTurnDeactivated.Add( EventRefreshButtons );
+	Events.MultiplayerMatchHostMigrated.Add( EventRefreshButtons );
 	Events.UserRequestClose.Add( OnRequestClose );
 	Events.LoadGameViewStateDone.Add( OnLoadGameViewStateDone );
+	Events.CloudGameKilled.Add(OnCloudGameKilled);
+	Events.CloudGameQuit.Add(OnCloudGameQuit);
 
-	Controls.VersionLabel:SetText( UI.GetAppVersion() );
+	-- Convert to string so formatting isn't performed by locale when added to tooltip:
+	local gameSeed		:string	= tostring( GameConfiguration.GetValue("GAME_SYNC_RANDOM_SEED") );
+	local mapSeed		:string	= tostring( MapConfiguration.GetValue("RANDOM_SEED") );	
+	local version		:string = UI.GetAppVersion();
+	local tooltipInfo	:string= --Locale.Lookup("LOC_PAUSEMENU_INFO_OVERVIEW_TOOLTIP");
+		Locale.Lookup("LOC_PAUSEMENU_INFO_OVERVIEW_TOOLTIP") .. "[NEWLINE]" ..
+		Locale.Lookup("LOC_PAUSEMENU_INFO_VERSION_TOOLTIP", version) .. "[NEWLINE]" ..		
+		Locale.Lookup("LOC_PAUSEMENU_INFO_MAP_SEED", mapSeed) .. "[NEWLINE]" ..
+		Locale.Lookup("LOC_PAUSEMENU_INFO_GAME_SEED", gameSeed);
 
+	Controls.VersionLabel:SetText( version );
+	Controls.VersionLabel:SetToolTipString( tooltipInfo );
+	
 	-- Custom popup setup	
 	m_kPopupDialog = PopupDialog:new( "InGameTopOptionsMenu" );
 

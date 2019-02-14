@@ -12,8 +12,9 @@
 				<GridButton		ID="CopyrightAccept"	Anchor="C,T" Style="MainButton" Size="parent,parent" FontStyle="Stroke" ColorSet="ButtonCS" String="LOC_COPYRIGHT_ACCEPT"/>
 			</Container>
       <Stack Anchor="C,T" StackGrowth="Right" Padding="20">
-        <Image Texture="Shell_ForkLogo" StretchMode="Auto" Anchor="L,C"/>
-        <Image Texture="Shell_HavokLogo" StretchMode="Auto" Anchor="L,C"/>
+        <Image Texture="Shell_ForkLogo"		StretchMode="Auto" Anchor="L,C"/>
+        <Image Texture="Shell_HavokLogo"	StretchMode="Auto" Anchor="L,C"/>
+				<Image Texture="Shell_WWiseLogo"	StretchMode="Auto" Anchor="L,C"/>
       </Stack>
 		</Stack>
 

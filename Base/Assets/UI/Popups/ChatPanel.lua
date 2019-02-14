@@ -177,8 +177,6 @@ function SendChat( text )
     Controls.ChatEntry:ClearString();
 	Controls.ExpandedChatEntry:ClearString();
 end
-Controls.ChatEntry:RegisterCommitCallback( SendChat );
-Controls.ExpandedChatEntry:RegisterCommitCallback( SendChat );
 
 
 -------------------------------------------------
@@ -216,8 +214,9 @@ function OnOpenExpandedPanel()
 	Controls.ExpandedChatPanel:SetHide(false);
 	Controls.ExpandedChatPanelBG:SetHide(false);
 	Controls.PlayerListPanel:SetHide(not m_isPlayerListVisible);
+
+	LuaEvents.ChatPanel_OpenExpandedPanels();
 end
-Controls.ExpandButton:RegisterCallback(Mouse.eLClick, OnOpenExpandedPanel);
 
 -------------------------------------------------
 -------------------------------------------------
@@ -229,8 +228,9 @@ function OnCloseExpandedPanel()
 	Controls.ExpandedChatPanel:SetHide(true);
 	Controls.ExpandedChatPanelBG:SetHide(true);
 	Controls.PlayerListPanel:SetHide(true);
+
+	LuaEvents.ChatPanel_CloseExpandedPanels();
 end
-Controls.ContractButton:RegisterCallback(Mouse.eLClick, OnCloseExpandedPanel);
 
 
 ------------------------------------------------- 
@@ -314,6 +314,7 @@ end
 function TogglePlayerListPanel()
 	m_isPlayerListVisible = not m_isPlayerListVisible;
 	Controls.ShowPlayerListCheck:SetCheck(m_isPlayerListVisible);
+	Controls.PBCShowPlayerListCheck:SetCheck(m_isPlayerListVisible);
 	Controls.PlayerListPanel:SetHide(not m_isPlayerListVisible);
 	if(m_isPlayerListVisible) then
 		UI.PlaySound("Tech_Tray_Slide_Open");
@@ -321,8 +322,6 @@ function TogglePlayerListPanel()
 		UI.PlaySound("Tech_Tray_Slide_Closed");
 	end
 end
-Controls.ShowPlayerListCheck:RegisterCallback(Mouse.eLClick, TogglePlayerListPanel);
-Controls.ShowPlayerListButton:RegisterCallback(Mouse.eLClick, TogglePlayerListPanel);
 
 -------------------------------------------------
 -------------------------------------------------
@@ -368,8 +367,9 @@ function OnPlayerListPull(iPlayerID :number, iPlayerListDataID :number)
 				LuaEvents.SetKickPlayer(iPlayerID, playerName);
 			end
 		elseif(playerListData.playerAction == "PLAYERACTION_FRIENDREQUEST") then
-			if (Steam ~= nil) then
-				Steam.ActivateGameOverlayToFriendRequest(iPlayerID);
+			local pFriends = Network.GetFriends(Network.GetTransportType());
+			if(pFriends ~= nil) then
+				pFriends:ActivateGameOverlayToFriendRequest(iPlayerID);
 			end
 		end
 	end
@@ -442,8 +442,9 @@ end
 -- OnInviteButton
 -------------------------------------------------
 function OnInviteButton()
-	if (Steam ~= nil) then
-		Steam.ActivateInviteOverlay();
+	local pFriends = Network.GetFriends(Network.GetTransportType());
+	if pFriends ~= nil then
+		pFriends:ActivateInviteOverlay();
 	end
 end
 
@@ -484,6 +485,26 @@ end
 
 -------------------------------------------------
 -------------------------------------------------
+function OnMultiplayerHostMigrated()
+	-- Rebuild the player list so the game host icon is correct.
+	-- The MultiplayerHostMigrated does not indicate the old/new host pair so it is not possible to do a targeted update.
+	BuildPlayerList();
+end
+
+-------------------------------------------------
+-------------------------------------------------
+function OnMultiplayerMatchHostMigrated(newHostPlayerID: number, oldHostPlayerID: number)
+	if(newHostPlayerID ~= FireWireTypes.FIREWIRE_INVALID_ID) then
+		UpdatePlayerEntry(newHostPlayerID);
+	end
+
+	if(oldHostPlayerID ~= FireWireTypes.FIREWIRE_INVALID_ID) then
+		UpdatePlayerEntry(oldHostPlayerID);
+	end
+end
+
+-------------------------------------------------
+-------------------------------------------------
 function OnMultiplayerPingTimesChanged()
 	for playerID, playerEntry in pairs( m_playerListEntries ) do
 		UpdateNetConnectionIcon(playerID, playerEntry.ConnectionIcon);
@@ -492,7 +513,7 @@ end
 
 -------------------------------------------------
 -------------------------------------------------
-function OnMultiplayerSnapshotProcessed(playerID :number)
+function OnEventUpdateChatPlayer(playerID :number)
 	if(ContextPtr:IsHidden() == false) then
 		UpdatePlayerEntry(playerID);
 	end
@@ -509,7 +530,6 @@ function ShowHideHandler( bIsHide, bIsInit )
 		PlayerTargetChanged(m_playerTarget); -- Communicate starting player target so map pin screen can filter its Send To Chat button.
 	end	
 end
-ContextPtr:SetShowHideHandler( ShowHideHandler );
 
 function OnCollapsedChatPulldownChanged(newTargetType :number, newTargetID :number, tooltipText:string)
 	local textControl:table = Controls.ChatPull:GetButton():GetTextControl();
@@ -548,6 +568,7 @@ end
 
 function AdjustScreenSize()
 	Controls.ShowPlayerListButton:SetSizeX(Controls.ShowPlayerListCheck:GetSizeX() + 20);
+	Controls.PBCShowPlayerListButton:SetSizeX(Controls.PBCShowPlayerListCheck:GetSizeX() + 20);
 end
 
 -------------------------------------------------
@@ -559,28 +580,53 @@ function OnUpdateUI( type )
 end
 
 function SetDefaultPanelMode()
-	Controls.ChatPanel:SetHide(false);
-	Controls.ChatPanelBG:SetHide(false);
-	Controls.ExpandedChatPanel:SetHide(true);
-	Controls.ExpandedChatPanelBG:SetHide(true);
+	if(GameConfiguration.IsPlayByCloud()) then  
+		Controls.ChatPanel:SetHide(true);
+		Controls.ChatPanelBG:SetHide(true);
+		Controls.ExpandedChatPanel:SetHide(true);
+		Controls.ExpandedChatPanelBG:SetHide(true);
+		Controls.PlayByCloudPanel:SetHide(false);
+		Controls.PlayByCloudPanelBG:SetHide(false);
+	else
+		Controls.ChatPanel:SetHide(false);
+		Controls.ChatPanelBG:SetHide(false);
+		Controls.ExpandedChatPanel:SetHide(true);
+		Controls.ExpandedChatPanelBG:SetHide(true);
+		Controls.PlayByCloudPanel:SetHide(true);
+		Controls.PlayByCloudPanelBG:SetHide(true);
+	end
 end
 
 -- ===========================================================================
 function Initialize()
-	BuildPlayerList();
+
+	Controls.ChatEntry:RegisterCommitCallback( SendChat );
+	Controls.ExpandedChatEntry:RegisterCommitCallback( SendChat );
+	Controls.ExpandButton:RegisterCallback(Mouse.eLClick, OnOpenExpandedPanel);
+	Controls.ContractButton:RegisterCallback(Mouse.eLClick, OnCloseExpandedPanel);
+	Controls.ShowPlayerListCheck:RegisterCallback(Mouse.eLClick, TogglePlayerListPanel);
+	Controls.ShowPlayerListButton:RegisterCallback(Mouse.eLClick, TogglePlayerListPanel);
+	Controls.PBCShowPlayerListCheck:RegisterCallback(Mouse.eLClick, TogglePlayerListPanel);
+	Controls.PBCShowPlayerListButton:RegisterCallback(Mouse.eLClick, TogglePlayerListPanel);
+	ContextPtr:SetShowHideHandler( ShowHideHandler );
 
 	Events.SystemUpdateUI.Add( OnUpdateUI );
 	-- When player info is changed, this pulldown needs to know so it can update itself if it becomes invalid.
 	Events.PlayerInfoChanged.Add(OnChatPanelPlayerInfoChanged);
+	Events.MultiplayerHostMigrated.Add(OnMultiplayerHostMigrated);
+	Events.MultiplayerMatchHostMigrated.Add(OnMultiplayerMatchHostMigrated);
 	Events.MultiplayerPlayerConnected.Add( OnMultplayerPlayerConnected );
 	Events.MultiplayerPrePlayerDisconnected.Add( OnMultiplayerPrePlayerDisconnected );
 	-- Update net connection icons whenever pings have changed.
 	Events.MultiplayerPingTimesChanged.Add(OnMultiplayerPingTimesChanged);
-	Events.MultiplayerSnapshotProcessed.Add(OnMultiplayerSnapshotProcessed);
+	Events.MultiplayerSnapshotRequested.Add(OnEventUpdateChatPlayer);
+	Events.MultiplayerSnapshotProcessed.Add(OnEventUpdateChatPlayer);
 	Events.MultiplayerChat.Add( OnMultiplayerChat );
 
 	LuaEvents.MapPinPopup_SendPinToChat.Add(OnSendPinToChat);
 	LuaEvents.MapPinPopup_RequestChatPlayerTarget.Add(OnMapPinPopup_RequestChatPlayerTarget);
+
+	BuildPlayerList();
 
 	if ( m_isDebugging ) then
 		for i=1,20,1 do
@@ -604,16 +650,20 @@ function Initialize()
 	end);
 
 	-- Keep both edit boxes in-sync
-	Controls.ChatEntry:RegisterStringChangedCallback(function()
-		if Controls.ExpandedChatEntry:GetText() ~= Controls.ChatEntry:GetText() then
-			Controls.ExpandedChatEntry:SetText(Controls.ChatEntry:GetText());
-		end
-	end);
-	Controls.ExpandedChatEntry:RegisterStringChangedCallback(function()
-		if Controls.ChatEntry:GetText() ~= Controls.ExpandedChatEntry:GetText() then
-			Controls.ChatEntry:SetText(Controls.ExpandedChatEntry:GetText());
-		end
-	end);
+	Controls.ChatEntry:RegisterStringChangedCallback(
+		function(pControl:table)
+			local text:string = Controls.ChatEntry:GetText();
+			if Controls.ExpandedChatEntry:GetText() ~= text then
+				Controls.ExpandedChatEntry:SetText( text );
+			end
+		end);
+	Controls.ExpandedChatEntry:RegisterStringChangedCallback(
+		function(pControl:table)
+			local text:string = Controls.ExpandedChatEntry:GetText();
+			if Controls.ChatEntry:GetText() ~= text then
+				Controls.ChatEntry:SetText(text);
+			end
+		end);
 
 	ContextPtr:SetInputHandler(InputHandler, true);
 

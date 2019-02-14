@@ -27,7 +27,7 @@
 	<Instance Name="NumericSliderInstance">    
         <Stack StackGrowth="R" Anchor="L,T" ID="Root" SizePadding="0,8" Offset="0,8">
             <Label  Anchor="R,T" ID="FieldName" String="Test" Color="255,255,255,255" Offset="8" ></Label>
-            <Slider Anchor="L,T" Size="200,16" Offset="0,0" ID="TheSlider" Style="Slider_VertThumb"/>
+            <Slider Anchor="L,T" Size="200,16" Offset="0,0" ID="TheSlider" Texture="slider_vertthumb" Size="18,18" Vertical="1" SliceCornzer="0,3" SliceSize="18,18" StateOffsetIncrement="0,18" />
             <Label  Anchor="L,T" ID="ValueLabel" String="Value" Color="255,255,255,255" ></Label>
         </Stack>
     </Instance>

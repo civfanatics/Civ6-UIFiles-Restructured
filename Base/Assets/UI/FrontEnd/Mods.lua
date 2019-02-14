@@ -3,6 +3,7 @@
 -------------------------------------------------
 include( "InstanceManager" );
 include( "SupportFunctions" );
+include( "PopupDialog" );
 
 LOC_MODS_SEARCH_NAME = Locale.Lookup("LOC_MODS_SEARCH_NAME");
 
@@ -100,6 +101,11 @@ function RefreshListings()
 				name = name .. " [COLOR_RED](" .. Locale.Lookup("LOC_MODS_DETAILS_OWNERSHIP_NO") .. ")[ENDCOLOR]";
 			end
 
+			if(Modding.ShouldShowCompatibilityWarnings()) then
+				if(not Modding.IsModCompatible(v.Handle) and not Modding.GetIgnoreCompatibilityWarnings(v.Handle)) then
+					name = name .. " [COLOR_RED](" .. Locale.Lookup("LOC_MODS_DETAILS_COMPATIBLE_NOT") .. ")[ENDCOLOR]";
+				end
+			end
 
 			instance.ModTitle:LocalizeAndSetText(name);
 
@@ -247,6 +253,18 @@ function RefreshModDetails()
 			Controls.ModContent:LocalizeAndSetText("LOC_MODS_USER_CONTENT");
 		end
 
+		local compatible = Modding.IsModCompatible(modHandle);
+		Controls.ModCompatibilityWarning:SetHide(compatible);
+		Controls.WhitelistMod:SetHide(compatible);
+
+		if(not compatible) then
+			Controls.WhitelistMod:SetCheck(Modding.GetIgnoreCompatibilityWarnings(modHandle));
+			Controls.WhitelistMod:RegisterCallback(Mouse.eLClick, function()
+				Modding.SetIgnoreCompatibilityWarnings(modHandle, Controls.WhitelistMod:IsChecked());
+				RefreshListings();
+			end);
+		end
+
 		-- Official/Community Icons
 		Controls.OfficialIcon:SetHide(not info.Official);
 		Controls.CommunityIcon:SetHide(info.Official);
@@ -326,10 +344,26 @@ function RefreshModDetails()
 						enableButton:SetToolTipString(nil);
 					end
 
-					enableButton:RegisterCallback(Mouse.eLClick, function()
+					local OnEnable = function()
 						Modding.EnableMod(modHandle, true);
 						RefreshListings();
-					end);
+					end
+
+					if(	Modding.ShouldShowCompatibilityWarnings() and 
+						not Modding.IsModCompatible(modHandle) and 
+						not Modding.GetIgnoreCompatibilityWarnings(modHandle)) then
+
+						enableButton:RegisterCallback(Mouse.eLClick, function()
+							m_kPopupDialog:AddText(Locale.Lookup("LOC_MODS_ENABLE_WARNING_NOT_COMPATIBLE"));
+							m_kPopupDialog:AddTitle(Locale.ToUpper(Locale.Lookup("LOC_MODS_TITLE")));
+							m_kPopupDialog:AddButton(Locale.Lookup("LOC_YES_BUTTON"), OnEnable, nil, nil, "PopupButtonInstanceGreen"); 
+							m_kPopupDialog:AddButton(Locale.Lookup("LOC_NO_BUTTON"), nil);
+							m_kPopupDialog:Open();
+						end);
+
+					else
+						enableButton:RegisterCallback(Mouse.eLClick, OnEnable);
+					end
 				else
 					enableButton:SetDisabled(true);
 					
@@ -532,8 +566,42 @@ function EnableAllMods()
 			table.insert(modHandles, v.Handle);
 		end
 	end
-	Modding.EnableMod(modHandles);
-	RefreshListings();
+
+	if(	Modding.ShouldShowCompatibilityWarnings()) then
+		local whitelistMods = false;
+		local incompatibleMods = {};
+		for i,v in ipairs(modHandles) do
+			if(	not Modding.IsModCompatible(v) and 
+				not Modding.GetIgnoreCompatibilityWarnings(v)) then
+				table.insert(incompatibleMods, v);
+			end
+		end
+
+		function OnYes()
+			if(whitelistMods) then
+				for i,v in ipairs(incompatibleMods) do
+					Modding.SetIgnoreCompatibilityWarnings(v, true);
+				end
+			end
+
+			Modding.EnableMod(modHandles);
+			RefreshListings();
+		end
+
+		if(#incompatibleMods > 0) then
+			m_kPopupDialog:AddText(Locale.Lookup("LOC_MODS_ENABLE_WARNING_NOT_COMPATIBLE_MANY"));
+			m_kPopupDialog:AddTitle(Locale.ToUpper(Locale.Lookup("LOC_MODS_TITLE")));
+			m_kPopupDialog:AddButton(Locale.Lookup("LOC_YES_BUTTON"), OnYes, nil, nil, "PopupButtonInstanceGreen"); 
+			m_kPopupDialog:AddButton(Locale.Lookup("LOC_NO_BUTTON"), nil);
+			m_kPopupDialog:AddCheckBox(Locale.Lookup("LOC_MODS_WARNING_WHITELIST_MANY"), false, function(checked) whitelistMods = checked; end);
+			m_kPopupDialog:Open();
+		else
+			OnYes();
+		end
+	else	
+		Modding.EnableMod(modHandles);
+		RefreshListings();
+	end
 end
 
 function DisableAllMods()
@@ -597,6 +665,8 @@ function RefreshSubscriptionItem(item)
 		instance.LastUpdated:SetText(Locale.Lookup("LOC_MODS_LAST_UPDATED", details.LastUpdated));
 	end
 	
+	instance.UnsubscribeButton:SetHide(true);
+
 	local status = details.Status;
 	instance.SubscriptionDownloadProgress:SetHide(status ~= "Downloading");
 	if(status == "Downloading") then
@@ -646,11 +716,16 @@ function RefreshSubscriptionItem(item)
 			end);
 		else
 			instance.SubscriptionUpdateButton:SetHide(true);
+			instance.UnsubscribeButton:SetHide(false);
+			instance.UnsubscribeButton:RegisterCallback(Mouse.eLClick, function()
+				Modding.Unsubscribe(subscriptionId);
+				instance.SubscriptionInstanceRoot:SetHide(true);
+			end);
 		end
 	end
 
 
-
+	instance.SubscriptionInstanceRoot:SetHide(false);
 	item.NeedsRefresh = needsRefresh;
 end
 ----------------------------------------------------------------  
@@ -693,17 +768,15 @@ end
 function InputHandler( uiMsg, wParam, lParam )
 	if uiMsg == KeyEvents.KeyUp then
 		if wParam == Keys.VK_ESCAPE then
-
 			if(Controls.NameModGroupPopup ~= nil and Controls.NameModGroupPopup:IsVisible()) then
 				Controls.NameModGroupPopup:SetHide(true);
 			else
 				HandleExitRequest();
 			end
+			return true;
 		end
 	end
-
-	-- TODO: Is this needed?
-	return true;
+	return false;
 end
 ContextPtr:SetInputHandler( InputHandler );
 
@@ -761,6 +834,7 @@ function OnShow()
 end	
 ----------------------------------------------------------------    
 function HandleExitRequest()
+	GameConfiguration.UpdateEnabledMods();
 	UIManager:DequeuePopup( ContextPtr );
 end
 ----------------------------------------------------------------  
@@ -852,6 +926,8 @@ function InitializeSortListingsPulldown()
 end
 
 function Initialize()
+	m_kPopupDialog = PopupDialog:new( "Mods" );
+
 	Controls.EnableAll:RegisterCallback(Mouse.eLClick, EnableAllMods);
 	Controls.DisableAll:RegisterCallback(Mouse.eLClick, DisableAllMods);
 	Controls.CreateModGroup:RegisterCallback(Mouse.eLClick, CreateModGroup);
@@ -908,7 +984,7 @@ function Initialize()
 		Controls.SubscriptionsTab:SetHide(true);
 	end
 
-	local pFriends = Network:GetFriends();
+	local pFriends = Network.GetFriends();
 	if(pFriends ~= nil and pFriends:IsOverlayEnabled()) then
 		Controls.BrowseWorkshop:RegisterCallback( Mouse.eLClick, OnOpenWorkshop );
 		Controls.BrowseWorkshop:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);

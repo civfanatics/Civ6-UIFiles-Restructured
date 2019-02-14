@@ -3,6 +3,7 @@
 -- Button Handlers
 -- ===========================================================================
 function OnNewWorldBuilderMap()
+
 	GameConfiguration.SetToDefaults();
 	GameConfiguration.SetWorldBuilderEditor(true);
 	local advancedSetup = ContextPtr:LookUpControl( "/FrontEnd/MainMenu/AdvancedSetup" );
@@ -10,6 +11,16 @@ function OnNewWorldBuilderMap()
 end
 Controls.NewWorldBuilderMap:RegisterCallback( Mouse.eLClick, OnNewWorldBuilderMap );
 
+
+function OnImportWorldBuilderMap()
+
+	GameConfiguration.SetToDefaults();
+	GameConfiguration.SetWorldBuilderEditor(true);
+	MapConfiguration.SetScript("WBImport.lua");
+	local advancedSetup = ContextPtr:LookUpControl( "/FrontEnd/MainMenu/AdvancedSetup" );
+	UIManager:QueuePopup(advancedSetup, PopupPriority.Current);
+end
+Controls.ImportWorldBuilderMap:RegisterCallback( Mouse.eLClick, OnImportWorldBuilderMap );
 
 -- ===========================================================================
 function OnLoadWorldBuilderMap()

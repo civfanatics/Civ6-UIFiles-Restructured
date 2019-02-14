@@ -70,8 +70,49 @@ local sectionId = page.SectionId;
 			end
 		end
 	end
+	
+	for row in GameInfo.Improvement_Tourism() do
+		if(row.ImprovementType == improvementType and row.Improvement_Tourism ~= 0) then
+			local yield;
+			if(row.TourismSource == "TOURISMSOURCE_CULTURE") then
+				yield = GameInfo.Yields["YIELD_CULTURE"];
+			elseif(row.TourismSource == "TOURISMSOURCE_GOLD") then
+				yield = GameInfo.Yields["YIELD_GOLD"];
+			elseif(row.TourismSource == "TOURISMSOURCE_FAITH") then
+				yield = GameInfo.Yields["YIELD_FAITH"];
+			elseif(row.TourismSource == "TOURISMSOURCE_FOOD") then
+				yield = GameInfo.Yields["YIELD_FOOD"];
+			elseif(row.TourismSource == "TOURISMSOURCE_PRODUCTION") then
+				yield = GameInfo.Yields["YIELD_PRODUCTION"];
+			elseif(row.TourismSource == "TOURISMSOURCE_SCIENCE") then
+				yield = GameInfo.Yields["YIELD_SCIENCE"];
+			
+			end
+		
+			local item;
+			if(row.PrereqCivic) then
+				item = GameInfo.Civics[row.PrereqCivic];
+			else
+				item = GameInfo.Technologies[row.PrereqTech];
+			end
+			
+			if(item) then
+				if(yield) then
+					table.insert(stats, Locale.Lookup("LOC_TYPE_TRAIT_TOURISM_BONUS_YIELD", row.ScalingFactor, yield.IconString, yield.Name, item.Name));
+				elseif (row.TourismSource == "TOURISMSOURCE_APPEAL") then
+					table.insert(stats, Locale.Lookup("LOC_TYPE_TRAIT_TOURISM_BONUS_APPEAL", row.ScalingFactor, item.Name));
+				end
+			else
+				if(yield) then
+					table.insert(stats, Locale.Lookup("LOC_TYPE_TRAIT_TOURISM_BONUS_YIELD_NO_REQUIREMENT", row.ScalingFactor, yield.IconString, yield.Name));
+				elseif (row.TourismSource == "TOURISMSOURCE_APPEAL") then
+					table.insert(stats, Locale.Lookup("LOC_TYPE_TRAIT_TOURISM_BONUS_APPEAL_NO_REQUIREMENT", row.ScalingFactor));
+				end
+			end
+		end
+	end
 
-	local unique_to = {};
+	local unique_to_map = {};
 	if(improvement.TraitType) then
 		local traitType = improvement.TraitType;
 
@@ -101,10 +142,10 @@ local sectionId = page.SectionId;
 					if(city_state_civilization) then
 						local civ = GameInfo.Civilizations[city_state_civilization];
 						if(civ) then
-							table.insert(unique_to, {"ICON_" .. civ.CivilizationType, civ.Name, civ.CivilizationType});
+							unique_to_map[civ.CivilizationType] = {"ICON_" .. civ.CivilizationType, civ.Name, civ.CivilizationType};
 						end
 					else
-						table.insert(unique_to, {"ICON_" .. row.LeaderType, leader.Name, row.LeaderType});
+						unique_to_map[row.LeaderType] = {"ICON_" .. row.LeaderType, leader.Name, row.LeaderType};
 					end
 				end
 			end
@@ -114,7 +155,7 @@ local sectionId = page.SectionId;
 			if(row.TraitType == traitType) then
 				local civ = GameInfo.Civilizations[row.CivilizationType];
 				if(civ) then
-					table.insert(unique_to, {"ICON_" .. row.CivilizationType, civ.Name, row.CivilizationType});
+					unique_to_map[row.CivilizationType] = {"ICON_" .. row.CivilizationType, civ.Name, row.CivilizationType};
 				end
 			end
 		end
@@ -149,10 +190,10 @@ local sectionId = page.SectionId;
 						if(city_state_civilization) then
 							local civ = GameInfo.Civilizations[city_state_civilization];
 							if(civ) then
-								table.insert(unique_to, {"ICON_" .. civ.CivilizationType, civ.Name, civ.CivilizationType});
+								unique_to_map[civ.CivilizationType] = {"ICON_" .. civ.CivilizationType, civ.Name, civ.CivilizationType};
 							end
 						else
-							table.insert(unique_to, {"ICON_" .. row.LeaderType, leader.Name, row.LeaderType});
+							unique_to_map[row.LeaderType] = {"ICON_" .. row.LeaderType, leader.Name, row.LeaderType};
 						end
 					end
 				end
@@ -162,7 +203,7 @@ local sectionId = page.SectionId;
 				if(row.TraitType == traitType) then
 					local civ = GameInfo.Civilizations[row.CivilizationType];
 					if(civ) then
-						table.insert(unique_to, {"ICON_" .. row.CivilizationType, civ.Name, row.CivilizationType});
+						unique_to_map[row.CivilizationType] = {"ICON_" .. row.CivilizationType, civ.Name, row.CivilizationType}
 					end
 				end
 			end
@@ -197,7 +238,7 @@ local sectionId = page.SectionId;
 	for k,_ in pairs(beliefs) do
 		local belief = GameInfo.Beliefs[k];
 		if(belief) then
-			table.insert(unique_to, {"ICON_" .. belief.BeliefType, belief.Name, belief.BeliefType});
+			unique_to_map[belief.BeliefType] = {"ICON_" .. belief.BeliefType, belief.Name, belief.BeliefType}
 		end
 	end
 
@@ -328,6 +369,11 @@ local sectionId = page.SectionId;
 		end
 	end
 	table.sort(placement_requirements, function(a,b) return Locale.Compare(a[1],b[1]) == -1 end);
+
+	local unique_to = {};
+	for k,v in pairs(unique_to_map) do
+		table.insert(unique_to, v);
+	end
 
 
 	-- Right Column

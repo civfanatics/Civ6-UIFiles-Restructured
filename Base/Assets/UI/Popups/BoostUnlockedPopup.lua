@@ -11,6 +11,7 @@ include("SupportFunctions");
 local m_queuedBoosts			:table	 = {};
 local m_isDisabledByTutorial	:boolean = false;
 local m_isPastLoadingScreen		:boolean = false;
+local m_isOnQueue				:boolean = false;
 
 -- ===========================================================================
 function ShowBoost(queueEntry:table)
@@ -21,7 +22,8 @@ function ShowBoost(queueEntry:table)
 	end
 
 	-- Queue Popup through UI Manager
-	UIManager:QueuePopup( ContextPtr, PopupPriority.Normal);
+	UIManager:QueuePopup( ContextPtr, PopupPriority.Low, { DelayShow = true });
+	m_isOnQueue = true;
 
 	PlayAnimations();
 end
@@ -259,6 +261,11 @@ function PlayAnimations()
 end
 
 -- ===========================================================================
+function CanShow()
+	return UI.CanShowPopup(PopupPriority.Low) and m_isOnQueue==false;
+end
+
+-- ===========================================================================
 function DoCivicBoost(ePlayer, civicIndex, iCivicProgress, eSource)
 	-- If it's the first turn of a late start game, ignore all the boosts the come across the wire.
 	if (not m_isPastLoadingScreen) and (Game.GetCurrentGameTurn() == GameConfiguration.GetStartTurn()) then 
@@ -269,7 +276,7 @@ function DoCivicBoost(ePlayer, civicIndex, iCivicProgress, eSource)
 		local civicBoostEntry:table = { civicIndex=civicIndex, iCivicProgress=iCivicProgress, eSource=eSource };
 
 		-- If we're not showing a boost popup then add it to the popup system queue
-		if UI.CanShowPopup() then
+		if CanShow() then
 			ShowBoost(civicBoostEntry);
 		else
 			-- Add to queue if already showing a boost popup
@@ -290,7 +297,7 @@ function DoTechBoost(ePlayer, techIndex, iTechProgress, eSource)
 		local techBoostEntry:table = { techIndex=techIndex, iTechProgress=iTechProgress, eSource=eSource };
 
 		-- If we're not showing a boost popup then add it to the popup system queue
-		if UI.CanShowPopup() then
+		if CanShow() then
 			ShowBoost(techBoostEntry);
 		else
 			-- Add to queue if already showing a boost popup
@@ -314,6 +321,7 @@ end
 function OnClose()	
 	-- Dequeue popup from UI mananger
 	UIManager:DequeuePopup( ContextPtr );
+	m_isOnQueue = false;
 
 	ShowNextQueuedPopup();
 end
@@ -323,7 +331,7 @@ function OnInputHandler( input )
 	local msg = input:GetMessageType();
 	if (msg == KeyEvents.KeyUp) then
 		local key = input:GetKey();
-		if key == Keys.VK_ESCAPE then
+		if key == Keys.VK_RETURN or key == Keys.VK_ESCAPE then
 			OnClose();
 			return true;
 		end
@@ -351,7 +359,7 @@ end
 -- ===========================================================================
 function OnUIIdle()
 	-- The UI is idle, are we waiting to show a popup?
-	if UI.CanShowPopup() then
+	if UI.CanShowPopup(PopupPriority.Normal) then
 		ShowNextQueuedPopup();
 	end
 end

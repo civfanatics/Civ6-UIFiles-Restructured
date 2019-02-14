@@ -4,6 +4,7 @@
 	<Stack				Anchor="C,C" Offset="0,150" Padding="5" WrapWidth="200" WrapGrowth="Right" >
 		<GridButton ID="NewWorldBuilderMap" Style="MainButton" Size="300,41" FontStyle="Stroke" ColorSet="ButtonCS" String="LOC_WORLD_BUILDER_START_NEW" />
 		<GridButton ID="LoadWorldBuilderMap" Style="MainButton" Size="300,41" FontStyle="Stroke" ColorSet="ButtonCS" String="LOC_WORLD_BUILDER_LOAD" />
+		<GridButton ID="ImportWorldBuilderMap" Style="MainButton" Size="300,41" FontStyle="Stroke" ColorSet="ButtonCS" String="LOC_WORLD_BUILDER_IMPORT" />
 		<GridButton ID="BackButton"	Style="MainButton" Size="300,41" FontStyle="Stroke" ColorSet="ButtonCS" String="LOC_MENU_BACK"/>
 	</Stack>
 

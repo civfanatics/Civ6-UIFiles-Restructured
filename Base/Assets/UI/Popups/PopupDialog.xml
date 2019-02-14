@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<Root>
+<Include File="PopupDialog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="..\..\..\..\..\..\CivTech\Libs\ForgeUI\ForgeUI_Assets\Controls.xsd">
 
 	<Instance 						Name="PopupDialog">
-		<Box								ID="PopupRoot" Color="0,0,0,150" Size="parent,parent" ConsumeMouse="1" Hidden="1">
+		<Box								ID="PopupRoot" Color="0,0,0,150" Size="parent,parent" ConsumeMouse="1" Hidden="1" TutorialActive="1">
 			<AlphaAnim        ID="PopupAlphaIn"      Size="parent,parent"  AlphaBegin="0"  AlphaEnd="1"  Speed="3" Function="Root" Cycle="Once">
 				<SlideAnim      ID="PopupSlideIn"      Size="parent,parent"  Start="0,-20"   End="0,0"     Speed="3" Function="Root" Cycle="Once">
 					<Grid                           Size="auto,auto"              Anchor="C,C" Offset="0,0" Style="DropShadow2"     Color="255,255,255,200" AutoSizePadding="25,25" ConsumeMouse="1">
@@ -36,12 +36,12 @@
 	</Instance>
 
 	<Instance				Name="PopupRowInstance">
-		<Stack        ID="Row"			Anchor="C,T" StackGrowth="Right" StackWrap="Bottom" StackPadding="10" />
+		<Stack        ID="Row"			Anchor="C,T" StackGrowth="Right" WrapGrowth="Bottom" StackPadding="10" />
 	</Instance>
 
 	<Instance				Name="PopupCountDownInstance">
 		<AlphaAnim		ID="Anim"			Anchor="C,T"	Size="50,50" AlphaStart="1" AlphaEnd="0.5" Function="OutQuint" Cycle="Once">
-			<Label			ID="Text"			Anchor="C,T"	Style="FontNormal40" Align="C,T" Color="0,0,0,255" />
+			<Label			ID="Text"			Anchor="C,T"	Style="FontNormal40" Align="C" Color="0,0,0,255" />
 		</AlphaAnim>
 	</Instance>
 
@@ -49,5 +49,15 @@
 		<CheckBox			ID="Check"		Anchor="C,T"		Style="CheckBoxPopupControl"  Size="340,24" />
 	</Instance>
 
-</Root>
+	<Instance				Name="PopupEditboxInstance">
+		<Stack		ID="EditBoxRoot" StackGrowth="Right" Padding="20" Anchor="C,T">
+			<Label      ID="EditLabel" Style="BodyTextDark18" Align="Right" WrapWidth="parent-20" Anchor="L,C"/>
+			<Grid Style="EditTextArea" Size="153,29" Anchor="C,T" Offset="0,4">
+				<Box Size="parent-8,parent-8" Color="0,0,0,70" Anchor="C,C"/>
+				<EditBox  ID="EditBox" FocusStop="0" Style="BlueGlow" EditMode="1" Size="parent-5,22" Anchor="C,C" MaxLength="32" ConsumeMouse="1" HighlightColor="25,120,154,200"/>
+			</Grid>
+		</Stack>
+	</Instance>
+
+</Include>
 

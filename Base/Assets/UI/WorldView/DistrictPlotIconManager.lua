@@ -19,6 +19,13 @@ local PADDING_Y :number = 16;
 local m_PlotBonusIM	:table = InstanceManager:new( "PlotYieldBonusInstance",	"Anchor", Controls.PlotBonusContainer );
 local m_MapIcons	:table = {};
 
+local m_UnitsMilitary : number = UILens.CreateLensLayerHash("Units_Military");
+local m_DistrictsCampus : number = UILens.CreateLensLayerHash("Districts_Campus");
+local m_MovementPath : number = UILens.CreateLensLayerHash("Movement_Path");
+local m_MovementZoneOfControl : number = UILens.CreateLensLayerHash("Movement_Zone_Of_Control");
+local m_AdjacencyBonusDistricts : number = UILens.CreateLensLayerHash("Adjacency_Bonus_Districts");
+local m_EmpireDetails : number = UILens.CreateLensLayerHash("Empire_Details");
+
 -- ===========================================================================
 function RealizeIconStack(instance:table)
 	instance.IconStack:CalculateSize();
@@ -67,10 +74,10 @@ end
 -- ===========================================================================
 function LayerToString( layerNum:number )
 	local out:string;
-	if		layerNum == LensLayers.Units_Military			then out = "Units_Military";
-	elseif	layerNum == LensLayers.Districts_Campus			then out = "Districts_Campus";
-	elseif	layerNum == LensLayers.Movement_Path			then out = "Movement_Path";
-	elseif	layerNum == LensLayers.Movement_Zone_Of_Control	then out = "Movement_Zone_Of_Control";
+	if		layerNum == m_UnitsMilitary			then out = "Units_Military";
+	elseif	layerNum == m_DistrictsCampus		then out = "Districts_Campus";
+	elseif	layerNum == m_MovementPath			then out = "Movement_Path";
+	elseif	layerNum == m_MovementZoneOfControl	then out = "Movement_Zone_Of_Control";
 	end
 	out = out .. "("..tostring(layerNum)..")";
 	return out;
@@ -87,9 +94,20 @@ function ClearEveything()
 end
 
 -- ===========================================================================
+function Realize2dArtForDistrictPlacement_AllCities()
+
+	local pLocalPlayer:table = Players[ Game.GetLocalPlayer() ];
+	if pLocalPlayer ~= nil then
+		for i, pCity in pLocalPlayer:GetCities():Members() do
+			Realize2dArtForCityDistricts( pCity );
+		end
+	end
+end
+
+-- ===========================================================================
 function Realize2dArtForDistrictPlacement()
 
-	local isLayerOn:boolean = UILens.IsLayerOn(LensLayers.ADJACENCY_BONUS_DISTRICTS);
+	local isLayerOn:boolean = UILens.IsLayerOn(m_AdjacencyBonusDistricts);
 	if not isLayerOn then
 		return;
 	end
@@ -99,6 +117,12 @@ function Realize2dArtForDistrictPlacement()
 		return;
 	end
 
+	Realize2dArtForCityDistricts( selectedCity );
+end
+
+-- ===========================================================================
+function Realize2dArtForCityDistricts( pCity:table )
+
 	local districtHash:number	= UI.GetInterfaceModeParameter(CityOperationTypes.PARAM_DISTRICT_TYPE);
 	local district				= GameInfo.Districts[districtHash];
 	local buildingHash:number	= UI.GetInterfaceModeParameter(CityOperationTypes.PARAM_BUILDING_TYPE);
@@ -107,16 +131,16 @@ function Realize2dArtForDistrictPlacement()
 	-- Realizing a district about to be placed?
 	if district ~= nil then
 		-- Show information for a district about to be placed
-		local plots			:table = GetCityRelatedPlotIndexesDistrictsAlternative( selectedCity, districtHash ); --GetCityRelatedPlotIndexes( selectedCity );		
+		local plots			:table = GetCityRelatedPlotIndexesDistrictsAlternative( pCity, districtHash );		
 		for i,plotID in pairs(plots) do
 			local kPlot:table =  Map.GetPlotByIndex(plotID);
 			if kPlot == nil then
 				UI.DataError("Bad plot index; could not get plot #"..tostring(plotID));
 			else
 				-- All plots that are valid for this district
-				if kPlot:CanHaveDistrict(district.Index, selectedCity:GetOwner(), selectedCity:GetID()) then
-					local yieldBonus:string, yieldTooltip, requirementText:string = GetAdjacentYieldBonusString( district.Index, selectedCity, kPlot );
-					local showIfPurchaseable:boolean = IsShownIfPlotPurchaseable(district.Index, selectedCity, kPlot);
+				if kPlot:CanHaveDistrict(district.Index, pCity:GetOwner(), pCity:GetID()) then
+					local yieldBonus:string, yieldTooltip, requirementText:string = GetAdjacentYieldBonusString( district.Index, pCity, kPlot );
+					local showIfPurchaseable:boolean = IsShownIfPlotPurchaseable(district.Index, pCity, kPlot);
 					if showIfPurchaseable or requirementText ~= nil then
 						local instance:table = GetInstanceAt( plotID );
 						instance.PlotBonus:SetHide( yieldBonus == "" );
@@ -135,14 +159,14 @@ function Realize2dArtForDistrictPlacement()
 	-- How about a wonder?
 	elseif building ~= nil then
 		-- Show information for a wonder about to be placed
-		local plots			:table = GetCityRelatedPlotIndexesWondersAlternative( selectedCity, buildingHash ); --GetCityRelatedPlotIndexes( selectedCity );		
+		local plots			:table = GetCityRelatedPlotIndexesWondersAlternative( pCity, buildingHash );	
 		for i,plotID in pairs(plots) do
 			local kPlot:table =  Map.GetPlotByIndex(plotID);
 			if kPlot == nil then
 				UI.DataError("Bad plot index; could not get plot #"..tostring(plotID));
 			else
 				-- All plots that are valid for this wonder
-				if kPlot:CanHaveWonder(building.Index, selectedCity:GetOwner(), selectedCity:GetID()) then
+				if kPlot:CanHaveWonder(building.Index, pCity:GetOwner(), pCity:GetID()) then
 					local instance:table = GetInstanceAt( plotID );
 					instance.PlotBonus:SetHide(true);
 					instance.BonusText:SetText("");
@@ -160,7 +184,7 @@ function Realize2dArtForDistrictPlacement()
 		local plots				:table = {};
 		local variations		:table = {};
 		local adjacencyYields	:table = {};
-		local cityDistricts		:table = selectedCity:GetDistricts();
+		local cityDistricts		:table = pCity:GetDistricts();
 
 		for i, district in cityDistricts:Members() do
 
@@ -169,10 +193,10 @@ function Realize2dArtForDistrictPlacement()
 			local kPlot			:table  = Map.GetPlot(locX,locY);
 			local plotID		:number = kPlot:GetIndex();
 
-			local yieldBonus:string, yieldTooltip:string = GetAdjacentYieldBonusString( district:GetType(), selectedCity, kPlot );
-			local showIfPurchaseable:boolean = IsShownIfPlotPurchaseable(district:GetType(), selectedCity, kPlot);
+			local yieldBonus:string, yieldTooltip:string = GetAdjacentYieldBonusString( district:GetType(), pCity, kPlot );
+			local showIfPurchaseable:boolean = IsShownIfPlotPurchaseable(district:GetType(), pCity, kPlot);
 			if showIfPurchaseable then
-				local instance:table = GetInstanceAt( plotID, LensLayers.ADJACENCY_BONUS_DISTRICTS );
+				local instance:table = GetInstanceAt( plotID, m_AdjacencyBonusDistricts );
 				instance.PlotBonus:SetHide( yieldBonus == "" );
 				instance.BonusText:SetText(yieldBonus);
 				instance.BonusText:SetToolTipString(yieldTooltip);
@@ -190,7 +214,7 @@ end
 --	Initialize / hotload support
 -- ===========================================================================
 function OnInit( isHotLoad:boolean )
-	if isHotLoad and UILens.IsLayerOn(LensLayers.ADJACENCY_BONUS_DISTRICTS) then
+	if isHotLoad and UILens.IsLayerOn(m_AdjacencyBonusDistricts) then
 		Realize2dArtForDistrictPlacement(); 
 	end
 end
@@ -217,7 +241,7 @@ function OnCityMadePurchase(owner:number, cityID:number, plotX:number, plotY:num
 	if owner ~= Game.GetLocalPlayer() then
 		return;
 	end
-	if UILens.IsLayerOn( LensLayers.ADJACENCY_BONUS_DISTRICTS ) then
+	if UILens.IsLayerOn( m_AdjacencyBonusDistricts ) then
 		if purchaseType == EventSubTypes.PLOT then
 			ClearEveything();
 			Realize2dArtForDistrictPlacement();   
@@ -232,7 +256,7 @@ function OnCitySelectionChanged(owner:number, ID:number, i:number, j:number, k:n
 	if owner ~= Game.GetLocalPlayer() then
 		return;
 	end	
-	if bSelected and UILens.IsLayerOn(LensLayers.ADJACENCY_BONUS_DISTRICTS) then
+	if bSelected and UILens.IsLayerOn(m_AdjacencyBonusDistricts) then
 		ClearEveything();
 		Realize2dArtForDistrictPlacement();
 	end	
@@ -242,25 +266,35 @@ end
 --	Gamecore Event
 -- ===========================================================================
 function OnLensLayerOn( layerNum:number )	
-	if not (layerNum==LensLayers.ADJACENCY_BONUS_DISTRICTS) then 
-		return; 
+	if layerNum == m_AdjacencyBonusDistricts then 
+		Realize2dArtForDistrictPlacement();
+	elseif layerNum == m_EmpireDetails then
+		Realize2dArtForDistrictPlacement_AllCities();
 	end
-	Realize2dArtForDistrictPlacement();
 end
 
 -- ===========================================================================
 --	Gamecore Event
 -- ===========================================================================
 function OnLensLayerOff( layerNum:number )
-	
-	if not (layerNum==LensLayers.ADJACENCY_BONUS_DISTRICTS) then 
-		return; 
+	if layerNum==m_AdjacencyBonusDistricts or layerNum == m_EmpireDetails then 
+		for key,pInstance in pairs(m_MapIcons) do
+			m_PlotBonusIM:ReleaseInstance( pInstance );
+			m_MapIcons[key] = nil;
+		end	
 	end
+end
 
-	for key,pInstance in pairs(m_MapIcons) do
-		m_PlotBonusIM:ReleaseInstance( pInstance );
-		m_MapIcons[key] = nil;
-	end	
+-- ===========================================================================
+function OnInterfaceModeChanged( oldMode:number, newMode:number )
+	if newMode == InterfaceModeTypes.DISTRICT_PLACEMENT then
+		if UILens.IsLayerOn(m_AdjacencyBonusDistricts) then
+			-- Catch refresh of district bonuses if m_AdjacencyBonusDistricts already happens
+			-- to be active. Example: Going from Empire lens to District Placement lens
+			ClearEveything();
+			Realize2dArtForDistrictPlacement();
+		end
+	end
 end
 
 -- ===========================================================================
@@ -277,5 +311,6 @@ function Initialize()
 	Events.CityMadePurchase.Add( OnCityMadePurchase );
 	Events.LensLayerOn.Add( OnLensLayerOn );
 	Events.LensLayerOff.Add( OnLensLayerOff );
+	Events.InterfaceModeChanged.Add( OnInterfaceModeChanged );
 end
 Initialize();

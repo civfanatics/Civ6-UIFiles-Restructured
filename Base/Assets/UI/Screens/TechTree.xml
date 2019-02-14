@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Context xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="..\..\..\..\..\CivTech\Libs\ForgeUI\ForgeUI_Assets\Controls.xsd">
 
-	<Container Style="FullScreenVignetteConsumer"/>
+	<Container ID="Vignette" Style="FullScreenVignetteConsumer"/>
 	<AlphaAnim ID="SearchResultsTimer" Begin="0" End="1" Speed="2" Cycle="Once" Stopped="1"/>
 	
   <Container Anchor="C,C" Size="full,768">
@@ -13,18 +13,18 @@
       <Container ID="ForceArtSizeX" Size="1,1"/>
     </ScrollPanel>
     <Image Anchor="L,B" Offset="0,33" Size="parent,22" Texture="Controls_GradientSmall" Color="0,0,0,150" FlipY="1"/>
-    <ScrollPanel ID="ArtScroller" Offset="0,-2" Size="parent,parent" Vertical="0" ScrollBar="0">
-      <Container ID="ForceSizeX" Size="1,1"/>
-      <Image ID="ArtParchmentLeft" Offset="0,0" Size="3,parent" Texture="Controls_GradientSmall" Rotate="90" Color="0,0,0,255"/>
-      <Image ID="ArtParchmentDecoTop" Offset="0,50" Size="123,103" Texture="Parchment_BorderDeco" FlipY="1" StretchMode="Tile" Alpha="0.2"/>
-      <Image ID="ArtParchmentDecoBottom" Anchor="L,B" Offset="0,50" Size="123,103" Texture="Parchment_BorderDeco" FlipY="0" StretchMode="Tile" Alpha="0.2"/>
-      <Image ID="ArtParchmentRippleTop" Offset="0,44" Size="609,217" Texture="Parchment_Ripple" FlipY="1" StretchMode="Tile" Alpha="1.0"/>
-      <Image ID="ArtParchmentRippleBottom" Anchor="L,B" Offset="0,33" Size="609,217" Texture="Parchment_Ripple" FlipY="0" StretchMode="Tile" Alpha="1.0"/>
-      <Image ID="ArtCornerGrungeTL" Offset="0,33" Size="52,44" Texture="Parchment_CornerGrunge" FlipX="1" FlipY="1" Alpha="1.0"/>
-      <Image ID="ArtCornerGrungeTR" Anchor="R,T" Offset="0,33" Size="52,44" Texture="Parchment_CornerGrunge" FlipX="0" FlipY="1" Alpha="1.0"/>
-      <Image ID="ArtCornerGrungeBL" Anchor="L,B" Offset="0,33" Size="52,44" Texture="Parchment_CornerGrunge" FlipX="1" FlipY="0" Alpha="1.0"/>
-      <Image ID="ArtCornerGrungeBR" Anchor="R,B" Offset="0,33" Size="52,44" Texture="Parchment_CornerGrunge" FlipX="0" FlipY="0" Alpha="1.0"/>
-    </ScrollPanel>
+		<ScrollPanel ID="ArtScroller" Offset="0,-2" Size="parent,parent" Vertical="0" ScrollBar="0">
+			<Image ID="ArtParchmentLeft" Offset="0,0" Size="3,parent" Texture="Controls_GradientSmall" Rotate="90" Color="0,0,0,255"/>
+			<Image ID="ArtParchmentDecoTop" Offset="0,50" Size="123,103" Texture="Parchment_BorderDeco" FlipY="1" StretchMode="Tile" Alpha="0.2"/>
+			<Image ID="ArtParchmentDecoBottom" Anchor="L,B" Offset="0,50" Size="123,103" Texture="Parchment_BorderDeco" FlipY="0" StretchMode="Tile" Alpha="0.2"/>
+			<Image ID="ArtParchmentRippleTop" Offset="0,44" Size="609,217" Texture="Parchment_Ripple" FlipY="1" StretchMode="Tile" Alpha="1.0"/>
+			<Image ID="ArtParchmentRippleBottom" Anchor="L,B" Offset="0,33" Size="609,217" Texture="Parchment_Ripple" FlipY="0" StretchMode="Tile" Alpha="1.0"/>
+			<Image ID="ArtCornerGrungeTL" Offset="0,33" Size="52,44" Texture="Parchment_CornerGrunge" FlipX="1" FlipY="1" Alpha="1.0"/>
+			<Image ID="ArtCornerGrungeTR" Anchor="R,T" Offset="0,33" Size="52,44" Texture="Parchment_CornerGrunge" FlipX="0" FlipY="1" Alpha="1.0"/>
+			<Image ID="ArtCornerGrungeBL" Anchor="L,B" Offset="0,33" Size="52,44" Texture="Parchment_CornerGrunge" FlipX="1" FlipY="0" Alpha="1.0"/>
+			<Image ID="ArtCornerGrungeBR" Anchor="R,B" Offset="0,33" Size="52,44" Texture="Parchment_CornerGrunge" FlipX="0" FlipY="0" Alpha="1.0"/>
+			<Container ID="ForceSizeX" Size="1,1"/>
+		</ScrollPanel>
 
     <ScrollPanel ID="LineScroller" Offset="0,0" Size="parent,parent" Vertical="0" ScrollBar="0">
       <Container ID="LineForceSizeX" Size="1,1"/>

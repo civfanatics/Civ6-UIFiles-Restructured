@@ -8,6 +8,17 @@
 -- ===========================================================================
 local m_isDisableWaterAvailLens:boolean = false;
 
+local m_MovementRange : number = UILens.CreateLensLayerHash("Movement_Range");
+local m_MovementZoneOfControl : number = UILens.CreateLensLayerHash("Movement_Zone_Of_Control");
+local m_HexColoringWaterAvail : number = UILens.CreateLensLayerHash("Hex_Coloring_Water_Availablity");
+local m_HexColoringReligion : number = UILens.CreateLensLayerHash("Hex_Coloring_Religion");
+local m_Selection : number = UILens.CreateLensLayerHash("Selection");
+
+-- ===========================================================================
+--	GLOBALS
+-- ===========================================================================
+
+m_HexColoringGreatPeople = UILens.CreateLensLayerHash("Hex_Coloring_Great_People");
 
 -- ===========================================================================
 --	MEMBERS
@@ -16,8 +27,8 @@ local m_isDisableWaterAvailLens:boolean = false;
 -- ===========================================================================
 function RealizeMoveRadius( kUnit:table )
 	
-	UILens.ClearLayerHexes( LensLayers.MOVEMENT_RANGE );
-	UILens.ClearLayerHexes( LensLayers.MOVEMENT_ZONE_OF_CONTROL );
+	UILens.ClearLayerHexes( m_MovementRange );
+	UILens.ClearLayerHexes( m_MovementZoneOfControl );
 
 	if kUnit ~= nil and ( not GameInfo.Units[kUnit:GetUnitType()].IgnoreMoves ) and ( not UI.IsGameCoreBusy() ) then
 		
@@ -47,9 +58,11 @@ function RealizeMoveRadius( kUnit:table )
 				kZOCPlots = {};
 				table.insert( kMovePlots, Map.GetPlot( kUnit:GetX(), kUnit:GetY() ):GetIndex() );
 			end
-			
+						
+			local isShowingTarget :boolean = kUnit:GetAttacksRemaining() > 0;
+
 			-- Extract attack indicator locations and extensions to movement range
-			if kAttackPlots ~= nil and table.count( kAttackPlots ) > 0 then
+			if isShowingTarget and kAttackPlots ~= nil and table.count( kAttackPlots ) > 0 then
 				if kMovePlots == nil then kMovePlots = {} end
 				for _, plot in ipairs( kAttackPlots ) do
 					table.insert( kAttackIndicators, { "AttackRange_Target", plot } );
@@ -81,12 +94,12 @@ function RealizeMoveRadius( kUnit:table )
 
 			-- Lay down ZOC and attack indicators
 			if table.count( kZOCPlots ) > 0 or table.count( kAttackIndicators ) > 0 then
-				UILens.SetLayerHexesArea( LensLayers.MOVEMENT_ZONE_OF_CONTROL, eLocalPlayer, kZOCPlots, kAttackIndicators );
+				UILens.SetLayerHexesArea( m_MovementZoneOfControl, eLocalPlayer, kZOCPlots, kAttackIndicators );
 			end
 
 			-- Lay down movement border around movable and attack-movable hexes
 			if kMovePlots ~= nil and table.count( kMovePlots ) > 0 then
-				UILens.SetLayerHexesArea( LensLayers.MOVEMENT_RANGE, eLocalPlayer, kMovePlots );
+				UILens.SetLayerHexesArea( m_MovementRange, eLocalPlayer, kMovePlots );
 			end
 		end
 	end
@@ -94,13 +107,14 @@ end
 
 -- ===========================================================================
 function RealizeGreatPersonLens( kUnit:table )
-	UILens.ClearLayerHexes(LensLayers.HEX_COLORING_GREAT_PEOPLE);
-	if UILens.IsLayerOn( LensLayers.HEX_COLORING_GREAT_PEOPLE ) then
-		UILens.ToggleLayerOff(LensLayers.HEX_COLORING_GREAT_PEOPLE);
+	UILens.ClearLayerHexes(m_HexColoringGreatPeople);
+	if UILens.IsLayerOn( m_HexColoringGreatPeople ) then
+		UILens.ToggleLayerOff(m_HexColoringGreatPeople);
 	end
 	if kUnit ~= nil and ( not UI.IsGameCoreBusy() ) then
 		local playerID:number = kUnit:GetOwner();
 		if playerID == Game.GetLocalPlayer() then
+			local kUnitArchaeology:table = kUnit:GetArchaeology();
 			local kUnitGreatPerson:table = kUnit:GetGreatPerson();
 			if kUnitGreatPerson ~= nil and kUnitGreatPerson:IsGreatPerson() then
 				local greatPersonInfo:table = GameInfo.GreatPersonIndividuals[kUnitGreatPerson:GetIndividual()];
@@ -117,16 +131,26 @@ function RealizeGreatPersonLens( kUnit:table )
 						table.insert(activationPlots, {"Great_People", plotIndex});
 					end
 				end
-				UILens.SetLayerHexesArea(LensLayers.HEX_COLORING_GREAT_PEOPLE, playerID, areaHighlightPlots, activationPlots);
-				UILens.ToggleLayerOn(LensLayers.HEX_COLORING_GREAT_PEOPLE);
+				UILens.SetLayerHexesArea(m_HexColoringGreatPeople, playerID, areaHighlightPlots, activationPlots);
+				UILens.ToggleLayerOn(m_HexColoringGreatPeople);
+			elseif( kUnitArchaeology ~= nil and GameInfo.Units[kUnit:GetUnitType()].ExtractsArtifacts == true) then 
+				-- Highlight plots that can activated by Archaeologists
+				local activationPlots:table = {};
+				local rawActivationPlots:table = kUnitArchaeology:GetActivationHighlightPlots();
+				for _,plotIndex:number in ipairs(rawActivationPlots) do
+					table.insert(activationPlots, {"Great_People", plotIndex});
+				end
+					
+				UILens.SetLayerHexesArea(m_HexColoringGreatPeople, playerID, {}, activationPlots);
+				UILens.ToggleLayerOn(m_HexColoringGreatPeople);
 			elseif GameInfo.Units[kUnit:GetUnitType()].ParkCharges > 0 then -- Highlight plots that can activated by Naturalists
 				local parkPlots:table = {};
 				local rawParkPlots:table = Game.GetNationalParks():GetPossibleParkTiles(playerID);
 				for _,plotIndex:number in ipairs(rawParkPlots) do
 					table.insert(parkPlots, {"Great_People", plotIndex});
 				end
-				UILens.SetLayerHexesArea(LensLayers.HEX_COLORING_GREAT_PEOPLE, playerID, {}, parkPlots);
-				UILens.ToggleLayerOn(LensLayers.HEX_COLORING_GREAT_PEOPLE);
+				UILens.SetLayerHexesArea(m_HexColoringGreatPeople, playerID, {}, parkPlots);
+				UILens.ToggleLayerOn(m_HexColoringGreatPeople);
 			end
 		end
 	end
@@ -145,6 +169,11 @@ function OnUnitSelectionChanged( playerID:number, unitID:number, hexI:number, he
 		return;
 	end
 
+	-- Mode(s) to skip selecting a unit
+	local eMode:number = UI.GetInterfaceMode();
+	if eMode == InterfaceModeTypes.CINEMATIC then return; end	-- (Still) in Cinematic mode; one may have just queued up after the other.
+
+
 	local kUnit		:table = nil;
 	local pPlayer	:table = Players[playerID];
 	if pPlayer ~= nil then
@@ -155,6 +184,11 @@ function OnUnitSelectionChanged( playerID:number, unitID:number, hexI:number, he
 			if UI.GetInterfaceMode() == InterfaceModeTypes.VIEW_MODAL_LENS then
 				UI.SetInterfaceMode(InterfaceModeTypes.SELECTION);
 			end
+			
+			-- If a selection is occuring and the city attack interface mode is up, take it down.
+			if UI.GetInterfaceMode() == InterfaceModeTypes.CITY_RANGE_ATTACK then
+				UI.SetInterfaceMode(InterfaceModeTypes.SELECTION);
+			end
 
 			UILens.SetActive("Default");
 
@@ -162,7 +196,7 @@ function OnUnitSelectionChanged( playerID:number, unitID:number, hexI:number, he
 			if religiousStrength > 0 and not UILens.IsLensActive("Religion") then
 				UILens.SetActive("Religion");
 			elseif GameInfo.Units[kUnit:GetUnitType()].FoundCity and (not m_isDisableWaterAvailLens) and pPlayer:GetCities():GetCount() > 0 then
-				UILens.ToggleLayerOn(LensLayers.HEX_COLORING_WATER_AVAILABLITY);			-- Used on the settler lens
+				UILens.ToggleLayerOn(m_HexColoringWaterAvail);			-- Used on the settler lens
 			end
 		else
 			if kUnit ~= nil then
@@ -170,7 +204,7 @@ function OnUnitSelectionChanged( playerID:number, unitID:number, hexI:number, he
 				if religiousStrength > 0 then
 					UILens.SetActive("Default");
 				elseif GameInfo.Units[kUnit:GetUnitType()].FoundCity and (not m_isDisableWaterAvailLens) then
-					UILens.ToggleLayerOff(LensLayers.HEX_COLORING_WATER_AVAILABLITY);
+					UILens.ToggleLayerOff(m_HexColoringWaterAvail);
 				end
 				kUnit = nil; -- Ensure movement radius is turned off.
 			else
@@ -213,15 +247,15 @@ end
 --	Game Engine Event
 -- ===========================================================================
 function OnBeginWonderReveal()
-	UILens.ToggleLayerOff(LensLayers.SELECTION);
-	UILens.ClearLayerHexes(LensLayers.SELECTION);
+	UILens.ToggleLayerOff(m_Selection);
+	UILens.ClearLayerHexes(m_Selection);
 end
 
 -- ===========================================================================
 --	Game Engine Event
 -- ===========================================================================
 function OnEndWonderReveal()
-	UILens.ToggleLayerOn(LensLayers.SELECTION);
+	UILens.ToggleLayerOn(m_Selection);
 end
 
 -- ===========================================================================
@@ -237,7 +271,7 @@ end
 --	Game Engine Event
 -- ===========================================================================
 function OnLensLayerOn( layerNum:number )
-	if layerNum == LensLayers.MOVEMENT_RANGE then
+	if layerNum == m_MovementRange then
 		local pUnit:table = UI.GetHeadSelectedUnit();
 		if pUnit ~= nil then
 			RealizeMoveRadius( pUnit );
@@ -250,9 +284,9 @@ end
 --	Game Engine Event
 -- ===========================================================================
 function OnCombatVisBegin()
-	UILens.ClearLayerHexes( LensLayers.MOVEMENT_RANGE );
-	UILens.ClearLayerHexes( LensLayers.MOVEMENT_ZONE_OF_CONTROL  );
-	UILens.ClearLayerHexes( LensLayers.SELECTION );
+	UILens.ClearLayerHexes( m_MovementRange );
+	UILens.ClearLayerHexes( m_MovementZoneOfControl  );
+	UILens.ClearLayerHexes( m_Selection );
 end
 
 -- ===========================================================================
@@ -329,6 +363,20 @@ function OnUnitPromotionChanged(playerID : number, unitID : number )
 end
 
 -- ===========================================================================
+--	Game Engine Event
+-- ===========================================================================
+function OnUnitTeleported(playerID: number, unitID : number, x : number, y : number)
+	local idLocalPlayer	:number = Game.GetLocalPlayer();
+	if idLocalPlayer > -1 and playerID == idLocalPlayer then
+		local kUnit = UI.GetHeadSelectedUnit();
+		if (kUnit ~= nil) then
+			RealizeMoveRadius( kUnit );
+			RealizeGreatPersonLens( kUnit );
+		end
+	end
+end
+
+-- ===========================================================================
 --	Engine EVENT
 --	Local player changed; likely a hotseat game
 -- ===========================================================================
@@ -341,7 +389,7 @@ function OnLocalPlayerChanged( eLocalPlayer:number , ePrevLocalPlayer:number )
 
 	-- Equivalent to original code, not sure if actually needed
 	if UILens.IsLensActive("Religion") then
-		UILens.ClearLayerHexes( LensLayers.HEX_COLORING_RELIGION );
+		UILens.ClearLayerHexes( m_HexColoringReligion );
 	end
 	
 	if UI.GetInterfaceMode() == InterfaceModeTypes.VIEW_MODAL_LENS then
@@ -349,24 +397,24 @@ function OnLocalPlayerChanged( eLocalPlayer:number , ePrevLocalPlayer:number )
 	end
 	UILens.SetActive("Default");
 
-	if(UILens.IsLayerOn(LensLayers.HEX_COLORING_GREAT_PEOPLE)) then
-		UILens.ClearLayerHexes( LensLayers.HEX_COLORING_GREAT_PEOPLE );
-		UILens.ToggleLayerOff( LensLayers.HEX_COLORING_GREAT_PEOPLE );
+	if(UILens.IsLayerOn(m_HexColoringGreatPeople)) then
+		UILens.ClearLayerHexes( m_HexColoringGreatPeople );
+		UILens.ToggleLayerOff( m_HexColoringGreatPeople );
 	end
 
-	if(UILens.IsLayerOn(LensLayers.HEX_COLORING_WATER_AVAILABLITY)) then
-		UILens.ClearLayerHexes( LensLayers.HEX_COLORING_WATER_AVAILABLITY );
-		UILens.ToggleLayerOff( LensLayers.HEX_COLORING_WATER_AVAILABLITY );
+	if(UILens.IsLayerOn(m_HexColoringWaterAvail)) then
+		UILens.ClearLayerHexes( m_HexColoringWaterAvail );
+		UILens.ToggleLayerOff( m_HexColoringWaterAvail );
 	end
 
-	if(UILens.IsLayerOn(LensLayers.MOVEMENT_ZONE_OF_CONTROL)) then
-		UILens.ClearLayerHexes( LensLayers.MOVEMENT_ZONE_OF_CONTROL );
-		UILens.ToggleLayerOff( LensLayers.MOVEMENT_ZONE_OF_CONTROL );
+	if(UILens.IsLayerOn(m_MovementZoneOfControl)) then
+		UILens.ClearLayerHexes( m_MovementZoneOfControl );
+		UILens.ToggleLayerOff( m_MovementZoneOfControl );
 	end
 
-	if(UILens.IsLayerOn(LensLayers.MOVEMENT_RANGE)) then
-		UILens.ClearLayerHexes( LensLayers.MOVEMENT_RANGE );
-		UILens.ToggleLayerOff( LensLayers.MOVEMENT_RANGE );
+	if(UILens.IsLayerOn(m_MovementRange)) then
+		UILens.ClearLayerHexes( m_MovementRange );
+		UILens.ToggleLayerOff( m_MovementRange );
 	end
 end
 -- ===========================================================================
@@ -410,6 +458,7 @@ function Initialize()
 	Events.LensLayerOn.Add( OnLensLayerOn );
 	Events.LocalPlayerTurnBegin.Add( OnLocalPlayerTurnBegin );
 	Events.PlayerTurnActivated.Add( OnPlayerTurnActivated );
+	Events.UnitTeleported.Add( OnUnitTeleported );
 	Events.UnitPromoted.Add( OnUnitPromotionChanged );
 	Events.UnitSelectionChanged.Add( OnUnitSelectionChanged );
 	Events.UnitSimPositionChanged.Add( UnitSimPositionChanged );

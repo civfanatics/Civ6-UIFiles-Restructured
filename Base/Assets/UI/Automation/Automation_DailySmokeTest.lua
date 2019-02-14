@@ -247,13 +247,13 @@ Tests["LoadGame"].Run = function()
 		return;
 	end
 
-	local hasLaunched = Automation.GetSetParameter("CurrentTest", "HasLanunched", 0);
+	local hasLaunched = Automation.GetSetParameter("CurrentTest", "HasLaunched", 0);
 
 	if (hasLaunched ~= 0) then
 		-- Have we already launched?  If so, some error happened.
 		Automation.SendTestComplete();
 	else
-		Automation.SetSetParameter("CurrentTest", "HasLanunched", 1);
+		Automation.SetSetParameter("CurrentTest", "HasLaunched", 1);
 
 		local loadGame = {};
 

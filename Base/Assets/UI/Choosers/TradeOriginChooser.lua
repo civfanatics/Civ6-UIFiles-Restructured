@@ -121,7 +121,7 @@ end
 -- ===========================================================================
 function OnUnitSelectionChanged( playerID : number, unitID : number, hexI : number, hexJ : number, hexK : number, bSelected : boolean, bEditable : boolean)
 	-- Close if we select a unit
-	if m_AnimSupport:IsVisible() and owner == Game.GetLocalPlayer() and owner ~= -1 then
+	if m_AnimSupport:IsVisible() and playerID ~= -1 and playerID == Game.GetLocalPlayer() then
 		Close();
 	end
 end
@@ -182,6 +182,7 @@ function Initialize()
 	-- Hot-reload events
 	ContextPtr:SetInitHandler(OnInit);
 	ContextPtr:SetShutdown(OnShutdown);
+	
 	LuaEvents.GameDebug_Return.Add(OnGameDebugReturn);
 
 	-- Game Engine Events	

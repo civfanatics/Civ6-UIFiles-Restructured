@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <GameInfo>
   <IconTextureAtlases>
+    <Row Name="ICON_ATLAS_DISTRICTS" IconSize="22" IconsPerRow="8" IconsPerColumn="8" Filename="Districts22.dds"/>
     <Row Name="ICON_ATLAS_DISTRICTS" IconSize="32" IconsPerRow="8" IconsPerColumn="8" Filename="Districts32.dds"/>
 	  <Row Name="ICON_ATLAS_DISTRICTS" IconSize="38" IconsPerRow="8" IconsPerColumn="8" Filename="Districts38.dds"/>
     <Row Name="ICON_ATLAS_DISTRICTS" IconSize="50" IconsPerRow="8" IconsPerColumn="8" Filename="Districts50.dds"/>
@@ -31,6 +32,7 @@
     <Row Name="ICON_DISTRICT_MBANZA"                  Atlas="ICON_ATLAS_DISTRICTS" Index="10"/>
     <Row Name="ICON_DISTRICT_STREET_CARNIVAL"         Atlas="ICON_ATLAS_DISTRICTS" Index="7"/>
     <Row Name="ICON_DISTRICT_ROYAL_NAVY_DOCKYARD"     Atlas="ICON_ATLAS_DISTRICTS" Index="4"/>
+    <Row Name="ICON_DISTRICT_UNDER_CONSTRUCTION"      Atlas="ICON_ATLAS_DISTRICTS" Index="14"/>
 
     <Row Name="ICON_DISTRICT_CITY_CENTER_FOW"           Atlas="ICON_ATLAS_DISTRICTS_FOW" Index="0"/>
     <Row Name="ICON_DISTRICT_HOLY_SITE_FOW"             Atlas="ICON_ATLAS_DISTRICTS_FOW" Index="1"/>

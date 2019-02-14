@@ -1,4 +1,9 @@
 
+
+local m_friendProfile = { name ="LOC_FRIEND_ACTION_PROFILE",	tooltip = "LOC_FRIEND_ACTION_PROFILE_TT",	action = "profile" };
+local m_friendChat =	{ name ="LOC_FRIEND_ACTION_CHAT",		tooltip = "LOC_FRIEND_ACTION_CHAT_TT",		action = "chat" };
+local m_friendInvite =	{ name = "LOC_FRIEND_ACTION_INVITE",	tooltip = "LOC_FRIEND_ACTION_INVITE_TT",	action = "invite" };
+
 function DefaultFriendsSortFunction(a:table,b:table)
 	if not a.PlayingCiv and b.PlayingCiv then
 		return false;
@@ -55,15 +60,39 @@ function OnFriendPulldownCallback(friendID:string, actionType:string)
 	end
 end
 
+function BuildFriendActionList(actionList:table, allowInvites:boolean)
+
+	if allowInvites and Network.HasSingleFriendInvite() then
+		table.insert(actionList, m_friendInvite);
+	end
+
+	if Network.CanViewFriendProfile() then
+		table.insert(actionList, m_friendProfile);
+	end
+
+	if Network.CanShowFriendChatWindow() then
+		table.insert(actionList, m_friendChat);
+	end
+end
+
 function PopulateFriendsInstance(instance:table, friendData:table, friendActions:table, pulldownClickedCallback:ifunction)
 	local friendID:string = friendData.ID;
 	local friendStatus:string = friendData.PlayingCiv and friendData.RichPresence or "LOC_PRESENCE_ONLINE";
+	local hasActions:boolean = (friendActions ~= nil) and (#friendActions > 0);
+
 	instance.PlayerName:SetText(friendData.PlayerName);
 	instance.PlayerStatus:SetText(Locale.Lookup(friendStatus));
 	instance.OnlineIndicator:SetHide(not friendData.PlayingCiv);
 
+	instance.Simple_PlayerName:SetText(friendData.PlayerName);
+	instance.Simple_PlayerStatus:SetText(Locale.Lookup(friendStatus));
+	instance.Simple_OnlineIndicator:SetHide(not friendData.PlayingCiv);
+
+	instance.FriendPulldown:SetHide(not hasActions);
+	instance.FriendBox:SetHide(hasActions);
+
 	instance.FriendPulldown:ClearEntries();
-	if friendActions ~= nil then
+	if hasActions then
 		for _, action in ipairs(friendActions) do
 			controlTable = {};
 			local actionType:string = action.action;

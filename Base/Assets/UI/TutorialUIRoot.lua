@@ -73,8 +73,8 @@ hstructure TutorialItemMeta
 
 	new						: ifunction;
 	destroy					: ifunction;
+	RemoveItem				: ifunction;
 	Initialize				: ifunction;
-
 	SetTutorialLevel		: ifunction;
 	SetIsQueueable			: ifunction;
 	SetIsEndOfChain			: ifunction;
@@ -99,12 +99,12 @@ hstructure TutorialItemMeta
 	SetNextTutorialItemId	: ifunction;
 	SetOverlayEnabled		: ifunction;
 	AddGoal					: ifunction;
+	RemoveGoal				: ifunction;
 	SetCompletedGoals		: ifunction;
 end
 
 hstructure TutorialItem
 	meta				: TutorialItemMeta;
-
 	ScenarioName		: string;		-- Name for set of tutorials in this "scenario"
 	ID					: string;		-- Tutorial enum ID
 	TutorialLevel		: number;		-- At which player experience level does this message appear?
@@ -155,7 +155,8 @@ local m_uiDebugItemList			: table			= {};								-- DEBUG MODE ONLY: ui list of 
 local m_isGoalsAutoRemove		: boolean		= false;							-- Are goals automatically removed (1 turn after completing)
 local m_MovieStopCallback		: ifunction		= nil;								-- Function to callback once movie is stopped (or click stopped).
 local m_beforeEveryOpen			: ifunction		= nil;								-- Function to run before every Open() is called
-local m_turn					: number		= -1;									-- Track the current turn; required to prevent edge case where local player turn can be re-signaled with same turn when there are remaining moves for a unit.
+local m_turn					: number		= -1;								-- Track the current turn; required to prevent edge case where local player turn can be re-signaled with same turn when there are remaining moves for a unit.
+local m_itemsCompleted			: table			= {};								-- List of items/events that have already been checked.
 
 local m_LockedProductionHash	:number = -1;	-- cached production type hash value for when production is locked during the tutorial
 local m_LockedResearchHash		:number = -1;	-- cached research type hash value for when research is locked during the tutorial
@@ -183,7 +184,11 @@ end
 
 -- ===========================================================================
 function TutorialItem.destroy( self : TutorialItem )
-	m_unseen[scenarioName][ self.ID ] = nil;
+	m_unseen[m_currentScenarioName][ self.ID ] = nil;
+end
+
+function TutorialItem.RemoveItem( ID )
+	m_unseen[m_currentScenarioName][ID] = nil;
 end
 
 -- ===========================================================================
@@ -290,6 +295,18 @@ function TutorialItem:AddGoal( goalId:string, goalText:string, goalTooltip:strin
 		ItemId		= self.ID };
 
 	table.insert( self.Goals, goalItem );
+end
+
+-- ===========================================================================
+function TutorialItem:RemoveGoal( goalId:string )
+	if self.Goals ~= nil then
+		for v,goalItem in ipairs(self.Goals) do
+			if goalItem.Id == goalId then
+				table.remove( self.Goals, v );
+				return;	-- There SHOULD be only one of each goal.  See AddGoal
+			end
+		end
+	end
 end
 
 
@@ -518,20 +535,20 @@ end
 function RemoveLoadScreenClosedWatch()
 	m_isLoadScreenUp = false;
 	Events.LoadScreenClose.Remove( OnLoadScreenClose );
-
-	-- Check if any of the events fired before the tutorial raises are suppose
-	-- to raise a tutorial event...
-	if m_active == nil then 
-		for _,eventName in ipairs(m_preLoadEvents) do
-			TutorialCheck(eventName);
-			if m_active ~= nil then 
-				break;
-			end
-		end
-	end
-	m_preLoadEvents = {};
 end
 
+-- ===========================================================================
+function CheckPreLoadEvents()
+	-- Check if any of the events fired before the tutorial raises are suppose
+	-- to raise a tutorial event...
+	if not m_isLoadScreenUp then
+		-- Queue them all up
+		for _,eventName in ipairs(m_preLoadEvents) do
+			TutorialCheck(eventName);
+		end
+		m_preLoadEvents = {};
+	end
+end
 -- ===========================================================================
 --	Force the system into a certain tutorial level.
 -- ===========================================================================
@@ -940,6 +957,14 @@ function CheckLockedUnit()
 			end
 		end
 	end
+end
+
+-- ===========================================================================
+-- Goal Checks
+-- ===========================================================================
+
+function TutorialItemCompleted( tutorialItem:string )
+	return m_itemsCompleted[tutorialItem] ~= nil;
 end
 
 -- ===========================================================================
@@ -1368,6 +1393,12 @@ function KeyHandler( key:number, pInputStruct:table )
 			end
 		end	
 	end
+
+	-- Raise pause menu.  (InGame may not be getting input due to tutorial lockdown)
+	if key == Keys.ESC then
+		LuaEvents.InGame_OpenInGameOptionsMenu();
+	end		
+	
 	return false;
 end
 
@@ -1425,12 +1456,16 @@ function RefreshTutorialLevel()
 
 	m_tutorialLevel = UserConfiguration.TutorialLevel()
 
+	if(GlobalParameters.DISABLE_TUTORIAL) then
+		m_tutorialLevel = TUTORIAL_LEVEL_DISABLED;
+	end
+
 	if GameConfiguration.IsAnyMultiplayer() then
-		m_tutorialLevel = TUTORIAL_LEVEL_DISABLED
+		m_tutorialLevel = TUTORIAL_LEVEL_DISABLED;
 	end
 
 	if Benchmark.IsEnabled() then
-		m_tutorialLevel = TUTORIAL_LEVEL_DISABLED
+		m_tutorialLevel = TUTORIAL_LEVEL_DISABLED;
 	end
 end
 
@@ -1738,6 +1773,8 @@ function TutorialCheck( listenerName:string )
 	local pPlayer:table = Players[playerID];
 	if pPlayer:IsTurnActive() or IsListenerAbleToProcessOnNonPlayerTurn( listenerName ) then
 
+		m_itemsCompleted[listenerName] = true;
+
 		-- Current item?  If so, mark it useen if done matches
 		if m_active ~= nil then
 			if IsMatchingDoneListener( m_active, listenerName ) and m_active.IsDoneFunc() then
@@ -2004,6 +2041,9 @@ function OnLocalPlayerTurnEnd()				TutorialCheck("LocalPlayerTurnEnd"); end
 
 -- ===========================================================================
 function OnLocalPlayerTurnBegin()
+
+	-- See if there were any events queued up during the load/generation phase
+	CheckPreLoadEvents();
 
 	-- Prevent local player turn being re-raised on the same turn.  (Edge case, but can happen when there is remaining movement that is required to move)
 	local turn :number= Game.GetCurrentGameTurn();
@@ -3182,6 +3222,7 @@ end
 function LoadItems()
 	m_unseen = {};		-- Clear
 	m_turn	 = -1;
+	m_itemsCompleted = {};
 
 	-- Initialize the tutorial system.
 	-- If it's a first run, be sure to initialize first run info; otherwise

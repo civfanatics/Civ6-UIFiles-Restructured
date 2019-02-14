@@ -12,12 +12,20 @@ local m_preSaveMainMenuOptions:	table = {};
 local m_defaultMainMenuOptions:	table = {};
 local m_singlePlayerListOptions:table = {};
 local m_hasSaves:boolean = false;
+local m_cloudNotify:number = CloudNotifyTypes.CLOUDNOTIFY_NONE;
+local m_hasCloudUnseenComplete:boolean = false; -- Do we have completed PlayByCloud games that we haven't seen yet?
+local m_checkedCloudNotify:boolean = false;	-- Have we checked for cloud notifications?
 local m_currentOptions:table = {};		--Track which main menu options are being displayed and selected. Indices follow the format of {optionControl:table, isSelected:boolean}
 local m_initialPause = 1.5;				--How long to wait before building the main menu options when the game first loads
 local m_internetButton:table = nil;		--Cache internet button so it can be updated when online status events fire
-local m_multiplayerButton:table = nil;	--Cache multiplayer button.
+local m_multiplayerButton:table = nil;	--Cache multiplayer button so it can be updated if a new cloud turn comes in.
+local m_cloudGamesButton:table = nil;	--Cache cloud games button so it can be updated if a new cloud turn comes in.
 local m_resumeButton:table = nil;		--Cache resume button so it can be updated when FileListQueryResults event fires
 local m_scenariosButton:table = nil;	--Cache scenarios button so it can be updated later.
+local m_isQuitting :boolean = false;	-- Is the application shutting down (after user approval.)
+
+g_XP1WasEnabled = nil;					-- Track whether the expansion was enabled to avoid resetting the movie/logo.
+g_XP2WasEnabled = nil;					-- Track whether the expansion was enabled to avoid resetting the movie/logo.
 
 
 -- ===========================================================================
@@ -83,6 +91,13 @@ end
 
 
 function OnPlayCiv6()
+	
+	-- Avoid double clicks.
+	if(_ClickedPlayNow) then 
+		return;
+	end
+	_ClickedPlayNow = true;
+	
 	local save = Options.GetAppOption("Debug", "PlayNowSave");
 	if(save ~= nil) then
 		Network.LeaveGame();
@@ -157,6 +172,11 @@ function OnMods()
 	Close();
 end
 
+function OnHallofFame()
+	UIManager:QueuePopup(Controls.HallofFame, PopupPriority.Current);
+	Close();
+end
+
 -- ===========================================================================
 function OnPlayMultiplayer()
 	UIManager:QueuePopup(Controls.MultiplayerSelect, PopupPriority.Current);
@@ -198,8 +218,6 @@ function OnMarketingPushDataUpdated()
 	UpdateMotD();
 end
 
-Events.MarketingPushDataUpdated.Add( OnMarketingPushDataUpdated );
-
 -- ===========================================================================
 --	Engine Event
 -- ===========================================================================
@@ -207,13 +225,30 @@ function OnUserRequestClose()
     LuaEvents.MainMenu_UserRequestClose();
 end
 
+-- ===========================================================================
+--	EVENT
+--	Application has been confirmed to close.
+-- ===========================================================================
+function OnUserConfirmedClose()
+	m_isQuitting = true;
+	Controls.SubMenuSlide:SetAlpha( 0 ); -- Don't toggle visibility so surrounding stack doesn't collapse.
+end
+
     -- ===========================================================================
 function OnGraphicsBenchmark()
 	Benchmark.RunGraphicsBenchmark("GraphicsBenchmark.Civ6Save");
 end
 
+function OnExp2GraphicsBenchmark()
+	Benchmark.RunExp2GraphicsBenchmark("XP2Benchmark.Civ6Save", SaveDirectories.BENCHMARK, "Automation_StandardTests.lua; Automation_BenchmarkCamera_Capitals.lua");
+end
+
 function OnAIBenchmark()
 	Benchmark.RunAIBenchmark("AIBenchmark.Civ6Save");
+end
+
+function OnExp2AIBenchmark()
+	Benchmark.RunExp2AIBenchmark("XP2Benchmark.Civ6Save");
 end
 
 -- ===========================================================================
@@ -223,11 +258,39 @@ function OnCredits()
 end
 
 -- ===========================================================================
+function OnCloudTurnCheckComplete(notifyType :number, turnGameName :string, inGames :boolean)
+	m_cloudNotify = notifyType;
+	if (not ContextPtr:IsHidden()) then
+		UpdateCloudGamesButton();
+		UpdateMultiplayerButton();
+	end
+end
+
+-- ===========================================================================
+function OnCloudUnseenCompleteCheckComplete(haveCompletedGame :boolean, gameName :string)
+	m_hasCloudUnseenComplete = haveCompletedGame;
+	if (not ContextPtr:IsHidden()) then
+		UpdateCloudGamesButton();
+		UpdateMultiplayerButton();
+	end
+end
+
+-- ===========================================================================
 -- Multiplayer Select Screen
 -- ===========================================================================
 local InternetButtonOnlineStr : string = Locale.Lookup("LOC_MULTIPLAYER_INTERNET_GAME_TT");
 local InternetButtonOfflineStr : string = Locale.Lookup("LOC_MULTIPLAYER_INTERNET_GAME_OFFLINE_TT");
-local MultiplayerButtonTTStr : string = Locale.Lookup("LOC_MAINMENU_MULTIPLAYER_TT");
+local CloudButtonTTStr : string = Locale.Lookup("LOC_MULTIPLAYER_CLOUD_GAME_TT");
+local CloudNotLoggedInTTStr : string = Locale.Lookup("LOC_MULTIPLAYER_CLOUD_GAME_NO_LOGIN_TT");
+local CloudButtonUnseenCompleteGameTTStr : string = Locale.Lookup("LOC_MULTIPLAYER_CLOUD_UNSEEN_COMPLETE_GAME_TT");
+local CloudButtonHaveTurnTTStr : string = Locale.Lookup("LOC_MULTIPLAYER_CLOUD_GAME_HAVE_TURN_TT");
+local CloudButtonGameReadyTTStr: string = Locale.Lookup("LOC_MULTIPLAYER_CLOUD_GAME_GAME_READY_TT");
+local CloudButtonNewMPModeTTStr : string = Locale.Lookup("LOC_MULTIPLAYER_CLOUD_GAME_NEW_MODE_TT");
+local MultiplayerButtonTTStr : string = Locale.Lookup("LOC_MAINMENU_MULTIPLAYER_BASE_TT");
+local MultiplayerButtonHaveTurnTTStr : string = Locale.Lookup("LOC_MAINMENU_MULTIPLAYER_HAVE_CLOUD_TURN_TT");
+local MultiplayerButtonGameReadyTTStr : string = Locale.Lookup("LOC_MAINMENU_MULTIPLAYER_GAME_READY_TT");
+local MultiplayerButtonUnseenCompleteTTStr : string = Locale.Lookup("LOC_MAINMENU_MULTIPLAYER_UNSEEN_COMPLETE_GAME_TT");
+local MultiplayerButtonNewMPModeTTStr : string = Locale.Lookup("LOC_MAINMENU_MULTIPLAYER_NEW_MP_MODE_TT");
 
 -- ===========================================================================
 function OnInternet()
@@ -248,6 +311,7 @@ function UpdateAIBenchmark(buttonControl)
 	
 	if(m_aiButton ~= nil) then
 
+		--Requires Montezuma DLC
 		local allowed = false;
 		local modId = "02A8BDDE-67EA-4D38-9540-26E685E3156E";
 		local modHandle = Modding.GetModHandle(modId);
@@ -266,6 +330,72 @@ function UpdateAIBenchmark(buttonControl)
 			m_aiButton.ButtonLabel:SetColorByName( "ButtonCS" );
 		else
 			aiButtonTooltip = aiButtonTooltip .. "[NEWLINE]" .. Locale.Lookup("LOC_BENCHMARK_AI_TT_ERROR");
+			m_aiButton.OptionButton:SetDisabled(true);
+			m_aiButton.Top:SetToolTipString(aiButtonTooltip);
+			m_aiButton.ButtonLabel:SetColorByName( "ButtonDisabledCS" );
+		end
+	end
+end
+
+function UpdateExp2AIBenchmark(buttonControl)
+	if (buttonControl ~= nil) then
+		m_aiButton = buttonControl;
+	end
+	
+	if(m_aiButton ~= nil) then
+
+		--Requires expansion 2
+		local allowed = false;
+		local modId = "4873eb62-8ccc-4574-b784-dda455e74e68";
+		local modHandle = Modding.GetModHandle(modId);
+		if(modHandle ~= nil) then
+			local modInfo = Modding.GetModInfo(modHandle);
+			if(modInfo.Allowance ~= false) then
+				allowed = true;
+			end
+		end
+
+		local aiButtonTooltip = Locale.Lookup("LOC_BENCHMARK_EXP2_AI_TT");
+
+		if(allowed) then
+			m_aiButton.OptionButton:SetDisabled(false);
+			m_aiButton.Top:SetToolTipString(aiButtonTooltip);
+			m_aiButton.ButtonLabel:SetColorByName( "ButtonCS" );
+		else
+			aiButtonTooltip = aiButtonTooltip .. "[NEWLINE]" .. Locale.Lookup("LOC_BENCHMARK_EXP2_AI_TT_ERROR");
+			m_aiButton.OptionButton:SetDisabled(true);
+			m_aiButton.Top:SetToolTipString(aiButtonTooltip);
+			m_aiButton.ButtonLabel:SetColorByName( "ButtonDisabledCS" );
+		end
+	end
+end
+
+function UpdateExp2GraphicsBenchmark(buttonControl)
+	if (buttonControl ~= nil) then
+		m_aiButton = buttonControl;
+	end
+	
+	if(m_aiButton ~= nil) then
+
+		--Requires expansion 2
+		local allowed = false;
+		local modId = "4873eb62-8ccc-4574-b784-dda455e74e68";
+		local modHandle = Modding.GetModHandle(modId);
+		if(modHandle ~= nil) then
+			local modInfo = Modding.GetModInfo(modHandle);
+			if(modInfo.Allowance ~= false) then
+				allowed = true;
+			end
+		end
+
+		local aiButtonTooltip = Locale.Lookup("LOC_BENCHMARK_EXP2_GRAPHICS_TT");
+
+		if(allowed) then
+			m_aiButton.OptionButton:SetDisabled(false);
+			m_aiButton.Top:SetToolTipString(aiButtonTooltip);
+			m_aiButton.ButtonLabel:SetColorByName( "ButtonCS" );
+		else
+			aiButtonTooltip = aiButtonTooltip .. "[NEWLINE]" .. Locale.Lookup("LOC_BENCHMARK_EXP2_GRAPHICS_TT_ERROR");
 			m_aiButton.OptionButton:SetDisabled(true);
 			m_aiButton.Top:SetToolTipString(aiButtonTooltip);
 			m_aiButton.ButtonLabel:SetColorByName( "ButtonDisabledCS" );
@@ -293,14 +423,101 @@ function UpdateInternetButton(buttonControl: table)
 	end
 end
 
+function UpdateCloudGamesButton(buttonControl: table)
+	if (buttonControl ~=nil) then
+		m_cloudGamesButton = buttonControl;
+	end
+	
+	-- Your turn in a cloud game?
+	if(m_cloudGamesButton ~= nil) then
+		local isFullyLoggedIn = FiraxisLive.IsFullyLoggedIn() and FiraxisLive.IsPlatformOrFullAccount();
+		local seenPBC = Options.GetUserOption("Interface", "SeenPlayByCloudLobby");
+		if(not isFullyLoggedIn) then
+			m_cloudGamesButton.OptionButton:SetDisabled(true);
+			m_cloudGamesButton.Top:SetToolTipString(CloudNotLoggedInTTStr);
+			m_cloudGamesButton.ButtonLabel:SetColorByName( "ButtonDisabledCS" );
+		elseif (seenPBC == nil or seenPBC == 0) then
+			-- Player has never looked at the PBC lobby, show explaination point to indicate this is a new multiplayer mode.
+			m_cloudGamesButton.OptionButton:SetDisabled(false);
+			m_cloudGamesButton.Top:SetToolTipString(CloudButtonNewMPModeTTStr);
+			m_cloudGamesButton.ButtonLabel:SetText(Locale.Lookup("LOC_MULTIPLAYER_CLOUD_NEW_MODE"));
+			m_cloudGamesButton.ButtonLabel:SetColorByName( "ButtonCS" );
+		elseif (m_cloudNotify ~= CloudNotifyTypes.CLOUDNOTIFY_NONE and m_cloudNotify ~= CloudNotifyTypes.CLOUDNOTIFY_ERROR) then
+			m_cloudGamesButton.OptionButton:SetDisabled(false);
+			local CloudTTStr = GetCloudButtonTTForNotify(m_cloudNotify);
+			m_cloudGamesButton.Top:SetToolTipString(CloudTTStr);
+			m_cloudGamesButton.ButtonLabel:SetText(Locale.Lookup("LOC_MULTIPLAYER_CLOUD_GAME_HAVE_CLOUD_NOTIFY"));
+			m_cloudGamesButton.ButtonLabel:SetColorByName( "ButtonCS" );
+		elseif (m_hasCloudUnseenComplete) then
+			m_cloudGamesButton.OptionButton:SetDisabled(false);
+			m_cloudGamesButton.Top:SetToolTipString(CloudButtonUnseenCompleteGameTTStr .. "[NEWLINE][NEWLINE]" .. CloudButtonTTStr);
+			m_cloudGamesButton.ButtonLabel:SetText(Locale.Lookup("LOC_MULTIPLAYER_CLOUD_UNSEEN_COMPLETE_GAME"));
+			m_cloudGamesButton.ButtonLabel:SetColorByName( "ButtonCS" );
+		else
+			m_cloudGamesButton.OptionButton:SetDisabled(false);
+			m_cloudGamesButton.Top:SetToolTipString(CloudButtonTTStr);
+			m_cloudGamesButton.ButtonLabel:SetText(Locale.Lookup("LOC_MULTIPLAYER_CLOUD_GAME"));
+			m_cloudGamesButton.ButtonLabel:SetColorByName( "ButtonCS" );
+		end
+	end
+end
+
+function GetCloudButtonTTForNotify(cloudNotifyType :number)
+	local cloudTTStr :string;
+	if(cloudNotifyType == CloudNotifyTypes.CLOUDNOTIFY_YOURTURN) then
+		cloudTTStr = CloudButtonHaveTurnTTStr;
+	elseif(cloudNotifyType == CloudNotifyTypes.CLOUDNOTIFY_GAMEREADY) then
+		cloudTTStr = CloudButtonGameReadyTTStr;
+	else
+		-- unhandled type.  just show the default text.
+		return CloudButtonTTStr;
+	end
+
+	cloudTTStr = cloudTTStr .. "[NEWLINE][NEWLINE]" .. CloudButtonTTStr;
+	return cloudTTStr;
+end
+
 function UpdateMultiplayerButton(buttonControl: table)
 	if (buttonControl ~=nil) then
 		m_multiplayerButton = buttonControl;
 	end
 
-	m_multiplayerButton.Top:SetToolTipString(MultiplayerButtonTTStr);
-	m_multiplayerButton.ButtonLabel:SetText(Locale.Lookup("LOC_PLAY_MULTIPLAYER"));
-	m_multiplayerButton.OptionButton:SetEnabled(UI.HasFeature("Multiplayer"));
+	local seenPBC = Options.GetUserOption("Interface", "SeenPlayByCloudLobby");
+	
+	-- Your turn in a cloud game?
+	if(m_multiplayerButton ~= nil) then
+		if (seenPBC == nil or seenPBC == 0) then
+			m_multiplayerButton.Top:SetToolTipString(MultiplayerButtonNewMPModeTTStr .. "[NEWLINE][NEWLINE]" .. MultiplayerButtonTTStr);
+			m_multiplayerButton.ButtonLabel:SetText(Locale.Lookup("LOC_PLAY_MULTIPLAYER_NEW_MP_MODE"));
+		elseif (m_cloudNotify ~= CloudNotifyTypes.CLOUDNOTIFY_NONE and m_cloudNotify ~= CloudNotifyTypes.CLOUDNOTIFY_ERROR) then
+			local cloudTTStr = GetMPButtonTTForNotify(m_cloudNotify);
+			m_multiplayerButton.Top:SetToolTipString(cloudTTStr);
+			m_multiplayerButton.ButtonLabel:SetText(Locale.Lookup("LOC_PLAY_MULTIPLAYER_HAVE_CLOUD_NOTIFY"));
+		elseif (m_hasCloudUnseenComplete) then
+			m_multiplayerButton.Top:SetToolTipString(MultiplayerButtonUnseenCompleteTTStr .. "[NEWLINE][NEWLINE]" .. MultiplayerButtonTTStr);
+			m_multiplayerButton.ButtonLabel:SetText(Locale.Lookup("LOC_PLAY_MULTIPLAYER_UNSEEN_COMPLETE_GAME"));
+		else
+			m_multiplayerButton.Top:SetToolTipString(MultiplayerButtonTTStr);
+			m_multiplayerButton.ButtonLabel:SetText(Locale.Lookup("LOC_PLAY_MULTIPLAYER"));
+		end
+
+		m_multiplayerButton.OptionButton:SetEnabled(UI.HasFeature("Multiplayer"));
+	end
+end
+
+function GetMPButtonTTForNotify(cloudNotifyType :number)
+	local cloudTTStr :string;
+	if(cloudNotifyType == CloudNotifyTypes.CLOUDNOTIFY_YOURTURN) then
+		cloudTTStr = MultiplayerButtonHaveTurnTTStr;
+	elseif(cloudNotifyType == CloudNotifyTypes.CLOUDNOTIFY_GAMEREADY) then
+		cloudTTStr = MultiplayerButtonGameReadyTTStr;
+	else
+		-- unhandled type.  just show the default text.
+		return MultiplayerButtonTTStr;
+	end
+
+	cloudTTStr = cloudTTStr  .. "[NEWLINE][NEWLINE]" .. MultiplayerButtonTTStr;
+	return cloudTTStr;
 end
 
 -- ===========================================================================
@@ -314,6 +531,19 @@ end
 function OnHotSeat()
 	LuaEvents.ChangeMPLobbyMode(MPLobbyTypes.HOTSEAT);
 	LuaEvents.MainMenu_RaiseHostGame();
+	Close();
+end
+
+-- ===========================================================================
+function OnPlayByCloud()
+	LuaEvents.ChangeMPLobbyMode(MPLobbyTypes.PLAYBYCLOUD);
+	UIManager:QueuePopup( Controls.Lobby, PopupPriority.Current );
+	Close();
+end
+
+-- ===========================================================================
+function OnCloud()
+	UIManager:QueuePopup( Controls.CloudGameScreen, PopupPriority.Current );
 	Close();
 end
 
@@ -466,14 +696,18 @@ local m_SinglePlayerSubMenu :table = {
 							};
 
 local m_MultiPlayerSubMenu :table = {
+								{label = "LOC_MULTIPLAYER_CLOUD_GAME",		callback = OnPlayByCloud,	tooltip = "LOC_MULTIPLAYER_CLOUD_GAME_TT", buttonState = UpdateCloudGamesButton},
 								{label = "LOC_MULTIPLAYER_INTERNET_GAME",	callback = OnInternet,		tooltip = "LOC_MULTIPLAYER_INTERNET_GAME_TT", buttonState = UpdateInternetButton},
 								{label = "LOC_MULTIPLAYER_LAN_GAME",		callback = OnLANGame,		tooltip = "LOC_MULTIPLAYER_LAN_GAME_TT"},
 								{label = "LOC_MULTIPLAYER_HOTSEAT_GAME",	callback = OnHotSeat,		tooltip = "LOC_MULTIPLAYER_HOTSEAT_GAME_TT"},
+								--{label = "LOC_MULTIPLAYER_CLOUD_GAME",		callback = OnCloud,			tooltip = "LOC_MULTIPLAYER_CLOUD_GAME_TT"},
 							};
 
 local m_BenchmarkSubMenu :table = {
-								{label = "LOC_BENCHMARK_GRAPHICS",			callback = OnGraphicsBenchmark,	tooltip = "LOC_BENCHMARK_GRAPHICS_TT"},
-								{label = "LOC_BENCHMARK_AI",				callback = OnAIBenchmark,		tooltip = "LOC_BENCHMARK_AI_TT", buttonState = UpdateAIBenchmark},
+								{label = "LOC_BENCHMARK_GRAPHICS",			callback = OnGraphicsBenchmark,		tooltip = "LOC_BENCHMARK_GRAPHICS_TT"},
+								{label = "LOC_BENCHMARK_AI",				callback = OnAIBenchmark,			tooltip = "LOC_BENCHMARK_AI_TT", buttonState = UpdateAIBenchmark},
+								{label = "LOC_BENCHMARK_EXP2_GRAPHICS",		callback = OnExp2GraphicsBenchmark,	tooltip = "LOC_BENCHMARK_EXP2_GRAPHICS_TT", buttonState = UpdateExp2GraphicsBenchmark},
+								{label = "LOC_BENCHMARK_EXP2_AI",			callback = OnExp2AIBenchmark,		tooltip = "LOC_BENCHMARK_EXP2_AI_TT", buttonState = UpdateExp2AIBenchmark},
 							};
 
 -- ===========================================================================
@@ -489,7 +723,8 @@ local m_defaultMainMenuOptions :table = {
 								{label = "LOC_SINGLE_PLAYER",				callback = OnSinglePlayer,	tooltip = "LOC_MAINMENU_SINGLE_PLAYER_TT",	submenu = m_SinglePlayerSubMenu}, 
 								{label = "LOC_PLAY_MULTIPLAYER",			callback = OnMultiPlayer,	tooltip = "LOC_MAINMENU_MULTIPLAYER_TT",	submenu = m_MultiPlayerSubMenu, buttonState = UpdateMultiplayerButton},
 								{label = "LOC_MAIN_MENU_OPTIONS",			callback = OnOptions,	tooltip = "LOC_MAINMENU_GAME_OPTIONS_TT"},
-								{label = "LOC_MAIN_MENU_ADDITIONAL_CONTENT",				callback = OnMods,	tooltip = "LOC_MAIN_MENU_ADDITIONAL_CONTENT_TT"},
+								{label = "LOC_MAIN_MENU_ADDITIONAL_CONTENT", callback = OnMods,	tooltip = "LOC_MAIN_MENU_ADDITIONAL_CONTENT_TT"},
+								{label = "LOC_MAIN_MENU_HALL_OF_FAME",		callback = OnHallofFame, tooltip = "LOC_MAIN_MENU_HALL_OF_FAME_TT"},
 								{label = "LOC_MAIN_MENU_TUTORIAL",			callback = OnTutorial,	tooltip = "LOC_MAINMENU_TUTORIAL_TT"},
 								{label = "LOC_MAIN_MENU_BENCH",				callback = OnBenchmark,	tooltip = "LOC_MAINMENU_BENCHMARK_TT",			submenu = m_BenchmarkSubMenu},
 								{label = "LOC_MAIN_MENU_CREDITS",			callback = OnCredits,	tooltip = "LOC_MAINMENU_CREDITS_TT"},
@@ -713,11 +948,16 @@ end
 -- =============================================================================
 function BuildAllMenus()
 
+	if m_isQuitting then 
+		return; 
+	end
+
 	-- Reset cached buttons to make sure we don't reference reused instances
 	m_resumeButton = nil;
 	m_internetButton = nil;
 	m_scenariosButton = nil;
 	m_multiplayerButton = nil;
+	m_cloudGamesButton = nil;
 
 	-- WISHLIST: When we rebuild the menus, let's check to see if there are ANY saved games whatsoever.  
 	-- If none exist, then do not display the option in the submenu. (See: OnFileListQueryResults)
@@ -743,6 +983,10 @@ end
 --	Restart animation on show
 -- ===========================================================================
 function OnShow()
+
+	-- Re-enable the play now button.
+	_ClickedPlayNow = nil;
+
 	local save = Options.GetAppOption("Debug", "PlayNowSave");
 	if (save ~= nil) then
 		--If we have a save specified in AppOptions, then only display the play button
@@ -756,7 +1000,7 @@ function OnShow()
 
 	local pFriends = Network.GetFriends();
 	if (pFriends ~= nil) then
-		pFriends:SetRichPresence("location", "LOC_PRESENCE_IN_SHELL");
+		pFriends:SetRichPresence("civPresence", "LOC_PRESENCE_IN_SHELL");
 	end
 
 	local gameType = SaveTypes.SINGLE_PLAYER;
@@ -771,10 +1015,26 @@ function OnShow()
 	if (not m_bHasShownError and error ~= nil) then
 		m_bHasShownError = true;
 
-		local error_string = Locale.Lookup("LOC_GAME_START_ERROR_DESC") .. "[NEWLINE][NEWLINE]" .. Locale.Lookup("LOC_GAME_START_ERROR_CODE", tostring(error));
+		local reasonString;
+		if error == DB.MakeHash("UNKNOWN_VERSION") then
+			reasonString = "LOC_GAME_START_ERROR_UNKNOWN_VERSION";
+		elseif error == DB.MakeHash("MOD_CONTENT") then
+			reasonString = "LOC_GAME_START_ERROR_MOD_CONTENT";
+		elseif error == DB.MakeHash("MOD_CONFIG") then
+			reasonString = "LOC_GAME_START_ERROR_MOD_CONFIG";
+		elseif error == DB.MakeHash("MOD_OWNERSHIP") then
+			reasonString = "LOC_GAME_START_ERROR_MOD_OWNERSHIP";
+		else
+			reasonString = string.format("%X", error);
+		end
+
+		local error_string = Locale.Lookup("LOC_GAME_START_ERROR_DESC") .. "[NEWLINE][NEWLINE]" .. Locale.Lookup("LOC_GAME_START_ERROR_CODE", reasonString);
 
 		LuaEvents.MainMenu_LaunchError(error_string);
 	end
+
+	m_checkedCloudNotify = false;
+	UpdateCheckCloudNotify();
 end
 
 function OnHide()
@@ -817,17 +1077,105 @@ end
 
 -- ===========================================================================
 function OnFiraxisLiveActivate(bActive)
+	UpdateCheckCloudNotify();
+end
+
+function UpdateCheckCloudNotify()
+	if(not m_checkedCloudNotify) then
+		local kandoConnected = FiraxisLive.IsFiraxisLiveLoggedIn();
+		if(kandoConnected) then
+			FiraxisLive.SetAutoCloudNotificationChecks(true); -- continue polling the turn notification check in the future.
+			local started = FiraxisLive.CheckForCloudNotifications();
+			if(started) then
+				m_checkedCloudNotify = true;
+			end
+		end
+	end
 end
 
 -- ===========================================================================
 function OnMy2KLinkAccountResult(bSuccess)
+	-- account link status changes can toggle the cloud games button.
+	UpdateCloudGamesButton();
 end
 
+-- ===========================================================================
+-- Quick utility function to determine if Rise and Fall is installed.
+function Expansion1IsEnabled()
+	local id = "1B28771A-C749-434B-9053-D1380C553DE9";
+	return Modding.IsModEnabled(id);
+end
+
+-- Quick utility function to determine if Gathering Storm is installed.
+function Expansion2IsEnabled()
+	local id = "4873eb62-8ccc-4574-b784-dda455e74e68";
+	return Modding.IsModEnabled(id);
+end
+
+-- ===========================================================================
+function OnGameplayContentChanged( kEvent )
+
+	if(kEvent.Success and kEvent.ConfigurationChanged) then
+
+		local logoTexture;
+		local logoMovie;
+		local xp1Enabled = Expansion1IsEnabled();
+		local xp2Enabled = Expansion2IsEnabled();
+
+		--change image logo.
+		if(Expansion2IsEnabled()) then
+			if(not g_XP2WasEnabled) then	-- Only update, if changed.
+				logoTexture = "Shell_LogoEXP2.dds";
+				logoMovie = "Expansion2FrontEndBackground.bk2";
+			end
+		elseif( Expansion1IsEnabled() ) then
+			if(not g_XP1WasEnabled) then	-- Only update, if changed.
+				logoTexture = "Shell_LogoEXP.dds";
+				logoMovie = "Expansion1FrontEndBackground.bk2";
+			end
+		else
+			-- Only update, if changed.
+			if(g_XP2WasEnabled or g_XP1WasEnabled) then
+				logoTexture = "MainLogo.dds";
+				logoMovie = "TitleBG.bk2";
+			end
+		end
+
+		-- Update cache.
+		g_XP1WasEnabled = xp1Enabled;
+		g_XP2WasEnabled = xp2Enabled;
+	
+		-- If there are changes, apply them.
+		if(logoTexture and logoMovie) then
+			
+			-- change texture
+			Controls.Logo:SetTexture(logoTexture);
+
+			-- change movie
+			local movieControl:table = ContextPtr:LookUpControl("/FrontEnd/BackgroundMovie");
+			if(movieControl ~= nil) then
+				movieControl:SetMovie(logoMovie, true);
+			end
+
+		end
+	end
+end
 
 -- ===========================================================================
 function Initialize()
 
 	UI.CheckUserSetup();
+	UIManager:DisablePopupQueue( false );	-- If coming back from a (PBC) game, it is possible this may have been left on; ensure popups work or the main menu won't show.	
+
+	-- Remove the Play By Cloud option if it is not available
+	if(not Network.HasCapability("CloudGame")) then
+		local l_CloudGame : table = { label = "LOC_MULTIPLAYER_CLOUD_GAME" };
+		RemoveOptionFromMenu(m_MultiPlayerSubMenu, l_CloudGame);
+	end
+
+	if(not Network.HasCapability("FiraxisLiveSupport")) then
+		Controls.My2KContents:SetShow(false);
+	end
 
 	ContextPtr:SetShowHandler( OnShow );
 	
@@ -839,13 +1187,22 @@ function Initialize()
 		Controls.MotDLogo:RegisterCallback( Mouse.eLClick, OnCycleMotD );
 	end
 
+	g_XP1WasEnabled = Expansion1IsEnabled();
+	g_XP2WasEnabled = Expansion2IsEnabled();
+
 	-- Game Events
 	Events.SteamServersConnected.Add( UpdateInternetButton );
 	Events.SteamServersDisconnected.Add( UpdateInternetButton );
 	Events.MultiplayerGameLaunched.Add( OnGameLaunched );
     Events.UserRequestClose.Add( OnUserRequestClose );
+	Events.UserConfirmedClose.Add( OnUserConfirmedClose );
+	Events.CloudTurnCheckComplete.Add( OnCloudTurnCheckComplete );
+	Events.CloudUnseenCompleteCheckComplete.Add( OnCloudUnseenCompleteCheckComplete );
 	Events.FiraxisLiveActivate.Add( OnFiraxisLiveActivate );
 	Events.My2KLinkAccountResult.Add( OnMy2KLinkAccountResult );
+	Events.MarketingPushDataUpdated.Add( OnMarketingPushDataUpdated );
+
+	Events.FinishedGameplayContentConfigure.Add( OnGameplayContentChanged );
 
 	-- LUA Events
 	LuaEvents.FileListQueryResults.Add( OnFileListQueryResults );

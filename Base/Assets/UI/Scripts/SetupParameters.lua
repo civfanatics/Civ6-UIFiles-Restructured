@@ -3,9 +3,57 @@
 -- Logic that visualizes data-defined parameters and updates a variant map with 
 -- their values.
 -------------------------------------------------------------------------------
+
+-- Set this to true to enable detailed logging of setup parameters.
+local SetupParameters_EnableLogging = false;
+
+-- Set this to true to enable detailed profiling of setup parameters.
+local SetupParameters_EnableProfiling = false;
+
+
+if(SetupParameters_EnableLogging and print) then
+	SetupParameters_Log = print;
+else
+	SetupParameters_Log = function() end;
+end
+
+if(SetupParameters_EnableProfiling and GetTickCount and where and print) then
+	local startTicks = 0;
+	local stepTicks = 0;
+	local blockTicks = 0;
+
+	function BeginProfiling(t)
+		startTicks = GetTickCount();
+		stepTicks = startTicks;
+	end
+
+	function EndProfiling(label)
+		print("Profile:", (GetTickCount() - startTicks) * 0.0001, label or where(2));
+	end
+	function ProfileStep(step)
+		local v = GetTickCount();
+		print("Profile:", (v - stepTicks) * 0.0001, step);
+		stepTicks = v;
+	end
+
+	function BeginProfileBlock() 
+		blockTicks = GetTickCount();
+	end
+
+	function EndProfileBlock(label)
+		print("Profile:", (GetTickCount() - blockTicks) * 0.0001, label or where(2));
+	end
+else
+	function BeginProfiling(t) end;
+	function EndProfiling() end;
+	function ProfileStep(step) end;
+	function BeginProfileBlock() end;
+	function EndProfileBlock() end;
+end
+
 QueryChanges = 0;
 QueryCache = {};
-
+ResultsId = 1;
 -------------------------------------------------------------------------------
 -- Global function for caching the result of a database query with arguments.
 -------------------------------------------------------------------------------
@@ -38,6 +86,9 @@ function CachedQuery(sql, arg1, arg2, arg3, arg4)
 	if(results == nil) then
 		local entry = {arg1, arg2, arg3, arg4};
 		results = DB.ConfigurationQuery(sql, arg1, arg2, arg3, arg4);
+		results.Id = ResultsId;
+		ResultsId = ResultsId + 1;
+
 		entry[0] = results;
 		table.insert(cache, entry);
 	end
@@ -156,21 +207,15 @@ end
 -- Does *not* update the UI.  UpdateVisualization() should be called after.
 -------------------------------------------------------------------------------
 function SetupParameters:UpdateParameters(parameters)
+	BeginProfiling();	
 	
-	--local startTicks = 0;
-	--if(profile) then
-		--local stats = profile.runtime("stats");
-		--startTicks = stats.currentTicks;
-		--profile.runtime("start");
-	--end
-
 	if(self.Refreshing == true) then
 	--	error("Refresh inception! This is bad");
 	end
 
 	self.Refreshing = true;
-	
-	print("Updating Parameters - " .. tostring(self.PlayerId or "Game"));
+
+	SetupParameters_Log("Updating Parameters - " .. tostring(self.PlayerId or "Game"));
 	local old_params = self.Parameters or {};
 	local new_params = parameters or {}; 
 
@@ -205,6 +250,8 @@ function SetupParameters:UpdateParameters(parameters)
 	end
 
 	table.sort(sorted_groups, function(a,b) return a[1] < b[1] end);
+
+	ProfileStep("Sort Parameters.");
 	
 	local params_to_write = {};
 
@@ -228,11 +275,11 @@ function SetupParameters:UpdateParameters(parameters)
 				value = value.Value;
 			end
 
-			print("Parameter - " .. tostring(p.ParameterId) .. " : " .. tostring(value));
+			SetupParameters_Log("Parameter - " .. tostring(p.ParameterId) .. " : " .. tostring(value));
 
 			-- If needed, push the parameter value into the configuration.
 			if(should_write and self:Config_CanWriteParameter(p)) then
-				print("Parameter needs to update config.");
+				SetupParameters_Log("Parameter needs to update config.");
 				table.insert(params_to_write, p);
 			end 
 		end
@@ -240,17 +287,19 @@ function SetupParameters:UpdateParameters(parameters)
 
 	self.Parameters = new_params;
 
+	ProfileStep("Sync Parameters.");
+
 	-- Writes are batched to minimize event dispatch.
 	if(#params_to_wipe > 0 or #params_to_write > 0) then
 		self:Config_BeginWrite();
 
 		local parameters_changed = false;
 		for i,p in ipairs(params_to_wipe) do
-			print("Wiping parameter - " .. p.ParameterId);
+			SetupParameters_Log("Wiping parameter - " .. p.ParameterId);
 			if(self:Config_ClearParameterValues(p)) then
 				parameters_changed = true;
 			else
-				print("Could not wipe parameter - " .. p.ParameterId);
+				SetupParameters_Log("Could not wipe parameter - " .. p.ParameterId);
 			end
 		end
 
@@ -260,20 +309,22 @@ function SetupParameters:UpdateParameters(parameters)
 				value = value.Value;
 			end
 
-			print("Writing parameter - " .. p.ParameterId .. " to " .. tostring(value) .. "(" .. type(value) .. ")");
+			SetupParameters_Log("Writing parameter - " .. p.ParameterId .. " to " .. tostring(value) .. "(" .. type(value) .. ")");
 			if(self:Config_WriteParameterValues(p)) then
 				parameters_changed = true;
 			else
-				print("Could not write parameter - " .. p.ParameterId);
+				SetupParameters_Log("Could not write parameter - " .. p.ParameterId);
 			end 
 		end
 
 		self:Config_EndWrite(parameters_changed);
 	else
-		print("Nothing to change.");
+		SetupParameters_Log("Nothing to change.");
 	end	
 
-	print("Checking static configuration updates");
+	ProfileStep("Write Parameters.");
+
+	SetupParameters_Log("Checking static configuration updates");
 	if(self.ConfigurationUpdates) then
 		local updates = {};
 		for i,v in ipairs(self.ConfigurationUpdates) do
@@ -296,26 +347,18 @@ function SetupParameters:UpdateParameters(parameters)
 		if(#updates) then
 			self:Config_BeginWrite();
 			for i,v in ipairs(updates) do
-				print("Writing additional config values - " .. tostring(v[2]) .. " = " .. tostring(v[3]));
+				SetupParameters_Log("Writing additional config values - " .. tostring(v[2]) .. " = " .. tostring(v[3]));
 				self:Config_Write(v[1], v[2], v[4]);
 			end
 			self:Config_EndWrite(parameters_changed);
 		end
 	end
 
-	--if(profile) then
-		--profile.runtime("stop");
-		--local stats = profile.runtime("stats");
-		--print("Update Parameters Perf:");
-		--print(" * Interpreter Time - " .. stats.interpreterTime);
-		--print(" * Callback Time - " .. stats.callbackTime);
-		--print(" * Compiler Time - " .. stats.compilerTime);
-		--print(" * GC Time - " .. stats.gcTime);
-		--print(" * Finalizer Time - " .. stats.finalizerTime);
-		--print(" * Ticks- " .. stats.currentTicks - startTicks);
-	--end
+	ProfileStep("Additional Configuration Updates.");
 
 	self.Refreshing = nil;
+
+	EndProfiling("UpdateParameters");
 end
 -------------------------------------------------------------------------------
 
@@ -323,19 +366,14 @@ end
 -- Syncronize the UI to the current parameter data.
 -------------------------------------------------------------------------------
 function SetupParameters:UpdateVisualization()
+	BeginProfiling();
+	SetupParameters_Log("Visualizing Parameters - " .. tostring(self.PlayerId or "Game"));
 
-	--local startTicks = 0;
-	--if(profile) then
-		--local stats = profile.runtime("stats");
-		--startTicks = stats.currentTicks;
-		--profile.runtime("start");
-	--end
-
-	print("Visualizing Parameters - " .. tostring(self.PlayerId or "Game"));
 	local old_params = self.VisualParameters or {};
 	local new_params = self.Parameters or {}; 
 
 	self:UI_BeforeRefresh();
+	ProfileStep("UI_BeforeRefresh");
 
 	-- Handle parameters that no longer exist first.
 	for pid, p in pairs(old_params) do
@@ -344,6 +382,8 @@ function SetupParameters:UpdateVisualization()
 			self:UI_DestroyParameter(p);
 		end
 	end
+
+	ProfileStep("UI_DestroyParameter");
 
 	-- Handle any new parameters.
 	local params_by_group = {};
@@ -357,6 +397,8 @@ function SetupParameters:UpdateVisualization()
 		table.insert(group, p);
 	end
 
+	ProfileStep("Index new parameters");
+
 	-- Sort individual groups and place group in array to be sorted.
 	-- This might be overkill, but we want the order of operations to be consistent across all machines.
 	local sorted_groups = {};
@@ -366,11 +408,17 @@ function SetupParameters:UpdateVisualization()
 	end
 
 	table.sort(sorted_groups, function(a,b) return a[1] < b[1] end);
+
+	ProfileStep("Sort parameters");
+
 	for i, group in ipairs(sorted_groups) do
 		local gid = group[1];
 		local g = group[2];
 
+		
+		BeginProfileBlock();
 		self:UI_BeforeRefreshGroup(gid);
+		EndProfileBlock("UI_BeforeRefreshGroup");
 
 		for ii, p in ipairs(g) do
 		
@@ -381,34 +429,41 @@ function SetupParameters:UpdateVisualization()
 			-- Is this a newly added parameter?
 			if(old_param == nil) then
 				-- Tell UI about the new parameter.
-				 self:UI_CreateParameter(p);
+				BeginProfileBlock();
+				self:UI_CreateParameter(p);
+				EndProfileBlock("UI_CreateParameter");
 			end
 
 			-- With values properly synchronized, it's time to notify UI of the changes.
+			BeginProfileBlock();
 			self:UI_SetParameterPossibleValues(p);   
+			EndProfileBlock("UI_SetParameterPossibleValues - " .. p.ParameterId);
+
+			BeginProfileBlock();
 			self:UI_SetParameterValue(p);
+			EndProfileBlock("UI_SetParameterValue");
+			
+			BeginProfileBlock();
 			self:UI_SetParameterEnabled(p);
+			EndProfileBlock("UI_SetParameterEnabled");
+			
+			BeginProfileBlock();
 			self:UI_SetParameterVisible(p);
+			EndProfileBlock("UI_SetParameterVisible");
  
 		end
 
+		BeginProfileBlock();
 		self:UI_AfterRefreshGroup(gid);
+		EndProfileBlock("UI_AfterRefreshGroup");
 	end
+	ProfileStep("Create/Update parameters");
 
 	self.VisualParameters = new_params;
 	self:UI_AfterRefresh();
+	ProfileStep("UI_AfterRefresh");
 
-	--if(profile) then
-		--profile.runtime("stop");
-		--local stats = profile.runtime("stats");
-		--print("Visualize Parameters Perf:");
-		--print(" * Interpreter Time - " .. stats.interpreterTime);
-		--print(" * Callback Time - " .. stats.callbackTime);
-		--print(" * Compiler Time - " .. stats.compilerTime);
-		--print(" * GC Time - " .. stats.gcTime);
-		--print(" * Finalizer Time - " .. stats.finalizerTime);
-		--print(" * Ticks- " .. stats.currentTicks - startTicks);
-	--end
+	EndProfiling("UpdateVisualization");
 end
 -------------------------------------------------------------------------------
 
@@ -474,6 +529,13 @@ function SetupParameters:Config_CanWriteParameter(parameter)
 		return false;
 	end
 
+	-- Check ChangeableAfterPlayByCloudMatchCreate state.
+	if(not parameter.ChangeableAfterPlayByCloudMatchCreate 
+		and GameConfiguration.IsPlayByCloud()
+		and Network.IsInSession()) then
+		return false;
+	end
+
 	if (not Network.IsInSession() or Network.IsNetSessionHost() or self.PlayerId == Network.GetLocalPlayerID()) then
 
 		-- As long as this isn't hot seat, Human players will provide their own settings (including filtered domains)
@@ -534,7 +596,13 @@ function SetupParameters:Config_ReadParameterValues(parameter)
 	-- The value may be a hash value.  Attempt to translate.
 	if(value ~= nil and parameter.Values ~= nil) then
 		for i, v in ipairs(parameter.Values) do
-			if(v.Hash == value) then
+			local hash = v.Hash;
+			if(hash == nil) then
+				hash = DB.MakeHash(v.Value);
+				v.Hash = hash;
+			end
+
+			if(hash == value) then
 				value = v.Value;
 				break;
 			end
@@ -564,7 +632,7 @@ function SetupParameters:Config_Write(group, id, value)
 			if(v.SourceGroup == group and v.SourceId == id) then
 				if(value == v.SourceValue or value == DB.MakeHash(v.SourceValue) or (type(value) == "boolean" and value == false and v.SourceValue == 0) or (type(value) == "boolean" and value == true and v.SourceValue == 1)) then
 					local update_value = v.Hash and DB.MakeHash(v.TargetValue) or v.TargetValue;
-					print("Writing additional config values - " .. tostring(v.TargetId) .. " = " .. tostring(v.TargetValue));
+					SetupParameters_Log("Writing additional config values - " .. tostring(v.TargetId) .. " = " .. tostring(v.TargetValue));
 					self:Config_Write(v.TargetGroup, v.TargetId, update_value);
 				end
 			end
@@ -637,6 +705,16 @@ function SetupParameters:Config_WriteAuxParameterValues(parameter)
 		local domain = (type(parameter.Value) == "table") and parameter.Value.Domain;
 		self:Config_Write(parameter.ConfigurationGroup, parameter.ValueDomainConfigurationId, domain);
 	end
+
+	-- KLUDGE!  This should be in PlayerSetupLogic.lua
+	-- Extend auxilery values to include CivilizationTypeName and Hash
+	if(parameter.ParameterId == "PlayerLeader") then
+		local civilizationType = (parameter.Value ~= nil) and GetPlayerCivilization(parameter.Value.Domain, parameter.Value.Value);
+		local civilizationTypeId = (civilizationType) and DB.MakeHash(civilizationType);
+
+		self:Config_Write("Player", "CIVILIZATION_TYPE_NAME", civilizationType);
+		self:Config_Write("Player", "CIVILIZATION_TYPE_ID", civilizationTypeId);
+	end
 end
 -------------------------------------------------------------------------------
 
@@ -644,13 +722,8 @@ end
 -- Returns a map of all discovered parameters using the latest configuration.
 -------------------------------------------------------------------------------
 function SetupParameters:Data_DiscoverParameters()
-	
-	--local startTicks = 0;
-	--if(profile) then
-		--local stats = profile.runtime("stats");
-		--startTicks = stats.currentTicks;
-		--profile.runtime("start");
-	--end
+	BeginProfiling();
+	SetupParameters_Log("Discovering Parameters");
 
 	--Cache data.
 	local queries = {};
@@ -790,6 +863,8 @@ function SetupParameters:Data_DiscoverParameters()
 	end
 	self.ConfigurationUpdates = configuration_updates;
 
+	ProfileStep("Cache Data");
+
 	-- Query for Parameters.
 	local parameters = {};
 	for pqid, pq in pairs(parameter_queries) do
@@ -819,7 +894,9 @@ function SetupParameters:Data_DiscoverParameters()
 						SupportsLANMultiplayer = self.Utility_ToBool(row[pq.SupportsLANMultiplayerField]),
 						SupportsInternetMultiplayer = self.Utility_ToBool(row[pq.SupportsInternetMultiplayerField]),
 						SupportsHotSeat = self.Utility_ToBool(row[pq.SupportsHotSeatField]),
+						SupportsPlayByCloud = self.Utility_ToBool(row[pq.SupportsPlayByCloudField]),
 						ChangeableAfterGameStart = self.Utility_ToBool(row[pq.ChangeableAfterGameStartField]),
+						ChangeableAfterPlayByCloudMatchCreate = self.Utility_ToBool(row[pq.ChangeableAfterPlayByCloudMatchCreateField]),
 						SortIndex = row[pq.SortIndexField],
 						Criteria = parameter_criteria[row[pq.ParameterIdField]]
 					};	
@@ -842,6 +919,8 @@ function SetupParameters:Data_DiscoverParameters()
 		end
 	end
 
+	ProfileStep("Query Parameters");
+
 
 	-- Check parameter query criteria then parameter criteria.
 	for pqid, pq in pairs(parameter_queries) do
@@ -851,7 +930,8 @@ function SetupParameters:Data_DiscoverParameters()
 	for pid, p in pairs(parameters) do
 		p.MeetsCriteria = p.Query.MeetsCriteria and (p.Criteria == nil or self:Parameter_MeetsCriteria(p.Criteria));
 	end
-	-- 
+	--
+	ProfileStep("Check Parameter Criteria");
 
 	-- Populate parameter domain (as well as cross-reference default values)
 	local pod_domains = {
@@ -861,7 +941,6 @@ function SetupParameters:Data_DiscoverParameters()
 		["text"] = true
 	};
 
-	
 	-- Query for Domain Ranges.
 	local domain_ranges = {};
 	for _, drq in ipairs(domain_range_queries) do
@@ -879,11 +958,12 @@ function SetupParameters:Data_DiscoverParameters()
 				if(dr.MinimumValue ~= nil and dr.MaximumValue ~= nil) then
 					domain_ranges[dr.Domain] = dr;
 				else
-					print("Setup Parameter Error! IntRange domain lacks constraints Min: " .. tostring(dr.MinimumValue) .. " Max: " .. tostring(dr.MaximumValue));
+					SetupParameters_Log("Setup Parameter Error! IntRange domain lacks constraints Min: " .. tostring(dr.MinimumValue) .. " Max: " .. tostring(dr.MaximumValue));
 				end
 			end
 		end
 	end
+	ProfileStep("Query Domain Ranges");
 
 	-- Query for Domain Values.
 	local union_values = {};
@@ -891,19 +971,19 @@ function SetupParameters:Data_DiscoverParameters()
 		local q = queries[dvq.QueryId];
 		if(q) then
 			
-			for i, row in ipairs(self:Data_Query(q)) do
+			local dq = self:Data_Query(q)
+			for i, row in ipairs(dq) do
 
 				local dv = {
-					Query = dvq,
+					QueryId = dq.Id,
+					QueryIndex = i,
 					Domain = row[dvq.DomainField],
 					Value = row[dvq.ValueField],
 					RawName  = row[dvq.NameField]  or "",
+					RawDescription = row[dvq.DescriptionField] or "",
 					Name = Locale.Lookup(row[dvq.NameField]  or ""),
-					Description = Locale.Lookup(row[dvq.DescriptionField] or ""),
 					SortIndex = row[dvq.SortIndexField],
 				};
-
-				dv.Hash = DB.MakeHash(dv.Value);
 					
 				-- Add domain value.
 				local values = union_values[dv.Domain];
@@ -916,7 +996,7 @@ function SetupParameters:Data_DiscoverParameters()
 			end
 		end
 	end
-	
+	ProfileStep("Query Domain Values");
 
 
 	-- Populate intersect values per domain
@@ -950,6 +1030,7 @@ function SetupParameters:Data_DiscoverParameters()
 			end
 		end
 	end
+	ProfileStep("Perform Domain Intersects");
 
 	-- Populate domain unions
 	local domain_unions = {};
@@ -971,6 +1052,7 @@ function SetupParameters:Data_DiscoverParameters()
 			end
 		end
 	end
+	ProfileStep("Perform Domain Unions");
 				
 	-- Parse domains and split 
 	_CacheDomainParts(domain_ranges);		-- from domain_range definitions.
@@ -1049,6 +1131,8 @@ function SetupParameters:Data_DiscoverParameters()
 
 		return values;
 	end);
+	ProfileStep("Parse Domain Values");
+
 
 	local domain_overrides = {};
 	for _, doq in ipairs(domain_override_queries) do
@@ -1063,12 +1147,13 @@ function SetupParameters:Data_DiscoverParameters()
 			end
 		end
 	end
+	ProfileStep("Query Domain Overrides");
 	
 	local count = 0;
 	for pid, p in pairs(parameters) do
 		count = count + 1;
 	end
-	print("Parameter Count - " .. count);
+	SetupParameters_Log("Parameter Count - " .. count);
 
 	for pid, p in pairs(parameters) do
 		
@@ -1102,19 +1187,9 @@ function SetupParameters:Data_DiscoverParameters()
 		
 		p.Enabled = self:Parameter_GetEnabled(p);
 	end
-	
-	--if(profile) then
-		--profile.runtime("stop");
-		--local stats = profile.runtime("stats");
-		--print("Discover Parameters Perf:");
-		--print(" * Interpreter Time - " .. stats.interpreterTime);
-		--print(" * Callback Time - " .. stats.callbackTime);
-		--print(" * Compiler Time - " .. stats.compilerTime);
-		--print(" * GC Time - " .. stats.gcTime);
-		--print(" * Finalizer Time - " .. stats.finalizerTime);
-		--print(" * Ticks- " .. stats.currentTicks - startTicks);
-	--end
-	
+
+	ProfileStep("Finalize Parameters");
+		
 	return parameters;
 end
 -------------------------------------------------------------------------------
@@ -1147,15 +1222,85 @@ end
 -------------------------------------------------------------------------------
 
 -------------------------------------------------------------------------------
+-- Determine the civilization of a given leader and domain.
+-- This is utilized by Parameter_FilterValues for preventing duplicate civs.
+-- Like Parameter_FilterValues, this method should probably exist in 
+-- GameSetupLogic or PlayerSetupLogic.
+-------------------------------------------------------------------------------
+function GetPlayerCivilization(domain, leader_type)
+	if(leader_type ~= "RANDOM") then
+		local info_query = "SELECT CivilizationType from Players where Domain = ? and LeaderType = ? LIMIT 1";
+		local info_results = CachedQuery(info_query, domain, leader_type);
+		
+		if(info_results and #info_results == 1) then
+			return info_results[1].CivilizationType;
+		end
+	end
+end
+
+-------------------------------------------------------------------------------
 -- Filter possible values for a given parameter.
+-- NOTE: This method probably should be migrated to GameSetupLogic or
+-- PlayerSetupLogic as it's not core to SetupParameters and is more of a game 
+-- detail.
 -------------------------------------------------------------------------------
 function SetupParameters:Parameter_FilterValues(parameter, values)
 	if(parameter.ParameterId == "PlayerLeader") then
 		local unique_leaders = GameConfiguration.GetValue("NO_DUPLICATE_LEADERS");
-		local leaders_in_use;
+		local unique_civilizations = GameConfiguration.GetValue("NO_DUPLICATE_CIVILIZATIONS");
 
-		-- Populate a table of current leader selections (excluding current player).
+		local leaders_in_use;
+		local civilizations_in_use;
+
+		local InsertIntoDuplicateBucket = function(map, key, other_key)
+			local bucketA = map[key];
+			local bucketB = map[other_key];
+
+			if(bucketA == nil and bucketB == nil) then
+				bucketA = {key, other_key};
+				map[key] = bucketA;
+				map[other_key] = bucketA;
+
+			elseif(bucketA == nil and bucketB ~= nil) then
+				table.insert(bucketB, key);
+				map[key] = bucketB;
+
+			elseif(bucketA ~= nil and bucketB == nil) then
+				table.insert(bucketA, other_key);
+				map[other_key] = bucketA;
+			
+			elseif(bucketA ~= nil and bucketB ~= nil and bucketA ~= bucketB) then
+				-- consolidate buckets
+				-- if A is a dupe of B and B is a dupe of C, then A is a dupe of C.
+				for i,v in ipairs(bucketB) do
+					table.insert(bucketA, v);
+					map[v] = bucketA;
+				end
+
+			elseif(bucketA == bucketB) then
+				-- buckets are same, no need to do anything since they are already dupes of each other
+			end
+		end;
+
+		local duplicate_civilizations;
+		if(unique_civilizations) then
+			duplicate_civilizations = {};
+			for i, row in ipairs(CachedQuery("SELECT CivilizationType, OtherCivilizationType from DuplicateCivilizations where Domain = ?", parameter.Domain)) do
+				InsertIntoDuplicateBucket(duplicate_civilizations, row.CivilizationType, row.OtherCivilizationType);
+			end
+		end
+
+		local duplicate_leaders;
 		if(unique_leaders) then
+			duplicate_leaders = {};
+			for i, row in ipairs(CachedQuery("SELECT LeaderType, OtherLeaderType from DuplicateLeaders where Domain = ?", parameter.Domain)) do
+				InsertIntoDuplicateBucket(duplicate_leaders, row.LeaderType, row.OtherLeaderType);
+			end
+		end
+
+		if(unique_civilizations or unique_leaders) then
+
+			civilizations_in_use = {};
 			leaders_in_use = {};
 
 			local player_ids = GameConfiguration.GetParticipatingPlayerIDs();
@@ -1163,10 +1308,28 @@ function SetupParameters:Parameter_FilterValues(parameter, values)
 				if(player_id ~= self.PlayerId) then
 					local playerConfig = PlayerConfigurations[player_id];
 					if(playerConfig) then
-						local status = playerConfig:GetSlotStatus();
+						local civilization = playerConfig:GetCivilizationTypeName();
+						if(type(civilization) == "string") then
+							civilizations_in_use[civilization] = true;
+
+							local dupes = duplicate_civilizations and duplicate_civilizations[civilization];
+							if(dupes) then
+								for i,v in ipairs(dupes) do
+									civilizations_in_use[v] = true;
+								end
+							end 
+						end
+
 						local leader = playerConfig:GetLeaderTypeName();
 						if(type(leader) == "string") then
 							leaders_in_use[leader] = true;
+
+							local dupes = duplicate_leaders and duplicate_leaders[leader];
+							if(dupes) then
+								for i,v in ipairs(dupes) do
+									leaders_in_use[v] = true;
+								end
+							end 
 						end
 					end
 				end
@@ -1176,8 +1339,7 @@ function SetupParameters:Parameter_FilterValues(parameter, values)
 		local new_values = {};
 		
 		local gameInProgress = GameConfiguration.GetGameState() ~= GameStateTypes.GAMESTATE_PREGAME;
-
-
+	
 		local checkOwnership = true;
 		if(GameConfiguration.IsAnyMultiplayer()) then
 			local checkComputerSlots = Network.IsGameHost() and not gameInProgress;
@@ -1192,8 +1354,13 @@ function SetupParameters:Parameter_FilterValues(parameter, values)
 			local reason;
 			if(checkOwnership and not Modding.IsLeaderAllowed(self.PlayerId, v.Value)) then
 				reason = "LOC_SETUP_ERROR_LEADER_NOT_OWNED";
-			elseif(leaders_in_use and leaders_in_use[v.Value]) then
+			elseif(unique_leaders and leaders_in_use[v.Value]) then
 				reason = "LOC_SETUP_ERROR_NO_DUPLICATE_LEADERS";
+			elseif(unique_civilizations) then
+				local civilization = GetPlayerCivilization(v.Domain, v.Value);
+				if(civilization and civilizations_in_use[civilization]) then
+					reason = "LOC_SETUP_ERROR_NO_DUPLICATE_CIVILIZATIONS";
+				end
 			end
 
 			if(reason == nil) then
@@ -1233,6 +1400,13 @@ function SetupParameters:Parameter_GetEnabled(parameter)
 	-- Check ChangeableAfterGameStart state.
 	local gameState = GameConfiguration.GetGameState(); 
 	if(not parameter.ChangeableAfterGameStart and gameState ~= GameStateTypes.GAMESTATE_PREGAME) then
+		return false;
+	end
+
+	-- Check ChangeableAfterPlayByCloudMatchCreate state.
+	if(not parameter.ChangeableAfterPlayByCloudMatchCreate 
+		and GameConfiguration.IsPlayByCloud()
+		and Network.IsInSession()) then
 		return false;
 	end
 
@@ -1303,7 +1477,7 @@ function SetupParameters:Parameter_MeetsCriteria(criteria)
 					end
 				end
 			else
-				print("Warning! Could not find criteria operator - " .. tostring(v.Operator));
+				SetupParameters_Log("Warning! Could not find criteria operator - " .. tostring(v.Operator));
 			end
 		end
 	end
@@ -1364,9 +1538,6 @@ function SetupParameters:Parameter_SyncAuxConfigurationValues(parameter)
 	end
 
 	if(parameter.ValueNameConfigurationId) then
-		if(parameter.Value.RawName == nil) then
-			foo = 5;
-		end
 		local bundle = (parameter.Value ~= nil) and Locale.Bundle(parameter.Value.RawName);
 		local config_bundle = self:Config_Read(parameter.ConfigurationGroup, parameter.ValueNameConfigurationId);
 		if(bundle ~= config_bundle) then
@@ -1375,6 +1546,18 @@ function SetupParameters:Parameter_SyncAuxConfigurationValues(parameter)
 			-- to be placed in an error state.			
 			return true;
 		end
+	end
+
+	-- KLUDGE!  This should be in PlayerSetupLogic.lua
+	-- Extend auxilery values to include CivilizationTypeName and Hash
+	if(parameter.ParameterId == "PlayerLeader") then
+		local civilizationType = (parameter.Value ~= nil) and GetPlayerCivilization(parameter.Value.Domain, parameter.Value.Value);
+		local civilizationTypeId = (civilizationType) and DB.MakeHash(civilizationType);
+
+		local config_civilizationType = self:Config_Read("Player", "CIVILIZATION_TYPE_NAME");
+		local config_civilizationTypeId = self:Config_Read("Player", "CIVILIZATION_TYPE_ID");
+
+		return civilizationType ~= config_civilizationType or civilizationTypeId ~= config_civilizationTypeId;
 	end
 end
   
@@ -1464,7 +1647,7 @@ function SetupParameters:Parameter_SyncConfigurationValues(parameter)
 					end
 				end
 
-				print("Cannot find config_value in domain - " .. parameter.ConfigurationId .. " - " .. tostring(config_value));
+				SetupParameters_Log("Cannot find config_value in domain - " .. parameter.ConfigurationId .. " - " .. tostring(config_value));
 			end
 		end
 
@@ -1481,7 +1664,7 @@ function SetupParameters:Parameter_SyncConfigurationValues(parameter)
 			-- blech! get the first value.
 			local first_value = parameter.Values[1];
 			if(first_value) then
-				print("Defaulting to first value - " .. parameter.ConfigurationId);
+				SetupParameters_Log("Defaulting to first value - " .. parameter.ConfigurationId);
 				parameter.Value = first_value;
 				return true;
 			else

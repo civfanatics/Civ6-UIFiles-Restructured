@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Context>
+	<Container ID="MapProxy" Size="parent,parent" />
+	<Container ID="EdgeGradient" Size="parent,parent" >
+		<Image	Anchor="R,B" Size="500,500"   Texture="Controls_Vignette" Color="0,0,0,100" />
+		<Image	Anchor="R,T" Size="500,500"   Texture="Controls_Vignette" Color="0,0,0,100"  FlipY="1"/>
+		<Image	Anchor="L,T" Size="500,500"   Texture="Controls_Vignette" Color="0,0,0,100"  FlipY="1" FlipX="1"/>
+		<Image	Anchor="L,B" Size="500,500"   Texture="Controls_Vignette" Color="0,0,0,100"  FlipX="1"/>
+		<Image	Anchor="L,T" Size="150,parent"  Texture="Controls_Gradient" Color="0,0,0,240"  Rotate="90"/>
+		<Image	Anchor="R,T" Size="150,parent"  Texture="Controls_Gradient" Color="0,0,0,240"  Rotate="270"/>
+		<Image	Anchor="L,T" Size="parent,150"  Texture="Controls_Gradient" Color="0,0,0,240"  FlipY="1"/>
+		<Image	Anchor="L,B" Size="parent,150"  Texture="Controls_Gradient" Color="0,0,0,240" />
+	</Container>
+	<Button ID="CloseButton" Texture="Controls_CloseButtonAlt" Size="32,32" Anchor="R,T" Offset="2,0" ToolTip="LOC_HUD_CLOSE"/>
+</Context>

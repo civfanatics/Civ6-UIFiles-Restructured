@@ -1,5 +1,7 @@
 include( "PopupDialog" );
 
+local m_HexColoringWaterAvail : number = UILens.CreateLensLayerHash("Hex_Coloring_Water_Availablity");
+
 -- ===========================================================================
 --	Game Engine Event
 -- ===========================================================================
@@ -23,8 +25,8 @@ function OnUnitCaptured( currentUnitOwner, unit, owningPlayer, capturingPlayer )
 				szOwnerString = pPlayerConfig:GetCivilizationShortDescription();
 			end	
 			-- If the player had a Settler selected, turn off the Settler lens when the unit is captured.
-			if UILens.IsLayerOn(LensLayers.HEX_COLORING_WATER_AVAILABLITY) and UI.GetInterfaceMode() ~= InterfaceModeTypes.VIEW_MODAL_LENS then
-				UILens.ToggleLayerOff(LensLayers.HEX_COLORING_WATER_AVAILABLITY);	
+			if UILens.IsLayerOn(m_HexColoringWaterAvail) and UI.GetInterfaceMode() ~= InterfaceModeTypes.VIEW_MODAL_LENS then
+				UILens.ToggleLayerOff(m_HexColoringWaterAvail);	
 			end
 			captureMessage = "LOC_UNIT_CAPTURED";
 		end
@@ -40,9 +42,10 @@ end
 
 -- ===========================================================================
 function Initialize()
-	-- hotseat gets unit captured messages via the notification bar as this screen will only show for the 
+	-- Multiplayer gets unit captured messages via the notification bar.
+	-- This is important for hotseat as this screen will only show for the 
 	-- currently active player which may not be the player that owned the captured unit.
-	if(not GameConfiguration.IsHotseat()) then
+	if(not GameConfiguration.IsAnyMultiplayer()) then
 		Events.UnitCaptured.Add(OnUnitCaptured);
 	end
 end

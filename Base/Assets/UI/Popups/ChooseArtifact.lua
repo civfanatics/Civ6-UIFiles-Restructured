@@ -9,8 +9,14 @@ function OnOpen()
 	end
 
 	local pkArchaeologist = localPlayer:GetUnits():GetNextExtractingArchaeologist();
-	local iIndex = Map.GetPlotIndex(pkArchaeologist:GetX(), pkArchaeologist:GetY());
-	local kObject = Game.GetArtifactAtPlot(iIndex);
+	if pkArchaeologist == nil then
+		return;
+	end
+
+	local pkUnitArchaeology = pkArchaeologist:GetArchaeology();
+
+	local iIndex = pkUnitArchaeology:GetArtifactIndex();
+	local kObject = Game.GetArtifactByIndex(iIndex);
 
 	if kObject == nil then
 		return;
@@ -34,7 +40,8 @@ function OnOpen()
 	elseif (kObject.Type == 4) then
 	    szExplanationString = "LOC_CHOOSE_ARTIFACT_EXPLANATION_SHIP_SUNK";
 	end
-	local szEraName = Locale.Lookup(GameInfo.Eras[kObject.ActingPlayerEra].Name);
+
+	local szEraName = GameInfo.Eras[kObject.ActingPlayerEra].Name;
 	Controls.EraString:LocalizeAndSetText("LOC_CHOOSE_ARTIFACT_ERA_STRING", szEraName);
 
 	if (bNoChoice == true) then

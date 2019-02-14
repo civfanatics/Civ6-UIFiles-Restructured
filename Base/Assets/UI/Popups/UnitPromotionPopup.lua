@@ -46,21 +46,13 @@ function OnClose()
 end
 
 -- ===========================================================================
---	UI Event
--- ===========================================================================
-function OnInit( isReload:boolean )
-	if isReload then		
-		LuaEvents.GameDebug_GetValues(RELOAD_CACHE_ID);		
-	end
-end
-
-------------------------------------------------------------------------------------------------
 function OnLocalPlayerTurnEnd()
 	if(GameConfiguration.IsHotseat()) then
 		Close();
 	end
 end
 
+-- ===========================================================================
 function OnPromoteUnit(ePromotion, unitID)
 	if Game.GetLocalPlayer() == -1 then
 		return;
@@ -77,6 +69,7 @@ function OnPromoteUnit(ePromotion, unitID)
 	end
 end
 
+-- ===========================================================================
 function OnPromoteUnitPopup()
 	local pUnit:table	= UI.GetHeadSelectedUnit();
 
@@ -303,12 +296,11 @@ function OnPromoteUnitPopup()
 	end
 
 	Controls.PromotionScrollPanel:CalculateInternalSize();
-	UIManager:QueuePopup(ContextPtr, PopupPriority.Current)
+	UIManager:QueuePopup(ContextPtr, PopupPriority.Low)
 end
 
 
 -- ===========================================================================
-
 function OnInputHandler( pInputStruct:table )
 	local uiMsg = pInputStruct:GetMessageType();
 	if uiMsg == KeyEvents.KeyUp then
@@ -330,7 +322,6 @@ function Initialize()
 	ContextPtr:SetInputHandler( OnInputHandler, true );
 	-- Controls Events
 	Controls.CloseButton:RegisterCallback( eLClick, OnClose );
-	ContextPtr:SetInitHandler( OnInit );
 
 	Events.CitySelectionChanged.Add( OnCitySelectionChanged );
 

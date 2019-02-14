@@ -1,56 +1,60 @@
+-- Copyright 2016-2018, Firaxis Games
+-- Popup for Natural Wonders
+
+include("PopupSupport");
+
+
 -- ===========================================================================
---	Popups when a Natural Wonder has been discovered
+--	CONSTANTS
 -- ===========================================================================
+local RELOAD_CACHE_ID:string = "NaturalWonderPopup";
+
 
 -- ===========================================================================
 --	CONSTANTS / MEMBERS
 -- ===========================================================================
-local m_isWaitingToShowPopup:boolean = false;
-local m_kQueuedPopups		:table	 = {};
-local m_eCurrentFeature		:number  = -1;
-local m_kCurrentPopup		:table	 = nil;
-local ms_eventID					 = 0;
+local m_kQueuedPopups	:table	 = {};
+local m_kCurrentPopup	:table	 = nil;
+local m_eCurrentFeature	:number  = -1;
+
 
 -- ===========================================================================
 --	FUNCTIONS
 -- ===========================================================================
+
 
 -- ===========================================================================
 --	Closes the immediate popup, will raise more if queued.
 -- ===========================================================================
 function Close()
 
-	UI.ClearTemporaryPlotVisibility("NaturalWonder");
-	
-	-- Dequeue popup from UI mananger (will re-queue if another is about to show).
-	ShowNaturalWonderLens(false);
-	-- Release our hold on the event
-	ReleaseGameCoreEvent( ms_eventID );
-	ms_eventID = 0;
-	UIManager:DequeuePopup( ContextPtr );
-	UI.PlaySound("Stop_Speech_NaturalWonders");
-	local isNewOneSet = false;
+	UI.ClearTemporaryPlotVisibility("NaturalWonder");	
+	UI.PlaySound("Stop_Speech_NaturalWonders");	
 	
 	-- Stop the camera animation if it hasn't finished already
 	if (m_kCurrentPopup ~= nil) then
 		Events.StopAllCameraAnimations();
 	end
 
+	local isDone:boolean  = true;
+
 	-- Find first entry in table, display that, then remove it from the internal queue
 	for i, entry in ipairs(m_kQueuedPopups) do
 		ShowPopup(entry);
 		table.remove(m_kQueuedPopups, i);
-		isNewOneSet = true;
+		isDone = false;
 		break;
 	end
 
-	if not isNewOneSet then
-		m_isWaitingToShowPopup = false;	
+	-- If done, restore engine processing and let the world know.
+	if isDone then
 		m_eCurrentFeature = -1;
-		m_kCurrentPopup = nil;
+		m_kCurrentPopup = nil;		
 		LuaEvents.NaturalWonderPopup_Closed();	-- Signal other systems (e.g., bulk show UI)
-	end
-		
+		UI.SetInterfaceMode(InterfaceModeTypes.SELECTION);		
+		UILens.RestoreActiveLens();
+		UnlockPopupSequence();		
+	end		
 end
 
 -- ===========================================================================
@@ -60,20 +64,15 @@ function OnClose()
 	Close();
 end
 
-
-function ShowNaturalWonderLens(isShowing: boolean)
-	if isShowing then
-		if(UI.GetInterfaceMode() ~= InterfaceModeTypes.NATURAL_WONDER) then
-			UI.SetInterfaceMode(InterfaceModeTypes.NATURAL_WONDER);	-- Enter mode
-		end
-	else		
-		UI.SetInterfaceMode(InterfaceModeTypes.SELECTION);		
-	end
-end
-
 -- ===========================================================================
 function ShowPopup( kData:table )
-	UIManager:QueuePopup( ContextPtr, PopupPriority.Medium );
+
+	-- Only call once to preserve whatever lens was on before showing scene
+	if(UI.GetInterfaceMode() ~= InterfaceModeTypes.CINEMATIC) then
+		UILens.SaveActiveLens();
+		UILens.SetActive("Cinematic");
+		UI.SetInterfaceMode(InterfaceModeTypes.CINEMATIC);		
+	end
 
 	local pPlot = Map.GetPlot(kData.plotx, kData.ploty);
 	if pPlot ~= nil then
@@ -84,8 +83,6 @@ function ShowPopup( kData:table )
 		UI.AddTemporaryPlotVisibility("NaturalWonder", aPlots, RevealedState.VISIBLE);
 	end
 
-	ShowNaturalWonderLens(true);
-	m_isWaitingToShowPopup = true;
 	m_eCurrentFeature = kData.Feature;
 	m_kCurrentPopup = kData;
 	
@@ -108,7 +105,7 @@ function ShowPopup( kData:table )
 end
 
 -- ===========================================================================
---
+--	Game EVENT
 -- ===========================================================================
 function OnNaturalWonderRevealed( plotx:number, ploty:number, eFeature:number, isFirstToFind:boolean )
 	local localPlayer = Game.GetLocalPlayer();	
@@ -116,65 +113,61 @@ function OnNaturalWonderRevealed( plotx:number, ploty:number, eFeature:number, i
 		return;	-- autoplay
 	end
 
-	-- No wonder popups in multiplayer games.
-	if(GameConfiguration.IsAnyMultiplayer()) then
+	if not Players[localPlayer]:IsHuman() then 
 		return;
 	end
-	
-	UILens.SetActive("Default");
 
 	-- Only human players and NO hotseat
-	if Players[localPlayer]:IsHuman() and not GameConfiguration.IsHotseat() then
-		local info:table = GameInfo.Features[eFeature];
-		if info ~= nil then
+	local info:table = GameInfo.Features[eFeature];
+	if info ~= nil then
 
-			local quote :string = nil;
-			if info.Quote ~= nil then
-				quote = Locale.Lookup(info.Quote);
-			end
-
-			local description :string = nil;
-			if info.Description ~= nil then
-				description = Locale.Lookup(info.Description);
-			end
-			
-			local kData:table = { 
-				Feature		= eFeature,
-				Name		= Locale.ToUpper(Locale.Lookup(info.Name)),
-				Quote		= quote,
-				QuoteAudio	= info.QuoteAudio,
-				Description	= description,
-				TypeName	= info.FeatureType,
-				plotx		= plotx,
-				ploty		= ploty
-			}
-
-			-- Add to queue if already showing a popup
-			if not m_isWaitingToShowPopup then				
-				ms_eventID = ReferenceCurrentGameCoreEvent();
-				ShowPopup( kData );
-				LuaEvents.NaturalWonderPopup_Shown();	-- Signal other systems (e.g., bulk hide UI)
-			else		
-			
-				-- Prevent DUPES when bulk showing; only happen during force reveal?
-				for _,kExistingData in ipairs(m_kQueuedPopups) do
-					if kExistingData.Feature == eFeature then
-						return;		-- Already have a popup for this feature queued then just leave.
-					end
-				end
-				if m_eCurrentFeature ~= eFeature then
-					table.insert(m_kQueuedPopups, kData);	
-				end
-			end
-			
+		local quote :string = nil;
+		if info.Quote ~= nil then
+			quote = Locale.Lookup(info.Quote);
 		end
+
+		local description :string = nil;
+		if info.Description ~= nil then
+			description = Locale.Lookup(info.Description);
+		end
+			
+		local kData:table = { 			
+			Feature		= eFeature,
+			Name		= Locale.ToUpper(Locale.Lookup(info.Name)),
+			Quote		= quote,
+			QuoteAudio	= info.QuoteAudio,
+			Description	= description,
+			TypeName	= info.FeatureType,
+			plotx		= plotx,
+			ploty		= ploty
+		}
+
+		-- Add to queue if already showing a popup
+		if not IsLocked() then								
+			LockPopupSequence( "NaturalWonder", PopupPriority.High );
+			ShowPopup( kData );
+			LuaEvents.NaturalWonderPopup_Shown();	-- Signal other systems (e.g., bulk hide UI)
+		else		
+			
+			-- Prevent DUPES when bulk showing; only happen during force reveal?
+			for _,kExistingData in ipairs(m_kQueuedPopups) do
+				if kExistingData.Feature == eFeature then
+					return;		-- Already have a popup for this feature queued then just leave.
+				end
+			end
+			if m_eCurrentFeature ~= eFeature then
+				table.insert(m_kQueuedPopups, kData);	
+			end
+		end
+			
 	end
 end
 
 -- ===========================================================================
 function OnLocalPlayerTurnEnd()
-	if (not ContextPtr:IsHidden()) and GameConfiguration.IsHotseat() then
-		OnClose();
+	if IsLocked() then
+		m_kQueuedPopups = {};	-- Ensure queue is empty to close immediately.
+		Close();
 	end
 end
 
@@ -190,6 +183,37 @@ function OnCameraAnimationNotFound()
 	if (m_kCurrentPopup ~= nil) then
 		-- this will play if the animation doesnt exist
 		UI.LookAtPlot(m_kCurrentPopup.plotx, m_kCurrentPopup.ploty);
+	end
+end
+
+-- ===========================================================================
+function OnInit(isReload:boolean)
+	if isReload then
+		LuaEvents.GameDebug_GetValues(RELOAD_CACHE_ID);
+	end
+end
+
+-- ===========================================================================
+function OnShutdown()
+	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "isHidden", ContextPtr:IsHidden());
+	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "m_kCurrentPopup", m_kCurrentPopup);
+	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "m_popupSupportEventID", m_popupSupportEventID);	-- In popupsupport
+	if not ContextPtr:IsHidden() then
+		UILens.RestoreActiveLens();
+	end
+end
+
+-- ===========================================================================
+function OnGameDebugReturn(context:string, contextTable:table)
+	if context == RELOAD_CACHE_ID then
+		if contextTable["isHidden"] ~= nil and contextTable["isHidden"] == false then
+			UI.SetInterfaceMode(InterfaceModeTypes.SELECTION);
+			if contextTable["m_kCurrentPopup"] ~= nil then
+				m_kCurrentPopup = contextTable["m_kCurrentPopup"];
+				ShowPopup(m_kCurrentPopup);
+			end
+		end
+		m_popupSupportEventID = contextTable["m_popupSupportEventID"];
 	end
 end
 
@@ -214,15 +238,24 @@ end
 -- ===========================================================================
 function Initialize()
 
+	-- Because these popup movies lock the engine until complete; disable 
+	-- them if playing in any type of multiplayer game.
+	if GameConfiguration.IsAnyMultiplayer() or GameConfiguration.IsHotseat() then
+		return;
+	end
+
 	ContextPtr:SetInputHandler( OnInputHander, true );
-
 	Controls.Close:RegisterCallback(Mouse.eLClick, OnClose);
-	Controls.WonderRevealedHeader:SetText( Locale.ToUpper( Locale.Lookup("LOC_UI_FEATURE_NATURAL_WONDER_DISCOVERY")) )
 	
-	Events.NaturalWonderRevealed.Add(OnNaturalWonderRevealed);
+	Events.NaturalWonderRevealed.Add( OnNaturalWonderRevealed );
 	Events.LocalPlayerTurnEnd.Add( OnLocalPlayerTurnEnd );	
-
 	Events.CameraAnimationStopped.Add( OnCameraAnimationStopped );
 	Events.CameraAnimationNotFound.Add( OnCameraAnimationNotFound );
+
+	-- Hot-Reload Events
+	ContextPtr:SetInitHandler( OnInit );
+	ContextPtr:SetShutdown( OnShutdown );
+	LuaEvents.GameDebug_Return.Add( OnGameDebugReturn );
+
 end
 Initialize();

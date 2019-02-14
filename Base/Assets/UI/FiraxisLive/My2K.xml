@@ -6,7 +6,7 @@
 	<Instance Name="2KMainMenuInstance" >
 		<Grid ID="Dialog" Size="500,400" Anchor="C,C" Style="My2KWindow" >
 
-			<Stack ID="WindowData" Anchor="C,B" Offset="0,30" StackGrowth="Bottom" Padding="12">
+			<Stack ID="WindowData" Anchor="C,B" Offset="0,15" StackGrowth="Bottom" Padding="12">
 
 				<Label ID="Title" WrapWidth="440" Style="My2KTitleText" />
 				
@@ -25,7 +25,7 @@
 	<Instance Name="LoginDialogInstance" >
 		<Grid ID="Dialog" Size="500,500" Anchor="C,C" Style="My2KWindow" >
 
-			<Stack ID="WindowData" Anchor="C,B" Offset="0,30" StackGrowth="Bottom" Padding="24">
+			<Stack ID="WindowData" Anchor="C,B" Offset="0,15" StackGrowth="Bottom" Padding="24">
 
 				<Label ID="Title" WrapWidth="440" Style="My2KTitleText" String="title" />
 
@@ -66,7 +66,7 @@
 	<Instance Name="NewUserDialogInstance" >
 		<Grid ID="Dialog" Size="500,460" Anchor="C,C" Offset="0,0" Style="My2KWindow" >
 
-			<Stack ID="WindowData" Anchor="C,B" Offset="0,30" StackGrowth="Bottom" Padding="24">
+			<Stack ID="WindowData" Anchor="C,B" Offset="0,15" StackGrowth="Bottom" Padding="24">
 
 				<Label ID="Title" WrapWidth="440" Style="My2KTitleText" String="TXT_KEY_MY2K_ADDITION_SIGN_UP_TITLE" />
 
@@ -95,7 +95,7 @@
 
 	<Instance Name="UnlinkConfirmationInstance">
 		<Grid ID="Dialog" Size="500,300" Anchor="C,C" Offset="0,0" Style="My2KWindow">
-			<Stack ID="WindowData" Anchor="C,B" Offset="0,30" StackGrowth="Bottom" Padding="24">
+			<Stack ID="WindowData" Anchor="C,B" Offset="0,15" StackGrowth="Bottom" Padding="24">
 				<Label ID="Title" WrapWidth="440" Style="My2KTitleText" String="TXT_KEY_MY2K_ADDITION_UNLINK_ACCOUNT_TITLE" />
 				<Label ID="Message" Anchor="C,T"  WrapWidth="440" Style="My2KMessageText" String="TXT_KEY_MY2K_ADDITION_UNLINK_ACCOUNT" />
 				<Stack ID="ButtonStack" Anchor="C,B" Padding="24" StackGrowth="Right">
@@ -113,7 +113,7 @@
 	<Instance Name="UserNameDialogInstance" >
 		<Grid ID="Dialog" Size="500,460" Anchor="C,C" Offset="0,0" Style="My2KWindow" >
 
-			<Stack ID="WindowData" Anchor="C,B" Offset="0,30" StackGrowth="Bottom" Padding="24">
+			<Stack ID="WindowData" Anchor="C,B" Offset="0,15" StackGrowth="Bottom" Padding="24">
 
 				<Label ID="Title" WrapWidth="440" Style="My2KTitleText" String="title" />
 
@@ -141,7 +141,7 @@
 	<Instance Name="LegalDialogInstance" >
 		<Grid ID="Dialog" Size="500,460" Anchor="C,C" Offset="0,0" Style="My2KWindow" >
 
-			<Stack ID="WindowData" Anchor="C,B" Offset="0,30" StackGrowth="Bottom" Padding="24">
+			<Stack ID="WindowData" Anchor="C,B" Offset="0,15" StackGrowth="Bottom" Padding="24">
 
 				<Label ID="Title" WrapWidth="440" Style="My2KTitleText" String="title" />
 					  
@@ -180,14 +180,14 @@
 	<Instance Name="LegalItemDialogInstance" >
     <Grid ID="Dialog" Size="900,660" Anchor="C,C" Offset="0,0" Style="My2KWindowPlain" >
 
-    <Label			ID="Title" Offset="0,30" WrapWidth="840" Style="My2KTitleText" String="title" />
+    <Label			ID="Title" Offset="0,15" WrapWidth="840" Style="My2KTitleText" String="title" />
       
     <ScrollPanel	ID="ContentArea"	Anchor="C,T" Offset="0,74" Vertical="1" Size="840,500" AutoScrollBar="1">
       <ScrollBar	Anchor="R,T"  Style="Slider_Light" AnchorSide="O,I"  Offset="0,0" Length="300"  />
       <Stack		ID="ContentStack"	Anchor="L,T"  Padding="10" StackGrowth="Bottom" />
     </ScrollPanel>
 
-    <Stack			ID="ButtonStack" Offset="0,30"	Anchor="C,B" Padding="24" StackGrowth="Right" >
+    <Stack			ID="ButtonStack" Offset="0,15"	Anchor="C,B" Padding="24" StackGrowth="Right" >
       <GridButton ID="OkButton"	Size="200,36" Anchor="C,T"			Style="ShellButtonOrnateFlat">
         <Label	ID="OkText"		Anchor="C,C" String="TXT_KEY_MY2K_ADDITION_OK"		Style="ShellFlagButtonFont" />
       </GridButton>
@@ -205,7 +205,7 @@
 	<Instance Name="MessageDialogInstance" >
 		<Grid ID="Dialog" Size="500,460" Anchor="C,C" Offset="0,0" Style="My2KWindow" >
 
-			<Stack ID="WindowData" Anchor="C,B" Offset="0,30" StackGrowth="Bottom" Padding="24">
+			<Stack ID="WindowData" Anchor="C,B" Offset="0,15" StackGrowth="Bottom" Padding="24">
 
 				<Label ID="Title" WrapWidth="440" Style="My2KTitleText" String="title" />
 				<Label ID="Message" Anchor="C,T"  WrapWidth="440" Style="My2KMessageText" String="message" />
@@ -223,7 +223,7 @@
 	<Instance Name="LogoutDialogInstance" >
 		<Grid ID="Dialog" Size="500,120" Anchor="C,C" Offset="0,0" Style="My2KWindow" >
 
-			<Stack ID="WindowData" Anchor="C,B" Offset="0,30" StackGrowth="Bottom" Padding="24">
+			<Stack ID="WindowData" Anchor="C,B" Offset="0,15" StackGrowth="Bottom" Padding="24">
 
 				<Label ID="Title" WrapWidth="440" Style="My2KTitleText" String="title" />
 				<Label ID="Message" Anchor="C,T"  WrapWidth="440" Style="My2KMessageText" String="message" />

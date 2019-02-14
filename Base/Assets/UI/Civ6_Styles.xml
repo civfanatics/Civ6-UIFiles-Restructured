@@ -23,11 +23,11 @@
 
   <ButtonFont								Style="FontNormal14"		FontStyle="glow"		Color0="208,212,217,255"	Color1="16,43,67,100"/>
   <ButtonFont16							Style="FontNormal16"		FontStyle="glow"		Color0="208,212,217,255"	Color1="16,43,67,100"/>
-  <TabFont									Style="FontNormal14"		FontStyle="glow"		Color0="208,212,217,255"	Color1="16,43,67,100"/>
+  <TabFont									Style="FontNormal14"		FontStyle="glow"		Color0="208,212,217,255"	Color1="16,43,67,100" TextOffset="0,2"/>
+  <TabSelectedFont					Style="FontNormal14"		FontStyle="shadow"	Color0="5,29,51,255"	    Color1="0,0,0,50" TextOffset="0,2"/>
   <ShellTabFont							Style="FontFlair18"			FontStyle="shadow"	Color0="28,177,171,255"		Color1="0,0,0,200" SmallCaps="22" SmallCapsLeading="0" SmallCapsType="EveryWord"/>
   <SelectedShellTabFont			Style="FontFlair18"			FontStyle="shadow"	Color0="26,62,91,255"			Color1="0,0,0,0" SmallCaps="22" SmallCapsLeading="0" SmallCapsType="EveryWord"/>
   <ShellButtonOrnateFont		Style="FontFlair16"			FontStyle="glow"		Color0="10,137,173,255"		Color1="0,0,0,100"	Color2="170,255,255,255" SmallCaps="22" SmallCapsLeading="0" SmallCapsType="EveryWord"/>
-  <TabSelectedFont					Style="FontNormal14"		FontStyle="shadow"	Color0="5,29,51,255"	    Color1="0,0,0,50"/>
   <Button16									Style="FontFlair16"			FontStyle="shadow"	Color0="208,212,217,255"	Color1="0,0,0,100" />
   <Button16dark							Style="FontFlair16"			FontStyle="shadow"	Color0="5,29,51,255"			Color1="0,0,0,50" />
   <Button20									Style="FontFlair20"			FontStyle="shadow"	Color0="208,212,217,255"	Color1="0,0,0,100" />
@@ -104,6 +104,22 @@
 	<EventPopupJournal Color="66,54,19,255" Style="FontItalicFlair22"/>
 	<EventPopupEffects Style="EventPopupDescription"/>
 
+  <!-- World Congress Fonts -->
+  <WCProposalTitle Style="FontFlair14" Color="255,244,227,242" SmallCaps="18" SmallCapsType="EveryWord" />
+  <WCProposalDescription Style="FontNormalMedium16" Color="255,244,227,242"/>
+  <WCProposalSubTitle Style="FontFlair11" Color="229,220,204,229" SmallCaps="15" SmallCapsType="EveryWord" />
+  <WCProposalBody Style="FontNormalMedium14"	Color="252,234,204,184" />
+  <WCProposalHeader Style="FontNormalBold14"	Color="229,220,204,229" />
+  <WCProposalVotes Style="FontNormalMedium20"	Color="222,222,222,255"	/>
+  <WCProposalFavor Style="FontNormal14" FontStyle="shadow" Color0="251,209,138,153"	Color1="23,23,23,128"/>
+  <WCProposalFavorTitle Style="FontNormal16" FontStyle="shadow" Color0="251,209,138,153"	Color1="23,23,23,128"/>
+	<WCChoiceLabel FontStyle="Shadow"	Color="229,220,204,229"	Style="FontFlair20" Align="Center" SmallCaps="26" SmallCapsType="EveryWord" />
+
+  <WCScrollPanel Size="parent-35,parent-145" Offset="10,10" Vertical="1" AutoScrollBar="1"/>
+  <WCScrollBar Size="17,parent" Anchor="R,B" Offset="5,0" AnchorSide="O,I" Texture="WC_ScrollBar" SliceCorner="7,7" SliceSize="2,3" SliceTextureSize="17,18" Vertical="1"/>
+  <WCScrollBarThumb Size="5,12" Texture="WC_ScrollHandle" SliceCorner="1,5" SliceSize="2,1" SliceTextureSize="5,12"/>
+
+
   <!-- Common Text Styles (used across the game) -->
   <PanelText        ColorSet="TopBarLabelCS"   FontStyle="stroke" Style="FontNormal20"/>
   <TutorialHeaderText WrapWidth="250" Anchor="C,T" ColorSet="TutorialCS" FontStyle="stroke" Style="FontBoldFlair18" SmallCaps="24" SmallCapsType="EveryWord"/>
@@ -120,8 +136,8 @@
 
   <!-- *********************************************************************************** -->
   <!-- Button -->
-  <Btn_Topbar_Quit		Texture="UI/Art/styles/btn_topbar_quit"  Size="50,50" />
-  <SoftTouchPadButton Texture="UI/Art/styles/RoundBlack"
+  <Btn_Topbar_Quit		Texture="btn_topbar_quit"  Size="50,50" />
+  <SoftTouchPadButton Texture="RoundBlack"
           SliceCorner="12,12"
           SliceSize="20,20"
           SliceTextureSize="44,44"	/>
@@ -163,20 +179,30 @@
   <EditTextArea Texture="Controls_TextArea" SliceTextureSize="22,22" SliceCorner="11,15" Style="ButtonFont"/>
 
   <EditTextButton Texture="Controls_TextEntry" SliceTextureSize="44,26" SliceCorner="30,13" StateOffsetIncrement="0,26"/>
-  <!-- *********************************************************************************** -->
+
+	<CivTooltip Size="220,75">
+		<Grid ID="BG" Size="auto,auto" SliceCorner="10,10" SliceTextureSize="33,32" Texture="Controls_Tooltip" InnerPadding="25,25" InnerOffset="10,10" >
+			<Image ID="LeaderIcon" Offset="0,0" Size="55,55" Texture="Leaders55"/>
+			<Image ID="YouIndicator" Offset="0,0" Hidden="1" Size="55,55" Texture="Diplomacy_YouIndicatorSmall"/>
+			<Label ID="LeaderName" Anchor="L,C" Offset="65,0" Style="FontNormal16" Color="0,0,0,255"/>
+		</Grid>
+	</CivTooltip>
+
+
+
+	<!-- ******************************************************************** -->
   <!-- Slider and Scroll Bar Components -->
 
   <!-- Common scroll pieces: -->
 	<ScrollVerticalBacking		Texture="Controls_ScrollbarV"					Size="11,14"	StateOffsetIncrement="0,0" Vertical="1" SliceCorner="5,7" SliceTextureSize="11,14" Color="35,73,114,255"/>
 	<ScrollHorizontalBacking	Texture="Controls_ScrollbarH"					Size="12,8"		StateOffsetIncrement="0,0" Vertical="0" SliceCorner="6,0" SliceTextureSize="12,8" />
-	<!--<ScrollThumb							Texture="Controls_Handle"							Size="15,15"	StateOffsetIncrement="0,0" SliceCorner="7,7" /> Old Gold scroll handle-->
-	<ScrollThumb						Texture="Controls_ScrollHandle"						Size="5,12"		StateOffsetIncrement="0,0" SliceCorner="3,6" SliceTextureSize="5,12" Color="35,73,114,255" />
-	<ScrollUpButton						Texture="Controls_ScrollbarUp"				Size="17,17"	StateOffsetIncrement="0,17" />
-  <ScrollDownButton					Texture="Controls_ScrollbarDown"			Size="17,17"	StateOffsetIncrement="0,17" />
-  <ScrollVerticalBackingAlt	Style="ScrollVerticalBacking"							Color="46,54,60,255" />
-  <ScrollHorizontalBackingAlt	Style="ScrollHorizontalBacking"					Color="90,90,80,255" />
-  <ScrollThumbAlt						Texture="Controls_ScrollHandle"						Size="5,12"		StateOffsetIncrement="0,0" SliceCorner="3,6" SliceTextureSize="5,12" Color="46,54,60,255" />
-  <ScrollThumbHAlt					Texture="Controls_ScrollHandleH"					Size="12,5"		StateOffsetIncrement="0,0" SliceCorner="5,3" SliceTextureSize="12,5" Color="90,90,80,255" />
+	<ScrollThumb							Texture="Controls_ScrollHandle"				Size="5,12"		StateOffsetIncrement="0,0" SliceCorner="3,6" SliceTextureSize="5,12" Color="35,73,114,255" />
+	<ScrollUpButton						Texture="Controls_ScrollbarUp"				Size="17,17"	StateOffsetIncrement="0,17" States="2" />
+  <ScrollDownButton					Texture="Controls_ScrollbarDown"			Size="17,17"	StateOffsetIncrement="0,17" States="2" />
+  <ScrollVerticalBackingAlt	Style="ScrollVerticalBacking"					Color="46,54,60,255" />
+  <ScrollHorizontalBackingAlt	Style="ScrollHorizontalBacking"			Color="90,90,80,255" />
+  <ScrollThumbAlt						Texture="Controls_ScrollHandle"				Size="5,12"		StateOffsetIncrement="0,0" SliceCorner="3,6" SliceTextureSize="5,12" Color="46,54,60,255" />
+  <ScrollThumbHAlt					Texture="Controls_ScrollHandleH"			Size="12,5"		StateOffsetIncrement="0,0" SliceCorner="5,3" SliceTextureSize="12,5" Color="90,90,80,255" />
 
 	<ScrollVerticalBackingHighContrast		Texture="Controls_ScrollbarV"					Size="11,14"	StateOffsetIncrement="0,0" Vertical="1" SliceCorner="5,7" SliceTextureSize="11,14" Color="64,76,87,255"/>
 	<ScrollHorizontalBackingHighContrast	Texture="Controls_ScrollbarH"					Size="12,8"		StateOffsetIncrement="0,0" Vertical="0" SliceCorner="6,0" SliceTextureSize="12,8" />
@@ -237,14 +263,14 @@
 
   <WorldRankingsColumnHeader Texture="Controls_ColumnHeader" SliceCorner="10,11" SliceTextureSize="28,28" Color="33,43,49,255"/>
 
-  <!-- !!!! DEPRECATED: !!!! 
-	     Use the above styles instead; those below here are going away,
-			 using them will require someone to change them later.  -->
-  <Scroll_Up    Texture="Controls_ScrollbarUp"    Size="18,18" />
-  <Scroll_Down  Texture="Controls_ScrollbarDown"  Size="18,18" />
-  <Select_Up     Texture="select_up"   Size="18,18" />
-  <Select_Down   Texture="select_down" Size="18,18" />
-  <Slider_VertThumb Texture="slider_vertthumb" Size="18,18" Vertical="1" SliceCornzer="0,3" SliceSize="18,18" StateOffsetIncrement="0,18" />
+
+	<!-- ******************************************************************** -->
+	<!-- DEPRECATED!:
+	     Use the above styles instead; those below here are going away, using them will require someone to change them later.  
+	-->
+	<Scroll_Up    Texture="Controls_ScrollbarUp"    Size="18,18" />
+	<Scroll_Down  Texture="Controls_ScrollbarDown"  Size="18,18" />
+	<Slider_VertThumb Texture="slider_vertthumb" Size="18,18" Vertical="1" SliceCornzer="0,3" SliceSize="18,18" StateOffsetIncrement="0,18" />
   <Slider_Vert Texture="slider_vert" Size="18,18" Vertical="1" SliceCorner="0,6" SliceTextureSize="18,18">
     <Thumb Style="Slider_VertThumb" Size="18,18" />
   </Slider_Vert>
@@ -259,7 +285,7 @@
 
 
 
-  <!-- *********************************************************************************** -->
+	<!-- *********************************************************************************** -->
   <!-- PullDown -->
 
   <MainPullDown ID="SmallPulldown" Size="194,26"	ScrollThreshold="450" SpaceForScroll="0" AutoSizePopup="1">
@@ -280,45 +306,6 @@
     </InstanceData>
   </MainPullDown>
 
-	<WBPullDown ID="SmallPulldown" Size="194,26" ScrollThreshold="450" SpaceForScroll="0" AutoSizePopup="1">
-		<ButtonData>
-			<GridButton Offset="0,0" Size="194,26" String="LOC_TREE_FILTER_W_DOTS" Style="TreeOptionText" >
-				<GridData Texture="Controls_Dropdown2" StateOffsetIncrement="0,26"	SliceCorner="30,14"	SliceSize="1,1"		SliceTextureSize="41,26" />
-			</GridButton>
-		</ButtonData>
-		<GridData Offset="0,27" Texture="Controls_OptionPanel" SliceCorner="3,3" SliceSize="10,52" SliceTextureSize="16,64" />
-		<ScrollPanelData Anchor="C,C" Vertical="1" Size="18,18" AutoScrollBar="1" >
-			<ScrollBar Style="Slider_Vert" Anchor="R,C" AnchorSide="O,I"   />
-			<UpButton Style="Scroll_Up" Anchor="R,T" AnchorSide="O,I"   />
-			<DownButton Style="Scroll_Down" Anchor="R,B" AnchorSide="O,I"   />
-		</ScrollPanelData>
-		<StackData StackGrowth="Bottom" Anchor="C,T" Padding="0"/>
-		<InstanceData Name="InstanceOne" >
-			<GridButton ID="Button" Size="200,24" Style="ButtonControl"  Anchor="C,C"/>
-		</InstanceData>
-	</WBPullDown>
-
-	<!--
-	<MainPullDown AutoSizePopup="1" >
-		<ButtonData>
-			<GridButton Style="PullDownButton" Anchor="L,C"/>
-		</ButtonData>
-
-		<GridData Style="UnitFrame" Anchor="C,B" Offset="0,0" AnchorSide="I,O"  Padding="5,5" />
-
-		<ScrollPanelData Anchor="C,C"  Vertical="1" Size="18,18"  AutoScrollBar="1" >
-			<ScrollBar  Style="Slider_Vert"      Anchor="R,C" AnchorSide="O,I"   />
-			<UpButton   Style="Scroll_Up"     Anchor="R,T" AnchorSide="O,I"   />
-			<DownButton Style="Scroll_Down"   Anchor="R,B" AnchorSide="O,I"   />
-		</ScrollPanelData>
-
-		<StackData StackGrowth="Bottom" Padding="0" Anchor="C,T" />
-
-		<InstanceData Name="InstanceOne" >
-			<GridButton  Size="200,24" Style="MainMenuSquareButton"  Anchor="C,C" ID="Button" />
-		</InstanceData>
-	</MainPullDown>-->
-
   <ChatPullDown AutoSizePopup="1" >
     <ButtonData>
       <GridButton Style="ButtonControl" Anchor="L,C" Size="parent,parent" TextColor="0,0,0,0">
@@ -327,7 +314,7 @@
         <Label ID="ChatIcon" Offset="5,2" String="[ICON_Global]" Style="FontNormal22"/>
         <Box Offset="30,0" Anchor="L,C" Size="parent-52,parent" Color="0,0,0,0" ConsumeMouse="1">
           <Box Anchor="L,C" Size="parent,parent-10" Color="0,0,0,60">
-            <EditBox	ID="ChatEntry" Anchor="C,C" Offset="1,0"	Size="parent,16" MaxLength="255" KeepFocus="1" Style="FontNormal14"		FontStyle="glow"		Color0="208,212,217,255"	Color1="16,43,67,100" CursorColor="194,194,204"/>
+            <EditBox	ID="ChatEntry" Anchor="C,C" Offset="1,0"	Size="parent,16" MaxLength="250" KeepFocus="1" Style="FontNormal14"		FontStyle="glow"		Color0="208,212,217,255"	Color1="16,43,67,100" CursorColor="194,194,204"/>
             <Box Size="1,parent" Anchor="R,C" Color="0,0,0,150" />
             <Box Size="1,parent" Anchor="L,C" Color="0,0,0,150" />
           </Box>
@@ -361,7 +348,7 @@
         <Label ID="ExpandedChatIcon" Offset="5,2" String="[ICON_Global]" Style="FontNormal22"/>
         <Box Offset="30,0" Anchor="L,C" Size="parent-52,parent" Color="0,0,0,0" ConsumeMouse="1">
           <Box Anchor="L,C" Size="parent,parent-10" Color="0,0,0,60">
-            <EditBox	ID="ExpandedChatEntry" Anchor="C,C" Offset="1,0"	Size="parent,16" MaxLength="255" KeepFocus="1" Style="FontNormal14"		FontStyle="glow"		Color0="208,212,217,255"	Color1="16,43,67,100" CursorColor="194,194,204"/>
+            <EditBox	ID="ExpandedChatEntry" Anchor="C,C" Offset="1,0"	Size="parent,16" MaxLength="250" KeepFocus="1" Style="FontNormal14"		FontStyle="glow"		Color0="208,212,217,255"	Color1="16,43,67,100" CursorColor="194,194,204"/>
             <Box Size="1,parent" Anchor="R,C" Color="0,0,0,150" />
             <Box Size="1,parent" Anchor="L,C" Color="0,0,0,150" />
           </Box>
@@ -395,7 +382,7 @@
         <Label ID="ChatIcon" Offset="5,2" String="[ICON_Global]" Style="FontNormal22"/>
         <Box Offset="30,0" Anchor="L,C" Size="parent-52,parent" Color="0,0,0,0" ConsumeMouse="1">
           <Box Anchor="L,C" Size="parent,parent-10" Color="0,0,0,60">
-            <EditBox	ID="ChatEntry" Anchor="C,C" Offset="1,0"	Size="parent,16" MaxLength="255" KeepFocus="1" Style="FontNormal14"		FontStyle="glow"		Color0="208,212,217,255"	Color1="16,43,67,100" CursorColor="194,194,204"/>
+            <EditBox	ID="ChatEntry" Anchor="C,C" Offset="1,0"	Size="parent,16" MaxLength="250" KeepFocus="1" Style="FontNormal14"		FontStyle="glow"		Color0="208,212,217,255"	Color1="16,43,67,100" CursorColor="194,194,204"/>
             <Box Size="1,parent" Anchor="R,C" Color="0,0,0,150" />
             <Box Size="1,parent" Anchor="L,C" Color="0,0,0,150" />
           </Box>
@@ -429,7 +416,7 @@
         <Label ID="ChatIcon" Offset="5,2" String="[ICON_Global]" Style="FontNormal22"/>
         <Box Offset="30,0" Anchor="L,C" Size="parent-52,parent" Color="0,0,0,0" ConsumeMouse="1">
           <Box Anchor="L,C" Size="parent,parent-10" Color="0,0,0,60">
-            <EditBox	ID="ChatEntry" Anchor="C,C" Offset="1,0"	Size="parent,16" MaxLength="255" KeepFocus="1" Style="FontNormal14"		FontStyle="glow"		Color0="208,212,217,255"	Color1="16,43,67,100" CursorColor="194,194,204"/>
+            <EditBox	ID="ChatEntry" Anchor="C,C" Offset="1,0"	Size="parent,16" MaxLength="250" KeepFocus="1" Style="FontNormal14"		FontStyle="glow"		Color0="208,212,217,255"	Color1="16,43,67,100" CursorColor="194,194,204"/>
             <Box Size="1,parent" Anchor="R,C" Color="0,0,0,150" />
             <Box Size="1,parent" Anchor="L,C" Color="0,0,0,150" />
           </Box>
@@ -569,6 +556,7 @@
 									SliceTextureSize="24,24" 
 									StateOffsetIncrement="0,24" />
 
+	<RowGroupStart	Style="FontNormal16" FontStyle="Glow" Color1="7,15,23,255" Color0="203,215,225,255" />
 	<RowButton			Style="FontNormal16" FontStyle="Glow" Color1="7,15,23,255" Color0="203,215,225,255"
 									TextAnchor="L,C"
 									TextOffset="10,0"
@@ -578,10 +566,9 @@
 									SliceTextureSize="24,24"
 									StateOffsetIncrement="0,24" />
 
-
 	<MainButton Style="ButtonText16">
     <GridData Style="Grid9MainButton" />
-    <AlphaAnim ShowOnMouseOut="1" Anchor="L,T" Size="parent-6,parent-6" Pause="0" Cycle="Once" Speed="2" AlphaStart="1" AlphaEnd="0" Offset="3,2">
+    <AlphaAnim ShowOnMouseOut="1" Anchor="L,T" Size="parent,parent" Pause="0" Cycle="Once" Speed="2" AlphaStart="1" AlphaEnd="0">
       <Grid Size="parent,parent" Offset="0,0" Padding="0,0" Style="Grid9MainButtonHighlight" />
     </AlphaAnim>
   </MainButton>
@@ -612,24 +599,32 @@
     </AlphaAnim>
   </ButtonLightweightSmall>
 
-  <Grid9MainButton Texture="Controls_Button" Padding="0,0"
-              SliceCorner="41,20"
-              SliceTextureSize="80,41"
-              StateOffsetIncrement="0,41"
-            MinSize="80,41"
-    />
+  <Grid9MainButton Texture="Controls_Button"
+    SliceCorner="41,20"
+    SliceTextureSize="80,41"
+    StateOffsetIncrement="0,41"
+    MinSize="80,41"
+  />
 
-  <Grid9MainButtonHighlight Texture="Controls_Button" Padding="0,0"
-          SliceStart="3,43"
-          StateOffsetIncrement="0,0"
-          SliceCorner="38,20"
-          SliceTextureSize="74,35"
-    />
+  <Grid9MainButtonHighlight Texture="Controls_Button"
+    SliceStart="0,41"
+    SliceCorner="41,20"
+    SliceTextureSize="80,41"
+    StateOffsetIncrement="0,41"
+    MinSize="80,41"
+  />
 
+  <Grid9ProposalButton Texture="WC_DiscussBtn_AidPt1"
+    StateOffsetIncrement="0,120"
+    SliceCorner="60,5"
+    SliceTextureSize="120,120"
+    SliceSize="0,111"
+  />
+  
   <ButtonExpand Style="Button16" SmallCaps="20" SmallCapsLeading="0" SmallCapsType="EveryWord">
     <GridData Style="ButtonExpandGrid" />
     <AlphaAnim ShowOnMouseOut="1" Anchor="L,T" Size="parent,parent" Pause="0" Cycle="Once" Speed="2" AlphaStart="1" AlphaEnd="0" >
-      <Grid Size="parent,parent" Offset="0,0" Padding="0,0" Style="ButtonExpandHighlight" />
+      <Grid Size="parent,parent" Style="ButtonExpandHighlight" />
     </AlphaAnim>
   </ButtonExpand>
 
@@ -637,20 +632,20 @@
     <GridData Style="ButtonExpandSelectedGrid" />
   </ButtonExpandSelected>
 
-  <ButtonExpandGrid Texture="Controls_ButtonExpand" Padding="0,0"
+  <ButtonExpandGrid Texture="Controls_ButtonExpand"
               StateOffsetIncrement="0,41"
               SliceCorner="28,20"
               SliceTextureSize="57,41"
     />
 
-  <ButtonExpandHighlight Texture="Controls_ButtonExpand" Padding="0,0"
+  <ButtonExpandHighlight Texture="Controls_ButtonExpand"
               SliceStart="0,41"
               StateOffsetIncrement="0,41"
               SliceCorner="28,20"
               SliceTextureSize="57,41"
     />
 
-  <ButtonExpandSelectedGrid Texture="Controls_ButtonExpand" Padding="0,0"
+  <ButtonExpandSelectedGrid Texture="Controls_ButtonExpand"
             SliceStart="0,164"
             StateOffsetIncrement="0,0"
             SliceCorner="28,20"
@@ -739,9 +734,9 @@
     />
 
 
-  <ButtonConfirm  Style="ConfirmButtonText16">
+  <ButtonConfirm Style="ConfirmButtonText16">
     <GridData Style="Grid9ConfirmButton"/>
-    <AlphaAnim ShowOnMouseOut="1" Anchor="L,T" Size="parent-6,parent-6" Pause="0" Cycle="Once" Speed="2" AlphaStart="1" AlphaEnd="0" Offset="3,2">
+    <AlphaAnim ShowOnMouseOut="1" Anchor="L,T" Size="parent,parent" Pause="0" Cycle="Once" Speed="2" AlphaStart="1" AlphaEnd="0">
       <Grid Size="parent,parent" Offset="0,0" Padding="0,0" Style="Grid9ConfirmButtonHL" />
     </AlphaAnim>
   </ButtonConfirm>
@@ -754,10 +749,11 @@
     />
 
   <Grid9ConfirmButtonHL Texture="Controls_Confirm" Padding="0,0"
-          SliceStart="3,43"
-          StateOffsetIncrement="0,0"
+          SliceStart="0,41"
+          StateOffsetIncrement="0,41"
           SliceCorner="38,20"
-          SliceTextureSize="74,35"
+          SliceTextureSize="80,41"
+          MinSize="80,41"
     />
 
   <ButtonConfirmSmall Style="RedButtonText14">
@@ -792,7 +788,7 @@
     </AlphaAnim>
   </TabButton>
 
-  <TabButtonSelected Style="Button16dark">
+  <TabButtonSelected Style="TabSelectedFont">
     <GridData Style="TabButtonSelectedGrid" />
   </TabButtonSelected>
 
@@ -818,6 +814,17 @@
         StateOffsetIncrement="0,0"
         SliceCorner="21,13"
     />
+
+  <WCTabButton Style="TabFont">
+    <GridData Style="TabButtonGrid" />
+    <AlphaAnim ShowOnMouseOut="1" Anchor="L,T" Size="parent,parent" Pause="0" Cycle="Once" Speed="2" AlphaStart="1" AlphaEnd="0" >
+      <Grid Size="parent,parent" Offset="0,0" Padding="0,0" Style="TabButtonHighlight" />
+    </AlphaAnim>
+  </WCTabButton>
+
+  <WCTabButtonSelected Style="TabSelectedFont">
+    <GridData Style="TabButtonSelectedGrid" />
+  </WCTabButtonSelected>
 
   <YouIndicator Texture ="Controls_YouIndicatorLine"
                 SliceCorner="28,42"
@@ -1042,7 +1049,7 @@
         <GridData Texture="Controls_DropDownControl" StateOffsetIncrement="0,24"	SliceCorner="10,12"	SliceSize="1,1"		SliceTextureSize="45,24" />
       </GridButton>
     </ButtonData>
-    <GridData Offset="0,24" Texture="Controls_DropdownPanel" InnerPadding="0,6" SliceCorner="10,10" SliceTextureSize="22,22"/>
+    <GridData Offset="0,24" Texture="Controls_DropdownPanel" InnerPadding="3,6" SliceCorner="10,10" SliceTextureSize="22,22"/>
     <ScrollPanelData Anchor="C,C" Vertical="1" Size="parent,parent" AutoScrollBar="1" >
       <ScrollBar Style="Slider_Blue" Anchor="R,C" AnchorSide="O,I"   />
     </ScrollPanelData>
@@ -1068,18 +1075,70 @@
     </InstanceData>
   </PullDownMultiplayerTeam>
 
+  <PlayerSelectPullDownMP ID="PullDown" Size="245,50" AutoSizePopup="1" AutoFlip="1" ScrollThreshold="350" SpaceForScroll="15">
+      <ButtonData>
+        <GridButton  Size="245,45" Style="TabFont" TextAnchor="L,C" TextOffset="60" WrapWidth="200">
+          <GridData Texture="Controls_DropDownControlLarge" StateOffsetIncrement="0,45"	SliceCorner="10,15" SliceTextureSize="45,45" />
+          <Container Size="62,62" Offset="-3,0" Anchor="L,C">
+            <Image Texture="Controls_CircleBacking45" Size="51,51" Anchor="C,C" Offset="0,1"/>
+            <Image ID="LeaderIcon" Texture="Leaders44" Size="44,44" Anchor="C,C"/>
+          </Container>
+        </GridButton>
+      </ButtonData>
+    <GridData Offset="0,45" Texture="Controls_DropdownPanel" InnerPadding="0,6" SliceCorner="10,10" SliceTextureSize="22,22"/>
+    <ScrollPanelData Anchor="C,C" Vertical="1" Size="parent,parent" AutoScrollBar="1" >
+      <ScrollBar Style="Slider_Blue" Anchor="R,C" AnchorSide="O,I"   />
+    </ScrollPanelData>
+    <StackData StackGrowth="Bottom" Anchor="C,T"/>
+    <InstanceData Name="InstanceOne">
+      <GridButton ID="Button" Style="ButtonControl" Anchor="L,T"	Size="325,50" TextAnchor="L,C" TextOffset="60" WrapWidth="200">
+        <Container Size="62,62" Offset="-3,0" Anchor="L,C">
+          <Image ID="LeaderIcon" Texture="Leaders44" Size="44,44" Anchor="C,C"/>
+        </Container>
+      </GridButton>
+    </InstanceData>
+  </PlayerSelectPullDownMP>
+
+  <ColorSchemePullDown ID="PullDown" Size="85,50" AutoSizePopup="1" AutoFlip="1" ScrollThreshold="350" SpaceForScroll="15">
+		<ButtonData>
+			<GridButton  Size="75,45" Style="TabFont" TextAnchor="L,C" TextOffset="60" WrapWidth="200" DisabledMouseMoveCallbacks="1">
+				<GridData Texture="Controls_DropDownControlLarge" StateOffsetIncrement="0,45"	SliceCorner="10,15" SliceTextureSize="45,45" />
+				<Image ID="WarnIcon" Texture="Alert18" Size="18,18" Anchor="R,T" Offset="3,2"/>
+				<Container Size="30,30" Offset="0,0" Anchor="C,C">
+					<Image ID="IconBG" Texture="CircleBacking30" Size="30,30" Anchor="C,C" Offset="0,1"/>
+					<Image ID="CivIcon" Texture="CivSymbols30" Size="30,30" Anchor="C,C"/>
+				</Container>
+			</GridButton>
+		</ButtonData>
+    <GridData Offset="0,45" Texture="Controls_DropdownPanel" InnerPadding="0,6" SliceCorner="10,10" SliceTextureSize="22,22"/>
+    <ScrollPanelData Anchor="C,C" Vertical="1" Size="parent,parent" AutoScrollBar="1" >
+      <ScrollBar Style="Slider_Blue" Anchor="R,C" AnchorSide="O,I"   />
+    </ScrollPanelData>
+    <StackData StackGrowth="Bottom" Anchor="C,T"/>
+    <InstanceData Name="InstanceOne">
+      <GridButton ID="Button" Style="ButtonControl" Anchor="L,T"	Size="75,45" Offset="10,0" TextAnchor="L,C" TextOffset="60" WrapWidth="200">
+        <Container Size="30,30" Offset="0,0" Anchor="C,C">
+          <Image ID="IconBG" Texture="CircleBacking30" Size="30,30" Anchor="C,C" Offset="0,0"/>
+          <Image ID="CivIcon" Texture="CivSymbols30" Size="30,30" Anchor="C,C"/>
+        </Container>
+      </GridButton>
+    </InstanceData>
+  </ColorSchemePullDown>
+
   <PlayerSelectPullDown ID="PullDown" Size="325,50" AutoSizePopup="1" AutoFlip="1" ScrollThreshold="350" SpaceForScroll="15">
     <ButtonData>
       <GridButton  Size="325,45" Style="TabFont" TextAnchor="L,C" TextOffset="100" WrapWidth="200">
         <GridData Texture="Controls_DropDownControlLarge" StateOffsetIncrement="0,45"	SliceCorner="10,15" SliceTextureSize="45,45" />
-        <Container Size="62,62" Anchor="L,C" Offset="-3,0">
-          <Image Texture="Controls_CircleBacking45" Size="51,51" Anchor="C,C" Offset="-1,0"/>
-          <Image ID="CivIcon" Texture="CivDefaults45" Size="45,45" Anchor="C,C" Offset="-1,-1"/>
-        </Container>
-        <Container Size="62,62" Offset="44,-1" Anchor="L,C">
-          <Image Texture="Controls_CircleBacking45" Size="51,51" Anchor="C,C" Offset="0,1"/>
-          <Image ID="LeaderIcon" Texture="Leaders45" Size="45,45" Anchor="C,C"/>
-        </Container>
+				<Container Size="44,44" Offset="3,3">
+					<Image ID="CivIconBG" Texture="CircleBacking44" Size="44,44"/>
+					<Image Anchor="C,C" Size="44,44" Texture="Circle44_Darker"  Color="0,0,0,50" />
+					<Image Anchor="C,C" Size="44,44" Texture="Circle44_Lighter" Color="255,255,255,100" />
+					<Image ID="CivIcon" Texture="CivSymbols36" Size="36,36" Anchor="C,C"/>
+				</Container>
+				<Container Size="45,45" Offset="52,2">
+					<Image Texture="Controls_CircleBacking45" Size="51,51" Anchor="L,T" Offset="-3,-3"/>
+					<Image ID="LeaderIcon" Texture="Leaders45" Size="45,45" Anchor="C,C"/>
+				</Container>
       </GridButton>
     </ButtonData>
     <GridData Offset="0,45" Texture="Controls_DropdownPanel" InnerPadding="0,6" SliceCorner="10,10" SliceTextureSize="22,22"/>
@@ -1089,12 +1148,15 @@
     <StackData StackGrowth="Bottom" Anchor="C,T"/>
     <InstanceData Name="InstanceOne">
       <GridButton ID="Button" Style="ButtonControl" Anchor="L,T"	Size="315,50" TextAnchor="L,C" TextOffset="100" WrapWidth="200">
-        <Container Size="62,62" Anchor="L,C" Offset="-3,0">
-          <Image ID="CivIcon" Texture="CivDefaults45" Size="45,45" Anchor="C,C" Offset="-1,-1"/>
-        </Container>
-        <Container Size="62,62" Offset="44,-1" Anchor="L,C">
-          <Image ID="LeaderIcon" Texture="Leaders45" Size="45,45" Anchor="C,C"/>
-        </Container>
+				<Container Size="44,44" Anchor="L,T" Offset="3,3">
+					<Image ID="CivIconBG" Texture="CircleBacking44" Size="44,44"/>
+					<Image Anchor="C,C" Size="44,44" Texture="Circle44_Darker"  Color="0,0,0,50" />
+					<Image Anchor="C,C" Size="44,44" Texture="Circle44_Lighter" Color="255,255,255,100" />
+					<Image ID="CivIcon" Texture="CivSymbols44" Size="44,44" Anchor="C,C"/>
+				</Container>
+				<Container Size="62,62" Offset="44,-1" Anchor="L,C">
+					<Image ID="LeaderIcon" Texture="Leaders45" Size="45,45" Anchor="C,C"/>
+				</Container>
       </GridButton>
     </InstanceData>
   </PlayerSelectPullDown>
@@ -1228,7 +1290,7 @@
               SliceTextureSize="22,22"/>
 
   <!--  MainMenuSquareButton -->
-  <MainMenuSquareButton Texture="UI/Art/styles/btn_mainmenu_sq"
+  <MainMenuSquareButton Texture="btn_mainmenu_sq"
     StateOffsetIncrement="0,32"
     ULSize="10,10"  ULTexStart="0,0"
     UCSize="12,10" UCTexStart="10,0"
@@ -1241,9 +1303,9 @@
     LRSize="10,10"  LRTexStart="22,22"
               />
 
-  <btn_mmenu Texture="UI/Art/styles/btn_mmenu"         Size="400,60" />
+  <btn_mmenu Texture="btn_mmenu"         Size="400,60" />
 
-	<SquareButton14 Texture="UI/Art/styles/btn_mainmenu_sq"
+	<SquareButton14 Texture="btn_mainmenu_sq"
 	  StateOffsetIncrement="0,32"
 	  ULSize="10,10"  ULTexStart="0,0"
 	  UCSize="12,10" UCTexStart="10,0"
@@ -1303,27 +1365,27 @@
   <Subheader Texture="Controls_SubHeader3" SliceCorner="2,6" SliceSize="29,23" SliceTextureSize="34,34"/>
 
   <!-- Civic Slots -->
-  <CivicMilitary Texture="UI/Art/styles/CivicsGrid_Military"
+  <CivicMilitary Texture="CivicsGrid_Military"
                  SliceCorner="8,8"
                  SliceSize="16,16"
                  StateOffsetIncrement="0,32"
                  />
-  <CivicEconomic Texture="UI/Art/styles/CivicsGrid_Economic"
+  <CivicEconomic Texture="CivicsGrid_Economic"
                  SliceCorner="8,8"
                  SliceSize="16,16"
                  StateOffsetIncrement="0,32"
                  />
-  <CivicDiplomatic Texture="UI/Art/styles/CivicsGrid_Diplomatic"
+  <CivicDiplomatic Texture="CivicsGrid_Diplomatic"
                  SliceCorner="8,8"
                  SliceSize="16,16"
                    StateOffsetIncrement="0,32"
                  />
-  <CivicWildcard Texture="UI/Art/styles/CivicsGrid_Wildcard"
+  <CivicWildcard Texture="CivicsGrid_Wildcard"
                  SliceCorner="8,8"
                  SliceSize="16,16"
                  StateOffsetIncrement="0,32"
                  />
-  <BlueHighlightBox Texture="UI/Art/styles/Blue_Highlight"
+  <BlueHighlightBox Texture="Blue_Highlight"
                     SliceCorner="8,8"
                     SliceSize="16,16"
                     StateOffsetIncrement="0,32"
@@ -1371,7 +1433,7 @@
               SliceCorner="44,8"
               SliceTextureSize="88,16"/>
 
-  <BaseButton Texture="UI/Art/styles/btn_mainmenu_sq"
+  <BaseButton Texture="btn_mainmenu_sq"
 	  StateOffsetIncrement="0,32"
 	  ULSize="10,10"  ULTexStart="0,0"
 	  UCSize="12,10" UCTexStart="10,0"
@@ -1384,7 +1446,7 @@
 	  LRSize="10,10"  LRTexStart="22,22"
                 />
 
-  <SmallButton Texture="UI/Art/styles/btn_mainmenu_sq"
+  <SmallButton Texture="btn_mainmenu_sq"
 	  StateOffsetIncrement="0,32"
 	  ULSize="10,10"  ULTexStart="0,0"
 	  UCSize="12,10" UCTexStart="10,0"
@@ -1397,7 +1459,7 @@
 	  LRSize="10,10"  LRTexStart="22,22"
                 />
 
-  <NextTurnSquareButton Texture="UI/Art/styles/btn_nextturn_sq"
+  <NextTurnSquareButton Texture="btn_nextturn_sq"
       StateOffsetIncrement="0,52"
       ULSize="4,4"  ULTexStart="0,0"
       UCSize="4,4" UCTexStart="4,0"
@@ -1418,7 +1480,7 @@
 			/>
 
   <!--  ZoomButton -->
-  <ZoomButton Texture="UI/Art/styles/ZoomButton"
+  <ZoomButton Texture="ZoomButton"
     StateOffsetIncrement="0,27"
     ULSize="4,4"  ULTexStart="0,0"
     UCSize="19,4" UCTexStart="4,0"
@@ -1469,6 +1531,26 @@
   <WindowFrameTitle				Texture="Controls_WindowTitle"				SliceCorner="55,55"		SliceSize="1,1"		SliceTextureSize="118,118" MinSize="118,118"/>
 	<WindowFrameTopOnly			Texture="Controls_WindowFrameTopOnly"	SliceCorner="61,62"		SliceSize="1,1"		SliceTextureSize="123,124" MinSize="123,124"/>
   
+  <!-- These are Container Controls -->
+  <WorldCongressFrame>
+    <Grid Size="parent,72" Texture="WC_Header" SliceCorner="0,0" SliceSize="8,72" SliceTextureSize="8,72"/>
+    <Grid Anchor="L,B" Size="parent,72" Texture="WC_Footer" SliceCorner="0,0" SliceSize="8,72" SliceTextureSize="8,72"/>
+    <Grid Anchor="L,B" Offset="0,72" Size="parent,72" Texture="WC_FooterGradient" SliceCorner="0,0" SliceSize="8,72" SliceTextureSize="8,72"/>
+  </WorldCongressFrame>
+  <WorldCongressIntroFrame>
+    <Grid Size="parent,72" Texture="WC_Header" SliceCorner="0,0" SliceSize="8,72" SliceTextureSize="8,72"/>
+    <Grid Anchor="L,B" Size="parent,72" Texture="WC_Footer" SliceCorner="0,0" SliceSize="8,72" SliceTextureSize="8,72"/>
+  </WorldCongressIntroFrame>
+  <WorldCongressBanner>
+    <Image                 Size="parent,parent" Texture="WC_BannerTile" StretchMode="TileY"/>
+    <Image Anchor="C,C"    Size="360,836" Texture="WC_BannerSymbol"/>
+  </WorldCongressBanner>
+  <WorldCongressIntroBanner>
+    <Image Anchor="C,C"    Size="946,946" Texture="WC_BGGlobe"/>
+    <Grid                 Size="parent,parent" Texture="WC_BannerTile" SliceCorner="8,0" SliceSize="343,388" SliceTextureSize="360,489" MinSize="360,489"/>
+    <Image Anchor="C,C"    Size="360,836" Texture="WC_BannerSymbol"/>
+  </WorldCongressIntroBanner>
+
   <TutorialCalloutGrid				Anchor="C,T" Size="325,325"  Style="DropShadow3" Color="255,255,255,200" AutoSize="V" InnerPadding="0,50"/>
   
   <TutorialEndTurnCalloutGrid Size="220,220" Anchor="R,T" AutoSize="V" InnerPadding="0,50" Style="DropShadow3" Color="255,255,255,200"/>
@@ -1574,7 +1656,7 @@
               />
 
   <!-- EscMenuFrame -->
-  <EscMenuFrame Texture="UI/Art/styles/grid_esccorners"
+  <EscMenuFrame Texture="grid_esccorners"
     StateOffsetIncrement="0,0"
     ULSize="24,24"  ULTexStart="0,0"
     UCSize="16,24" UCTexStart="24,0"
@@ -1620,15 +1702,7 @@
   <UnitPanelStatLabel		Style="FontNormal10"	Color0="149,153,148,255"	Color1="0,0,0,150"		FontStyle="Shadow" />
   <UnitPanelSupportName		    Style="FontNormal14"	Color0="214,214,214,255"	Color1="0,0,0,55"	FontStyle="Stroke"/>
   <UnitPanelSupportStrength		Style="FontNormal26"	Color0="214,214,214,255"	Color1="0,0,0,55"	FontStyle="Stroke"/>
-
-  <ScrollPanelProduction Vertical="1" Size="18,18" AutoScrollBar="1" >
-    <ScrollBar Anchor="R,C" AnchorSide="O,I"  Offset="-18,20" Texture="Controls_ScrollbarV" Size="8,12" StateOffsetIncrement="0,0" Vertical="1" SliceCorner="0,6" SliceTextureSize="8,12">
-      <Thumb Texture="Controls_Handle" Size="15,15"	StateOffsetIncrement="0,0" SliceCorner="7,7" />
-    </ScrollBar>
-    <UpButton Anchor="R,T" AnchorSide="O,I"  Offset="-23,20" Texture="Controls_ScrollbarUp"		Size="17,17"	StateOffsetIncrement="0,17" />
-    <DownButton Anchor="R,B" AnchorSide="O,I"	 Offset="-22,-20" Texture="Controls_ScrollbarDown"	Size="17,17"	StateOffsetIncrement="0,17" />
-  </ScrollPanelProduction>
-
+  
   <CityPanelNumLarge				Style="FontFlair22"		FontStyle="Stroke"	Color="255,255,255,255" EffectColor="0,0,0,150" />
   <CityPanelNumSmall				Style="FontFlair14"		FontStyle="Stroke"	Color="255,255,255,255" EffectColor="0,0,0,150" />
   <CityPanelText						Style="FontNormal15"	FontStyle="Stroke"	Color="255,255,255,200" EffectColor="0,0,0,100" />
@@ -1647,9 +1721,9 @@
     <GridData Style="ButtonLightWeightSmallGrid"  />
   </CityPanelSubPanelButton>
   <CityPanelIgnoreYieldButton Offset="8,3" Size="19,18" Texture="Controls_RadioButtonIgnore" Hidden="1" NoStateChange="1" />
-  <CityPanelFilterCheckBox	Style="FontNormal12"	Anchor="L,C" Offset="0,2" CheckTexture="Controls_RadioButtonLarge" CheckSize="35,35" CheckOffset="0,-1" CheckTextureOffset="0,35" ButtonTexture="Controls_RadioButtonLarge" ButtonSize="35,35" NoStateChange="1" BoxOnLeft="1" TextOffset="5,0" InnerPadding="0" />
+  <CityPanelFilterCheckBox	Style="FontNormal12"	Anchor="L,C" Offset="0,2" CheckTexture="Controls_RadioButtonLarge" CheckSize="35,35" CheckOffset="0,-1" CheckTextureOffset="0,140" ButtonTexture="Controls_RadioButtonLarge" ButtonSize="35,35" NoStateChange="1" BoxOnLeft="1" TextOffset="5,0" InnerPadding="0" />
 
-  <CityPanelLineItem				Size="parent,16"		Texture="CityPanel_StatPanelLineItem" SliceCorner="7,7" SliceSize="1,1" SliceTextureSize="16,16" InnerPadding="4,4"/>
+  <CityPanelLineItem				Size="parent,16"		Texture="CityPanel_StatPanelLineItem" SliceCorner="7,7" SliceSize="1,1" SliceTextureSize="16,16" InnerPadding="4,4" />
   <CityPanelCBCulture				Style="CityPanelFilterCheckBox"	ColorSet="ResCultureLabelCS"		FontStyle="stroke" />
   <CityPanelCBFaith					Style="CityPanelFilterCheckBox"	ColorSet="ResFaithLabelCS"			FontStyle="stroke" />
   <CityPanelCBFood					Style="CityPanelFilterCheckBox"	ColorSet="ResFoodLabelCS"				FontStyle="stroke" />
@@ -1692,7 +1766,7 @@
  
 	<!-- *****************************************​************************* -->
 	<!--  Common Popup Dialog                                               -->
-	<!--  Works great with PopupDialog.lua                           -->
+	<!--  Works with PopupDialog.lua                                        -->
 	<!-- *****************************************​************************* -->
 	<PopupDialogGrid      ID="PopupDialog"    Anchor="C,C" AutoSize="V" InnerPadding="0,60" Size="500,200" Style="WindowFrame"   Hidden="1">
 	  <Stack              ID="PopupStack"     Anchor="C,C" Size="default,auto" StackGrowth="Bottom" StackPadding="30" InnerPadding="0,10" />
@@ -1731,6 +1805,42 @@
 
   <ScreenFrame Texture="Controls_WindowFrameTopOnly" SliceCorner="62,61" SliceTextureSize="123,124" MinSize="123,124" />
 
+  <!-- Minispec Yields -->
+  <YieldContainerStyle Anchor="R,T"  Size="auto,auto" AutoSizePadding="20,5" Offset="0,0" Texture="TopBar_YieldFrame" SliceCorner="60,25" SliceSize="1,1" SliceTextureSize="64,54" Hidden="1">
+    <Stack                                    Offset="37,1" StackGrowth="Right" Padding="-1">
+      <Stack				                          StackGrowth="Down" Padding="-1">
+        <Grid	ID="ScienceBacking"							Size="40,24"	Style="YieldBacking" Color="24,156,216,150"	ToolTip="LOC_TOP_PANEL_SCIENCE_YIELD">
+          <Stack		ID="ScienceStack"					Anchor="L,C" Offset="0,2"	StackGrowth="Right">
+            <Label														Anchor="L,B" Offset="0,4"	String="[ICON_ScienceLarge]"/>
+            <Label	ID="SciencePerTurn"				Anchor="C,T"																Style="FontNormal18" ColorSet="ResScienceLabelCS" FontStyle="Stroke" String="0"/>
+          </Stack>
+        </Grid>
+        <Grid				ID="GoldBacking"					Size="40,24" Style="YieldBacking" Color="185,176,70,150">
+          <Stack		ID="GoldStack"						Anchor="L,C" Offset="0,2"	StackGrowth="Right" >
+            <Label														Anchor="L,B" Offset="0,4"	String="[ICON_GoldLarge]"/>
+            <Label	ID="GoldBalance"					Anchor="C,T"								Style="FontNormal18" ColorSet="ResGoldLabelCS" String="?"	/>
+            <Label	ID="GoldPerTurn"											 Offset="2,-2"									Style="FontNormal14" ColorSet="ResGoldLabelCS" FontStyle="Stroke" String="0" />
+          </Stack>
+        </Grid>
+      </Stack>
+      <Stack				                          StackGrowth="Down" Padding="-1">
+        <Grid	ID="CultureBacking"																		Size="40,24"		Style="YieldBacking" Color="254,42,237,100"	ToolTip="LOC_TOP_PANEL_CULTURE_YIELD">
+          <Stack		ID="CultureStack"					Anchor="L,C" Offset="0,2"	StackGrowth="Right">
+            <Label														Anchor="L,B" Offset="0,4"	String="[ICON_CultureLarge]"/>
+            <Label	ID="CulturePerTurn"				Anchor="C,T"																Style="FontNormal18" ColorSet="ResCultureLabelCS" FontStyle="Stroke" String="0"/>
+          </Stack>
+        </Grid>
+        <Grid	ID="FaithBacking"																			Size="40,24"		Style="YieldBacking" Color="99,114,159,200"	ToolTip="LOC_TOP_PANEL_FAITH">
+          <Stack		ID="FaithStack"						Anchor="L,C" Offset="0,2"	StackGrowth="Right">
+            <Label														Anchor="L,B" Offset="0,4"	String="[ICON_FaithLarge]"/>
+            <Label	ID="FaithBalance"					Anchor="C,T"							Style="FontNormal18" ColorSet="ResFaithLabelCS" String="?" />
+            <Label	ID="FaithPerTurn"					Offset="2,-2"																Style="FontNormal14" ColorSet="ResFaithLabelCS" FontStyle="Stroke" String="0"	/>
+          </Stack>
+        </Grid>
+      </Stack>
+    </Stack>
+  </YieldContainerStyle>
+  
   <ModalScreen													Anchor="C,C"									Size="1024,768">
     <Image ID="ModalBG" Size="1024,768" Offset="0,0" Texture="Religion_BG" StretchMode="Tile" ConsumeMouse="1"/>
     <Grid																														  Size="parent,40"						Texture="Controls_SubHeader2" ConsumeMouse="1" SliceCorner="20,2" SliceTextureSize="40,40">
@@ -1748,40 +1858,7 @@
     <Grid	Offset="-8,-8"	Size="parent+16,parent+16"	Style="ScreenFrame"/>
     
     <!-- Minispec Yields -->
-    <Grid ID="YieldsContainer" Anchor="R,T"  Size="auto,auto" AutoSizePadding="20,5" Offset="0,0" Texture="TopBar_YieldFrame" SliceCorner="60,25" SliceSize="1,1" SliceTextureSize="64,54" Hidden="1">
-      <Stack                                    Offset="37,1" StackGrowth="Right" Padding="-1">
-        <Stack				                          StackGrowth="Down" Padding="-1">
-          <Grid	ID="ScienceBacking"							Size="40,24"	Style="YieldBacking" Color="24,156,216,150"	ToolTip="LOC_TOP_PANEL_SCIENCE_YIELD">
-            <Stack		ID="ScienceStack"					Anchor="L,C" Offset="0,2"	StackGrowth="Right">
-              <Label														Anchor="L,B" Offset="0,4"	String="[ICON_ScienceLarge]"/>
-              <Label	ID="SciencePerTurn"				Anchor="C,T"																Style="FontNormal18" ColorSet="ResScienceLabelCS" FontStyle="Stroke" String="0"/>
-            </Stack>
-          </Grid>
-          <Grid				ID="GoldBacking"					Size="40,24" Style="YieldBacking" Color="185,176,70,150">
-            <Stack		ID="GoldStack"						Anchor="L,C" Offset="0,2"	StackGrowth="Right" >
-              <Label														Anchor="L,B" Offset="0,4"	String="[ICON_GoldLarge]"/>
-              <Label	ID="GoldBalance"					Anchor="C,T"								Style="FontNormal18" ColorSet="ResGoldLabelCS" String="?"	/>
-              <Label	ID="GoldPerTurn"											 Offset="2,-2"									Style="FontNormal14" ColorSet="ResGoldLabelCS" FontStyle="Stroke" String="0" />
-            </Stack>
-          </Grid>
-        </Stack>
-        <Stack				                          StackGrowth="Down" Padding="-1">
-          <Grid	ID="CultureBacking"																		Size="40,24"		Style="YieldBacking" Color="254,42,237,100"	ToolTip="LOC_TOP_PANEL_CULTURE_YIELD">
-            <Stack		ID="CultureStack"					Anchor="L,C" Offset="0,2"	StackGrowth="Right">
-              <Label														Anchor="L,B" Offset="0,4"	String="[ICON_CultureLarge]"/>
-              <Label	ID="CulturePerTurn"				Anchor="C,T"																Style="FontNormal18" ColorSet="ResCultureLabelCS" FontStyle="Stroke" String="0"/>
-            </Stack>
-          </Grid>
-          <Grid	ID="FaithBacking"																			Size="40,24"		Style="YieldBacking" Color="99,114,159,200"	ToolTip="LOC_TOP_PANEL_FAITH">
-            <Stack		ID="FaithStack"						Anchor="L,C" Offset="0,2"	StackGrowth="Right">
-              <Label														Anchor="L,B" Offset="0,4"	String="[ICON_FaithLarge]"/>
-              <Label	ID="FaithBalance"					Anchor="C,T"							Style="FontNormal18" ColorSet="ResFaithLabelCS" String="?" />
-              <Label	ID="FaithPerTurn"					Offset="2,-2"																Style="FontNormal14" ColorSet="ResFaithLabelCS" FontStyle="Stroke" String="0"	/>
-            </Stack>
-          </Grid>
-        </Stack>
-      </Stack>
-    </Grid>
+    <Grid ID="YieldsContainer" Style="YieldContainerStyle"/>
     
     <Button				ID="ModalScreenClose" Anchor="R,T"																							Style="CloseButtonLarge" Offset="-8,-5"/>
   </ModalScreenWide>
@@ -1797,9 +1874,9 @@
       <Image Texture="Controls_GradientSmall" Size="22,parent" AnchorSide="O,I" Anchor="L,T" Color="0,0,0,255" Rotate="90" Offset="-2,0"/>
     </Image>
     <Grid					ID="Header"			Anchor="R,T"	Offset="-50,0"	Size="600,74"					Texture="Controls_BannerHeaderRed" SliceCorner="371,0" SliceSize="1,74" SliceTextureSize="426,74">
-      <Label			ID="Title"			Anchor="L,T"	Offset="45,15"	Style="WorldRankingsTitle" />
+      <Label			ID="Title"			Anchor="L,T"	Offset="45,15"	Style="WorldRankingsTitle" TruncateWidth="250" TruncatedTooltip="1"/>
     </Grid>
-    <Grid Texture="Controls_BannerBottom" Anchor="L,B" Offset="0,-4" Size="514,32" SliceSize="1,30" SliceCorner="18,2" SliceTextureSize="37,32"/>
+    <Grid Texture="Controls_BannerBottom" Anchor="L,B" Offset="0,-4" Size="514,32" SliceSize="1,30" SliceCorner="18,2" SliceTextureSize="37,32" ConsumeMouse="1" />
   </RundownAnimBG>
 
   <!-- ****************************************************************** -->
@@ -1864,48 +1941,48 @@
   <!--	In World      																										-->
   <!-- ******************************************************************	-->
 
-  <EncampmentBannerBacking Texture="UI/Art/Screens/InWorld/EncampmentBannerBacking"
+  <EncampmentBannerBacking Texture="EncampmentBannerBacking"
                  SliceCorner="42,13"
                  SliceSize="1,1"
                  SliceTextureSize="85,30"
                   />
-  <CityBannerBackground Texture="UI/Art/Screens/InWorld/Banner_BannerBacking"
+  <CityBannerBackground Texture="Banner_BannerBacking"
                   SliceCorner="53,24"
                   SliceSize="1,1"
                   SliceTextureSize="106,48"
                   />
 
-  <CityBannerFill Texture="UI/Art/Screens/InWorld/Banner_ColorPrimaryBase"
+  <CityBannerFill Texture="Banner_ColorPrimaryBase"
                   SliceCorner="107,22"
                   SliceSize="1,1"
                   SliceTextureSize="214,45"
                   />
 
-  <CityBannerFill2 Texture="UI/Art/Screens/InWorld/Banner_ColorPrimaryDarker"
+  <CityBannerFill2 Texture="Banner_ColorPrimaryDarker"
                 SliceCorner="107,22"
                 SliceSize="1,1"
                 SliceTextureSize="214,45"
                   />
 
-  <CityBannerFill3 Texture="UI/Art/Screens/InWorld/Banner_ColorPrimaryLighter"
+  <CityBannerFill3 Texture="Banner_ColorPrimaryLighter"
                 SliceCorner="107,22"
                 SliceSize="1,1"
                 SliceTextureSize="214,45"
                   />
 
-  <CityBannerFill4 Texture="UI/Art/Screens/InWorld/Banner_ColorNone"
+  <CityBannerFill4 Texture="Banner_ColorNone"
               SliceCorner="107,22"
               SliceSize="1,1"
               SliceTextureSize="214,45"
                   />
 
-  <CityBannerFillOver Texture="UI/Art/Screens/InWorld/Banner_SecondaryColor"
+  <CityBannerFillOver Texture="Banner_SecondaryColor"
                 SliceCorner="107,22"
                 SliceSize="1,1"
                 SliceTextureSize="214,45"
                   />
 
-  <CityBannerRangeAttack	Size="25,25"	Texture="UI/Art/Screens/InWorld/CityBannerRangeAttack"  >
+  <CityBannerRangeAttack	Size="25,25"	Texture="CityBannerRangeAttack"  >
     <AlphaAnim						Size="parent,parent" Pause="0" Cycle="Bounce" Speed="1" AlphaStart="1" AlphaEnd="0" >
       <Image							Size="parent,parent" Style="CityBannerRangeAttackHighlight" />
     </AlphaAnim>
@@ -1914,7 +1991,7 @@
     </AlphaAnim>
   </CityBannerRangeAttack>
 
-  <CityBannerRangeAttackHighlight Texture="UI/Art/Screens/InWorld/CityBannerRangeAttack" Size="25,25" TextureOffset="0,25"/>
+  <CityBannerRangeAttackHighlight Texture="CityBannerRangeAttack" Size="25,25" TextureOffset="0,25"/>
 
   <!-- ******************************************************************	-->
 
@@ -2050,13 +2127,12 @@
   <LaunchBarRightEdge	Texture="LaunchBar_Backing"	TextureOffset="116,0" Size="116,43"/>
   <LaunchBarLeftEdge	Texture="LaunchBar_Backing"	TextureOffset="0,0"  Size="116,43"/>
   <LaunchBarBacking	  Texture="LaunchBar_Backing_Tile" StretchMode="Tile" />
-  <LaunchBarHookButton Texture="LaunchBar_Hook_ButtonMedium"	Size="51,51" StateOffsetIncrement="0,51"/>
-
+  <LaunchBarHookButton Texture="LaunchBar_Hook_ButtonMedium" Size="44,44" SliceTextureSize="44,44" StateOffsetIncrement="0,44" MinSize="44"/>
 
   <!-- =======================================================
         Common Full Screens (e.g., TechTree)
 	============================================================ -->
-  <FullScreenVignetteConsumer																	 Size="parent,parent"			ConsumeMouse="1" Anchor="L,B">
+  <FullScreenVignetteConsumer																	 Size="parent,parent"	ConsumeMouse="1" Anchor="L,B">
     <AlphaAnim								ID="ScreenAnimIn"								 Size="parent,parent"	AlphaBegin="0" AlphaEnd="1" Speed="1" Function="Root" Cycle="Once" Delay="1">
       <Box																										 Size="parent,parent"															Color="21,46,75,150" >
         <Image																		Anchor="R,B" Size="500,500"   Texture="Controls_Vignette" Color="0,0,0,200" />
@@ -2091,6 +2167,7 @@
   <GovEraBigText									Style="FontFlair28"		Color0="117,109,94,255"	 />
   <GovEraSmallText								Style="FontFlair16"		Color0="117,109,94,255"	 />
 
+	
   <!-- =======================================================
 			Religion
 	============================================================ -->
@@ -2122,6 +2199,7 @@
     <GridData Style="ButtonLightWeightSmallGrid"/>
   </CityStateTinyButton>
   
+	
   <!-- =======================================================
 			Half Screens
 	============================================================ -->
@@ -2129,6 +2207,7 @@
   <HalfScreenHeader Style="FontFlair14" Color0="208,212,217,255" SmallCaps="18" SmallCapsLeading="0" SmallCapsType="EveryWord"/>
   <HalfScreenBody   Style="FontNormal14" Color="208,212,217,255"/>
 
+	
   <!-- =======================================================
 			Parchment
 	============================================================ -->
@@ -2136,6 +2215,7 @@
   <ParchmentHeader Style="FontFlair14" Color="25,25,25,255" SmallCaps="18" SmallCapsLeading="0" SmallCapsType="EveryWord"/>
   <ParchmentBody   Style="FontNormal14" Color="40,40,40,255"/>
 
+	
   <!-- =======================================================
 			Great People
 	============================================================ -->
@@ -2144,7 +2224,28 @@
   <GreatPeopleLargeText		Style="FontFlair14"		ColorSet="GreatPeopleCS" SmallCaps="20" SmallCapsType="EveryWord" />
   <GreatPeopleChartHeader	Style="FontNormal15"	Color0="184,178,163,255" Color1="0,0,0,200" Align="center" FontStyle="Shadow" />
 
+	
+	<!-- =======================================================
+			World Climate
+	============================================================ -->
+	<WorldClimateText				    Style="FontNormal14" />
+	<WorldClimateStatArea		    Style="FontFlair16" SmallCaps="22" SmallCapsType="EveryWord" FontStyle="Glow" EffectColor="ClimateScreen_LightBlue" GradientColor="ClimateScreen_LightBlue"/>
+  <WorldClimateStatAreaLarge  Style="FontFlair20" SmallCaps="26" SmallCapsType="EveryWord" FontStyle="Glow" EffectColor="ClimateScreen_LightBlue" GradientColor="ClimateScreen_LightBlue"/>
+	<WorldClimateSection		    Style="FontFlair16"	SmallCaps="22" SmallCapsType="EveryWord" />
+	<WorldClimateBigText		    Style="FontFlair24" SmallCaps="28" SmallCapsType="EveryWord" FontStyle="Glow" EffectColor="ClimateScreen_LightBlue" GradientColor="ClimateScreen_LightBlue"/>
 
+  <ClimateHistoryHeader Style="FontNormal16" GradientColor="169,194,219,255"/>
+  <ClimateHistoryText   Style="FontNormal14" GradientColor="172,179,192,255" FontStyle="Glow" EffectColor="104,187,255,128"/>
+  <ClimateHistoryTitle  Style="FontFlair14" SmallCaps="18" SmallCapsType="EveryWord" GradientColor="161,187,215,255" FontStyle="Glow" EffectColor="114,140,171,255"/>
+    
+  <Climate_StatFrameDeco_Grid Texture="Climate_StatFrameDeco" SliceTextureSize="177,2" SliceCorner="10,0" SliceSize="40,2"/>
+  <Climate_StatFrame_Grid Texture="Climate_StatFrame" SliceCorner="30,30" SliceSize="30,30" SliceStart="5,5" SliceTextureSize="80,80"/>
+  <Climate_StatFrame_Grid_Left Texture="Climate_StatFrame_L" SliceCorner="24,24" SliceSize="2,2"/>
+  <Climate_StatFrame_Grid_Right Texture="Climate_StatFrame_R" SliceCorner="24,24" SliceSize="2,2"/>
+  <Climate_EventFrame_Grid Texture="Climate_EventFrame" SliceTextureSize="132,14" SliceCorner="45,5" SliceSize="42,3"/>
+  <Climate_StatHeading Texture="Climate_StatHeading" SliceCorner="10,20" SliceSize="1,1"/>
+  <Climate_FooterPanel Texture="Climate_FooterPanel" SliceCorner="34,34" SliceSize="2,2"/>
+  
 	<!-- =======================================================
 			Reports
 	============================================================ -->
@@ -2166,6 +2267,7 @@
 	<ReportYieldScience			Style="FontNormal14" FontStyle="Glow" Color0="68,179,234,255"		Color1="7,15,23,255" />
 	<ReportYieldCulture			Style="FontNormal14" FontStyle="Glow" Color0="175,89,245,255"		Color1="7,15,23,255" />
 	<ReportYieldTourism			Style="FontNormal14" FontStyle="Glow" Color0="181,116,102,255"	Color1="7,15,23,255" />
+	<ReportInfoText					Style="FontNormal16" FontStyle="Glow"	Color0="200,200,200,255"	Color1="7,15,23,255" />
 
 
 	<!-- =======================================================
@@ -2198,6 +2300,7 @@
 	============================================================ -->
   <ChatWithMapPinButton Anchor="L,C" TextAnchor ="C,C" Size="150,16" Texture="Controls_InlineButton" SliceCorner="7,7" SliceSize="1,1" SliceTextureSize="14,14" States="4" StateOffsetIncrement="0,14" Style="FontNormal12" TextColor="10,40,64,255"/>
 
+	
   <!-- =======================================================
 			Multiplayer Shell
 	============================================================ -->
@@ -2218,7 +2321,7 @@
   <DawnText				Style="FontNormal14"	Color0="229,231,235,208" Color1="0,0,0,200" FontStyle="Shadow" />
 
   <!-- =======================================================
-		  My2K / FiraxisLive
+		  2K / My2K / FiraxisLive
 	============================================================ -->
   <MOTDTitle Style="FontTitle" Align="Center" FontStyle="Glow" Color0="182,203,228,255" Color1="182,203,228,150" />
   <MOTDMessage Style="FontNormal16" Align="Center" FontStyle="Glow" Color0="182,203,228,255" Color1="182,203,228,150" />
@@ -2261,16 +2364,14 @@
     </AlphaAnim>
   </My2KButton>
 
-  <My2KLogoButton Texture="My2KLogoButton" Size="128,64">
-  </My2KLogoButton>
-
+  <My2KLogoButton Texture="My2KLogoButton" Size="128,64" />
+  
   <My2KWindow Color="0,0,0,0">
-    <Grid         ID="WindowBacking"  Size="parent+20,parent+20" Color="255,255,255,200" Style="DropShadow3" Offset="-7,0">
-      <Box                            Size="parent-20,parent-20" Color="21,46,75,255" Anchor="C,C">
+    <Grid         ID="WindowBacking"  Size="parent+20,parent+20"	Color="255,255,255,200" Style="DropShadow3" Offset="-7,0">
+      <Box                            Size="parent,parent"				Color="21,46,75,255"		Anchor="C,C">
         <Grid     ID="WindowOutline"  Size="parent+10,parent+10" Style="WindowFrameAlpha" Anchor="C,C">
-          <Image ID="My2KLogo" Anchor="C,T" Offset="20,30" Texture="Controls_DropShadow2" Color="0,0,0,200"  Size="auto,auto" AutoSizePadding="30,10">
-            <Image Anchor="C,T" Size="256,100" Texture="My2KLogo" Offset="0,-10" />
-          </Image>
+          <Image	ID="My2KLogo" Anchor="C,T" Offset="0,-25" Texture="Controls_DropShadow2" Color="0,0,0,200"  Size="280,220" />
+          <Image								Anchor="C,T" Offset="0,15" Size="256,128" Texture="My2KLogo" />          
         </Grid>
       </Box>
     </Grid>
@@ -2347,13 +2448,5 @@
   <Civilopedia_ChapterParagraph Style="FontNormalMedium16" Size="16" Color="0,0,0,255" />
 
   <!-- EXPERIMENTAL STYLE CLASS MODULES -->
-
-  <CivTooltip Size="220,75">
-    <Grid ID="BG" Size="auto,auto" SliceCorner="10,10" SliceTextureSize="33,32" Texture="Controls_Tooltip" InnerPadding="25,25" InnerOffset="10,10" >
-      <Image ID="LeaderIcon" Offset="0,0" Size="55,55" Texture="Leaders55"/>
-      <Image ID="YouIndicator" Offset="0,0" Hidden="1" Size="55,55" Texture="Diplomacy_YouIndicatorSmall"/>
-      <Label ID="LeaderName" Anchor="L,C" Offset="65,0" Style="FontNormal16" Color="0,0,0,255"/>
-    </Grid>
-  </CivTooltip>
 
 </StyleSheet>

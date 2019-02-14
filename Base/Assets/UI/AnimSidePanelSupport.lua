@@ -7,7 +7,7 @@
 function CreateScreenAnimation( slideAnimControl:table, onCloseCallback:ifunction )
 
 	if slideAnimControl == nil then 
-		error("Cannot create kAnim for "..ContextPtr:GetID()..", no slide animation control passed into create.");
+		UI.DataError("Cannot create kAnim for "..ContextPtr:GetID()..", no slide animation control passed into create.");
 		return nil;
 	end
 

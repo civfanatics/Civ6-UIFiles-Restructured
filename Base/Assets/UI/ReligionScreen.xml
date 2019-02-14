@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Context xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="..\..\..\..\..\CivTech\Libs\ForgeUI\ForgeUI_Assets\Controls.xsd">
 
-<Container Style="FullScreenVignetteConsumer" />
+<Container ID="Vignette" Style="FullScreenVignetteConsumer" />
   <Container ID="ModalControls" Style="ModalScreen">
 
     <!-- ==================================================================	-->
@@ -17,40 +17,7 @@
     </Container>
 
     <!-- Minispec Yields -->
-    <Grid ID="YieldsContainer" Anchor="R,T"  Size="auto,auto" AutoSizePadding="20,5" Offset="0,0" Texture="TopBar_YieldFrame" SliceCorner="60,25" SliceSize="1,1" SliceTextureSize="64,54" Hidden="0">
-      <Stack                                    Offset="37,1" StackGrowth="Right" Padding="-1">
-        <Stack				                          StackGrowth="Down" Padding="-1">
-          <Grid	ID="ScienceBacking"							Size="40,24"	Style="YieldBacking" Color="24,156,216,150"	ToolTip="LOC_TOP_PANEL_SCIENCE_YIELD">
-            <Stack		ID="ScienceStack"					Anchor="L,C" Offset="0,2"	StackGrowth="Right">
-              <Label														Anchor="L,B" Offset="0,4"	String="[ICON_ScienceLarge]"/>
-              <Label	ID="SciencePerTurn"				Anchor="C,T"																Style="FontNormal18" ColorSet="ResScienceLabelCS" FontStyle="Stroke" String="0"/>
-            </Stack>
-          </Grid>
-          <Grid				ID="GoldBacking"					Size="40,24" Style="YieldBacking" Color="185,176,70,150">
-            <Stack		ID="GoldStack"						Anchor="L,C" Offset="0,2"	StackGrowth="Right" >
-              <Label														Anchor="L,B" Offset="0,4"	String="[ICON_GoldLarge]"/>
-              <Label	ID="GoldBalance"					Anchor="C,T"								Style="FontNormal18" ColorSet="ResGoldLabelCS" String="?"	/>
-              <Label	ID="GoldPerTurn"											 Offset="2,-2"									Style="FontNormal14" ColorSet="ResGoldLabelCS" FontStyle="Stroke" String="0" />
-            </Stack>
-          </Grid>
-        </Stack>
-        <Stack				                          StackGrowth="Down" Padding="-1">
-          <Grid	ID="CultureBacking"																		Size="40,24"		Style="YieldBacking" Color="254,42,237,100"	ToolTip="LOC_TOP_PANEL_CULTURE_YIELD">
-            <Stack		ID="CultureStack"					Anchor="L,C" Offset="0,2"	StackGrowth="Right">
-              <Label														Anchor="L,B" Offset="0,4"	String="[ICON_CultureLarge]"/>
-              <Label	ID="CulturePerTurn"				Anchor="C,T"																Style="FontNormal18" ColorSet="ResCultureLabelCS" FontStyle="Stroke" String="0"/>
-            </Stack>
-          </Grid>
-          <Grid	ID="FaithBacking"																			Size="40,24"		Style="YieldBacking" Color="99,114,159,200"	ToolTip="LOC_TOP_PANEL_FAITH">
-            <Stack		ID="FaithStack"						Anchor="L,C" Offset="0,2"	StackGrowth="Right">
-              <Label														Anchor="L,B" Offset="0,4"	String="[ICON_FaithLarge]"/>
-              <Label	ID="FaithBalance"					Anchor="C,T"							Style="FontNormal18" ColorSet="ResFaithLabelCS" String="?" />
-              <Label	ID="FaithPerTurn"					Offset="2,-2"																Style="FontNormal14" ColorSet="ResFaithLabelCS" FontStyle="Stroke" String="0"	/>
-            </Stack>
-          </Grid>
-        </Stack>
-      </Stack>
-    </Grid>
+    <Grid ID="YieldsContainer" Style="YieldContainerStyle"/>
 
     <!-- ==================================================================	-->
     <!--	Displays until player creates a religion                          -->
@@ -225,7 +192,7 @@
         <Image Texture="Religion_BraceDeco" Anchor="R,C" Offset="-16,0"/>
 
         <Image ID="PendingReligionImage" Texture="Religion_Generic" Anchor="C,C" Offset="-280,0" />
-        <Label ID="PendingReligionTitle" Offset="-280,50" Anchor="C,C" Size="400" Style="ReligionHeadingSmall" String="" WrapWidth="500" />
+        <Label ID="PendingReligionTitle" Offset="-280,50" Anchor="C,C" Size="400" Style="ReligionHeadingSmall" String="" WrapWidth="400" />
         <Label ID="PendingReligionStatus" Offset="550,100" Size="400" Style="ReligionSubHeading" String="PendingReligionStatus" />
         <Label ID="PendingReligionEffect" Offset="550,125" Size="400" Style="ReligionObjective" String="PendingReligionEffect" />
       </Grid>
@@ -237,8 +204,8 @@
         <ScrollPanel ID="ChooseReligionScrollbar" Offset="25,70" Size="935,285" Style="ScrollPanelWithRightBar">
           <Stack ID="ChooseReligionItems" Size="parent" StackPadding="10" StackGrowth="Right" WrapGrowth="Down" WrapWidth="980" />
         </ScrollPanel>
-        <GridButton	ID="ChooseReligionNameButton" Offset="0,-132" Size="350,26" Anchor="C,C" Texture="Controls_TextEntry" SliceCorner="30,0" SliceTextureSize="44,26" StateOffsetIncrement="0,26">
-          <EditBox ID="ChooseReligionName" Offset="-20,0" Size="parent-20,parent" Anchor="R,C" EditMode="1" Style="FontNormalMedium16" String="ChooseReligionName" MaxLength="32" />
+        <GridButton	ID="ChooseReligionNameButton" Offset="0,-132" Size="490,26" Anchor="C,C" Texture="Controls_TextEntry" SliceCorner="30,0" SliceTextureSize="44,26" StateOffsetIncrement="0,26">
+          <EditBox ID="ChooseReligionName" Offset="-20,0" Size="parent-10,parent" Anchor="R,C" EditMode="1" Style="FontNormalMedium16" String="ChooseReligionName" MaxLength="32" Width="300"/>
         </GridButton>
         <GridButton ID="ConfirmReligion" Offset="0,0" Anchor="C,B" Style="ButtonConfirm" Disabled="1" AnchorSide="I,O" Size="250,41"/>
       </Grid>

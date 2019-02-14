@@ -1,69 +1,84 @@
 -- ===========================================================================
 --	EraCompletePopup
---	Full screen message to tell player they've entered a new era.
+--	Full screen message to tell player when the game enters a new era.
 --
---	NOTE:	currently not using m_eventID since when starting a game at a later
---			era, this will fire twice for the local player, once the era before
---			and then once again after... and when this is on it will queue
---			them back-to-back
+--	NOTE:	
+--	Not using a m_eventID handle from engine to block it's progression as
+--	it will fire twice for a local player when starting at a later era.
 -- ===========================================================================
+
+include("PopupSupport");
+
+
+-- ===========================================================================
+--	CONSTANTS
+-- ===========================================================================
+local debugTest:boolean = false;		-- (false) when true run test on hotload
+local RELOAD_CACHE_AND_LOCK_ID	:string = "EraCompletePopup";
 
 -- ===========================================================================
 --	VARIABLES
 -- ===========================================================================
-local m_eventID		:number = 0;
+local m_lastShownEraIndex	:number = -1;
+local m_isClosing			:boolean = false;
+
 
 -- ===========================================================================
 --	Game Engine EVENT
 -- ===========================================================================
-function OnEraComplete( playerIndex:number, eraType:number )	
-	-- Only activate if it's for this player and not multiplayer.	
-	local localPlayer :number = Game.GetLocalPlayer();
-	if	localPlayer ~= playerIndex or 
-		localPlayer == PlayerTypes.NONE or 
-		GameConfiguration.IsNetworkMultiplayer() or 
-		eraType == 0 or
-		Game.GetCurrentGameTurn() == GameConfiguration.GetStartTurn() then
+function OnEraComplete( playerIndex:number, currentEra:number )
+
+	local localPlayer	:number = Game.GetLocalPlayer();
+	local currentTurn	:number = Game.GetCurrentGameTurn();
+	local gameStartTurn	:number = GameConfiguration.GetStartTurn();
+
+	-- Check all the reasons why this shouldn't occur and bail if any are true.
+	local isInvalidLocalPlayer	:boolean = localPlayer == PlayerTypes.NONE;
+	local isSameEra				:boolean = currentEra == m_lastShownEraIndex;	
+	local isFirstTurnOfGame		:boolean = currentTurn == gameStartTurn;
+	if isInvalidLocalPlayer or isSameEra or isFirstTurnOfGame or localPlayer ~= playerIndex then
 		return;	
-	else
-		local eraName :string = GameInfo.Eras[eraType].Name;		
-		-- Bring back if blocking; see header note: m_eventID = ReferenceCurrentGameCoreEvent();
-		Controls.EraCompletedHeader:SetText( Locale.ToUpper(Locale.Lookup(eraName)) );
-		UIManager:QueuePopup( ContextPtr, PopupPriority.High );
-		
 	end
+
+	m_lastShownEraIndex = currentEra;
+
+	StartEraShow();
 end
 
 -- ===========================================================================
+function StartEraShow()
+
+	LockPopupSequence(RELOAD_CACHE_AND_LOCK_ID, PopupPriority.High);
+	m_isClosing = false;
+	
+	local eraName :string = GameInfo.Eras[m_lastShownEraIndex].Name;
+	Controls.EraCompletedHeader:SetText( Locale.ToUpper(eraName) );
+end
+
+-- ===========================================================================
+--	UI Callback
+-- ===========================================================================
 function OnShow()
-    UI.PlaySound("Pause_TechCivic_Speech");
-    UI.PlaySound("UI_Era_Change");
-
-	--print("OnShow","-", "-", Controls.EraCompletedHeader:GetText(), Controls.EraCompletedHeader:IsHidden() );	--debug
-
+	UI.PlaySound("Pause_TechCivic_Speech");
+	UI.PlaySound("UI_Era_Change");
+	
 	Controls.EraPopupAnimation:SetToBeginning();
 	Controls.EraPopupAnimation:Play();
-	
+
 	Controls.HeaderAlpha:SetToBeginning();
 	Controls.HeaderAlpha:Play();
 
-	Controls.HeaderSlide:SetBeginVal(0,50);
+	Controls.HeaderSlide:SetBeginVal(0,100);
 	Controls.HeaderSlide:SetEndVal(0,0);
 	Controls.HeaderSlide:SetToBeginning();
-	Controls.HeaderSlide:Play();	
-end
-
--- ===========================================================================
-function OnHeaderAnimationComplete()
-	Controls.HeaderSlide:SetBeginVal(0,0);
-	Controls.HeaderSlide:SetEndVal(0,-50);
-	Controls.HeaderSlide:SetToBeginning();
-	Controls.HeaderSlide:SetPauseTime(1);
 	Controls.HeaderSlide:Play();
 end
 
+
 -- ===========================================================================
 function OnEraPopupAnimationEnd()
+	if m_isClosing then return; end	-- Already closing, ignore any anim callbacks.
+
 	if Controls.EraPopupAnimation:IsReversing() then
 		Close();
 	else
@@ -76,16 +91,16 @@ function Resize()
 	local screenX, screenY:number = UIManager:GetScreenSizeVal()
 	Controls.GradientT:SetSizeX(screenX);
 	Controls.GradientB:SetSizeX(screenX);
-	Controls.GradientT:ReprocessAnchoring();
-	Controls.GradientB:ReprocessAnchoring();
-	Controls.EraCompletedHeader:ReprocessAnchoring();
 end
 
 -- ===========================================================================
 function Close()
-	-- Bring back if blocking; see header note:  ReleaseGameCoreEvent( m_eventID );
-	m_eventID = 0;
-	UIManager:DequeuePopup( ContextPtr );
+	if not m_isClosing then
+		m_isClosing = true;
+		UnlockPopupSequence();
+		Controls.EraPopupAnimation:Stop();
+		Controls.HeaderSlide:Stop();		
+	end
 end
 
 -- ===========================================================================
@@ -98,11 +113,11 @@ end
 --	UI Event Handler
 -- ===========================================================================
 function KeyHandler( key:number )
-    if key == Keys.VK_ESCAPE then
+	if key == Keys.VK_ESCAPE then
 		Close();
 		return true;
-    end
-    return false;
+	end
+	return false;
 end
 function OnInputHandler( pInputStruct:table )
 	local uiMsg = pInputStruct:GetMessageType();
@@ -113,22 +128,65 @@ end
 -- ===========================================================================
 --	Resize Handler
 -- ===========================================================================
-function OnUpdateUI( type:number, tag:string, iData1:number, iData2:number, strData1:string )   
+function OnUpdateUI( type:number, tag:string, iData1:number, iData2:number, strData1:string )
   if type == SystemUpdateUI.ScreenResize then
-    Resize();
+	Resize();
   end
 end
 
 -- ===========================================================================
-function Initialize()	
+--	LUA Event
+--	Set cached values back after a hotload.
+-- ===========================================================================
+function OnGameDebugReturn( context:string, contextTable:table )
+	if context ~= RELOAD_CACHE_ID then
+		return;
+	end
+	
+	m_lastShownEraIndex = contextTable["m_lastShownEraIndex"];
+	if (contextTable["isHidden"]==false) then
+		StartEraShow()
+	end
+end
+
+
+-- ===========================================================================
+--	UI Event Handler
+-- ===========================================================================
+function OnInit( isReload:boolean )
+	if isReload or debugTest then
+		LuaEvents.GameDebug_GetValues(RELOAD_CACHE_AND_LOCK_ID);				
+	end
+end
+
+-- ===========================================================================
+--	UI Event Handler
+-- ===========================================================================
+function OnShutdown()
+	if IsLocked() then
+		UnlockPopupSequence();
+	end
+	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_AND_LOCK_ID, "isHidden", ContextPtr:IsHidden() );
+	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_AND_LOCK_ID, "m_lastShownEraIndex", m_lastShownEraIndex );
+end
+
+-- ===========================================================================
+function Initialize()
+
+	if GameConfiguration.IsNetworkMultiplayer() then
+		return;
+	end
+
 	ContextPtr:SetInputHandler( OnInputHandler, true );
 	ContextPtr:SetShowHandler( OnShow );
+	ContextPtr:SetInitHandler( OnInit );
+	ContextPtr:SetShutdown( OnShutdown );
 
-	Controls.EraPopupAnimation:RegisterStartCallback( function() print("START EraPopupAnimation"); end ); --??TRON debug
+	LuaEvents.GameDebug_Return.Add(OnGameDebugReturn);
+
 	Controls.EraPopupAnimation:RegisterEndCallback( OnEraPopupAnimationEnd );
-	Controls.HeaderSlide:RegisterEndCallback( OnHeaderAnimationComplete );
 
-	Events.PlayerEraChanged.Add( OnEraComplete );	
-	Events.SystemUpdateUI.Add( OnUpdateUI );
+	Events.SystemUpdateUI.Add( OnUpdateUI );	
+	Events.PlayerEraChanged.Add( OnEraComplete );
 end
 Initialize();

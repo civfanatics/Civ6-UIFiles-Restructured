@@ -1,8 +1,5 @@
--- ===========================================================================
---	ReportScreen
---	All the data
---
--- ===========================================================================
+-- Copyright 2016-2018, Firaxis Games
+
 include("CitySupport");
 include("Civ6Common");
 include("InstanceManager");
@@ -14,7 +11,6 @@ include("TabSupport");
 --	DEBUG
 --	Toggle these for temporary debugging help.
 -- ===========================================================================
-local m_debugFullHeight				:boolean = true;		-- (false) if the screen area should resize to full height of the available space.
 local m_debugNumResourcesStrategic	:number = 0;			-- (0) number of extra strategics to show for screen testing.
 local m_debugNumBonuses				:number = 0;			-- (0) number of extra bonuses to show for screen testing.
 local m_debugNumResourcesLuxuries	:number = 0;			-- (0) number of extra luxuries to show for screen testing.
@@ -42,19 +38,19 @@ end
 --	VARIABLES
 -- ===========================================================================
 
-m_simpleIM = InstanceManager:new("SimpleInstance",			"Top",		Controls.Stack);				-- Non-Collapsable, simple
-m_tabIM = InstanceManager:new("TabInstance",				"Button",	Controls.TabContainer);
-local m_groupIM				:table = InstanceManager:new("GroupInstance",			"Top",		Controls.Stack);				-- Collapsable
-local m_bonusResourcesIM	:table = InstanceManager:new("ResourceAmountInstance",	"Info",		Controls.BonusResources);
-local m_luxuryResourcesIM	:table = InstanceManager:new("ResourceAmountInstance",	"Info",		Controls.LuxuryResources);
-local m_strategicResourcesIM:table = InstanceManager:new("ResourceAmountInstance",	"Info",		Controls.StrategicResources);
+m_simpleIM							= InstanceManager:new("SimpleInstance",			"Top",		Controls.Stack);				-- Non-Collapsable, simple
+m_tabIM								= InstanceManager:new("TabInstance",				"Button",	Controls.TabContainer);
+m_strategicResourcesIM				= InstanceManager:new("ResourceAmountInstance",	"Info",		Controls.StrategicResources);
+m_bonusResourcesIM					= InstanceManager:new("ResourceAmountInstance",	"Info",		Controls.BonusResources);
+m_luxuryResourcesIM					= InstanceManager:new("ResourceAmountInstance",	"Info",		Controls.LuxuryResources);
+local m_groupIM				:table	= InstanceManager:new("GroupInstance",			"Top",		Controls.Stack);				-- Collapsable
 
 
 m_kCityData = nil;
 m_tabs = nil;
+m_kResourceData = nil;
 local m_kCityTotalData		:table = nil;
 local m_kUnitData			:table = nil;	-- TODO: Show units by promotion class
-local m_kResourceData		:table = nil;
 local m_kDealData			:table = nil;
 local m_uiGroups			:table = nil;	-- Track the groups on-screen for collapse all action.
 
@@ -83,15 +79,21 @@ end
 -- ===========================================================================
 --	Single entry point for display
 -- ===========================================================================
-function Open()
-	UIManager:QueuePopup( ContextPtr, PopupPriority.Normal );
+function Open( tabToOpen:string )
+	
+	local displayedTabIndex:number = 1;
+	if tabToOpen=="Resources" then displayedTabIndex = 2; end
+	if tabToOpen=="CityStatus" then displayedTabIndex = 3; end
+
+
+	UIManager:QueuePopup( ContextPtr, PopupPriority.Medium );
 	Controls.ScreenAnimIn:SetToBeginning();
 	Controls.ScreenAnimIn:Play();
 	UI.PlaySound("UI_Screen_Open");
 
 	m_kCityData, m_kCityTotalData, m_kResourceData, m_kUnitData, m_kDealData = GetData();
 	
-	m_tabs.SelectTab( 1 );
+	m_tabs.SelectTab( displayedTabIndex );
 end
 
 -- ===========================================================================
@@ -100,6 +102,20 @@ end
 -- ===========================================================================
 function OnTopOpenReportsScreen()
 	Open();
+end
+
+-- ===========================================================================
+--	LUA Events
+-- ===========================================================================
+function OnOpenCityStatus()
+	Open("CityStatus");
+end
+
+-- ===========================================================================
+--	LUA Events
+-- ===========================================================================
+function OnOpenResources()
+	Open("Resources");
 end
 
 -- ===========================================================================
@@ -418,23 +434,28 @@ function GetData()
 		end
 	end
 
+	kResources = AddMiscResourceData(pResources, kResources);
+
+	return kCityData, kCityTotalData, kResources, kUnitData, kDealData;
+end
+
+function AddMiscResourceData(pResourceData:table, kResourceTable:table)
 	-- Resources not yet accounted for come from other gameplay bonuses
-	if pResources then
+	if pResourceData then
 		for row in GameInfo.Resources() do
-			local internalResourceAmount:number = pResources:GetResourceAmount(row.Index);
+			local internalResourceAmount:number = pResourceData:GetResourceAmount(row.Index);
 			if (internalResourceAmount > 0) then
-				if (kResources[row.Index] ~= nil) then
-					if (internalResourceAmount > kResources[row.Index].Total) then
-						AddResourceData(kResources, row.Index, "LOC_HUD_REPORTS_MISC_RESOURCE_SOURCE", "-", internalResourceAmount - kResources[row.Index].Total);
+				if (kResourceTable[row.Index] ~= nil) then
+					if (internalResourceAmount > kResourceTable[row.Index].Total) then
+						AddResourceData(kResourceTable, row.Index, "LOC_HUD_REPORTS_MISC_RESOURCE_SOURCE", "-", internalResourceAmount - kResourceTable[row.Index].Total);
 					end
 				else
-					AddResourceData(kResources, row.Index, "LOC_HUD_REPORTS_MISC_RESOURCE_SOURCE", "-", internalResourceAmount);
+					AddResourceData(kResourceTable, row.Index, "LOC_HUD_REPORTS_MISC_RESOURCE_SOURCE", "-", internalResourceAmount);
 				end
 			end
 		end
 	end
-
-	return kCityData, kCityTotalData, kResources, kUnitData, kDealData;
+	return kResourceTable;
 end
 
 -- ===========================================================================
@@ -960,7 +981,7 @@ function ViewYieldsPage()
 	local iTotalBuildingMaintenance :number = 0;
 	for cityName,kCityData in pairs(m_kCityData) do
 		for _,kBuilding in ipairs(kCityData.Buildings) do
-			if kBuilding.Maintenance > 0 then
+			if (kBuilding.Maintenance > 0 and kBuilding.isPillaged == false) then
 				local pBuildingInstance:table = {};		
 				ContextPtr:BuildInstanceForControl( "BuildingExpensesEntryInstance", pBuildingInstance, instance.ContentStack ) ;		
 				TruncateStringWithTooltip(pBuildingInstance.CityName, 224, Locale.Lookup(cityName)); 
@@ -970,7 +991,7 @@ function ViewYieldsPage()
 			end
 		end
 		for _,kDistrict in ipairs(kCityData.BuildingsAndDistricts) do
-			if kDistrict.Maintenance > 0 then
+			if (kDistrict.Maintenance > 0 and kDistrict.isPillaged == false) then
 				local pDistrictInstance:table = {};		
 				ContextPtr:BuildInstanceForControl( "BuildingExpensesEntryInstance", pDistrictInstance, instance.ContentStack ) ;		
 				TruncateStringWithTooltip(pDistrictInstance.CityName, 224, Locale.Lookup(cityName)); 
@@ -1139,7 +1160,7 @@ function ViewResourcesPage()
 		local numCitiesProvidingTo: number = table.count(citiesProvidedTo);
 		if (numCitiesProvidingTo > 0) then
 			pFooterInstance.AmenitiesContainer:SetHide(false);
-			pFooterInstance.Amenities:SetText("[ICON_Amenities][ICON_GoingTo]"..numCitiesProvidingTo.." "..Locale.Lookup("LOC_PEDIA_CONCEPTS_PAGEGROUP_CITIES_NAME"));
+			pFooterInstance.Amenities:SetText("[ICON_Amenities][ICON_GoingTo]" .. Locale.Lookup("LOC_HUD_REPORTS_CITY_AMENITIES", numCitiesProvidingTo));
 			local amenitiesTooltip: string = "";
 			local playerCities = localPlayer:GetCities();
 			for i,city in ipairs(citiesProvidedTo) do
@@ -1229,7 +1250,11 @@ function ViewCityStatusPage()
 		elseif kCityData.HousingMultiplier <= 0.5 then
 			status = "LOC_HUD_REPORTS_STATUS_SLOWED";
 		else
-			status = "LOC_HUD_REPORTS_STATUS_NORMAL";
+			if kCityData.HappinessGrowthModifier > 0 then
+				status = "LOC_HUD_REPORTS_STATUS_ACCELERATED";
+			else
+				status = "LOC_HUD_REPORTS_STATUS_NORMAL";
+			end
 		end
 		pCityInstance.GrowthRateStatus:SetText( Locale.Lookup(status) );
 
@@ -1300,34 +1325,25 @@ end
 
 
 -- ===========================================================================
---	UI Event
--- ===========================================================================
-function OnInit( isReload:boolean )
-	if isReload then		
-		if ContextPtr:IsHidden()==false then
-			Open();
-		end
-	end
-	m_tabs.AddAnimDeco(Controls.TabAnim, Controls.TabArrow);	
-end
-
-
--- ===========================================================================
 function Resize()
 	local topPanelSizeY:number = 30;
 
-	if m_debugFullHeight then
-		x,y = UIManager:GetScreenSizeVal();
-		Controls.Main:SetSizeY( y - topPanelSizeY );
-		Controls.Main:SetOffsetY( topPanelSizeY * 0.5 );
+	x,y = UIManager:GetScreenSizeVal();
+	Controls.Main:SetSizeY( y - topPanelSizeY );
+	Controls.Main:SetOffsetY( topPanelSizeY * 0.5 );
+end
+
+-- ===========================================================================
+--	Game Event Callback
+-- ===========================================================================
+function OnLocalPlayerTurnEnd()
+	if(GameConfiguration.IsHotseat()) then
+		OnCloseButton();
 	end
 end
 
 -- ===========================================================================
---
--- ===========================================================================
-function Initialize()
-
+function LateInitialize()
 	Resize();	
 
 	m_tabs = CreateTabs( Controls.TabContainer, 42, 34, 0xFF331D05 );
@@ -1339,6 +1355,24 @@ function Initialize()
 
 	m_tabs.SameSizedTabs(50);
 	m_tabs.CenterAlignTabs(-10);		
+end
+
+-- ===========================================================================
+--	UI Event
+-- ===========================================================================
+function OnInit( isReload:boolean )
+	LateInitialize();
+	if isReload then		
+		if ContextPtr:IsHidden()==false then
+			Open();
+		end
+	end
+	m_tabs.AddAnimDeco(Controls.TabAnim, Controls.TabArrow);
+end
+
+
+-- ===========================================================================
+function Initialize()
 
 	-- UI Callbacks
 	ContextPtr:SetInitHandler( OnInit );
@@ -1351,5 +1385,10 @@ function Initialize()
 	-- Events
 	LuaEvents.TopPanel_OpenReportsScreen.Add( OnTopOpenReportsScreen );
 	LuaEvents.TopPanel_CloseReportsScreen.Add( OnTopCloseReportsScreen );
+	LuaEvents.ReportsList_OpenCityStatus.Add( OnOpenCityStatus );
+	LuaEvents.ReportsList_OpenResources.Add( OnOpenResources );
+	LuaEvents.ReportsList_OpenYields.Add( OnTopOpenReportsScreen );
+
+	Events.LocalPlayerTurnEnd.Add( OnLocalPlayerTurnEnd );
 end
 Initialize();

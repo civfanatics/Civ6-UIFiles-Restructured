@@ -1,45 +1,61 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 
-<Root>
+<Include File="CivilizationIcon" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="..\..\..\..\..\..\CivTech\Libs\ForgeUI\ForgeUI_Assets\Controls.xsd">
 
-	<Instance Name="CivilizationIcon22" Size="22,22">
+	<Instance Name="CivilizationIcon22">
 		<Image ID="CivIconBacking" Size="22,22" Texture="CircleBacking22">
 			<Image ID="CivIcon" Size="22,22" Texture="CivSymbols22"/>
 		</Image>
 	</Instance>
 
-  <Instance Name="CivilizationIcon30" Size="30,30">
+  <Instance Name="CivilizationIcon30">
     <Image ID="CivIconBacking" Size="30,30" Texture="CircleBacking30">
       <Image ID="CivIcon" Size="30,30" Texture="CivSymbols30"/>
     </Image>
   </Instance>
   
-  <Instance Name="CivilizationIcon36" Size="36,36">
+  <Instance Name="CivilizationIcon36">
     <Image ID="CivIconBacking" Size="36,36" Texture="CircleBacking36">
       <Image ID="CivIcon" Size="36,36" Texture="CivSymbols36"/>
     </Image>
   </Instance>
 
-  <Instance Name="CivilizationIconBar36" Size="36,36">
+	<!-- Currently only one with full compositing layers. -->
+  <Instance Name="CivilizationIcon44">
+    <Image ID="CivIconBacking" Size="44,44" Texture="CircleBacking44">
+			<Image Anchor="C,C" Size="44,44" Texture="Circle44_Darker"  Color="0,0,0,50" />
+			<Image Anchor="C,C" Size="44,44" Texture="Circle44_Lighter" Color="255,255,255,100" />
+			<Image ID="CivIcon" Size="44,44" Texture="CivSymbols44"/>
+    </Image>
+  </Instance>
+
+  <Instance Name="CivilizationIcon256">
+    <Image ID="CivIconBacking" Size="256,256" Texture="CircleBacking256">
+      <Image ID="CivIcon" Size="256,256" Texture="CivSymbols256"/>
+    </Image>
+  </Instance>
+
+  <Instance Name="CivilizationIconBar36">
     <TextureBar	ID="CivIconBacking" Anchor="C,C" Direction="Up" Speed="0" Size="36,36" Texture="CircleBacking36">
       <TextureBar	ID="CivIcon" Anchor="C,C" Direction="Up" Speed="0" Size="36,36" Texture="CivSymbols36"/>
     </TextureBar>
   </Instance>
 
-  <Instance Name="CivilizationIconBar48" Size="48,48">
+  <Instance Name="CivilizationIconBar48">
     <TextureBar	ID="CivIconBacking" Anchor="C,C" Direction="Up" Speed="0" Size="48,48" Texture="CircleBacking48">
       <TextureBar	ID="CivIcon" Anchor="C,C" Direction="Up" Speed="0" Size="48,48" Texture="CivSymbols48"/>
     </TextureBar>
   </Instance>
 
-	<Instance Name="CivilizationIconShaded44" Size="44,44">
+	<!-- Deprecate for standard 44 -->
+	<Instance Name="CivilizationIconShaded44">
 		<Container Size="auto,auto" Anchor="C,C">
 			<Image ID="CivBacking_Base" Texture="Circle44_Base" Size="44,44" Anchor="C,C" Color="49,59,80,255"/>
-			<Image ID="CivBacking_Darker" Texture="Circle44_Darker" Size="44,44" Anchor="C,C" Color="49,59,80,255"/>
-			<Image ID="CivBacking_Lighter" Texture="Circle44_Lighter" Size="44,44" Anchor="C,C" Color="49,59,80,255"/>
+			<Image ID="CivBacking_Darker" Texture="Circle44_Darker" Size="44,44" Anchor="C,C" Color="0,0,0,50"/>
+			<Image ID="CivBacking_Lighter" Texture="Circle44_Lighter" Size="44,44" Anchor="C,C" Color="255,255,255,100"/>
 			<Image ID="CivBacking_None" Texture="Circle44_None" Size="44,44" Anchor="C,C"/>
 			<Image ID="CivIcon" Texture="CivSymbols36" Size="36,36" Anchor="C,C"/>
 		</Container>
 	</Instance>
   
-</Root>
+</Include>

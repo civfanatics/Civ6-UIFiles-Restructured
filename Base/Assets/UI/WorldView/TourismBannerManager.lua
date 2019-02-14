@@ -4,6 +4,7 @@
 
 include( "InstanceManager" );
 include( "SupportFunctions" );
+include( "Colors") ;
 
 -- ===========================================================================
 --	CONSTANTS
@@ -64,6 +65,8 @@ local m_TourismBannerIM:table = InstanceManager:new( "TourismBannerInstance", "A
 
 local m_zoomMultiplier				:number = 1;
 local m_prevZoomMultiplier			:number = 1;
+
+local m_TouristTokens : number = UILens.CreateLensLayerHash("Tourist_Tokens");
 
 -- ===========================================================================
 -- constructor
@@ -134,7 +137,7 @@ end
 -- ===========================================================================
 function TourismBanner.UpdateVisibility( self:TourismBanner )
 	-- Only show when the tourism lens is active
-	if UILens.IsLayerOn( LensLayers.TOURIST_TOKENS ) then
+	if UILens.IsLayerOn( m_TouristTokens ) then
 		self.m_Instance.TourismBannerContainer:SetHide(false);
 	else
 		self.m_Instance.TourismBannerContainer:SetHide(true);
@@ -267,21 +270,21 @@ end
 
 -- ===========================================================================
 function OnWorldRenderViewChanged()
-	if UILens.IsLayerOn(LensLayers.TOURIST_TOKENS) then
+	if UILens.IsLayerOn(m_TouristTokens) then
 		RefreshBannerPositions();
 	end
 end
 
 -- ===========================================================================
 function OnCameraUpdate()
-	if UILens.IsLayerOn(LensLayers.TOURIST_TOKENS) then
+	if UILens.IsLayerOn(m_TouristTokens) then
 		RefreshBannerPositions();
 	end
 end
 
 -- ===========================================================================
 function OnLensLayerOn( layerNum:number )		
-	if layerNum == LensLayers.TOURIST_TOKENS then
+	if layerNum == m_TouristTokens then
 		-- Add any new banners
 		CreateTourismBanners( Game.GetLocalPlayer() );
 
@@ -292,7 +295,7 @@ end
 
 -- ===========================================================================
 function OnLensLayerOff( layerNum:number )
-	if layerNum == LensLayers.TOURIST_TOKENS then
+	if layerNum == m_TouristTokens then
 		RefreshBanners(false);
 	end
 end
@@ -300,7 +303,7 @@ end
 -- ===========================================================================
 function OnContextInitialize( isReload:boolean )	
 	if isReload then
-		if UILens.IsLayerOn( LensLayers.TOURIST_TOKENS ) then
+		if UILens.IsLayerOn( m_TouristTokens ) then
 			CreateTourismBanners( Game.GetLocalPlayer() );
 			RefreshBanners(false);
 		end

@@ -2,7 +2,7 @@
 <Context xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="..\..\..\..\..\CivTech\Libs\ForgeUI\ForgeUI_Assets\Controls.xsd"
 		ColorSet="BodyTextCool" Style="FontNormal22" FontEffect="Stroke">
 
-
+	<Include File="PopupDialog" />
 	<Box ID="MainGrid" Size="1024,parent" Anchor="C,T" Color="9,44,72,200" TutorialActive="1">
 		<Image Texture="Controls_GradientSmall" Size="22,parent" AnchorSide="O,I" Anchor="R,T" Color="0,0,0,200" Rotate="270" Offset="0,0"/>
 		<Image Texture="Controls_GradientSmall" Size="22,parent" AnchorSide="O,I" Anchor="L,T" Color="0,0,0,200" Rotate="90" Offset="0,0"/>
@@ -93,11 +93,13 @@
 							</Grid>
 
 							<!-- Additional details scroll panel -->
-							<ScrollPanel ID="ModDetailsScrollPanel" Anchor="L,T" Vertical="1" Offset="0,100" Size="parent,parent-130" AutoScrollBar="1">
+							<ScrollPanel ID="ModDetailsScrollPanel" Anchor="L,T" Vertical="1" Offset="0,100" Size="parent,parent-160" AutoScrollBar="1">
 								<Stack Anchor="L,T" ID="ModDetailsStack" StackGrowth="Bottom" Padding="5" Size="parent,10">
 
+									
 									<Container Size="parent,8"/>
-									<Label ID="ModIdVersion" Style="FontNormal16" Anchor="C,T" Offset="0,5"/>
+									<Label ID="ModCompatibilityWarning" Style="FontNormal14" String="LOC_MODS_DETAILS_NOT_COMPATIBLE_WARNING" Anchor="C,T" Offset="0,5"/>
+									<Label ID="ModIdVersion" Style="FontNormal14" Anchor="C,T" Offset="0,5"/>
 									<Container Size="parent,6"/>
 
 									<Stack ID="ModPropertiesStack" StackGrowth="Right" Anchor="C,T" Padding="5">
@@ -139,9 +141,10 @@
 							</ScrollPanel>
 
 							<!-- Enable/Disable Buttons -->
+							<CheckBox ID="WhitelistMod" Style="CheckBoxModsControl" String="LOC_MODS_DETAILS_COMPATIBILITY_WHITELIST_PROMPT"   Anchor="C,B"  Size="150,24" Offset="0,30" />
 							<Box Color="10,60,78,255" Anchor="C,B" Size="Parent,3" Offset="0,26" />
-							<GridButton ID="EnableButton" Style="MainButtonSmall" Anchor="C,B" Size="250,24" String="LOC_MODS_ENABLE"/>
-							<GridButton ID="DisableButton" Style="MainButtonSmall" Anchor="C,B" Size="250,24" String="LOC_MODS_DISABLE"/>
+							<GridButton ID="EnableButton" Style="MainButtonSmall" Anchor="C,B" Offset="0,-5" Size="250,30" String="LOC_MODS_ENABLE"/>
+							<GridButton ID="DisableButton" Style="MainButtonSmall" Anchor="C,B" Offset="0,-5" Size="250,30" String="LOC_MODS_DISABLE"/>
 						</Container>
 					</Grid>
 				</Grid>
@@ -213,6 +216,7 @@
 			<Stack Anchor="R,B" StackGrowth="Left">
 				<GridButton ID="SubscriptionViewButton" Style="TabButton" Anchor="R,B" Offset="0,5" Size="150,36" String="LOC_MODS_VIEW" />
 				<GridButton ID="SubscriptionUpdateButton" Style="TabButton" Anchor="R,B" Offset="0,5" Size="150,36" String="LOC_MODS_UPDATE" />
+				<GridButton ID="UnsubscribeButton" Style="TabButton" Anchor="R,B" Offset="0,5" Size="150,36" String="LOC_MODS_UNSUBSCRIBE" />
 			</Stack>
 		</Grid>
 	</Instance>
@@ -220,5 +224,8 @@
 	<Instance Name="ReferenceItemInstance">
 		<Label ID="Item" Style="FontNormal14" Anchor="L,T" WrapWidth="parent-10" String="[ICON_DOT] Some Awesome Mod." />
 	</Instance>
+
+	<!-- Dialog Support -->
+	<MakeInstance Name="PopupDialog" />
 
 </Context>

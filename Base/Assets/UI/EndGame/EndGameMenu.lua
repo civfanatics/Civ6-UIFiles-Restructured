@@ -1,3 +1,5 @@
+-- Copyright 2016-2018, Firaxis Games
+-- See global EndGameMenu_ include at bottom of file!
 
 include("InstanceManager")
 include("EndGameReplayLogic")
@@ -52,7 +54,8 @@ local g_HideLeaderPortrait = false;
 
 local m_bAllowBack = true;
 
-local m_MovieWasPlayed = false;
+local m_MovieWasPlayed	= false;
+local m_teamVictory		= false;
 
 local g_RankIM = InstanceManager:new( "RankEntry", "Root", Controls.RankingStack );
 local g_GraphLegendInstanceManager = InstanceManager:new("GraphLegendInstance", "GraphLegend", Controls.GraphLegendStack);
@@ -220,7 +223,7 @@ function UpdateButtonStates(data:table)
 	-- If there are living human players in a hot-seat game, do not display the main menu button.
 	-- Instead go to the next player's turn.
 	local nextPlayer = false;
-	if(GameConfiguration.IsHotseat()) then
+	if(not data.NoMorePlayers and GameConfiguration.IsHotseat()) then
 		local humans = GameConfiguration.GetHumanPlayerIDs();
 		for i,v in ipairs(humans) do
 			local human = Players[v];
@@ -232,7 +235,11 @@ function UpdateButtonStates(data:table)
 	end
 
 	local noExtendedGame = GameConfiguration.GetValue("NO_EXTENDED_GAME");
-	local canExtendGame = noExtendedGame == nil or (noExtendedGame ~= 1 and noExtendedGame ~= true);
+	-- Was One More Turn ever allowed for the current game?
+	local everAllowExtended = (noExtendedGame == nil or (noExtendedGame ~= 1 and noExtendedGame ~= true))
+							and not GameConfiguration.IsPlayByCloud();			
+	-- Is One More Turn allowed for the local player now?							
+	local canExtendGame = everAllowExtended;
 	
 	if data ~= nil and data.OneMoreTurn ~= nil then
 		canExtendGame = data.OneMoreTurn;
@@ -246,10 +253,11 @@ function UpdateButtonStates(data:table)
 	-- Always show the main menu button.
 	Controls.MainMenuButton:SetHide(false);
 	
-	-- Enable just one more turn if we can extend the game.	
+	-- Enable just one more turn if we can extend the game.
 	-- Show the just one more turn button if we're not showing the next player button.	
+	-- Hide the one more turn button if it was never allowed for this game.
 	Controls.BackButton:SetDisabled(not canExtendGame);
-	Controls.BackButton:SetHide(nextPlayer);
+	Controls.BackButton:SetHide(nextPlayer or not everAllowExtended);
 
 	-- Show the next player button only if in a hot-seat match and just one more turn is disabled.
 	Controls.NextPlayerButton:SetHide(not nextPlayer);
@@ -269,11 +277,33 @@ TruncateStringWithTooltip(Controls.NextPlayerButton, MAX_BUTTON_SIZE, Locale.Loo
 Controls.NextPlayerButton:RegisterCallback( Mouse.eLClick, OnNextPlayer );
 Controls.NextPlayerButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 
+-- ===========================================================================
+function Close()
+
+	ReplayShutdown();
+	g_RankIM:ResetInstances();	-- Unload instances.	
+	Controls.Movie:Close();		-- Unload movie
+	
+	-- Unload large textures.
+	Controls.Background:UnloadTexture();
+	Controls.PlayerPortrait:UnloadTexture();
+
+	UIManager:DequeuePopup( ContextPtr );
+	UI.UnloadSoundBankGroup(5);	
+	UI.ReleasePauseEvent();		-- Release any event we might have been holding on to.	
+
+	local isHiding:boolean = true;
+	HandlePauseGame( isHiding );	
+end
+
 ----------------------------------------------------------------
 ----------------------------------------------------------------
-function OnMainMenu()
-    UI.UnloadSoundBankGroup(5);
-	Events.ExitToMainMenu();
+function OnMainMenu()    
+	Controls.Movie:Close();		-- Unload movie
+	UI.UnloadSoundBankGroup(5);	
+	UI.ReleasePauseEvent();		-- Release any event we might have been holding on to.	
+
+	Events.ExitToMainMenu();	
 end
 TruncateStringWithTooltip(Controls.MainMenuButton, MAX_BUTTON_SIZE, Locale.Lookup("LOC_UI_ENDGAME_MAIN_MENU"));
 Controls.MainMenuButton:RegisterCallback( Mouse.eLClick, OnMainMenu );
@@ -281,10 +311,9 @@ Controls.MainMenuButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlayS
 
 ----------------------------------------------------------------
 ----------------------------------------------------------------
-function OnBack()
-    UI.UnloadSoundBankGroup(5);
-	UIManager:DequeuePopup( ContextPtr );
-	LuaEvents.EndGameMenu_OneMoreTurn();
+function OnBack()    
+	Close();	
+	LuaEvents.EndGameMenu_OneMoreTurn();	
 end
 TruncateStringWithTooltip(Controls.BackButton, MAX_BUTTON_SIZE, Locale.Lookup("LOC_UI_ENDGAME_EXTENDED_GAME"));
 Controls.BackButton:RegisterCallback( Mouse.eLClick, OnBack );
@@ -298,7 +327,6 @@ function OnInfo()
     Controls.GraphPanel:SetHide(true);
 	Controls.ChatPanel:SetHide(true);
 	Controls.PlayerPortrait:SetHide(g_HideLeaderPortrait);
-
 
 	Controls.InfoButtonSelected:SetHide(false);
 	Controls.RankingButtonSelected:SetHide(true);
@@ -402,8 +430,8 @@ function OnMovieExitOrFinished()
         m_MovieWasPlayed = false;
     end
 
-	-- If in Network MP, release the pause event, so our local machine continues processing
-	if (GameConfiguration.IsNetworkMultiplayer()) then
+	-- If in Network or PlayByCloud MP, release the pause event, so our local machine continues processing
+	if (GameConfiguration.IsNetworkMultiplayer() or GameConfiguration.IsPlayByCloud()) then
 		UI.ReleasePauseEvent();
 	end
 end
@@ -426,83 +454,48 @@ function OnInputHandler( input )
 	end
 	return false;
 end
-ContextPtr:SetInputHandler( OnInputHandler, true );
 
-----------------------------------------------------------------        
-----------------------------------------------------------------        
-function ShowHideHandler( bIsHide, bIsInit )
-	 return OnShowHide( bIsHide, bIsInit );
+-- ===========================================================================
+function OnShow()
+	print("Showing EndGame Menu");
+
+	LuaEvents.EndGameMenu_Shown();	-- Add ingame bulk hide counter
+	Resize();						-- Verify we're scaled properly.
+	OnInfo();						-- Always start with the info panel.	
+	OnReplayMovie();				-- Noop if no movie is set.
+
+	-- Setup Chat Player Target Pulldown.
+	PopulateTargetPull(Controls.ChatPull, Controls.ChatEntry, Controls.ChatIcon, m_playerTargetEntries, m_playerTarget, false, OnChatPulldownChanged);
+
+	-- TODO: Better place for this to happen so it doesn't get called on every show (every queue popup)
+	local isHiding:boolean = false;
+	HandlePauseGame( isHiding );
 end
 
-function OnShowHide( bIsHide, bIsInit )
-
-	if( not bIsInit ) then
-	    if( not bIsHide ) then
-			LuaEvents.EndGameMenu_Shown();
-
-			print("Showing EndGame Menu");
-
-
-			-- Verify we're scaled properly.
-			Resize();
-
-			-- Always start with the info panel.
-			OnInfo();
-
-			-- Noop if no movie is set.
-			OnReplayMovie();
-
-		 	-- Update the state of the lower buttons.
-			UpdateButtonStates();
-
-			-- Setup Chat Player Target Pulldown.
-			PopulateTargetPull(Controls.ChatPull, Controls.ChatEntry, Controls.ChatIcon, m_playerTargetEntries, m_playerTarget, false, OnChatPulldownChanged);
-        else
-
-			print("Hiding EndGame Menu");
-			-- Release any event we might have been holding on to.
-			UI.ReleasePauseEvent();
-
-			-- Unload instances.
-			g_RankIM:ResetInstances();
-			ReplayShutdown();
-
-			-- Unload movie
-			Controls.Movie:Close();
-
-			-- NOTE: We cannot unload these textures because at present there are situations
-			-- where the popup manager shows then hides then shows the UI again.
-			-- Once this issue has been addressed, then we can add this.
-			-- Unload large textures.
-			--Controls.Background:UnloadTexture();
-			--Controls.PlayerPortrait:UnloadTexture();
-
-			LuaEvents.EndGameMenu_Closed();
-		end
-		
-		HandlePauseGame(bIsHide);
-    end
+-- ===========================================================================
+function OnHide()
+	print("Hiding EndGame Menu");
+	LuaEvents.EndGameMenu_Closed();		-- Remove ingame bulk (un)hide counter.
 end
-----------------------------------------------------------------        
----------------------------------------------------------------- 
+
+-- ===========================================================================
 -- When should the End Game screen pause the game?
--- If the player can "One More Turn" and the game has a turn timer, 
--- to prevent the game from progressing while players are looking at the screen.
+-- Network multiplayer games need to pause the game in specific situations so the game does not progress while the local player looks at this screen.
+-- NOTE: We use the gameplay pausing instead of an UI pause event because UI pause events lock gameplay event playback in a unmultiplayer friendly way.
 function ShouldPauseGame()
-	if(not GameConfiguration.IsAnyMultiplayer()
-		or GameConfiguration.GetTurnTimerType() == TurnTimerTypes.NO_TURNTIMER) then
+	if(not GameConfiguration.IsNetworkMultiplayer() ) then
 		return false;
 	end
-
-	-- Only pause the game if this player is still alive (and not totally defeated)
-	local pLocalPlayer = Players[Game.GetLocalPlayer()];
-	if(pLocalPlayer and pLocalPlayer:IsAlive()) then
-		return true;
+	
+	-- Only pause if there has been a game victory.  We do not pause the game for personal defeats because gameplay should continue for the non-defeated players.
+	if(m_teamVictory == false) then
+		return false;
 	end
 	
-	return false;	
+	return true;	
 end
 
+-- ===========================================================================
 function HandlePauseGame( bIsHide : boolean )
 	if(ShouldPauseGame()) then
 		local localPlayerID = Network.GetLocalPlayerID();
@@ -514,6 +507,7 @@ function HandlePauseGame( bIsHide : boolean )
 	end
 end
      
+	 -- ===========================================================================
 function Resize()
 	local screenX, screenY = UIManager:GetScreenSizeVal();
 
@@ -642,7 +636,7 @@ function View(data:table)
 	Controls.Movie:Close();
 
 	if(ContextPtr:IsHidden()) then
-		UIManager:QueuePopup( ContextPtr, PopupPriority.High );
+		UIManager:QueuePopup( ContextPtr, PopupPriority.EndGameMenu );
 	end	
 
 	UpdateButtonStates(data);
@@ -721,8 +715,16 @@ function PlayerDefeatedData(playerID:number, defeatType:string)
 	data.DefeatedFrontColor = frontColor;
 	data.DefeatedBackColor = backColor;
 
-	if GameInfo.Defeats[defeatType] then
-		data.OneMoreTurn = GameInfo.Defeats[defeatType].OneMoreTurn;
+	local defeat = GameInfo.Defeats[defeatType];
+	if (defeat) then
+		data.OneMoreTurn = defeat.OneMoreTurn;
+
+		-- KLUDGE
+		-- This is a kludge for hot-seat games to avoid a soft hang.
+		-- What's happening is the local player is still in the process of handling their defeat
+		-- The cache of whether other players are alive hasn't been updated for the other players yet
+		-- so end-game thinks other players are alive and the game can be resumed.
+		data.NoMorePlayers= defeat.Global;
 	end
 
 	return data;
@@ -748,7 +750,18 @@ function TeamVictoryData(winningTeamID:number, victoryType:string)
 	end
 
 	-- Gather player portrait data
-	local pPlayerConfig = PlayerConfigurations[localPlayerID];
+	-- The portrait should be the first living player in the winning team.
+	local playerToShow = localPlayerID; -- default to local player, if something weird happens.
+	local team = Teams[winningTeamID];
+	for i, v in ipairs(team) do
+		local player = Players[v];
+		if(player:IsAlive()) then
+			playerToShow = v;
+			break;
+		end
+	end
+
+	local pPlayerConfig = PlayerConfigurations[playerToShow];
 	local leaderType = pPlayerConfig:GetLeaderTypeName();
 	local loadingInfo:table = GameInfo.LoadingInfo[leaderType];
 	if loadingInfo and loadingInfo.ForegroundImage then
@@ -818,8 +831,8 @@ function TeamVictoryData(winningTeamID:number, victoryType:string)
 		-- We hide this panel unless the winning player is not the local player
 		data.DefeatedName = "";
 	else
-		local pDefeatedConfig = PlayerConfigurations[localPlayerTeamID];
-		local pDefeatedPlayer = Players[localPlayerTeamID];
+		local pDefeatedConfig = PlayerConfigurations[localPlayerID];
+		local pDefeatedPlayer = Players[localPlayerID];
 		data.DefeatedName = Locale.Lookup(pDefeatedConfig:GetCivilizationDescription());
 		if GameConfiguration.IsAnyMultiplayer() and pDefeatedPlayer:IsHuman() then
 			local defeatedName = Locale.Lookup(pDefeatedConfig:GetPlayerName());
@@ -829,7 +842,7 @@ function TeamVictoryData(winningTeamID:number, victoryType:string)
 		local defeatedCivType = pDefeatedConfig:GetCivilizationTypeName();
 		data.DefeatedIcon = "ICON_" .. defeatedCivType;
 
-		local backColor, frontColor = UI.GetPlayerColors(localPlayerTeamID);
+		local backColor, frontColor = UI.GetPlayerColors(localPlayerID);
 		data.DefeatedFrontColor = frontColor;
 		data.DefeatedBackColor = backColor;
 	end
@@ -869,10 +882,16 @@ end
 -- The UI is only displayed if this player is you.
 ----------------------------------------------------------------
 function OnTeamVictory(team, victory, eventID)
-
+	m_teamVictory = true;
 	local localPlayer = Game.GetLocalPlayer();
 	if (localPlayer and localPlayer >= 0) then		-- Check to see if there is any local player
 		local p = Players[localPlayer]; 
+		
+		-- [TTP 34847] Handle the specific case where the local player was defeated and it resulted in game victory.  
+		-- It is possible that PlayerDefeat was processed first.  In that case the player defeated screen is visible but the game is not paused.
+		if(ContextPtr:IsHidden() == false) then
+			HandlePauseGame(false);
+		end
 
 		-- Only show the defeat screen to other living players.  If a player
 		-- was defeated, they would receive another notification.
@@ -1077,7 +1096,10 @@ end
 --	Initialize screen
 -- ===========================================================================
 function Initialize()
-	ContextPtr:SetShowHideHandler( ShowHideHandler );
+
+	ContextPtr:SetInputHandler( OnInputHandler, true );
+	ContextPtr:SetShowHandler( OnShow );
+	ContextPtr:SetHideHandler( OnHide );
 
 	Controls.ChatEntry:RegisterCommitCallback( SendChat );
 

@@ -165,9 +165,7 @@ function AddChatEntry( chatString :string, chatEntryStack :table, chatInstances 
 	controlTable.ChatRoot:SetSize(controlTable.String:GetSize());	
 
 	chatEntryStack:CalculateSize();
-	chatEntryStack:ReprocessAnchoring();
 	chatLogPanel:CalculateInternalSize();
-	chatLogPanel:ReprocessAnchoring();
 end
 
 

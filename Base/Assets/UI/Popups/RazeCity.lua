@@ -1,44 +1,66 @@
-local g_pSelectedCity;
+-- Copyright 2016-2018, Firaxis Games
 
+-- ===========================================================================
+--	GLOBALS
+-- ===========================================================================
+g_pSelectedCity = nil;
+
+
+-- ===========================================================================
+--	FUNCTIONS
+-- ===========================================================================
+
+
+-- ===========================================================================
 function OnButton1()
 	local tParameters = {};
-	tParameters[UnitOperationTypes.PARAM_FLAGS] = 0;
+	tParameters[UnitOperationTypes.PARAM_FLAGS] = CityDestroyDirectives.LIBERATE_FOUNDER;
 	if (CityManager.CanStartCommand( g_pSelectedCity, CityCommandTypes.DESTROY, tParameters)) then
 		UI.DeselectAllCities();
 		CityManager.RequestCommand( g_pSelectedCity, CityCommandTypes.DESTROY, tParameters);
 	end
-	OnClose();
+	Close();
 end
+
+-- ===========================================================================
 function OnButton2()
 	local tParameters = {};
-	tParameters[UnitOperationTypes.PARAM_FLAGS] = 1;
+	tParameters[UnitOperationTypes.PARAM_FLAGS] = CityDestroyDirectives.LIBERATE_PREVIOUS_OWNER;
 	if (CityManager.CanStartCommand( g_pSelectedCity, CityCommandTypes.DESTROY, tParameters)) then
 		UI.DeselectAllCities();
 		CityManager.RequestCommand( g_pSelectedCity, CityCommandTypes.DESTROY, tParameters);
 	end
-	OnClose();
+	Close();
 end
+
+-- ===========================================================================
 function OnButton3()
 	local tParameters = {};
-	tParameters[UnitOperationTypes.PARAM_FLAGS] = 2;
+	tParameters[UnitOperationTypes.PARAM_FLAGS] = CityDestroyDirectives.KEEP;
 	if (CityManager.CanStartCommand( g_pSelectedCity, CityCommandTypes.DESTROY, tParameters)) then
 		CityManager.RequestCommand( g_pSelectedCity, CityCommandTypes.DESTROY, tParameters);
 	end
-	OnClose();
+	Close();
 end
+
+-- ===========================================================================
 function OnButton4()
 	local tParameters = {};
-	tParameters[UnitOperationTypes.PARAM_FLAGS] = 3;
+	tParameters[UnitOperationTypes.PARAM_FLAGS] = CityDestroyDirectives.RAZE;
 	if (CityManager.CanStartCommand( g_pSelectedCity, CityCommandTypes.DESTROY, tParameters)) then
 		UI.DeselectAllCities();
 		CityManager.RequestCommand( g_pSelectedCity, CityCommandTypes.DESTROY, tParameters);
        UI.PlaySound("RAZE_CITY");
 	end
-	OnClose();
+	Close();
 end
-function OnClose()
-	ContextPtr:SetHide(true);
+
+-- ===========================================================================
+function Close()
+	UIManager:DequeuePopup(ContextPtr);
 end
+
+-- ===========================================================================
 function OnOpen()
 	local localPlayerID = Game.GetLocalPlayer();
 	local localPlayer = Players[localPlayerID];
@@ -113,32 +135,50 @@ function OnOpen()
 
 	end
 	Controls.PopupStack:CalculateSize();
-	Controls.PopupStack:ReprocessAnchoring();
-	Controls.RazeCityPanel:ReprocessAnchoring();
-	ContextPtr:SetHide(false);
+
+	UIManager:QueuePopup(ContextPtr, PopupPriority.Medium);
+
 	Controls.PopupAlphaIn:SetToBeginning();
 	Controls.PopupAlphaIn:Play();
 	Controls.PopupSlideIn:SetToBeginning();
-	Controls.PopupSlideIn:Play();
-	ContextPtr:SetInputHandler(OnInputHandler);
+	Controls.PopupSlideIn:Play();	
 end
 
+-- ===========================================================================
 function OnInputHandler( uiMsg, wParam, lParam )
     if uiMsg == KeyEvents.KeyUp then
         if wParam == Keys.VK_ESCAPE then
-            OnClose();
+            Close();
         end
     end
     return true;
 end
 
 -- ===========================================================================
-function Initialize()
+function OnClose()
+	Close();
+end
+
+-- ===========================================================================
+function LateInitialize()	
+	ContextPtr:SetInputHandler(OnInputHandler);
+
 	Controls.Button1:RegisterCallback(Mouse.eLClick, OnButton1);
 	Controls.Button2:RegisterCallback(Mouse.eLClick, OnButton2);
 	Controls.Button3:RegisterCallback(Mouse.eLClick, OnButton3);
 	Controls.Button4:RegisterCallback(Mouse.eLClick, OnButton4);
-	LuaEvents.NotificationPanel_OpenRazeCityChooser.Add(OnOpen);
-	Controls.ModalScreenClose:RegisterCallback(Mouse.eLClick, OnClose);
+	Controls.CloseButton:RegisterCallback(Mouse.eLClick, OnClose);
+	
+	LuaEvents.NotificationPanel_OpenRazeCityChooser.Add( OnOpen );
+end
+
+-- ===========================================================================
+function OnInit( isReload:boolean )
+	LateInitialize();
+end
+
+-- ===========================================================================
+function Initialize()
+	ContextPtr:SetInitHandler( OnInit );
 end
 Initialize();

@@ -1,20 +1,31 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Context>
-  <!-- Darken the screen -->
-  <Box Color="0,0,0,150" Size="parent,parent" ConsumeMouse="1"/>
-  <Image Texture="Controls_Vignette" Size="500,500"   Color="0,0,0,255" Anchor="R,B"/>
-  <Image Texture="Controls_Vignette" Size="500,500"   Color="0,0,0,255" Anchor="R,T" FlipY="1"/>
-  <Image Texture="Controls_Vignette" Size="500,500"   Color="0,0,0,255" Anchor="L,T" FlipY="1" FlipX="1"/>
-  <Image Texture="Controls_Vignette" Size="500,500"   Color="0,0,0,255" Anchor="L,B" FlipX="1"/>
-  <Image Texture="Controls_Gradient" Size="150,parent"  Color="0,0,0,255" Anchor="L,T" Rotate="90"/>
-  <Image Texture="Controls_Gradient" Size="150,parent"  Color="0,0,0,255" Anchor="R,T" Rotate="270"/>
-  <Image Texture="Controls_Gradient" Size="parent,150"  Color="0,0,0,255" Anchor="L,T" FlipY="1"/>
-  <Image Texture="Controls_Gradient" Size="parent,150"  Color="0,0,0,255" Anchor="L,B"/>
 
-  <AlphaAnim ID="WarConfirmAlpha" AlphaBegin="0" AlphaEnd="1" Speed="3" Function="Root" Cycle="Once" Size="parent,parent">
-    <SlideAnim ID="WarConfirmSlide" Start="0,-20" End="0,0" Speed="3" Function="Root" Cycle="Once" Size="parent,parent">
-      <Grid ID="DropShadow" Size="595,768" Anchor="C,C" Offset="0,0" Style="DropShadow2" Color="255,255,255,200">
-        <Grid ID="Window" Size="parent-5,parent+8" Anchor="C,C" Offset="0,0" SizePadding="0,20" Style="EventPopupFrame">
+  <!-- This instance needs to be defined at the top, because we use it in MakeInstance tags below -->
+  <Instance Name="EventPopupEffects">
+    <Container ID="Top" Anchor="C,T" Size="auto,auto">
+        <Stack ID="EffectsStack" Anchor="C,T" Size="parent,auto" Offset="0,0" StackPadding="5">
+          <Label ID="UnlocksTitle" Style="EventPopupDescriptionBold" Offset="0,2" Size="auto,auto" Align="Center" WrapWidth="250" Anchor="C,T"/>
+          <Stack ID="UnlocksStack" Anchor="C,T" Size="auto,40" StackPadding="5" StackGrowth="Right"/>
+        </Stack>
+    </Container>
+  </Instance>
+
+	<!-- Darken the screen -->
+	<Box Color="0,0,0,150" Size="parent,parent" ConsumeMouse="1"/>
+	<Image Texture="Controls_Vignette" Size="500,500"   Color="0,0,0,255" Anchor="R,B"/>
+	<Image Texture="Controls_Vignette" Size="500,500"   Color="0,0,0,255" Anchor="R,T" FlipY="1"/>
+	<Image Texture="Controls_Vignette" Size="500,500"   Color="0,0,0,255" Anchor="L,T" FlipY="1" FlipX="1"/>
+	<Image Texture="Controls_Vignette" Size="500,500"   Color="0,0,0,255" Anchor="L,B" FlipX="1"/>
+	<Image Texture="Controls_Gradient" Size="150,parent"  Color="0,0,0,255" Anchor="L,T" Rotate="90"/>
+	<Image Texture="Controls_Gradient" Size="150,parent"  Color="0,0,0,255" Anchor="R,T" Rotate="270"/>
+	<Image Texture="Controls_Gradient" Size="parent,150"  Color="0,0,0,255" Anchor="L,T" FlipY="1"/>
+	<Image Texture="Controls_Gradient" Size="parent,150"  Color="0,0,0,255" Anchor="L,B"/>
+
+	<AlphaAnim ID="WarConfirmAlpha" AlphaBegin="0" AlphaEnd="1" Speed="3" Function="Root" Cycle="Once" Size="parent,parent">
+		<SlideAnim ID="WarConfirmSlide" Start="0,-20" End="0,0" Speed="3" Function="Root" Cycle="Once" Size="parent,parent">
+			<Grid ID="DropShadow" Size="595,768" Anchor="C,C" Offset="0,0" Style="DropShadow2" Color="255,255,255,200">
+				<Grid ID="Window" Size="parent-5,parent+8" Anchor="C,C" Offset="0,0" SizePadding="0,20" Style="EventPopupFrame">
 					<Container Size="parent-32,65" Offset="0,17" Anchor="C,T">
 						<Grid Style="EventPopupTitleBar" Size="parent,parent" Anchor="C,T"/>
 						<Image Texture="Event_Default" Offset="10,0" Anchor="L,C"/>
@@ -29,17 +40,49 @@
 						<Image ID="ForegroundImage" Texture="EventFG_Default" Anchor="C,C"/>
 						<Label ID="ImageText" Offset="0,70" Style="EventPopupJournal" Align="Center" WrapWidth="270" String="" Anchor="C,B"/>
 					</Container>
-					<Grid Style="EventPopupEffectsDeco" Offset="0,70" Size="parent-50,90"  Anchor="C,B">
-						<ScrollPanel ID="EffectsScrollPanel" Offset="7,5" Size="parent-14,parent-10" Style="ScrollPanelHighContrast" >
-							<Label ID="Effects" Style="EventPopupEffects" Align="Center" WrapWidth="460" String="" Anchor="C,C"/>
-						</ScrollPanel>
-					</Grid>
-          <Stack ID="ButtonStack" Anchor="C,B" Offset="0,23" StackPadding="15" StackGrowth="Right">
-            <GridButton ID="Continue" Style="MainButton" Size="200,41" Anchor="C,T" Offset="0,0"  Hidden="0" String="LOC_CONTINUE"/>
-          </Stack>
-        </Grid>
-      </Grid>
-    </SlideAnim>
-  </AlphaAnim>
+
+          <Grid Style="EventPopupEffectsDeco" Anchor="C,B" Offset="0,68" Size="parent-50,auto" MinSize="90,90">
+            <ScrollPanel ID="EffectsScrollPanel" Anchor="C,T" Style="ScrollPanelHighContrast" Size="parent-14,auto" MinSize="90,90">
+              <Stack ID="EffectsStack" Anchor="C,T" Size="parent,auto" Offset="0,0" StackPadding="5">
+                <Container ID="EffectsSpacer" Size="1,10"/>
+                <Label ID="Effects" Style="EventPopupEffects" Size="parent,auto" Align="Center" WrapWidth="460" String="" Anchor="C,T"/>
+                <Container ID="UnlocksSpacer1" Size="1,5"/>
+                
+                <Label ID="UnlocksTitle" Style="EventPopupDescriptionBold" Offset="0,2" Size="parent,auto" Align="Center" WrapWidth="420" String="LOC_EVENT_POPUP_UNLOCKED" Anchor="C,T"/>
+                <Stack ID="UnlocksStack" Anchor="C,T" Size="auto,40" StackPadding="5" StackGrowth="Right"/>
+                
+                <Container ID="MultipleChoiceUnlocks" Anchor="C,T" Size="parent,auto">
+                  <Container Size="240,auto" Anchor="L,T">
+                    <MakeInstance ID="ChoiceAEffects" Name="EventPopupEffects"/>
+                  </Container>
+                  <Container Size="240,auto" Anchor="R,T">
+                    <MakeInstance ID="ChoiceBEffects" Name="EventPopupEffects"/>
+                  </Container>
+                </Container>
+                
+                <Container ID="UnlocksSpacer2" Size="1,5"/>
+              </Stack>
+            </ScrollPanel>
+          </Grid>
+          
+					<Stack ID="ButtonStack" Anchor="C,B" Offset="0,23" StackPadding="10" StackGrowth="Right">
+						<GridButton ID="Continue" Style="MainButton" SizeToText="200,20" Anchor="C,T" Offset="0,0" Hidden="0" String="LOC_CONTINUE"/>
+						<GridButton ID="ChoiceA" Style="MainButton" Size="268,41" Anchor="L,T" Offset="0,0" Hidden="1" String="LOC_YES"/>
+						<GridButton ID="ChoiceB" Style="MainButton" Size="268,41" Anchor="R,T" Offset="0,0" Hidden="1" String="LOC_NO"/>
+					</Stack>
+				</Grid>
+			</Grid>
+		</SlideAnim>
+	</AlphaAnim>
+
+  <Instance Name="UnlockInstance">
+    <Container ID="Top" Size="45,45">
+      <Image Texture="CompletedPopup_IconSlot">
+        <Button ID="UnlockIcon" Style="UnlockFrames" NoStateChange="1" Anchor="C,C">
+          <Image ID="Icon" Size="38,38" Texture="Controls_Blank" Anchor="C,C"/>
+        </Button>
+      </Image>
+    </Container>
+  </Instance>
   
 </Context>

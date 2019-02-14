@@ -33,10 +33,10 @@
 		<Row Name="ICON_STATS_TRADEGOODS"			Index="21" Atlas="ICON_ATLAS_STATS"/>
 		<Row Name="ICON_STATS_TERRAIN"				Index="22" Atlas="ICON_ATLAS_STATS"/>
 		<Row Name="ICON_STATS_INTERCEPTOR"			Index="23" Atlas="ICON_ATLAS_STATS"/>
-		<Row Name="ICON_STATS_ANTIAIR"				Index="24" Atlas="ICON_ATLAS_STATS"/>
 		<Row Name="ICON_STATS_GENERIC_MODIFIER"		Index="25" Atlas="ICON_ATLAS_STATS"/>
 		<Row Name="ICON_STATS_SLEEP"				Index="26" Atlas="ICON_ATLAS_STATS"/>
 		<Row Name="ICON_STATS_SKIP"					Index="27" Atlas="ICON_ATLAS_STATS"/>
+    <Row Name="ICON_STATS_ANTIAIR"			Index="29" Atlas="ICON_ATLAS_STATS"/>
     <Row Name="ICON_STATS_SPREADCHARGES"					Index="30" Atlas="ICON_ATLAS_STATS"/>
 
     <Row Name="ICON_AGENDA"							Index="31" Atlas="ICON_ATLAS_STATS"/>
@@ -46,5 +46,11 @@
 		<Row Name="ICON_RELATIONSHIP"				Index="35" Atlas="ICON_ATLAS_STATS"/>
 		<Row Name="ICON_RELATIONSHIPS"			Index="36" Atlas="ICON_ATLAS_STATS"/>
     <Row Name="ICON_OVERVIEW"			      Index="37" Atlas="ICON_ATLAS_STATS"/>
+
+    <Row Name="ICON_RESOURCES"	        Index="40" Atlas="ICON_ATLAS_STATS"/>
+    <Row Name="ICON_STAT_DISTRICTS"	    Index="41" Atlas="ICON_ATLAS_STATS"/>
+    <Row Name="ICON_STAT_WONDERS"	      Index="42" Atlas="ICON_ATLAS_STATS"/>
+    <Row Name="ICON_STAT_PROJECTS"      Index="43" Atlas="ICON_ATLAS_STATS"/>
+    <Row Name="ICON_STAT_UNITS"	        Index="44" Atlas="ICON_ATLAS_STATS"/>
 	</IconDefinitions>
 </GameInfo>

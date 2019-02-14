@@ -8,7 +8,7 @@ include( "InputSupport" );
 include( "InstanceManager" );
 include( "SupportFunctions" );
 include( "Civ6Common" );
-
+include( "Colors") ;
 
 -- ===========================================================================
 --	Action Hotkeys
@@ -49,7 +49,7 @@ function OnActivateButtonClicked()
 	Controls.Portrait:UnloadTexture();
 	Events.LoadScreenClose();
 	UI.PlaySound("STOP_SPEECH_DAWNOFMAN");
-	UI.PlaySound("Stop_Main_Menu_Music");
+	UI.StartStopMenuMusic(false);
 	UI.PlaySound("Game_Begin_Button_Click");
 	UI.PlaySound("Set_View_3D");
 	UIManager:DequeuePopup( ContextPtr );
@@ -96,14 +96,12 @@ function RegisterButtonCallbacks()
 	Controls.ActivateButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end );
 	Controls.ActivateButton:RegisterCallback( Mouse.eLClick, OnActivateButtonClicked );
 	Controls.StartLabelButton:RegisterCallback( Mouse.eLClick, OnActivateButtonClicked );
-	Controls.FallbackMessage:RegisterCallback( Mouse.eLClick, OnActivateButtonClicked );
 end
 
 -- ===========================================================================
 function ClearButtonCallbacks()
 	Controls.ActivateButton:ClearCallback( Mouse.eLClick );
 	Controls.ActivateButton:ClearCallback( Mouse.eMouseEnter );
-	Controls.FallbackMessage:ClearCallback( Mouse.eLClick );
 	Controls.StartLabelButton:ClearCallback( Mouse.eLClick );
 end
 
@@ -206,6 +204,7 @@ function OnLoadScreenContentReady()
 		Controls.BackgroundImage:SetTexture( backgroundTexture );
 		if (not Controls.BackgroundImage:HasTexture()) then
 			UI.DataError("Failed to load background image texture: "..backgroundTexture);
+			Controls.BackgroundImage:SetTexture("LEADER_T_ROOSEVELT_BACKGROUND");	-- Set to well known texture
 		end
 
 		local LEADER_CONTAINER_X = 512;
@@ -298,6 +297,13 @@ function OnLoadScreenContentReady()
 		Controls.Banner:SetHide(false);
 		Controls.Portrait:SetHide(false);
 
+		-- Find center of remaining space to right of ribbon, portrait will center it's texture on that.
+		local ribbonRunsPastCenter:number = 80;
+		local screenWidth, screenHeight = UIManager:GetScreenSizeVal();
+		local backgroundWidth, backgroundHeight = Controls.BackgroundImage:GetSizeVal();
+		local minWidth = math.min(backgroundWidth, screenWidth);
+		Controls.PortraitContainer:SetSizeX( (minWidth*0.5) - ribbonRunsPastCenter );
+
 		-- start the voiceover
 		local leaderID = playerConfig:GetLeaderTypeID();
 		local bPlayDOM = true;
@@ -334,9 +340,18 @@ function OnLoadScreenContentReady()
 			--print( "ua:", item.TraitType, item.Name, item.Description, Locale.Lookup(item.Description));	--debug
 			local instance:table = {};
 			ContextPtr:BuildInstanceForControl("TextInfoInstance", instance, Controls.FeaturesStack );
-			local headerText:string = Locale.ToUpper(Locale.Lookup( item.Name )); 
-			instance.Header:SetText( headerText );
-			instance.Description:SetText( Locale.Lookup( item.Description ) );
+			if (item.Name ~= nil and item.Name ~= "NONE") then
+				local headerText:string = Locale.ToUpper(Locale.Lookup( item.Name )); 
+				instance.Header:SetText( headerText );
+			else
+				instance.Header:SetShow(false);
+			end
+
+			if (item.Description ~= nil and item.Description ~= "NONE") then
+				instance.Description:SetText( Locale.Lookup( item.Description ) );
+			else
+				instance.Description:SetShow(false);
+			end
 		end
 
 		local size:number = SIZE_BUILDING_ICON;
@@ -387,7 +402,7 @@ function OnLoadGameViewStateDone()
 	
 	UIManager:SetUICursor( 0 );	
 	
-	if m_isResyncLoad or GameConfiguration.IsAnyMultiplayer() then
+	if m_isResyncLoad or GameConfiguration.IsAnyMultiplayer() or GameConfiguration:IsWorldBuilderEditor() then
 		-- If this is a resync load, skip the Begin Game button.
 		OnActivateButtonClicked();
 	else
@@ -416,8 +431,6 @@ function OnLoadGameViewStateDone()
 		end
 	end    
 	
-	Controls.FallbackMessage:SetText("Start Game");
-
 	RegisterButtonCallbacks();
 
 	-- Engine loading should be done at this point; enable input handling.	
@@ -441,7 +454,5 @@ function Initialize()
 	Events.BeforeMultiplayerInviteProcessing.Add( OnBeforeMultiplayerInviteProcessing );
 
     UI.SetExitOnClose(true);
-
-	Controls.Portrait:ReprocessAnchoring();
 end
 Initialize();

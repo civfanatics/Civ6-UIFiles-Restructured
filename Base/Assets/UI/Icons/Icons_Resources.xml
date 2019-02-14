@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <GameInfo>
   <IconTextureAtlases>
-    <Row Name="ICON_ATLAS_RESOURCES" IconSize="64" IconsPerRow="8" IconsPerColumn="8" Filename="Resources.dds"/>
-    <Row Name="ICON_ATLAS_RESOURCES" IconSize="38" IconsPerRow="8" IconsPerColumn="8" Filename="Resources38.dds"/>
-	<Row Name="ICON_ATLAS_RESOURCES" IconSize="50" IconsPerRow="8" IconsPerColumn="8" Filename="Resources50.dds"/>
-	<Row Name="ICON_ATLAS_RESOURCES" IconSize="256" IconsPerRow="8" IconsPerColumn="8" Filename="Resources256.dds"/>
-    <Row Name="ICON_ATLAS_RESOURCES_FOW" IconSize="64" IconsPerRow="8" IconsPerColumn="8" Filename="Resources_FOW.dds"/>
+    <Row Name="ICON_ATLAS_RESOURCES"			IconSize="64"		IconsPerRow="8" IconsPerColumn="8" Filename="Resources.dds"/>
+    <Row Name="ICON_ATLAS_RESOURCES"			IconSize="38"		IconsPerRow="8" IconsPerColumn="8" Filename="Resources38.dds"/>
+		<Row Name="ICON_ATLAS_RESOURCES"			IconSize="50"		IconsPerRow="8" IconsPerColumn="8" Filename="Resources50.dds"/>
+		<Row Name="ICON_ATLAS_RESOURCES"			IconSize="256"	IconsPerRow="8" IconsPerColumn="8" Filename="Resources256.dds"/>
+    <!--<Row Name="ICON_ATLAS_RESOURCES_FOW"	IconSize="64"		IconsPerRow="8" IconsPerColumn="8" Filename="Resources_FOW.dds"/> -->
+		<Row Name="ICON_ATLAS_RESOURCES_FOW"	IconSize="256"	IconsPerRow="8" IconsPerColumn="8" Filename="Resources256_FOW.dds"/>
   </IconTextureAtlases>
   <IconDefinitions>
     <Row Name="ICON_RESOURCE_BANANAS"        Atlas="ICON_ATLAS_RESOURCES" Index="0"/>

@@ -13,7 +13,7 @@
 			<Grid Anchor="L,T" Size="parent,61" Texture="Controls_TabLedge2"  SliceCorner="194,18" SliceSize="52,26" SliceTextureSize="438,61">
 				<Container ID="TabContainer" Size="parent-80,34"	Offset="40,13" />
 				<Button ID="ExpandExtraTabs" Offset="-5,15" Texture="Controls_ButtonPlus" Size="36,36" StateOffsetIncrement="0,36">
-					<Container ID="ExtraTabs" Offset="18,0" Anchor="R,B" AnchorSide="I,O" Size="auto,auto" Hidden="1">
+					<Container ID="ExtraTabs" Offset="5,-5" Anchor="R,B" AnchorSide="I,O" Size="auto,auto" Hidden="1" ConsumeMouse="1">
 						<Grid ID="ExtraTabsShadow" Size="auto,auto" AutoSizePadding="5,5" Style="DropShadow4">
 							<Grid ID="ExtraTabsBG" Size="auto,auto" AutoSizePadding="5,5" Texture="Controls_DropdownPanel" SliceCorner="11,11" SliceSize="1,1" SliceTextureSize="22,22">
 								<Stack ID="ExtraTabStack" Anchor="C,C" Padding="-3"/>
@@ -182,6 +182,12 @@
 		</GridButton>
 
 	</Instance>
+
+  <Instance Name="ExtraTabInstance">
+
+    <GridButton ID="Button" Size="100,26" Style="FontNormalMedium14" Texture="Controls_DropdownChoice" SliceCorner="16,0" SliceSize="4,26" SliceTextureSize="32,26" StateOffsetIncrement="0,26"/>
+
+  </Instance>
 	
 	<Instance Name="GenericHeaderInstance">
 		
@@ -273,7 +279,7 @@
 			<Container ID="TopPlayer" Size="56,56" Offset="2,58">
 				<Image ID="CivIconBackingFaded" Anchor="C,C" Offset="0,0" Size="48,48" Texture="CircleBacking48" Color="100,100,100,255"/>
 				<Image ID="CivIconFaded" Anchor="C,C" Offset="0,0" Size="48,48" Texture="CivSymbols48" Color="100,100,100,255"/>
-				<Image Offset="0,0" Size="56,56" Texture="Controls_CircleRim"/>
+				<Image ID="CivIconBackingRing" Offset="0,0" Size="56,56" Texture="Controls_CircleRim"/>
 				<Image ID="LocalPlayer" Offset="10,0" Size="35,10" Texture="Controls_YouArrowSmall"/>
 				<Container Offset="28,28">
 					<MakeInstance Name="CivilizationIconBar48"/>
@@ -344,7 +350,7 @@
 						<Image ID="ObjHidden_1" Offset="3,10" Size="56,16" TextureOffset="0,32" Texture="Controls_MeterLinear"/>
 						<TextureBar	ID="ObjBar_1" Offset="5,10" Direction="Right" Speed="0" Size="56,16" TextureOffset="0,16" Texture="Controls_MeterLinear"/>
 						<Image ID="ObjToggle_OFF_1" Offset="45,2" Size="35,35" Texture="Controls_RadioButtonLarge" TextureOffset="0,0"/>
-						<Image ID="ObjToggle_ON_1" Offset="45,2" Size="35,35" Texture="Controls_RadioButtonLarge" TextureOffset="0,35" Hidden="1"/>
+						<Image ID="ObjToggle_ON_1" Offset="45,2" Size="35,35" Texture="Controls_RadioButtonLarge" TextureOffset="0,175" Hidden="1"/>
 					</Grid>
 					<Grid ID="ObjBG_2" Size="75,37" Texture="Controls_Segment" SliceStart="0,0" SliceCorner="2,2" SliceSize="73,34" SliceTextureSize="75,37">
 						<Grid ID="ObjFill_2" Offset="0,0" Size="75,37" Texture="Controls_Segment" SliceStart="0,37" SliceCorner="2,2" SliceSize="73,34" SliceTextureSize="75,37" Hidden="1"/>
@@ -352,7 +358,7 @@
 						<Image ID="ObjHidden_2" Offset="3,10" Size="56,16" TextureOffset="0,32" Texture="Controls_MeterLinear"/>
 						<TextureBar	ID="ObjBar_2" Offset="5,10" Direction="Right" Speed="0" Size="56,16" TextureOffset="0,16" Texture="Controls_MeterLinear"/>
 						<Image ID="ObjToggle_OFF_2" Offset="45,2" Size="35,35" Texture="Controls_RadioButtonLarge" TextureOffset="0,0"/>
-						<Image ID="ObjToggle_ON_2" Offset="45,2" Size="35,35" Texture="Controls_RadioButtonLarge" TextureOffset="0,35" Hidden="1"/>
+						<Image ID="ObjToggle_ON_2" Offset="45,2" Size="35,35" Texture="Controls_RadioButtonLarge" TextureOffset="0,175" Hidden="1"/>
 					</Grid>
 					<Grid ID="ObjBG_3" Size="75,37" Texture="Controls_Segment" SliceStart="0,0" SliceCorner="2,2" SliceSize="73,34" SliceTextureSize="75,37">
 						<Grid ID="ObjFill_3" Offset="0,0" Size="75,37" Texture="Controls_Segment" SliceStart="0,37" SliceCorner="2,2" SliceSize="73,34" SliceTextureSize="75,37" Hidden="1"/>
@@ -360,7 +366,7 @@
 						<Image ID="ObjHidden_3" Offset="3,10" Size="56,16" TextureOffset="0,32" Texture="Controls_MeterLinear"/>
 						<TextureBar	ID="ObjBar_3" Offset="5,10" Direction="Right" Speed="0" Size="56,16" TextureOffset="0,16" Texture="Controls_MeterLinear"/>
 						<Image ID="ObjToggle_OFF_3" Offset="45,2" Size="35,35" Texture="Controls_RadioButtonLarge" TextureOffset="0,0"/>
-						<Image ID="ObjToggle_ON_3" Offset="45,2" Size="35,35" Texture="Controls_RadioButtonLarge" TextureOffset="0,35" Hidden="1"/>
+						<Image ID="ObjToggle_ON_3" Offset="45,2" Size="35,35" Texture="Controls_RadioButtonLarge" TextureOffset="0,175" Hidden="1"/>
 					</Grid>
 				</Stack>
 			</Grid>
@@ -378,7 +384,7 @@
 				<Image ID="ObjHidden_1" Offset="3,10" Size="56,16" TextureOffset="0,32" Texture="Controls_MeterLinear"/>
 				<TextureBar	ID="ObjBar_1" Offset="5,10" Direction="Right" Speed="0" Size="56,16" TextureOffset="0,16" Texture="Controls_MeterLinear"/>
 				<Image ID="ObjToggle_OFF_1" Offset="45,2" Size="35,35" Texture="Controls_RadioButtonLarge" TextureOffset="0,0"/>
-				<Image ID="ObjToggle_ON_1" Offset="45,2" Size="35,35" Texture="Controls_RadioButtonLarge" TextureOffset="0,35" Hidden="1"/>
+				<Image ID="ObjToggle_ON_1" Offset="45,2" Size="35,35" Texture="Controls_RadioButtonLarge" TextureOffset="0,175" Hidden="1"/>
 			</Grid>
 			<Grid ID="ObjBG_2" Offset="307,10" Size="75,37" Texture="Controls_Segment" SliceStart="0,0" SliceCorner="2,2" SliceSize="73,34" SliceTextureSize="75,37">
 				<Grid ID="ObjFill_2" Offset="0,0" Size="75,37" Texture="Controls_Segment" SliceStart="0,37" SliceCorner="2,2" SliceSize="73,34" SliceTextureSize="75,37" Hidden="1"/>
@@ -386,7 +392,7 @@
 				<Image ID="ObjHidden_2" Offset="3,10" Size="56,16" TextureOffset="0,32" Texture="Controls_MeterLinear"/>
 				<TextureBar	ID="ObjBar_2" Offset="5,10" Direction="Right" Speed="0" Size="56,16" TextureOffset="0,16" Texture="Controls_MeterLinear"/>
 				<Image ID="ObjToggle_OFF_2" Offset="45,2" Size="35,35" Texture="Controls_RadioButtonLarge" TextureOffset="0,0"/>
-				<Image ID="ObjToggle_ON_2" Offset="45,2" Size="35,35" Texture="Controls_RadioButtonLarge" TextureOffset="0,35" Hidden="1"/>
+				<Image ID="ObjToggle_ON_2" Offset="45,2" Size="35,35" Texture="Controls_RadioButtonLarge" TextureOffset="0,175" Hidden="1"/>
 			</Grid>
 				<Grid ID="ObjBG_3" Offset="384,10" Size="75,37" Texture="Controls_Segment" SliceStart="0,0" SliceCorner="2,2" SliceSize="73,34" SliceTextureSize="75,37">
 				<Grid ID="ObjFill_3" Offset="0,0" Size="75,37" Texture="Controls_Segment" SliceStart="0,37" SliceCorner="2,2" SliceSize="73,34" SliceTextureSize="75,37" Hidden="1"/>
@@ -394,7 +400,7 @@
 				<Image ID="ObjHidden_3" Offset="3,10" Size="56,16" TextureOffset="0,32" Texture="Controls_MeterLinear"/>
 				<TextureBar	ID="ObjBar_3" Offset="5,10" Direction="Right" Speed="0" Size="56,16" TextureOffset="0,16" Texture="Controls_MeterLinear"/>
 				<Image ID="ObjToggle_OFF_3" Offset="45,2" Size="35,35" Texture="Controls_RadioButtonLarge" TextureOffset="0,0"/>
-				<Image ID="ObjToggle_ON_3" Offset="45,2" Size="35,35" Texture="Controls_RadioButtonLarge" TextureOffset="0,35" Hidden="1"/>
+				<Image ID="ObjToggle_ON_3" Offset="45,2" Size="35,35" Texture="Controls_RadioButtonLarge" TextureOffset="0,175" Hidden="1"/>
 			</Grid>
 		</GridButton>
 
@@ -499,7 +505,7 @@
 
 				<!-- Religion Info -->
 				<Label ID="CivsConverted" Offset="10,5" Align="right" Anchor="R,T" Style="FontNormalMedium14" Color="206,218,225,255" String="CivsConverted"/>
-				<Stack ID="CivsConvertedStack" Anchor="R,T" Offset="16,18" Padding="5" StackGrowth="Left" WrapWidth="240" WrapGrowth="bottom"/>
+				<Stack ID="CivsConvertedStack" Anchor="R,T" Offset="16,18" Padding="5" StackGrowth="Left" WrapWidth="280" WrapGrowth="bottom"/>
 			</Grid>
 
 			<!-- Player Stack -->
@@ -516,7 +522,7 @@
 			<Label ID="ReligionName" Offset="80,32" Style="FontNormalMedium14" Color="206,218,225,255" String="ReligionName"/>
 			<MakeInstance Name="CivilizationIconInstance" ID="CivilizationIcon"/>
 			<Label ID="CivsConverted" Offset="10,5" Align="right" Anchor="R,T" Style="FontNormalMedium14" Color="206,218,225,255" String="CivsConverted"/>
-			<Stack ID="CivsConvertedStack" Anchor="R,T" Offset="10,20" Padding="5" StackGrowth="Left" WrapWidth="240" WrapGrowth="bottom"/>
+			<Stack ID="CivsConvertedStack" Anchor="R,T" Offset="10,20" Padding="5" StackGrowth="Left" WrapWidth="280" WrapGrowth="bottom"/>
 		</GridButton>
 
 	</Instance>
@@ -559,14 +565,8 @@
 		</Container>
 	</Instance>
 
-	<Instance Name="ExtraTab">
-
-		<GridButton ID="Button" Size="100,26" Style="FontNormalMedium14" Texture="Controls_DropdownChoice" SliceCorner="16,0" SliceSize="4,26" SliceTextureSize="32,26" StateOffsetIncrement="0,26"/>
-
-	</Instance>
-
 	<Instance Name="TeamTooltipInstance" >
-		<Grid ID="BG" Size="220,75" SliceCorner="10,10" SliceTextureSize="33,32" Texture="Controls_Tooltip" InnerPadding="25,25" InnerOffset="10,10" >
+		<Grid ID="BG" Size="auto,auto" SliceCorner="10,10" SliceTextureSize="33,32" Texture="Controls_Tooltip" InnerPadding="25,25" InnerOffset="10,10" >
 			<Image ID="LeaderIcon" Offset="0,0" Size="55,55" Texture="Leaders55"/>
 			<Image ID="YouIndicator" Offset="0,0" Hidden="1" Size="55,55" Texture="Diplomacy_YouIndicatorSmall"/>
 			<Label ID="LeaderName" Anchor="L,C" Offset="65,0" Style="FontNormal16" Color="0,0,0,255"/>

@@ -4,12 +4,33 @@
 		<Row Name="ICON_ATLAS_FONT_ICON_BASELINE_4" Baseline="4" IconSize="22" IconsPerRow="11" IconsPerColumn="25" Filename="FontIcons.dds"/>
 		<Row Name="ICON_ATLAS_FONT_ICON_BASELINE_6" Baseline="6" IconSize="22" IconsPerRow="11" IconsPerColumn="25" Filename="FontIcons.dds"/>
 		<Row Name="ICON_ATLAS_FONT_ICON_BASELINE_8" Baseline="8" IconSize="22" IconsPerRow="11" IconsPerColumn="25" Filename="FontIcons.dds"/>
-    <Row Name="ICON_ATLAS_REPORT_ICON" IconSize="22" Baseline="4" IconsPerRow="1" IconsPerColumn="1" Filename="ReportsIcon.dds"/>
-  </IconTextureAtlases>
-
+		<!-- Network Connection Pip Atlases -->
+		<Row Name="ICON_ATLAS_NETWORK_HOTJOIN" IconSize="22" Baseline="4" IconsPerRow="1" IconsPerColumn="1" Filename="NetworkIcons_Hotjoining.dds"/>
+		<Row Name="ICON_ATLAS_NETWORK_NOT_MODREADY" IconSize="22" Baseline="4" IconsPerRow="1" IconsPerColumn="1" Filename="NetworkIcons_NotModReady.dds"/>
+		<Row Name="ICON_ATLAS_NETWORK_OFFLINE" IconSize="22" Baseline="4" IconsPerRow="1" IconsPerColumn="1" Filename="NetworkIcons_Offline.dds"/>
+		<Row Name="ICON_ATLAS_NETWORK_PAUSED_GREEN_PING" IconSize="22" Baseline="4" IconsPerRow="1" IconsPerColumn="1" Filename="NetworkIcons_PausedGreen.dds"/>
+		<Row Name="ICON_ATLAS_NETWORK_PAUSED_YELLOW_PING" IconSize="22" Baseline="4" IconsPerRow="1" IconsPerColumn="1" Filename="NetworkIcons_PausedYellow.dds"/>
+		<Row Name="ICON_ATLAS_NETWORK_PAUSED_RED_PING" IconSize="22" Baseline="4" IconsPerRow="1" IconsPerColumn="1" Filename="NetworkIcons_PausedRed.dds"/>
+		<Row Name="ICON_ATLAS_NETWORK_ONLINE_GREEN_PING" IconSize="22" Baseline="4" IconsPerRow="1" IconsPerColumn="1" Filename="NetworkIcons_PingLevelsGreat.dds"/>
+		<Row Name="ICON_ATLAS_NETWORK_ONLINE_YELLOW_PING" IconSize="22" Baseline="4" IconsPerRow="1" IconsPerColumn="1" Filename="NetworkIcons_PingLevelsGood.dds"/>
+		<Row Name="ICON_ATLAS_NETWORK_ONLINE_RED_PING" IconSize="22" Baseline="4" IconsPerRow="1" IconsPerColumn="1" Filename="NetworkIcons_PingLevelsBad.dds"/>
+		<Row Name="ICON_ATLAS_NETWORK_RESYNCING" IconSize="22" Baseline="4" IconsPerRow="1" IconsPerColumn="1" Filename="NetworkIcons_Resyncing.dds"/>
+		<!-- Individuals -->
+		<Row Name="ICON_SINGLE_REPORT_ICON"						Baseline="4" IconSize="22" IconsPerRow="1"	IconsPerColumn="1" Filename="ReportsIcon.dds"/>
+		<Row Name="ICON_SINGLE_PRODUCTION_QUEUE_ICON" Baseline="4" IconSize="22" IconsPerRow="1"	IconsPerColumn="1" Filename="ProductionQueue.dds"/>
+		<Row Name="ICON_SINGLE_PROMISES_CITY"					Baseline="6" IconSize="22" IconsPerRow="1"	IconsPerColumn="1" Filename="Promises22_City"/>
+		<Row Name="ICON_SINGLE_PROMISES_CITYSTATE"		Baseline="6" IconSize="22" IconsPerRow="1"	IconsPerColumn="1" Filename="Promises22_CityState"/>
+		<Row Name="ICON_SINGLE_PROMISES_ESPIONAGE"		Baseline="6" IconSize="22" IconsPerRow="1"	IconsPerColumn="1" Filename="Promises22_Espionage"/>
+		<Row Name="ICON_SINGLE_PROMISES_RELIGION"			Baseline="6" IconSize="22" IconsPerRow="1"	IconsPerColumn="1" Filename="Promises22_Religion"/>
+	</IconTextureAtlases>
+	<IconSingleDefinitions>
+		<!-- TODO: Implement formats
+		<Row Name="IDNAME"			Baseline="4" IconSize="22"	Filename="TheDDSFilename" />	    explicit file size
+		<Row Name="IDNAME"			Baseline="4"								Filename="TheDDSFilename-22x22" />   implicit file size from filename ("-"SIZE)
+		-->
+	</IconSingleDefinitions>
 	<IconDefinitions>
-    <Row Name="Reports" Atlas="ICON_ATLAS_REPORT_ICON" Index="0" />
-    <Row Name="Housing" Atlas="ICON_ATLAS_FONT_ICON_BASELINE_6" Index="0"/>
+		<Row Name="Housing" Atlas="ICON_ATLAS_FONT_ICON_BASELINE_6" Index="0"/>
 		<Row Name="Amenities" Atlas="ICON_ATLAS_FONT_ICON_BASELINE_6" Index="1"/>
 		<Row Name="Citizen" Atlas="ICON_ATLAS_FONT_ICON_BASELINE_6" Index="2"/>
 		<Row Name="TradeRoute" Atlas="ICON_ATLAS_FONT_ICON_BASELINE_6" Index="3"/>
@@ -165,7 +186,16 @@
 		<Row Name="GreatScientist" Atlas="ICON_ATLAS_FONT_ICON_BASELINE_6" Index="161"/>
 		<Row Name="GreatWriter" Atlas="ICON_ATLAS_FONT_ICON_BASELINE_6" Index="162"/>
 		<Row Name="OnlinePip" Atlas="ICON_ATLAS_FONT_ICON_BASELINE_4" Index="165"/>
-		<Row Name="OfflinePip" Atlas="ICON_ATLAS_FONT_ICON_BASELINE_6" Index="147"/>
+		<Row Name="OfflinePip" Atlas="ICON_ATLAS_NETWORK_OFFLINE" Index="0"/>
+		<Row Name="NotModReadyPip" Atlas="ICON_ATLAS_NETWORK_NOT_MODREADY" Index="0"/>
+		<Row Name="OnlineGreenPingPip" Atlas="ICON_ATLAS_NETWORK_ONLINE_GREEN_PING" Index="0"/>
+		<Row Name="OnlineYellowPingPig" Atlas="ICON_ATLAS_NETWORK_ONLINE_YELLOW_PING" Index="0"/>
+		<Row Name="OnlineRedPingPig" Atlas="ICON_ATLAS_NETWORK_ONLINE_RED_PING" Index="0"/>
+		<Row Name="PausedGreenPingPip" Atlas="ICON_ATLAS_NETWORK_PAUSED_GREEN_PING" Index="0"/>
+		<Row Name="PausedYellowPingPig" Atlas="ICON_ATLAS_NETWORK_PAUSED_YELLOW_PING" Index="0"/>
+		<Row Name="PausedRedPingPig" Atlas="ICON_ATLAS_NETWORK_PAUSED_RED_PING" Index="0"/>
+		<Row Name="HotjoiningPip" Atlas="ICON_ATLAS_NETWORK_HOTJOIN" Index="0"/>
+		<Row Name="ResyncingPip" Atlas="ICON_ATLAS_NETWORK_RESYNCING" Index="0"/>
 		<Row Name="Host" Atlas="ICON_ATLAS_FONT_ICON_BASELINE_4" Index="166"/>
 		<Row Name="You" Atlas="ICON_ATLAS_FONT_ICON_BASELINE_4" Index="167"/>
 		<Row Name="Ready" Atlas="ICON_ATLAS_FONT_ICON_BASELINE_4" Index="168"/>
@@ -176,7 +206,7 @@
 		<Row Name="Global" Atlas="ICON_ATLAS_FONT_ICON_BASELINE_4" Index="173"/>
 		<Row Name="AdditionalContent" Atlas="ICON_ATLAS_FONT_ICON_BASELINE_4" Index="174"/>
 		<Row Name="DownloadContent" Atlas="ICON_ATLAS_FONT_ICON_BASELINE_4" Index="175"/>
-		<Row Name="DISTRICT_CITYCENTER" Atlas="ICON_ATLAS_FONT_ICON_BASELINE_4" Index="176"/>
+		<Row Name="DISTRICT_CITY_CENTER" Atlas="ICON_ATLAS_FONT_ICON_BASELINE_4" Index="176"/>
 		<Row Name="DISTRICT_CAMPUS" Atlas="ICON_ATLAS_FONT_ICON_BASELINE_4" Index="177"/>
 		<Row Name="DISTRICT_COMMERCIAL_HUB" Atlas="ICON_ATLAS_FONT_ICON_BASELINE_4" Index="178"/>
 		<Row Name="DISTRICT_ENCAMPMENT" Atlas="ICON_ATLAS_FONT_ICON_BASELINE_4" Index="179"/>
@@ -270,5 +300,11 @@
 		<Row Name="DIPLOMATIC_DELEGATION" Atlas="ICON_ATLAS_FONT_ICON_BASELINE_4" Index="267"/>
 		<Row Name="RESIDENT_EMBASSY" Atlas="ICON_ATLAS_FONT_ICON_BASELINE_4" Index="267"/>
 		<Row Name="REQUEST_ASSISTANCE" Atlas="ICON_ATLAS_FONT_ICON_BASELINE_4" Index="268"/>
+		<Row Name="Reports"								Atlas="ICON_SINGLE_REPORT_ICON"					Index="0" />
+		<Row Name="ProductionQueue"				Atlas="ICON_SINGLE_PRODUCTION_QUEUE_ICON" Index="0" />
+		<Row Name="PROMISES_CITY"					Atlas="ICON_SINGLE_PROMISES_CITY"				Index="0" />
+		<Row Name="PROMISES_CITYSTATE"		Atlas="ICON_SINGLE_PROMISES_CITYSTATE"	Index="0" />
+		<Row Name="PROMISES_ESPIONAGE"		Atlas="ICON_SINGLE_PROMISES_ESPIONAGE"	Index="0" />
+		<Row Name="PROMISES_RELIGION"			Atlas="ICON_SINGLE_PROMISES_RELIGION"		Index="0" />		
 	</IconDefinitions>
 </GameInfo>

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Context>
 	<!-- Force to always render on "tutorial" graphics stream 'layer' so it's on top even when no tutorial controls are active. -->
 

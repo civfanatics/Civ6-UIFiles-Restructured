@@ -3,7 +3,11 @@
          Name="BenchmarkContext" FontStyle="Shadow" ColorSet="BodyTextCool" FontSize="20">
 
   <!--Empty modal panel to disable interaction while waiting-->
-  <Grid Size="320,240" ID="WaitingPanel" Anchor="C,T" Offset="0,100" Color="0,0,0,0" />
+  <Grid Size="320,240" ID="WaitingPanel" Anchor="C,T" Offset="0,100" Color="0,0,0,0">
+    <Grid Style="WindowFrameHUD" Anchor="C,C" Size="auto,auto" AutoSizePadding="10,10" ID="BenchmarkPleaseWaitPanel">
+       <Label String="LOC_ACTION_PANEL_PLEASE_WAIT" Anchor="C,C" />
+    </Grid>
+  </Grid>
   
   <!--UI shown while the graphics benchmark is running-->
   <Grid Style="WindowFrameHUD" Anchor="C,T" Offset="0,50" Size="640,230" ID="GraphicsBenchmarkPanel">
@@ -83,6 +87,21 @@
         <Label String="LOC_BENCHMARK_AVG_TURN_TIME" Anchor="L,C"/>
       </Stack>
       <GridButton ID="CloseAIResults" Anchor="C,T" Size="236,40" Style="MainButton" String="LOC_HUD_CLOSE" />
+    </Stack>
+  </Grid>
+
+
+  <!--UI shown while the autoprofiler is running-->
+  <Grid ID="AutoProfilerPanel" Style="WindowFrameHUD" Anchor="L,T" Size="auto,auto" AutoSizePadding="3,2">
+    <Stack StackGrowth="Down" StackPadding="2" Anchor="C,C">
+      <Container Size="400,auto">
+        <Label ID="AutoProf_BenchmarkName" Offset="10,0" Style="ButtonFont" String="$yo$" Anchor="L,C"/>
+        <Stack StackGrowth="Left" StackPadding="5" Anchor="R,T">
+          <GridButton ID="AutoProf_Cancel" Anchor="R,C" Size="80,32" Style="MainButtonSmall" String="LOC_CANCEL" />
+          <Label ID="AutoProf_Progress" String="$ayy$" Anchor="R,C"/>
+        </Stack>
+      </Container>
+      <Graph ID="AutoProf_FrameGraph" Size="400,180" Anchor="C,C" Domain="0,100" Range="0,33" TickInterval="0,5" NumberInterval="0,5" ShowTicks="0,1" ShowGridLines="1,1" ShowNumbers="0,1" ShowAxes="0,1" GridColor="Civ6Green" />
     </Stack>
   </Grid>
 

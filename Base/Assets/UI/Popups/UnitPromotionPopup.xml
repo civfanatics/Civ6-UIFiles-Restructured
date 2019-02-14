@@ -40,8 +40,8 @@
         <Box			ID="PromotionListIcon"		Anchor="L,T" Offset="8,7" Size="32,32"	Color="0,0,0,0" >
           <Image  ID="PromotionIcon" Texture="PromotionsSmall" Size="32,32" Offset="0,0" TextureOffset="32,0"/>
         </Box>
-        <Label		ID="PromotionName"				             Anchor="L,C" Offset="44,-30"							Style="UnitPanelHeader"	 WrapWidth="170" String="Promotion Name"/>
-        <Label		ID="PromotionDescription"							 Offset="13,40"						Style="FontNormalMedium14" Color0="214,214,214,255"	Color1="0,0,0,55" WrapWidth="190" String="Promotion Description"/>
+        <Label		ID="PromotionName"				             Anchor="L,C" Offset="44,-30"							Style="UnitPanelHeader"	 WrapWidth="160" String="Promotion Name"/>
+        <Label		ID="PromotionDescription"							 Offset="13,40"						Style="FontNormalMedium14" Color0="214,214,214,255"	Color1="0,0,0,55" WrapWidth="190" String="Promotion Description" TruncateHeight="60" TruncatedTooltip="1"/>
       </GridButton>
     </Container>
   </Instance>
@@ -53,8 +53,8 @@
           <Image  ID="PromotionIcon" Texture="PromotionsSmall" Size="32,32" Offset="0,0" TextureOffset="32,0"/>
           
         </Box>
-        <Label		ID="PromotionName"				             Anchor="L,C" Offset="44,-30"							Style="UnitPanelHeader"	 WrapWidth="170" String="Promotion Name"/>
-        <Label		ID="PromotionDescription"							 Offset="13,40"						Style="FontNormalMedium14" Color0="214,214,214,255"	Color1="0,0,0,55" WrapWidth="190" String="Promotion Description"/>
+        <Label		ID="PromotionName"				             Anchor="L,C" Offset="44,-30"							Style="UnitPanelHeader"	 WrapWidth="160" String="Promotion Name"/>
+        <Label		ID="PromotionDescription"							 Offset="13,40"						Style="FontNormalMedium14" Color0="214,214,214,255"	Color1="0,0,0,55" WrapWidth="190" String="Promotion Description" TruncateHeight="60" TruncatedTooltip="1"/>
       </GridButton>
     </Container>
   </Instance>

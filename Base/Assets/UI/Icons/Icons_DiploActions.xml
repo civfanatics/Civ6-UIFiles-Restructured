@@ -37,6 +37,7 @@
     <Row Name="ICON_DIPLOACTION_VIEW_TRADE"               Atlas="ICON_ATLAS_DIPLOACTIONS"   Index="10"/>
     <Row Name="ICON_DIPLOACTION_VIEW_DEMAND_TRIBUTE"      Atlas="ICON_ATLAS_DIPLOACTIONS"   Index="7"/>
     <Row Name="ICON_DIPLOACTION_USE_NUCLEAR_WEAPON"       Atlas="ICON_ATLAS_DIPLOACTIONS"   Index="11"/>
+    <Row Name="ICON_DIPLOACTION_GIVE_OPEN_BORDERS"	   	  Atlas="ICON_ATLAS_DIPLOACTIONS"   Index="17"/>
 	</IconDefinitions>
 </GameInfo>
 

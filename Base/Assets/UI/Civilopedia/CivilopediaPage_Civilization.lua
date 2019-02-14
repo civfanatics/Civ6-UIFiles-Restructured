@@ -103,7 +103,7 @@ PageLayouts["Civilization" ] = function(page)
 	for row in GameInfo.CivilizationTraits() do
 		if(row.CivilizationType == civType and not_abilities[row.TraitType] ~= true) then
 			local trait = GameInfo.Traits[row.TraitType];
-			if(trait) then
+			if(trait and trait.Name ~= nil and trait.Description ~= nil) then
 				table.insert(unique_abilities, trait);
 			end			
 		end
@@ -192,7 +192,9 @@ PageLayouts["Civilization" ] = function(page)
 		AddHeader("LOC_UI_PEDIA_UNIQUE_ABILITY");
 	
 		for _, item in ipairs(unique_abilities) do
-			AddHeaderBody(item.Name,  item.Description);
+			if (item.Name ~= nil and item.Name ~= "NONE") then
+				AddHeaderBody(item.Name,  item.Description);
+			end
 		end
 	end
 

@@ -106,8 +106,8 @@ function UpdateGreatWork()
 	local greatWorkType:string = greatWorkInfo.GreatWorkType;
 	local greatWorkCreator:string = Locale.Lookup(m_CityBldgs:GetCreatorNameFromIndex(m_GreatWorkIndex));
 	local greatWorkCreationDate:string = Calendar.MakeDateStr(m_CityBldgs:GetTurnFromIndex(m_GreatWorkIndex), GameConfiguration.GetCalendarType(), GameConfiguration.GetGameSpeedType(), false);
-	local greatWorkCreationCity:string = Locale.Lookup(m_City:GetName());
-	local greatWorkCreationBuilding:string = Locale.Lookup(GameInfo.Buildings[m_BuildingID].Name);
+	local greatWorkCreationCity:string = m_City:GetName();
+	local greatWorkCreationBuilding:string = GameInfo.Buildings[m_BuildingID].Name;
 	local greatWorkObjectType:string = greatWorkInfo.GreatWorkObjectType;
 
 	local greatWorkTypeName:string;
@@ -252,10 +252,17 @@ function OnInputHandler(pInputStruct:table)
 	return false;
 end
 function OnGreatWorkCreated(playerID:number, creatorID:number, cityX:number, cityY:number, buildingID:number, greatWorkIndex:number)
+	-- Ignore relics when responding to the GreatWorkCreated event.  Relics have a dedicated notification that will trigger this screen
+	-- Thru NotificationPanel_ShowRelicCreated
+	DisplayGreatWorkCreated(playerID, creatorID, cityX, cityY, buildingID, greatWorkIndex, false);
+end
+function OnShowRelicCreated(playerID:number, creatorID:number, cityX:number, cityY:number, buildingID:number, greatWorkIndex:number)
+	DisplayGreatWorkCreated(playerID, creatorID, cityX, cityY, buildingID, greatWorkIndex, true);
+end
+function DisplayGreatWorkCreated(playerID:number, creatorID:number, cityX:number, cityY:number, buildingID:number, greatWorkIndex:number, showRelics:boolean)
 	if playerID ~= Game.GetLocalPlayer() then
 		return;
 	end
-
 	m_isGallery = false;
 	m_BuildingID = buildingID;
 	m_GreatWorkIndex = greatWorkIndex;
@@ -263,6 +270,12 @@ function OnGreatWorkCreated(playerID:number, creatorID:number, cityX:number, cit
 	if m_City ~= nil then
 		m_CityBldgs = m_City:GetBuildings();
 		m_GreatWorkType = m_CityBldgs:GetGreatWorkTypeFromIndex(m_GreatWorkIndex);
+
+		if(not showRelics and m_GreatWorkType == GREAT_WORK_RELIC_TYPE) then
+			-- Ignore relics if showRelics is false.
+			return;
+		end
+
 		ShowScreen();
 	end
 end
@@ -362,6 +375,7 @@ function Initialize()
 	LuaEvents.GameDebug_Return.Add(OnGameDebugReturn);
 	LuaEvents.LaunchBar_OpenGreatWorksShowcase(OnShowScreen);
 	LuaEvents.GreatWorksOverview_ViewGreatWork.Add(OnViewGreatWork);
+	LuaEvents.NotificationPanel_ShowRelicCreated.Add(OnShowRelicCreated);
 
 	Controls.ModalBG:SetTexture("GreatWorks_Background");
 	Controls.ModalScreenClose:RegisterCallback(Mouse.eLClick, OnHideScreen);

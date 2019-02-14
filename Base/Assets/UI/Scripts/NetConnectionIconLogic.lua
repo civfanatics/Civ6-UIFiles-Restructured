@@ -9,15 +9,21 @@ local PlayerConnectedStr = Locale.Lookup( "LOC_MP_PLAYER_CONNECTED" );
 local PlayerConnectingStr = Locale.Lookup( "LOC_MP_PLAYER_CONNECTING" );
 local PlayerNotConnectedStr = Locale.Lookup( "LOC_MP_PLAYER_NOTCONNECTED" );
 local PlayerNotModReadyStr = Locale.Lookup( "LOC_MP_PLAYER_NOT_MOD_READY" );
+local PlayerResyncingStr = Locale.Lookup( "LOC_MP_PLAYER_RESYNCING" );
 
 -- Connection Label Strings.
 local PlayerConnectedSummaryStr = Locale.Lookup( "LOC_MP_PLAYER_CONNECTED_SUMMARY" );
 local PlayerConnectingSummaryStr = Locale.Lookup( "LOC_MP_PLAYER_CONNECTING_SUMMARY" );
 local PlayerNotConnectedSummaryStr = Locale.Lookup( "LOC_MP_PLAYER_NOTCONNECTED_SUMMARY" );
+local PlayerNotModReadySummaryStr = Locale.Lookup( "LOC_MP_PLAYER_NOT_MOD_READY_SUMMARY" );
+local PlayerResyncingSummaryStr = Locale.Lookup( "LOC_MP_PLAYER_RESYNCING_SUMMARY" );
 
 -- Ping Time Strings
 local secondsStr = Locale.Lookup( "LOC_TIME_SECONDS" );
 local millisecondsStr = Locale.Lookup( "LOC_TIME_MILLISECONDS" );
+
+local PING_GREAT	= 100; -- [Milliseconds] Player's ping is considered to be great (green) if under this number.
+local PING_OK		= 200; -- [Milliseconds] Player's ping is considered to be ok (yellow) if under this number.
 
 ----------------------------------------------------------------
 -- UpdateNetConnectionIcon
@@ -44,31 +50,42 @@ function UpdateNetConnectionIcon(playerID :number, connectIcon)
 		connectIcon:SetHide(false);
 		if(Network.IsPlayerHotJoining(playerID)) then
 			-- Player is hot joining.
-			--connectIcon:SetTextureOffsetVal(0,32);
+			connectIcon:SetString("[ICON_HotjoiningPip]");
 			connectIcon:SetToolTipString( PlayerConnectingStr ..  pingStr);
 		elseif(Network.IsPlayerConnected(playerID)) then
 			if(not pPlayerConfig:GetModReady()) then
 				-- Player is not mod ready yet
-				--connectIcon:SetTextureOffsetVal(0,96);
+				connectIcon:SetString("[ICON_NotModReadyPip]");
 				connectIcon:SetToolTipString( PlayerNotModReadyStr .. pingStr );
+			elseif(Network.IsPlayerResyncing(playerID)) then
+				connectIcon:SetString("[ICON_ResyncingPip]");
+				connectIcon:SetToolTipString( PlayerResyncingStr .. pingStr );
 			else
 				-- fully connected
-				-- icon changes based on ping time
-				--[[
-				if(iPingTime < 100) then -- green
-					connectIcon:SetTextureOffsetVal(0,64);
-				elseif(iPingTime < 200) then -- yellow
-					connectIcon:SetTextureOffsetVal(0,96);
-				else -- red
-					connectIcon:SetTextureOffsetVal(0,128);
-				end
-				--]]
+				-- icon changes based on ping time and pause state.
+				if(pPlayerConfig:GetWantsPause()) then
+					if(iPingTime < PING_GREAT) then -- green
+						connectIcon:SetString("[ICON_PausedGreenPingPip]");
+					elseif(iPingTime < PING_OK) then -- yellow
+						connectIcon:SetString("[ICON_PausedYellowPingPig]");
+					else -- red
+						connectIcon:SetString("[ICON_PausedRedPingPig]");
+					end
+				else
+					if(iPingTime < PING_GREAT) then -- green
+						connectIcon:SetString("[ICON_OnlineGreenPingPip]");
+					elseif(iPingTime < PING_OK) then -- yellow
+						connectIcon:SetString("[ICON_OnlineYellowPingPig]");
+					else -- red
+						connectIcon:SetString("[ICON_OnlineRedPingPig]");
+					end
+				end	
 				
 				connectIcon:SetToolTipString( PlayerConnectedStr .. pingStr );
 			end
 		else
 			-- Not connected
-			--connectIcon:SetTextureOffsetVal(0,0);
+			connectIcon:SetString("[ICON_OfflinePip]");
 			connectIcon:SetToolTipString( PlayerNotConnectedStr );		
 		end		
   else
@@ -93,9 +110,17 @@ function UpdateNetConnectionLabel(playerID :number, connectLabel :table)
 			statusString = PlayerConnectingSummaryStr;
 			tooltipString = PlayerConnectingStr;
 		elseif(Network.IsPlayerConnected(playerID)) then
-			-- Player is fully connected.
-			statusString = PlayerConnectedSummaryStr;
-			tooltipString = PlayerConnectedStr;
+			if(not pPlayerConfig:GetModReady()) then
+				statusString = PlayerNotModReadySummaryStr;
+				tooltipString = PlayerNotModReadyStr;
+			elseif(Network.IsPlayerResyncing(playerID)) then
+				statusString = PlayerResyncingSummaryStr;
+				tooltipString = PlayerResyncingStr;
+			else
+				-- Player is fully connected.
+				statusString = PlayerConnectedSummaryStr;
+				tooltipString = PlayerConnectedStr;
+			end
 		else
 			-- Not connected
 			statusString = PlayerNotConnectedSummaryStr;

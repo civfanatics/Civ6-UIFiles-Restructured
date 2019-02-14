@@ -37,6 +37,11 @@ local _RightColumnStatIconLabelManager = InstanceManager:new("RightColumnStatIco
 local _RightColumnStatIconNumberLabelManager = InstanceManager:new("RightColumnStatIconNumberLabel", "Root", nil);
 local _RightColumnStatIconListManager = InstanceManager:new("RightColumnStatIconList", "Root", nil);
 
+local lastPageIndex:table = {
+	lastSection = "none",
+	lastPage = "none"
+};
+
 _HasSection = {};
 _Sections = {};
 _PagesBySection = {};
@@ -139,7 +144,8 @@ function CacheData_FetchData()
 				Name = row.Name,
 				Tooltip = row.Tooltip,
 				VisibleIfEmpty = row.VisibleIfEmpty,
-				SortIndex = row.SortIndex
+				SortIndex = row.SortIndex,
+				Collapsed = true
 			};
 			AddPageGroup(page_group);
 		end
@@ -155,7 +161,8 @@ function CacheData_FetchData()
 				Name = row.Name,
 				TextKeyPrefix = row.TextKeyPrefix,
 				Tooltip = row.Tooltip,
-				SortIndex = row.SortIndex
+				SortIndex = row.SortIndex,
+				Collapsed = true
 			};
 
 			AddPage(page);
@@ -171,7 +178,8 @@ function CacheData_FetchData()
 					Name = row[q.NameColumn],
 					Tooltip = q.TooltipColumn and row[q.TooltipColumn],
 					VisibleIfEmpty = q.VisibleIfEmptyColumn and row[q.VisibleIfEmptyColumn] or false,
-					SortIndex = q.SortIndexColumn and row[q.SortIndexColumn] or q.SortIndex
+					SortIndex = q.SortIndexColumn and row[q.SortIndexColumn] or q.SortIndex,
+					Collapsed = true
 				};
 				AddPageGroup(page_group);
 			end
@@ -577,14 +585,14 @@ function FindPageTextKey(SectionId, PageId, Tag)
 	local keys = {
 		"LOC_PEDIA_" .. SectionId .. "_PAGE_" .. PageId .. suffix,
 		"LOC_PEDIA_PAGE_" .. PageId .. suffix,
-		"LOC_PEDIA_PAGE_" .. suffix
+		"LOC_PEDIA_PAGE_" .. Tag
 	};
 
 	local page = GetPage(SectionId, PageId);
 	if(page) then
 		local prefix = page.TextKeyPrefix;
 		if(prefix) then
-			table.insert(keys, 1, prefix .. PageId .. suffix);
+			table.insert(keys, 1, prefix .. "_" .. PageId .. suffix);
 			table.insert(keys, 2, prefix .. suffix);
 		end
 	end
@@ -886,6 +894,10 @@ function NavigateTo(SectionId, PageId)
 	_CurrentSectionId = SectionId;
 	_CurrentPageId = PageId;   
 
+	--Save our last navigation
+	lastPageIndex.lastSection = _CurrentSectionId;
+	lastPageIndex.lastPage = _CurrentPageId;
+
 	RefreshSections();
 	RefreshPageTabs(SectionId, (SectionId ~= prevSectionId));
 
@@ -947,15 +959,34 @@ function OnOpenCivilopedia(sectionId_or_search, pageId)
 			NavigateTo(page.SectionId, page.PageId);
 		end
 	elseif(sectionId_or_search and pageId) then
-		NavigateTo(sectionId_or_search, pageId);
+		local page = GetPage(sectionId_or_search, pageId);
+		if(page ~= nil) then
+			NavigateTo(sectionId_or_search, pageId);
+		else
+			-- To the front page!
+			local sections = GetSections();
+			local pages = GetPages(sections[1].SectionId);
+			local page = pages[1];
+			NavigateTo(page.SectionId, page.PageId);
+		end
 	else
-		local sections = GetSections();
-		local pages = GetPages(sections[1].SectionId);
-		local page = pages[1];
-		NavigateTo(page.SectionId, page.PageId);
+		local sectionID = nil;
+		local pageID = nil;
+		if(lastPageIndex.lastSection ~= "none" and lastPageIndex.lastPage ~= "none") then
+			sectionID = lastPageIndex.lastSection;
+			pageID = lastPageIndex.lastPage;
+		else
+			local sections = GetSections();
+			local pages = GetPages(sections[1].SectionId);
+			local page = pages[1];
+			sectionID = page.SectionId;
+			pageID = page.PageId;
+		end
+
+		NavigateTo(sectionID, pageID);
 	end
 
-	UIManager:QueuePopup(ContextPtr, PopupPriority.Current);	
+	UIManager:QueuePopup(ContextPtr, PopupPriority.Civilopedia);
 	UI.PlaySound("Civilopedia_Open");
 end
 

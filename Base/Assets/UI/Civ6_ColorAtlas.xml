@@ -15,6 +15,7 @@
 		
 	<Color Name="COLOR_RED"							Color="255,0,0,255"/>
 	<Color Name="COLOR_GREEN"						Color="0,255,0,255"/>
+	<Color Name="COLOR_MEDIUM_GREEN"	  				Color="7,110,39,255"/>
 	<Color Name="COLOR_LIGHTBLUE"				Color="100,255,240,255"/>
   <Color Name="COLOR_FLOAT_CULTURE"		Color="254,42,237,255"/>
 	<Color Name="COLOR_FLOAT_FOOD"			Color="85,155,6,255"/>
@@ -23,7 +24,8 @@
   <Color Name="COLOR_FLOAT_PRODUCTION" Color="145,51,0,255"/>
   <Color Name="COLOR_FLOAT_SCIENCE"		Color="95,145,255,255"/>
   <Color Name="COLOR_FLOAT_FAITH"			Color="255,255,255,255"/>
-
+  <Color Name="COLOR_FLOAT_DIPLOMATIC" Color="140,107,64,255"/>
+  
   <Color Name="Airport"								Color="133,16,241,255"/>
 	<Color Name="AirportDark"						Color="86,10,155,255"/>
 	<Color Name="Brown"									Color="106,89,71,255"/>
@@ -54,8 +56,6 @@
 	<Color Name="GovInkDarkMark"				Color="62,56,50,255" />	
 	<Color Name="GovWaterMark"					Color="20,55,85,200" />
 	<Color Name="GovWaterDarkMark"			Color="62,56,50,100" />
-	<Color Name="GreatPeopleRow"				Color="143,141,137,255" />
-	<Color Name="GreatPeopleRowUnOwned"	Color="48,58,66,255" />
 	<Color Name="Happiness"							Color="246,225,44,255"/>
 	<Color Name="HappinessDark"					Color="156,139,25,255"/>
 	<Color Name="Marine"								Color="113,226,214,255"/>
@@ -99,6 +99,8 @@
 	<ColorSet Name="ConnectionStatus_Offline"		Color0="132,145,158,255"	Color1="0,0,0,50"/> <!-- Color of the Offline network connection summary text -->
 	<ColorSet Name="ConnectionStatus_Connected"		Color0="13,191,80,255"		Color1="0,0,0,50"/> <!-- Color of the Connected network connection summary text -->
 	<ColorSet Name="ConnectionStatus_Connecting"	Color0="237,205,78,255"		Color1="0,0,0,50"/> <!-- Color of the Connecting network connection summary text -->
+	<ColorSet Name="ConnectionStatus_NotModReady"	Color0="238,34,34,255"		Color1="0,0,0,50"/> <!-- Color of the Not Mod Ready network connection summary text -->
+	<ColorSet Name="ConnectionStatus_Resyncing"		Color0="238,34,34,255"		Color1="0,0,0,50"/> <!-- Color of the Resyncing network connection summary text -->
 	<ColorSet Name="ChatMessage_Help"		Color0="132,145,158,255"	Color1="0,0,0,50"/>	<!-- Color of help text -->
 	<ColorSet Name="ChatMessage_Team"		Color0="13,191,80,255"		Color1="0,0,0,50"/>		<!-- Color of team chat -->
 	<ColorSet Name="ChatMessage_Global"		Color0="90,170,236,255"		Color1="0,0,0,50"/>		<!-- Color of global chat -->
@@ -127,10 +129,6 @@
   <ColorSet Name="ButtonDisabledCS"  						Color0="127,157,190,150"	Color1="0,0,0,100"				Color2="205,176,205,150" />
 	<ColorSet Name="CityStateCS"									Color0="160,160,160,240"  Color1="0,0,0,100" />
 	<ColorSet Name="CityStateDisabledCS"					Color0="80,80,80,240"			Color1="0,0,0,100" />
-	<ColorSet Name="GreatPeopleCS"								Color0="130,130,100,255"  Color1="0,0,0,255" />
-  <ColorSet Name="GreatPeopleActiveCS"					Color0="198,195,187,255"  Color1="0,0,0,255" />
-	<ColorSet Name="GreatPeoplePastCS"						Color0="198,195,187,255"  Color1="0,0,0,255" />
-	<ColorSet Name="GreatPeoplePastUnownedCS"			Color0="121,125,125,255"  Color1="0,0,0,255" />
 	<ColorSet Name="GrowthCS"											Color0="120,140,70,255"		Color1="0,0,0,150" />
 	<ColorSet Name="HudCS"												Color0="179,175,179,255"	Color1="0,0,0,155"				Color2="240,240,240,255"/>
 	<ColorSet Name="LeaderCS"											Color0="168,180,190,255"	Color1="0,0,0,150" />
@@ -139,6 +137,7 @@
 	<ColorSet Name="PlaceholderCS"								Color0="255,100,200,255"	Color1="200,200,200,100"  Color2="25,10,10,255" />
 	<ColorSet Name="ResearchPanelCS"							Color0="212,211,210,255"	Color1="0,0,0,100" />
 	<ColorSet Name="ResCultureLabelCS"						Color0="190,89,189,255"		Color1="0,0,0,100"				Color2="255,214,255,255" />
+	<ColorSet Name="ResFavorLabelCS"							Color0="140,107,64,255"		Color1="0,0,0,100"				Color2="255,210,130,255"  />
 	<ColorSet Name="ResFoodLabelCS"								Color0="171,224,47,255"   Color1="0,0,0,100"				Color2="217,236,148,255"/>
 	<ColorSet Name="ResFaithLabelCS"							Color0="100,128,160,255"	Color1="0,0,0,100"				Color2="255,255,255,255" />
 	<ColorSet Name="ResGoldLabelCS"								Color0="229,213,66,255"		Color1="0,0,0,100"				Color2="255,255,255,255" />
@@ -146,7 +145,8 @@
 	<ColorSet Name="ResScienceLabelCS"						Color0="10,137,173,255"		Color1="0,0,0,100"				Color2="170,255,255,255" />
 	<ColorSet Name="ResMilitaryLabelCS"						Color0="188,22,22,255"		Color1="0,0,0,100"				Color2="240,120,120,255" />
   <ColorSet Name="ResTourismLabelCS"						Color0="181,116,102,255"	Color1="0,0,0,100"				Color2="255,255,255,255" />
-  <ColorSet Name="TopBarLabelCS"								Color0="179,175,179,255"	Color1="0,0,0,155"				Color2="240,240,240,255"/>
+	<ColorSet Name="DiplomaticLabelCS"						Color0="12,117,120,255"		Color1="0,0,0,100"				Color2="255,255,255,255" />
+	<ColorSet Name="TopBarLabelCS"								Color0="179,175,179,255"	Color1="0,0,0,155"				Color2="240,240,240,255"/>
 	<ColorSet Name="TopBarValueCS"								Color0="170,169,168,255"	Color1="0,0,0,155"				Color2="245,245,245,255" />
 	<ColorSet Name="TradeOverviewTextCS"	        Color0="255,255,255,255"  Color1="0,0,0,100"				Color2="255,255,255,127"/>
 	<ColorSet Name="TradeOverviewTextDisabledCS"	Color0="255,255,255,85"		Color1="0,0,0,100"				Color2="255,255,255,127"/>
@@ -168,16 +168,42 @@
 	<Color		Name="MultiplayerSubContainer"			Color="30,50,75,255" />
 	<Color		Name="MultiplayerGameSetupText"			Color="28,177,171,255" />
 
+  <!-- ClimateScreen -->
+  <Color Name="ClimateScreen_LightBlue"					Color="68,132,191,255"/>
+
+	<!-- EspionageOverview -->
+	<Color Name="EspionageOverview_EffectBlue"		Color="54,89,220,255"/>
+
+	<!-- EspionagePopup -->
+	<Color Name="EspionagePopup_Header"						Color="52,50,43,255"/>
+	<Color Name="EspionagePopup_Body"							Color="95,87,71,255"/>
+	<Color Name="EspionagePopup_Deco"							Color="126,117,99,255"/>
+
+	<!-- Great People -->
+	<Color		Name="GreatPeopleRow"								Color="143,141,137,255" />
+	<Color		Name="GreatPeopleRowUnOwned"				Color="48,58,66,255" />
+	<ColorSet Name="GreatPeopleCS"								Color0="130,130,100,255"  Color1="0,0,0,255" />
+	<ColorSet Name="GreatPeopleActiveCS"					Color0="198,195,187,255"  Color1="0,0,0,255" />
+	<ColorSet Name="GreatPeoplePastCS"						Color0="198,195,187,255"  Color1="0,0,0,255" />
+	<ColorSet Name="GreatPeoplePastUnownedCS"			Color0="121,125,125,255"  Color1="0,0,0,255" />
+	
 	<!-- LoadGameScreen -->
 	<Color Name="LoadSaveGameInfoIconBackingBase"			Color="49,59,80,255" />
 	<Color Name="LoadSaveGameInfoIconBackingDarker"		Color="49,59,80,255" />
 	<Color Name="LoadSaveGameInfoIconBackingLighter"	Color="49,59,80,255" />
 
-	<!-- EspionagePopup -->
-  <Color Name="EspionagePopup_Header"			  Color="52,50,43,255"/>
-  <Color Name="EspionagePopup_Body"			    Color="95,87,71,255"/>
-  <Color Name="EspionagePopup_Deco"			    Color="126,117,99,255"/>
+	<!-- ReportsScreen -->
+	<Color Name="RESOURCECLASS_STRATEGIC"					Color="90,20,15,255" />
+	<Color Name="RESOURCECLASS_LUXURY"						Color="40,40,75,255" />
+	<Color Name="RESOURCECLASS_BONUS"							Color="120,120,40,255" />	
+	<Color Name="RESOURCECLASS_OTHER"							Color="60,65,60,255"  />
 
-  <!-- EspionageOverview -->
-  <Color Name="EspionageOverview_EffectBlue"  Color="54,89,220,255"/>
+  <!-- WorldCrisisPopup-->
+  <Color Name="Emergency_Gold"							  Color="228,195,39,255"  />
+  <Color Name="Emergency_Silver"							Color="199,207,210,255"  />
+  <Color Name="Emergency_Bronze"							Color="206,124,51,255"  />
+  <Color Name="Emergency_Failed"							Color="199,5,26,255"  />
+  <Color Name="Emergency_Default"							Color="114,105,158,255"  />
+  <Color Name="Emergency_In_Progress"					Color="255,91,0,255"  />
+
 </ColorAtlas>

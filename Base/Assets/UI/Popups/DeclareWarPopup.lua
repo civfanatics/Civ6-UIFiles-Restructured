@@ -3,6 +3,13 @@
 include( "InstanceManager" );
 include( "DiplomacyStatementSupport" );
 include( "SupportFunctions" );				--DarkenLightenColor
+include( "Colors" );
+
+
+--	******************************************************************************************************
+--	GLOBALS
+--	******************************************************************************************************
+g_ConsequenceItemIM = InstanceManager:new( "ConsequenceItem",  "Root" );
 
 --	******************************************************************************************************
 --	CONSTANTS
@@ -14,7 +21,6 @@ local CONSEQUENCE_TYPES = {WARMONGER = 1, DEFENSIVE_PACT = 2, CITY_STATE = 3, TR
 --	MEMBERS
 --	******************************************************************************************************
 local m_TargetCivIM:table = InstanceManager:new( "TargetCivilization", "Root", Controls.Targets);
-local m_ConsequenceItemIM:table = InstanceManager:new( "ConsequenceItem",  "Root" );
 
 --	******************************************************************************************************
 --	FUNCTIONS
@@ -119,8 +125,8 @@ function OnShow(eAttackingPlayer:number, kDefendingPlayers:table, eWarType:numbe
 	Controls.Message:SetText(Locale.Lookup("LOC_DIPLO_WARNING_DECLARE_WAR_FROM_UNIT_ATTACK_INFO_MULTIPLE"));
 
 	-- Populate warmonger consequences
-	m_ConsequenceItemIM:ResetInstances();
-	local consequenceItem = m_ConsequenceItemIM:GetInstance(Controls.WarmongerStack);
+	g_ConsequenceItemIM:ResetInstances();
+	local consequenceItem = g_ConsequenceItemIM:GetInstance(Controls.WarmongerStack);
 	local szWarmongerLevel = pAttacker:GetDiplomacy():GetWarmongerLevel(-iWarmongerPoints);
 	consequenceItem.Text:SetText(Locale.Lookup("LOC_DIPLO_CHOICE_WARMONGER_INFO", szWarmongerLevel));
 
@@ -203,7 +209,8 @@ function Initialize()
 	LuaEvents.DiplomacyActionView_ConfirmWarDialog.Add(OnShowSingleTarget);
 	LuaEvents.CityStates_ConfirmWarDialog.Add(OnShowSingleTarget);
 	LuaEvents.Civ6Common_ConfirmWarDialog.Add(OnShowSingleTarget);
-	LuaEvents.WorldInput_ConfirmWarDialog.Add(OnShow);
+	-- below is wrapped in an anonymous function so it can be overriden in expansion content
+	LuaEvents.WorldInput_ConfirmWarDialog.Add(function(eAttackingPlayer:number, kDefendingPlayers:table, eWarType:number, confirmCallbackFn) OnShow(eAttackingPlayer, kDefendingPlayers, eWarType, confirmCallbackFn) end);
 	Events.SystemUpdateUI.Add( OnUpdateUI );
 	Events.LocalPlayerTurnEnd.Add( OnClose );
 	Resize();

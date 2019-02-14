@@ -4,12 +4,26 @@
 include("Civ6Common");
 include("InstanceManager");
 include("PopupDialog");
+include("PlayerSetupLogic");
 
 
 -- Quick utility function to determine if Rise and Fall is installed.
 function HasExpansion1()
 	local xp1ModId = "1B28771A-C749-434B-9053-D1380C553DE9";
 	return Modding.IsModInstalled(xp1ModId);
+end
+
+-- Quick utility function to determine if Rise and Fall is installed.
+function HasExpansion2()
+	local xpModId = "4873eb62-8ccc-4574-b784-dda455e74e68";
+	return Modding.IsModInstalled(xpModId);
+end
+
+function IsInGame()
+	if(GameConfiguration ~= nil) then
+		return GameConfiguration.GetGameState() ~= GameStateTypes.GAMESTATE_PREGAME;
+	end
+	return false;
 end
 
 -- ===========================================================================
@@ -28,10 +42,25 @@ local m_debugAlwaysAllowAllOptions	:boolean= false;	-- (false) When true no opti
 local _KeyBindingCategories = InstanceManager:new("KeyBindingCategory", "CategoryName", Controls.KeyBindingsStack);
 local _KeyBindingActions = InstanceManager:new("KeyBindingAction", "Root", Controls.KeyBindingsStack);
 local m_tabs;
+local m_pendingGameConfigChanges;
+
+local BORDERLESS_OPTION = 2;
+local FULLSCREEN_OPTION = 1;
+local WINDOWED_OPTION = 0;
+
+local MIN_SCROLL_SPEED = 0.5;
+local MAX_SCROLL_SPEED = 5.0;
 
 _PromptRestartApp = false;
 _PromptRestartGame = false;
 _PromptResolutionAck = false;
+
+-- Options for WebHook Frequency Pulldown
+local webhookFreq_options = 
+{
+	{"LOC_WEBHOOK_FREQ_MY_TURN", TurnNotifyFrequencyModes.TurnNotify_MyTurn},
+	{"LOC_WEBHOOK_FREQ_EVERY_TURN", TurnNotifyFrequencyModes.TurnNotify_EveryTurn}
+};
 
 -------------------------------------------------------------------------------
 --
@@ -52,6 +81,15 @@ end
 -------------------------------------------------------------------------------
 function OnOptionChangeRequiresResolutionAck()
 	_PromptResolutionAck = true;
+end
+
+-------------------------------------------------------------------------------
+--
+-------------------------------------------------------------------------------
+function OnPBCNotifyRemind_ShowOptions()
+	-- Go to first tab where play-by-cloud options exist
+	OnSelectTab(1);
+	UIManager:QueuePopup( ContextPtr, PopupPriority.Current );
 end
 
 -------------------------------------------------------------------------------
@@ -108,8 +146,8 @@ end
 function OnReset()
     function EnableControls()
         Controls.ResetButton:SetDisabled(false);
-        Controls.ConfirmButton:SetDisabled(false);
         Controls.WindowCloseButton:SetDisabled(false);
+        Controls.ConfirmButton:SetDisabled(true);
     end
 	function ResetOptions()
 		Options.ResetOptions();
@@ -128,8 +166,8 @@ function OnReset()
     end
 
     _kPopupDialog:AddText(Locale.Lookup("LOC_OPTIONS_RESET_OPTIONS_POPUP_TEXT"));
-	_kPopupDialog:AddButton(Locale.Lookup("LOC_OPTIONS_RESET_OPTIONS_POPUP_NO"), function() CancelReset(); end); 
     _kPopupDialog:AddButton(Locale.Lookup("LOC_OPTIONS_RESET_OPTIONS_POPUP_YES"), function() ResetOptions(); end, nil, nil,"PopupButtonInstanceRed");  
+		_kPopupDialog:AddButton(Locale.Lookup("LOC_OPTIONS_RESET_OPTIONS_POPUP_NO"), function() CancelReset(); end); 
     _kPopupDialog:Open();
     Controls.ResetButton:SetDisabled(true);
     Controls.ConfirmButton:SetDisabled(true);
@@ -148,12 +186,14 @@ function OnConfirm()
 
         -- Save after applying the options to make sure they are valid
         Options.SaveOptions();
-        
+        PopulateGraphicsOptions();
+
         _PromptRestartApp = false;
 	    _PromptRestartGame = false;
         _PromptResolutionAck = false;
         
-        UIManager:DequeuePopup(ContextPtr);
+        -- Do not call DequeuePopup, because PopupDialog calls self.Close() before calling this function
+        --UIManager:DequeuePopup(ContextPtr);
     end
 
     function RevertGraphicsChanges()
@@ -162,12 +202,11 @@ function OnConfirm()
 
         -- Save after reverting the options to make sure they are valid
         Options.SaveOptions();
+        PopulateGraphicsOptions();
 
         _PromptRestartApp = false;
 	    _PromptRestartGame = false;
         _PromptResolutionAck = false;
-        
-        UIManager:DequeuePopup(ContextPtr);
     end
 
 	function ConfirmChanges()
@@ -193,38 +232,62 @@ function OnConfirm()
         
 		UserConfiguration.SetValue("AutoUnitCycle", Options.GetUserOption("Gameplay", "AutoUnitCycle"));
 		UserConfiguration.SetValue("PlotTooltipDelay", Options.GetUserOption("Interface", "PlotTooltipDelay"));
+		UserConfiguration.SetValue("ScrollSpeed", Options.GetUserOption("Interface", "ScrollSpeed"));
+
 
         -- Apply the graphics options (modifies in-memory values and modifies the engine, but does not save to disk)
         local bSuccess = Options.ApplyGraphicsOptions();
+
+        -- tell the colorblindness adapatation code to switch to the new base palette 
+		-- Do not do this if the game has started as it will reset player colors.
+		if(not IsInGame()) then
+			UI.RefreshColorSet();   
+		end
+
+		UI.TouchEnableChanged();
 
         -- Re-populate the graphics options to update any settings that the engine had to modify from the user's selected values
 	    PopulateGraphicsOptions();
 
         -- Show the resolution acknowledgment pop-up
-        if(bSuccess and _PromptResolutionAck) then
-		    _kPopupDialog:AddText(Locale.Lookup("LOC_OPTIONS_RESOLUTION_OK"));
-            _kPopupDialog:AddButton(Locale.Lookup("LOC_OPTIONS_RESET_OPTIONS_POPUP_NO"), function() RevertGraphicsChanges(); end);
-		    _kPopupDialog:AddButton(Locale.Lookup("LOC_OPTIONS_RESET_OPTIONS_POPUP_YES"), function() KeepGraphicsChanges(); end); 
-            _kPopupDialog:AddCountDown(15, function() RevertGraphicsChanges(); end );
-		    _kPopupDialog:Open();
-        else
-            KeepGraphicsChanges();
+        if bSuccess then
+			if _PromptResolutionAck then
+				_kPopupDialog:AddText(Locale.Lookup("LOC_OPTIONS_RESOLUTION_OK"));
+				_kPopupDialog:AddButton(Locale.Lookup("LOC_OPTIONS_RESET_OPTIONS_POPUP_YES"), 
+					function() 
+						KeepGraphicsChanges(); 
+						UserConfiguration.SaveCheckpoint();
+					end);
+				_kPopupDialog:AddButton(Locale.Lookup("LOC_OPTIONS_RESET_OPTIONS_POPUP_NO"), function() RevertGraphicsChanges(); end);
+				_kPopupDialog:AddCountDown(15, function() RevertGraphicsChanges(); end );
+				_kPopupDialog:Open();
+			else
+				KeepGraphicsChanges();
+				UserConfiguration.SaveCheckpoint();
+			end
         end
 
+		-- Save game config options if they have been modified
+		if m_pendingGameConfigChanges and table.count(m_pendingGameConfigChanges) > 0 then
+			for group, values in pairs(m_pendingGameConfigChanges) do
+				for id, value in pairs(values) do
+					BASE_Config_Write(SetupParameters, group, id, value);
+				end
+			end
+			Network.BroadcastGameConfig();
+		end
+
+		Controls.ConfirmButton:SetDisabled(true);
         _PromptResolutionAck = false;
     end
-    
-	local isInGame = false;
-	if(GameConfiguration ~= nil) then
-		isInGame = GameConfiguration.GetGameState() ~= GameStateTypes.GAMESTATE_PREGAME;
-	end
-	
+
 	if(_PromptRestartApp) then
 		_kPopupDialog:AddText(Locale.Lookup("LOC_OPTIONS_CHANGES_REQUIRE_APP_RESTART"));
 		_kPopupDialog:AddButton(Locale.Lookup("LOC_OPTIONS_RESET_OPTIONS_POPUP_OK"), function() ConfirmChanges(); end); 
 		_kPopupDialog:Open();
+		Controls.ConfirmButton:SetDisabled(true);
 
-	elseif(_PromptRestartGame and isInGame) then
+	elseif(_PromptRestartGame and IsInGame()) then
 		_kPopupDialog:AddText(Locale.Lookup("LOC_OPTIONS_CHANGES_REQUIRE_GAME_RESTART"));
 		_kPopupDialog:AddButton(Locale.Lookup("LOC_OPTIONS_RESET_OPTIONS_POPUP_OK"), function() ConfirmChanges(); end);
 		_kPopupDialog:Open();
@@ -259,6 +322,9 @@ function PopulateComboBox(control, values, selected_value, selection_handler, is
 	control:SetDisabled(is_locked ~= false);
 
 	if(selection_handler) then
+		control:GetButton():RegisterCallback(Mouse.eMouseEnter, function()
+            UI.PlaySound("Main_Menu_Mouse_Over");
+		end);
 		control:RegisterSelectionCallback(
 			function(voidValue1, voidValue2, control)
 				local option = values[voidValue1];
@@ -298,6 +364,9 @@ function PopulateCheckBox(control, current_value, check_handler, is_locked)
                 check_handler(selected);
             end
         );
+		control:RegisterCallback(Mouse.eMouseEnter, function()
+            UI.PlaySound("Main_Menu_Mouse_Over");
+		end);
     end
 
 end
@@ -313,6 +382,10 @@ function PopulateEditBox(control, current_value, commit_handler, is_locked)
 
 	control:SetText(current_value);
     control:SetDisabled(is_locked ~= false);
+
+    control:RegisterMouseEnterCallback(function()
+        UI.PlaySound("Main_Menu_Mouse_Over");
+    end);
 
     if(commit_handler) then
         control:RegisterCommitCallback( 
@@ -384,11 +457,81 @@ function UpdateTimeLabel(value)
 end
 
 -- Change the state of the resolution pulldown based on whether we have selected borderless mode or not
-function AdjustResolutionPulldown(is_borderless, is_in_game )
-    if is_in_game then
+function AdjustResolutionPulldown(window_mode, is_in_game )
+	
+	local named_modes = {};
+	local modes = Options.GetAvailableDisplayModes();
+
+	for i, v in ipairs(modes) do
+		local s = v.Width .. "x" .. v.Height;
+		if( window_mode == FULLSCREEN_OPTION) then
+			s = s .. " (" .. v.RefreshRate .. " Hz)";
+		end
+		named_modes[s] = v;
+	end
+
+	local indexed_modes = {};
+	for k, v in pairs(named_modes) do
+		table.insert(indexed_modes, {k, v});
+	end
+	table.sort(indexed_modes, function(a, b) return a[1] > b[1]; end);
+
+	--remove duplicate modes if in windowed (same res, different refresh rate)
+	local final_indexed_modes = {};
+	if( window_mode == WINDOWED_OPTION ) then
+		local last = "";
+		for i,v in ipairs(indexed_modes) do
+			if( v[1] ~= last ) then
+				table.insert(final_indexed_modes, v );
+			end
+			last = v[1];
+		end
+	else
+		final_indexed_modes = indexed_modes;
+	end
+
+    Controls.ResolutionPullDown:ClearEntries();
+	for i, v in ipairs(final_indexed_modes) do
+		local instance = {};
+		Controls.ResolutionPullDown:BuildEntry( "InstanceOne", instance );
+		instance.Button:SetVoid1(i);
+		instance.Button:SetText(v[1]);
+	end
+	Controls.ResolutionPullDown:CalculateInternals();
+
+	Controls.ResolutionPullDown:RegisterSelectionCallback(
+		function(voidValue1, voidValue2, control)
+			local option = final_indexed_modes[voidValue1];
+
+			local resolution_button = control:GetButton();
+			resolution_button:SetText(option[1]);
+
+			Options.SetAppOption("Video", "RenderWidth", option[2].Width);
+			Options.SetAppOption("Video", "RenderHeight", option[2].Height);
+			Options.SetGraphicsOption("Video", "RefreshRateInHz", option[2].RefreshRate);
+
+            local fullscreen_option = Options.GetAppOption("Video", "FullScreen");
+            _PromptResolutionAck = (fullscreen_option == FULLSCREEN_OPTION);
+			Controls.ConfirmButton:SetDisabled(false);
+		end
+	);
+	
+	local current_width = Options.GetAppOption("Video", "RenderWidth");
+	local current_height = Options.GetAppOption("Video", "RenderHeight");
+	local refresh_rate = Options.GetGraphicsOption("Video", "RefreshRateInHz");
+	
+	local resolution_button = Controls.ResolutionPullDown:GetButton();
+	if( window_mode ~= FULLSCREEN_OPTION ) then
+		resolution_button:SetText(current_width .. "x" .. current_height);
+	else
+		resolution_button:SetText(current_width .. "x" .. current_height .. " (" .. refresh_rate .. " Hz)");
+	end
+
+	local isTunerEnabled:boolean = Options.GetUserOption("Debug", "EnableTuner");	-- When debugging allow game resolution change. TODO: Evaluate allowing change for everyone.
+    if is_in_game and isTunerEnabled then
         Controls.ResolutionPullDown:SetDisabled(true);
     else
-        if is_borderless  then
+        if(window_mode == BORDERLESS_OPTION) then
             Controls.ResolutionPullDown:SetDisabled(true);
             local resolution_button = Controls.ResolutionPullDown:GetButton();
 	        local display_width  = Options.GetDisplayWidth();
@@ -401,7 +544,11 @@ function AdjustResolutionPulldown(is_borderless, is_in_game )
 	        local refresh_rate = Options.GetGraphicsOption("Video", "RefreshRateInHz");
 	
 	        local resolution_button = Controls.ResolutionPullDown:GetButton();
-	        resolution_button:SetText(current_width .. "x" .. current_height .. " (" .. refresh_rate .. " Hz)");
+			local resolution_text = current_width .. "x" .. current_height;
+			if( window_mode == FULLSCREEN_OPTION ) then
+				resolution_text = resolution_text .. " (" .. refresh_rate .. " Hz)";
+			end
+	        resolution_button:SetText(resolution_text);
         end
 
     end
@@ -424,9 +571,6 @@ function PopulateGraphicsOptions()
         {"LOC_OPTIONS_TICK_INTERVAL_60_FPS", 16},
     };
 
-    local BORDERLESS_OPTION = 2;
-    local FULLSCREEN_OPTION = 1;
-    local WINDOWED_OPTION = 0;
 	local windowed_options =
     {
 		{"LOC_OPTIONS_WINDOW_MODE_WINDOWED", WINDOWED_OPTION},
@@ -503,13 +647,6 @@ function PopulateGraphicsOptions()
     {
         {"2048x2048", 2048},
         {"4096x4096", 4096},
-        {"8192x8192", 8192},
-    };
-
-    local overlayResolution_options =
-    {
-        {"2048x2048", 2048},
-        {"4096x4096", 4096},
     };
 
     local fowMaskResolution_options =
@@ -538,7 +675,7 @@ function PopulateGraphicsOptions()
 	
 	local leaderQuality_options =
 	{
-		{"LOC_OPTIONS_DISABLED", 0},
+		{"LOC_OPTIONS_LEADERS_STATIC", 0},
 		{"LOC_OPTIONS_LOW",      1},
 		{"LOC_OPTIONS_MEDIUM",   2},
 		{"LOC_OPTIONS_HIGH",     3},
@@ -576,7 +713,7 @@ function PopulateGraphicsOptions()
 			adapter_button:SetText(adapters[voidValue1]);
 
 			Options.SetAppOption("Video", "DeviceID", voidValue1);
-
+			Controls.ConfirmButton:SetDisabled(false);
             _PromptRestartApp = true;
 		end
 	);
@@ -590,58 +727,13 @@ function PopulateGraphicsOptions()
     PopulateCheckBox(Controls.MultiGPUCheckbox, bMGPUValue,
         function(option)
             Options.SetGraphicsOption("DX12", "EnableSplitScreenMultiGPU", option);
+			Controls.ConfirmButton:SetDisabled(false);
             _PromptRestartApp = true;
         end
     );
     Controls.MultiGPUCheckbox:SetDisabled( Options.IsMultiNodeGPU() == 0 );
 
-    -- Resolution
-	local named_modes = {};
-	local modes = Options.GetAvailableDisplayModes();
-	for i, v in ipairs(modes) do
-		local s = v.Width .. "x" .. v.Height .. " (" .. v.RefreshRate .. " Hz)";
-		named_modes[s] = v;
-	end
-
-	local indexed_modes = {};
-	for k, v in pairs(named_modes) do
-		table.insert(indexed_modes, {k, v});
-	end
-	table.sort(indexed_modes, function(a, b) return a[1] > b[1]; end);
-
-    Controls.ResolutionPullDown:ClearEntries();
-	for i, v in ipairs(indexed_modes) do
-		local instance = {};
-		Controls.ResolutionPullDown:BuildEntry( "InstanceOne", instance );
-		instance.Button:SetVoid1(i);
-		instance.Button:SetText(v[1]);
-	end
-	Controls.ResolutionPullDown:CalculateInternals();
-	
-	local current_width = Options.GetAppOption("Video", "RenderWidth");
-	local current_height = Options.GetAppOption("Video", "RenderHeight");
-	local refresh_rate = Options.GetGraphicsOption("Video", "RefreshRateInHz");
-	
-	local resolution_button = Controls.ResolutionPullDown:GetButton();
-	resolution_button:SetText(current_width .. "x" .. current_height .. " (" .. refresh_rate .. " Hz)");
-
-	Controls.ResolutionPullDown:RegisterSelectionCallback(
-		function(voidValue1, voidValue2, control)
-			local option = indexed_modes[voidValue1];
-
-			local resolution_button = control:GetButton();
-			resolution_button:SetText(option[1]);
-
-			Options.SetAppOption("Video", "RenderWidth", option[2].Width);
-			Options.SetAppOption("Video", "RenderHeight", option[2].Height);
-			Options.SetGraphicsOption("Video", "RefreshRateInHz", option[2].RefreshRate);
-
-            local fullscreen_option = Options.GetAppOption("Video", "FullScreen");
-            _PromptResolutionAck = (fullscreen_option == FULLSCREEN_OPTION);
-		end
-	);
-
- -- UI Upscaling
+	-- UI Upscaling
 	local available_scales = {};
 	for k, v in pairs(uiscale_options) do
 		if (Options.IsUIUpscaleAllowed(v[2] + 1.0)) then
@@ -653,6 +745,7 @@ function PopulateGraphicsOptions()
     PopulateComboBox(Controls.UIScalePulldown, available_scales, Options.GetAppOption("Video", "UIUpscale"), 
         function(option)
 	    	Options.SetAppOption("Video", "UIUpscale", option);
+			Controls.ConfirmButton:SetDisabled(false);
 	    end
     );
 	Controls.UIScalePulldown:SetDisabled( not Options.IsUIUpscaleAllowed() );
@@ -682,7 +775,8 @@ function PopulateGraphicsOptions()
 
                 -- Update the option set with the new preset, which updates all other options (see OptionSet::ProcessExternally())
                 Options.SetGraphicsOption("Video", "PerformanceImpact", SliderStepToImpactValue(Controls.PerformanceSlider, performance_sliderStep));
-            
+				Controls.ConfirmButton:SetDisabled(false);
+
                 -- Update the text description
                 Controls.PerformanceValue:LocalizeAndSetText(performanceImpact_options[performance_sliderStep]);
 
@@ -727,6 +821,7 @@ function PopulateGraphicsOptions()
 
                 -- Update the option set with the new preset, which updates all other options (see OptionSet::ProcessExternally())
                 Options.SetGraphicsOption("Video", "MemoryImpact", SliderStepToImpactValue(Controls.MemorySlider, memory_sliderStep));
+				Controls.ConfirmButton:SetDisabled(false);
 
                 -- Update the text description
                 Controls.MemoryValue:LocalizeAndSetText(memoryImpact_options[memory_sliderStep]);
@@ -758,6 +853,7 @@ function PopulateGraphicsOptions()
     PopulateCheckBox(Controls.VSyncEnabledCheckbox, Options.GetGraphicsOption("Video", "VSync"),
         function(option)
             Options.SetGraphicsOption("Video", "VSync", option);
+			Controls.ConfirmButton:SetDisabled(false);
         end
     );
 	
@@ -765,6 +861,7 @@ function PopulateGraphicsOptions()
     PopulateComboBox(Controls.TickIntervalPullDown, tickInterval_options, Options.GetAppOption("Performance", "TickIntervalInMS"), 
         function(option)
 	    	Options.SetAppOption("Performance", "TickIntervalInMS", option);
+			Controls.ConfirmButton:SetDisabled(false);
 	    end
     );
     
@@ -779,9 +876,10 @@ function PopulateGraphicsOptions()
 			    Options.SetAppOption("Video", "RenderHeight", Options.GetDisplayHeight());
             end
 
-            AdjustResolutionPulldown(option == BORDERLESS_OPTION, is_in_game )
+            AdjustResolutionPulldown(option, is_in_game )
 
             _PromptResolutionAck = (option == FULLSCREEN_OPTION);
+			Controls.ConfirmButton:SetDisabled(false);
 	    end
     );	
 
@@ -841,6 +939,7 @@ function PopulateGraphicsOptions()
         function(option)
             Options.SetGraphicsOption("Video", "MSAA", option[1]);              -- First set the sliders to "custom", then set the new value, otherwise ProcessExternally() will overwrite the new value with a preset
             Options.SetGraphicsOption("Video", "MSAAQuality", option[2]);
+			Controls.ConfirmButton:SetDisabled(false);
 	    end
     );
 
@@ -849,7 +948,7 @@ function PopulateGraphicsOptions()
         function(option)
             Controls.MemorySlider:SetStepAndCall(memory_customStep);                -- It's enough to set just one of the Impact sliders to "custom", the logic sets the other one
             Options.SetGraphicsOption("Video", "ReducedAssetTextures", not option); -- First set the sliders to "custom", then set the new value, otherwise ProcessExternally() will overwrite the new value with a preset
-
+			Controls.ConfirmButton:SetDisabled(false);
             _PromptRestartGame = true;
         end
     );
@@ -859,6 +958,7 @@ function PopulateGraphicsOptions()
         function(option)
             Controls.PerformanceSlider:SetStepAndCall(performance_customStep);  -- It's enough to set just one of the Impact sliders to "custom", the logic sets the other one
 		    Options.SetGraphicsOption("General", "VFXDetailLevel", option);     -- First set the sliders to "custom", then set the new value, otherwise ProcessExternally() will overwrite the new value with a preset
+			Controls.ConfirmButton:SetDisabled(false);
 	    end
     );
 	
@@ -871,6 +971,7 @@ function PopulateGraphicsOptions()
         function(option)
             Controls.PerformanceSlider:SetStepAndCall(performance_customStep);  -- It's enough to set just one of the Impact sliders to "custom", the logic sets the other one
             Options.SetGraphicsOption("Bloom", "EnableBloom", option);          -- First set the sliders to "custom", then set the new value, otherwise ProcessExternally() will overwrite the new value with a preset
+			Controls.ConfirmButton:SetDisabled(false);
         end
     );
 
@@ -879,6 +980,7 @@ function PopulateGraphicsOptions()
         function(option)
             Controls.PerformanceSlider:SetStepAndCall(performance_customStep);              -- It's enough to set just one of the Impact sliders to "custom", the logic sets the other one
             Options.SetGraphicsOption("DynamicLighting", "EnableDynamicLighting", option);  -- First set the sliders to "custom", then set the new value, otherwise ProcessExternally() will overwrite the new value with a preset
+			Controls.ConfirmButton:SetDisabled(false);
         end
     );
     
@@ -891,8 +993,8 @@ function PopulateGraphicsOptions()
         function(option)
             Controls.PerformanceSlider:SetStepAndCall(performance_customStep);  -- It's enough to set just one of the Impact sliders to "custom", the logic sets the other one
             Options.SetGraphicsOption("Shadows", "EnableShadows", option);      -- First set the sliders to "custom", then set the new value, otherwise ProcessExternally() will overwrite the new value with a preset
-
             Controls.ShadowsResolutionPullDown:SetDisabled(not option);
+			Controls.ConfirmButton:SetDisabled(false);
         end
     );
 
@@ -901,27 +1003,31 @@ function PopulateGraphicsOptions()
         function(option)
             Controls.MemorySlider:SetStepAndCall(memory_customStep);            -- It's enough to set just one of the Impact sliders to "custom", the logic sets the other one
 		    Options.SetGraphicsOption("Video", "ShadowMapResolution", option);  -- First set the sliders to "custom", then set the new value, otherwise ProcessExternally() will overwrite the new value with a preset
+			Controls.ConfirmButton:SetDisabled(false);
 	    end,
         Options.GetGraphicsOption("Shadows", "EnableShadows") == 0
     );
 
+	-- Cloud Shadows Enabled
+	PopulateCheckBox(Controls.CloudShadowsEnabledCheckbox, Options.GetGraphicsOption("CloudShadows", "EnableCloudShadows"),
+        function(option)
+            Controls.PerformanceSlider:SetStepAndCall(performance_customStep);  -- It's enough to set just one of the Impact sliders to "custom", the logic sets the other one
+            Options.SetGraphicsOption("CloudShadows", "EnableCloudShadows", option);      -- First set the sliders to "custom", then set the new value, otherwise ProcessExternally() will overwrite the new value with a preset
+			Controls.ConfirmButton:SetDisabled(false);
+        end
+    );
     -------------------------------------------------------------------------------
     -- Advanced Settings - Overlay
     -------------------------------------------------------------------------------
 
     -- Overlay Resolution
-    PopulateComboBox(Controls.OverlayResolutionPullDown, overlayResolution_options, Options.GetGraphicsOption("Video", "OverlayResolution"), 
-        function(option)
-            Controls.MemorySlider:SetStepAndCall(memory_customStep);            -- It's enough to set just one of the Impact sliders to "custom", the logic sets the other one
-		    Options.SetGraphicsOption("Video", "OverlayResolution", option);    -- First set the sliders to "custom", then set the new value, otherwise ProcessExternally() will overwrite the new value with a preset
-	    end
-    );
     
     -- Screen-Space Overlay Enabled
     PopulateCheckBox(Controls.SSOverlayEnabledCheckbox, Options.GetGraphicsOption("General", "ScreenSpaceOverlay"),
         function(option)
             Controls.PerformanceSlider:SetStepAndCall(performance_customStep);  -- It's enough to set just one of the Impact sliders to "custom", the logic sets the other one
             Options.SetGraphicsOption("General", "ScreenSpaceOverlay", option); -- First set the sliders to "custom", then set the new value, otherwise ProcessExternally() will overwrite the new value with a preset
+			Controls.ConfirmButton:SetDisabled(false);
         end
     );
         
@@ -934,7 +1040,7 @@ function PopulateGraphicsOptions()
         function(option)
              Controls.PerformanceSlider:SetStepAndCall(performance_customStep); -- It's enough to set just one of the Impact sliders to "custom", the logic sets the other one
 	    	 Options.SetGraphicsOption("Terrain", "TerrainQuality", option);    -- First set the sliders to "custom", then set the new value, otherwise ProcessExternally() will overwrite the new value with a preset
-
+			 Controls.ConfirmButton:SetDisabled(false);
 	    	 _PromptRestartGame = true;
 	    end
     );
@@ -958,6 +1064,7 @@ function PopulateGraphicsOptions()
                 Options.SetGraphicsOption("Terrain", "TerrainSynthesisDetailLevel", 2);
             end
 
+			Controls.ConfirmButton:SetDisabled(false);
             _PromptRestartGame = true;
         end
     );
@@ -967,6 +1074,7 @@ function PopulateGraphicsOptions()
         function(option)
             Controls.MemorySlider:SetStepAndCall(memory_customStep);                        -- It's enough to set just one of the Impact sliders to "custom", the logic sets the other one
             Options.SetGraphicsOption("Terrain", "ReducedTerrainMaterials", not option);    -- First set the sliders to "custom", then set the new value, otherwise ProcessExternally() will overwrite the new value with a preset
+			Controls.ConfirmButton:SetDisabled(false);
         end
     );
 
@@ -980,6 +1088,7 @@ function PopulateGraphicsOptions()
             
             local bAODropDownEnabled = option and Options.GetGraphicsOption("AO", "EnableAO") == 1;
             Controls.TerrainAOResolutionPullDown:SetDisabled(not bAODropDownEnabled);
+			Controls.ConfirmButton:SetDisabled(false);
         end
     );
 
@@ -988,7 +1097,7 @@ function PopulateGraphicsOptions()
         function(option)
             Controls.PerformanceSlider:SetStepAndCall(performance_customStep);  -- It's enough to set just one of the Impact sliders to "custom", the logic sets the other one
             Options.SetGraphicsOption("AO", "EnableAO", option);                -- First set the sliders to "custom", then set the new value, otherwise ProcessExternally() will overwrite the new value with a preset
-
+			Controls.ConfirmButton:SetDisabled(false);
             Controls.TerrainAOResolutionPullDown:SetDisabled(not option);
         end,
         Options.GetGraphicsOption("Terrain", "LowQualityTerrainShader") == 1
@@ -1000,6 +1109,7 @@ function PopulateGraphicsOptions()
             Controls.MemorySlider:SetStepAndCall(memory_customStep);            -- It's enough to set just one of the Impact sliders to "custom", the logic sets the other one
 		    Options.SetGraphicsOption("Video", "AORenderResolution", option);   -- First set the sliders to "custom", then set the new value, otherwise ProcessExternally() will overwrite the new value with a preset
             Options.SetGraphicsOption("Video", "AODepthResolution", option);
+			Controls.ConfirmButton:SetDisabled(false);
 	    end,
         Options.GetGraphicsOption("AO", "EnableAO") == 0 or Options.GetGraphicsOption("Terrain", "LowQualityTerrainShader") == 1
     );
@@ -1009,6 +1119,7 @@ function PopulateGraphicsOptions()
         function(option)
             Controls.PerformanceSlider:SetStepAndCall(performance_customStep);  -- It's enough to set just one of the Impact sliders to "custom", the logic sets the other one
             Options.SetGraphicsOption("General", "ClutterDetailLevel", option); -- First set the sliders to "custom", then set the new value, otherwise ProcessExternally() will overwrite the new value with a preset
+			Controls.ConfirmButton:SetDisabled(false);
         end
     );
 
@@ -1021,6 +1132,7 @@ function PopulateGraphicsOptions()
         function(option)
             Controls.MemorySlider:SetStepAndCall(memory_customStep);            -- It's enough to set just one of the Impact sliders to "custom", the logic sets the other one
             Options.SetGraphicsOption("General", "UseLowResWater", not option); -- First set the sliders to "custom", then set the new value, otherwise ProcessExternally() will overwrite the new value with a preset
+			Controls.ConfirmButton:SetDisabled(false);
         end
     );
 
@@ -1028,20 +1140,36 @@ function PopulateGraphicsOptions()
     PopulateCheckBox(Controls.WaterShaderCheckbox, InvertOptionInt(Options.GetGraphicsOption("General", "UseLowQualityWaterShader")),
         function(option)
             -- Only high-resolution water shader has reflections
-            Controls.WaterReflectionPassesPullDown:SetDisabled(not option);
+            Controls.ReflectionPassesPullDown:SetDisabled(not option);
 
             Controls.PerformanceSlider:SetStepAndCall(performance_customStep);              -- It's enough to set just one of the Impact sliders to "custom", the logic sets the other one
             Options.SetGraphicsOption("General", "UseLowQualityWaterShader", not option);   -- First set the sliders to "custom", then set the new value, otherwise ProcessExternally() will overwrite the new value with a preset
+			Controls.ConfirmButton:SetDisabled(false);
         end
     );
 
-    -- Screen-space Reflection Passes
-    PopulateComboBox(Controls.WaterReflectionPassesPullDown, reflectionPasses_options, Options.GetGraphicsOption("General", "SSReflectPasses"), 
+	-------------------------------------------------------------------------------
+    -- Advanced Settings - Reflections
+    -------------------------------------------------------------------------------
+
+	-- Reflections enabled
+	PopulateCheckBox(Controls.ReflectionsEnabledCheckbox, Options.GetGraphicsOption("General", "EnableReflections"),
+        function(option)
+            Controls.PerformanceSlider:SetStepAndCall(performance_customStep);  -- It's enough to set just one of the Impact sliders to "custom", the logic sets the other one
+            Options.SetGraphicsOption("General", "EnableReflections", option);      -- First set the sliders to "custom", then set the new value, otherwise ProcessExternally() will overwrite the new value with a preset
+            Controls.ReflectionPassesPullDown:SetDisabled(not option);
+			Controls.ConfirmButton:SetDisabled(false);
+        end
+    );
+
+	 -- Screen-space Reflection Passes
+    PopulateComboBox(Controls.ReflectionPassesPullDown, reflectionPasses_options, Options.GetGraphicsOption("General", "SSReflectPasses"), 
         function(option)
             Controls.PerformanceSlider:SetStepAndCall(performance_customStep);  -- It's enough to set just one of the Impact sliders to "custom", the logic sets the other one
 		    Options.SetGraphicsOption("General", "SSReflectPasses", option);    -- First set the sliders to "custom", then set the new value, otherwise ProcessExternally() will overwrite the new value with a preset
-	    end,
-        Options.GetGraphicsOption("General", "UseLowQualityWaterShader") == 1
+			Controls.ConfirmButton:SetDisabled(false);
+		end,
+		Options.GetGraphicsOption("General", "EnableReflections") == 0
     );
 
     -------------------------------------------------------------------------------
@@ -1069,6 +1197,7 @@ function PopulateGraphicsOptions()
 				_PromptRestartGame = true;
 			end
 			UpdateMotionBlurCheckbox(option);
+			Controls.ConfirmButton:SetDisabled(false);
 	    end
     );
     
@@ -1077,6 +1206,7 @@ function PopulateGraphicsOptions()
         function(option)
             Controls.MemorySlider:SetStepAndCall(memory_customStep);          -- It's enough to set just one of the Impact sliders to "custom", the logic sets the other one
             Options.SetGraphicsOption("Leaders", "EnableMotionBlur", option); -- First set the sliders to "custom", then set the new value, otherwise ProcessExternally() will overwrite the new value with a preset
+			Controls.ConfirmButton:SetDisabled(false);
         end
     );
 
@@ -1091,7 +1221,7 @@ function PopulateGraphicsOptions()
     Controls.AdapterPullDown:SetDisabled( is_in_game )
 
     -- Put resolution dropdown in the right state for current borderless setting
-    AdjustResolutionPulldown( Options.GetAppOption("Video", "FullScreen") == BORDERLESS_OPTION, is_in_game )
+    AdjustResolutionPulldown( Options.GetAppOption("Video", "FullScreen"), is_in_game )
 
 	-- Put leader motion blur checkbox in right state for current leader quality setting
 	UpdateMotionBlurCheckbox( Options.GetGraphicsOption("Leaders", "Quality") );
@@ -1115,8 +1245,13 @@ function TemporaryHardCodedGoodness()
 	};
 
 	local currentTutorialLevel = Options.GetUserOption("Gameplay", "TutorialLevel");
-	if(HasExpansion1() or currentTutorialLevel > 1) then
+	if(HasExpansion1() or currentTutorialLevel == 2) then
 		table.insert(tutorial_options, {"LOC_OPTIONS_TUTORIAL_NEW_TO_XP1", 2});
+	end
+
+	local currentTutorialLevel = Options.GetUserOption("Gameplay", "TutorialLevel");
+	if(HasExpansion2() or currentTutorialLevel == 3) then
+		table.insert(tutorial_options, {"LOC_OPTIONS_TUTORIAL_NEW_TO_XP2", 3});
 	end
 
 	local autosave_settings = {
@@ -1175,50 +1310,74 @@ function TemporaryHardCodedGoodness()
 		{"LOC_OPTIONS_ALWAYS", 2},
 	};
 
+	-- Pulldown options for PlayByCloudEndTurnBehavior.
+	local playByCloud_endturn_options = {
+		{"LOC_OPTIONS_PLAYBYCLOUD_END_TURN_BEHAVIOR_ASK_ME", PlayByCloudEndTurnBehaviorType.PBC_ENDTURN_ASK_ME},
+		{"LOC_OPTIONS_PLAYBYCLOUD_END_TURN_BEHAVIOR_DO_NOTHING", PlayByCloudEndTurnBehaviorType.PBC_ENDTURN_DO_NOTHING},
+		{"LOC_OPTIONS_PLAYBYCLOUD_END_TURN_BEHAVIOR_EXIT_TO_MAINMENU", PlayByCloudEndTurnBehaviorType.PBC_ENDTURN_EXIT_MAINMENU},	
+	};
+
+	-- Pulldown options for ColorblindAdaptation.
+	local colorblindAdaptation_options = {
+		{"LOC_OPTIONS_CBADAPT_DO_NOTHING", 0},
+		{"LOC_OPTIONS_CBADAPT_PROTANOPIA", 1},
+		{"LOC_OPTIONS_CBADAPT_DEUTERANOPIA", 2},
+		{"LOC_OPTIONS_CBADAPT_TRITANOPIA", 3},
+	};
 
 	-- Populate the pull-downs because we can't do this in XML.
 	--Gameplay
 	PopulateComboBox(Controls.QuickCombatPullDown, boolean_options, Options.GetUserOption("Gameplay", "QuickCombat"), function(option)
 		Options.SetUserOption("Gameplay", "QuickCombat", option);
+		Controls.ConfirmButton:SetDisabled(false);
 	end, 
 	UserConfiguration.IsValueLocked("QuickCombat"));
 	
 	
 	PopulateComboBox(Controls.QuickMovementPullDown, boolean_options, Options.GetUserOption("Gameplay", "QuickMovement"), function(option)
 		Options.SetUserOption("Gameplay", "QuickMovement", option);
+		Controls.ConfirmButton:SetDisabled(false);
 	end,
 	UserConfiguration.IsValueLocked("QuickMovement"));
 
 	PopulateComboBox(Controls.AutoEndTurnPullDown, boolean_options, Options.GetUserOption("Gameplay", "AutoEndTurn"), function(option)
 		Options.SetUserOption("Gameplay", "AutoEndTurn", option);
+		Controls.ConfirmButton:SetDisabled(false);
 	end,
 	UserConfiguration.IsValueLocked("AutoEndTurn"));
 
 	PopulateComboBox(Controls.CityRangeAttackTurnBlockingPullDown, boolean_options, Options.GetUserOption("Gameplay", "CityRangeAttackTurnBlocking"), function(option)
 		Options.SetUserOption("Gameplay", "CityRangeAttackTurnBlocking", option);
+		Controls.ConfirmButton:SetDisabled(false);
 	end,
 	UserConfiguration.IsValueLocked("CityRangeAttackTurnBlocking"));
 
 	PopulateComboBox(Controls.TunerPullDown, boolean_options, Options.GetAppOption("Debug", "EnableTuner"), function(option)
 		Options.SetAppOption("Debug", "EnableTuner", option);
+		Controls.ConfirmButton:SetDisabled(false);
 		_PromptRestartApp = true;
 	end);	
 
 	PopulateComboBox(Controls.AutoDownloadPullDown, boolean_options, Options.GetUserOption("Multiplayer", "AutoModDownload"), function(option)
 		Options.SetUserOption("Multiplayer", "AutoModDownload", option);
+		Controls.ConfirmButton:SetDisabled(false);
 	end);	
 
 	PopulateComboBox(Controls.TutorialPullDown, tutorial_options, Options.GetUserOption("Gameplay", "TutorialLevel"), function(option)
 		Options.SetUserOption("Gameplay", "TutorialLevel", option);
+		Options.SetUserOption("Tutorial", "HasChosenTutorialLevel", 1);
+		Controls.ConfirmButton:SetDisabled(false);
 	end,
 	UserConfiguration.IsValueLocked("TutorialLevel"));	
 
 	PopulateComboBox(Controls.SaveFrequencyPullDown, autosave_settings, Options.GetUserOption("Gameplay", "AutoSaveFrequency"), function(option)
 		Options.SetUserOption("Gameplay", "AutoSaveFrequency", option);
+		Controls.ConfirmButton:SetDisabled(false);
 	end);	
 
 	PopulateComboBox(Controls.SaveKeepPullDown, autosave_settings, Options.GetUserOption("Gameplay", "AutoSaveKeepCount"), function(option)
 		Options.SetUserOption("Gameplay", "AutoSaveKeepCount", option);
+		Controls.ConfirmButton:SetDisabled(false);
 	end);	
 
 	local fTOD = Options.GetGraphicsOption("General", "DefaultTimeOfDay");
@@ -1229,11 +1388,13 @@ function TemporaryHardCodedGoodness()
         Options.SetGraphicsOption("General", "DefaultTimeOfDay", fTime, 0);
         UI.SetAmbientTimeOfDay(fTime);
 		UpdateTimeLabel(fTime);
+		Controls.ConfirmButton:SetDisabled(false);
     end);
 
     PopulateCheckBox(Controls.TimeOfDayCheckbox, Options.GetGraphicsOption("General", "AmbientTimeOfDay"), function(option)
         Options.SetGraphicsOption("General", "AmbientTimeOfDay", option);
         UI.SetAmbientTimeOfDayAnimating(option);
+		Controls.ConfirmButton:SetDisabled(false);
     end
     );
 
@@ -1241,32 +1402,76 @@ function TemporaryHardCodedGoodness()
 	if HasExpansion1() then
 		PopulateCheckBox(Controls.HistoricMomentsAnimCheckbox, Options.GetUserOption("General", "PlayHistoricMomentAnimation"), function(option)
 			Options.SetUserOption("Interface", "PlayHistoricMomentAnimation", option and 1 or 0);
+			Controls.ConfirmButton:SetDisabled(false);
 		end);
 	end
+
+	PopulateCheckBox(Controls.TouchInputCheckbox, Options.GetAppOption("UI", "IsTouchScreenEnabled"), function(option)
+		Options.SetAppOption("UI", "IsTouchScreenEnabled", option and 1 or 0);
+		Controls.ConfirmButton:SetDisabled(false);
+	end);
+
 
 	PopulateEditBox(Controls.LANPlayerNameEdit, Options.GetUserOption("Multiplayer", "LANPlayerName"), function(option)
 		UserConfiguration.SetValue("LANPlayerName", option);
 		Options.SetUserOption("Multiplayer", "LANPlayerName", option);
+		Controls.ConfirmButton:SetDisabled(false);
 	end,
 	UserConfiguration.IsValueLocked("LANPlayerName"));
-	
+
+	-- PlayByCloud Webhook
+	PopulateEditBox(Controls.PBCTurnWebhookEdit, Options.GetUserOption("Multiplayer", "TurnWebHookURL"), 
+		function(option)
+			Options.SetUserOption("Multiplayer", "TurnWebHookURL", option);
+			Controls.ConfirmButton:SetDisabled(false);
+		end
+	);
+
+	PopulateComboBox(Controls.TurnWebhookFreqPullDown, webhookFreq_options,  Options.GetUserOption("Multiplayer", "TurnWebHookFrequency"), 
+        function(option)
+		    Options.SetUserOption("Multiplayer", "TurnWebHookFrequency", option);
+			Controls.ConfirmButton:SetDisabled(false);
+	    end
+    );	
 
 	-- Interface
 	PopulateComboBox(Controls.ClockFormat, clock_options, Options.GetUserOption("Interface", "ClockFormat"), function(option)
 		UserConfiguration.SetValue("ClockFormat", option);
 		Options.SetUserOption("Interface", "ClockFormat", option);
+		Controls.ConfirmButton:SetDisabled(false);
 	end,
 	UserConfiguration.IsValueLocked("ClockFormat"));	
 
+	PopulateComboBox(Controls.PlayByCloudEndTurnBehavior, playByCloud_endturn_options, Options.GetUserOption("Interface", "PlayByCloudEndTurnBehavior"), 
+		function(option)
+			Options.SetUserOption("Interface", "PlayByCloudEndTurnBehavior", option);
+			Controls.ConfirmButton:SetDisabled(false);
+		end
+	);
+
+	PopulateComboBox(Controls.ColorblindAdaptation, colorblindAdaptation_options, Options.GetAppOption("UI", "ColorblindAdaptation"), function(option)
+		Options.SetAppOption("UI", "ColorblindAdaptation", option);
+		Controls.ConfirmButton:SetDisabled(false);
+		_PromptRestartGame = true;
+    end);	
+
+    -- we can't allow this to be changed in-game, too many things cache the values
+    if IsInGame() then
+        Controls.ColorblindAdaptation:SetDisabled(true);
+    else
+        Controls.ColorblindAdaptation:SetDisabled(false);
+    end
 
 	-- Language
 	PopulateComboBox(Controls.DisplayLanguagePullDown, language_options, Options.GetAppOption("Language", "DisplayLanguage"), function(option)
 		Options.SetAppOption("Language", "DisplayLanguage", option);
+		Controls.ConfirmButton:SetDisabled(false);
 		_PromptRestartApp = true;
 	end);	
 
 	PopulateComboBox(Controls.SpokenLanguagePullDown, audio_language_options, Options.GetAppOption("Language", "AudioLanguage"), function(option)
 		Options.SetAppOption("Language", "AudioLanguage", option);
+		Controls.ConfirmButton:SetDisabled(false);
 		_PromptRestartApp = true;
 	end);	
 
@@ -1276,6 +1481,7 @@ function TemporaryHardCodedGoodness()
         else
             Options.SetAppOption("Language", "EnableSubtitles", 0);
         end
+		Controls.ConfirmButton:SetDisabled(false);
     end);
 
     -- Sound
@@ -1283,6 +1489,7 @@ function TemporaryHardCodedGoodness()
     Controls.MasterVolSlider:RegisterSliderCallback(
     	function(value)
             Options.SetAudioOption("Sound", "Master Volume", value * 100.0, 0);
+			Controls.ConfirmButton:SetDisabled(false);
             UI.PlaySound("Bus_Feedback_Master");
     	end
     );
@@ -1291,6 +1498,7 @@ function TemporaryHardCodedGoodness()
     Controls.MusicVolSlider:RegisterSliderCallback(
     	function(value)
             Options.SetAudioOption("Sound", "Music Volume", value * 100.0, 0);
+			Controls.ConfirmButton:SetDisabled(false);
     	end
     );
 
@@ -1298,6 +1506,7 @@ function TemporaryHardCodedGoodness()
     Controls.SFXVolSlider:RegisterSliderCallback(
     	function(value)
             Options.SetAudioOption("Sound", "SFX Volume", value * 100.0, 0);
+			Controls.ConfirmButton:SetDisabled(false);
             UI.PlaySound("Bus_Feedback_SFX");
     	end
     );
@@ -1306,6 +1515,7 @@ function TemporaryHardCodedGoodness()
     Controls.AmbVolSlider:RegisterSliderCallback(
     	function(value)
             Options.SetAudioOption("Sound", "Ambience Volume", value * 100.0, 0);
+			Controls.ConfirmButton:SetDisabled(false);
             UI.PlaySound("Bus_Feedback_Ambience");
     	end
     );
@@ -1314,6 +1524,7 @@ function TemporaryHardCodedGoodness()
     Controls.SpeechVolSlider:RegisterSliderCallback(
     	function(value)
             Options.SetAudioOption("Sound", "Speech Volume", value * 100.0, 0);
+			Controls.ConfirmButton:SetDisabled(false);
             UI.PlaySound("Bus_Feedback_Speech");
     	end
     );
@@ -1325,6 +1536,7 @@ function TemporaryHardCodedGoodness()
             else
                 Options.SetAudioOption("Sound", "Mute Focus", 0, 0);
             end
+			Controls.ConfirmButton:SetDisabled(false);
         end
             );
 
@@ -1346,22 +1558,26 @@ function TemporaryHardCodedGoodness()
     -- Interface
 	PopulateComboBox(Controls.StartInStrategicView, boolean_options, Options.GetUserOption("Gameplay", "StartInStrategicView"), function(option)
 		Options.SetUserOption("Gameplay", "StartInStrategicView", option);
+		Controls.ConfirmButton:SetDisabled(false);
 		_PromptRestartGame = true;
 	end);
 
     PopulateComboBox(Controls.MouseGrabPullDown, grab_options, Options.GetAppOption("Video", "MouseGrab"), function(option)
 		Options.SetAppOption("Video", "MouseGrab", option);
+		Controls.ConfirmButton:SetDisabled(false);
         _PromptRestartApp = true;
 	end);
 
 	PopulateComboBox(Controls.EdgeScrollPullDown, boolean_options, Options.GetUserOption("Gameplay", "EdgePan"), function(option)
 		Options.SetUserOption("Gameplay", "EdgePan", option);
-        OnOptionChangeRequiresAppRestart();
+		Controls.ConfirmButton:SetDisabled(false);
+        _PromptRestartApp = true;
 	end, 
 	UserConfiguration.IsValueLocked("EdgePan"));
 
 	PopulateComboBox(Controls.UnitCyclingPullDown, boolean_options, Options.GetUserOption("Gameplay", "AutoUnitCycle"), function(option)
 		Options.SetUserOption("Gameplay", "AutoUnitCycle", option);
+		Controls.ConfirmButton:SetDisabled(false);
 	end,
 	UserConfiguration.IsValueLocked("AutoUnitCycle"));
 	
@@ -1370,6 +1586,7 @@ function TemporaryHardCodedGoodness()
 	UI.SetMinimapSize(minimapSize);
 	Controls.MinimapSizeSlider:RegisterSliderCallback(function(value)
 		Options.SetGraphicsOption("General", "MinimapSize", value);
+		Controls.ConfirmButton:SetDisabled(false);
 		UI.SetMinimapSize(value);
 	end);
 
@@ -1379,13 +1596,33 @@ function TemporaryHardCodedGoodness()
 	Controls.PlotToolTipDelaySlider:RegisterSliderCallback(function(value)
 		local adjustedValue = value * 2;
 		Options.SetUserOption("Interface", "PlotTooltipDelay", adjustedValue);
+		Controls.ConfirmButton:SetDisabled(false);
 		Controls.PlotToolTipDelayValue:LocalizeAndSetText("LOC_OPTIONS_PLOT_TOOLTIP_DELAY_VALUE", adjustedValue);
+	end);
+
+	local scrollSpeed = Options.GetUserOption("Interface", "ScrollSpeed") or 1.0;
+	Controls.ScrollSpeedSlider:SetValue((scrollSpeed - MIN_SCROLL_SPEED) / MAX_SCROLL_SPEED);
+	Controls.ScrollSpeedValue:LocalizeAndSetText("LOC_OPTIONS_SCROLL_SPEED_VALUE", scrollSpeed);
+	Controls.ScrollSpeedSlider:RegisterSliderCallback(function(value)
+		local adjustedValue = MIN_SCROLL_SPEED + (MAX_SCROLL_SPEED * value);
+		Options.SetUserOption("Interface", "ScrollSpeed", adjustedValue);
+		Controls.ConfirmButton:SetDisabled(false);
+		Controls.ScrollSpeedValue:LocalizeAndSetText("LOC_OPTIONS_SCROLL_SPEED_VALUE", adjustedValue);
 	end);
 	
     -- Application
     PopulateComboBox(Controls.ShowIntroPullDown, boolean_options, Options.GetAppOption("Video", "PlayIntroVideo"), function(option)
         Options.SetAppOption("Video", "PlayIntroVideo", option);
+		Controls.ConfirmButton:SetDisabled(false);
     end);
+
+	PopulateCheckBox(Controls.WarnAboutModsCheckbox, Options.GetAppOption("UI", "WarnAboutModCompatibility"), function(option)
+        Options.SetAppOption("UI", "WarnAboutModCompatibility", option);
+		Controls.ConfirmButton:SetDisabled(false);
+    end
+    );
+
+
 end
 
 ----------------------------------------------------------------        
@@ -1480,7 +1717,6 @@ function InitializeKeyBinding()
 		end
 
 		Controls.KeyBindingsStack:CalculateSize();
-		Controls.KeyBindingsStack:ReprocessAnchoring();
 		Controls.KeyBindingsScrollPanel:CalculateSize();
 	end
 
@@ -1507,6 +1743,7 @@ function InitializeKeyBinding()
 
 	function BindRecordedGesture(gesture)
 		if(_CurrentAction and _CurrentActionIndex) then
+			Controls.ConfirmButton:SetDisabled(false);
 			Input.BindAction(_CurrentAction, _CurrentActionIndex, gesture);
 			RefreshKeyBinding();
 		end
@@ -1526,6 +1763,7 @@ function InitializeKeyBinding()
 		StopActiveKeyBinding();	
 
 		if(currentAction and currentActionIndex) then
+            Controls.ConfirmButton:SetDisabled(false);
 			Input.ClearGesture(currentAction, currentActionIndex);
 			RefreshKeyBinding();
 		end		
@@ -1538,11 +1776,60 @@ end
 
 -------------------------------------------------------------------------------
 function OnShow()
-    local isInGame = false;
 	RefreshKeyBinding();
 	UserConfiguration.SaveCheckpoint();
     PopulateGraphicsOptions();
     TemporaryHardCodedGoodness();
+
+	-- Disable confirm button until user changes any option
+	Controls.ConfirmButton:SetDisabled(true);
+
+	if IsInGame() and GameConfiguration.IsAnyMultiplayer() then
+		m_pendingGameConfigChanges = {};
+		g_BroadcastNetworkConfigOnSave = false;
+		BuildGameSetup(Options_UI_CreateParameter);
+		Controls.GameSetupContainer:SetHide(false);
+	else
+		Controls.GameSetupContainer:SetHide(true);
+	end
+end
+
+-------------------------------------------------------------------------------
+function BroadcastGameConfigChanges() end -- Do nothing, we broadcast changes inside OnConfirm
+
+-------------------------------------------------------------------------------
+function Options_UI_CreateParameter(o, parameter)
+	-- Add the colon to the setting name to match convention of options screen
+	parameter.Name = parameter.Name .. ":";
+	GameParameters_UI_CreateParameter(o, parameter);
+end
+
+-------------------------------------------------------------------------------
+BASE_Config_Read = SetupParameters.Config_Read;
+function SetupParameters:Config_Read(group, id)
+	
+	if m_pendingGameConfigChanges[group] and m_pendingGameConfigChanges[group][id] then
+		return m_pendingGameConfigChanges[group][id];
+	end
+
+	return BASE_Config_Read(self, group, id);
+end
+
+-------------------------------------------------------------------------------
+BASE_Config_Write = SetupParameters.Config_Write;
+function SetupParameters:Config_Write(group, id, value)
+	local prevValue = self:Config_Read(group, id);
+	if prevValue ~= value then
+		Controls.ConfirmButton:SetDisabled(false);
+
+		if not m_pendingGameConfigChanges[group] then
+			m_pendingGameConfigChanges[group] = {};
+		end
+		
+		m_pendingGameConfigChanges[group][id] = value;
+		return true;
+	end
+	return false;
 end
 
 -------------------------------------------------------------------------------
@@ -1556,8 +1843,7 @@ function OnToggleAdvancedOptions()
 		Controls.AdvancedGraphicsOptions:SetText(Locale.Lookup("LOC_OPTIONS_HIDE_ADVANCED_GRAPHICS"));
 		Controls.AdvancedOptionsContainer:SetHide(false);
 	end
-	Controls.GraphicsOptionsStack:CalculateSize();
-	Controls.GraphicsOptionsStack:ReprocessAnchoring();
+	Controls.GraphicsOptionsStack:CalculateSize();	
 	Controls.GraphicsOptionsPanel:CalculateSize();
 end
 -------------------------------------------------------------------------------
@@ -1572,8 +1858,7 @@ function Resize()
 	if(screenY >= Controls.MainWindow:GetSizeY() + (Controls.LogoContainer:GetSizeY()+ Controls.LogoContainer:GetOffsetY())*2) then
 		hideLogo = false;
 	end
-	Controls.LogoContainer:SetHide(hideLogo);
-	Controls.MainGrid:ReprocessAnchoring();
+	Controls.LogoContainer:SetHide(hideLogo);	
 end
 
 function OnUpdateUI( type:number, tag:string, iData1:number, iData2:number, strData1:string )   
@@ -1586,10 +1871,44 @@ function OnUpdateGraphicsOptions()
     PopulateGraphicsOptions();  -- Ensure that the new monitor's resolutions are shown in the UI
 end
 
+-- ===========================================================================
+--	UICallback
+--	tab, a data struct of a tab OR an index of the struct to use
+-- ===========================================================================
+function OnSelectTab( tab )
+	
+	-- If an index, use to look up tab structure
+	if type(tab)=="number" then
+		originalTabValue = tab; -- save for error message
+		tab = m_tabs[tab];
+		if tab == nil then
+			UI.DataError("Could not switch option tab, invalid tab id passed in: "..tostring(originalTabValue));
+			return;
+		end
+	end
+
+	local button = tab[1];
+	local panel = tab[2];
+	local title = tab[3]
+	for i, v in ipairs(m_tabs) do
+		v[2]:SetHide(true);
+		v[1]:SetSelected(false);
+		if tab[4] == 1 then
+			Controls.ResetButton:SetHide(true);
+		else
+			Controls.ResetButton:SetHide(false);
+		end
+	end	
+	button:SetSelected(true);
+	panel:SetHide(false);		
+	Controls.WindowTitle:SetText(Locale.ToUpper(Locale.Lookup(title)));
+end
+
 function Initialize()
 
 	_PromptRestartApp = false;
 	_PromptRestartGame = false;
+	_PromptResolutionAck = false;
 
 	_kPopupDialog = PopupDialog:new( "Options" );
 
@@ -1612,6 +1931,8 @@ function Initialize()
 	Events.OptionChangeRequiresAppRestart.Add(OnOptionChangeRequiresAppRestart);
 	Events.OptionChangeRequiresGameRestart.Add(OnOptionChangeRequiresGameRestart);
 	Events.OptionChangeRequiresResolutionAck.Add(OnOptionChangeRequiresResolutionAck);
+
+	LuaEvents.PBCNotifyRemind_ShowOptions.Add(OnPBCNotifyRemind_ShowOptions);
 
 	ContextPtr:SetShowHandler( OnShow );
 	ContextPtr:SetInputHandler(InputHandler, true );
@@ -1645,29 +1966,16 @@ function Initialize()
 	
 	for i, tab in ipairs(m_tabs) do
 		local button = tab[1];
-		local panel = tab[2];
-		local title = tab[3]
-		button:RegisterCallback(Mouse.eLClick, function()
-			for i, v in ipairs(m_tabs) do
-				v[2]:SetHide(true);
-				v[1]:SetSelected(false);
-                if tab[4] == 1 then
-                    Controls.ResetButton:SetHide(true);
-                else
-                    Controls.ResetButton:SetHide(false);
-                end
-			end	
-			button:SetSelected(true);
-			panel:SetHide(false);		
-			Controls.WindowTitle:SetText(Locale.ToUpper(Locale.Lookup(title)));
+		button:RegisterCallback(Mouse.eMouseEnter, function()
+            UI.PlaySound("Main_Menu_Mouse_Over");
 		end);
+		button:RegisterCallback(Mouse.eLClick, function() OnSelectTab(tab); end );
 		button:SetHide(false);
 	end
 
 	m_tabs[1][1]:SetSelected(true);
 	Controls.WindowTitle:SetText(Locale.ToUpper(Locale.Lookup(m_tabs[1][3])));
 	Controls.TabStack:CalculateSize();
-	Controls.TabStack:ReprocessAnchoring();
 
 	Events.SystemUpdateUI.Add( OnUpdateUI );
     Events.UpdateGraphicsOptions.Add( OnUpdateGraphicsOptions );

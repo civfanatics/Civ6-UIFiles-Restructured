@@ -1,11 +1,12 @@
-
--------------------------------------------------
+-- Copyright 2016-2018, Firaxis Games
 -- Tutorial Setup Screen
--------------------------------------------------
+
 include("SetupParameters");
 
 g_TutorialModId = "17462E0F-1EE1-4819-AAAA-052B5896B02A";
 g_GameParameters = nil;		-- Game Parameters.
+local m_isMoviePaused:boolean = false;
+
 
 -------------------------------------------------------------------------------
 -- Setup Parameter overrides.
@@ -103,7 +104,6 @@ function ConstructParameters()
 end
 
 function TeardownParameters()
-	-- Destroy the parameter scaffolding and release any cached data.
 	if(g_GameParameters) then
 		g_GameParameters:Shutdown();
 		g_GameParameters = nil;
@@ -121,9 +121,10 @@ function OnShow()
 	Controls.IntroMovie:SetMovie("TUT_INTRO.bk2");	
 	Controls.IntroMovie:Play();	
 	UI.PlaySound("Play_Cinematic_Tutorial_Intro");
+	m_isMoviePaused = false;
 end
 
-------------------------------------------------------------------    
+-- ===========================================================================
 function OnHide()
 	TeardownParameters();
 end
@@ -219,26 +220,21 @@ end
 -- ===========================================================================
 -- Input handling
 -- ===========================================================================
-function InputHandler( pInputStruct:table )
+function OnInputHandler( pInputStruct:table )
 
-	local uiMsg = pInputStruct:GetMessageType();
-
-	if Controls.IntroMovie:IsPlaying() and not Controls.IntroMovieContainer:IsHidden() then
-		if uiMsg == KeyEvents.KeyUp then
-			local uiKey = pInputStruct:GetKey();
+	local uiMsg :number = pInputStruct:GetMessageType();
+	if uiMsg == KeyEvents.KeyUp then
+		local uiKey :number = pInputStruct:GetKey();
+		if Controls.IntroMovie:IsPlaying() and not Controls.IntroMovieContainer:IsHidden() then					
 			if uiKey == Keys.VK_ESCAPE or uiKey == Keys.VK_RETURN then
 				StopMovie();
 				return true;
 			end
-		end
-	end
-
-
-	if uiMsg == KeyEvents.KeyUp then
-		local uiKey = pInputStruct:GetKey();
-		if(uiKey == Keys.VK_ESCAPE) then
-			OnBackButton();
-			return true;
+		else
+			if uiKey == Keys.VK_ESCAPE then
+				OnBackButton();
+				return true;
+			end
 		end
 	end
 	
@@ -268,13 +264,32 @@ end
 
 
 -- ===========================================================================
+function OnUserRequestClose()
+	if UIManager:IsInPopupQueue( ContextPtr ) then
+		if Controls.IntroMovie:IsPlaying() then
+			Controls.IntroMovie:Pause();
+			UI.PlaySound("Stop_Cinematic_Tutorial_Intro");
+			m_isMoviePaused = true;
+		end
+	end
+end
+
+-- ===========================================================================
+function OnCancelAppClose()
+	if UIManager:IsInPopupQueue( ContextPtr ) and m_isMoviePaused then		
+		m_isMoviePaused = false;
+		Controls.IntroMovie:Play();
+	end
+end
+
+-- ===========================================================================
 function Initialize()	
 
 	Resize();
 	
 	ContextPtr:SetShowHandler( OnShow );
 	ContextPtr:SetHideHandler( OnHide );
-	ContextPtr:SetInputHandler(InputHandler, true );
+	ContextPtr:SetInputHandler( OnInputHandler, true );
 	
 	-- Static information we don't need to change later.
 	Controls.Leader1Portrait:SetIcon("ICON_LEADER_CLEOPATRA");
@@ -286,5 +301,8 @@ function Initialize()
 	Controls.CloseButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 
 	Events.SystemUpdateUI.Add( OnUpdateUI );
+    Events.UserRequestClose.Add( OnUserRequestClose );
+
+	LuaEvents.FrontEndPopup_CloseConfirmationWithoutAction.Add( OnCancelAppClose );
 end
 Initialize();

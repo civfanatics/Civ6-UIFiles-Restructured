@@ -51,6 +51,7 @@ function OnShow()
 	Controls.ConfirmButton:SetHide(isInSession);
 	
 	ShowDefaultButton();
+	ShowLoadConfigButton();
 	Controls.LoadButton:SetHide(not GameConfiguration.IsHotseat() or isInSession);
 
 	--[[
@@ -69,6 +70,13 @@ function ShowDefaultButton()
 								and not Network.IsInSession();
 
 	Controls.DefaultButton:SetHide(not showDefaultButton);
+end
+
+function ShowLoadConfigButton()
+	local showLoadConfig = not GameConfiguration.IsSavedGame()
+								and not Network.IsInSession();
+
+	Controls.LoadConfigButton:SetHide(not showLoadConfig);
 end
 
 -- ===========================================================================
@@ -138,6 +146,26 @@ function OnConfirmClick()
 	Network.HostGame(serverType);	
 end
 
+-------------------------------------------------
+-- Load Configuration Button Handler
+-------------------------------------------------
+function OnLoadConfig()
+	local serverType = ServerTypeForMPLobbyType(m_lobbyModeName);
+	LuaEvents.HostGame_SetLoadGameServerType(serverType);
+	local kParameters = {};
+	kParameters.FileType = SaveFileTypes.GAME_CONFIGURATION;
+	UIManager:QueuePopup(Controls.LoadGameMenu, PopupPriority.Current, kParameters);
+end
+
+-------------------------------------------------
+-- Load Configuration Button Handler
+-------------------------------------------------
+function OnSaveConfig()
+	local kParameters = {};
+	kParameters.FileType = SaveFileTypes.GAME_CONFIGURATION;
+	UIManager:QueuePopup(Controls.SaveGameMenu, PopupPriority.Current, kParameters);
+end
+
 function OnAbandoned(eReason)
 	if (not ContextPtr:IsHidden()) then
 
@@ -158,6 +186,8 @@ function OnAbandoned(eReason)
 		elseif (eReason == KickReason.KICK_MOD_MISSING) then
 			local modMissingErrorStr = Modding.GetLastModErrorString();
 			LuaEvents.MultiplayerPopup( modMissingErrorStr, "LOC_GAME_ABANDONED_MOD_MISSING_TITLE" );
+		elseif (eReason == KickReason.KICK_MATCH_DELETED) then
+			LuaEvents.MultiplayerPopup( "LOC_GAME_ABANDONED_MATCH_DELETED", "LOC_GAME_ABANDONED_MATCH_DELETED_TITLE" );
 		else
 			LuaEvents.MultiplayerPopup( "LOC_GAME_ABANDONED_CONNECTION_LOST", "LOC_GAME_ABANDONED_CONNECTION_LOST_TITLE");
 		end
@@ -333,6 +363,8 @@ function Initialize()
 	ContextPtr:SetHideHandler(OnHide);
 
 	Controls.DefaultButton:RegisterCallback( Mouse.eLClick, OnDefaultButton);
+	Controls.LoadConfigButton:RegisterCallback( Mouse.eLClick, OnLoadConfig);
+	Controls.SaveConfigButton:RegisterCallback( Mouse.eLClick, OnSaveConfig);
 	Controls.ConfirmButton:RegisterCallback( Mouse.eLClick, OnConfirmClick );
 	Controls.ModsButton:RegisterCallback( Mouse.eLClick, ModsButtonClick );
 

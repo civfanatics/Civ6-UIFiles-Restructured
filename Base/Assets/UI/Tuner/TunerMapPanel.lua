@@ -3,6 +3,7 @@ g_PanelHasFocus = false;
 
 g_UnitPlacement =
 {
+	UnitFilter = "",
 	UnitType = -1,
 	Embarked = false,
 	

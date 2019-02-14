@@ -1,9 +1,9 @@
 -------------------------------------------------
 -- Confirm Player Kick
 -------------------------------------------------
+include( "PopupDialog" );
 
-local g_kickIdx = 0;
-local g_kickName = "";
+local g_kickIdx:number = -1;
 
 -------------------------------------------------
 -------------------------------------------------
@@ -12,8 +12,6 @@ function OnCancel()
     ContextPtr:CallParentShowHideHandler( true );
     ContextPtr:SetHide( true );
 end
-Controls.CancelButton:RegisterCallback( Mouse.eLClick, OnCancel );
-
 
 -------------------------------------------------
 -------------------------------------------------
@@ -24,7 +22,6 @@ function OnAccept()
 	ContextPtr:CallParentShowHideHandler( true );
 	ContextPtr:SetHide( true );
 end
-Controls.AcceptButton:RegisterCallback( Mouse.eLClick, OnAccept );
 
 ----------------------------------------------------------------
 -- Input processing
@@ -44,29 +41,14 @@ ContextPtr:SetInputHandler( InputHandler );
 
 -------------------------------------------------
 -------------------------------------------------
-function ShowHideHandler( bIsHide, bIsInit )
-    
-	if( not bIsHide ) then
-		-- Set player name in popup
-		UpdateKickLabel();
-	end
-end
-ContextPtr:SetShowHideHandler( ShowHideHandler );
-
--------------------------------------------------
--------------------------------------------------
-function UpdateKickLabel()
-	Controls.DialogText:LocalizeAndSetText("LOC_CONFIRM_KICK_PLAYER_DESC", g_kickName);	
-	Controls.StackContents:CalculateSize();
-	Controls.StackContents:ReprocessAnchoring();
-end
-
--------------------------------------------------
--------------------------------------------------
 function OnSetKickPlayer(playerID, playerName)
 	g_kickIdx = playerID;
-	g_kickName = playerName;
-	UpdateKickLabel();
+
+	m_kPopupDialog:Close();	-- clear out the popup incase it is already open.
+	m_kPopupDialog:AddText( Locale.Lookup("LOC_CONFIRM_KICK_PLAYER_DESC", playerName) );
+	m_kPopupDialog:AddButton( Locale.Lookup("LOC_ACCEPT_BUTTON"), OnAccept, nil, nil, "PopupButtonInstanceRed" );
+	m_kPopupDialog:AddButton( Locale.Lookup("LOC_CANCEL_BUTTON"), OnCancel );
+	m_kPopupDialog:Open();
 end
 
 -------------------------------------------------
@@ -87,6 +69,8 @@ function Initialize()
 	Events.MultiplayerPostPlayerDisconnected.Add(OnMultiplayerPostPlayerDisconnected);
 
 	LuaEvents.SetKickPlayer.Add(OnSetKickPlayer);
+
+	m_kPopupDialog = PopupDialog:new( "ConfirmKick" );
 end
 Initialize();
 

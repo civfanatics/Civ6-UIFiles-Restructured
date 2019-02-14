@@ -99,7 +99,7 @@ end
 -- Create parameters for all players.
 -------------------------------------------------------------------------------
 function CreatePlayerParameters(playerId, bHeadless)
-	print("Creating player parameters for Player " .. tonumber(playerId));
+	SetupParameters_Log("Creating player parameters for Player " .. tonumber(playerId));
 
 	-- Don't create player parameters for minor city states.  The configuration database doesn't know city state parameter values (like city state leader types) so it will stomp on them.
 	local playerConfig = PlayerConfigurations[playerId];
@@ -160,30 +160,30 @@ function RebuildPlayerParameters(bHeadless)
 	g_PlayerParameters = {};
 
 	local player_ids = GameConfiguration.GetParticipatingPlayerIDs();
-	print("There are " .. #player_ids .. " participating players.");
+	SetupParameters_Log("There are " .. #player_ids .. " participating players.");
 	for i, player_id in ipairs(player_ids) do	
 		CreatePlayerParameters(player_id, bHeadless);
 	end
 end
 
 function RefreshPlayerParameters()
-	print("Refresh Player Parameters");
+	SetupParameters_Log("Refresh Player Parameters");
 	for i,v in ipairs(g_PlayerParameters) do
 		v[2]:Refresh();
 	end
-	print("End Refresh Player Parameters");
+	SetupParameters_Log("End Refresh Player Parameters");
 end
 
 function VisualizePlayerParameters()
-	print("Visualizing Player Parameters");
+	SetupParameters_Log("Visualizing Player Parameters");
 	for i,v in ipairs(g_PlayerParameters) do
 		v[2]:UpdateVisualization();
 	end
-	print("End Visualizing Player Parameters");
+	SetupParameters_Log("End Visualizing Player Parameters");
 end
 
 function ReleasePlayerParameters()
-	print("Releasing Player Parameters");
+	SetupParameters_Log("Releasing Player Parameters");
 	for i,v in ipairs(g_PlayerParameters) do
 		v[2]:Shutdown();
 	end
@@ -218,6 +218,20 @@ function GetPlayerParameterError(playerId)
 	end
 end
 
+function CanShowLeaderAbility(playerInfo : table)
+	if (playerInfo.LeaderAbilityName and playerInfo.LeaderAbilityDescription and playerInfo.LeaderAbilityIcon) then
+		return playerInfo.LeaderAbilityName ~= "NONE" and playerInfo.LeaderAbilityDescription ~= "NONE" and playerInfo.LeaderAbilityIcon ~= "NONE";
+	end
+	return false;
+end
+
+function CanShowCivAbility(playerInfo : table)
+	if (playerInfo.CivilizationAbilityName and playerInfo.CivilizationAbilityDescription and playerInfo.CivilizationAbilityIcon) then
+		return playerInfo.CivilizationAbilityName ~= "NONE" and playerInfo.CivilizationAbilityDescription ~= "NONE" and playerInfo.CivilizationAbilityIcon ~= "NONE";
+	end
+	return false;
+end    
+
 -- Obtain additional information about a specific player value.
 -- Returns a table containing the following fields:
 --	CivilizationIcon					-- The icon id representing the civilization.
@@ -242,6 +256,57 @@ end
 --			Icon,						-- The icon of the unique item.
 --		}
 --	},
+
+local _GetPlayerIconsCache = {};
+local _GetPlayerIconsDefaultValue = {
+	LeaderIcon = "ICON_LEADER_DEFAULT",  
+	CivIcon = "ICON_CIVILIZATION_UNKNOWN"
+};
+
+function GetPlayerIcons(domain, leader_type)
+	-- Kludge:  We're special casing random for now.
+	-- this will eventually change and 'RANDOM' will
+	-- be just another row in the players entry.
+	-- This can't happen until GameCore supports 
+	-- multiple 'random' pools.
+	if(leader_type ~= "RANDOM") then
+
+		-- Does the cache need to be invalidated?
+		local changes = DB.ConfigurationChanges();
+		if(changes ~= _GetPlayerIconsCache[1]) then
+			_GetPlayerIconsCache = {changes};
+		end
+
+		-- Create single key to look up rather than use a 2D array.
+		local key = domain .. "|" .. leader_type;
+		local value = _GetPlayerIconsCache[key];
+		if(value) then
+			return value;
+		else
+			local info_query = "SELECT CivilizationIcon, LeaderIcon, PlayerColor from Players where Domain = ? and LeaderType = ? LIMIT 1";
+			local results = CachedQuery(info_query, domain, leader_type);		
+			if(results) then
+				local row = results[1];
+
+				local playerColor = row.PlayerColor or leader_type;
+
+				local info = {
+					LeaderIcon = row.LeaderIcon, 
+					CivIcon = row.CivilizationIcon,
+					PlayerColor = playerColor
+				};
+				
+				-- Cache it.
+				_GetPlayerIconsCache[key] = info;
+
+				return info;
+			end
+		end
+	end
+
+	return _GetPlayerIconsDefaultValue;
+end
+
 function GetPlayerInfo(domain, leader_type)
 	-- Kludge:  We're special casing random for now.
 	-- this will eventually change and 'RANDOM' will
@@ -249,7 +314,7 @@ function GetPlayerInfo(domain, leader_type)
 	-- This can't happen until GameCore supports 
 	-- multiple 'random' pools.
 	if(leader_type ~= "RANDOM") then
-		local info_query = "SELECT CivilizationIcon, LeaderIcon, LeaderName, CivilizationName, LeaderAbilityName, LeaderAbilityDescription, LeaderAbilityIcon, CivilizationAbilityName, CivilizationAbilityDescription, CivilizationAbilityIcon, Portrait, PortraitBackground from Players where Domain = ? and LeaderType = ? LIMIT 1";
+		local info_query = "SELECT CivilizationIcon, LeaderIcon, LeaderName, CivilizationName, LeaderAbilityName, LeaderAbilityDescription, LeaderAbilityIcon, CivilizationAbilityName, CivilizationAbilityDescription, CivilizationAbilityIcon, Portrait, PortraitBackground, PlayerColor from Players where Domain = ? and LeaderType = ? LIMIT 1";
 		local item_query = "SELECT Name, Description, Icon from PlayerItems where Domain = ? and LeaderType = ? ORDER BY SortIndex";
 		local info_results = CachedQuery(info_query, domain, leader_type);
 		local item_results = CachedQuery(item_query, domain, leader_type);
@@ -258,18 +323,15 @@ function GetPlayerInfo(domain, leader_type)
 			local info = {};
 			info.LeaderType = leader_type;
 			for i,row in ipairs(info_results) do
-				-- This is a hack! We need to find a better way to handle multiple civs with different leaders
-				if (row.LeaderIcon == "ICON_LEADER_GORGO") then
-					info.CivilizationIcon= "ICON_CIVILIZATION_GREECE_GORGO";
-				else
-					info.CivilizationIcon= row.CivilizationIcon;
-				end
+				
+				info.PlayerColor = row.PlayerColor or leader_type;
+				info.CivilizationIcon= row.CivilizationIcon;
 				info.LeaderIcon= row.LeaderIcon;
 				info.LeaderName = row.LeaderName;
 				info.CivilizationName = row.CivilizationName;
 				info.Portrait = row.Portrait;
 				info.PortraitBackground = row.PortraitBackground;
-				if(row.LeaderAbilityName and row.LeaderAbilityDescription and row.LeaderAbilityIcon) then
+				if (CanShowLeaderAbility(row)) then
 					info.LeaderAbility = {
 						Name = row.LeaderAbilityName,
 						Description = row.LeaderAbilityDescription,
@@ -277,7 +339,7 @@ function GetPlayerInfo(domain, leader_type)
 					};
 				end
 
-				if(row.CivilizationAbilityName and row.CivilizationAbilityDescription and row.CivilizationAbilityIcon) then
+				if (CanShowCivAbility(row)) then
 					info.CivilizationAbility = {
 						Name = row.CivilizationAbilityName,
 						Description = row.CivilizationAbilityDescription,
@@ -358,40 +420,48 @@ end
 --	alwaysHide:			A boolean indicating that we should always hide both flyouts.  The "Random" leader selection will always be hidden for example
 -- ===========================================================================
 function DisplayCivLeaderToolTip(info:table, tooltipControls:table, alwaysHide:boolean)
+
+	function ShowControl(alpha, slide)
+		if(alpha and slide) then
+			if (alpha:IsReversing()) then
+				alpha:Reverse();
+				slide:Reverse();
+			else
+				alpha:Play();
+				slide:Play();
+			end
+		end
+	end
+
+	function HideControl(alpha, slide) 
+		if(alpha and slide) then
+			if (not alpha:IsReversing()) then
+				alpha:Reverse();
+				slide:Reverse();
+			else
+				alpha:Play();
+				slide:Play();
+			end
+		end
+	end
+
+	local showLeaderPortrait = false;
+	local showToolTip = false;
 	if(info.CivilizationName ~= "LOC_RANDOM_CIVILIZATION" and not alwaysHide) then --If we are showing leader data flyouts, then make sure we are playing forwards, and play until shown
-		if (tooltipControls.CivToolTipAlpha:IsReversing()) then
-			tooltipControls.CivToolTipAlpha:Reverse();
-			tooltipControls.CivToolTipSlide:Reverse();
-			if(tooltipControls.HasLeaderPlacard) then
-				tooltipControls.CivLeaderAlpha:Reverse();
-				tooltipControls.CivLeaderSlide:Reverse();
-			end
-		else
-			tooltipControls.CivToolTipAlpha:Play();
-			tooltipControls.CivToolTipSlide:Play();
-			if(tooltipControls.HasLeaderPlacard) then
-				tooltipControls.CivLeaderAlpha:Play();
-				tooltipControls.CivLeaderSlide:Play();
-			end
-		end
-		SetUniqueCivLeaderData(info, tooltipControls);
+		showLeaderPortrait, showToolTip = SetUniqueCivLeaderData(info, tooltipControls);
+	end
+
+	if(showLeaderPortrait) then
+		ShowControl(tooltipControls.CivLeaderAlpha, tooltipControls.CivLeaderSlide);
 	else
-		if (not tooltipControls.CivToolTipAlpha:IsReversing()) then --If we are hiding the leader data flyouts, make sure we are playing backwards, and play until hidden
-			tooltipControls.CivToolTipAlpha:Reverse();
-			tooltipControls.CivToolTipSlide:Reverse();
-			if(tooltipControls.HasLeaderPlacard) then
-				tooltipControls.CivLeaderAlpha:Reverse();
-				tooltipControls.CivLeaderSlide:Reverse();
-			end
-		else
-			tooltipControls.CivToolTipAlpha:Play();
-			tooltipControls.CivToolTipSlide:Play();
-			if(tooltipControls.HasLeaderPlacard) then
-				tooltipControls.CivLeaderAlpha:Play();
-				tooltipControls.CivLeaderSlide:Play();
-			end
-		end
-	end	
+		HideControl(tooltipControls.CivLeaderAlpha, tooltipControls.CivLeaderSlide);	
+	end
+
+	if(showToolTip) then
+		ShowControl(tooltipControls.CivToolTipAlpha, tooltipControls.CivToolTipSlide);
+	else
+		HideControl(tooltipControls.CivToolTipAlpha, tooltipControls.CivToolTipSlide);	
+	end
 end
 
 -- ===========================================================================
@@ -408,9 +478,13 @@ end
 -- ===========================================================================
 function SetUniqueCivLeaderData(info:table, tooltipControls:table)
 
+	local hasLeaderPlacard = false;
+	local hasTooltipInfo = false;
+
 	tooltipControls.HeaderIconIM:ResetInstances();
 	tooltipControls.UniqueIconIM:ResetInstances();
 	tooltipControls.HeaderIM:ResetInstances();
+	tooltipControls.CivHeaderIconIM:ResetInstances();
 
 	-- Check to make sure this player panel has the leader placard
 	if tooltipControls.HasLeaderPlacard then
@@ -443,24 +517,39 @@ function SetUniqueCivLeaderData(info:table, tooltipControls:table)
 			leaderBGImage = info.LeaderType .. "_BACKGROUND";
 		end
 		tooltipControls.LeaderBG:SetTexture(leaderBGImage);
+		hasLeaderPlacard = true;
 	end
 
 	-- Set Leader unique data
-	local leaderHeader = tooltipControls.HeaderIM:GetInstance();
-	leaderHeader.Header:SetText(Locale.ToUpper(Locale.Lookup(info.LeaderName)));
-	local leaderAbility = tooltipControls.HeaderIconIM:GetInstance();
-	leaderAbility.Icon:SetIcon(info.LeaderIcon);
-	leaderAbility.Header:SetText(Locale.ToUpper(Locale.Lookup(info.LeaderAbility.Name)));
-	leaderAbility.Description:LocalizeAndSetText(info.LeaderAbility.Description);
+	if (info.LeaderAbility) then
+		local leaderHeader = tooltipControls.HeaderIM:GetInstance();
+		leaderHeader.Header:SetText(Locale.ToUpper(Locale.Lookup(info.LeaderName)));
+		local leaderAbility = tooltipControls.HeaderIconIM:GetInstance();
+		leaderAbility.Icon:SetIcon(info.LeaderIcon);
+		leaderAbility.Header:SetText(Locale.ToUpper(Locale.Lookup(info.LeaderAbility.Name)));
+		leaderAbility.Description:LocalizeAndSetText(info.LeaderAbility.Description);
+	end
 	
 	-- Set Civ unique data
-	local civHeader = tooltipControls.HeaderIM:GetInstance();
-	civHeader.Header:SetText(Locale.ToUpper(Locale.Lookup(info.CivilizationName)));
-	local civAbility = tooltipControls.HeaderIconIM:GetInstance();
-	civAbility.Icon:SetIcon(info.CivilizationIcon);
-	civAbility.Header:SetText(Locale.ToUpper(Locale.Lookup(info.CivilizationAbility.Name)));
-	civAbility.Description:LocalizeAndSetText(info.CivilizationAbility.Description);
-	
+	if (info.CivilizationAbility) then
+		local civHeader = tooltipControls.HeaderIM:GetInstance();
+		civHeader.Header:SetText(Locale.ToUpper(Locale.Lookup(info.CivilizationName)));
+		local civAbility = tooltipControls.CivHeaderIconIM:GetInstance();
+
+		civAbility.Icon:SetIcon(info.CivilizationIcon);
+
+		local backColor, frontColor = UI.GetPlayerColorValues(info.PlayerColor, 0);
+		if(backColor and frontColor and backColor ~= 0 and frontColor ~= 0) then
+			civAbility.Icon:SetColor(frontColor);
+			civAbility.IconBG:SetColor(backColor);
+		end
+
+
+		civAbility.Header:SetText(Locale.ToUpper(Locale.Lookup(info.CivilizationAbility.Name)));
+		civAbility.Description:LocalizeAndSetText(info.CivilizationAbility.Description);
+		hasTooltipInfo = true;
+	end
+
 	-- Set Civ unique units data
 	for _, item in ipairs(info.Uniques) do
 		local instance:table = {};
@@ -469,11 +558,14 @@ function SetUniqueCivLeaderData(info:table, tooltipControls:table)
 		local headerText:string = Locale.ToUpper(Locale.Lookup( item.Name ));
 		instance.Header:SetText( headerText );
 		instance.Description:SetText(Locale.Lookup(item.Description));
+		hasTooltipInfo = true;
 	end
 
 	tooltipControls.InfoStack:CalculateSize();
 	tooltipControls.InfoStack:ReprocessAnchoring();
 	tooltipControls.InfoScrollPanel:CalculateSize();
+
+	return hasLeaderPlacard, hasTooltipInfo;
 end
 
 -- Checks external conditions where this player parameter should be disabled.
@@ -527,7 +619,7 @@ end
 -- It then appends a driver to the setup parameter to control a visual 
 -- representation of the parameter
 -------------------------------------------------------------------------------
-function SetupLeaderPulldown(playerId:number, instance:table, pulldownControlName:string, civIconControlName, leaderIconControlName, tooltipControls:table)
+function SetupLeaderPulldown(playerId:number, instance:table, pulldownControlName:string, civIconControlName, civIconBGControlName, leaderIconControlName, tooltipControls:table)
 	local parameters = GetPlayerParameters(playerId);
 	if(parameters == nil) then
 		parameters = CreatePlayerParameters(playerId);
@@ -544,12 +636,17 @@ function SetupLeaderPulldown(playerId:number, instance:table, pulldownControlNam
 		civIconControlName = "CivIcon";
 	end
 
+	if(civIconBGControlName == nil) then
+		civIconBGControlName = "CivIconBG";
+	end
+
 	if(leaderIconControlName == nil) then
 		leaderIconControlName = "LeaderIcon";
 	end
 		
 	local control = instance[pulldownControlName];
 	local civIcon = instance[civIconControlName];
+	local civIconBG = instance[civIconBGControlName];
 	local leaderIcon = instance[leaderIconControlName];
 	local instanceManager = control["InstanceManager"];
 	if not instanceManager then
@@ -570,73 +667,152 @@ function SetupLeaderPulldown(playerId:number, instance:table, pulldownControlNam
 		LeaderName = "LOC_RANDOM_LEADER"
 	};
 
+	local cache = {};
+
 	table.insert(controls, {
 		UpdateValue = function(v)
-			local button = control:GetButton();
+			local refresh = true;
+			local cv = cache.Value;
+			if(v and cv and cv.QueryId == v.QueryId and cv.QueryIndex == v.QueryIndex and cv.Invalid == v.Invalid and cv.InvalidReason == v.InvalidReason) then
+				refresh = false;
+			end
 
-			if(v == nil) then
-				button:LocalizeAndSetText("LOC_SETUP_ERROR_INVALID_OPTION");
-				button:ClearCallback(Mouse.eMouseEnter);
-				button:ClearCallback(Mouse.eMouseExit);
-			else
-				local caption = v.Name;
-				if(v.Invalid) then
-					local err = v.InvalidReason or "LOC_SETUP_ERROR_INVALID_OPTION";
-					caption = caption .. "[NEWLINE][COLOR_RED](" .. Locale.Lookup(err) .. ")[ENDCOLOR]";
-				end
+			if(refresh) then
+				local button = control:GetButton();
 
-				button:SetText(caption);
-				
-				local info = GetPlayerInfo(v.Domain, v.Value);
-				local tooltip = GenerateToolTipFromPlayerInfo(info);
+				if(v == nil) then
+					button:LocalizeAndSetText("LOC_SETUP_ERROR_INVALID_OPTION");
+					button:ClearCallback(Mouse.eMouseEnter);
+					button:ClearCallback(Mouse.eMouseExit);
+				else
+					local caption = v.Name;
+					if(v.Invalid) then
+						local err = v.InvalidReason or "LOC_SETUP_ERROR_INVALID_OPTION";
+						caption = caption .. "[NEWLINE][COLOR_RED](" .. Locale.Lookup(err) .. ")[ENDCOLOR]";
+					end
 
-				if(civIcon) then
-					civIcon:SetIcon(info.CivilizationIcon);
-				end
-				if(leaderIcon) then
-					leaderIcon:SetIcon(info.LeaderIcon);
-				end
+					button:SetText(caption);
+			
+					local icons = GetPlayerIcons(v.Domain, v.Value);
 
-				if(not tooltipControls.HasLeaderPlacard) then
-					button:RegisterCallback( Mouse.eMouseEnter, function() DisplayCivLeaderToolTip(info, tooltipControls, false); end);
-					button:RegisterCallback( Mouse.eMouseExit, function() DisplayCivLeaderToolTip(info, tooltipControls, true); end);
-				end
-			end		
+					local backColor, frontColor = UI.GetPlayerColorValues(icons.PlayerColor, 0);
+					
+					if(backColor and frontColor and backColor ~= 0 and frontColor ~= 0) then
+						civIcon:SetSizeVal(36,36);
+						civIcon:SetIcon(icons.CivIcon);
+        				civIcon:SetColor(frontColor);
+						civIconBG:SetColor(backColor);
+						civIconBG:SetHide(false);
+					else
+						civIcon:SetSizeVal(45,45);
+						civIcon:SetIcon(icons.CivIcon, 45);
+        				civIcon:SetColor(1,1,1,1);
+						civIconBG:SetHide(true);
+					end
+										
+					if(leaderIcon) then
+						leaderIcon:SetIcon(icons.LeaderIcon);
+					end
+
+					if(not tooltipControls.HasLeaderPlacard) then
+						local info; -- Upvalue
+						local domain = v.Domain;
+						local value = v.Value;
+						button:RegisterCallback( Mouse.eMouseEnter, function() 
+							if(info == nil) then info = GetPlayerInfo(domain, value); end
+							DisplayCivLeaderToolTip(info, tooltipControls, false); 
+						end);
+						button:RegisterCallback( Mouse.eMouseExit, function() 
+							if(info == nil) then info = GetPlayerInfo(domain, value); end
+							DisplayCivLeaderToolTip(info, tooltipControls, true); 
+						end);
+					end
+
+					cache.Value = v;
+				end		
+			end
 		end,
 		UpdateValues = function(values)
 
-			instanceManager:ResetInstances();
-			for i,v in ipairs(values) do
-				local info = GetPlayerInfo(v.Domain, v.Value);
-				local tooltip = GenerateToolTipFromPlayerInfo(info);
-
-				local entry = instanceManager:GetInstance();
-				
-				local caption = v.Name;
-				if(v.Invalid) then 
-					local err = v.InvalidReason or "LOC_SETUP_ERROR_INVALID_OPTION";
-					caption = caption .. "[NEWLINE][COLOR_RED](" .. Locale.Lookup(err) .. ")[ENDCOLOR]";
-				end
-
-				entry.Button:SetText(caption);
-				entry.CivIcon:SetIcon(info.CivilizationIcon);
-				entry.LeaderIcon:SetIcon(info.LeaderIcon);
-				entry.Button:RegisterCallback( Mouse.eMouseEnter, function() DisplayCivLeaderToolTip(info, tooltipControls, false); end);
-				if(tooltipControls.HasLeaderPlacard) then
-					entry.Button:RegisterCallback( Mouse.eMouseExit, function() DisplayCivLeaderToolTip(m_currentInfo, tooltipControls, false); end);	-- When we mouse out, let's show what we currently have selected 
-				else
-					entry.Button:RegisterCallback( Mouse.eMouseExit, function() DisplayCivLeaderToolTip(m_currentInfo, tooltipControls, true); end);	-- Unless we are not showing the leader placard.. in which case, let's just dismiss
-				end
-				entry.Button:SetToolTipString(nil);			
-				entry.Button:RegisterCallback(Mouse.eLClick, function()
-					local parameter = parameters.Parameters["PlayerLeader"];
-					parameters:SetParameterValue(parameter, v);
-					if(playerId == 0) then
-						m_currentInfo = info;
+			local refresh = false;
+			local cValues = cache.Values;
+			if(cValues and #cValues == #values) then
+				for i,v in ipairs(values) do
+					local cv = cValues[i];
+					if(cv == nil) then
+						refresh = true;
+						break;
+					elseif(cv.QueryId ~= v.QueryId or cv.QueryIndex ~= v.QueryIndex or cv.Invalid ~= v.Invalid or cv.InvalidReason ~= v.InvalidReason) then
+						refresh = true;
+						break;
 					end
-				end);
+				end
+			else
+				refresh = true;
 			end
-			control:CalculateInternals();
+
+			if(refresh) then
+				instanceManager:ResetInstances();
+
+				-- Avoid creating call back for each value.
+				local hasPlacard = tooltipControls.HasLeaderPlacard;
+				local OnMouseExit = function()
+					DisplayCivLeaderToolTip(m_currentInfo, tooltipControls, not hasPlacard);
+				end;
+
+				for i,v in ipairs(values) do
+					
+					local icons = GetPlayerIcons(v.Domain, v.Value);
+
+					local entry = instanceManager:GetInstance();
+				
+					local caption = v.Name;
+					if(v.Invalid) then 
+						local err = v.InvalidReason or "LOC_SETUP_ERROR_INVALID_OPTION";
+						caption = caption .. "[NEWLINE][COLOR_RED](" .. Locale.Lookup(err) .. ")[ENDCOLOR]";
+					end
+
+					local backColor, frontColor = UI.GetPlayerColorValues(icons.PlayerColor, 0);
+					
+					if(backColor and frontColor and backColor ~= 0 and frontColor ~= 0) then
+						entry.CivIcon:SetSizeVal(36,36);
+						entry.CivIcon:SetIcon(icons.CivIcon);
+        				entry.CivIcon:SetColor(frontColor);
+						entry.CivIconBG:SetColor(backColor);
+						entry.CivIconBG:SetHide(false);
+					else
+						entry.CivIcon:SetSizeVal(45,45);
+						entry.CivIcon:SetIcon(icons.CivIcon, 45);
+        				entry.CivIcon:SetColor(1,1,1,1);
+						entry.CivIconBG:SetHide(true);
+					end
+
+					entry.Button:SetText(caption);
+					entry.LeaderIcon:SetIcon(icons.LeaderIcon);
+
+					local info;
+					local domain = v.Domain;
+					local value = v.Value;
+
+					entry.Button:RegisterCallback( Mouse.eMouseEnter, function() 
+						if(info == nil) then info = GetPlayerInfo(domain, value); end
+						DisplayCivLeaderToolTip(info, tooltipControls, false); 
+					end);
+
+					entry.Button:RegisterCallback( Mouse.eMouseExit, OnMouseExit);
+					entry.Button:SetToolTipString(nil);			
+					entry.Button:RegisterCallback(Mouse.eLClick, function()
+						local parameter = parameters.Parameters["PlayerLeader"];
+						parameters:SetParameterValue(parameter, v);
+						if(playerId == 0) then
+							if(info == nil) then info = GetPlayerInfo(domain, value); end
+							m_currentInfo = info;
+						end
+					end);
+				end
+				control:CalculateInternals();
+				cache.Values = values;
+			end
 		end,
 		SetEnabled = function(enabled, parameter)
 			local notExternalEnabled = not CheckExternalEnabled(playerId, enabled, true);
@@ -701,30 +877,30 @@ g_Refreshing = false;
 g_NeedsAdditionalRefresh = false;
 function GameSetup_RefreshParameters()
 	if(g_Refreshing) then
-		print("An additional refresh was requested!");
+		SetupParameters_Log("An additional refresh was requested!");
 		g_NeedsAdditionalRefresh = true;
 	else
 		g_Refreshing = true;
 		g_NeedsAdditionalRefresh = false;
 
-		print("Refreshing Game parameters");
+		SetupParameters_Log("Refreshing Game parameters");
 		if(g_GameParameters == nil) then
 			BuildGameSetup();
 		else
 			g_GameParameters:Refresh();
 		end
 		
-		print("Refreshing Player parameters");
+		SetupParameters_Log("Refreshing Player parameters");
 		RefreshPlayerParameters();
 		
 		g_Refreshing = false;
-		print("Finished Refreshing");
+		SetupParameters_Log("Finished Refreshing");
 
 		if(g_NeedsAdditionalRefresh) then
-			print("Refreshing again, to be sure.")
+			SetupParameters_Log("Refreshing again, to be sure.")
 			return GameSetup_RefreshParameters();
 		else
-			print("Visualizing parameters"); 
+			SetupParameters_Log("Visualizing parameters"); 
 			g_GameParameters:UpdateVisualization();
 			VisualizePlayerParameters();
 		end
@@ -736,7 +912,7 @@ function GameSetup_RefreshParameters()
 end
 
 function GameSetup_RefreshPlayerParameter(playerId)
-	print("Refreshing parameters for player " .. tostring(playerId));
+	SetupParameters_Log("Refreshing parameters for player " .. tostring(playerId));
 	local parameters = GetPlayerParameters(playerId);
 	if(parameters) then
 
@@ -745,18 +921,18 @@ function GameSetup_RefreshPlayerParameter(playerId)
 		g_Refreshing = false;
 
 		if(g_NeedsAdditionalRefresh) then
-			print("Refreshing all parameters, to be sure.")
+			SetupParameters_Log("Refreshing all parameters, to be sure.")
 			return GameSetup_RefreshParameters();
 		else
 			parameters:UpdateVisualization();
 		end
 	else
-		print("Player parameters not found!");
+		SetupParameters_Log("Player parameters not found!");
 	end
 end
 
 function GameSetup_ConfigurationChanged()
-	print("Configuration Changed!");
+	SetupParameters_Log("Configuration Changed!");
 	GameSetup_RefreshParameters();
 end
 

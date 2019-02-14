@@ -1,7 +1,4 @@
---[[
--- Created by Samuel Batista on Friday Apr 19 2017
--- Copyright (c) Firaxis Games
---]]
+-- Copyright 2017-2018, Firaxis Games.
 
 LuaClass = {}
 

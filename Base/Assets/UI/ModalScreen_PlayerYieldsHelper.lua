@@ -1,14 +1,24 @@
 include( "ToolTipHelper_PlayerYields" );
 
-local YIELD_PADDING_Y	= 12;
+-- ===========================================================================
+--	GLOBALS
+-- ===========================================================================
+TOP_PANEL_OFFSET = 29;
+MIN_SPEC_HEIGHT = 768;
+
+
 
 -- ===========================================================================
+--	Refresh the yeilds
+--	RETURNS: true if screen is taller than minspec height.
+-- ===========================================================================
 function RefreshYields()
+		
 	-- This panel should only show at minispec
 	local screenX, screenY:number = UIManager:GetScreenSizeVal();
-	if (screenY > 768 ) then
+	if (screenY > MIN_SPEC_HEIGHT ) then
 		Controls.YieldsContainer:SetHide(true);
-		return;
+		return false;
 	end
 
 	local ePlayer		:number = Game.GetLocalPlayer();
@@ -16,11 +26,13 @@ function RefreshYields()
 	if ePlayer ~= -1 then
 		localPlayer = Players[ePlayer];
 		if localPlayer == nil then
-			return;
+			return false;
 		end
 	else
-		return;
+		return false;
 	end
+
+	local YIELD_PADDING_Y:number	= 12;
 
 	---- SCIENCE ----
 	local playerTechnology		:table	= localPlayer:GetTechs();
@@ -83,11 +95,11 @@ function RefreshYields()
 	end
 
 	Controls.YieldsContainer:SetHide(false);
-	Controls.YieldsContainer:ReprocessAnchoring();
 
 	if Controls.ModalScreenClose ~= nil then
 		Controls.ModalScreenClose:Reparent();
 	end
+	return true;
 end
 
 -- ===========================================================================

@@ -7,7 +7,7 @@
 --	Interacts With:	DiplomacyActionView, DiplomacyView, and DiplomacyDealView
 -- ------------------------------------------------------------------------------------------------------------------------
 include( "InstanceManager" );
-include( "SupportFunctions" ); -- DarkenLightenColor
+include( "SupportFunctions" );
 
 --	MEMBERS
 local m_kBackgroundLayersIM	:table		= InstanceManager:new( "Layer",  "Background_Anim", Controls.Backgrounds );
@@ -113,22 +113,22 @@ function OnLeaderSelect(selectedPlayerID)
 end
 -- ------------------------------------------------------------------------------------------------------------------------
 -- The DiploActionView is notifying us that the leader has loaded.
-function OnSceneOpened(selectedPlayerID)
+function OnSceneOpened(selectedPlayerID, liteMode)
 	if(selectedPlayerID ~= nil) then
 		GenerateLayers(selectedPlayerID);
 	end
 	if (ContextPtr:IsHidden()) then
 		ContextPtr:SetHide(false);
-		InitializeView();
+		InitializeView(liteMode);
 	end
 end
 -- ------------------------------------------------------------------------------------------------------------------------
 --	InitializeView and UninitializeView
 --	These functions allow us to wait until the leader is fully loaded before we show the context.
-function InitializeView()
+function InitializeView(liteMode)
 	if (not m_isViewInitialized) then
 		m_isViewInitialized = true;
-		if (m_isTutorial == false) then
+		if (m_isTutorial == false and not liteMode) then
 			UIManager:DisablePopupQueue( true );		-- Enable once this added into Forge
 		end
 	end

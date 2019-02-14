@@ -1,5 +1,7 @@
+-- Copyright 2018, Firaxis Games
+
 -- ===========================================================================
---	Contains scaffolding for WorldRankings and other Right Anchored screens
+--	Contains scaffolding for WorldRankings
 -- ===========================================================================
 include("TabSupport");
 include("InstanceManager");
@@ -7,10 +9,62 @@ include("SupportFunctions");
 include("AnimSidePanelSupport");
 include("TeamSupport");
 include("CivilizationIcon");
+include("Colors");
+
 -- ===========================================================================
 --	DEBUG
 -- ===========================================================================
-local m_isDebugForceShowAllScoreCategories :boolean = false;		-- (false) Show all scoring categories under details
+local m_isDebugForceShowAllScoreCategories:boolean = false; -- (false) Show all scoring categories under details
+
+-- ===========================================================================
+--	GLOBALS
+-- ===========================================================================
+g_TabSupport = nil; -- Gets initialized in PopulateTabs
+g_victoryData = {
+	VICTORY_CONQUEST = {
+		GetText = function(p) return "LOC_WORLD_RANKINGS_OVERVIEW_DOMINATION_MILITARY_STRENGTH" end,
+		GetScore = function(p) return p:GetStats():GetMilitaryStrengthWithoutTreasury(); end
+	},
+	VICTORY_CULTURE = {
+		Primary = {
+			GetText = function(p) return "LOC_WORLD_RANKINGS_OVERVIEW_CULTURE_TOURISM_RATE" end,
+			GetScore = function(p) return p:GetStats():GetTourism(); end
+		},
+		Secondary = {
+			GetText = function(p) return "LOC_WORLD_RANKINGS_OVERVIEW_CULTURE_CULTURE_RATE" end,
+			GetScore = function(p) return p:GetCulture():GetCultureYield(); end
+		}
+	},
+	VICTORY_RELIGIOUS = {
+		Primary = {
+			GetText = function(p) return "LOC_WORLD_RANKINGS_OVERVIEW_RELIGION_CITIES_FOLLOWING_RELIGION" end,
+			GetScore = function(p) return p:GetStats():GetNumCitiesFollowingReligion(); end
+		},
+		Secondary = {
+			GetText = function(p) return "LOC_WORLD_RANKINGS_OVERVIEW_RELIGION_FAITH_RATE" end;
+			GetScore = function(p) return p:GetReligion():GetFaithYield(); end
+		}
+	},
+	VICTORY_TECHNOLOGY = {
+		Primary = {
+			GetText = function(p) return "LOC_WORLD_RANKINGS_OVERVIEW_SCIENCE_NUM_TECHS" end,
+			GetScore = function(p) return p:GetStats():GetNumTechsResearched(); end
+		},
+		Secondary = {
+			GetText = function(p) return "LOC_WORLD_RANKINGS_OVERVIEW_SCIENCE_SCIENCE_RATE" end,
+			GetScore = function(p) return p:GetTechs():GetScienceYield(); end
+		}
+	}
+};
+-- If victory type isn't specified, return default domination data
+setmetatable(g_victoryData, { 
+	__index = function()
+		return {
+			GetText = function(p) return "LOC_WORLD_RANKINGS_OVERVIEW_DOMINATION_SCORE" end,
+			GetScore = function(p) return p:GetScore(); end
+		}
+	end
+});
 
 -- ===========================================================================
 --	CONSTANTS
@@ -69,12 +123,12 @@ local TEAM_ICON_PREFIX:string = "Team";
 local TEAM_ICON_SIZE_TOP_TEAM:number = 38;
 local TEAM_ICON_SIZE:number = 28;
 
-local TAB_SCORE:string = Locale.Lookup("LOC_WORLD_RANKINGS_SCORE_TAB");
-local TAB_OVERALL:string = Locale.Lookup("LOC_WORLD_RANKINGS_OVERALL_TAB");
-local TAB_SCIENCE:string = Locale.Lookup("LOC_WORLD_RANKINGS_SCIENCE_TAB");
-local TAB_CULTURE:string = Locale.Lookup("LOC_WORLD_RANKINGS_CULTURE_TAB");
-local TAB_RELIGION:string = Locale.Lookup("LOC_WORLD_RANKINGS_RELIGION_TAB");
-local TAB_DOMINATION:string = Locale.Lookup("LOC_WORLD_RANKINGS_DOMINATION_TAB");
+TAB_SCORE = Locale.Lookup("LOC_WORLD_RANKINGS_SCORE_TAB");
+TAB_OVERALL = Locale.Lookup("LOC_WORLD_RANKINGS_OVERALL_TAB");
+TAB_SCIENCE = Locale.Lookup("LOC_WORLD_RANKINGS_SCIENCE_TAB");
+TAB_CULTURE = Locale.Lookup("LOC_WORLD_RANKINGS_CULTURE_TAB");
+TAB_RELIGION = Locale.Lookup("LOC_WORLD_RANKINGS_RELIGION_TAB");
+TAB_DOMINATION = Locale.Lookup("LOC_WORLD_RANKINGS_DOMINATION_TAB");
 
 local SCORE_TITLE:string = Locale.Lookup("LOC_WORLD_RANKINGS_SCORE_VICTORY");
 local SCORE_DETAILS:string = Locale.Lookup("LOC_WORLD_RANKINGS_SCORE_DETAILS");
@@ -159,23 +213,22 @@ end
 -- ===========================================================================
 --	PLAYER VARIABLES
 -- ===========================================================================
-local m_LocalPlayer:table;
-local m_LocalPlayerID:number;
+m_LocalPlayer = {};
+m_LocalPlayerID = 0;
 -- ===========================================================================
 --	SCREEN VARIABLES
 -- ===========================================================================
-local m_TabSupport:table; -- TabSupport
 local m_AnimSupport:table; --AnimSidePanelSupport
-local m_ActiveHeader:table;
-local m_TotalTabSize:number = 0;
-local m_MaxExtraTabSize:number = 0;
-local m_ExtraTabs:table = {};
+m_ActiveHeader = {};
+m_TotalTabSize = 0;
+m_MaxExtraTabSize = 0;
+m_ExtraTabs = {};
 local m_HeaderInstances:table = {};
 local m_ActiveViewUpdate:ifunction;
 local m_ShowScoreDetails:boolean = false;
 local m_CultureHeaderState:number = CULTURE_HEADER_STATES.WHAT_IS_CULTURE_VICTORY;
-local m_TabSupportIM:table = InstanceManager:new("TabInstance", "Button", Controls.TabContainer);
-local m_GenericHeaderIM:table = InstanceManager:new("GenericHeaderInstance", "HeaderTop"); -- Used by Score, Religion and Domination Views
+m_TabSupportIM = InstanceManager:new("TabInstance", "Button", Controls.TabContainer);
+m_GenericHeaderIM = InstanceManager:new("GenericHeaderInstance", "HeaderTop"); -- Used by Score, Religion and Domination Views
 local m_ScienceHeaderIM:table = InstanceManager:new("ScienceHeaderInstance", "HeaderTop", Controls.ScienceViewHeader);
 local m_CultureHeaderIM:table = InstanceManager:new("CultureHeaderInstance", "HeaderTop", Controls.CultureViewHeader);
 local m_OverallIM:table = InstanceManager:new("OverallInstance", "ButtonBG", Controls.OverallViewStack);
@@ -195,16 +248,53 @@ local m_DominationTeamIM:table = InstanceManager:new("DominationTeamInstance", "
 local m_ReligionIM:table = InstanceManager:new("ReligionInstance", "ButtonBG", Controls.ReligionViewStack);
 local m_ReligionTeamIM:table = InstanceManager:new("ReligionTeamInstance", "ButtonFrame", Controls.ReligionViewStack);
 
-local m_GenericIM:table = InstanceManager:new("GenericInstance", "ButtonBG", Controls.GenericViewStack);
-local m_GenericTeamIM:table = InstanceManager:new("GenericTeamInstance", "ButtonFrame", Controls.GenericViewStack);
+m_GenericIM = InstanceManager:new("GenericInstance", "ButtonBG", Controls.GenericViewStack);
+m_GenericTeamIM = InstanceManager:new("GenericTeamInstance", "ButtonFrame", Controls.GenericViewStack);
 
-local m_ExtraTabsIM:table = InstanceManager:new("ExtraTab", "Button", Controls.ExtraTabStack);
+m_ExtraTabsIM = InstanceManager:new("ExtraTabInstance", "Button", Controls.ExtraTabStack);
 
 local m_CivTooltip = {};
 TTManager:GetTypeControlTable("CivTooltip", m_CivTooltip);
 
 local m_TeamTooltip = {};
 TTManager:GetTypeControlTable("TeamTooltip", m_TeamTooltip);
+
+-- Track the number of turns till the closest cultural victory
+local m_iTurnsTillCulturalVictory:number = -1;
+
+-- Helper method to quickly generate a list of teams of living major players.
+function GetAliveMajorTeamIDs()
+	local ti = 1;
+	local result = {};
+	local duplicate_team = {};
+	for i,v in ipairs(PlayerManager.GetAliveMajors()) do
+		local teamId = v:GetTeam();
+		if(duplicate_team[teamId] == nil) then
+			duplicate_team[teamId] = true;
+			result[ti] = teamId;
+			ti = ti + 1;
+		end
+	end
+
+	return result;
+end
+
+-- ===========================================================================
+--	Tab selection helpers
+-- ===========================================================================
+function DeselectExtraTabs()
+	for _, extraTabInst in pairs(m_ExtraTabs) do
+		extraTabInst.Button:SetSelected(false);
+	end
+end
+
+function DeselectPreviousTab()
+	if g_TabSupport.prevSelectedControl ~= nil then
+		if g_TabSupport.prevSelectedControl.Selection then -- TabInstance
+			g_TabSupport.prevSelectedControl.Selection:SetHide(true);
+		end
+	end
+end
 
 -- ===========================================================================
 --	Called once during Init
@@ -219,15 +309,14 @@ function PopulateTabs()
 	m_TabSupportIM:ResetInstances();
 	
 	-- Deselect previously selected tab
-	if(m_TabSupport ~= nil) then
-		m_TabSupport.SelectTab(nil);
-		if(m_TabSupport.prevSelectedControl ~= nil) then
-			m_TabSupport.prevSelectedControl[DATA_FIELD_SELECTION]:SetHide(true);
-		end
+	if g_TabSupport then
+		g_TabSupport.SelectTab(nil);
+		DeselectPreviousTab();
+		DeselectExtraTabs();
 	end
 
 	-- Create TabSupport object
-	m_TabSupport = CreateTabs(Controls.TabContainer, 42, 34, 0xFF331D05);
+	g_TabSupport = CreateTabs(Controls.TabContainer, 42, 34, 0xFF331D05);
 
 	local defaultTab = AddTab(TAB_OVERALL, ViewOverall);
 
@@ -265,8 +354,8 @@ function PopulateTabs()
 		Controls.ExpandExtraTabs:SetHide(true);
 	end
 
-	m_TabSupport.SelectTab(defaultTab);
-	m_TabSupport.EvenlySpreadTabs();
+	g_TabSupport.SelectTab(defaultTab);
+	g_TabSupport.EvenlySpreadTabs();
 end
 
 function AddTab(label:string, onClickCallback:ifunction)
@@ -288,38 +377,27 @@ function AddTab(label:string, onClickCallback:ifunction)
 		m_TabSupportIM:ReleaseInstance(tabInst);
 		AddExtraTab(label, onClickCallback);
 	else
-
-		local callback = function()
-			if(m_TabSupport.prevSelectedControl ~= nil) then
-				m_TabSupport.prevSelectedControl[DATA_FIELD_SELECTION]:SetHide(true);
-			end
-			tabInst.Selection:SetHide(false);
-			onClickCallback();
-			CloseExtraTabs();
-		end
-
-		m_TabSupport.AddTab(tabInst.Button, callback);
+		g_TabSupport.AddTab(tabInst.Button, OnTabClicked(tabInst, onClickCallback));
 	end
 
 	return tabInst.Button;
 end
 
+function OnTabClicked(tabInst:table, onClickCallback:ifunction)
+	return function()
+		tabInst.Selection:SetHide(false);
+		DeselectPreviousTab();
+		DeselectExtraTabs();
+		onClickCallback();
+		CloseExtraTabs();
+	end
+end
+
 function AddExtraTab(label:string, onClickCallback:ifunction)
 	local extraTabInst:table = m_ExtraTabsIM:GetInstance();
+	
 	extraTabInst.Button:SetText(label);
-
-	local callback = function()
-		if(m_TabSupport.selectedControl ~= nil) then
-			m_TabSupport.selectedControl[DATA_FIELD_SELECTION]:SetHide(true);
-			m_TabSupport.SetSelectedTabVisually(nil);
-		end
-		for _,tabInst in pairs(m_ExtraTabs) do
-			tabInst.Button:SetSelected(tabInst == extraTabInst);
-		end
-		onClickCallback();
-	end
-
-	extraTabInst.Button:RegisterCallback(Mouse.eLClick, callback);
+	extraTabInst.Button:RegisterCallback(Mouse.eLClick, OnExtraTabClicked(extraTabInst, onClickCallback));
 
 	local textControl = extraTabInst.Button:GetTextControl();
 	local textSize:number = textControl:GetSizeX();
@@ -332,6 +410,16 @@ function AddExtraTab(label:string, onClickCallback:ifunction)
 	end
 
 	table.insert(m_ExtraTabs, extraTabInst);
+end
+
+function OnExtraTabClicked(extraTabInst:table, onClickCallback:ifunction)
+	return function()
+		g_TabSupport.SelectTab(nil);
+		DeselectPreviousTab();
+		DeselectExtraTabs();
+		extraTabInst.Button:SetSelected(true);
+		onClickCallback();
+	end
 end
 
 -- ===========================================================================
@@ -352,6 +440,8 @@ function ResetState(newView:ifunction)
 	if newView ~= ViewCulture then
 		ResetTourismLens();
 	end
+
+	DeactivateReligionLens();
 end
 
 function ChangeActiveHeader(headerType:string, headerIM:table, parentControl:table)
@@ -515,7 +605,6 @@ function ViewOverall()
 		local victoryType:string = row.VictoryType;
 		if IsCustomVictoryType(victoryType) and Game.IsVictoryEnabled(victoryType) then
 			PopulateOverallInstance(m_OverallIM:GetInstance(), victoryType);
-
 		end
 	end
 
@@ -535,7 +624,8 @@ end
 function PopulateOverallInstance(instance:table, victoryType:string, typeText:string)
 	
 	local victoryInfo:table= GameInfo.Victories[victoryType];
-	
+	local numIcons = 0;
+
 	instance.VictoryLabel:SetText(Locale.ToUpper(Locale.Lookup(victoryInfo.Name)));
 	instance.VictoryLabelUnderline:SetSizeX(instance.VictoryLabel:GetSizeX() + PADDING_VICTORY_LABEL_UNDERLINE);
 	
@@ -563,111 +653,74 @@ function PopulateOverallInstance(instance:table, victoryType:string, typeText:st
 		instance.VictoryIcon:SetHide(true);
 	end
 
-	-- Tiebreak score functions
-	local firstTiebreakerText = "LOC_WORLD_RANKINGS_OVERVIEW_DOMINATION_SCORE";
-	local firstTiebreakerFunction = function(p)
-		return p:GetScore();
-	end;
-	local secondTiebreakerText = "LOC_WORLD_RANKINGS_OVERVIEW_DOMINATION_SCORE";
-	local secondTiebreakerFunction = function(p)
-		return p:GetScore();
-	end;
-	if (victoryType == "VICTORY_TECHNOLOGY") then
-		firstTiebreakerText = "LOC_WORLD_RANKINGS_OVERVIEW_SCIENCE_NUM_TECHS";
-		firstTiebreakerFunction = function(p)
-			return p:GetStats():GetNumTechsResearched();
-		end;
-		secondTiebreakerText = "LOC_WORLD_RANKINGS_OVERVIEW_SCIENCE_SCIENCE_RATE";
-		secondTiebreakerFunction = function(p)
-			return p:GetTechs():GetScienceYield();
-		end;
-	elseif (victoryType == "VICTORY_CULTURE") then
-		firstTiebreakerText = "LOC_WORLD_RANKINGS_OVERVIEW_CULTURE_TOURISM_RATE";
-		firstTiebreakerFunction = function(p)
-			return p:GetStats():GetTourism();
-		end;
-		secondTiebreakerText = "LOC_WORLD_RANKINGS_OVERVIEW_CULTURE_CULTURE_RATE";
-		secondTiebreakerFunction = function(p)
-			return p:GetCulture():GetCultureYield();
-		end;
-	elseif (victoryType == "VICTORY_CONQUEST") then
-		firstTiebreakerText = "LOC_WORLD_RANKINGS_OVERVIEW_DOMINATION_MILITARY_STRENGTH";
-		firstTiebreakerFunction = function(p)
-			return p:GetStats():GetMilitaryStrengthWithoutTreasury();
-		end;
-	elseif (victoryType == "VICTORY_RELIGIOUS") then
-		firstTiebreakerText = "LOC_WORLD_RANKINGS_OVERVIEW_RELIGION_CITIES_FOLLOWING_RELIGION";
-		firstTiebreakerFunction = function(p)
-			return p:GetStats():GetNumCitiesFollowingReligion();
-		end;
-		secondTiebreakerText = "LOC_WORLD_RANKINGS_OVERVIEW_RELIGION_FAITH_RATE";
-		secondTiebreakerFunction = function(p)
-			return p:GetReligion():GetFaithYield();
-		end;
-	end
+	-- Cache victory data to avoid table access within loops
+	local victoryData = g_victoryData[victoryType];
 
 	-- Team tiebreaker score functions
-	local firstTeamTiebreakerFunction = function(playerData, playerCount)
-		local averageScore:number = 0;
-
+	local averageScores = function(playerData, playerCount, scoreKey)
 		-- Add player scores
-		for playerID, player in pairs(playerData) do
-			averageScore = averageScore + player.FirstTiebreakScore;
+		local score:number = 0;
+		for _, player in pairs(playerData) do
+			score = score + player[scoreKey];
 		end
-
 		-- Divide by player count
-		averageScore = averageScore / playerCount;
-		
-		return averageScore;
-	end;
-	local secondTeamTiebreakerFunction = function(playerData, playerCount)
-		local averageScore:number = 0;
-
-		-- Add player scores
-		for playerID, player in pairs(playerData) do
-			averageScore = averageScore + player.SecondTiebreakScore;
-		end
-
-		-- Divide by player count
-		averageScore = averageScore / playerCount;
-		
-		return averageScore;
+		return score / playerCount;
 	end;
 
 	-- Gather team data
+	local teamIDs = GetAliveMajorTeamIDs();
+
 	local teamData:table = {};
-	for teamID, team in pairs(Teams) do
-		if (teamID >= 0) then
+	for _, teamID in ipairs(teamIDs) do
+		local team = Teams[teamID];
+		if(team ~= nil) then
 			-- If progress is nil, then the team is not capable of earning a victory (ex: city-state teams and barbarian teams).
 			-- Skip any team that is incapable of earning a victory.
 			local progress = Game.GetVictoryProgressForTeam(victoryType, teamID);
 			if(progress ~= nil) then
+
 				-- PlayerData
 				local playerData:table = {};
 				local playerCount:number = 0;
+				local teamGenericScore = 0;
+
 				for i, playerID in ipairs(team) do
 					if IsAliveAndMajor(playerID) then
-						local pPlayer = Players[playerID];
+						local pPlayer:table = Players[playerID];
+
+						local firstTiebreaker:table = victoryData.Primary or victoryData;
+						local secondTiebreaker:table = victoryData.Secondary or victoryData;
+						local primaryScore:number = firstTiebreaker.GetScore(pPlayer);
+						local secondaryScore:number = secondTiebreaker.GetScore(pPlayer);
+
+						local genericScore = pPlayer:GetScore();
+
+						-- Team score is calculated as the highest individual score.
+						teamGenericScore = math.max(teamGenericScore, genericScore);
+
 						playerData[playerID] = {
 							Player = pPlayer,
-							FirstTiebreakScore = firstTiebreakerFunction(pPlayer),
-							SecondTiebreakScore = secondTiebreakerFunction(pPlayer),
-							FirstTiebreakSummary = Locale.Lookup(firstTiebreakerText, Round(firstTiebreakerFunction(pPlayer), 1)),
-							SecondTiebreakSummary = Locale.Lookup(secondTiebreakerText, Round(secondTiebreakerFunction(pPlayer), 1)),
+							GenericScore = genericScore,
+							FirstTiebreakScore = primaryScore,
+							SecondTiebreakScore = secondaryScore,
+							FirstTiebreakSummary = Locale.Lookup(firstTiebreaker.GetText(pPlayer), Round(primaryScore, 1)),
+							SecondTiebreakSummary = Locale.Lookup(secondTiebreaker.GetText(pPlayer), Round(secondaryScore, 1)),
 						};
 
 						playerCount = playerCount + 1;
 					end
 				end
 
+				-- Team Data
 				table.insert(teamData, {
-					-- Team Data
 					TeamID = teamID,
 					TeamScore = progress,
+					TeamProgress = progress,
+					TeamGenericScore = teamGenericScore,
 					PlayerData = playerData,
 					PlayerCount = playerCount,
-					FirstTeamTiebreakScore = firstTeamTiebreakerFunction(playerData, playerCount);
-					SecondTeamTiebreakScore = secondTeamTiebreakerFunction(playerData, playerCount);
+					FirstTeamTiebreakScore = averageScores(playerData, playerCount, "FirstTiebreakScore");
+					SecondTeamTiebreakScore = averageScores(playerData, playerCount, "SecondTiebreakScore");
 				});
 			end
 		end
@@ -675,23 +728,35 @@ function PopulateOverallInstance(instance:table, victoryType:string, typeText:st
 
 	-- Sort teams by score
 	table.sort(teamData, function(a, b)
-		if (a.TeamScore == b.TeamScore) then
-			if (a.FirstTeamTiebreakScore == b.FirstTeamTiebreakScore) then
-				if (a.SecondTeamTiebreakScore == b.SecondTeamTiebreakScore) then
-					return a.TeamID > b.TeamID;
-				end
-				return a.SecondTeamTiebreakScore > b.SecondTeamTiebreakScore;
-			end
+		if (a.TeamProgress ~= b.TeamProgress) then
+			return a.TeamProgress > b.TeamProgress;
+		elseif(a.FirstTeamTiebreakScore ~= b.FirstTeamTiebreakScore) then
 			return a.FirstTeamTiebreakScore > b.FirstTeamTiebreakScore;
+		elseif(a.SecondTeamTiebreakScore ~= b.SecondTeamTiebreakScore) then
+			return a.SecondTeamTiebreakScore > b.SecondTeamTiebreakScore;
+		elseif(a.TeamGenericScore ~= b.TeamGenericScore) then
+			return a.TeamGenericScore > b.TeamGenericScore;
+		else
+			return a.TeamID < b.TeamID;
 		end
-		return a.TeamScore > b.TeamScore;
 	end);
 
-	-- Handle case where this victory type is not completable by any team.  
+	-- Handle case where this victory type is not completable by any team.
 	-- This can happen with Global Thermonuclear War's Proxy War victory if there are no city states to conquer.
 	if(#teamData < 1) then
 			instance.VictoryPlayer:SetText("");
 			instance.VictoryLeading:SetText(Locale.Lookup("LOC_WORLD_RANKINGS_VICTORY_DISABLED"));
+			-- Make the whole box look plain, since the victory is out of reach
+			instance.TeamRibbon:SetHide(true);
+			instance.TopPlayer:SetHide(true);
+			instance.CivIcon:SetHide(true);
+			instance.CivIconFaded:SetHide(true);
+			instance.CivIconBacking:SetHide(true);
+			instance.CivIconBackingRing:SetHide(true);
+			instance.CivIconBackingFaded:SetHide(true);
+			instance.VictoryLabelGradient:SetHide(true); 
+			instance.VictoryBanner:SetHide(true); 
+			instance.VictoryIcon:SetHide(true); 
 		return;
 	end
 
@@ -707,8 +772,9 @@ function PopulateOverallInstance(instance:table, victoryType:string, typeText:st
 	if teamData[1].PlayerCount > 1 then
 		PopulateOverallTeamIconInstance(instance, teamData[1], TEAM_ICON_SIZE_TOP_TEAM, TEAM_RIBBON_SIZE_TOP_TEAM);
 	else
-		PopulateOverallPlayerIconInstance(instance, teamData[1], SIZE_OVERALL_TOP_PLAYER_ICON);
+		PopulateOverallPlayerIconInstance(instance, victoryType, teamData[1], SIZE_OVERALL_TOP_PLAYER_ICON);
 	end
+	numIcons = numIcons + 1;
 
 	-- Populate other team/player icons
 	if #teamData > 1 then
@@ -717,8 +783,9 @@ function PopulateOverallInstance(instance:table, victoryType:string, typeText:st
 			if teamData[i].PlayerCount > 1 then
 				PopulateOverallTeamIconInstance(playerInstance, teamData[i], TEAM_ICON_SIZE, TEAM_RIBBON_SIZE);
 			else
-				PopulateOverallPlayerIconInstance(playerInstance, teamData[i], SIZE_OVERALL_PLAYER_ICON);
+				PopulateOverallPlayerIconInstance(playerInstance, victoryType, teamData[i], SIZE_OVERALL_PLAYER_ICON);
 			end
+			numIcons = numIcons + 1;
 		end
 	end
 
@@ -774,7 +841,7 @@ function PopulateOverallInstance(instance:table, victoryType:string, typeText:st
 		end
 	end
 
-	instance.ButtonBG:SetSizeY(SIZE_OVERALL_BG_HEIGHT + math.max(instance.PlayerStack:GetSizeY(), SIZE_OVERALL_INSTANCE));
+	instance.ButtonBG:SetSizeY(SIZE_OVERALL_BG_HEIGHT + math.max(instance.PlayerStack:GetSizeY(), SIZE_OVERALL_INSTANCE * ((numIcons / 9) + 1)));
 end
 
 function PopulateOverallTeamIconInstance(instance:table, teamData:table, iconSize:number, ribbonSize:number)
@@ -806,9 +873,11 @@ function PopulateOverallTeamIconInstance(instance:table, teamData:table, iconSiz
 
 	-- Update tooltip
 	SetTeamTooltip(instance.CivIcon, teamData);
+	return instance;
 end
 
-function PopulateOverallPlayerIconInstance(instance:table, teamData:table, iconSize:number)
+-- ===========================================================================
+function PopulateOverallPlayerIconInstance(instance:table, victoryType:string, teamData:table, iconSize:number)
 	-- Take the player ID from the first team member who should be the only team member
 	local playerID:number = Teams[teamData.TeamID][1];
 	local playerData:table = teamData.PlayerData[playerID];
@@ -826,6 +895,7 @@ function PopulateOverallPlayerIconInstance(instance:table, teamData:table, iconS
 		instance.CivIcon:SetPercent(teamData.TeamScore);
 		instance.CivIconBacking:SetPercent(teamData.TeamScore);
 		instance.TeamRibbon:SetHide(true);
+		return instance;
 	end
 end
 
@@ -889,11 +959,10 @@ function UpdateTeamTooltip(control, teamData)
 				end
 			
 				civInstance.LeaderName:SetText(desc);
-				civInstance.BG:DoAutoSize();
 			
 				-- Track the most wide instance so we can widen smaller instances to match
-				if civInstance.BG:GetSizeX() > maxWidth then
-					maxWidth = civInstance.BG:GetSizeX();
+				if civInstance.Content:GetSizeX() > maxWidth then
+					maxWidth = civInstance.Content:GetSizeX();
 				end
 			end
 		end
@@ -918,14 +987,17 @@ function UpdateTeamTooltip(control, teamData)
 				civInstance.UnmetLabel:SetText(Locale.Lookup("LOC_DIPLOPANEL_UNMET_PLAYER"));
 			end
 
-			civInstance.BG:DoAutoSize();
+			-- Track the most wide instance so we can widen smaller instances to match
+			if civInstance.Content:GetSizeX() > maxWidth then
+				maxWidth = civInstance.Content:GetSizeX();
+			end
 		end
 	end
 
 	-- Widen all instances to match up
 	for i=1,m_TeamTooltip.TooltipIM.m_iCount,1 do
 		local instance:table = m_TeamTooltip.TooltipIM:GetAllocatedInstance(i);
-		if instance and instance.BG:GetSizeX() < maxWidth then
+		if instance and instance.BG:GetSizeX() ~= maxWidth then
 			instance.BG:SetSizeX(maxWidth);
 		end
 	end
@@ -970,8 +1042,10 @@ end
 function GatherScoreData()
 	local data:table = {};
 
-	for teamID, team in pairs(Teams) do
-		if teamID >= 0 then
+	local teamIDs = GetAliveMajorTeamIDs();
+	for _, teamID in ipairs(teamIDs) do
+		local team = Teams[teamID];
+		if (team ~= nil) then
 			local teamData:table = { TeamID = teamID, PlayerData = {}, TeamScore = 0 };
 
 			-- Add players
@@ -1181,8 +1255,10 @@ function ViewScience()
 	m_ScienceIM:ResetInstances();
 	m_ScienceTeamIM:ResetInstances();
 
-	for teamID, team in pairs(Teams) do
-		if teamID >= 0 then
+	local teamIDs = GetAliveMajorTeamIDs();
+	for _, teamID in ipairs(teamIDs) do
+		local team = Teams[teamID];
+		if (team ~= nil) then
 			if #team > 1 then
 				PopulateScienceTeamInstance(m_ScienceTeamIM:GetInstance(), teamID);
 			else
@@ -1368,8 +1444,8 @@ function PopulateScienceInstance(instance:table, pPlayer:table)
 				projectProgress = pBuildQueue:GetProjectProgress(projectInfo.Index);
 			end
 			finishedProjects[3][i] = false;
+			projectTotals[3] = projectTotals[3] + projectCost;
 			if projectProgress ~= 0 then
-				projectTotals[3] = projectTotals[3] + projectCost;
 				projectProgresses[3] = projectProgresses[3] + projectProgress;
 				finishedProjects[3][i] = projectProgress == projectCost;
 			end
@@ -1535,19 +1611,29 @@ end
 function GatherCultureData()
 	local data:table = {};
 
-	for teamID, team in pairs(Teams) do
-		if teamID >= 0 then
+	local teamIDs = GetAliveMajorTeamIDs();
+	for _, teamID in ipairs(teamIDs) do
+		local team = Teams[teamID];
+		if (team ~= nil) then
 			local teamData:table = { TeamID = teamID, PlayerData = {}, BestNumVisitingUs = 0, BestNumRequiredTourists = 1 };
 
 			-- Add players
 			for i, playerID in ipairs(team) do
 				if IsAliveAndMajor(playerID) then
 					local pPlayer:table = Players[playerID];
+					local pPlayerCulture:table = pPlayer:GetCulture();
+
 					local playerData:table = { 
 						PlayerID = playerID, 
 						NumRequiredTourists = 0,
-						NumStaycationers = pPlayer:GetCulture():GetStaycationers(),
-						NumVisitingUs = pPlayer:GetCulture():GetTouristsTo() };
+						NumStaycationers = pPlayerCulture:GetStaycationers(),
+						NumVisitingUs = pPlayerCulture:GetTouristsTo() };
+
+					-- Determine if this player is the closest to cultural victory
+					playerData.TurnsTillCulturalVictory = pPlayerCulture.GetTurnsUntilVictory and pPlayerCulture:GetTurnsUntilVictory() or -1;
+					if m_iTurnsTillCulturalVictory == -1 or m_iTurnsTillCulturalVictory > playerData.TurnsTillCulturalVictory then
+						m_iTurnsTillCulturalVictory = playerData.TurnsTillCulturalVictory;
+					end
 
 					-- Determine number of tourist needed for victory
 					-- Has to be one more than every other players number of domestic tourists
@@ -1619,10 +1705,22 @@ function PopulateCultureInstance(instance:table, playerData:table)
 	end
 	instance.DomesticTourists:SetText(playerData.NumStaycationers);
 
+	if(instance.TurnsTillVictory) then
+		local iTurnsTillVictory:number = playerData.TurnsTillCulturalVictory;
+		if(iTurnsTillVictory > 0 and iTurnsTillVictory >= m_iTurnsTillCulturalVictory) then
+			instance.TurnsTillVictory:SetText(Locale.Lookup("LOC_WORLD_RANKINGS_CULTURAL_VICTORY_TURNS", iTurnsTillVictory));
+			instance.TurnsTillVictory:SetToolTipString(Locale.Lookup("LOC_WORLD_RANKINGS_CULTURAL_VICTORY_TURNS_TT", iTurnsTillVictory));
+			instance.TurnsTillVictory:SetHide(false);
+		else
+			instance.TurnsTillVictory:SetHide(true);
+		end
+	end
+
 	if (m_LocalPlayer ~= nil) then
-		instance.VisitingUsTourists:SetText(m_LocalPlayer:GetCulture():GetTouristsFrom(playerData.PlayerID));
-		instance.VisitingUsTourists:SetToolTipString(m_LocalPlayer:GetCulture():GetTouristsFromTooltip(playerData.PlayerID));
-		instance.VisitingUsIcon:SetToolTipString(m_LocalPlayer:GetCulture():GetTouristsFromTooltip(playerData.PlayerID));
+		local pLocalPlayerCulture:table = m_LocalPlayer:GetCulture();
+		instance.VisitingUsTourists:SetText(pLocalPlayerCulture:GetTouristsFrom(playerData.PlayerID));
+		instance.VisitingUsTourists:SetToolTipString(pLocalPlayerCulture:GetTouristsFromTooltip(playerData.PlayerID));
+		instance.VisitingUsIcon:SetToolTipString(pLocalPlayerCulture:GetTouristsFromTooltip(playerData.PlayerID));
 	end
 end
 
@@ -1674,8 +1772,11 @@ function ViewDomination()
 	PopulateGenericHeader(RealizeDominationStackSize, DOMINATION_TITLE, "", DOMINATION_DETAILS, DOMINATION_ICON);
 
 	local dominationData:table = {};
-	for teamID, team in pairs(Teams) do
-		if teamID >= 0 then
+
+	local teamIDs = GetAliveMajorTeamIDs();
+	for _, teamID in ipairs(teamIDs) do
+		local team = Teams[teamID];
+		if (team ~= nil) then
 			local teamData:table = { TeamID = teamID, TotalCapturedCapitals = 0, PlayerData = {} };
 
 			for i, playerID in ipairs(team) do
@@ -1819,6 +1920,8 @@ end
 function ViewReligion()
 	ResetState(ViewReligion);
 	Controls.ReligionView:SetHide(false);
+	
+	ActivateReligionLens();
 
 	ChangeActiveHeader("VICTORY_RELIGIOUS", m_GenericHeaderIM, Controls.ReligionViewHeader);
 	PopulateGenericHeader(RealizeReligionStackSize, RELIGION_TITLE, "", RELIGION_DETAILS, RELIGION_ICON);
@@ -1851,8 +1954,10 @@ function GatherReligionData()
 	local data:table = {};
 	local totalCivs:number = 0;
 
-	for teamID, team in pairs(Teams) do
-		if teamID >= 0 then
+	local teamIDs = GetAliveMajorTeamIDs();
+	for _, teamID in ipairs(teamIDs) do
+		local team = Teams[teamID];
+		if (team ~= nil) then
 			local teamData:table = { TeamID = teamID, PlayerData = {}, ReligionTypes = {}, ConvertedCivs = {} };
 
 			-- Add players
@@ -2015,7 +2120,11 @@ function ViewGeneric(victoryType:string)
 	ChangeActiveHeader("GENERIC", m_GenericHeaderIM, Controls.GenericViewHeader);
 
 	local victoryInfo:table = GameInfo.Victories[victoryType];
-	PopulateGenericHeader(RealizeGenericStackSize, victoryInfo.Name, nil, victoryInfo.Description, ICON_GENERIC);
+    if victoryInfo.Icon ~= nil then
+        PopulateGenericHeader(RealizeGenericStackSize, victoryInfo.Name, nil, victoryInfo.Description, victoryInfo.Icon);
+    else
+        PopulateGenericHeader(RealizeGenericStackSize, victoryInfo.Name, nil, victoryInfo.Description, ICON_GENERIC);
+    end
 
 	local genericData:table = GatherGenericData();
 
@@ -2036,8 +2145,10 @@ end
 function GatherGenericData()
 	local data:table = {};
 
-	for teamID, team in pairs(Teams) do
-		if teamID >= 0 then
+	local teamIDs = GetAliveMajorTeamIDs();
+	for _, teamID in ipairs(teamIDs) do
+		local team = Teams[teamID];
+		if (team ~= nil) then
 			local teamData:table = { TeamID = teamID, PlayerData = {} };
 
 			-- Add players
@@ -2253,6 +2364,22 @@ function Close()
 	if UI.GetInterfaceMode() ~= InterfaceModeTypes.VIEW_MODAL_LENS then
 		ResetTourismLens();
 	end
+
+	DeactivateReligionLens();
+end
+
+-- ===========================================================================
+function ActivateReligionLens()
+	if not UILens.IsLensActive("Religion") then
+		UILens.SetActive("Religion");
+	end
+end
+
+-- ===========================================================================
+function DeactivateReligionLens()
+	if UILens.IsLensActive("Religion") then
+		UILens.SetActive("Default");
+	end
 end
 
 -- ===========================================================================
@@ -2267,15 +2394,10 @@ end
 -- ===========================================================================
 --	HOT-RELOADING EVENTS
 -- ===========================================================================
-function OnInit(isReload:boolean)
-	if isReload then
-		LuaEvents.GameDebug_GetValues(RELOAD_CACHE_ID);
-	end
-end
 function OnShutdown()
 	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "isHidden", ContextPtr:IsHidden());
-	if(m_TabSupport ~= nil and m_TabSupport.selectedControl ~= nil) then
-		LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "selectedTabText", m_TabSupport.selectedControl:GetTextControl():GetText());
+	if(g_TabSupport ~= nil and g_TabSupport.selectedControl ~= nil) then
+		LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "selectedTabText", g_TabSupport.selectedControl:GetTextControl():GetText());
 	end
 	if(m_ActiveHeader ~= nil) then
 		LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "activeHeaderExpanded", m_ActiveHeader[DATA_FIELD_HEADER_EXPANDED]);
@@ -2286,9 +2408,9 @@ function OnGameDebugReturn(context:string, contextTable:table)
 		Open();
 		-- Select previously selected tab
 		local selectedTabText:string = contextTable["selectedTabText"];
-		for _, tab in pairs(m_TabSupport.tabControls) do
+		for _, tab in pairs(g_TabSupport.tabControls) do
 			if tab:GetTextControl():GetText() == selectedTabText then
-				m_TabSupport.SelectTab(tab);
+				g_TabSupport.SelectTab(tab);
 			end
 		end
 
@@ -2340,15 +2462,37 @@ function OnCloseAllExcept( contextToStayOpen:string )
 end
 
 -- ===========================================================================
+--	LUA Event
+--	Open to the Culture page.
+-- ===========================================================================
+function OpenCulture()
+    Open();
+    ViewCulture();
+end
+
+-- ===========================================================================
 --	INIT (Generic)
 -- ===========================================================================
-function Initialize()
+function OnInit(isReload:boolean)
+	LateInitialize();
+	if isReload then
+		LuaEvents.GameDebug_GetValues(RELOAD_CACHE_ID);
+	end
+end
+
+function GetDefaultStackSize()
+    return 225;
+end
+
+function LateInitialize()
+
+    SIZE_STACK_DEFAULT = GetDefaultStackSize();
 
 	-- Animation Controller
 	m_AnimSupport = CreateScreenAnimation(Controls.SlideAnim, Close);
 
 	-- Hot-Reload Events
-	ContextPtr:SetInitHandler(OnInit);
+	
 	ContextPtr:SetShutdown(OnShutdown);
 	LuaEvents.GameDebug_Return.Add(OnGameDebugReturn);
 
@@ -2374,10 +2518,11 @@ function Initialize()
 	-- Lua Events
 	LuaEvents.PartialScreenHooks_ToggleWorldRankings.Add(Toggle);
 	LuaEvents.PartialScreenHooks_OpenWorldRankings.Add(Open);
+	LuaEvents.PartialScreenHooks_OpenWorldRankingsCulture.Add(OpenCulture);
 	LuaEvents.PartialScreenHooks_CloseWorldRankings.Add(Close);
 	LuaEvents.PartialScreenHooks_CloseAllExcept.Add(OnCloseAllExcept);
 
 	UpdatePlayerData();
 	PopulateTabs();
 end
-Initialize();
+ContextPtr:SetInitHandler(OnInit);

@@ -18,7 +18,7 @@ function OnActionButton()
 	if (g_iSelectedFileEntry == -1) then
 		local fileName = Controls.FileName:GetText();
 		for i, v in ipairs(g_FileList) do
-			local displayName = GetDisplayName(v.Name); 
+			local displayName = GetDisplayName(v); 
 			if(Locale.Length(displayName) > 0) then
 				if(Locale.ToUpper(fileName) == Locale.ToUpper(displayName)) then
 					SetSelected(i);
@@ -77,7 +77,7 @@ function OnFileNameChange( fileNameEntry )
 	
 	if( g_iSelectedFileEntry ~= -1 ) then
 		local kSelectedFile = g_FileList[ g_iSelectedFileEntry ];
-		local displayName = GetDisplayName(kSelectedFile.Name); 
+		local displayName = GetDisplayName(kSelectedFile); 
 		if (fileNameEntry:GetText() ~= displayName) then
 			DismissCurrentSelected();
 		end
@@ -109,8 +109,10 @@ function OnCloudCheck( )
 
 	g_ShowCloudSaves = bWantShowCloudSaves;
 	Controls.CloudCheck:SetSelected(g_ShowCloudSaves);
+    SetDontUpdateFileName(true);
 	SetupFileList();
 	UpdateActionButtonState();
+    SetDontUpdateFileName(false);
 end
 
 
@@ -141,12 +143,53 @@ function OnShow()
 
 	UpdateActionButtonState();
 
+	local cloudServicesEnabled,cloudServicesResult = UI.AreCloudSavesEnabled("SAVE");
 	local cloudEnabled = UI.AreCloudSavesEnabled() and not GameConfiguration.IsAnyMultiplayer() and g_FileType ~= SaveFileTypes.GAME_CONFIGURATION;
-	Controls.CloudCheck:SetHide(not cloudEnabled);
+	Controls.CloudCheck:SetHide(false);
+	Controls.CloudCheck:SetEnabled(cloudEnabled);
+
+    local isNew = Options.GetAppOption("Misc", "UserSawCloudNew");
+	Controls.CheckNewIndicator:SetHide(true);
+	Controls.DummyNewIndicator:SetHide(true);
+
+	if cloudEnabled == false then
+		if cloudServicesResult ~= nil then
+			if cloudServicesResult == DB.MakeHash("REQUIRES_LINKED_ACCOUNT") then
+				Controls.CloudCheck:LocalizeAndSetToolTip("LOC_CLOUD_SAVES_REQUIRE_LINKED_ACCOUNT");
+			else
+				Controls.CloudCheck:LocalizeAndSetToolTip("LOC_CLOUD_SAVES_SERVICE_NOT_CONNECTED");
+			end
+		end
+        if (isNew == 0) then
+            Controls.CheckNewIndicator:SetHide(false);
+        end
+	else
+		if UI.Is2KCloudAvailable() then
+			Controls.CloudCheck:SetToolTipString(Locale.Lookup("LOC_2K_CLOUD_SAVES_HELP"));
+			Controls.CloudCheck:SetText(Locale.Lookup("LOC_2K_CLOUD"));
+			Controls.CloudDummy:SetHide(true);
+			if (isNew == 0) then
+				Controls.CheckNewIndicator:SetHide(false);
+			end
+		else
+			Controls.CloudDummy:SetHide(false);
+			Controls.CloudDummy:SetDisabled(true);
+			Controls.CloudDummy:SetToolTipString(Locale.Lookup("LOC_2K_CLOUD_SAVES_HELP"));
+			Controls.CloudCheck:SetToolTipString(Locale.Lookup("LOC_STANDARD_CLOUD_SAVES_HELP"));
+			if (isNew == 0) then
+				Controls.DummyNewIndicator:SetHide(false);
+			end
+		end
+	end
+
+    if (isNew == 0) then
+        Options.SetAppOption("Misc", "UserSawCloudNew", 1);
+    end
 
 	local cloudSavesVisible = Controls.CloudCheck:IsVisible();
 	local sortByVisible = Controls.SortByPullDown:IsVisible();
 	local directoryVisible = Controls.DirectoryPullDown:IsVisible();
+    local dummyCloudVisible = Controls.CloudDummy:IsVisible();
 
 	local count = 0;
 	if(cloudSavesVisible) then
@@ -156,6 +199,9 @@ function OnShow()
 		count = count + 1;
 	end
 	if(directoryVisible) then
+		count = count + 1;
+	end
+	if(dummyCloudVisible) then
 		count = count + 1;
 	end
 		

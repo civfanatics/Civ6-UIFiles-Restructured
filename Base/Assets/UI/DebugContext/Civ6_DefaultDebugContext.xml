@@ -27,7 +27,7 @@
         <!-- Console Box and buttons -->
         <Grid Style="SubContainer" Anchor="L,T" Offset="60,0" Size="740,30" ID="ConsoleGrid" >
             <ColorBox Color="0,0,0,90" Anchor="C,C" Size="auto,auto" SizePadding="1,1" >
-                <EditBox Anchor="C,C" Size="730,20" MaxLength="255" ID="ConsoleEdit" />
+                <EditBox Anchor="C,C" Size="730,20" MaxLength="250" ID="ConsoleEdit" />
             </ColorBox>
             <CheckBox Style="MainMenuCheck" Anchor="L,C" AnchorSide="o,i" ToolTip="Toggle Log" ID="LogCheck" />
             <CheckBox Style="MainMenuCheck" Anchor="L,C" AnchorSide="o,i" Offset="30,0" ToolTip="Toggle Panel" ID="SubPanelCheck" />

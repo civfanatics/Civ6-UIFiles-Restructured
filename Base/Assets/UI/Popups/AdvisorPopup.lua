@@ -48,7 +48,6 @@ local m_bTutorialEnabled	: boolean = true;
 local m_currentItem			: AdvisorItem;		-- Currently only exists for hotloading
 local m_isDiplomacyUp		: boolean = false;	-- Is the diplomacy system currently not showing
 local m_hotkeyCallback		: ifunction = nil;
-local m_isAlwaysActiveSet	: boolean = false;	-- Did this context set the tutorial to be in always active mode.
 local m_kQueuedPopups		: table	 = {};
 
 -- ===========================================================================
@@ -93,10 +92,6 @@ end
 
 -- ===========================================================================
 function ShowAdvisorPopup( advisorData:AdvisorItem )
-
-	UITutorialManager:EnableOverlay( true );
-	UITutorialManager:SetActiveAlways( true );
-	m_isAlwaysActiveSet = true;
 
 	m_currentItem = advisorData;	-- For hotloading
 
@@ -195,10 +190,10 @@ function ShowAdvisorPopup( advisorData:AdvisorItem )
 		UITutorialManager:ShowControlsByID( trigger, false );	
 	end
 
-	UIManager:QueuePopup( ContextPtr, PopupPriority.Medium );
+	UIManager:QueuePopup( ContextPtr, PopupPriority.Tutorial );
 
 	-- Put a hold on the event so further events don't process
-	ms_eventID = ReferenceCurrentGameCoreEvent();
+	ms_eventID = UI.ReferenceCurrentEvent();
 
 	if advisorData.ShowPortrait then
 		Controls.ButtonStack:ReprocessAnchoring();
@@ -224,32 +219,24 @@ function Close()
 	m_currentItem = nil;	
 
 	if ms_eventID ~= 0 then
-		ReleaseGameCoreEvent(ms_eventID);
+		UI.ReleaseEventID(ms_eventID);
 		ms_eventID = 0;
 	end
 	
 	m_hotkeyCallback = nil;
 
-	UITutorialManager:EnableOverlay( false );
 	UIManager:DequeuePopup( ContextPtr );		
-	UI.PlaySound("Stop_Advisor_Speech_All");
 end
 
 -- ===========================================================================
 function OnHideAdvisorDialog()
-	
-	-- If the advisor is not showing, don't force active tutorial input mode,
-	-- it may or may not still be active depending on if any controls are showing.
-	UITutorialManager:SetActiveAlways( false );
-	m_isAlwaysActiveSet = false;
-
 	-- If there are any associated <tutorial> triggers... trigger them.
 	for _,trigger in ipairs(m_currentItem.UITriggers) do	
 		UITutorialManager:HideControlsByID( trigger, false );	
 	end
 
 	if ms_eventID ~= 0 then
-		ReleaseGameCoreEvent(ms_eventID);
+		UI.ReleaseEventID(ms_eventID);
 		ms_eventID = 0;
 	end
 	
@@ -262,6 +249,9 @@ function OnHideAdvisorDialog()
 		UIManager:DequeuePopup( ContextPtr );		
 	end
 
+	-- If the advisor (AdvisorBase) is not showing, don't force active tutorial input mode,
+	-- it may or may not still be active depending on if any controls are showing.
+	UITutorialManager:SetActiveAlways( false );
 	Controls.AdvisorBase:SetHide( true );
 	Controls.MetaBase:SetHide( true );
 end
@@ -283,7 +273,7 @@ end
 -- Show the supplied advisor if possible, else queue it.
 function ShowOrQueuePopup(advisorData:AdvisorItem)
 
-	if UI.CanShowPopup() or IsTutorialRunning() then
+	if UI.CanShowPopup(PopupPriority.Tutorial) or IsTutorialRunning() then
 		ShowAdvisorPopup(advisorData);
 	else
 		-- Add to queue
@@ -295,7 +285,7 @@ end
 -- ===========================================================================
 function OnUIIdle()
 	-- The UI is idle, are we waiting to show a popup?
-	if UI.CanShowPopup() then
+	if UI.CanShowPopup(PopupPriority.Tutorial) then
 		ShowNextQueuedPopup();
 	end
 end
@@ -306,7 +296,8 @@ end
 -- ===========================================================================
 function OnDiploSceneClosed()
 	m_isDiplomacyUp = false;
-	if m_isAlwaysActiveSet then
+	local isAdvisorVisible	:boolean = (not Controls.AdvisorBase:IsHidden());
+	if isAdvisorVisible then
 		UITutorialManager:SetActiveAlways( true );
 	end
 end
@@ -320,7 +311,8 @@ function OnDiploSceneOpened()
 
 	-- If always active was set by this, turn it off to not interfer with the
 	-- diplomacy input.  (So it's ALMOST always active.)
-	if m_isAlwaysActiveSet then
+	local isAdvisorVisible	:boolean = (not Controls.AdvisorBase:IsHidden());
+	if isAdvisorVisible then
 		UITutorialManager:SetActiveAlways( false );	
 	end
 end
@@ -443,8 +435,21 @@ end
 --	UI Event
 -- ===========================================================================
 function OnShow()
-    UI.PlaySound("Resume_Advisor_Speech");
+	local isAdvisorVisible	:boolean = (not Controls.AdvisorBase:IsHidden());
+	UITutorialManager:EnableOverlay( isAdvisorVisible );
+	UITutorialManager:SetActiveAlways( isAdvisorVisible );
+	UI.PlaySound("Resume_Advisor_Speech");
     UI.PlaySound("Pause_TechCivic_Speech");
+end
+
+-- ===========================================================================
+--	UI Event
+-- ===========================================================================
+function OnHide()
+	local isAdvisorVisible	:boolean = (not Controls.AdvisorBase:IsHidden());
+	UITutorialManager:EnableOverlay( isAdvisorVisible );
+	UITutorialManager:SetActiveAlways( isAdvisorVisible );
+	UI.PlaySound("Stop_Advisor_Speech_All");
 end
 
 -- ===========================================================================
@@ -452,7 +457,7 @@ end
 -- ===========================================================================
 function OnShutdown()
 	if ms_eventID ~= 0 then
-		ReleaseGameCoreEvent(ms_eventID);
+		UI.ReleaseEventID(ms_eventID);
 	end
 	UITutorialManager:SetActiveAlways( false );
 	
@@ -503,6 +508,7 @@ function Initialize()
 	ContextPtr:SetInputHandler( OnInputHandler, true );
 	ContextPtr:SetShutdown( OnShutdown );
     ContextPtr:SetShowHandler( OnShow );
+	ContextPtr:SetHideHandler( OnHide );
 
 	-- Events
 	Events.InputActionTriggered.Add( OnInputActionTriggered );

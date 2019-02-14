@@ -6,8 +6,10 @@ include( "ToolTipHelper" );
 include( "InstanceManager" );
 include( "TabSupport" );
 include( "Civ6Common" );
+include( "Colors") ;
 include( "SupportFunctions" );
 include( "AdjacencyBonusSupport");
+include( "ProductionHelper" );
 
 -- ===========================================================================
 --	Constants
@@ -18,7 +20,6 @@ local HEADER_Y			:number	= 41;
 local WINDOW_HEADER_Y	:number	= 150;
 local TOPBAR_Y			:number	= 28;
 local SEPARATOR_Y		:number	= 20;
-local BUTTON_Y			:number	= 48;
 local DISABLED_PADDING_Y:number	= 10;
 local TEXTURE_BASE				:string = "UnitFlagBase";
 local TEXTURE_CIVILIAN			:string = "UnitFlagCivilian";
@@ -31,43 +32,74 @@ local TEXTURE_TRADE				:string = "UnitFlagTrade";
 local BUILDING_IM_PREFIX		:string = "buildingListingIM_";
 local BUILDING_DRAWER_PREFIX	:string = "buildingDrawer_";
 local ICON_PREFIX				:string = "ICON_";
-local LISTMODE					:table	= {PRODUCTION = 1, PURCHASE_GOLD = 2, PURCHASE_FAITH=3};
+local LISTMODE					:table	= {PRODUCTION = 1, PURCHASE_GOLD = 2, PURCHASE_FAITH = 3, PROD_QUEUE = 4};
 local EXTENDED_BUTTON_HEIGHT = 60;
 local DEFAULT_BUTTON_HEIGHT = 48;
+
+local FIELD_LIST_BUILDING_SIZE_Y	:string = "fieldListBuilingSizeY";
+local FIELD_LIST_WONDER_SIZE_Y		:string = "fieldListWonderSizeY";
+local FIELD_LIST_UNIT_SIZE_Y		:string = "fieldListUnitSizeY";
+
+local FIELD_DISTRICT_LIST			:string = "fieldDistrictList";
+local FIELD_BUILDING_LIST			:string = "fieldBuildingList";
+local FIELD_WONDER_LIST				:string = "fieldWonderList";
+local FIELD_UNIT_LIST				:string = "fieldUnitList";
+local FIELD_PROJECTS_LIST			:string = "fieldProjectsList";
+
+local TXT_PRODUCTION_ITEM_REPAIR			:string = Locale.Lookup("LOC_PRODUCTION_ITEM_REPAIR");
+local TXT_PRODUCTION_ITEM_DECONTAMINATE		:string = Locale.Lookup("LOC_PRODUCTION_ITEM_DECONTAMINATE");
+local TXT_HUD_CITY_WILL_NOT_COMPLETE		:string = Locale.Lookup("LOC_HUD_CITY_WILL_NOT_COMPLETE");
+local TXT_HUD_CITY_DISTRICT_BUILT_TT		:string = Locale.Lookup("LOC_HUD_CITY_DISTRICT_BUILT_TT")
+local TXT_COST								:string = Locale.Lookup( "LOC_HUD_PRODUCTION_COST" );
+local TXT_PRODUCTION						:string = Locale.Lookup( "LOC_HUD_PRODUCTION" );
+local LOC_HUD_UNIT_PANEL_FLEET_SUFFIX		:string = Locale.Lookup("LOC_HUD_UNIT_PANEL_FLEET_SUFFIX");
+local TXT_HUD_UNIT_PANEL_CORPS_SUFFIX		:string = Locale.Lookup("LOC_HUD_UNIT_PANEL_CORPS_SUFFIX");
+local TXT_HUD_UNIT_PANEL_ARMADA_SUFFIX		:string = Locale.Lookup("LOC_HUD_UNIT_PANEL_ARMADA_SUFFIX");
+local TXT_HUD_UNIT_PANEL_ARMY_SUFFIX		:string = Locale.Lookup("LOC_HUD_UNIT_PANEL_ARMY_SUFFIX");
+local TXT_DISTRICT_REPAIR_LOCATION_FLOODED	:string = Locale.Lookup("LOC_DISTRICT_REPAIR_LOCATION_FLOODED");
 
 -- ===========================================================================
 --	Members
 -- ===========================================================================
 
-local m_listIM			= InstanceManager:new( "NestedList",  "Top", Controls.ProductionList );
-local m_purchaseListIM	= InstanceManager:new( "NestedList",  "Top", Controls.PurchaseList );
+local m_listIM				= InstanceManager:new( "NestedList",  "Top", Controls.ProductionList );
+local m_purchaseListIM		= InstanceManager:new( "NestedList",  "Top", Controls.PurchaseList );
 local m_purchaseFaithListIM	= InstanceManager:new( "NestedList",  "Top", Controls.PurchaseFaithList );
+local m_queueListIM			= InstanceManager:new( "NestedList",  "Top", Controls.QueueList );
+
+local m_QueueInstanceIM = InstanceManager:new( "ProductionQueueItem", "Top" );
 
 local m_tabs;
 local m_productionTab;	-- Additional tracking of the tab control data so that we can select between graphical tabs and label tabs
 local m_purchaseTab;
 local m_faithTab;
-local m_maxProductionSize	:number	= 0;
+local m_queueTab			:table = {};
+local m_managerTab			:table = {};
 local m_maxPurchaseSize		:number	= 0;
-local m_isQueueMode			:boolean = false;
 local m_TypeNames			:table	= {};
 local m_kClickedInstance;
-local prodBuildingList;
-local prodWonderList;
-local prodUnitList;
-local prodDistrictList;
-local prodProjectList;
-local purchGoldDistrictList;
-local purchFaithDistrictList;
-local purchGoldBuildingList;
-local purchFaithBuildingList;
-local purchGoldUnitList;
-local purchFaithUnitList;
 
-local showDisabled :boolean = true;
-local m_recommendedItems:table;
+local m_showDisabled:boolean = true;
+local m_kRecommendedItems:table;
 
---local prodAlreadyStarting :boolean = false;
+local m_CurrentProductionHash = 0;
+local m_PreviousProductionHash = 0;
+
+local m_isQueueOpen:boolean = false;
+local m_isManagerOpen:boolean = false;
+local m_isTutorialRunning:boolean = false;
+
+local m_selectedQueueInstance:table = nil;
+local m_kSelectedQueueItem:table	= {Parent = nil, Button = nil, Index = -1};
+
+local m_SelectedManagerIndex:number = -1;
+
+local m_tutorialTestMode:boolean = false;
+
+local m_hasProductionToShow:boolean = false;
+
+local m_PlayerScrollPositions:table = {};
+local m_CurrentListMode:number = -1;
 
 -- ===========================================================================
 function toint(n)
@@ -91,12 +123,6 @@ function OnCollapseTheList()
 	Controls.PauseCollapseList:SetToBeginning();
 	m_kClickedInstance.ListSlide:SetToBeginning();
 	m_kClickedInstance.ListAlpha:SetToBeginning();
-	Controls.ProductionList:CalculateSize();
-	Controls.PurchaseList:CalculateSize();
-	Controls.ProductionList:ReprocessAnchoring();
-	Controls.PurchaseList:ReprocessAnchoring();
-	Controls.ProductionListScroll:CalculateInternalSize();
-	Controls.PurchaseListScroll:CalculateInternalSize();
 end
 
 -- ===========================================================================
@@ -125,22 +151,26 @@ function OnExpand(instance:table)
 	instance.ListAlpha:SetToBeginning();
 	instance.ListSlide:Play();				
 	instance.ListAlpha:Play();
-	Controls.ProductionList:CalculateSize();
-	Controls.PurchaseList:CalculateSize();
-	Controls.ProductionList:ReprocessAnchoring();
-	Controls.PurchaseList:ReprocessAnchoring();
-	Controls.ProductionListScroll:CalculateInternalSize();
-	Controls.PurchaseListScroll:CalculateInternalSize();
 end
 
 -- ===========================================================================
 function OnTabChangeProduction()
+	CloseQueue();
+	CloseManager();
+	LuaEvents.ProductionPanel_IsQueueOpen(false);
+
 	Controls.MiniProductionTab:SetSelected(true);
 	Controls.MiniPurchaseTab:SetSelected(false);
 	Controls.MiniPurchaseFaithTab:SetSelected(false);
-	Controls.PurchaseFaithMenu:SetHide(true);
-    Controls.PurchaseMenu:SetHide(true);
-    Controls.ChooseProductionMenu:SetHide(false);
+
+	ShowProperList(LISTMODE.PRODUCTION);
+
+	Controls.CurrentProductionContainer:SetHide(not m_hasProductionToShow);
+	Controls.NoProductionContainer:SetHide(true);
+	Controls.CurrentProductionButton:SetSelected(false);
+	Controls.CurrentProductionButton:SetDisabled(true);
+	Controls.CurrentProductionButton:SetVisState(0);
+
     if (Controls.SlideIn:IsStopped()) then
 		UI.PlaySound("Production_Panel_ButtonClick");
         UI.PlaySound("Production_Panel_Open");
@@ -149,42 +179,122 @@ end
 
 -- ===========================================================================
 function OnTabChangePurchase()
+	CloseQueue();
+	CloseManager();
+	LuaEvents.ProductionPanel_IsQueueOpen(false);
+
 	Controls.MiniProductionTab:SetSelected(false);
 	Controls.MiniPurchaseTab:SetSelected(true);
 	Controls.MiniPurchaseFaithTab:SetSelected(false);
-	Controls.ChooseProductionMenu:SetHide(true);
-	Controls.PurchaseFaithMenu:SetHide(true);
-	Controls.PurchaseMenu:SetHide(false);
+
+	ShowProperList(LISTMODE.PURCHASE_GOLD);
+
+	Controls.CurrentProductionContainer:SetHide(true);
+	Controls.NoProductionContainer:SetHide(true);
+
 	UI.PlaySound("Production_Panel_ButtonClick");
 end
 
 -- ===========================================================================
 function OnTabChangePurchaseFaith()
+	CloseQueue();
+	CloseManager();
+	LuaEvents.ProductionPanel_IsQueueOpen(false);
+
 	Controls.MiniProductionTab:SetSelected(false);
 	Controls.MiniPurchaseTab:SetSelected(false);
 	Controls.MiniPurchaseFaithTab:SetSelected(true);
-	Controls.ChooseProductionMenu:SetHide(true);
-	Controls.PurchaseMenu:SetHide(true);
-	Controls.PurchaseFaithMenu:SetHide(false);
+
+	ShowProperList(LISTMODE.PURCHASE_FAITH);
+
+	Controls.CurrentProductionContainer:SetHide(true);
+	Controls.NoProductionContainer:SetHide(true);
+
 	UI.PlaySound("Production_Panel_ButtonClick");
+end
+
+-- ===========================================================================
+function OnTabChangeQueue()
+	OpenQueue();
+	CloseManager();
+	LuaEvents.ProductionPanel_IsQueueOpen(true);
+
+	ShowProperList(LISTMODE.PROD_QUEUE);
+
+	Controls.CurrentProductionContainer:SetHide(not m_hasProductionToShow);
+	Controls.NoProductionContainer:SetHide(m_hasProductionToShow);
+	Controls.CurrentProductionButton:SetSelected(false);
+	Controls.CurrentProductionButton:SetDisabled(false);
+
+	UI.PlaySound("Production_Panel_ButtonClick");
+end
+
+-- ===========================================================================
+function OnTabChangeManager()
+	CloseQueue();
+	OpenManager();
+	LuaEvents.ProductionPanel_IsQueueOpen(true);
+
+	ShowProperList(LISTMODE.PROD_QUEUE);
+
+	Controls.CurrentProductionContainer:SetHide(true);
+	Controls.NoProductionContainer:SetHide(true);
+
+	UI.PlaySound("Production_Panel_ButtonClick");
+end
+
+-- ===========================================================================
+function ShowProperList( eListMode:number )
+	m_CurrentListMode = eListMode;
+	Controls.PurchaseMenu:SetHide(not (m_CurrentListMode == LISTMODE.PURCHASE_GOLD));
+	Controls.PurchaseFaithMenu:SetHide(not (m_CurrentListMode == LISTMODE.PURCHASE_FAITH));
+	Controls.ProductionListScroll:SetHide(not (m_CurrentListMode == LISTMODE.PRODUCTION));
+	Controls.QueueListContainer:SetHide(not (m_CurrentListMode == LISTMODE.PROD_QUEUE));
+end
+
+-- ===========================================================================
+-- This function should be called before starting any production
+-- It blocks interaction with production list items while a current production 
+-- item is selected and also deselects the previous item
+-- ===========================================================================
+function CheckQueueItemSelected()
+	if m_kSelectedQueueItem.Index ~= -1 then
+		DeselectItem();
+		return true;
+	end
+
+	if m_SelectedManagerIndex ~= -1 then
+		LuaEvents.ProductionPanel_ProductionClicked();
+		return true;
+	end
+
+	return false;
 end
 
 -- ===========================================================================
 -- Placement/Selection 
 -- ===========================================================================
 function BuildUnit(city, unitEntry)
+	if CheckQueueItemSelected() then
+		return;
+	end
+
 	local tParameters = {}; 
 	tParameters[CityOperationTypes.PARAM_UNIT_TYPE] = unitEntry.Hash;
-	tParameters[CityOperationTypes.PARAM_INSERT_MODE] = CityOperationTypes.VALUE_EXCLUSIVE;
+	GetBuildInsertMode(tParameters);
 	CityManager.RequestOperation(city, CityOperationTypes.BUILD, tParameters);
-    UI.PlaySound("Confirm_Production");
+	UI.PlaySound("Confirm_Production");
 end
 
 -- ===========================================================================
 function BuildUnitCorps(city, unitEntry)
+	if CheckQueueItemSelected() then
+		return;
+	end
+
 	local tParameters = {};
 	tParameters[CityOperationTypes.PARAM_UNIT_TYPE] = unitEntry.Hash;
-	tParameters[CityOperationTypes.PARAM_INSERT_MODE] = CityOperationTypes.VALUE_EXCLUSIVE;
+	GetBuildInsertMode(tParameters);
 	tParameters[CityOperationTypes.MILITARY_FORMATION_TYPE] = MilitaryFormationTypes.CORPS_MILITARY_FORMATION;
 	CityManager.RequestOperation(city, CityOperationTypes.BUILD, tParameters);
 	UI.PlaySound("Confirm_Production");
@@ -192,9 +302,13 @@ end
 
 -- ===========================================================================
 function BuildUnitArmy(city, unitEntry)
+	if CheckQueueItemSelected() then
+		return;
+	end
+
 	local tParameters = {};
 	tParameters[CityOperationTypes.PARAM_UNIT_TYPE] = unitEntry.Hash;
-	tParameters[CityOperationTypes.PARAM_INSERT_MODE] = CityOperationTypes.VALUE_EXCLUSIVE;
+	GetBuildInsertMode(tParameters);
 	tParameters[CityOperationTypes.MILITARY_FORMATION_TYPE] = MilitaryFormationTypes.ARMY_MILITARY_FORMATION;
 	CityManager.RequestOperation(city, CityOperationTypes.BUILD, tParameters);
 	UI.PlaySound("Confirm_Production");
@@ -202,6 +316,9 @@ end
 
 -- ===========================================================================
 function BuildBuilding(city, buildingEntry)
+	if CheckQueueItemSelected() then
+		return;
+	end
 
 	local building			:table		= GameInfo.Buildings[buildingEntry.Type];
 	local bNeedsPlacement	:boolean	= building.RequiresPlacement;
@@ -226,21 +343,26 @@ function BuildBuilding(city, buildingEntry)
 		-- If so, set the placement mode
 		local tParameters = {}; 
 		tParameters[CityOperationTypes.PARAM_BUILDING_TYPE] = buildingEntry.Hash;
-		tParameters[CityOperationTypes.PARAM_INSERT_MODE] = CityOperationTypes.VALUE_EXCLUSIVE;
+		GetBuildInsertMode(tParameters);
 		UI.SetInterfaceMode(InterfaceModeTypes.BUILDING_PLACEMENT, tParameters);
+		Close();
 	else
 		-- If not, add it to the queue.
 		local tParameters = {}; 
 		tParameters[CityOperationTypes.PARAM_BUILDING_TYPE] = buildingEntry.Hash;  
-		tParameters[CityOperationTypes.PARAM_INSERT_MODE] = CityOperationTypes.VALUE_EXCLUSIVE;
+		GetBuildInsertMode(tParameters);
 		CityManager.RequestOperation(city, CityOperationTypes.BUILD, tParameters);
         UI.PlaySound("Confirm_Production");
+		CloseAfterNewProduction();
 	end
 end
 
 -- ===========================================================================
 function ZoneDistrict(city, districtEntry)
-	
+	if CheckQueueItemSelected() then
+		return;
+	end
+
 	local district			:table		= GameInfo.Districts[districtEntry.Type];
 	local bNeedsPlacement	:boolean	= district.RequiresPlacement;
 	local pBuildQueue		:table		= city:GetBuildQueue();
@@ -254,23 +376,29 @@ function ZoneDistrict(city, districtEntry)
 		-- If so, set the placement mode
 		local tParameters = {}; 
 		tParameters[CityOperationTypes.PARAM_DISTRICT_TYPE] = districtEntry.Hash;
-		tParameters[CityOperationTypes.PARAM_INSERT_MODE] = CityOperationTypes.VALUE_EXCLUSIVE;
+		GetBuildInsertMode(tParameters);
 		UI.SetInterfaceMode(InterfaceModeTypes.DISTRICT_PLACEMENT, tParameters);
+		Close();
 	else
 		-- If not, add it to the queue.
-		local tParameters = {}; 
+		local tParameters = {};
 		tParameters[CityOperationTypes.PARAM_DISTRICT_TYPE] = districtEntry.Hash;  
-		tParameters[CityOperationTypes.PARAM_INSERT_MODE] = CityOperationTypes.VALUE_EXCLUSIVE;
+		GetBuildInsertMode(tParameters);
 		CityManager.RequestOperation(city, CityOperationTypes.BUILD, tParameters);
         UI.PlaySound("Confirm_Production");
+		CloseAfterNewProduction();
 	end
 end
 
 -- ===========================================================================
 function AdvanceProject(city, projectEntry)
+	if CheckQueueItemSelected() then
+		return;
+	end
+
 	local tParameters = {}; 
 	tParameters[CityOperationTypes.PARAM_PROJECT_TYPE] = projectEntry.Hash;
-	tParameters[CityOperationTypes.PARAM_INSERT_MODE] = CityOperationTypes.VALUE_EXCLUSIVE;
+	GetBuildInsertMode(tParameters);
 	CityManager.RequestOperation(city, CityOperationTypes.BUILD, tParameters);
     UI.PlaySound("Confirm_Production");
 end
@@ -347,17 +475,33 @@ function PurchaseDistrict(city, districtEntry)
 	-- Almost all districts need to be placed, but just in case let's check anyway
 	if (bNeedsPlacement ) then			
 		-- If so, set the placement mode
-		local tParameters = {}; 
-		tParameters[CityOperationTypes.PARAM_DISTRICT_TYPE] = districtEntry.Hash;
-		tParameters[CityCommandTypes.PARAM_YIELD_TYPE] = GameInfo.Yields["YIELD_GOLD"].Index;
-		UI.SetInterfaceMode(InterfaceModeTypes.DISTRICT_PLACEMENT, tParameters);
+		if(districtEntry.Yield == "YIELD_GOLD") then
+			local tParameters = {}; 
+			tParameters[CityOperationTypes.PARAM_DISTRICT_TYPE] = districtEntry.Hash;
+			tParameters[CityCommandTypes.PARAM_YIELD_TYPE] = GameInfo.Yields["YIELD_GOLD"].Index;
+			UI.SetInterfaceMode(InterfaceModeTypes.DISTRICT_PLACEMENT, tParameters);
+		else
+			local tParameters = {}; 
+			tParameters[CityOperationTypes.PARAM_DISTRICT_TYPE] = districtEntry.Hash;
+			tParameters[CityCommandTypes.PARAM_YIELD_TYPE] = GameInfo.Yields["YIELD_FAITH"].Index;
+			UI.SetInterfaceMode(InterfaceModeTypes.DISTRICT_PLACEMENT, tParameters);
+		end
 	else
-		-- If not, add it to the queue.
-		local tParameters = {}; 
-		tParameters[CityOperationTypes.PARAM_DISTRICT_TYPE] = districtEntry.Hash;
-		tParameters[CityCommandTypes.PARAM_YIELD_TYPE] = GameInfo.Yields["YIELD_GOLD"].Index;  
-		CityManager.RequestCommand(city, CityCommandTypes.PURCHASE, tParameters);
-        UI.PlaySound("Purchase_With_Gold");
+		if(districtEntry.Yield == "YIELD_GOLD") then
+			-- If not, add it to the queue.
+			local tParameters = {}; 
+			tParameters[CityOperationTypes.PARAM_DISTRICT_TYPE] = districtEntry.Hash;
+			tParameters[CityCommandTypes.PARAM_YIELD_TYPE] = GameInfo.Yields["YIELD_GOLD"].Index;  
+			CityManager.RequestCommand(city, CityCommandTypes.PURCHASE, tParameters);
+			UI.PlaySound("Purchase_With_Gold");
+		else
+			-- If not, add it to the queue.
+			local tParameters = {}; 
+			tParameters[CityOperationTypes.PARAM_DISTRICT_TYPE] = districtEntry.Hash;
+			tParameters[CityCommandTypes.PARAM_YIELD_TYPE] = GameInfo.Yields["YIELD_FAITH"].Index;  
+			CityManager.RequestCommand(city, CityCommandTypes.PURCHASE, tParameters);
+			UI.PlaySound("Purchase_With_Faith");
+		end
 	end
 end
 
@@ -401,7 +545,7 @@ function OnUnitSelectionChanged( playerID : number, unitID : number, hexI : numb
 		-- If a unit is selected and this is showing; hide it.
 		local pSelectedUnit:table = UI.GetHeadSelectedUnit();
 		if pSelectedUnit ~= nil and not ContextPtr:IsHidden() then 
-			OnHide();
+			Close();
 		end
 	end
 end
@@ -416,6 +560,7 @@ function Close()
 		Controls.SlideIn:Reverse();	
 		Controls.AlphaIn:Reverse();
 		Controls.PauseDismissWindow:Play();
+		LuaEvents.ProductionPanel_CloseManager();
 		LuaEvents.ProductionPanel_Close();
 	end
 end
@@ -433,11 +578,11 @@ function Open()
 	if ContextPtr:IsHidden() then					-- The ContextPtr is only hidden as a callback to the finished SlideIn animation, so this check should be sufficient to ensure that we are not animating.
 		-- Sets up proper selection AND the associated lens so it's not stuck "on".
 		UI.PlaySound("Production_Panel_Open");
-		LuaEvents.ProductionPanel_Open()
+		LuaEvents.ProductionPanel_Open();
 		UI.SetInterfaceMode(InterfaceModeTypes.SELECTION);
 		Refresh();
 		ContextPtr:SetHide(false);
-		Controls.ProductionListScroll:SetScrollValue(0);
+		Controls.ProductionListScroll:SetScrollValue(GetScrollPosition(LISTMODE.PRODUCTION));
 
 		-- Size the panel to the maximum Y value of the expanded content	
 		Controls.AlphaIn:SetToBeginning();
@@ -453,84 +598,62 @@ function OnHide()
 	Controls.PauseDismissWindow:SetToBeginning();
 end
 
+-- ===========================================================================
+function UpdateQueueTabText( queueSize:number )
+	Controls.QueueTab:SetText("[ICON_ProductionQueue] " .. Locale.Lookup("LOC_PRODUCTION_PANEL_QUEUE_WITH_COUNT", queueSize));
+end
 
 -- ===========================================================================
 --	Initialize, Refresh, Populate, View
 --	Update the layout based on the view model
 -- ===========================================================================
 function View(data)
-	local selectedCity	= UI.GetHeadSelectedCity();
+	local pSelectedCity	= UI.GetHeadSelectedCity();
+
 	-- Get the hashes for the top three recommended items
-	m_recommendedItems = selectedCity:GetCityAI():GetBuildRecommendations();
+	-- Convert to a BuildItemHash indexed table for easier look up
+	m_kRecommendedItems = {};
+	for _,kItem in ipairs(pSelectedCity:GetCityAI():GetBuildRecommendations()) do
+		m_kRecommendedItems[kItem.BuildItemHash] = kItem.BuildItemScore;
+	end
 
 	-- TODO there is a ton of duplicated code between producing, buying with gold, and buying with faith
 	-- there is also a ton of duplicated code between districts, buildings, units, wonders, etc
 	-- I think this could be a prime candidate for a refactor if there is time, currently, care must
 	-- be taken to copy any changes in several places to keep it functioning consistently
 	
-	-- These need to be cleared out before the PopulateLists() calls
-	prodBuildingList       = nil;
-	prodWonderList         = nil;
-	prodUnitList           = nil;
-	prodDistrictList       = nil;
-	prodProjectList        = nil;
-	purchGoldDistrictList  = nil;
-	purchFaithDistrictList = nil;
-	purchGoldBuildingList  = nil;
-	purchFaithBuildingList = nil;
-	purchGoldUnitList      = nil;
-	purchFaithUnitList     = nil;
-
 	PopulateList(data, LISTMODE.PRODUCTION, m_listIM);
+	Controls.ProductionListScroll:SetScrollValue(GetScrollPosition(LISTMODE.PRODUCTION));
 	PopulateList(data, LISTMODE.PURCHASE_GOLD, m_purchaseListIM);
+	Controls.PurchaseListScroll:SetScrollValue(GetScrollPosition(LISTMODE.PURCHASE_GOLD));
 	PopulateList(data, LISTMODE.PURCHASE_FAITH, m_purchaseFaithListIM);
+	Controls.PurchaseFaithListScroll:SetScrollValue(GetScrollPosition(LISTMODE.PURCHASE_FAITH));
+	PopulateList(data, LISTMODE.PROD_QUEUE, m_queueListIM);
+	Controls.QueueListScroll:SetScrollValue(GetScrollPosition(LISTMODE.PROD_QUEUE));
 
-	if( prodDistrictList ~= nil) then
-		OnExpand(prodDistrictList);
+	if m_isTutorialRunning or m_tutorialTestMode then
+		Controls.QueueContainer:SetHide(true);
+		Controls.ScrollToButtonContainer:SetHide(true);
 	end
-	if( prodWonderList ~= nil) then
-		OnExpand(prodWonderList);
-	end
-	if(prodUnitList ~= nil) then
-		OnExpand(prodUnitList);
-	end
-	if(prodProjectList ~= nil) then
-		OnExpand(prodProjectList);
-	end
-	if( purchFaithBuildingList ~= nil) then
-		OnExpand(purchFaithBuildingList);
-	end
-	if( purchGoldBuildingList ~= nil) then
-		OnExpand(purchGoldBuildingList);
-	end
-	if( purchFaithUnitList ~= nil ) then
-		OnExpand(purchFaithUnitList);
-	end
-	if( purchGoldUnitList ~= nil) then
-		OnExpand(purchGoldUnitList);
-	end
-	if (purchGoldDistrictList ~= nil) then
-		OnExpand(purchGoldDistrictList);
-	end
-	if (purchFaithDistrictList ~= nil) then
-		OnExpand(purchFaithDistrictList);
-	end
-	--
+
+	RefreshQueue(data.Owner, data.City:GetID())
 	
+	Controls.PurchaseList:CalculateSize();
 	if( Controls.PurchaseList:GetSizeY() == 0 ) then
 		Controls.NoGoldContent:SetHide(false);
 	else
 		Controls.NoGoldContent:SetHide(true);
 	end
+
+	Controls.PurchaseFaithList:CalculateSize();
 	if( Controls.PurchaseFaithList:GetSizeY() == 0 ) then
 		Controls.NoFaithContent:SetHide(false);
 	else
 		Controls.NoFaithContent:SetHide(true);
 	end
-
-	m_tabs.SelectTab(m_productionTab);
 end
 
+-- ===========================================================================
 function ResetInstanceVisibility(productionItem: table)
 	if (productionItem.ArmyCorpsDrawer ~= nil) then
 		productionItem.ArmyCorpsDrawer:SetHide(true);
@@ -550,579 +673,542 @@ function ResetInstanceVisibility(productionItem: table)
 	productionItem.RecommendedIcon:SetHide(true);
 	productionItem.Disabled:SetHide(true);
 end
+
 -- ===========================================================================
+function ResizeProductionScrollList()
+	local contentOffset:number = Controls.TabContainer:GetSizeY() + Controls.TabContainer:GetOffsetY();
+	Controls.WindowContent:SetOffsetY(contentOffset);
 
-function PopulateList(data, listMode, listIM)
-	listIM:ResetInstances();
-	local districtList;
-	local buildingList;
-	local wonderList;
-	local projectList;
-	local unitList;
-	Controls.PauseCollapseList:Stop();
-	local selectedCity	= UI.GetHeadSelectedCity();
+	local contentSize:number = Controls.ProductionPanel:GetSizeY() - contentOffset;
+	Controls.WindowContent:SetSizeY(contentSize);
 
-	if(listMode == LISTMODE.PRODUCTION) then
-		m_maxProductionSize = 0;
-		-- Populate Current Item
-		local buildQueue	= selectedCity:GetBuildQueue();
-		local productionHash = 0;
-		local completedStr = "";
-		local currentProductionHash = buildQueue:GetCurrentProductionTypeHash();
-		local previousProductionHash = buildQueue:GetPreviousProductionTypeHash();
-		local screenX, screenY:number = UIManager:GetScreenSizeVal()
+	local scrollSize:number = contentSize - Controls.TopStackContainer:GetSizeY();
+	Controls.ProductionListScroll:SetSizeY(scrollSize);
+	Controls.QueueListScroll:SetSizeY(scrollSize);
+	Controls.PurchaseListScroll:SetSizeY(scrollSize);
+	Controls.PurchaseFaithListScroll:SetSizeY(scrollSize);
+end
+
+-- ===========================================================================
+function OnTopStackContainerSizeChanged()
+	ResizeProductionScrollList();
+end
+
+-- ===========================================================================
+function OnTabContainerSizeChanged()
+	ResizeProductionScrollList();
+end
+
+-- ===========================================================================
+function PopulateGenericItemData( kInstance:table, kItem:table )
+	ResetInstanceVisibility(kInstance);
+
+	-- Recommended check
+	if m_kRecommendedItems[kItem.Hash] ~= nil then
+		kInstance.RecommendedIcon:SetHide(false);
+	end
 	
-		if( currentProductionHash == 0 and previousProductionHash == 0 ) then
-			Controls.CurrentProductionArea:SetHide(true);
-			Controls.ProductionListScroll:SetSizeY(screenY-120);
-			Controls.ProductionListScroll:CalculateSize();
-			Controls.ProductionListScroll:SetOffsetY(10);
-			completedStr = "";
+	-- Item Name
+	local sName:string = Locale.Lookup(kItem.Name);
+	if (kItem.Repair) then
+		sName = sName .. "[NEWLINE]" .. TXT_PRODUCTION_ITEM_REPAIR;
+	end
+		
+	kInstance.LabelText:SetText(sName);
+
+	-- Tooltips
+	kInstance.Button:SetToolTipString(kItem.ToolTip);
+	kInstance.Disabled:SetToolTipString(kItem.ToolTip);
+
+	-- Icon
+	kInstance.Icon:SetIcon(ICON_PREFIX..kItem.Type);
+
+	-- Is item disabled?
+	if (kItem.Disabled) then 
+		if(m_showDisabled) then
+			kInstance.Disabled:SetHide(false);
+			kInstance.Button:SetColor(COLOR_LOW_OPACITY);
 		else
-			Controls.CurrentProductionArea:SetHide(false);	
-			Controls.ProductionListScroll:SetSizeY(screenY-175);
-			Controls.ProductionListScroll:CalculateSize();
-			Controls.ProductionListScroll:SetOffsetY(65);
-			if( currentProductionHash == 0 ) then
-				productionHash = previousProductionHash;
-				Controls.CompletedArea:SetHide(false);
-				completedStr = Locale.ToUpper(Locale.Lookup("LOC_TECH_KEY_COMPLETED"));
-			else
-				Controls.CompletedArea:SetHide(true);
-				productionHash = currentProductionHash;
-				completedStr = ""
-			end
+			kInstance.Button:SetHide(true);
 		end
+	else
+		kInstance.Button:SetHide(false);
+		kInstance.Disabled:SetHide(true);
+		kInstance.Button:SetColor(0xffffffff);
+	end
+	kInstance.Button:SetDisabled(kItem.Disabled);
+end
 
-		local currentProductionInfo				:table = GetProductionInfoOfCity( data.City, productionHash );
+-- ===========================================================================
+function PopulateGenericBuildData( kInstance:table, kItem:table )
+	PopulateGenericItemData(kInstance, kItem);
+
+	-- Progress
+	if kItem.Progress > 0 then
+		local iItemProgress:number = kItem.Progress/kItem.Cost;
+		if iItemProgress < 1 then
+			kInstance.ProductionProgress:SetPercent(iItemProgress);
+			kInstance.ProductionProgressArea:SetHide(false);
+		else
+			kInstance.ProductionProgressArea:SetHide(true);
+		end
+	else
+		kInstance.ProductionProgressArea:SetHide(true);
+	end
+end
+
+-- ===========================================================================
+function PopulateGenericPurchaseData( kInstance:table, kItem:table )
+	PopulateGenericItemData(kInstance, kItem);
+
+	kInstance.ProductionProgressArea:SetHide(true);
+end
+
+-- ===========================================================================
+function PopulateCurrentProduction(data:table)
+	m_hasProductionToShow = RefreshCurrentProduction( Controls, data.Owner, data.City:GetID() );
+end
+
+-- ===========================================================================
+function PopulateWonders(data:table, listMode:number, listIM:table)
+	local wonderList = listIM:GetInstance();
 	
-		if (currentProductionInfo.Icon ~= nil) then
-			Controls.CurrentProductionName:SetText(Locale.ToUpper(Locale.Lookup(currentProductionInfo.Name)).." "..completedStr);
-			Controls.CurrentProductionProgress:SetPercent(currentProductionInfo.PercentComplete);
-			Controls.CurrentProductionProgress:SetShadowPercent(currentProductionInfo.PercentCompleteNextTurn);
-			Controls.CurrentProductionIcon:SetIcon(currentProductionInfo.Icon);
-			if(currentProductionInfo.Tooltip ~= nil) then
-				Controls.CurrentProductionIcon:SetToolTipString(Locale.Lookup(currentProductionInfo.Tooltip));
+	local sHeaderText:string = Locale.ToUpper("LOC_HUD_CITY_WONDERS");
+	wonderList.Header:SetText(sHeaderText);
+	wonderList.HeaderOn:SetText(sHeaderText);
+	
+	if ( wonderList.wonderListIM ~= nil ) then
+		wonderList.wonderListIM:ResetInstances()
+	else
+		wonderList.wonderListIM = InstanceManager:new( "BuildingListInstance", "Root", wonderList.List);
+	end
+		
+	for i, item in ipairs(data.BuildingItems) do
+		if(item.IsWonder) then
+			local wonderListing = wonderList.wonderListIM:GetInstance();
+
+			PopulateGenericBuildData(wonderListing, item);
+
+			local turnsStrTT:string = "";
+			local turnsStr:string = "";
+			local numberOfTurns = item.TurnsLeft;
+			if numberOfTurns == -1 then
+				numberOfTurns = "999+";
+				turnsStrTT = TXT_HUD_CITY_WILL_NOT_COMPLETE;
 			else
-				Controls.CurrentProductionIcon:SetToolTipString();
+				turnsStrTT = numberOfTurns .. Locale.Lookup("LOC_HUD_CITY_TURNS_TO_COMPLETE", item.TurnsLeft);
 			end
-			local numberOfTurns = currentProductionInfo.Turns;
+			turnsStr = numberOfTurns .. "[ICON_Turn]";
+			wonderListing.CostText:SetText(turnsStr);
+			wonderListing.CostText:SetToolTipString(turnsStrTT);
+
+            wonderListing.Button:RegisterCallback( Mouse.eMouseEnter,	function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
+			wonderListing.Button:RegisterCallback( Mouse.eLClick, function()
+				BuildBuilding(data.City, item);
+			end);
+
+			if not m_isTutorialRunning then
+				wonderListing.Button:RegisterCallback( Mouse.eRClick, function()
+					LuaEvents.OpenCivilopedia(item.Type);
+				end);
+			else
+				wonderListing.Button:SetTag(UITutorialManager:GetHash(item.Type));
+			end	
+		end
+	end
+		
+	if (wonderList.wonderListIM.m_iAllocatedInstances <= 0) then
+		wonderList.Top:SetHide(true);
+	else		
+        wonderList.Header:RegisterCallback( Mouse.eMouseEnter,	function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
+		wonderList.Header:RegisterCallback( Mouse.eLClick, function()
+			OnExpand(wonderList);					
+			end);
+        wonderList.HeaderOn:RegisterCallback( Mouse.eMouseEnter,	function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
+		wonderList.HeaderOn:RegisterCallback( Mouse.eLClick, function()
+			OnCollapse(wonderList);					
+			end);
+	end
+
+	wonderList.Top:RegisterSizeChanged(function() OnWonderListSizeChanged(listIM, wonderList.Top:GetSizeY()); end);
+	OnWonderListSizeChanged(listIM, wonderList.Top:GetSizeY());
+
+	OnExpand(wonderList);
+end
+
+-- ===========================================================================
+function PopulateProjects(data:table, listMode:number, listIM:table)
+	local projectList = listIM:GetInstance();
+
+	local sHeaderText:string = Locale.ToUpper("LOC_HUD_PROJECTS");
+	projectList.Header:SetText(sHeaderText);
+	projectList.HeaderOn:SetText(sHeaderText);
+
+	if ( projectList.projectListIM ~= nil ) then
+		projectList.projectListIM:ResetInstances();
+	else
+		projectList.projectListIM = InstanceManager:new( "ProjectListInstance", "Root", projectList.List);
+	end
+
+	for i, item in ipairs(data.ProjectItems) do
+		if item.IsCurrentProduction == false or (listMode == LISTMODE.PROD_QUEUE and item.IsRepeatable) then
+			local projectListing = projectList.projectListIM:GetInstance();
+
+			PopulateGenericBuildData(projectListing, item);
+
+			local numberOfTurns = item.TurnsLeft;
 			if numberOfTurns == -1 then
 				numberOfTurns = "999+";
 			end;
 
-			Controls.CurrentProductionCost:SetText("[ICON_Turn]".. numberOfTurns);
-			Controls.CurrentProductionProgressString:SetText("[ICON_ProductionLarge]"..currentProductionInfo.Progress.."/"..currentProductionInfo.Cost);
-		end
+			local turnsStr = numberOfTurns .. "[ICON_Turn]";
+			projectListing.CostText:SetText(turnsStr);
 
-		-- Populate Districts ------------------------ CANNOT purchase districts
-		districtList = listIM:GetInstance();
-		districtList.Header:SetText(Locale.ToUpper(Locale.Lookup("LOC_HUD_DISTRICTS_BUILDINGS")));
-		districtList.HeaderOn:SetText(Locale.ToUpper(Locale.Lookup("LOC_HUD_DISTRICTS_BUILDINGS")));
-		local dL = districtList;	-- Due to lambda capture, we need to copy this for callback
-		if ( districtList.districtListIM ~= nil ) then
-			districtList.districtListIM:ResetInstances();
-		else
-			districtList.districtListIM = InstanceManager:new( "DistrictListInstance", "Root", districtList.List);	
-		end
-
-		-- In the interest of performance, we're keeping the instances that we created and resetting the data.
-		-- This requires a little bit of footwork to remember the instances that have been modified and to manually reset them.
-		for _,type in ipairs(m_TypeNames) do			
-			if ( districtList[BUILDING_IM_PREFIX..type] ~= nil) then		--Reset the states for the building instance managers 
-				districtList[BUILDING_IM_PREFIX..type]:ResetInstances();
-			end
-			if ( districtList[BUILDING_DRAWER_PREFIX..type] ~= nil) then	--Reset the states of the drawers
-				districtList[BUILDING_DRAWER_PREFIX..type]:SetHide(true);
-			end
-		end
-
-		for i, item in ipairs(data.DistrictItems) do
-			local districtListing = districtList["districtListIM"]:GetInstance();
-			ResetInstanceVisibility(districtListing);
-			-- Check to see if this district item is one of the items that is recommended:
-			for _,hash in ipairs( m_recommendedItems) do
-				if(item.Hash == hash.BuildItemHash) then
-					districtListing.RecommendedIcon:SetHide(false);
-				end
-			end
-
-			local nameStr = Locale.Lookup("{1_Name}", item.Name);
-			if (item.Repair) then
-				nameStr = nameStr .. "[NEWLINE]" .. Locale.Lookup("LOC_PRODUCTION_ITEM_REPAIR");
-			end
-			if (item.Contaminated) then
-				nameStr = nameStr .. Locale.Lookup("LOC_PRODUCTION_ITEM_DECONTAMINATE");
-			end
-			districtListing.LabelText:SetText(nameStr);
-
-			local turnsStrTT:string = "";
-			local turnsStr:string = "";
-
-			if(item.HasBeenBuilt and GameInfo.Districts[item.Type].OnePerCity == true and not item.Repair and not item.Contaminated and item.Progress == 0) then
-				turnsStrTT = Locale.Lookup("LOC_HUD_CITY_DISTRICT_BUILT_TT");
-				turnsStr = "[ICON_Checkmark]";
-			else
-				local numberOfTurns = item.TurnsLeft;
-				if numberOfTurns == -1 then
-					numberOfTurns = "999+";
-					turnsStrTT = Locale.Lookup("LOC_HUD_CITY_WILL_NOT_COMPLETE");
-				else
-					turnsStrTT = numberOfTurns .. Locale.Lookup("LOC_HUD_CITY_TURNS_TO_COMPLETE", item.TurnsLeft);
-				end
-				turnsStr = numberOfTurns .. "[ICON_Turn]";
-			end
-
-			if(item.Progress > 0) then
-				districtListing.ProductionProgressArea:SetHide(false);
-				local districtProgress = item.Progress/item.Cost;
-				if (districtProgress < 1) then
-					districtListing.ProductionProgress:SetPercent(districtProgress);
-				else
-					districtListing.ProductionProgressArea:SetHide(true);
-				end
-			else
-				districtListing.ProductionProgressArea:SetHide(true);
-			end
-			
-			districtListing.CostText:SetToolTipString(turnsStrTT);
-			districtListing.CostText:SetText(turnsStr);
-			districtListing.Button:SetToolTipString(item.ToolTip);
-			districtListing.Disabled:SetToolTipString(item.ToolTip);
-			districtListing.Icon:SetIcon(ICON_PREFIX..item.Type);
-
-			local districtType = item.Type;
-			-- Check to see if this is a unique district that will be substituted for another kind of district
-			if(GameInfo.DistrictReplaces[item.Type] ~= nil) then
-				districtType = 	GameInfo.DistrictReplaces[item.Type].ReplacesDistrictType;
-			end
-			local uniqueBuildingIMName = BUILDING_IM_PREFIX..districtType;
-			local uniqueBuildingAreaName = BUILDING_DRAWER_PREFIX..districtType;
-
-			table.insert(m_TypeNames, districtType);
-			districtList[uniqueBuildingIMName] = InstanceManager:new( "BuildingListInstance", "Root", districtListing.BuildingStack);
-			districtList[uniqueBuildingAreaName] = districtListing.BuildingDrawer;
-			districtListing.CompletedArea:SetHide(true);
-
-			if (item.Disabled) then 
-				if(item.HasBeenBuilt) then
-					districtListing.CompletedArea:SetHide(false);
-					districtListing.Disabled:SetHide(true);
-				else
-					if(showDisabled) then
-						districtListing.Disabled:SetHide(false);
-						districtListing.Button:SetColor(COLOR_LOW_OPACITY);
-					else
-						districtListing.Root:SetHide(true);
-					end
-				end
-			else
-				districtListing.Root:SetHide(false);
-				districtListing.Disabled:SetHide(true);
-				districtListing.Button:SetColor(0xFFFFFFFF);
-			end
-			districtListing.Button:SetDisabled(item.Disabled);
-			districtListing.Button:RegisterCallback( Mouse.eMouseEnter,	function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
-			districtListing.Button:RegisterCallback( Mouse.eLClick, function()
-				ZoneDistrict(data.City, item);
-				Close();
+			projectListing.Button:RegisterCallback( Mouse.eLClick, function()
+				AdvanceProject(data.City, item);
+				CloseAfterNewProduction();
 			end);
 
-			if(not IsTutorialRunning()) then
-				districtListing.Button:RegisterCallback( Mouse.eRClick, function()
+			if not m_isTutorialRunning then
+				projectListing.Button:RegisterCallback( Mouse.eRClick, function()
+					LuaEvents.OpenCivilopedia(item.Type);
+				end);
+			else
+				projectListing.Button:SetTag(UITutorialManager:GetHash(item.Type));
+			end
+		end
+	end
+		
+	if (projectList.projectListIM.m_iAllocatedInstances <= 0) then
+		projectList.Top:SetHide(true);
+	else
+		projectList.Header:RegisterCallback( Mouse.eLClick, function()
+			OnExpand(projectList);					
+			end);
+		projectList.HeaderOn:RegisterCallback( Mouse.eLClick, function()
+			OnCollapse(projectList);					
+			end);
+	end
+
+	OnExpand(projectList);
+end
+
+-- ===========================================================================
+function PopulateDistrictsWithNestedBuildings(data:table, listMode:number, listIM:table)
+	local districtList = listIM:GetInstance();
+	
+	local sHeaderText:string = Locale.ToUpper("LOC_HUD_DISTRICTS_BUILDINGS");
+	districtList.Header:SetText(sHeaderText);
+	districtList.HeaderOn:SetText(sHeaderText);
+
+	if ( districtList.districtListIM ~= nil ) then
+		districtList.districtListIM:ResetInstances();
+	else
+		districtList.districtListIM = InstanceManager:new( "DistrictListInstance", "Root", districtList.List);	
+	end
+
+	-- In the interest of performance, we're keeping the instances that we created and resetting the data.
+	-- This requires a little bit of footwork to remember the instances that have been modified and to manually reset them.
+	for _,type in ipairs(m_TypeNames) do
+		local sBuildingIM:string = BUILDING_IM_PREFIX..type;
+		if ( districtList[sBuildingIM] ~= nil) then		--Reset the states for the building instance managers 
+			districtList[sBuildingIM]:ResetInstances();
+		end
+		local sBuildingDrawer:string = BUILDING_DRAWER_PREFIX..type;
+		if ( districtList[sBuildingDrawer] ~= nil) then	--Reset the states of the drawers
+			districtList[sBuildingDrawer]:SetHide(true);
+		end
+	end
+
+	for i, item in ipairs(data.DistrictItems) do
+		local districtListing = districtList.districtListIM:GetInstance();
+
+		PopulateGenericBuildData(districtListing, item);
+
+		local turnsStrTT:string = "";
+		local turnsStr:string = "";
+
+		if(item.HasBeenBuilt and GameInfo.Districts[item.Type].OnePerCity == true and not item.Repair and not item.Contaminated and item.Progress == 0) then
+			turnsStrTT = TXT_HUD_CITY_DISTRICT_BUILT_TT;
+			turnsStr = "[ICON_Checkmark]";
+		elseif item.ContaminatedTurns > 0 then
+			turnsStrTT = Locale.Lookup("LOC_TOOLTIP_PLOT_CONTAMINATED_TEXT", item.ContaminatedTurns);
+			turnsStr = item.TurnsLeft .. "[ICON_Turn]";
+		else
+			local numberOfTurns = item.TurnsLeft;
+			if numberOfTurns == -1 then
+				numberOfTurns = "999+";
+				turnsStrTT = TXT_HUD_CITY_WILL_NOT_COMPLETE;
+			else
+				turnsStrTT = numberOfTurns .. Locale.Lookup("LOC_HUD_CITY_TURNS_TO_COMPLETE", item.TurnsLeft);
+			end
+			turnsStr = numberOfTurns .. "[ICON_Turn]";
+		end
+			
+		districtListing.CostText:SetToolTipString(turnsStrTT);
+		districtListing.CostText:SetText(turnsStr);
+
+		local districtType = item.Type;
+		-- Check to see if this is a unique district that will be substituted for another kind of district
+		if(GameInfo.DistrictReplaces[item.Type] ~= nil) then
+			districtType = 	GameInfo.DistrictReplaces[item.Type].ReplacesDistrictType;
+		end
+		local uniqueBuildingIMName = BUILDING_IM_PREFIX..districtType;
+		local uniqueBuildingAreaName = BUILDING_DRAWER_PREFIX..districtType;
+
+		table.insert(m_TypeNames, districtType);
+
+		if districtList[uniqueBuildingIMName] == nil then
+			districtList[uniqueBuildingIMName] = InstanceManager:new( "BuildingListInstance", "Root", districtListing.BuildingStack);
+		else
+			districtList[uniqueBuildingIMName]:ResetInstances();
+			districtList[uniqueBuildingIMName].m_ParentControl = districtListing.BuildingStack;
+		end
+
+		districtList[uniqueBuildingAreaName] = districtListing.BuildingDrawer;
+		districtListing.CompletedArea:SetHide(true);
+
+		if (item.Disabled) then 
+			if(item.HasBeenBuilt and GameInfo.Districts[item.Type].OnePerCity == true and not item.Repair) then
+				districtListing.CompletedArea:SetHide(false);
+				districtListing.Disabled:SetHide(true);
+			end
+		end
+
+		districtListing.Button:RegisterCallback( Mouse.eMouseEnter,	function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
+		districtListing.Button:RegisterCallback( Mouse.eLClick, function()
+			ZoneDistrict(data.City, item);
+		end);
+
+		if not m_isTutorialRunning then
+			districtListing.Button:RegisterCallback( Mouse.eRClick, function()
+				LuaEvents.OpenCivilopedia(item.Type);
+			end);
+		else
+			districtListing.Root:SetTag(UITutorialManager:GetHash(item.Type));
+		end	
+	end
+
+	if (districtList.districtListIM.m_iAllocatedInstances <= 0) then
+		districtList.Top:SetHide(true);
+	else
+		districtList.Header:RegisterCallback( Mouse.eLClick, function()
+			OnExpand(districtList);					
+			end);
+        districtList.Header:RegisterCallback( Mouse.eMouseEnter,	function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
+		districtList.HeaderOn:RegisterCallback( Mouse.eLClick, function()
+			OnCollapse(districtList);					
+			end);
+        districtList.HeaderOn:RegisterCallback(	Mouse.eMouseEnter,	function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
+	end
+
+	-- Populate Nested Buildings -----------------
+			
+	for i, buildingItem in ipairs(data.BuildingItems) do
+		if(not buildingItem.IsWonder) then
+			local uniqueDrawerName = BUILDING_DRAWER_PREFIX..buildingItem.PrereqDistrict;
+			local uniqueIMName = BUILDING_IM_PREFIX..buildingItem.PrereqDistrict;
+			local pDistrictBuildingIM:table = districtList[uniqueIMName];
+			if (pDistrictBuildingIM ~= nil) then
+
+				local buildingListing = pDistrictBuildingIM:GetInstance();
+
+				PopulateGenericBuildData(buildingListing, buildingItem);
+
+				buildingListing.Root:SetSizeX(305);
+				buildingListing.Button:SetSizeX(305);
+				local districtBuildingAreaControl = districtList[uniqueDrawerName];
+				districtBuildingAreaControl:SetHide(false);
+
+				local turnsStrTT:string = "";
+				local turnsStr:string = "";
+				local numberOfTurns = buildingItem.TurnsLeft;
+				if numberOfTurns == -1 then
+					numberOfTurns = "999+";
+					turnsStrTT = TXT_HUD_CITY_WILL_NOT_COMPLETE;
+				else
+					turnsStrTT = numberOfTurns .. Locale.Lookup("LOC_HUD_CITY_TURNS_TO_COMPLETE", buildingItem.TurnsLeft);
+				end
+				turnsStr = numberOfTurns .. "[ICON_Turn]";
+				buildingListing.CostText:SetToolTipString(turnsStrTT);
+				buildingListing.CostText:SetText(turnsStr);
+
+                buildingListing.Button:RegisterCallback( Mouse.eMouseEnter,	function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
+				buildingListing.Button:RegisterCallback( Mouse.eLClick, function()
+					BuildBuilding(data.City, buildingItem);
+				end);
+
+				if not m_isTutorialRunning then
+					buildingListing.Button:RegisterCallback( Mouse.eRClick, function()
+						LuaEvents.OpenCivilopedia(buildingItem.Type);
+					end);
+				else
+					buildingListing.Button:SetTag(UITutorialManager:GetHash(buildingItem.Type));
+				end	
+			end
+		end
+	end
+
+	districtList.Top:RegisterSizeChanged( function() OnBuildingListSizeChanged(listIM, districtList.Top:GetSizeY()); end);
+	OnBuildingListSizeChanged(listIM, districtList.Top:GetSizeY());
+
+	OnExpand(districtList);
+end
+
+-- ===========================================================================
+function PopulateDistrictsWithoutNestedBuildings(data:table, listMode:number, listIM:table)
+	local districtList = listIM:GetInstance();
+
+	local sHeaderText:string = Locale.ToUpper("LOC_HUD_DISTRICTS");
+	districtList.Header:SetText(sHeaderText);
+	districtList.HeaderOn:SetText(sHeaderText);
+
+	if ( districtList.districtListIM ~= nil) then
+		districtList.districtListIM:ResetInstances();
+	else
+		districtList.districtListIM = InstanceManager:new( "DistrictListInstance", "Root", districtList.List);
+	end
+
+	for i, item in ipairs(data.DistrictPurchases) do
+		if ((item.Yield == "YIELD_GOLD" and listMode == LISTMODE.PURCHASE_GOLD) or (item.Yield == "YIELD_FAITH" and listMode == LISTMODE.PURCHASE_FAITH)) then
+			local districtListing = districtList.districtListIM:GetInstance();
+
+			PopulateGenericPurchaseData(districtListing, item);
+
+			local costStr;
+			if (item.Yield == "YIELD_GOLD") then
+				costStr = Locale.Lookup("LOC_PRODUCTION_PURCHASE_GOLD_TEXT", item.Cost);
+			else
+				costStr = Locale.Lookup("LOC_PRODUCTION_PURCHASE_FAITH_TEXT", item.Cost);
+			end
+			if (item.CantAfford) then
+				costStr = "[COLOR:Red]" .. costStr .. "[ENDCOLOR]";
+			end
+
+			districtListing.CostText:SetText(costStr);
+
+			districtListing.Button:RegisterCallback( Mouse.eMouseEnter,	function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
+
+			districtListing.Button:RegisterCallback( Mouse.eLClick, function()
+					PurchaseDistrict(data.City, item);
+					Close();
+				end);
+
+		end
+	end
+
+	if (districtList.districtListIM.m_iAllocatedInstances <= 0) then
+		districtList.Top:SetHide(true);
+	else
+		m_maxPurchaseSize = m_maxPurchaseSize + HEADER_Y + SEPARATOR_Y;
+        districtList.Header:RegisterCallback( Mouse.eMouseEnter,	function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
+		districtList.Header:RegisterCallback( Mouse.eLClick, function()
+			OnExpand(districtList);					
+			end);
+        districtList.HeaderOn:RegisterCallback( Mouse.eMouseEnter,	function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
+		districtList.HeaderOn:RegisterCallback( Mouse.eLClick, function()
+			OnCollapse(districtList);					
+			end);
+	end
+
+	OnExpand(districtList);
+
+	-- Populate Buildings ------------------------
+	local buildingList = listIM:GetInstance();
+
+	local sHeaderText:string = Locale.ToUpper("LOC_HUD_BUILDINGS");
+	buildingList.Header:SetText(sHeaderText);
+	buildingList.HeaderOn:SetText(sHeaderText);
+
+	if ( buildingList.buildingListIM ~= nil ) then
+		buildingList.buildingListIM:ResetInstances();
+	else
+		buildingList.buildingListIM = InstanceManager:new( "BuildingListInstance", "Root", buildingList.List);
+	end
+
+	for i, item in ipairs(data.BuildingPurchases) do
+		if ((item.Yield == "YIELD_GOLD" and listMode == LISTMODE.PURCHASE_GOLD) or (item.Yield == "YIELD_FAITH" and listMode == LISTMODE.PURCHASE_FAITH)) then
+			local buildingListing = buildingList.buildingListIM:GetInstance();
+
+			PopulateGenericPurchaseData(buildingListing, item);
+
+			local costStr;
+			if (item.Yield == "YIELD_GOLD") then
+				costStr = Locale.Lookup("LOC_PRODUCTION_PURCHASE_GOLD_TEXT", item.Cost);
+			else
+				costStr = Locale.Lookup("LOC_PRODUCTION_PURCHASE_FAITH_TEXT", item.Cost);
+			end
+			if item.CantAfford then
+				costStr = "[COLOR:Red]" .. costStr .. "[ENDCOLOR]";
+			end
+
+			buildingListing.CostText:SetText(costStr);
+
+			if not m_isTutorialRunning then
+				buildingListing.Button:RegisterCallback( Mouse.eRClick, function()
 					LuaEvents.OpenCivilopedia(item.Type);
 				end);
 			end
 
-			districtListing.Root:SetTag(UITutorialManager:GetHash(item.Type));
-		end
+            buildingListing.Button:RegisterCallback( Mouse.eMouseEnter,	function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 
-		districtList.List:CalculateSize();
-		districtList.List:ReprocessAnchoring();
-
-		if (districtList.List:GetSizeY()==0) then
-			districtList.Top:SetHide(true);
-		else
-			m_maxProductionSize = m_maxProductionSize + HEADER_Y + SEPARATOR_Y;
-			districtList.Header:RegisterCallback( Mouse.eLClick, function()
-				OnExpand(dL);					
-				end);
-            districtList.Header:RegisterCallback( Mouse.eMouseEnter,	function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
-			districtList.HeaderOn:RegisterCallback( Mouse.eLClick, function()
-				OnCollapse(dL);					
-				end);
-            districtList.HeaderOn:RegisterCallback(	Mouse.eMouseEnter,	function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
-		end
-
-		prodDistrictList = dL;
-
-		-- Populate Nested Buildings -----------------
-			
-		for i, buildingItem in ipairs(data.BuildingItems) do
-			if(not buildingItem.IsWonder) then
-				local uniqueDrawerName = BUILDING_DRAWER_PREFIX..buildingItem.PrereqDistrict;
-				local uniqueIMName = BUILDING_IM_PREFIX..buildingItem.PrereqDistrict;
-				if (districtList[uniqueIMName] ~= nil) then
-
-					local buildingListing = districtList[uniqueIMName]:GetInstance();	
-					ResetInstanceVisibility(buildingListing);	
-					-- Check to see if this is one of the recommended items
-					for _,hash in ipairs( m_recommendedItems) do
-						if(buildingItem.Hash == hash.BuildItemHash) then
-							buildingListing.RecommendedIcon:SetHide(false);
-						end
-					end
-					buildingListing.Root:SetSizeX(305);
-					buildingListing.Button:SetSizeX(305);
-					local districtBuildingAreaControl = districtList[uniqueDrawerName];
-					districtBuildingAreaControl:SetHide(false);
-
-					--Fill the meter if there is any progress, hide it if not
-					if(buildingItem.Progress > 0) then
-						buildingListing.ProductionProgressArea:SetHide(false);
-						local buildingProgress = buildingItem.Progress/buildingItem.Cost;
-						if (buildingProgress < 1) then
-							buildingListing.ProductionProgress:SetPercent(buildingProgress);
-						else
-							buildingListing.ProductionProgressArea:SetHide(true);
-						end
-					else
-						buildingListing.ProductionProgressArea:SetHide(true);
-					end
-
-					local nameStr = Locale.Lookup("{1_Name}", buildingItem.Name);
-					if (buildingItem.Repair) then
-						nameStr = nameStr .. "[NEWLINE]" .. Locale.Lookup("LOC_PRODUCTION_ITEM_REPAIR");
-					end
-					buildingListing.LabelText:SetText(nameStr);
-					local turnsStrTT:string = "";
-					local turnsStr:string = "";
-					local numberOfTurns = buildingItem.TurnsLeft;
-					if numberOfTurns == -1 then
-						numberOfTurns = "999+";
-						turnsStrTT = Locale.Lookup("LOC_HUD_CITY_WILL_NOT_COMPLETE");
-					else
-						turnsStrTT = numberOfTurns .. Locale.Lookup("LOC_HUD_CITY_TURNS_TO_COMPLETE", buildingItem.TurnsLeft);
-					end
-					turnsStr = numberOfTurns .. "[ICON_Turn]";
-					buildingListing.CostText:SetToolTipString(turnsStrTT);
-					buildingListing.CostText:SetText(turnsStr);
-					buildingListing.Button:SetToolTipString(buildingItem.ToolTip);
-					buildingListing.Disabled:SetToolTipString(buildingItem.ToolTip);
-					buildingListing.Icon:SetIcon(ICON_PREFIX..buildingItem.Type);
-					if (buildingItem.Disabled) then 
-						if(showDisabled) then
-							buildingListing.Disabled:SetHide(false);
-							buildingListing.Button:SetColor(COLOR_LOW_OPACITY);
-						else
-							buildingListing.Button:SetHide(true);
-						end
-					else
-						buildingListing.Button:SetHide(false);
-						buildingListing.Disabled:SetHide(true);
-						buildingListing.Button:SetSizeY(BUTTON_Y);
-						buildingListing.Button:SetColor(0xffffffff);
-					end
-					buildingListing.Button:SetDisabled(buildingItem.Disabled);
-                    buildingListing.Button:RegisterCallback( Mouse.eMouseEnter,	function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
-					buildingListing.Button:RegisterCallback( Mouse.eLClick, function()
-						BuildBuilding(data.City, buildingItem);
-						Close();
-					end);
-
-					if(not IsTutorialRunning()) then
-						buildingListing.Button:RegisterCallback( Mouse.eRClick, function()
-							LuaEvents.OpenCivilopedia(buildingItem.Type);
-						end);
-					end
-
-					buildingListing.Button:SetTag(UITutorialManager:GetHash(buildingItem.Type));
-					
-				end
-			end
-		end
-
-		-- Populate Wonders ------------------------ CANNOT purchase wonders
-		wonderList = listIM:GetInstance();
-		wonderList.Header:SetText(Locale.ToUpper(Locale.Lookup("LOC_HUD_CITY_WONDERS")));
-		wonderList.HeaderOn:SetText(Locale.ToUpper(Locale.Lookup("LOC_HUD_CITY_WONDERS")));
-		local wL = wonderList;
-		if ( wonderList.wonderListIM ~= nil ) then
-			wonderList.wonderListIM:ResetInstances()
-		else
-			wonderList.wonderListIM = InstanceManager:new( "BuildingListInstance", "Root", wonderList.List);
-		end
-		
-		for i, item in ipairs(data.BuildingItems) do
-			if(item.IsWonder) then
-				local wonderListing = wonderList["wonderListIM"]:GetInstance();
-				ResetInstanceVisibility(wonderListing);
-				for _,hash in ipairs( m_recommendedItems) do
-					if(item.Hash == hash.BuildItemHash) then
-						wonderListing.RecommendedIcon:SetHide(false);
-					end
-				end
-				local nameStr = Locale.Lookup("{1_Name}", item.Name);
-				if (item.Repair) then
-					nameStr = nameStr .. "[NEWLINE]" .. Locale.Lookup("LOC_PRODUCTION_ITEM_REPAIR");
-				end
-				wonderListing.LabelText:SetText(nameStr);
-
-				if(item.Progress > 0) then
-					wonderListing.ProductionProgressArea:SetHide(false);
-					local wonderProgress = item.Progress/item.Cost;
-					if (wonderProgress < 1) then
-						wonderListing.ProductionProgress:SetPercent(wonderProgress);
-					else
-						wonderListing.ProductionProgressArea:SetHide(true);
-					end
-				else
-					wonderListing.ProductionProgressArea:SetHide(true);
-				end
-				local turnsStrTT:string = "";
-				local turnsStr:string = "";
-				local numberOfTurns = item.TurnsLeft;
-				if numberOfTurns == -1 then
-					numberOfTurns = "999+";
-					turnsStrTT = Locale.Lookup("LOC_HUD_CITY_WILL_NOT_COMPLETE");
-				else
-					turnsStrTT = numberOfTurns .. Locale.Lookup("LOC_HUD_CITY_TURNS_TO_COMPLETE", item.TurnsLeft);
-				end
-				turnsStr = numberOfTurns .. "[ICON_Turn]";
-				wonderListing.CostText:SetText(turnsStr);
-				wonderListing.CostText:SetToolTipString(turnsStrTT);
-				wonderListing.Button:SetToolTipString(item.ToolTip);
-				wonderListing.Disabled:SetToolTipString(item.ToolTip);
-				wonderListing.Icon:SetIcon(ICON_PREFIX..item.Type);
-				if (item.Disabled) then 
-					if(showDisabled) then
-						wonderListing.Disabled:SetHide(false);
-						wonderListing.Button:SetColor(COLOR_LOW_OPACITY);
-					else
-						wonderListing.Button:SetHide(true);
-					end
-				else
-					wonderListing.Button:SetHide(false);
-					wonderListing.Disabled:SetHide(true);
-					wonderListing.Button:SetSizeY(BUTTON_Y);
-					wonderListing.Button:SetColor(0xffffffff);
-				end
-				wonderListing.Button:SetDisabled(item.Disabled);
-                wonderListing.Button:RegisterCallback( Mouse.eMouseEnter,	function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
-				wonderListing.Button:RegisterCallback( Mouse.eLClick, function()
-					BuildBuilding(data.City, item);
+			buildingListing.Button:RegisterCallback( Mouse.eLClick, function()
+					PurchaseBuilding(data.City, item);
 					Close();
 				end);
-
-				if(not IsTutorialRunning()) then
-					wonderListing.Button:RegisterCallback( Mouse.eRClick, function()
-						LuaEvents.OpenCivilopedia(item.Type);
-					end);
-				end
-
-				wonderListing.Button:SetTag(UITutorialManager:GetHash(item.Type));
 			end
-		end
-		
-		wonderList.List:CalculateSize();
-		wonderList.List:ReprocessAnchoring();
+	end
 
-		if (wonderList.List:GetSizeY()==0) then
-			wonderList.Top:SetHide(true);
-		else
-			m_maxProductionSize = m_maxProductionSize + HEADER_Y + SEPARATOR_Y;		
-            wonderList.Header:RegisterCallback( Mouse.eMouseEnter,	function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
-			wonderList.Header:RegisterCallback( Mouse.eLClick, function()
-				OnExpand(wL);					
-				end);
-            wonderList.HeaderOn:RegisterCallback( Mouse.eMouseEnter,	function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
-			wonderList.HeaderOn:RegisterCallback( Mouse.eLClick, function()
-				OnCollapse(wL);					
-				end);
-		end
-		prodWonderList = wL;
-	end --End if LISTMODE.PRODUCTION - display districts, NESTED buildings, and wonders
+	if (buildingList.buildingListIM.m_iAllocatedInstances <= 0) then
+		buildingList.Top:SetHide(true);
+	else
+		m_maxPurchaseSize = m_maxPurchaseSize + HEADER_Y + SEPARATOR_Y;
+        buildingList.Header:RegisterCallback( Mouse.eMouseEnter,	function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
+		buildingList.Header:RegisterCallback( Mouse.eLClick, function()
+			OnExpand(buildingList);					
+			end);
+        buildingList.HeaderOn:RegisterCallback( Mouse.eMouseEnter,	function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
+		buildingList.HeaderOn:RegisterCallback( Mouse.eLClick, function()
+			OnCollapse(buildingList);					
+			end);
+	end
 
-	if(listMode ~= LISTMODE.PRODUCTION) then			--If we are purchasing, then buildings don't have to be displayed in a nested way
+	districtList.Top:RegisterSizeChanged( function() OnBuildingListSizeChanged(listIM, districtList.Top:GetSizeY()); end);
+	OnBuildingListSizeChanged(listIM, districtList.Top:GetSizeY());
 
-		-- Populate Districts ------------------------
-		districtList = listIM:GetInstance();
-		districtList.Header:SetText(Locale.ToUpper(Locale.Lookup("LOC_HUD_DISTRICTS")));
-		districtList.HeaderOn:SetText(Locale.ToUpper(Locale.Lookup("LOC_HUD_DISTRICTS")));
-		local dL = districtList;
-		if ( districtList.districtListIM ~= nil) then
-			districtList.districtListIM:ResetInstances();
-		else
-			districtList.districtListIM = InstanceManager:new( "DistrictListInstance", "Root", districtList.List);
-		end
+	OnExpand(buildingList);
+end
 
-		for i, item in ipairs(data.DistrictPurchases) do
-			if (item.Yield == "YIELD_GOLD" and listMode == LISTMODE.PURCHASE_GOLD) then
-				local districtListing = districtList["districtListIM"]:GetInstance();
-				ResetInstanceVisibility(districtListing);
-				districtListing.ProductionProgressArea:SetHide(true);
-				local nameStr = Locale.Lookup(item.Name);
-				local costStr = Locale.Lookup("LOC_PRODUCTION_PURCHASE_GOLD_TEXT", item.Cost);
-				if (item.CantAfford) then
-					costStr = "[COLOR:Red]" .. costStr .. "[ENDCOLOR]";
-				end
-				for _,hash in ipairs( m_recommendedItems) do
-					if (item.Hash == hash.BuildItemHash) then
-						districtListing.RecommendedIcon:SetHide(false);
-					end
-				end
-				districtListing.LabelText:SetText(nameStr);
-				districtListing.CostText:SetText(costStr);
-				districtListing.Button:SetToolTipString(item.ToolTip);
-				districtListing.Disabled:SetToolTipString(item.ToolTip);
-				districtListing.Icon:SetIcon(ICON_PREFIX..item.Type);
-				if (item.Disabled) then 
-					if(showDisabled) then
-						districtListing.Disabled:SetHide(false);
-						districtListing.Button:SetColor(COLOR_LOW_OPACITY);
-					else
-						districtListing.Button:SetHide(true);
-					end
-				else
-					districtListing.Button:SetHide(false);
-					districtListing.Disabled:SetHide(true);
-					districtListing.Button:SetColor(0xffffffff);
-				end
-				districtListing.Button:SetDisabled(item.Disabled);
+-- ===========================================================================
+function GetTurnsToCompleteStrings( turnsToComplete:number )
+	local turnsStr:string = "";
+	local turnsStrTT:string = "";
 
-				districtListing.Button:RegisterCallback( Mouse.eMouseEnter,	function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
-
-				districtListing.Button:RegisterCallback( Mouse.eLClick, function()
-						PurchaseDistrict(data.City, item);
-						Close();
-					end);
-
-			end
-		end
-
-		districtList.List:CalculateSize();
-		districtList.List:ReprocessAnchoring();
-
-		if (districtList.List:GetSizeY()==0) then
-			districtList.Top:SetHide(true);
-		else
-			m_maxPurchaseSize = m_maxPurchaseSize + HEADER_Y + SEPARATOR_Y;
-            districtList.Header:RegisterCallback( Mouse.eMouseEnter,	function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
-			districtList.Header:RegisterCallback( Mouse.eLClick, function()
-				OnExpand(dL);					
-				end);
-            districtList.HeaderOn:RegisterCallback( Mouse.eMouseEnter,	function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
-			districtList.HeaderOn:RegisterCallback( Mouse.eLClick, function()
-				OnCollapse(dL);					
-				end);
-		end
-
-		if( listMode== LISTMODE.PURCHASE_GOLD) then
-			purchGoldDistrictList = dL;
-		elseif (listMode == LISTMODE.PURCHASE_FAITH) then
-			purchFaithDistrictList = dL;
-		end
-
-		-- Populate Buildings ------------------------
-		buildingList = listIM:GetInstance();
-		buildingList.Header:SetText(Locale.ToUpper(Locale.Lookup("LOC_HUD_BUILDINGS")));
-		buildingList.HeaderOn:SetText(Locale.ToUpper(Locale.Lookup("LOC_HUD_BUILDINGS")));
-		local bL = buildingList;
-		if ( buildingList.buildingListIM ~= nil ) then
-			buildingList.buildingListIM:ResetInstances();
-		else
-			buildingList.buildingListIM = InstanceManager:new( "BuildingListInstance", "Root", buildingList.List);
-		end
-
-		for i, item in ipairs(data.BuildingPurchases) do
-			if ((item.Yield == "YIELD_GOLD" and listMode == LISTMODE.PURCHASE_GOLD) or (item.Yield == "YIELD_FAITH" and listMode == LISTMODE.PURCHASE_FAITH)) then
-				local buildingListing = buildingList["buildingListIM"]:GetInstance();
-				ResetInstanceVisibility(buildingListing);
-				buildingListing.ProductionProgressArea:SetHide(true);						-- Since this is DEFINITELY a purchase instance, hide the progress bar
-				local nameStr = Locale.Lookup(item.Name);
-				local costStr;
-				if (item.Yield == "YIELD_GOLD") then
-					costStr = Locale.Lookup("LOC_PRODUCTION_PURCHASE_GOLD_TEXT", item.Cost);
-				else
-					costStr = Locale.Lookup("LOC_PRODUCTION_PURCHASE_FAITH_TEXT", item.Cost);
-				end
-				if item.CantAfford then
-					costStr = "[COLOR:Red]" .. costStr .. "[ENDCOLOR]";
-				end
-				for _,hash in ipairs( m_recommendedItems) do
-					if(item.Hash == hash.BuildItemHash) then
-						buildingListing.RecommendedIcon:SetHide(false);
-					end
-				end
-				buildingListing.LabelText:SetText(nameStr);
-				buildingListing.CostText:SetText(costStr);
-				buildingListing.Button:SetToolTipString(item.ToolTip);
-				buildingListing.Disabled:SetToolTipString(item.ToolTip);
-				buildingListing.Icon:SetIcon(ICON_PREFIX..item.Type);
-				if (item.Disabled) then 
-					if(showDisabled) then
-						buildingListing.Disabled:SetHide(false);
-						buildingListing.Button:SetColor(COLOR_LOW_OPACITY);
-					else
-						buildingListing.Button:SetHide(true);
-					end
-				else
-					buildingListing.Button:SetHide(false);
-					buildingListing.Disabled:SetHide(true);
-					buildingListing.Button:SetColor(0xffffffff);
-				end
-				buildingListing.Button:SetDisabled(item.Disabled);
-
-				if(not IsTutorialRunning()) then
-					buildingListing.Button:RegisterCallback( Mouse.eRClick, function()
-						LuaEvents.OpenCivilopedia(item.Type);
-					end);
-				end
-
-                buildingListing.Button:RegisterCallback( Mouse.eMouseEnter,	function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
-
-				buildingListing.Button:RegisterCallback( Mouse.eLClick, function()
-						PurchaseBuilding(data.City, item);
-						Close();
-					end);
-				end
-		end
-
-		buildingList.List:CalculateSize();
-		buildingList.List:ReprocessAnchoring();
-
-		if (buildingList.List:GetSizeY()==0) then
-			buildingList.Top:SetHide(true);
-		else
-			m_maxPurchaseSize = m_maxPurchaseSize + HEADER_Y + SEPARATOR_Y;
-            buildingList.Header:RegisterCallback( Mouse.eMouseEnter,	function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
-			buildingList.Header:RegisterCallback( Mouse.eLClick, function()
-				OnExpand(bL);					
-				end);
-            buildingList.HeaderOn:RegisterCallback( Mouse.eMouseEnter,	function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
-			buildingList.HeaderOn:RegisterCallback( Mouse.eLClick, function()
-				OnCollapse(bL);					
-				end);
-		end
-
-		if( listMode== LISTMODE.PURCHASE_GOLD) then
-			purchGoldBuildingList = bL;
-		elseif (listMode == LISTMODE.PURCHASE_FAITH) then
-			purchFaithBuildingList = bL;
-		end
-	end -- End if NOT LISTMODE.PRODUCTION 
+	if turnsToComplete == -1 then
+		turnsStr = "999+[ICON_Turn]";
+		turnsStrTT = TXT_HUD_CITY_WILL_NOT_COMPLETE;
+	else
+		turnsStr = turnsToComplete .. "[ICON_Turn]";
+		turnsStrTT = turnsToComplete .. Locale.Lookup("LOC_HUD_CITY_TURNS_TO_COMPLETE", turnsToComplete);
+	end
 	
-	-- Populate Units ------------------------
+	return turnsStr, turnsStrTT;
+end
+
+-- ===========================================================================
+function PopulateUnits(data:table, listMode:number, listIM:table)
+	local unitList = listIM:GetInstance();
+	
 	local primaryColor, secondaryColor  = UI.GetPlayerColors( Players[Game.GetLocalPlayer()]:GetID() );
 	local darkerFlagColor	:number = DarkenLightenColor(primaryColor,(-85),255);
 	local brighterFlagColor :number = DarkenLightenColor(primaryColor,90,255);
 	local brighterIconColor :number = DarkenLightenColor(secondaryColor,20,255);
 	local darkerIconColor	:number = DarkenLightenColor(secondaryColor,-30,255);
+	
+	local sHeaderText:string = Locale.ToUpper("LOC_TECH_FILTER_UNITS");
+	unitList.Header:SetText(sHeaderText);
+	unitList.HeaderOn:SetText(sHeaderText);
 
-	unitList = listIM:GetInstance();
-	unitList.Header:SetText(Locale.ToUpper(Locale.Lookup("LOC_TECH_FILTER_UNITS")));
-	unitList.HeaderOn:SetText(Locale.ToUpper(Locale.Lookup("LOC_TECH_FILTER_UNITS")));
-	local uL = unitList;
 	if ( unitList.unitListIM ~= nil ) then
 		unitList.unitListIM:ResetInstances();
 	else
@@ -1135,52 +1221,29 @@ function PopulateList(data, listMode, listIM)
 	end
 	
 	local unitData;
-	if(listMode == LISTMODE.PRODUCTION) then
+	if (listMode == LISTMODE.PRODUCTION or listMode == LISTMODE.PROD_QUEUE) then
 		unitData = data.UnitItems;
 	else
 		unitData = data.UnitPurchases;
 	end
 	for i, item in ipairs(unitData) do
-		local unitListing;
-		if ((item.Yield == "YIELD_GOLD" and listMode == LISTMODE.PURCHASE_GOLD) or (item.Yield == "YIELD_FAITH" and listMode == LISTMODE.PURCHASE_FAITH) or listMode == LISTMODE.PRODUCTION) then
+		local unitListing : table;
+		if ((item.Yield == "YIELD_GOLD" and listMode == LISTMODE.PURCHASE_GOLD) or (item.Yield == "YIELD_FAITH" and listMode == LISTMODE.PURCHASE_FAITH) or (listMode == LISTMODE.PRODUCTION and item.IsCurrentProduction == false) or listMode == LISTMODE.PROD_QUEUE) then
 			if (item.Civilian) then
 				unitListing = unitList["civilianListIM"]:GetInstance();
 			else
 				unitListing = unitList["unitListIM"]:GetInstance();
 			end
-			ResetInstanceVisibility(unitListing);
-			-- Check to see if this item is recommended
-			for _,hash in ipairs( m_recommendedItems) do
-				if(item.Hash == hash.BuildItemHash) then
-					unitListing.RecommendedIcon:SetHide(false);
-				end
-			end
 
 			local costStr = "";
 			local costStrTT = "";
-			if(listMode == LISTMODE.PRODUCTION) then
-				-- Production meter progress for parent unit
-				if(item.Progress > 0) then
-					unitListing.ProductionProgressArea:SetHide(false);
-					local unitProgress = item.Progress/item.Cost;
-					if (unitProgress < 1) then
-						unitListing.ProductionProgress:SetPercent(unitProgress);
-					else
-						unitListing.ProductionProgressArea:SetHide(true);
-					end
-				else
-					unitListing.ProductionProgressArea:SetHide(true);
-				end
-				local numberOfTurns = item.TurnsLeft;
-				if numberOfTurns == -1 then
-					numberOfTurns = "999+";
-					costStrTT = Locale.Lookup("LOC_HUD_CITY_WILL_NOT_COMPLETE");
-				else
-					costStrTT = numberOfTurns .. Locale.Lookup("LOC_HUD_CITY_TURNS_TO_COMPLETE", item.TurnsLeft);
-				end
-				costStr = numberOfTurns .. "[ICON_Turn]";
+			if (listMode == LISTMODE.PRODUCTION or listMode == LISTMODE.PROD_QUEUE) then
+				PopulateGenericBuildData(unitListing, item);
+				
+				costStr, costStrTT = GetTurnsToCompleteStrings(item.TurnsLeft);
 			else
-				unitListing.ProductionProgressArea:SetHide(true);
+				PopulateGenericPurchaseData(unitListing, item);
+
 				if (item.Yield == "YIELD_GOLD") then
 					costStr = Locale.Lookup("LOC_PRODUCTION_PURCHASE_GOLD_TEXT", item.Cost);
 				else
@@ -1191,14 +1254,10 @@ function PopulateList(data, listMode, listIM)
 				end
 			end
 
-			local nameStr = Locale.Lookup("{1_Name}", item.Name);
-			unitListing.LabelText:SetText(nameStr);
 			unitListing.CostText:SetText(costStr);
 			if(costStrTT ~= "") then
 				unitListing.CostText:SetToolTipString(costStrTT);
 			end
-			unitListing.TrainUnit:SetToolTipString(item.ToolTip);
-			unitListing.Disabled:SetToolTipString(item.ToolTip);
 
 			-- Show/hide religion indicator icon
 			if unitListing.ReligionIcon then
@@ -1228,16 +1287,17 @@ function PopulateList(data, listMode, listIM)
 			-- Set Icon color and backing
 			local textureName = TEXTURE_BASE;
 			if item.Type ~= -1 then
-				if (GameInfo.Units[item.Type].Combat ~= 0 or GameInfo.Units[item.Type].RangedCombat ~= 0) then		-- Need a simpler what to test if the unit is a combat unit or not.
-					if "DOMAIN_SEA" == GameInfo.Units[item.Type].Domain then
+				local kUnitDef:table = GameInfo.Units[item.Type];
+				if (kUnitDef.Combat ~= 0 or kUnitDef.RangedCombat ~= 0) then		-- Need a simpler what to test if the unit is a combat unit or not.
+					if "DOMAIN_SEA" == kUnitDef.Domain then
 						textureName = TEXTURE_NAVAL;
 					else
 						textureName =  TEXTURE_BASE;
 					end
 				else
-					if GameInfo.Units[item.Type].MakeTradeRoute then
+					if kUnitDef.MakeTradeRoute then
 						textureName = TEXTURE_TRADE;
-					elseif "FORMATION_CLASS_SUPPORT" == GameInfo.Units[item.Type].FormationClass then
+					elseif "FORMATION_CLASS_SUPPORT" == kUnitDef.FormationClass then
 						textureName = TEXTURE_SUPPORT;
 					elseif item.ReligiousStrength > 0 then
 						textureName = TEXTURE_RELIGION;
@@ -1257,85 +1317,48 @@ function PopulateList(data, listMode, listIM)
 			unitListing.FlagBaseDarken:SetColor( darkerFlagColor );
 			unitListing.FlagBaseLighten:SetColor( brighterFlagColor );
 			unitListing.Icon:SetColor( secondaryColor );
-			unitListing.Icon:SetIcon(ICON_PREFIX..item.Type);
 		
-			-- Handle if the item is disabled
-			if (item.Disabled) then 
-				if(showDisabled) then
-					unitListing.Disabled:SetHide(false);
-					unitListing.TrainUnit:SetColor(COLOR_LOW_OPACITY);
-				else
-					unitListing.TrainUnit:SetHide(true);
-				end
-			else
-				unitListing.TrainUnit:SetHide(false);
-				unitListing.Disabled:SetHide(true);
-				unitListing.TrainUnit:SetColor(0xffffffff);
-			end
-			unitListing.TrainUnit:SetDisabled(item.Disabled);
-            unitListing.TrainUnit:RegisterCallback( Mouse.eMouseEnter,	function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
-			if (listMode == LISTMODE.PRODUCTION) then
-				unitListing.TrainUnit:RegisterCallback( Mouse.eLClick, function()
+            unitListing.Button:RegisterCallback( Mouse.eMouseEnter,	function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
+			if (listMode == LISTMODE.PRODUCTION or listMode == LISTMODE.PROD_QUEUE) then
+				unitListing.Button:RegisterCallback( Mouse.eLClick, function()
 					BuildUnit(data.City, item);
-					Close();
+					CloseAfterNewProduction();
 					end);
 			else
-				unitListing.TrainUnit:RegisterCallback( Mouse.eLClick, function()
+				unitListing.Button:RegisterCallback( Mouse.eLClick, function()
 					PurchaseUnit(data.City, item);
 					Close();
 					end);
 			end
 
-			if(not IsTutorialRunning()) then
-				unitListing.TrainUnit:RegisterCallback( Mouse.eRClick, function()
+			if not m_isTutorialRunning then
+				unitListing.Button:RegisterCallback( Mouse.eRClick, function()
 					LuaEvents.OpenCivilopedia(item.Type);
-				end);	
+				end);
+			else
+				unitListing.Button:SetTag(UITutorialManager:GetHash(item.Type));
 			end
-
-			unitListing.TrainUnit:SetTag(UITutorialManager:GetHash(item.Type));
 
 			-- Controls for training unit corps and armies.
 			-- Want a special text string for this!! #NEW TEXT #LOCALIZATION - "You can only directly build corps and armies once you have constructed a military academy."
 			-- LOC_UNIT_TRAIN_NEED_MILITARY_ACADEMY
 			if item.Corps or item.Army then
-				--if (item.Disabled) then 
-				--	if(showDisabled) then
-				--		unitListing.CorpsDisabled:SetHide(false);
-				--		unitListing.ArmyDisabled:SetHide(false);	
-				--	end
-				--end 
+				if (item.CorpsDisabled) then
+					unitListing.CorpsDisabled:SetHide(false);
+				end
+				if (item.ArmyDisabled) then
+					unitListing.ArmyDisabled:SetHide(false);	
+				end
 				unitListing.CorpsArmyDropdownArea:SetHide(false);	
-				unitListing.CorpsArmyDropdownButton:RegisterCallback( Mouse.eLClick, function()
-						local isExpanded = unitListing.CorpsArmyArrow:IsSelected();
-						unitListing.CorpsArmyArrow:SetSelected(not isExpanded);
-						unitListing.ArmyCorpsDrawer:SetHide(not isExpanded);
-						unitList.List:CalculateSize();
-						unitList.List:ReprocessAnchoring();
-						unitList.Top:CalculateSize();
-						unitList.Top:ReprocessAnchoring();
-						if(listMode == LISTMODE.PRODUCTION) then
-							Controls.ProductionList:CalculateSize();						
-							Controls.ProductionListScroll:CalculateSize();
-						elseif(listMode == LISTMODE.PURCHASE_GOLD) then
-							Controls.PurchaseList:CalculateSize();
-							Controls.PurchaseListScroll:CalculateSize();
-						elseif(listMode == LISTMODE.PURCHASE_FAITH) then
-							Controls.PurchaseFaithList:CalculateSize();
-							Controls.PurchaseFaithListScroll:CalculateSize();
-						end
-						end);
+
+				unitListing.CorpsArmyArrow:RegisterCallback( Mouse.eLClick, function() OnCorpsToggle( unitList, unitListing ); end );
+				unitListing.CorpsArmyDropdownButton:RegisterCallback( Mouse.eLClick, function() OnCorpsToggle( unitList, unitListing ); end );
 			end
 
 			if item.Corps then	
-				-- Check to see if this item is recommended
-				for _,hash in ipairs( m_recommendedItems) do
-					if(item.Hash == hash.BuildItemHash) then
-						unitListing.CorpsRecommendedIcon:SetHide(false);
-					end
-				end
 				unitListing.CorpsButtonContainer:SetHide(false);
 				-- Production meter progress for corps unit
-				if (listMode == LISTMODE.PRODUCTION) then
+				if (listMode == LISTMODE.PRODUCTION or listMode == LISTMODE.PROD_QUEUE) then
 					if(item.Progress > 0) then
 						unitListing.ProductionCorpsProgressArea:SetHide(false);
 						local unitProgress = item.Progress/item.CorpsCost;
@@ -1347,8 +1370,8 @@ function PopulateList(data, listMode, listIM)
 					else
 						unitListing.ProductionCorpsProgressArea:SetHide(true);
 					end
-					local turnsStr = item.CorpsTurnsLeft .. "[ICON_Turn]";
-					local turnsStrTT = item.CorpsTurnsLeft .. Locale.Lookup("LOC_HUD_CITY_TURNS_TO_COMPLETE", item.CorpsTurnsLeft);
+
+					local turnsStr, turnsStrTT = GetTurnsToCompleteStrings(item.CorpsTurnsLeft);
 					unitListing.CorpsCostText:SetText(turnsStr);
 					unitListing.CorpsCostText:SetToolTipString(turnsStrTT);
 				else
@@ -1359,7 +1382,7 @@ function PopulateList(data, listMode, listIM)
 						costStr = Locale.Lookup("LOC_PRODUCTION_PURCHASE_FAITH_TEXT", item.CorpsCost);
 					end
 					if (item.CorpsDisabled) then
-						if (showDisabled) then
+						if (m_showDisabled) then
 							unitListing.CorpsDisabled:SetHide(false);
 						end
 						costStr = "[COLOR:Red]" .. costStr .. "[ENDCOLOR]";
@@ -1369,7 +1392,7 @@ function PopulateList(data, listMode, listIM)
 				
 
 				unitListing.CorpsLabelIcon:SetText(item.CorpsName);
-				unitListing.CorpsLabelText:SetText(nameStr);
+				unitListing.CorpsLabelText:SetText(Locale.Lookup(item.Name));
 				
 				unitListing.CorpsFlagBase:SetTexture(textureName);
 				unitListing.CorpsFlagBaseOutline:SetTexture(textureName);
@@ -1383,10 +1406,10 @@ function PopulateList(data, listMode, listIM)
 				unitListing.CorpsIcon:SetIcon(ICON_PREFIX..item.Type);
 				unitListing.TrainCorpsButton:SetToolTipString(item.CorpsTooltip);
 				unitListing.CorpsDisabled:SetToolTipString(item.CorpsTooltip);
-				if (listMode == LISTMODE.PRODUCTION) then
+				if (listMode == LISTMODE.PRODUCTION or listMode == LISTMODE.PROD_QUEUE) then
 					unitListing.TrainCorpsButton:RegisterCallback( Mouse.eLClick, function()
 						BuildUnitCorps(data.City, item);
-						Close();
+						CloseAfterNewProduction();
 					end);
 				else
 					unitListing.TrainCorpsButton:RegisterCallback( Mouse.eLClick, function()
@@ -1396,15 +1419,9 @@ function PopulateList(data, listMode, listIM)
 				end
 			end		
 			if item.Army then
-				-- Check to see if this item is recommended
-				for _,hash in ipairs( m_recommendedItems) do
-					if(item.Hash == hash.BuildItemHash) then
-						unitListing.ArmyRecommendedIcon:SetHide(false);
-					end
-				end
 				unitListing.ArmyButtonContainer:SetHide(false);
 
-				if (listMode == LISTMODE.PRODUCTION) then
+				if (listMode == LISTMODE.PRODUCTION or listMode == LISTMODE.PROD_QUEUE) then
 					if(item.Progress > 0) then
 						unitListing.ProductionArmyProgressArea:SetHide(false);
 						local unitProgress = item.Progress/item.ArmyCost;
@@ -1417,16 +1434,8 @@ function PopulateList(data, listMode, listIM)
 					else
 						unitListing.ProductionArmyProgressArea:SetHide(true);
 					end
-					local turnsStrTT:string = "";
-					local turnsStr:string = "";
-					local numberOfTurns = item.ArmyTurnsLeft;
-					if numberOfTurns == -1 then
-						numberOfTurns = "999+";
-						turnsStrTT = Locale.Lookup("LOC_HUD_CITY_WILL_NOT_COMPLETE");
-					else
-						turnsStrTT = numberOfTurns .. Locale.Lookup("LOC_HUD_CITY_TURNS_TO_COMPLETE", item.ArmyTurnsLeft);
-					end
-					turnsStr = numberOfTurns .. "[ICON_Turn]";
+					
+					local turnsStr, turnsStrTT = GetTurnsToCompleteStrings(item.ArmyTurnsLeft);
 					unitListing.ArmyCostText:SetText(turnsStr);
 					unitListing.ArmyCostText:SetToolTipString(turnsStrTT);
 				else
@@ -1437,7 +1446,7 @@ function PopulateList(data, listMode, listIM)
 						costStr = Locale.Lookup("LOC_PRODUCTION_PURCHASE_FAITH_TEXT", item.ArmyCost);
 					end
 					if (item.ArmyDisabled) then
-						if (showDisabled) then
+						if (m_showDisabled) then
 							unitListing.ArmyDisabled:SetHide(false);
 						end
 						costStr = "[COLOR:Red]" .. costStr .. "[ENDCOLOR]";
@@ -1446,7 +1455,7 @@ function PopulateList(data, listMode, listIM)
 				end
 				
 				unitListing.ArmyLabelIcon:SetText(item.ArmyName);
-				unitListing.ArmyLabelText:SetText(nameStr);
+				unitListing.ArmyLabelText:SetText(Locale.Lookup(item.Name));
 				unitListing.ArmyFlagBase:SetTexture(textureName);
 				unitListing.ArmyFlagBaseOutline:SetTexture(textureName);
 				unitListing.ArmyFlagBaseDarken:SetTexture(textureName);
@@ -1459,10 +1468,10 @@ function PopulateList(data, listMode, listIM)
 				unitListing.ArmyIcon:SetIcon(ICON_PREFIX..item.Type);
 				unitListing.TrainArmyButton:SetToolTipString(item.ArmyTooltip);
 				unitListing.ArmyDisabled:SetToolTipString(item.ArmyTooltip);
-				if (listMode == LISTMODE.PRODUCTION) then
+				if (listMode == LISTMODE.PRODUCTION or listMode == LISTMODE.PROD_QUEUE) then
 					unitListing.TrainArmyButton:RegisterCallback( Mouse.eLClick, function()
 						BuildUnitArmy(data.City, item);
-						Close();
+						CloseAfterNewProduction();
 						end);
 				else
 					unitListing.TrainArmyButton:RegisterCallback( Mouse.eLClick, function()
@@ -1474,146 +1483,93 @@ function PopulateList(data, listMode, listIM)
 		end -- end faith/gold check
 	end -- end iteration through units
 
-	unitList.List:CalculateSize();
-	unitList.List:ReprocessAnchoring();
-	
-	if (unitList.List:GetSizeY()==0) then
+	if (unitList.unitListIM.m_iAllocatedInstances <= 0 and unitList.civilianListIM.m_iAllocatedInstances <= 0) then
 		unitList.Top:SetHide(true);
 	else
-		m_maxProductionSize = m_maxProductionSize + HEADER_Y + SEPARATOR_Y;		
 		unitList.Header:RegisterCallback( Mouse.eLClick, function()
-			OnExpand(uL);					
+			OnExpand(unitList);					
 			end);
 		unitList.HeaderOn:RegisterCallback( Mouse.eLClick, function()
-			OnCollapse(uL);					
+			OnCollapse(unitList);					
 			end);
 	end
 
-	if( listMode== LISTMODE.PURCHASE_GOLD) then
-		purchGoldUnitList = uL;
-	elseif (listMode == LISTMODE.PURCHASE_FAITH) then
-		purchFaithUnitList = uL;
-	else
-		prodUnitList = uL;
-	end
+	unitList.Top:RegisterSizeChanged(function() OnUnitListSizeChanged(listIM, unitList.Top:GetSizeY()); end);
+	OnUnitListSizeChanged(listIM, unitList.Top:GetSizeY());
 
-	if(listMode == LISTMODE.PRODUCTION) then			--Projects can only be produced, not purchased
-		-- Populate Projects ------------------------
-		projectList = listIM:GetInstance();
-		projectList.Header:SetText(Locale.ToUpper(Locale.Lookup("LOC_HUD_PROJECTS")));
-		projectList.HeaderOn:SetText(Locale.ToUpper(Locale.Lookup("LOC_HUD_PROJECTS")));
-		local pL = projectList;
-		if ( projectList.projectListIM ~= nil ) then
-			projectList.projectListIM:ResetInstances();
-		else
-			projectList.projectListIM = InstanceManager:new( "ProjectListInstance", "Root", projectList.List);
-		end
-
-		for i, item in ipairs(data.ProjectItems) do
-			local projectListing = projectList.projectListIM:GetInstance();
-			ResetInstanceVisibility(projectListing);
-			-- Check to see if this item is recommended
-			for _,hash in ipairs( m_recommendedItems) do
-				if(item.Hash == hash.BuildItemHash) then
-					projectListing.RecommendedIcon:SetHide(false);
-				end
-			end
-
-			-- Production meter progress for project
-			if(item.Progress > 0) then
-				projectListing.ProductionProgressArea:SetHide(false);
-				local projectProgress = item.Progress/item.Cost;
-				if (projectProgress < 1) then
-					projectListing.ProductionProgress:SetPercent(projectProgress);
-				else
-					projectListing.ProductionProgressArea:SetHide(true);
-				end
-			else
-				projectListing.ProductionProgressArea:SetHide(true);
-			end
-			local numberOfTurns = item.TurnsLeft;
-			if numberOfTurns == -1 then
-				numberOfTurns = "999+";
-			end;
-			local nameStr = Locale.Lookup("{1_Name}", item.Name);
-			local turnsStr = numberOfTurns .. "[ICON_Turn]";
-			projectListing.LabelText:SetText(nameStr);
-			projectListing.CostText:SetText(turnsStr);
-			projectListing.Button:SetToolTipString(item.ToolTip);
-			projectListing.Disabled:SetToolTipString(item.ToolTip);
-			projectListing.Icon:SetIcon(ICON_PREFIX..item.Type);
-			if (item.Disabled) then 
-				if(showDisabled) then
-					projectListing.Disabled:SetHide(false);
-					projectListing.Button:SetColor(COLOR_LOW_OPACITY);
-				else
-					projectListing.Button:SetHide(true);
-				end
-			else
-				projectListing.Button:SetHide(false);
-				projectListing.Disabled:SetHide(true);
-				projectListing.Button:SetColor(0xffffffff);
-			end
-			projectListing.Button:SetDisabled(item.Disabled);
-			projectListing.Button:RegisterCallback( Mouse.eLClick, function()
-				AdvanceProject(data.City, item);
-				Close();
-			end);
-
-			if(not IsTutorialRunning()) then
-				projectListing.Button:RegisterCallback( Mouse.eRClick, function()
-					LuaEvents.OpenCivilopedia(item.Type);
-				end);
-			end
-
-			projectListing.Button:SetTag(UITutorialManager:GetHash(item.Type));
-		end
-		
-
-		projectList.List:CalculateSize();
-		projectList.List:ReprocessAnchoring();
-		
-		if (projectList.List:GetSizeY()==0) then
-			projectList.Top:SetHide(true);
-		else
-			m_maxProductionSize = m_maxProductionSize + HEADER_Y + SEPARATOR_Y;		
-			projectList.Header:RegisterCallback( Mouse.eLClick, function()
-				OnExpand(pL);					
-				end);
-			projectList.HeaderOn:RegisterCallback( Mouse.eLClick, function()
-				OnCollapse(pL);					
-				end);
-		end
-
-		prodProjectList = pL;
-	end -- end if LISTMODE.PRODUCTION 
-
-	-----------------------------------
-	if( listMode == LISTMODE.PRODUCTION) then
-		m_maxProductionSize = m_maxProductionSize + districtList.List:GetSizeY() + unitList.List:GetSizeY() + projectList.List:GetSizeY();
-	end
-	Controls.ProductionList:CalculateSize();
-	Controls.ProductionListScroll:CalculateSize();
-	Controls.PurchaseList:CalculateSize();
-	Controls.PurchaseListScroll:CalculateSize();
-	Controls.PurchaseFaithList:CalculateSize();
-	Controls.PurchaseFaithListScroll:CalculateSize();
-
-	-- DEBUG %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-	--for _,data in ipairs( m_recommendedItems) do
-	--	if(GameInfo.Types[data.BuildItemHash].Type ~= nil) then
-	--		print("Hash = ".. GameInfo.Types[data.BuildItemHash].Type);
-	--	else
-	--		print("Invalid hash received = " .. data.BuildItemHash);
-	--	end
-	--end
-	-- DEBUG %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	OnExpand(unitList);
 end
+
+-- ===========================================================================
+function OnCorpsToggle( unitList:table, unitListing:table )
+	local isExpanded = unitListing.CorpsArmyArrow:IsSelected();
+	unitListing.CorpsArmyArrow:SetSelected(not isExpanded);
+	unitListing.ArmyCorpsDrawer:SetHide(not isExpanded);
+	unitList.List:CalculateSize();
+	unitList.Top:CalculateSize();
+	if(m_CurrentListMode == LISTMODE.PRODUCTION) then
+		Controls.ProductionList:CalculateSize();						
+		Controls.ProductionListScroll:CalculateSize();
+	elseif(m_CurrentListMode == LISTMODE.PURCHASE_GOLD) then
+		Controls.PurchaseList:CalculateSize();
+		Controls.PurchaseListScroll:CalculateSize();
+	elseif(m_CurrentListMode == LISTMODE.PURCHASE_FAITH) then
+		Controls.PurchaseFaithList:CalculateSize();
+		Controls.PurchaseFaithListScroll:CalculateSize();
+	end
+end
+
+-- ===========================================================================
+function ResetFields(pListIM:table)
+	local pParentControl:table = pListIM.m_ParentControl;
+	if pParentControl then
+		pParentControl[FIELD_LIST_BUILDING_SIZE_Y]	= 0;
+		pParentControl[FIELD_LIST_WONDER_SIZE_Y]	= 0;
+		pParentControl[FIELD_LIST_UNIT_SIZE_Y]		= 0;
+		pParentControl[FIELD_DISTRICT_LIST]			= nil;
+		pParentControl[FIELD_BUILDING_LIST]			= nil;
+		pParentControl[FIELD_WONDER_LIST]			= nil;
+		pParentControl[FIELD_UNIT_LIST]				= nil;
+		pParentControl[FIELD_PROJECTS_LIST]			= nil;
+	end
+end
+
+-- ===========================================================================
+function PopulateList(data, listMode, listIM)
+	listIM:ResetInstances();
+
+	Controls.PauseCollapseList:Stop();
+
+	ResetFields(listIM);
+
+	if (listMode == LISTMODE.PRODUCTION or listMode == LISTMODE.PROD_QUEUE) then
+		PopulateCurrentProduction(data);
 		
+		ResizeProductionScrollList();
+
+		PopulateDistrictsWithNestedBuildings(data, listMode, listIM);
+		PopulateWonders(data, listMode, listIM);
+	end
+
+	--If we are purchasing, then buildings don't have to be displayed in a nested way
+	if (listMode == LISTMODE.PURCHASE_FAITH or listMode == LISTMODE.PURCHASE_GOLD) then
+		PopulateDistrictsWithoutNestedBuildings(data, listMode, listIM);
+	end
+	
+	PopulateUnits(data, listMode, listIM);
+
+	--Projects can only be produced, not purchased
+	if (listMode == LISTMODE.PRODUCTION or listMode == LISTMODE.PROD_QUEUE) then 
+		PopulateProjects(data, listMode, listIM);
+	end
+end
+
+-- ===========================================================================
 function OnLocalPlayerChanged()
 	Refresh();
 end
 
+-- ===========================================================================
 -- Returns ( allReasons:string )
 function ComposeFailureReasonStrings( isDisabled:boolean, results:table )
 	if isDisabled and results ~= nil then
@@ -1633,8 +1589,6 @@ end
 function ComposeProductionCostString( iProductionProgress:number, iProductionCost:number)
 	-- Show production progress only if there is progress present
 	if iProductionCost ~= 0 then
-		local TXT_COST			:string = Locale.Lookup( "LOC_HUD_PRODUCTION_COST" );
-		local TXT_PRODUCTION	:string = Locale.Lookup( "LOC_HUD_PRODUCTION" );
 		local costString		:string = tostring(iProductionCost);
 		
 		if iProductionProgress > 0 then -- Only show fraction if build progress has been made.
@@ -1652,9 +1606,9 @@ function ComposeUnitCorpsStrings( unit:table, iProdProgress:number, pBuildQueue 
 
 	local subtitle	:string = "";
 	if unit.Domain == "DOMAIN_SEA" then
-		subtitle = "(" .. Locale.Lookup("LOC_HUD_UNIT_PANEL_FLEET_SUFFIX") .. ")";
+		subtitle = "(" .. LOC_HUD_UNIT_PANEL_FLEET_SUFFIX .. ")";
 	else
-		subtitle = "(" .. Locale.Lookup("LOC_HUD_UNIT_PANEL_CORPS_SUFFIX") .. ")";
+		subtitle = "(" .. TXT_HUD_UNIT_PANEL_CORPS_SUFFIX .. ")";
 	end
 	tooltip = tooltip .. ComposeProductionCostString( iProdProgress, pBuildQueue:GetUnitCorpsCost( unit.Index ) );
 	return tooltip, subtitle;
@@ -1665,9 +1619,9 @@ function ComposeUnitArmyStrings( unit:table, iProdProgress:number, pBuildQueue )
 
 	local subtitle	:string = "";
 	if unit.Domain == "DOMAIN_SEA" then
-		subtitle = "("..Locale.Lookup("LOC_HUD_UNIT_PANEL_ARMADA_SUFFIX")..")";
+		subtitle = "(" .. TXT_HUD_UNIT_PANEL_ARMADA_SUFFIX .. ")";
 	else
-		subtitle = "("..Locale.Lookup("LOC_HUD_UNIT_PANEL_ARMY_SUFFIX")..")";
+		subtitle = "(" .. TXT_HUD_UNIT_PANEL_ARMY_SUFFIX .. ")";
 	end
 	tooltip = tooltip .. ComposeProductionCostString( iProdProgress, pBuildQueue:GetUnitArmyCost( unit.Index ) );
 	return tooltip, subtitle;
@@ -1685,7 +1639,7 @@ function ComposeUnitForPurchase( row:table, pCity:table, sYield:string, pYieldSo
 		local isCanStart, results			 = CityManager.CanStartCommand( pCity, CityCommandTypes.PURCHASE, false, tParameters, true );
 		local isDisabled			:boolean = not isCanStart;
 		local allReasons			 :string = ComposeFailureReasonStrings( isDisabled, results );
-		local sToolTip 				 :string = ToolTipHelper.GetUnitToolTip( row.Hash ) .. allReasons;
+		local sToolTip 				 :string = ToolTipHelper.GetUnitToolTip( row.Hash, MilitaryFormationTypes.STANDARD_MILITARY_FORMATION, pCity:GetBuildQueue() ) .. allReasons;
 		local isCantAfford			:boolean = false;
 		--print ( "UnitBuy ", row.UnitType,isCanStart );
 		
@@ -1737,6 +1691,13 @@ function ComposeUnitForPurchase( row:table, pCity:table, sYield:string, pYieldSo
 				if kUnit.CorpsDisabled then
 					kUnit.CorpsTooltip = kUnit.CorpsTooltip .. TXT_INSUFFIENT_YIELD;
 				end
+				tParameters[CityCommandTypes.PARAM_MILITARY_FORMATION_TYPE] = MilitaryFormationTypes.CORPS_MILITARY_FORMATION;
+				local bCanPurchase, kResults = CityManager.CanStartCommand( pCity, CityCommandTypes.PURCHASE, false, tParameters, true );
+				kUnit.CorpsDisabled = not bCanPurchase;
+				if (not bCanPurchase) then
+					local sFailureReasons:string = ComposeFailureReasonStrings( kUnit.CorpsDisabled, kResults );
+					kUnit.CorpsTooltip = kUnit.CorpsTooltip .. sFailureReasons;
+				end
 			end
 			
 			if kUnit.Army then
@@ -1745,6 +1706,13 @@ function ComposeUnitForPurchase( row:table, pCity:table, sYield:string, pYieldSo
 				kUnit.ArmyDisabled = not pYieldSource:CanAfford( nCityID, row.Hash, MilitaryFormationTypes.ARMY_MILITARY_FORMATION );
 				if kUnit.ArmyDisabled then
 					kUnit.ArmyTooltip = kUnit.ArmyTooltip .. TXT_INSUFFIENT_YIELD;
+				end
+				tParameters[CityCommandTypes.PARAM_MILITARY_FORMATION_TYPE] = MilitaryFormationTypes.ARMY_MILITARY_FORMATION;
+				local bCanPurchase, kResults = CityManager.CanStartCommand( pCity, CityCommandTypes.PURCHASE, false, tParameters, true );
+				kUnit.ArmyDisabled = not bCanPurchase;
+				if (not bCanPurchase) then
+					local sFailureReasons:string = ComposeFailureReasonStrings( kUnit.ArmyDisabled, kResults );
+					kUnit.ArmyTooltip = kUnit.ArmyTooltip .. sFailureReasons;
 				end
 			end
 		end
@@ -1834,6 +1802,7 @@ function ComposeDistrictForPurchase( pRow:table, pCity:table, sYield:string, pYi
 	end
 	return false, nil;
 end
+
 -- ===========================================================================
 function Refresh()
 	local playerID	:number = Game.GetLocalPlayer();
@@ -1842,298 +1811,395 @@ function Refresh()
 		return;
 	end
 
-	local selectedCity	= UI.GetHeadSelectedCity();
+	local pSelectedCity:table = UI.GetHeadSelectedCity();
+	if pSelectedCity == nil then
+		Close();
+		return;
+	end
 
-	if (selectedCity ~= nil) then
-		local cityGrowth	= selectedCity:GetGrowth();
-		local cityCulture	= selectedCity:GetCulture();
-		local buildQueue	= selectedCity:GetBuildQueue();
-		local playerTreasury= pPlayer:GetTreasury();
-		local playerReligion= pPlayer:GetReligion();
-		local cityGold		= selectedCity:GetGold();
-		local cityBuildings = selectedCity:GetBuildings();
-		local cityDistricts = selectedCity:GetDistricts();
-		local cityID		= selectedCity:GetID();
-		
-		local new_data = {
-			City				= selectedCity,
-			Population			= selectedCity:GetPopulation(),
-			Owner				= selectedCity:GetOwner(),
-			Damage				= pPlayer:GetDistricts():FindID( selectedCity:GetDistrictID() ):GetDamage(),
-			TurnsUntilGrowth	= cityGrowth:GetTurnsUntilGrowth(),
-			CurrentTurnsLeft	= buildQueue:GetTurnsLeft(),
-			FoodSurplus			= cityGrowth:GetFoodSurplus(),
-			CulturePerTurn		= cityCulture:GetCultureYield(),
-			TurnsUntilExpansion = cityCulture:GetTurnsUntilExpansion(),
-			DistrictItems		= {},
-			BuildingItems		= {},
-			UnitItems			= {},
-			ProjectItems		= {},
-			BuildingPurchases	= {},
-			UnitPurchases		= {},
-			DistrictPurchases	= {},
-		};
-		
-		local currentProductionHash = buildQueue:GetCurrentProductionTypeHash();
-
-		--Must do districts before buildings
-		for row in GameInfo.Districts() do
-			if row.Hash == currentProductionHash then
-				new_data.CurrentProduction = row.Name;
-				
-				if(GameInfo.DistrictReplaces[row.DistrictType] ~= nil) then
-					new_data.CurrentProductionType = GameInfo.DistrictReplaces[row.DistrictType].ReplacesDistrictType;
-				else
-					new_data.CurrentProductionType = row.DistrictType;
-				end
-			end
-			
-			local isInPanelList 		:boolean = row.Hash ~= currentProductionHash and not row.InternalOnly;
-			local bHasProducedDistrict	:boolean = cityDistricts:HasDistrict( row.Index );
-			if isInPanelList and ( buildQueue:CanProduce( row.Hash, true ) or bHasProducedDistrict ) then
-				local isCanProduceExclusion, results = buildQueue:CanProduce( row.Hash, false, true );
-				local isDisabled			:boolean = not isCanProduceExclusion;
-				
-				-- If at least one valid plot is found where the district can be built, consider it buildable.
-				local plots :table = GetCityRelatedPlotIndexesDistrictsAlternative( selectedCity, row.Hash );
-				if plots == nil or table.count(plots) == 0 then
-					-- No plots available for district. Has player had already started building it?
-					local isPlotAllocated :boolean = false;
-					local pDistricts 		:table = selectedCity:GetDistricts();
-					for _, pCityDistrict in pDistricts:Members() do
-						if row.Index == pCityDistrict:GetType() then
-							isPlotAllocated = true;
-							break;
-						end
-					end
-					-- If not, this district can't be built. Guarantee that isDisabled is set.
-					if not isPlotAllocated then
-						isDisabled = true;
-					end
-				elseif isDisabled and results ~= nil then
-					-- TODO this should probably be handled in the exposure, for example:
-					-- BuildQueue::CanProduce(nDistrictHash, bExclusionTest, bReturnResults, bAllowPurchasingPlots)
-					local pFailureReasons : table = results[CityCommandResults.FAILURE_REASONS];
-					if pFailureReasons ~= nil and table.count( pFailureReasons ) > 0 then
-						-- There are available plots to purchase, it could still be available
-						isDisabled = false;
-						for i,v in ipairs(pFailureReasons) do
-							-- If its disabled for another reason, keep it disabled
-							if v ~= "LOC_DISTRICT_ZONE_NO_SUITABLE_LOCATION" then
-								isDisabled = true;
-								break;
-							end
-						end
-					end
-				end
-				
-				local allReasons			:string = ComposeFailureReasonStrings( isDisabled, results );
-				local sToolTip				:string = ToolTipHelper.GetToolTip(row.DistrictType, Game.GetLocalPlayer()) .. allReasons;
-				
-				local iProductionCost		:number = buildQueue:GetDistrictCost( row.Index );
-				local iProductionProgress	:number = buildQueue:GetDistrictProgress( row.Index );
-				sToolTip = sToolTip .. ComposeProductionCostString( iProductionProgress, iProductionCost );
-
-				table.insert( new_data.DistrictItems, {
-					Type			= row.DistrictType, 
-					Name			= row.Name, 
-					ToolTip			= sToolTip, 
-					Hash			= row.Hash, 
-					Kind			= row.Kind, 
-					TurnsLeft		= buildQueue:GetTurnsLeft( row.DistrictType ), 
-					Disabled		= isDisabled, 
-					Repair			= cityDistricts:IsPillaged( row.Index ),
-					Contaminated	= cityDistricts:IsContaminated( row.Index ),
-					Cost			= iProductionCost, 
-					Progress		= iProductionProgress,
-					HasBeenBuilt	= bHasProducedDistrict
-				});
-			end
-
-			-- Can it be purchased with gold?
-			local isAllowed, kDistrict = ComposeDistrictForPurchase( row, selectedCity, "YIELD_GOLD", playerTreasury, "LOC_BUILDING_INSUFFICIENT_FUNDS" );
-			if isAllowed then
-				table.insert( new_data.DistrictPurchases, kDistrict );
-			end
-
-		end
-
-		--Must do buildings after districts
-		for row in GameInfo.Buildings() do
-			if row.Hash == currentProductionHash then
-				new_data.CurrentProduction = row.Name;
-				new_data.CurrentProductionType= row.BuildingType;
-			end
-
-			local bCanProduce = buildQueue:CanProduce( row.Hash, true );
-			local iPrereqDistrict = "";
-			if row.PrereqDistrict ~= nil then
-				iPrereqDistrict = row.PrereqDistrict;
-				
-				--Only add buildings if the prereq district is not the current production (this can happen when repairing)
-				if new_data.CurrentProductionType == row.PrereqDistrict then
-					bCanProduce = false;
-				end
-			end
-
-			if row.Hash ~= currentProductionHash and (not row.MustPurchase or cityBuildings:IsPillaged(row.Hash)) and bCanProduce then
-				local isCanStart, results			 = buildQueue:CanProduce( row.Hash, false, true );
-				local isDisabled			:boolean = not isCanStart;
-				local allReasons			 :string = ComposeFailureReasonStrings( isDisabled, results );
-				local sToolTip 				 :string = ToolTipHelper.GetBuildingToolTip( row.Hash, playerID, selectedCity ) .. allReasons;
-
-				local iProductionCost		:number = buildQueue:GetBuildingCost( row.Index );
-				local iProductionProgress	:number = buildQueue:GetBuildingProgress( row.Index );
-				sToolTip = sToolTip .. ComposeProductionCostString( iProductionProgress, iProductionCost );
-				
-				table.insert( new_data.BuildingItems, {
-					Type			= row.BuildingType, 
-					Name			= row.Name, 
-					ToolTip			= sToolTip, 
-					Hash			= row.Hash, 
-					Kind			= row.Kind, 
-					TurnsLeft		= buildQueue:GetTurnsLeft( row.Hash ), 
-					Disabled		= isDisabled, 
-					Repair			= cityBuildings:IsPillaged( row.Hash ), 
-					Cost			= iProductionCost, 
-					Progress		= iProductionProgress, 
-					IsWonder		= row.IsWonder,
-					PrereqDistrict	= iPrereqDistrict }
-				);
-			end
-			
-			-- Can it be purchased with gold?
-			if row.PurchaseYield == "YIELD_GOLD" then
-				local isAllowed, kBldg = ComposeBldgForPurchase( row, selectedCity, "YIELD_GOLD", playerTreasury, "LOC_BUILDING_INSUFFICIENT_FUNDS" );
-				if isAllowed then
-					table.insert( new_data.BuildingPurchases, kBldg );
-				end
-			end
-			-- Can it be purchased with faith?
-			if row.PurchaseYield == "YIELD_FAITH" or cityGold:IsBuildingFaithPurchaseEnabled( row.Hash ) then
-				local isAllowed, kBldg = ComposeBldgForPurchase( row, selectedCity, "YIELD_FAITH", playerReligion, "LOC_BUILDING_INSUFFICIENT_FAITH" );
-				if isAllowed then
-					table.insert( new_data.BuildingPurchases, kBldg );
-				end
-			end
-		end
-
-		for row in GameInfo.Units() do
-			if row.Hash == currentProductionHash then
-				new_data.CurrentProduction = row.Name;
-				new_data.CurrentProductionType= row.UnitType;
-			end
-			-- Can it be built normally?
-			if row.Hash ~= currentProductionHash and not row.MustPurchase and buildQueue:CanProduce( row.Hash, true ) then
-				local isCanProduceExclusion, results	 = buildQueue:CanProduce( row.Hash, false, true );
-				local isDisabled				:boolean = not isCanProduceExclusion;
-				local sAllReasons				 :string = ComposeFailureReasonStrings( isDisabled, results );
-				local sToolTip					 :string = ToolTipHelper.GetUnitToolTip( row.Hash ) .. sAllReasons;
-
-				local nProductionCost		:number = buildQueue:GetUnitCost( row.Index );
-				local nProductionProgress	:number = buildQueue:GetUnitProgress( row.Index );
-				sToolTip = sToolTip .. ComposeProductionCostString( nProductionProgress, nProductionCost );
-				
-				local kUnit :table = {
-					Type				= row.UnitType, 
-					Name				= row.Name, 
-					ToolTip				= sToolTip, 
-					Hash				= row.Hash, 
-					Kind				= row.Kind, 
-					TurnsLeft			= buildQueue:GetTurnsLeft( row.Hash ), 
-					Disabled			= isDisabled, 
-					Civilian			= row.FormationClass == "FORMATION_CLASS_CIVILIAN",
-					Cost				= nProductionCost, 
-					Progress			= nProductionProgress, 
-					Corps				= false,
-					CorpsCost			= 0,
-					CorpsTurnsLeft		= 1,
-					CorpsTooltip		= "",
-					CorpsName			= "",
-					Army				= false,
-					ArmyCost			= 0,
-					ArmyTurnsLeft		= 1,
-					ArmyTooltip			= "",
-					ArmyName			= "",
-					ReligiousStrength	= row.ReligiousStrength
-				};
-				
-				-- Should we present options for building Corps or Army versions?
-				if results ~= nil then
-					if results[CityOperationResults.CAN_TRAIN_CORPS] then
-						kUnit.Corps			= true;
-						kUnit.CorpsCost		= buildQueue:GetUnitCorpsCost( row.Index );
-						kUnit.CorpsTurnsLeft	= buildQueue:GetTurnsLeft( row.Hash, MilitaryFormationTypes.CORPS_MILITARY_FORMATION );
-						kUnit.CorpsTooltip, kUnit.CorpsName = ComposeUnitCorpsStrings( row, nProductionProgress, buildQueue );
-					end
-					if results[CityOperationResults.CAN_TRAIN_ARMY] then
-						kUnit.Army			= true;
-						kUnit.ArmyCost		= buildQueue:GetUnitArmyCost( row.Index );
-						kUnit.ArmyTurnsLeft	= buildQueue:GetTurnsLeft( row.Hash, MilitaryFormationTypes.ARMY_MILITARY_FORMATION );
-						kUnit.ArmyTooltip, kUnit.ArmyName = ComposeUnitArmyStrings( row, nProductionProgress, buildQueue );
-					end
-				end
-				
-				table.insert(new_data.UnitItems, kUnit );
-			end
-			
-			-- Can it be purchased with gold?
-			if row.PurchaseYield == "YIELD_GOLD" then
-				local isAllowed, kUnit = ComposeUnitForPurchase( row, selectedCity, "YIELD_GOLD", playerTreasury, "LOC_BUILDING_INSUFFICIENT_FUNDS" );
-				if isAllowed then
-					table.insert( new_data.UnitPurchases, kUnit );
-				end
-			end
-			-- Can it be purchased with faith?
-			if row.PurchaseYield == "YIELD_FAITH" or cityGold:IsUnitFaithPurchaseEnabled( row.Hash ) then
-				local isAllowed, kUnit = ComposeUnitForPurchase( row, selectedCity, "YIELD_FAITH", playerReligion, "LOC_BUILDING_INSUFFICIENT_FAITH" );
-				if isAllowed then
-					table.insert( new_data.UnitPurchases, kUnit );
-				end
-			end 
-		end
-		
-		for row in GameInfo.Projects() do
-			if row.Hash == currentProductionHash then
-				new_data.CurrentProduction = row.Name;
-				new_data.CurrentProductionType= row.ProjectType;
-			end
-			
-			if row.Hash ~= currentProductionHash and buildQueue:CanProduce( row.Hash, true ) then
-				local isCanProduceExclusion, results = buildQueue:CanProduce( row.Hash, false, true );
-				local isDisabled			:boolean = not isCanProduceExclusion;
-				
-				local allReasons		:string	= ComposeFailureReasonStrings( isDisabled, results );
-				local sToolTip			:string = ToolTipHelper.GetProjectToolTip( row.Hash ) .. allReasons;
-				
-				local iProductionCost		:number = buildQueue:GetProjectCost( row.Index );
-				local iProductionProgress	:number = buildQueue:GetProjectProgress( row.Index );
-				sToolTip = sToolTip .. ComposeProductionCostString( iProductionProgress, iProductionCost );
-				
-				table.insert(new_data.ProjectItems, {
-					Type			= row.ProjectType,
-					Name			= row.Name, 
-					ToolTip			= sToolTip, 
-					Hash			= row.Hash, 
-					Kind			= row.Kind, 
-					TurnsLeft		= buildQueue:GetTurnsLeft( row.ProjectType ), 
-					Disabled		= isDisabled, 
-					Cost			= iProductionCost, 
-					Progress		= iProductionProgress
-				});
-			end
-		end
-		
-		View(new_data);
+	local kData:table = GetData();
+	if kData ~= nil then
+		View(kData);
 	else
 		Close();
 	end
 end
 
 -- ===========================================================================
+function GetData()
+	local playerID	:number = Game.GetLocalPlayer();
+	local pPlayer	:table = Players[playerID];
+	if (pPlayer == nil) then
+		Close();
+		return nil;
+	end
+
+	local pSelectedCity:table = UI.GetHeadSelectedCity();
+	if pSelectedCity == nil then
+		Close();
+		return nil;
+	end
+
+	local cityGrowth	= pSelectedCity:GetGrowth();
+	local cityCulture	= pSelectedCity:GetCulture();
+	local buildQueue	= pSelectedCity:GetBuildQueue();
+	local playerTreasury= pPlayer:GetTreasury();
+	local playerReligion= pPlayer:GetReligion();
+	local cityGold		= pSelectedCity:GetGold();
+	local cityBuildings = pSelectedCity:GetBuildings();
+	local cityDistricts = pSelectedCity:GetDistricts();
+	local cityID		= pSelectedCity:GetID();
+		
+	local new_data = {
+		City				= pSelectedCity,
+		Population			= pSelectedCity:GetPopulation(),
+		Owner				= pSelectedCity:GetOwner(),
+		Damage				= pPlayer:GetDistricts():FindID( pSelectedCity:GetDistrictID() ):GetDamage(),
+		TurnsUntilGrowth	= cityGrowth:GetTurnsUntilGrowth(),
+		CurrentTurnsLeft	= buildQueue:GetTurnsLeft(),
+		FoodSurplus			= cityGrowth:GetFoodSurplus(),
+		CulturePerTurn		= cityCulture:GetCultureYield(),
+		TurnsUntilExpansion = cityCulture:GetTurnsUntilExpansion(),
+		DistrictItems		= {},
+		BuildingItems		= {},
+		UnitItems			= {},
+		ProjectItems		= {},
+		BuildingPurchases	= {},
+		UnitPurchases		= {},
+		DistrictPurchases	= {},
+	};
+		
+	m_CurrentProductionHash = buildQueue:GetCurrentProductionTypeHash();
+	m_PreviousProductionHash = buildQueue:GetPreviousProductionTypeHash();
+
+	--Must do districts before buildings
+	for row in GameInfo.Districts() do
+		if row.Hash == m_CurrentProductionHash then
+			new_data.CurrentProduction = row.Name;
+				
+			if(GameInfo.DistrictReplaces[row.DistrictType] ~= nil) then
+				new_data.CurrentProductionType = GameInfo.DistrictReplaces[row.DistrictType].ReplacesDistrictType;
+			else
+				new_data.CurrentProductionType = row.DistrictType;
+			end
+		end
+			
+		local isInPanelList 		:boolean = (row.Hash ~= m_CurrentProductionHash or not row.OnePerCity) and not row.InternalOnly;
+		local bHasProducedDistrict	:boolean = cityDistricts:HasDistrict( row.Index );
+		if isInPanelList and ( buildQueue:CanProduce( row.Hash, true ) or bHasProducedDistrict ) then
+			local isCanProduceExclusion, results = buildQueue:CanProduce( row.Hash, false, true );
+			local isDisabled			:boolean = not isCanProduceExclusion;
+				
+			-- If at least one valid plot is found where the district can be built, consider it buildable.
+			local plots :table = GetCityRelatedPlotIndexesDistrictsAlternative( pSelectedCity, row.Hash );
+			if plots == nil or table.count(plots) == 0 then
+				-- No plots available for district. Has player had already started building it?
+				local isPlotAllocated :boolean = false;
+				local pDistricts 		:table = pSelectedCity:GetDistricts();
+				for _, pCityDistrict in pDistricts:Members() do
+					if row.Index == pCityDistrict:GetType() then
+						isPlotAllocated = true;
+						break;
+					end
+				end
+				-- If not, this district can't be built. Guarantee that isDisabled is set.
+				if not isPlotAllocated then
+					isDisabled = true;
+				elseif results ~= nil then
+					local pFailureReasons : table = results[CityCommandResults.FAILURE_REASONS];
+					if pFailureReasons ~= nil and table.count( pFailureReasons ) > 0 then
+						for i,v in ipairs(pFailureReasons) do
+							if v == TXT_DISTRICT_REPAIR_LOCATION_FLOODED then
+								isDisabled = true;
+								break;
+							end
+						end
+					end
+				end
+			elseif isDisabled and results ~= nil then
+				-- TODO this should probably be handled in the exposure, for example:
+				-- BuildQueue::CanProduce(nDistrictHash, bExclusionTest, bReturnResults, bAllowPurchasingPlots)
+				local pFailureReasons : table = results[CityCommandResults.FAILURE_REASONS];
+				if pFailureReasons ~= nil and table.count( pFailureReasons ) > 0 then
+					-- There are available plots to purchase, it could still be available
+					isDisabled = false;
+					for i,v in ipairs(pFailureReasons) do
+						-- If its disabled for another reason, keep it disabled
+						if v ~= "LOC_DISTRICT_ZONE_NO_SUITABLE_LOCATION" then
+							isDisabled = true;
+							break;
+						end
+					end
+				end
+			end
+				
+			local allReasons			:string = ComposeFailureReasonStrings( isDisabled, results );
+			local sToolTip				:string = ToolTipHelper.GetToolTip(row.DistrictType, Game.GetLocalPlayer()) .. allReasons;
+				
+			local iProductionCost		:number = buildQueue:GetDistrictCost( row.Index );
+			local iProductionProgress	:number = buildQueue:GetDistrictProgress( row.Index );
+			sToolTip = sToolTip .. ComposeProductionCostString( iProductionProgress, iProductionCost );
+
+			local bIsContaminated:boolean = cityDistricts:IsContaminated( row.Index );
+			local iContaminatedTurns:number = 0;
+			if bIsContaminated then
+				for _, pDistrict in cityDistricts:Members() do
+					local kDistrictDef:table = GameInfo.Districts[pDistrict:GetType()];
+					if kDistrictDef.PrimaryKey == row.DistrictType then
+						local kFalloutManager = Game.GetFalloutManager();
+						local pDistrictPlot:table = Map.GetPlot(pDistrict:GetX(), pDistrict:GetY());
+						iContaminatedTurns = kFalloutManager:GetFalloutTurnsRemaining(pDistrictPlot:GetIndex());
+					end
+				end
+			end
+
+			table.insert( new_data.DistrictItems, {
+				Type				= row.DistrictType, 
+				Name				= row.Name, 
+				ToolTip				= sToolTip, 
+				Hash				= row.Hash, 
+				Kind				= row.Kind, 
+				TurnsLeft			= buildQueue:GetTurnsLeft( row.DistrictType ), 
+				Disabled			= isDisabled, 
+				Repair				= cityDistricts:IsPillaged( row.Index ),
+				Contaminated		= bIsContaminated,
+				ContaminatedTurns	= iContaminatedTurns,
+				Cost				= iProductionCost, 
+				Progress			= iProductionProgress,
+				HasBeenBuilt		= bHasProducedDistrict
+			});
+		end
+
+		-- Can it be purchased with gold?
+		local isAllowed, kDistrict = ComposeDistrictForPurchase( row, pSelectedCity, "YIELD_GOLD", playerTreasury, "LOC_BUILDING_INSUFFICIENT_FUNDS" );
+		if isAllowed then
+			table.insert( new_data.DistrictPurchases, kDistrict );
+		end
+
+		-- Can it be purchased with faith?
+		local isAllowed, kDistrict = ComposeDistrictForPurchase( row, pSelectedCity, "YIELD_FAITH", playerReligion, "LOC_BUILDING_INSUFFICIENT_FAITH" );
+		if isAllowed then
+			table.insert( new_data.DistrictPurchases, kDistrict );
+		end
+	end
+
+	--Must do buildings after districts
+	for row in GameInfo.Buildings() do
+		if row.Hash == m_CurrentProductionHash then
+			new_data.CurrentProduction = row.Name;
+			new_data.CurrentProductionType= row.BuildingType;
+		end
+
+		local bCanProduce = buildQueue:CanProduce( row.Hash, true );
+		local iPrereqDistrict = "";
+		if row.PrereqDistrict ~= nil then
+			iPrereqDistrict = row.PrereqDistrict;
+				
+			--Only add buildings if the prereq district is not the current production (this can happen when repairing)
+			if new_data.CurrentProductionType == row.PrereqDistrict then
+				bCanProduce = false;
+			end
+		end
+
+		if row.Hash ~= m_CurrentProductionHash and (not row.MustPurchase or cityBuildings:IsPillaged(row.Hash)) and bCanProduce then
+			local isCanStart, results			 = buildQueue:CanProduce( row.Hash, false, true );
+			local isDisabled			:boolean = not isCanStart;
+
+			-- Did it fail and it is a Wonder?  If so, if it failed because of *just* NO_SUITABLE_LOCATION, we can look for an alternate.
+			if (isDisabled and row.IsWonder and results ~= nil and results[CityOperationResults.NO_SUITABLE_LOCATION] ~= nil and results[CityOperationResults.NO_SUITABLE_LOCATION] == true) then
+				local pPurchaseablePlots :table = GetCityRelatedPlotIndexesWondersAlternative( pSelectedCity, row.Hash );
+				if (pPurchaseablePlots and #pPurchaseablePlots > 0) then
+					isDisabled = false;
+				end
+			end
+
+			local allReasons			 :string = ComposeFailureReasonStrings( isDisabled, results );
+			local sToolTip 				 :string = ToolTipHelper.GetBuildingToolTip( row.Hash, playerID, pSelectedCity ) .. allReasons;
+
+			local iProductionCost		:number = buildQueue:GetBuildingCost( row.Index );
+			local iProductionProgress	:number = buildQueue:GetBuildingProgress( row.Index );
+			sToolTip = sToolTip .. ComposeProductionCostString( iProductionProgress, iProductionCost );
+				
+			table.insert( new_data.BuildingItems, {
+				Type			= row.BuildingType, 
+				Name			= row.Name, 
+				ToolTip			= sToolTip, 
+				Hash			= row.Hash, 
+				Kind			= row.Kind, 
+				TurnsLeft		= buildQueue:GetTurnsLeft( row.Hash ), 
+				Disabled		= isDisabled, 
+				Repair			= cityBuildings:IsPillaged( row.Hash ), 
+				Cost			= iProductionCost, 
+				Progress		= iProductionProgress, 
+				IsWonder		= row.IsWonder,
+				PrereqDistrict	= iPrereqDistrict,
+				PrereqBuildings	= row.PrereqBuildingCollection
+			});
+		end
+			
+		-- Can it be purchased with gold?
+		if row.PurchaseYield == "YIELD_GOLD" then
+			local isAllowed, kBldg = ComposeBldgForPurchase( row, pSelectedCity, "YIELD_GOLD", playerTreasury, "LOC_BUILDING_INSUFFICIENT_FUNDS" );
+			if isAllowed then
+				table.insert( new_data.BuildingPurchases, kBldg );
+			end
+		end
+		-- Can it be purchased with faith?
+		if row.PurchaseYield == "YIELD_FAITH" or cityGold:IsBuildingFaithPurchaseEnabled( row.Hash ) then
+			local isAllowed, kBldg = ComposeBldgForPurchase( row, pSelectedCity, "YIELD_FAITH", playerReligion, "LOC_BUILDING_INSUFFICIENT_FAITH" );
+			if isAllowed then
+				table.insert( new_data.BuildingPurchases, kBldg );
+			end
+		end
+	end
+
+	-- Sort BuildingItems to ensure Buildings are placed behind any Prereqs for that building
+	table.sort(new_data.BuildingItems, 
+		function(a, b)
+			if a.IsWonder then
+				return false;
+			end
+			if a.Disabled == false and b.Disabled == true then
+				return true;
+			end
+			return false;
+		end
+	);
+
+	for row in GameInfo.Units() do
+		if row.Hash == m_CurrentProductionHash then
+			new_data.CurrentProduction = row.Name;
+			new_data.CurrentProductionType= row.UnitType;
+		end
+
+		local kBuildParameters = {};
+		kBuildParameters.UnitType = row.Hash;
+		kBuildParameters.MilitaryFormationType = MilitaryFormationTypes.STANDARD_MILITARY_FORMATION;
+
+		-- Can it be built normally?
+		if not row.MustPurchase and buildQueue:CanProduce( kBuildParameters, true ) then
+			local isCanProduceExclusion, results	 = buildQueue:CanProduce( kBuildParameters, false, true );
+			local isDisabled				:boolean = not isCanProduceExclusion;
+			local sAllReasons				 :string = ComposeFailureReasonStrings( isDisabled, results );
+			local sToolTip					 :string = ToolTipHelper.GetUnitToolTip( row.Hash, MilitaryFormationTypes.STANDARD_MILITARY_FORMATION, buildQueue ) .. sAllReasons;
+
+			local nProductionCost		:number = buildQueue:GetUnitCost( row.Index );
+			local nProductionProgress	:number = buildQueue:GetUnitProgress( row.Index );
+			sToolTip = sToolTip .. ComposeProductionCostString( nProductionProgress, nProductionCost );
+				
+			local kUnit :table = {
+				Type				= row.UnitType, 
+				Name				= row.Name, 
+				ToolTip				= sToolTip, 
+				Hash				= row.Hash, 
+				Kind				= row.Kind, 
+				TurnsLeft			= buildQueue:GetTurnsLeft( row.Hash ), 
+				Disabled			= isDisabled, 
+				Civilian			= row.FormationClass == "FORMATION_CLASS_CIVILIAN",
+				Cost				= nProductionCost, 
+				Progress			= nProductionProgress, 
+				Corps				= false,
+				CorpsCost			= 0,
+				CorpsTurnsLeft		= 1,
+				CorpsTooltip		= "",
+				CorpsName			= "",
+				Army				= false,
+				ArmyCost			= 0,
+				ArmyTurnsLeft		= 1,
+				ArmyTooltip			= "",
+				ArmyName			= "",
+				ReligiousStrength	= row.ReligiousStrength,
+				IsCurrentProduction = row.Hash == m_CurrentProductionHash
+			};
+				
+			-- Should we present options for building Corps or Army versions?
+			if results ~= nil then
+				if results[CityOperationResults.CAN_TRAIN_CORPS] then
+					kBuildParameters.MilitaryFormationType = MilitaryFormationTypes.CORPS_MILITARY_FORMATION;
+					local bCanProduceCorps, kResults = buildQueue:CanProduce( kBuildParameters, false, true);
+					kUnit.Corps			= true;
+					kUnit.CorpsDisabled = not bCanProduceCorps;
+					kUnit.CorpsCost		= buildQueue:GetUnitCorpsCost( row.Index );
+					kUnit.CorpsTurnsLeft	= buildQueue:GetTurnsLeft( row.Hash, MilitaryFormationTypes.CORPS_MILITARY_FORMATION );
+					kUnit.CorpsTooltip, kUnit.CorpsName = ComposeUnitCorpsStrings( row, nProductionProgress, buildQueue );
+					local sFailureReasons:string = ComposeFailureReasonStrings( kUnit.CorpsDisabled, kResults );
+					kUnit.CorpsTooltip = kUnit.CorpsTooltip .. sFailureReasons;
+				end
+				if results[CityOperationResults.CAN_TRAIN_ARMY] then
+					kBuildParameters.MilitaryFormationType = MilitaryFormationTypes.ARMY_MILITARY_FORMATION;
+					local bCanProduceArmy, kResults = buildQueue:CanProduce( kBuildParameters, false, true );
+					kUnit.Army			= true;
+					kUnit.ArmyDisabled	= not bCanProduceArmy;
+					kUnit.ArmyCost		= buildQueue:GetUnitArmyCost( row.Index );
+					kUnit.ArmyTurnsLeft	= buildQueue:GetTurnsLeft( row.Hash, MilitaryFormationTypes.ARMY_MILITARY_FORMATION );
+					kUnit.ArmyTooltip, kUnit.ArmyName = ComposeUnitArmyStrings( row, nProductionProgress, buildQueue );		
+					local sFailureReasons:string = ComposeFailureReasonStrings( kUnit.ArmyDisabled, kResults );
+					kUnit.ArmyTooltip = kUnit.ArmyTooltip .. sFailureReasons;
+				end
+			end
+				
+			table.insert(new_data.UnitItems, kUnit );
+		end
+			
+		-- Can it be purchased with gold?
+		if row.PurchaseYield == "YIELD_GOLD" then
+			local isAllowed, kUnit = ComposeUnitForPurchase( row, pSelectedCity, "YIELD_GOLD", playerTreasury, "LOC_BUILDING_INSUFFICIENT_FUNDS" );
+			if isAllowed then
+				table.insert( new_data.UnitPurchases, kUnit );
+			end
+		end
+		-- Can it be purchased with faith?
+		if row.PurchaseYield == "YIELD_FAITH" or cityGold:IsUnitFaithPurchaseEnabled( row.Hash ) then
+			local isAllowed, kUnit = ComposeUnitForPurchase( row, pSelectedCity, "YIELD_FAITH", playerReligion, "LOC_BUILDING_INSUFFICIENT_FAITH" );
+			if isAllowed then
+				table.insert( new_data.UnitPurchases, kUnit );
+			end
+		end 
+	end
+	
+	if (pBuildQueue == nil) then
+		pBuildQueue = pSelectedCity:GetBuildQueue();
+	end
+
+	for row in GameInfo.Projects() do
+		if row.Hash == m_CurrentProductionHash then
+			new_data.CurrentProduction = row.Name;
+			new_data.CurrentProductionType= row.ProjectType;
+		end
+
+		if buildQueue:CanProduce( row.Hash, true ) then
+			local isCanProduceExclusion, results = buildQueue:CanProduce( row.Hash, false, true );
+			local isDisabled			:boolean = not isCanProduceExclusion;
+				
+			local allReasons		:string	= ComposeFailureReasonStrings( isDisabled, results );
+			local sToolTip			:string = ToolTipHelper.GetProjectToolTip( row.Hash) .. allReasons;
+				
+			local iProductionCost		:number = buildQueue:GetProjectCost( row.Index );
+			local iProductionProgress	:number = buildQueue:GetProjectProgress( row.Index );
+			sToolTip = sToolTip .. ComposeProductionCostString( iProductionProgress, iProductionCost );
+				
+			table.insert(new_data.ProjectItems, {
+				Type				= row.ProjectType,
+				Name				= row.Name, 
+				ToolTip				= sToolTip, 
+				Hash				= row.Hash, 
+				Kind				= row.Kind, 
+				TurnsLeft			= buildQueue:GetTurnsLeft( row.ProjectType ), 
+				Disabled			= isDisabled, 
+				Cost				= iProductionCost, 
+				Progress			= iProductionProgress,
+				IsCurrentProduction = row.Hash == m_CurrentProductionHash,
+				IsRepeatable		= row.MaxPlayerInstances ~= 1 and true or false,
+			});
+		end
+	end
+
+	return new_data;
+end
+
+-- ===========================================================================
 function ShowHideDisabled()
-	--Controls.HideDisabled:SetSelected(showDisabled);
-	showDisabled = not showDisabled;
+	m_showDisabled = not m_showDisabled;
 	Refresh();
 end
 
@@ -2156,14 +2222,7 @@ end
 function OnNotificationPanelChooseProduction()
 	if ContextPtr:IsHidden() then
 		Open();
-		
-	--else																--TESTING TO SEE IF THIS FIXES OUR TUTORIAL BUG.
-	--	if Controls.PauseDismissWindow:IsStopped() then
-	--		Close();
-	--	else
-	--		Controls.PauseDismissWindow:Stop();
-	--		Open();			
-	--	end
+		m_tabs.SelectTab(m_productionTab);
 	end
 end
 
@@ -2214,9 +2273,9 @@ end
 --	Production opened from city banner (anchored to world view)
 -- ===========================================================================
 function OnCityBannerManagerProductionToggle()
-	m_isQueueMode = false;
 	if(ContextPtr:IsHidden()) then
 		Open();
+		m_tabs.SelectTab(m_productionTab);
 	else
 		Close();
 	end
@@ -2227,8 +2286,8 @@ end
 --	Production opened from city information panel
 -- ===========================================================================
 function OnCityPanelProductionOpen()
-	m_isQueueMode = false;
 	Open();
+	m_tabs.SelectTab(m_productionTab);
 end
 
 -- ===========================================================================
@@ -2236,7 +2295,6 @@ end
 --	Production opened from city information panel - Purchase with faith check
 -- ===========================================================================
 function OnCityPanelPurchaseFaithOpen()
-	m_isQueueMode = false;
 	Open();
 	m_tabs.SelectTab(m_faithTab);
 end
@@ -2246,7 +2304,6 @@ end
 --	Production opened from city information panel - Purchase with gold check
 -- ===========================================================================
 function OnCityPanelPurchaseGoldOpen()
-	m_isQueueMode = false;
 	Open();
 	m_tabs.SelectTab(m_purchaseTab);
 end
@@ -2254,16 +2311,22 @@ end
 --	LUA Event
 --	Production opened from a placement
 -- ===========================================================================
-function OnStrategicViewMapPlacementProductionOpen()
-	m_isQueueMode = false;
-	Open();
+function OnStrategicViewMapPlacementProductionOpen( bWasCancelled:boolean )
+	if m_isQueueOpen then
+		Open();
+		m_tabs.SelectTab(m_queueTab);
+	elseif m_isManagerOpen then
+		Open();
+		m_tabs.SelectTab(m_managerTab);
+	elseif bWasCancelled then
+		Open();
+	end
 end
 
 -- ===========================================================================
 --	LUA Event
 -- ===========================================================================
 function OnTutorialProductionOpen()
-	m_isQueueMode = false;
 	Open();
 end
 
@@ -2271,7 +2334,6 @@ end
 --	LUA Event
 -- ===========================================================================
 function OnProductionOpenForQueue()
-	m_isQueueMode = true;
 	Open();
 end
 
@@ -2288,10 +2350,23 @@ end
 -- ===========================================================================
 function OnGameDebugReturn( context:string, contextTable:table )
 	if context ~= RELOAD_CACHE_ID then return; end
-	m_isQueueMode = contextTable["m_isQueueMode"];
+
 	local isHidden:boolean = contextTable["isHidden"]; 
 	if not isHidden then
 		Refresh();
+
+		local listMode:number = contextTable["listMode"];
+		if listMode then
+			if listMode == LISTMODE.PRODUCTION then
+				m_tabs.SelectTab( m_productionTab );
+			elseif listMode == LISTMODE.PURCHASE_GOLD then
+				m_tabs.SelectTab( m_purchaseTab );
+			elseif listMode == LISTMODE.PURCHASE_FAITH then
+				m_tabs.SelectTab( m_faithTab );
+			elseif listMode == LISTMODE.PROD_QUEUE then
+				m_tabs.SelectTab( m_queueTab );
+			end
+		end
 	end
 end
 
@@ -2299,7 +2374,16 @@ end
 --	Keyboard INPUT Handler
 -- ===========================================================================
 function KeyHandler( key:number )
-	if (key == Keys.VK_ESCAPE) then Close(); return true; end
+	if (key == Keys.VK_ESCAPE) then 
+		if m_kSelectedQueueItem.Index ~= -1 then
+			DeselectItem();
+		elseif m_SelectedManagerIndex ~= -1 then
+			LuaEvents.ProductionPanel_CancelManagerSelection();
+		else
+			Close(); 
+		end
+		return true; 
+	end
 	return false;
 end
 
@@ -2308,7 +2392,9 @@ end
 -- ===========================================================================
 function OnInputHandler( pInputStruct:table )
 	local uiMsg = pInputStruct:GetMessageType();
-	if uiMsg == KeyEvents.KeyUp then return KeyHandler( pInputStruct:GetKey() ); end;
+	if uiMsg == KeyEvents.KeyUp then 
+		return KeyHandler( pInputStruct:GetKey() ); 
+	end;
 	return false;
 end
 
@@ -2325,23 +2411,8 @@ end
 --	UI Event
 -- ===========================================================================
 function OnShutdown()
-	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID,  "m_isQueueMode", m_isQueueMode );
-	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID,  "isHidden",		ContextPtr:IsHidden() );	
-end
-
-
--- ===========================================================================
--- ===========================================================================
-function Resize()
-	--local contentSize = (m_maxProductionSize > m_maxPurchaseSize) and m_maxProductionSize or m_maxPurchaseSize;
-	--contentSize = contentSize + WINDOW_HEADER_Y;		
-	--local w,h = UIManager:GetScreenSizeVal();
-	--local maxAllowable = h - Controls.Window:GetOffsetY() - TOPBAR_Y;
-	--local panelSizeY = (contentSize < maxAllowable) and contentSize or maxAllowable;
-	--Controls.Window:SetSizeY(panelSizeY);
-	--Controls.ProductionListScroll:SetSizeY(panelSizeY-Controls.WindowContent:GetOffsetY());
-	--Controls.PurchaseListScroll:SetSizeY(panelSizeY-Controls.WindowContent:GetOffsetY());
-	--Controls.DropShadow:SetSizeY(panelSizeY+100);	
+	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID,  "isHidden",		ContextPtr:IsHidden() );
+	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID,  "listMode",		m_CurrentListMode );	
 end
 
 -- ===========================================================================
@@ -2369,6 +2440,8 @@ function CreateCorrectTabs()
 	Controls.ProductionTab:SetHide(true);
 	Controls.PurchaseTab:SetHide(true);
 	Controls.PurchaseFaithTab:SetHide(true);
+	Controls.QueueTab:SetHide(true);
+	Controls.ManagerTab:SetHide(true);
 	Controls.MiniTabAnim:SetHide(true);
 	Controls.MiniTabArrow:SetHide(true);
 	Controls.TabAnim:SetHide(true);
@@ -2397,11 +2470,17 @@ function CreateCorrectTabs()
 		Controls.ProductionTab:SetHide(false);
 		Controls.PurchaseTab:SetHide(false);
 		Controls.PurchaseFaithTab:SetHide(false);
+		if not m_isTutorialRunning and not m_tutorialTestMode then
+			Controls.QueueTab:SetHide(false);
+			Controls.ManagerTab:SetHide(false);
+		end
 		Controls.TabAnim:SetHide(false);
 		Controls.TabArrow:SetHide(false);
 		m_productionTab = Controls.ProductionTab;
 		m_purchaseTab	= Controls.PurchaseTab;
 		m_faithTab		= Controls.PurchaseFaithTab;
+		m_queueTab		= Controls.QueueTab;
+		m_managerTab	= Controls.ManagerTab;
 		tabAnimControl	= Controls.TabAnim;
 		tabArrowControl = Controls.TabArrow;
 	end
@@ -2420,30 +2499,397 @@ function CreateCorrectTabs()
 		Controls.MiniPurchaseFaithTab:SetHide(true);
 		Controls.PurchaseFaithTab:SetHide(true);
 	end
-	m_tabs.CenterAlignTabs(0);
+	if not m_isTutorialRunning and not m_tutorialTestMode then
+		m_tabs.AddTab( m_queueTab,		OnTabChangeQueue );
+		m_tabs.AddTab( m_managerTab,	OnTabChangeManager );
+	end
+
+	m_tabs.CenterAlignTabs(0, 350, 32);
 	m_tabs.SelectTab( m_productionTab );
 	m_tabs.AddAnimDeco(tabAnimControl, tabArrowControl);
 end
 
+---------------------------------------------------
+function SetScrollPosition(modeIndex:number, scrollAmount:number)
+	if m_PlayerScrollPositions[Game.GetLocalPlayer()] == nil then
+		m_PlayerScrollPositions[Game.GetLocalPlayer()] = {};
+	end
+
+	local scrollPosTable:table = m_PlayerScrollPositions[Game.GetLocalPlayer()];
+
+	scrollPosTable[modeIndex] = scrollAmount;
+end
+
+---------------------------------------------------
+function GetScrollPosition(modeIndex:number)
+	local scrollPosTable:table = m_PlayerScrollPositions[Game.GetLocalPlayer()];
+	if scrollPosTable ~= nil then
+		return scrollPosTable[modeIndex];
+	end
+
+	return 0;
+end
+
+-- ===========================================================================
+function OnProductionListScrolled(scrollPanel:table, scrollAmount:number)
+	if not ContextPtr:IsHidden() then
+		SetScrollPosition(LISTMODE.PRODUCTION, scrollAmount);
+	end
+end
+
+-- ===========================================================================
+function OnPurchaseListScrolled(scrollPanel:table, scrollAmount:number)
+	if not ContextPtr:IsHidden() then
+		SetScrollPosition(LISTMODE.PURCHASE_GOLD, scrollAmount);
+	end
+end
+
+-- ===========================================================================
+function OnPurchaseFaithListScrolled(scrollPanel:table, scrollAmount:number)
+	if not ContextPtr:IsHidden() then
+		SetScrollPosition(LISTMODE.PURCHASE_FAITH, scrollAmount);
+	end
+end
+
+-- ===========================================================================
+function OnQueueListScrolled(scrollPanel:table, scrollAmount:number)
+	if not ContextPtr:IsHidden() then
+		SetScrollPosition(LISTMODE.PROD_QUEUE, scrollAmount);
+	end
+end
+
+-- ===========================================================================
+function OpenManager()
+	m_isManagerOpen = true;
+	LuaEvents.ProductionPanel_OpenManager();
+end
+
+-- ===========================================================================
+function CloseManager()
+	m_isManagerOpen = false;
+	LuaEvents.ProductionPanel_CloseManager();
+end
+
+-- ===========================================================================
+function CloseAfterNewProduction()
+	if not m_isQueueOpen and not m_isManagerOpen then
+		Close();
+	end
+end
+
+-- ===========================================================================
+function OpenQueue()
+	m_isQueueOpen = true;
+	Controls.QueueContainer:SetHide(false);
+end
+
+-- ===========================================================================
+function RefreshView()
+	local data = GetData();
+	if data ~= nil then
+		View(data);
+	end
+end
+
+-- ===========================================================================
+function CloseQueue()
+	m_isQueueOpen = false;
+	Controls.QueueContainer:SetHide(true);
+end
+
+-- ===========================================================================
+function RefreshQueue(playerID, cityID)
+	if m_isTutorialRunning or m_tutorialTestMode then
+		return;
+	end
+
+	DeselectItem();
+
+	local pCity:table = CityManager.GetCity(playerID, cityID);
+	local pBuildQueue:table = pCity:GetBuildQueue();
+
+	-- Subtract one so we don't count the current production as queued
+	local offsetQueueSize:number = pBuildQueue:GetSize() - 1;
+	UpdateQueueTabText(offsetQueueSize >= 0 and offsetQueueSize or 0);
+
+	m_QueueInstanceIM:ResetInstances();
+
+	-- Display queues items after the first which is shown as the current production
+	for i = 1, MAX_QUEUE_SIZE do
+		local entry:table = pBuildQueue:GetAt(i);
+		local queueInstance:table = CreateQueueInstance( m_QueueInstanceIM, Controls.QueueStack, playerID, cityID, i, entry );
+		queueInstance.Top:RegisterCallback( Mouse.eLClick, function() OnItemClicked( queueInstance, queueInstance.Top ); end );
+		queueInstance.Top:RegisterCallback( Mouse.eRClick, function() RemoveQueueItem(i); end );
+		queueInstance.Num:SetText( tostring(i+1) );		-- Start at 2
+	end
+
+	UpdateDisabledButtons();
+end
+
+-- ===========================================================================
+function DeselectItem()
+	if m_kSelectedQueueItem.Parent ~= nil then
+		local kParentControl:table = m_kSelectedQueueItem.Parent;
+		if kParentControl.ProductionIcon ~= nil then
+			kParentControl.ProductionIcon:SetAlpha(1.0);
+		end
+	end
+
+	m_kSelectedQueueItem.Parent = nil;
+	m_kSelectedQueueItem.Button = nil;
+	m_kSelectedQueueItem.Index = -1;
+
+	DisableMouseIcon();
+	HighlightButtons(false);
+end
+
+-- ===========================================================================
+function SelectItem( kParentControl:table, kButtonControl:table )
+	if kParentControl ~= nil and kParentControl[FIELD_QUEUE_INDEX] then
+		if kParentControl.ProductionIcon ~= nil then
+			kParentControl.ProductionIcon:SetAlpha(SELECTED_ICON_ALPHA);
+		end
+
+		m_kSelectedQueueItem.Parent = kParentControl;
+		m_kSelectedQueueItem.Button = kButtonControl;
+		m_kSelectedQueueItem.Index = kParentControl[FIELD_QUEUE_INDEX];
+
+		EnableMouseIcon(kParentControl[FIELD_ICON_TEXTURE]);
+		HighlightButtons(true);
+	end
+end
+
+-- ===========================================================================
+function OnTrashClicked()
+	if m_kSelectedQueueItem.Index ~= -1 then
+		RemoveQueueItem(m_kSelectedQueueItem.Index);
+	end
+end
+
+-- ===========================================================================
+function UpdateDisabledButtons()
+	for i=1, m_QueueInstanceIM.m_iCount, 1 do
+		local instance:table = m_QueueInstanceIM:GetAllocatedInstance(i);
+		if instance then 
+			instance.Top:SetSelected(false);
+			instance.Top:SetDisabled( instance[FIELD_QUEUE_INDEX] == -1 );
+		end
+	end
+end
+
+-- ===========================================================================
+function OnItemClicked( kParentControl:table, kButtonControl:table )
+	if m_kSelectedQueueItem.Index == -1 then
+		SelectItem(kParentControl, kButtonControl);
+	elseif m_kSelectedQueueItem.Index ~= kParentControl[FIELD_QUEUE_INDEX] then
+		SwapQueueItem(m_kSelectedQueueItem.Index, kParentControl[FIELD_QUEUE_INDEX]);
+	else
+		DeselectItem();
+	end
+end
+
+-- ===========================================================================
+function HighlightButtons( bShouldHighlight:boolean )
+
+	Controls.CurrentProductionButton:SetSelected(bShouldHighlight);
+
+	for i=1, m_QueueInstanceIM.m_iCount, 1 do
+		local instance:table = m_QueueInstanceIM:GetAllocatedInstance(i);
+		if instance then
+			if instance[FIELD_QUEUE_INDEX] ~= -1 then
+				instance.Top:SetSelected(bShouldHighlight);
+			end
+		end
+	end
+
+	Controls.TrashButton:SetSelected(bShouldHighlight);
+	Controls.TrashButton:SetDisabled(not bShouldHighlight);
+end
+
+-- ===========================================================================
+function OnBuildingListSizeChanged(listIM:table, sizeY:number)
+	local kListParent:table = listIM.m_ParentControl;
+	if kListParent then
+		kListParent[FIELD_LIST_BUILDING_SIZE_Y] = sizeY;
+	end
+end
+
+-- ===========================================================================
+function OnWonderListSizeChanged(listIM:table, sizeY:number)
+	local kListParent:table = listIM.m_ParentControl;
+	if kListParent then
+		kListParent[FIELD_LIST_WONDER_SIZE_Y] = sizeY;
+	end
+end
+
+-- ===========================================================================
+function OnUnitListSizeChanged(listIM:table, sizeY:number)
+	local kListParent:table = listIM.m_ParentControl;
+	if kListParent then
+		kListParent[FIELD_LIST_UNIT_SIZE_Y] = sizeY;
+	end
+end
+
+-- ===========================================================================
+function OnBuildingsButtonClicked()
+	-- Building/District list is always at the top
+	if m_CurrentListMode == LISTMODE.PRODUCTION then
+		Controls.ProductionListScroll:SetScrollValue(0.0);
+	elseif m_CurrentListMode == LISTMODE.PROD_QUEUE then
+		Controls.QueueListScroll:SetScrollValue(0.0);
+	elseif m_CurrentListMode == LISTMODE.PURCHASE_GOLD then
+		Controls.PurchaseListScroll:SetScrollValue(0.0);
+	elseif m_CurrentListMode == LISTMODE.PURCHASE_FAITH then
+		Controls.PurchaseFaithListScroll:SetScrollValue(0.0);
+	end
+end
+
+-- ===========================================================================
+function OnWondersButtonClicked()
+	if m_CurrentListMode == LISTMODE.PRODUCTION then
+		ScrollToWonderList(Controls.ProductionList, Controls.ProductionListScroll);
+	elseif m_CurrentListMode == LISTMODE.PROD_QUEUE then
+		ScrollToWonderList(Controls.QueueList, Controls.QueueListScroll);
+	end
+end
+
+-- ===========================================================================
+function ScrollToWonderList(kListStack:table, kListScroll:table)
+	local desiredScrollValue:number = kListStack[FIELD_LIST_BUILDING_SIZE_Y] / (kListStack:GetSizeY() - kListScroll:GetSizeY());
+	kListScroll:SetScrollValue(desiredScrollValue);
+end
+
+-- ===========================================================================
+function OnUnitsButtonClicked()
+	if m_CurrentListMode == LISTMODE.PRODUCTION then
+		ScrollToUnitList(Controls.ProductionList, Controls.ProductionListScroll);
+	elseif m_CurrentListMode == LISTMODE.PROD_QUEUE then
+		ScrollToUnitList(Controls.QueueList, Controls.QueueListScroll);
+	elseif m_CurrentListMode == LISTMODE.PURCHASE_GOLD then
+		ScrollToUnitList(Controls.PurchaseList, Controls.PurchaseListScroll);
+	elseif m_CurrentListMode == LISTMODE.PURCHASE_FAITH then
+		ScrollToUnitList(Controls.PurchaseFaithList, Controls.PurchaseFaithListScroll);
+	end
+end
+
+-- ===========================================================================
+function ScrollToUnitList(kListStack:table, kListScroll:table)
+	local desiredScrollValue:number = (kListStack[FIELD_LIST_BUILDING_SIZE_Y] + kListStack[FIELD_LIST_WONDER_SIZE_Y]) / (kListStack:GetSizeY() - kListScroll:GetSizeY());
+	kListScroll:SetScrollValue(desiredScrollValue);
+end
+
+-- ===========================================================================
+function OnProjectsButtonClicked()
+	if m_CurrentListMode == LISTMODE.PRODUCTION then
+		ScrollToProjectList(Controls.ProductionList, Controls.ProductionListScroll);
+	elseif m_CurrentListMode == LISTMODE.PROD_QUEUE then
+		ScrollToProjectList(Controls.QueueList, Controls.QueueListScroll);
+	end
+end
+
+-- ===========================================================================
+function ScrollToProjectList(kListStack:table, kListScroll:table)
+	local desiredScrollValue:number = (kListStack[FIELD_LIST_BUILDING_SIZE_Y] + kListStack[FIELD_LIST_WONDER_SIZE_Y] + kListStack[FIELD_LIST_UNIT_SIZE_Y]) / (kListStack:GetSizeY() - kListScroll:GetSizeY());
+	kListScroll:SetScrollValue(desiredScrollValue);
+end
+
+-- ===========================================================================
+function OnMoveItemLeftButtonClicked()
+	if m_selectedQueueInstance ~= nil then
+		local selectedItemIndex:number = m_selectedQueueInstance[FIELD_QUEUE_INDEX];
+		SwapQueueItem(selectedItemIndex, selectedItemIndex - 1);
+	end
+end
+
+-- ===========================================================================
+function GetBuildInsertMode( tParameters:table )
+	if m_isQueueOpen or m_isManagerOpen then
+		if IsBuildQueueFull(city) then
+			-- Replace last itme if queue is full
+			tParameters[CityOperationTypes.PARAM_INSERT_MODE] = CityOperationTypes.VALUE_REPLACE_AT;
+			tParameters[CityOperationTypes.PARAM_QUEUE_DESTINATION_LOCATION] = MAX_QUEUE_SIZE;
+		else
+			-- Append to end of queue
+			tParameters[CityOperationTypes.PARAM_INSERT_MODE] = CityOperationTypes.VALUE_APPEND;
+		end
+	else
+		tParameters[CityOperationTypes.PARAM_INSERT_MODE] = CityOperationTypes.VALUE_REPLACE_AT;
+		tParameters[CityOperationTypes.PARAM_QUEUE_DESTINATION_LOCATION] = 0;
+	end
+end
+
+-- ===========================================================================
+function OnCityProductionQueueChanged(playerID, cityID, changeType, queueIndex)
+	if playerID ~= Game.GetLocalPlayer() then
+		return;
+	end
+
+	Refresh();
+
+	-- Make sure we show the current production if we're in queue mode and adding the very first production to the city
+	if m_isQueueOpen then
+		Controls.CurrentProductionContainer:SetHide(not m_hasProductionToShow);
+		Controls.NoProductionContainer:SetHide(m_hasProductionToShow);
+	end
+end
+
+-- ===========================================================================
+function IsBuildQueueFull()
+	local pSelectedCity	= UI.GetHeadSelectedCity();
+	if pSelectedCity then
+		local pBuildQueue = pSelectedCity:GetBuildQueue();
+		if pBuildQueue ~= nil then
+			local iQueueSize:number = pBuildQueue:GetSize();
+			if iQueueSize - 1 >= MAX_QUEUE_SIZE then
+				return true;
+			end
+		end
+	end
+
+	return false;
+end
+
+-- ===========================================================================
+function OnManagerSelectedIndexChanged( newIndex:number )
+	m_SelectedManagerIndex = newIndex;
+end
+
+-- ===========================================================================
 function Initialize()
-	
+	-- Cache tutorial status
+	m_isTutorialRunning = IsTutorialRunning();
+
 	Controls.PauseCollapseList:Stop();
 	Controls.PauseDismissWindow:Stop();	
 	CreateCorrectTabs();
-	Resize();
 
-	--Controls.HideDisabled:RegisterCallback( Mouse.eLClick, ShowHideDisabled);
-	--AutoSizeGridButton(Controls.HideDisabled,45,24,20,"H");
-	-- ===== Event listeners =====
+	Controls.ProductionListScroll:RegisterScrollCallback(OnProductionListScrolled);
+	Controls.PurchaseListScroll:RegisterScrollCallback(OnPurchaseListScrolled);
+	Controls.PurchaseFaithListScroll:RegisterScrollCallback(OnPurchaseFaithListScrolled);
+	Controls.QueueListScroll:RegisterScrollCallback(OnQueueListScrolled);
 
 	Controls.CloseButton:RegisterCallback(Mouse.eLClick, OnClose);
 	Controls.CloseButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 	Controls.PauseCollapseList:RegisterEndCallback( OnCollapseTheList );
 	Controls.PauseDismissWindow:RegisterEndCallback( OnHide );
+	Controls.TopStackContainer:RegisterSizeChanged( OnTopStackContainerSizeChanged );
+	Controls.TabContainer:RegisterSizeChanged( OnTabContainerSizeChanged );
+	Controls.BuildingsButton:RegisterCallback( Mouse.eLClick, OnBuildingsButtonClicked );
+	Controls.WondersButton:RegisterCallback( Mouse.eLClick, OnWondersButtonClicked );
+	Controls.UnitsButton:RegisterCallback( Mouse.eLClick, OnUnitsButtonClicked );
+	Controls.ProjectsButton:RegisterCallback( Mouse.eLClick, OnProjectsButtonClicked );
+	Controls.CurrentProductionButton:RegisterCallback( Mouse.eLClick, function() OnItemClicked( Controls, Controls.CurrentProductionButton ); end);
+	Controls.CurrentProductionButton:RegisterCallback( Mouse.eRClick, function() RemoveQueueItem(0); end );
+	Controls.TrashButton:RegisterCallback( Mouse.eLClick, OnTrashClicked );
+
+	UpdateQueueTabText(0);
+	Controls.ManagerTab:SetText("[ICON_ProductionQueue] " .. Locale.Lookup("LOC_PRODUCTION_PANEL_MULTI_QUEUE"))
+
 	ContextPtr:SetInitHandler( OnInit  );
 	ContextPtr:SetInputHandler( OnInputHandler, true );
 	ContextPtr:SetShutdown( OnShutdown );
 
+	Events.CityProductionQueueChanged.Add( OnCityProductionQueueChanged );
 	Events.CitySelectionChanged.Add( OnCitySelectionChanged );
 	Events.InterfaceModeChanged.Add( OnInterfaceModeChanged );
 	Events.UnitSelectionChanged.Add( OnUnitSelectionChanged );
@@ -2461,7 +2907,8 @@ function Initialize()
 	LuaEvents.GameDebug_Return.Add( OnGameDebugReturn );
 	LuaEvents.NotificationPanel_ChooseProduction.Add( OnNotificationPanelChooseProduction );
 	LuaEvents.StrageticView_MapPlacement_ProductionOpen.Add( OnStrategicViewMapPlacementProductionOpen );
-	LuaEvents.Tutorial_ProductionOpen.Add( OnTutorialProductionOpen );	
+	LuaEvents.Tutorial_ProductionOpen.Add( OnTutorialProductionOpen );
+	LuaEvents.ProductionManager_SelectedIndexChanged.Add( OnManagerSelectedIndexChanged );
 end
 Initialize();
 

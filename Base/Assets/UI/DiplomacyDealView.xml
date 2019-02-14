@@ -114,9 +114,9 @@
               <!-- Dynamic: Button Area - where we accept the deal-->
               <Grid Style="SubContainer4" Size="parent-14,95" Anchor="C,T" Offset="0,-3" Color="Dark_Gray">
                 <Stack ID="DealOptionsStack" StackGrowth="Right" Anchor="C,C" Padding="4" WrapWidth="500">
-									<GridButton ID="RefuseDeal" Style="ButtonLightWeight" Size="200,32"/>
-									<GridButton ID="ResumeGame" Style="ButtonLightWeight" Size="200,32" String="LOC_DIPLOMACY_DEAL_RESUME_GAME"/>
                   <GridButton ID="AcceptDeal" Style="ButtonConfirm" Size="200,41" String="LOC_DIPLOMACY_DEAL_ACCEPT_DEAL"/>
+                  <GridButton ID="RefuseDeal" Style="ButtonLightWeight" Size="200,32"/>
+									<GridButton ID="ResumeGame" Style="ButtonLightWeight" Size="200,32" String="LOC_DIPLOMACY_DEAL_RESUME_GAME"/>
                   <GridButton ID="EqualizeDeal" Style="ButtonLightWeight" Size="200,32" String="LOC_DIPLOMACY_DEAL_WHAT_WOULD_IT_TAKE" ToolTip="LOC_DIPLOMACY_MAKE_DEAL_EQUITABLE_TOOLTIP"/>
                   <GridButton ID="DemandDeal" Style="ButtonRed" Size="200,41" String="LOC_DIPLOMACY_DEAL_DEMAND_DEAL"/>
                 </Stack>
@@ -235,11 +235,11 @@
                       </GridButton>
                       
                       <!-- Integer Modifying Box -->
-                      <Container ID="ValueAmountEditBoxContainer" Size="104,34" Anchor="C,T">
+                      <Container ID="ValueAmountEditBoxContainer" Size="155,34" Anchor="C,T">
                         <Grid Style="DropShadow3" Size="parent,50"/>
                         <Grid Anchor="C,C" Texture="Controls_WindowLight" SliceTextureSize="34,34" SliceCorner="17,17" Size="parent-30,34">
                           <Grid Anchor="C,C" Texture="Controls_TextArea" SliceTextureSize="22,22" SliceCorner="11,20" Size="parent-20,24">
-                            <EditBox ID="ValueAmountEditBox" Style="FontNormalBold16" FontStyle="Stroke" NumberInput="1" EditMode="1" Size="parent-5,parent" Anchor="C,C" MaxLength="5" ConsumeMouse="1" HighlightColor="25,120,154,200"/>
+                            <EditBox ID="ValueAmountEditBox" Style="FontNormalBold16" FontStyle="Stroke" NumberInput="1" EditMode="1" Size="parent-5,parent" Anchor="C,C" MaxLength="11" ConsumeMouse="1" HighlightColor="25,120,154,200"/>
                             <Button ID="ValueAmountEditLeftButton" Style="ArrowButtonLeft" Anchor="L,C" AnchorSide="O,I"/>
                             <Button ID="ValueAmountEditRightButton" Style="ArrowButtonRight" Anchor="R,C" AnchorSide="O,I"/>
                           </Grid>

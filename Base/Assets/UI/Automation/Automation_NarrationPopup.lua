@@ -243,7 +243,7 @@ function ShowNarrationPopup( narrationData:table )
 
 	-- Put a hold on the event so further events don't process
 	if (narrationData.ReferenceEvent ~= nil and narrationData.ReferenceEvent) then
-		ms_eventID = ReferenceCurrentGameCoreEvent();
+		ms_eventID = UI.ReferenceCurrentEvent();
 	end
 
 	if narrationData.ShowPortrait ~= nil and narrationData.ShowPortrait then
@@ -266,7 +266,7 @@ function Close()
 	m_currentItem = nil;	
 
 	if ms_eventID ~= 0 then
-		ReleaseGameCoreEvent(ms_eventID);
+		UI.ReleaseEventID(ms_eventID);
 		ms_eventID = 0;
 	end
 	
@@ -374,28 +374,13 @@ function OnInputHandler( pInputStruct:table )
 	return IsBlockingInput();
 end
 
--- ===========================================================================
---	UI Event
--- ===========================================================================
-function OnInit( isReload:boolean )
-	if isReload then
-		LuaEvents.GameDebug_GetValues(RELOAD_CACHE_ID);
-	end
-end
-
--- ===========================================================================
---	UI Event
--- ===========================================================================
-function OnShow()
-
-end
 
 -- ===========================================================================
 --	UI Event
 -- ===========================================================================
 function OnShutdown()
 	if ms_eventID ~= 0 then
-		ReleaseGameCoreEvent(ms_eventID);
+		UI.ReleaseEventID(ms_eventID);
 	end
 	
 	LuaEvents.DiploScene_SceneClosed.Remove( OnDiploSceneClosed );
@@ -416,10 +401,8 @@ function Initialize()
 	end
 
 	-- UI Events
-	ContextPtr:SetInitHandler( OnInit );
 	ContextPtr:SetInputHandler( OnInputHandler, true );
 	ContextPtr:SetShutdown( OnShutdown );
-    ContextPtr:SetShowHandler( OnShow );
 
 	-- Events
 	Events.InputActionTriggered.Add( OnInputActionTriggered );

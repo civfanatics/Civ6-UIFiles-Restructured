@@ -1,9 +1,3 @@
---[[
--- Last modifed by Samuel Batista on Jun 28 2017
--- Original Author: Tronster
--- Copyright (c) Firaxis Games
---]]
-
 include("LuaClass");
 include("InstanceManager");
 
@@ -45,13 +39,15 @@ PopupDialog.TOP_CONTROL_ROW				= "Row";
 PopupDialog.TOP_CONTROL_TEXT			= "Text";
 PopupDialog.TOP_CONTROL_BUTTON			= "Button";
 PopupDialog.TOP_CONTROL_COUNTDOWN		= "Anim";
-PopupDialog.TOP_CONTROL_CHECK			= "Check"
+PopupDialog.TOP_CONTROL_CHECK			= "Check";
+PopupDialog.TOP_CONTROL_EDITBOX			= "EditBoxRoot";
 
 PopupDialog.DEFAULT_INSTANCE_ROW		= "PopupRowInstance";
 PopupDialog.DEFAULT_INSTANCE_TEXT		= "PopupTextInstance";
 PopupDialog.DEFAULT_INSTANCE_BUTTON		= "PopupButtonInstance";
 PopupDialog.DEFAULT_INSTANCE_COUNTDOWN	= "PopupCountDownInstance";
 PopupDialog.DEFAULT_INSTANCE_CHECK		= "PopupCheckboxInstance";
+PopupDialog.DEFAULT_INSTANCE_EDITBOX	= "PopupEditboxInstance";
 
 -- Strings for doing PopupDialog:ActivateCommand on default popups
 PopupDialog.COMMAND_CANCEL				= "_CMD_CANCEL";
@@ -166,6 +162,7 @@ end
 --	callback					function to call when pressed (or NIL to just close)
 --	optionalActivatedCommand	some string that when matched will "virtually" press button
 --	optionalToolTip				tooltip
+--	optionalButtonInstanceName	instance name for the button control
 -- ===========================================================================
 function PopupDialog:AddButton( label:string, callback:ifunction, optionalActivateCommand:string, optionalToolTip:string, optionalButtonInstanceName: string )
 	
@@ -214,7 +211,6 @@ function PopupDialog:AddButton( label:string, callback:ifunction, optionalActiva
 
 	-- Recalculate size of button container
 	pTopControl:CalculateSize();
-	pTopControl:ReprocessAnchoring();
 end
 
 -- ===========================================================================
@@ -237,7 +233,7 @@ function PopupDialog:AddCountDown(  startValue:number, callback:ifunction  )
 			local value:number = tonumber( pInstance.Text:GetText() );
 			value = value - 1;
 			if value < 0 then
-				pInstance.Anim:ClearEndCallback();
+                pInstance.Anim:ClearEndCallback();
 				closeAndCallback();
 			else
 				pInstance.Text:SetText( tostring(value) );
@@ -280,6 +276,42 @@ function PopupDialog:AddCheckBox( label, checked, callback  )
 end
 
 -- ===========================================================================
+--	Assumes instance has a root control called "EditBoxRoot", <Label> named "EditLabel", and a <EditBox> named "EditBox".
+--	optionalActivatedCommand	A string that when matched will "virtually" call the editbox commit callback.
+function PopupDialog:AddEditBox( label:string, commitCallback:ifunction, optionalActivateCommand:string )
+	
+	if self:IsOpen() then
+		UI.DataError("Called AddEditBox on an already opened PopupDialog, ID: " .. self.ID);
+	end
+
+	self.RowInstance = nil;	-- Reset for first/new row of buttons later on.
+	local pInstance = self.EditBoxIM:GetInstance();
+	if(pInstance.EditLabel) then
+		pInstance.EditLabel:SetText( label );
+	end
+
+	pInstance.EditBox:ClearString();
+
+	if(commitCallback) then
+		-- Use custom wrapper function to include editbox string in function arguments.
+		pInstance.EditBox:RegisterCommitCallback(commitCallback); 
+	end
+	
+	table.insert(self.PopupControls, { Type = "EditBox", Control = pInstance.EditBox, Command = optionalActivateCommand });
+end
+
+-- ===========================================================================
+-- Returns the edit box text for the first edit box found associated with the command string.
+function PopupDialog:GetEditBoxText( command:string )
+	for _,uiControl in ipairs(self.PopupControls) do
+		if(uiControl.Type == "EditBox" and uiControl.Command == command) then
+			return uiControl.Control.GetText();
+		end
+	end
+	return nil;
+end
+
+-- ===========================================================================
 function PopupDialog:SetSize( width:number, height:number )
 	if self:IsOpen() then
 		UI.DataError("Called SetSize on an already opened PopupDialog, ID: " .. self.ID);
@@ -304,8 +336,6 @@ function PopupDialog:Open( optionalID:string )
 	end
 
 	self.Controls.PopupStack:CalculateSize();
-	self.Controls.PopupStack:ReprocessAnchoring();
-	self.Controls.PopupRoot:ReprocessAnchoring();
 end
 
 -- ===========================================================================
@@ -316,6 +346,7 @@ end
 
 -- ===========================================================================
 function PopupDialog:Reset()
+	
 	if self.Controls.PopupTitle then
 		self.Controls.PopupTitle:SetText(Locale.ToUpper(Locale.Lookup("LOC_CONFIRM_CHOICE")));
 	end
@@ -324,6 +355,10 @@ function PopupDialog:Reset()
 		local type:string = value.Type;
 		if value.Type == "Row" then
 			value.Control:DestroyAllChildren();
+		end
+		if value.Type == "Count" then
+			value.Control:Stop();
+			value.Control:SetToBeginning();
 		end
 	end
 
@@ -335,6 +370,10 @@ function PopupDialog:Reset()
 
 	if(self.CheckBoxIM) then
 		self.CheckBoxIM:ResetInstances();
+	end
+
+	if(self.EditBoxIM) then
+		self.EditBoxIM:ResetInstances();
 	end
 
 	self.Controls.PopupStack:CalculateSize();
@@ -373,8 +412,9 @@ end
 --			textTopControlName		Name of the top control in the text instance.
 --			rowInstanceName			Name of the instance to create a row for buttons
 --			rowTopControlName		Name of the top control in the row instance.
+--			editboxInstanceName		Name of the instance to create for editboxes.
 -- ===========================================================================
-function PopupDialog:SetInstanceNames( buttonInstanceName:string, buttonTopControlName:string, textInstanceName:string, textTopControlName:string, rowInstanceName:string, rowTopControlName:string, countDownInstanceName:string, countDownTopControlName:string, checkboxInstanceName)
+function PopupDialog:SetInstanceNames( buttonInstanceName:string, buttonTopControlName:string, textInstanceName:string, textTopControlName:string, rowInstanceName:string, rowTopControlName:string, countDownInstanceName:string, countDownTopControlName:string, checkboxInstanceName:string, editboxInstanceName:string)
 	
 	-- Look for default named items if explicit ones aren't passed in.
 	self.RowTopControlName = rowTopControlName and rowTopControlName or PopupDialog.TOP_CONTROL_ROW;
@@ -389,6 +429,7 @@ function PopupDialog:SetInstanceNames( buttonInstanceName:string, buttonTopContr
 	self.RowStackIM = InstanceManager:new(rowInstanceName and rowInstanceName or PopupDialog.DEFAULT_INSTANCE_ROW, self.RowTopControlName, self.Controls.PopupStack);
 	self.CountDownIM = InstanceManager:new(countDownInstanceName and countDownInstanceName or PopupDialog.DEFAULT_INSTANCE_COUNTDOWN, countDownTopControlName, self.Controls.PopupStack);
 	self.CheckBoxIM = InstanceManager:new(checkboxInstanceName and checkboxInstanceName or PopupDialog.DEFAULT_INSTANCE_CHECK, PopupDialog.TOP_CONTROL_CHECK, self.Controls.PopupStack);
+	self.EditBoxIM = InstanceManager:new(editboxInstanceName and editboxInstanceName or PopupDialog.DEFAULT_INSTANCE_EDITBOX, PopupDialog.TOP_CONTROL_EDITBOX, self.Controls.PopupStack);
 end
 
 -- ===========================================================================

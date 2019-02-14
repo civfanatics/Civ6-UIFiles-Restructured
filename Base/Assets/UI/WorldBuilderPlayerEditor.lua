@@ -236,6 +236,19 @@ function GetCivLevelEntryIndexByType(civLevelType)
 end
 
 -- ===========================================================================
+--	Get the index of the Civ's era that matches the type.
+-- ===========================================================================
+function GetCivEraIndexByType(civEraType)
+	for i, civEraEntry in ipairs(m_EraEntries) do
+		if civEraEntry ~= nil and civEraEntry.Type == civEraType then
+			return i;
+		end
+	end
+
+	return 1;
+end
+
+-- ===========================================================================
 function UpdateTechTabValues()
 
 	if m_SelectedPlayer ~= nil then
@@ -330,7 +343,7 @@ function UpdatePlayerEntry(playerEntry)
 	playerEntry.Leader = playerConfig.Leader ~= nil and playerConfig.Leader or "UNDEFINED";
 	playerEntry.Civ    = playerConfig.Civ ~= nil and playerConfig.Civ or "UNDEFINED";
 	playerEntry.CivLevel = playerConfig.CivLevel ~= nil and playerConfig.CivLevel or "UNDEFINED";
-	playerEntry.Era    = GameInfo.Eras[ playerConfig.Era ] ~= nil and GameInfo.Eras[ playerConfig.Era ].Index or 0;
+	playerEntry.Era    = playerConfig.Era ~= nil and playerConfig.Era or "DEFAULT";
 	playerEntry.Text   = string.format("%s - %s", playerConfig.IsHuman and "Human" or "AI", Locale.Lookup(playerConfig.Name));
 	playerEntry.Gold   = playerConfig.Gold;
 	playerEntry.Faith  = playerConfig.Faith;
@@ -407,7 +420,7 @@ function GetSelectedCity()
 
 	if m_SelectedPlayer ~= nil then
 		if (m_ViewingTab.SelectedCityID ~= nil) then
-			return CityManager.GetCity(m_SelectedPlayer.Index, m_ViewingTab.SelectedCityID);
+			return WorldBuilder.CityManager():GetCity(m_SelectedPlayer.Index, m_ViewingTab.SelectedCityID);
 		end			
 	end
 
@@ -488,17 +501,22 @@ end
 function UpdateGeneralTabValues(entry:table)
 	if m_ViewingTab.GeneralInstance then
 		local playerSelected = m_SelectedPlayer ~= nil;
+		local playerInitialized = false;
+		if playerSelected then
+			playerInitialized = WorldBuilder.PlayerManager():IsPlayerInitialized(m_SelectedPlayer.Index);
+		end
+
 		m_ViewingTab.GeneralInstance.CivPullDown:SetDisabled( not playerSelected );
-		m_ViewingTab.GeneralInstance.EraPullDown:SetDisabled( not playerSelected );
-		m_ViewingTab.GeneralInstance.GoldEdit:SetDisabled( not playerSelected );
-		m_ViewingTab.GeneralInstance.FaithEdit:SetDisabled( not playerSelected );
+		m_ViewingTab.GeneralInstance.EraPullDown:SetDisabled( not playerSelected or not playerInitialized );
+		m_ViewingTab.GeneralInstance.GoldEdit:SetDisabled( not playerSelected or not playerInitialized );
+		m_ViewingTab.GeneralInstance.FaithEdit:SetDisabled( not playerSelected or not playerInitialized );
 		m_ViewingTab.GeneralInstance.LeaderPullDown:SetDisabled( not playerSelected or not m_SelectedPlayer.IsFullCiv or m_SelectedPlayer.Civ == -1 );
 
 		if m_SelectedPlayer ~= nil then
 			m_ViewingTab.GeneralInstance.CivPullDown:SetSelectedIndex( GetCivEntryIndexByType( m_SelectedPlayer.Civ ), false );
 			m_ViewingTab.GeneralInstance.LeaderPullDown:SetSelectedIndex( GetLeaderEntryIndexByType( m_SelectedPlayer.Leader ), false );
 			m_ViewingTab.GeneralInstance.CivLevelPullDown:SetSelectedIndex( GetCivLevelEntryIndexByType( m_SelectedPlayer.CivLevel ), false );
-			m_ViewingTab.GeneralInstance.EraPullDown:SetSelectedIndex( m_SelectedPlayer.Era+1, false );
+			m_ViewingTab.GeneralInstance.EraPullDown:SetSelectedIndex( GetCivEraIndexByType( m_SelectedPlayer.Era ), false );
 
 			local goldText = m_ViewingTab.GeneralInstance.GoldEdit:GetText();
 			if goldText == nil or tonumber(goldText) ~= m_SelectedPlayer.Gold then
@@ -823,9 +841,12 @@ function OnBuildingEntryButton(control, entry)
 
 			else
 				-- Just create it, it will go in its district.
-				if WorldBuilder.CityManager():CreateBuilding(pCity, entry.Type.BuildingType, 100) == false then
-					-- Failed.  Uncheck the box
-					control:SetCheck(false);
+                local pCity = GetSelectedCity();
+                if pCity ~= nil then
+                    if WorldBuilder.CityManager():CreateBuilding(pCity, entry.Type.BuildingType, 100) == false then
+                        -- Failed.  Uncheck the box
+                        control:SetCheck(false);
+                    end
 				end
 			end
 
@@ -1143,7 +1164,7 @@ end
 function OnEraSelected(entry)
 
 	if m_SelectedPlayer ~= nil then
-		WorldBuilder.PlayerManager():SetPlayerEra(m_SelectedPlayer.Index, entry.Type.Index);
+		WorldBuilder.PlayerManager():SetPlayerEra(m_SelectedPlayer.Index, entry.Type);
 	end
 end
 
@@ -1248,8 +1269,9 @@ function OnInit()
 	Controls.ModalScreenTitle:SetText( Locale.ToUpper(Locale.Lookup("LOC_WORLD_BUILDER_PLAYER_EDITOR_TT")) );
 
 	-- EraPullDown
+	table.insert(m_EraEntries, { Text="LOC_WORLDBUILDER_DEFAULT", Type="DEFAULT" });
 	for type in GameInfo.Eras() do
-		table.insert(m_EraEntries, { Text=type.Name, Type=type });
+		table.insert(m_EraEntries, { Text=type.Name, Type=type.EraType });
 	end
 
 	-- CivLevelPullDown
@@ -1262,8 +1284,8 @@ function OnInit()
 
 	-- Intialize the m_CivEntries table.  This must use a simple index for the key, the pull down control will access it directly.
 	-- The first two entries are special
-	table.insert(m_CivEntries, { Text="Random", Type="RANDOM", DefaultLeader="RANDOM" });
-	table.insert(m_CivEntries, { Text="Any", Type="UNDEFINED", DefaultLeader="UNDEFINED" });
+	table.insert(m_CivEntries, { Text="LOC_WORLDBUILDER_RANDOM", Type="RANDOM", DefaultLeader="RANDOM" });
+	table.insert(m_CivEntries, { Text="LOC_WORLDBUILDER_ANY", Type="UNDEFINED", DefaultLeader="UNDEFINED" });
 	-- Fill in the civs
 	for type in GameInfo.Civilizations() do
 		table.insert(m_CivEntries, { Text=type.Name, Type=type.CivilizationType, DefaultLeader=-1 });
@@ -1279,8 +1301,8 @@ function OnInit()
 	end
 
 	-- LeaderPullDown
-	table.insert(m_LeaderEntries, { Text="Random", Type="RANDOM" });
-	table.insert(m_LeaderEntries, { Text="Any", Type="UNDEFINED" });
+	table.insert(m_LeaderEntries, { Text="LOC_WORLDBUILDER_RANDOM", Type="RANDOM" });
+	table.insert(m_LeaderEntries, { Text="LOC_WORLDBUILDER_ANY", Type="UNDEFINED" });
 	for type in GameInfo.Leaders() do
 		table.insert(m_LeaderEntries, { Text=type.Name, Type=type.LeaderType });
 	end

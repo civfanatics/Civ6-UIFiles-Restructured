@@ -15,6 +15,7 @@ local RELOAD_CACHE_ID: string = "LoadGameMenu";		-- hotloading
 local serverType : number = ServerType.SERVER_TYPE_NONE;
 local m_thisLoadFile;
 local m_QuickloadId;
+local m_isActionButtonDisabled:boolean = false;	-- Action button state before yes/no prompt
 g_IsDeletingFile = false;
 
 g_QuickLoadQueryRequestID = nil;
@@ -25,13 +26,69 @@ function OnLoadNo()
 	m_kPopupDialog:Close();
 end
 
+function OnLoadConfirmModCompatibility()
+	
+	if(Modding.ShouldShowCompatibilityWarnings() and m_thisLoadFile) then
+
+		local installedMods = Modding.GetInstalledMods();
+		local enabledModsByHandle = {};
+
+		for i,v in ipairs(installedMods) do
+			enabledModsByHandle[v.Handle] = v.Enabled;
+		end
+
+		local incompatibleMods = {};
+		local mods = m_thisLoadFile.RequiredMods or {};
+		for i,v in ipairs(mods) do
+			local mod = Modding.GetModHandle(v.Id);
+			local isCompatible = Modding.IsModCompatible(mod);
+			if(not isCompatible and enabledModsByHandle[mod] == false) then
+				table.insert(incompatibleMods, mod);
+			end
+		end
+
+		if(#incompatibleMods > 0) then
+
+			local whitelistMods = false;
+
+			function OnYes()
+				if(whitelistMods) then
+					for i,v in ipairs(incompatibleMods) do
+						Modding.SetIgnoreCompatibilityWarnings(v, true);
+					end
+				end
+
+				OnLoadYes();
+			end
+			
+			m_kPopupDialog:AddText(Locale.Lookup("LOC_MODS_ENABLE_WARNING_NOT_COMPATIBLE_MANY"));
+			m_kPopupDialog:AddTitle(Locale.ToUpper(Locale.Lookup("LOC_CONFIRM_TITLE_LOAD_TXT")));
+			m_kPopupDialog:AddButton(Locale.Lookup("LOC_YES_BUTTON"), OnYes, nil, nil, "PopupButtonInstanceGreen"); 
+			m_kPopupDialog:AddButton(Locale.Lookup("LOC_NO_BUTTON"), OnLoadNo);
+			m_kPopupDialog:AddCheckBox(Locale.Lookup("LOC_MODS_WARNING_WHITELIST_MANY"), false, function(checked) whitelistMods = checked; end);
+			m_kPopupDialog:Open();
+		else
+			OnLoadYes();
+		end
+
+	else
+		OnLoadYes();
+	end
+	
+end
 ----------------------------------------------------------------        
 ----------------------------------------------------------------        
 function OnLoadYes()
 	UITutorialManager:EnableOverlay( false );	
 	UITutorialManager:HideAll();
 	m_kPopupDialog:Close();
-	Network.LeaveGame();
+
+	-- Leave your current game if this is not a game configuration load.
+	-- Game Configuration should keep the game in the current state (hostgame/advanced setup).
+	if(g_FileType ~= SaveFileTypes.GAME_CONFIGURATION) then
+		Network.LeaveGame();
+	end
+
     Network.LoadGame(m_thisLoadFile, serverType);
     Controls.ActionButton:SetDisabled( true );
 
@@ -61,15 +118,23 @@ function OnActionButton()
 		   			if ( not m_kPopupDialog:IsOpen()) then
 						m_kPopupDialog:AddText(Locale.Lookup("LOC_CONFIRM_LOAD_TXT"));
 						m_kPopupDialog:AddTitle(Locale.ToUpper(Locale.Lookup("LOC_CONFIRM_TITLE_LOAD_TXT")));
-						m_kPopupDialog:AddButton(Locale.Lookup("LOC_YES_BUTTON"), OnLoadYes, nil, nil, "PopupButtonInstanceGreen"); 
+						m_kPopupDialog:AddButton(Locale.Lookup("LOC_YES_BUTTON"), OnLoadConfirmModCompatibility, nil, nil, "PopupButtonInstanceGreen"); 
 						m_kPopupDialog:AddButton(Locale.Lookup("LOC_NO_BUTTON"), OnLoadNo);
 						m_kPopupDialog:Open();
 					end
 				else
-					OnLoadYes();
+					if (g_GameType ~= SaveTypes.TILED_MAP) then
+						OnLoadConfirmModCompatibility();
+					end
     			end
+
+				if (g_GameType == SaveTypes.TILED_MAP) then
+					MapConfiguration.SetImportFilename(m_thisLoadFile.Path);
+					UI.SetWorldRenderView( WorldRenderView.VIEW_2D );
+					Network.HostGame(ServerType.SERVER_TYPE_NONE);
+				end
 			end
-		end
+        end
 	end	
 end
 
@@ -95,6 +160,7 @@ function OnShow()
 	Controls.ActionButton:SetHide( false );
 	Controls.ActionButton:SetDisabled( false );
 	Controls.ActionButton:SetToolTipString(nil);
+	m_isActionButtonDisabled = false;
 
 	g_ShowCloudSaves = false;
 	g_ShowAutoSaves = false;
@@ -103,9 +169,54 @@ function OnShow()
 	Controls.CloudCheck:SetSelected(false);
 
 	local cloudEnabled = UI.AreCloudSavesEnabled() and not GameConfiguration.IsAnyMultiplayer() and g_FileType ~= SaveFileTypes.GAME_CONFIGURATION;
-	Controls.CloudCheck:SetHide(not cloudEnabled);
+	local cloudServicesEnabled,cloudServicesResult = UI.AreCloudSavesEnabled("LOAD");
+
+	-- we want to show this in all cases
+	Controls.CloudCheck:SetHide(false);
 	
-	local autoSavesDisabled = (g_GameType == SaveTypes.WORLDBUILDER_MAP);
+	local isNew = Options.GetAppOption("Misc", "UserSawCloudNew");
+	Controls.CheckNewIndicator:SetHide(true);
+	Controls.DummyNewIndicator:SetHide(true);
+		
+	if cloudEnabled then
+		if UI.Is2KCloudAvailable() then
+			Controls.CloudCheck:SetToolTipString(Locale.Lookup("LOC_2K_CLOUD_SAVES_HELP"));
+			Controls.CloudCheck:SetText(Locale.Lookup("LOC_2K_CLOUD"));
+			Controls.CloudDummy:SetHide(true);
+			if (isNew == 0) then
+				Controls.CheckNewIndicator:SetHide(false);
+			end
+		else
+			Controls.CloudDummy:SetHide(false);
+			Controls.CloudDummy:SetDisabled(true);
+			Controls.CloudDummy:SetToolTipString(Locale.Lookup("LOC_2K_CLOUD_SAVES_HELP"));
+			Controls.CloudCheck:SetToolTipString(Locale.Lookup("LOC_STANDARD_CLOUD_SAVES_HELP"));
+			Controls.CloudCheck:SetText(Locale.Lookup("LOC_STEAMCLOUD"));
+			if (isNew == 0) then
+				Controls.DummyNewIndicator:SetHide(false);
+			end
+		end
+	else
+		Controls.CloudDummy:SetHide(true);
+		if (isNew == 0) then
+			Controls.CheckNewIndicator:SetHide(false);
+		end
+
+		if cloudServicesResult ~= nil then
+			if cloudServicesResult == DB.MakeHash("REQUIRES_LINKED_ACCOUNT") then
+				Controls.CloudCheck:LocalizeAndSetToolTip("LOC_CLOUD_SAVES_REQUIRE_LINKED_ACCOUNT");
+			else
+				Controls.CloudCheck:LocalizeAndSetToolTip("LOC_CLOUD_SAVES_SERVICE_NOT_CONNECTED");
+			end
+			Controls.CloudCheck:SetDisabled(true);
+		end
+	end
+		
+	if (isNew == 0) then
+		Options.SetAppOption("Misc", "UserSawCloudNew", 1);
+	end
+			
+	local autoSavesDisabled = ((g_GameType == SaveTypes.WORLDBUILDER_MAP) or (g_GameType == SaveTypes.TILED_MAP));
 	Controls.AutoCheck:SetHide(autoSavesDisabled);	
 
 	RefreshSortPulldown();
@@ -116,6 +227,7 @@ function OnShow()
 	local cloudSavesVisible = Controls.CloudCheck:IsVisible();
 	local sortByVisible = Controls.SortByPullDown:IsVisible();
 	local directoryVisible = Controls.DirectoryPullDown:IsVisible();
+    local dummyCloudVisible = Controls.CloudDummy:IsVisible();
 
 	local count = 0;
 	if(autoSavesVisible) then
@@ -128,6 +240,9 @@ function OnShow()
 		count = count + 1;
 	end
 	if(directoryVisible) then
+		count = count + 1;
+	end
+	if(dummyCloudVisible) then
 		count = count + 1;
 	end
 		
@@ -145,12 +260,13 @@ end
 ----------------------------------------------------------------        
 ----------------------------------------------------------------
 function OnDelete()
+	m_isActionButtonDisabled = Controls.ActionButton:IsDisabled();
 	Controls.ActionButton:SetDisabled(true);
 	if ( not m_kPopupDialog:IsOpen()) then
 		m_kPopupDialog:AddText(Locale.Lookup("LOC_CONFIRM_TXT"));
 		m_kPopupDialog:AddTitle(Locale.ToUpper(Locale.Lookup("LOC_CONFIRM_DELETE_TITLE_TXT")));
-		m_kPopupDialog:AddButton(Locale.Lookup("LOC_NO_BUTTON"), OnDeleteNo);
 		m_kPopupDialog:AddButton(Locale.Lookup("LOC_YES_BUTTON"), OnDeleteYes, nil, nil, "PopupButtonInstanceRed"); 
+		m_kPopupDialog:AddButton(Locale.Lookup("LOC_NO_BUTTON"), OnDeleteNo);
 		m_kPopupDialog:Open();
 	end
 end
@@ -164,13 +280,14 @@ function OnDeleteYes()
 		UI.DeleteSavedGame( kSelectedFile );
 	end
 	
-	Controls.ActionButton:SetDisabled(false);
+	Controls.ActionButton:SetDisabled(m_isActionButtonDisabled);
 	SetupFileList();
 end
 
 ----------------------------------------------------------------        
 ----------------------------------------------------------------
 function OnDeleteNo( )
+	Controls.ActionButton:SetDisabled(m_isActionButtonDisabled);
 	m_kPopupDialog:Close();
 end
 
@@ -404,8 +521,6 @@ function Initialize()
 	Controls.SelectedFileStack:RegisterSizeChanged( OnSelectedFileStackSizeChanged );
 
 	-- LUA Events
-	--??TRON remove LuaEvents.Lobby_ShowLoadScreen.Add(function() m_showMainMenuOnHide = false; end);
-	--??TRON remove LuaEvents.MainMenu_ShowLoadScreen.Add(function() m_showMainMenuOnHide = true; end);
 	LuaEvents.HostGame_SetLoadGameServerType.Add( OnSetLoadGameServerType );
 	LuaEvents.MainMenu_SetLoadGameServerType.Add( OnSetLoadGameServerType );
 	LuaEvents.InGameTopOptionsMenu_SetLoadGameServerType.Add( OnSetLoadGameServerType );

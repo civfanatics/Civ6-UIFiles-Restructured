@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Context>
   <!-- Darken the screen -->
   <Box Color="0,0,0,150" Size="parent,parent" ConsumeMouse="1"/>
@@ -108,7 +108,7 @@
 					</Image>
 				</AlphaAnim>
 			</Image>
-			<Label ID="TargetName" Style="BodyTextDark16" Anchor="L,C" Size="auto,44" Offset="50,0"/>
+			<Label ID="TargetName" Style="BodyTextDark16" Anchor="L,C" Size="auto,44" Offset="50,0" TruncateWidth="275"/>
 		</Container>
 	</Instance>
 

@@ -51,6 +51,11 @@
 	<FontBoldFlair21 Font="NotoSansCJKtc-Medium.otf;NotoSans-Medium.ttf" FontSize="21"/>
 	<FontBoldFlair26 Font="NotoSansCJKtc-Medium.otf;NotoSans-Medium.ttf" FontSize="26"/>
 	<FontBoldFlair60 Font="NotoSansCJKtc-Medium.otf;NotoSans-Medium.ttf" FontSize="60"/>
+	<FontItalicFlair18 Font="NotoSansCJKtc-Medium.otf;NotoSans-Medium.ttf" FontSize="18"/>
+	<FontItalicFlair21 Font="NotoSansCJKtc-Medium.otf;NotoSans-Medium.ttf" FontSize="21"/>
+	<FontItalicFlair22 Font="NotoSansCJKtc-Medium.otf;NotoSans-Medium.ttf" FontSize="22"/>
+	<FontItalicFlair26 Font="NotoSansCJKtc-Medium.otf;NotoSans-Medium.ttf" FontSize="26"/>
+	<FontItalicFlair60 Font="NotoSansCJKtc-Medium.otf;NotoSans-Medium.ttf" FontSize="60"/>
 
 	<FontNormalMedium12	Font="NotoSansCJKtc-Regular.otf;NotoSans-Regular.ttf" FontSize="12"/>
 	<FontNormalMedium13	Font="NotoSansCJKtc-Regular.otf;NotoSans-Regular.ttf" FontSize="13"/>
@@ -59,5 +64,5 @@
 	<FontNormalMedium18	Font="NotoSansCJKtc-Regular.otf;NotoSans-Regular.ttf" FontSize="18"/>
 	<FontNormalMedium20	Font="NotoSansCJKtc-Regular.otf;NotoSans-Regular.ttf" FontSize="20"/>
 
-
+	<FontMono14 Font="NotoSansCJKtc-Regular.otf;NotoSans-Regular.ttf" FontSize="14"/>
 </StyleSheet>

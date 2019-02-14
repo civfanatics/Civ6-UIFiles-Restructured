@@ -61,13 +61,15 @@
     </Container>
   </Instance>
 
-	<Container	ID="My2KContents"	Anchor="R,B"	Offset="5,5"				Size="128,75">
-	<Image											Anchor="R,B"	Offset="-345,-195"	Size="700,400"		Texture="Controls_Glow" Color="9,57,93,255" />
-    <Grid												Anchor="C,B"	Offset="0,-10"			Size="parent,32"	Style="DropShadow2"			Color="0,0,0,100"/>
-    <Button		ID="My2KLogin"		Anchor="C,T"											Size="128,64"			Style="My2KLogoButton"	Disabled="1" />
-    <Label		ID="My2KStatus"		Anchor="C,B"  Style="FontNormal12" ColorSet="ButtonCS"  String="TXT_KEY_MY2K_MODE_ANONYMOUS"/>
-  </Container>
-
+	<Stack					ID="My2KContents"	Anchor="R,B"	Offset="0,5"	StackGrowth="Down">
+		<Grid														Anchor="C,T"								Size="auto,auto"	Style="DropShadow2"			Color="0,0,0,150">
+			<Stack																										StackGrowth="Down">
+				<Button		ID="My2KLogin"		Anchor="C,T"								Size="128,84"			Style="My2KLogoButton"	Disabled="1" />
+				<Label		ID="My2KStatus"		Anchor="C,T"  Style="FontNormal12" ColorSet="ButtonCS"  String="TXT_KEY_MY2K_MODE_ANONYMOUS"/>
+			</Stack>
+		</Grid>
+	</Stack>
+	
 	<Container ID="MotDContainter" Anchor="C,B"	Size="parent,120" InnerPadding="300,0" Offset="0,24">
 		<Grid ID="MotDFrame" Style="SubContainer3" Color="204,207,245,100" Size="parent,auto" ClampSize="V" Anchor="C,C">
 			<Stack ID="MotDStack" Anchor="L,T" StackGrowth="Right" StackPadding="10" ClampSize="V">
@@ -82,13 +84,14 @@
 
 	<Label				ID="VersionLabel" Anchor="L,B"  Offset="2,2" Style="FontNormal12" ColorSet="ButtonCS"  />
   
-	<LuaContext		ID="Options"							DeferLoad="1"	FileName="Options"						Hidden="1" />
+	<LuaContext		ID="Options"							FileName="Options"						Hidden="1" />
 	<LuaContext		ID="ModsContext"					DeferLoad="1"	FileName="Mods"								Hidden="1" />
 	<LuaContext		ID="AdvancedSetup"				DeferLoad="1"	FileName="AdvancedSetup"			Hidden="1" />
 	<LuaContext		ID="ScenarioSetup"        DeferLoad="1" FileName="ScenarioSetup"      Hidden="1" /> 
 	<LuaContext		ID="CreditsScreen"											FileName="CreditsScreen"			Hidden="1" />
 	<LuaContext		ID="My2K"										            FileName="My2K"								Hidden="1" />
   <LuaContext		ID="WorldBuilder"					DeferLoad="1" FileName="WorldBuilderMenu"		Hidden="1" />
+	<LuaContext		ID="HallofFame"						DeferLoad="1"	FileName="GameSummaries"			Hidden="1" />
 	<LuaContext		ID="TutorialSetup"				DeferLoad="1" FileName="TutorialSetup"		  Hidden="1" />
 	<LuaContext		ID="Lobby"															FileName="Lobby"							Hidden="1" />
 	<LuaContext		ID="HostGame"														FileName="HostGame"						Hidden="1" />

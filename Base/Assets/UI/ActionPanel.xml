@@ -62,9 +62,12 @@
     </Button>
   
 		<Image																						Anchor="R,B"																				Texture="ActionPanel_Gold2.dds" Offset="20,2" >
-			
-			<Image				ID="EraIndicator"																Offset="0,-15"	Rotate="90"						Texture="ActionPanel_EraIndicator"  />
-      <FlipAnim FrameCount="17" Texture="ActionPanel_TurnProcessing" Columns="8" Anchor="R,B" Size="102,102" Offset="15,32" Stopped="0"/>
+
+			<Container			ID="EraContainer"						Offset="2,-15">
+				<Image				ID="EraIndicator" Rotate="0" Texture="ActionPanel_EraIndicator" />
+			</Container>
+
+			<FlipAnim FrameCount="17" Texture="ActionPanel_TurnProcessing" Columns="8" Anchor="R,B" Size="102,102" Offset="15,32" Stopped="0"/>
 			<BoxButton				ID="EndTurnButton"								Anchor="R,B"	Offset="11,28"	Size="108,108"				Color="0,0,0,0" NoStateChange="1">
         <Image      ID="CurrentTurnBlockerIcon"             Anchor="C,C" Texture="Notifications100" Size="100,100"/>
 				<AlphaAnim	ID="EndTurnButtonProductionAlpha" Anchor="C,C"									Size="parent,parent"  Cycle="Bounce" Speed="1" AlphaStart=".4" AlphaEnd="0" Hidden="1" >
@@ -216,5 +219,13 @@
       </Stack>
     </GridButton>
   </Instance>
+
+	<Instance				Name="EraPipInstance">
+		<Image				ID="PipImage" Texture="ActionPanel_EraPip" StretchMode="auto" />
+	</Instance>
+
+	<!-- Dialog Support -->
+	<Include File="PopupDialog" />
+	<MakeInstance Name="PopupDialog" />
 	
 </Context>

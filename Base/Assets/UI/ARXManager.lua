@@ -18,8 +18,9 @@ local m_ScreenMode:number = 0;
 local m_LocalPlayer:table;
 local m_LocalPlayerID:number;
 local fullStr:string = "";
-local m_kEras:table	= {};
 local m_bIsPortrait:boolean = false;
+m_kEras = nil;	-- Table of all era names sorted properly.
+
 
 -- ===========================================================================
 -- Draw the Top 5 Civs screen
@@ -400,14 +401,14 @@ function RefreshARX()
                        
 		local eraName;
 		if(m_LocalPlayer) then
-			local eraIndex:number = m_LocalPlayer:GetEra() + 1;
-			for _,era in pairs(m_kEras) do
-				if era.Index == eraIndex then
-					eraName = Locale.Lookup("LOC_GAME_ERA_DESC", era.Description );
-					break;
-				end		
+			local eraIndex = m_LocalPlayer:GetEra() + 1;
+			local era = m_kEras[eraIndex];
+			if(era) then 
+				eraName = Locale.Lookup("LOC_GAME_ERA_DESC", era.Name);
 			end
-		else
+		end
+
+		if(eraName == nil) then
 			eraName = Locale.Lookup("LOC_MULTIPLAYER_UNKNOWN");
 		end    
 
@@ -476,11 +477,14 @@ function Initialize()
     -- build era table
 	m_kEras = {};
 	for row:table in GameInfo.Eras() do
-		m_kEras[row.EraType] = { 
-			Description	= Locale.Lookup(row.Name),
-			Index		= row.ChronologyIndex,
-		}
+		table.insert(m_kEras, {
+			Name = row.Name,
+			ChronologyIndex = row.ChronologyIndex,
+		});
 	end	
+	table.sort(m_kEras, function(a,b) 
+		return a.ChronologyIndex < b.ChronologyIndex;
+	end);
 
     OnTurnBegin();
 end

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Context Layer="Tutorial">
 	<!-- Force to always render on "tutorial" graphics stream 'layer' so it's on top even when no tutorial controls are active. -->
-	
+	<!-- AdvisorBase should be hidden by default since the tutorial checks the always active flag based on it's visibility. -->
 		
-	<Container						ID="AdvisorBase"													Size="parent,parent" >
+	<Container						ID="AdvisorBase"													Size="parent,parent" Hidden="1" >
 		<AlphaAnim					ID="AdvisorAlpha"						Anchor="C,T"  Size="parent,parent" Speed="6" Cycle="Once" AlphaStart="0" AlphaEnd="1" Function="Root" Pause="0.5">
 			<SlideAnim				ID="AdvisorAnim"						Anchor="C,T"  Size="parent,parent" Speed="6" Cycle="Once" Start="0,-20" End="0,0"    Function="Root" Pause="0.5">
 				<Grid						ID="Window"									Anchor="C,T"	Offset="0,50" Texture="Advisor_WordBubble" SliceCorner="28,44" SliceTextureSize="72,64" Size="529,208" Color="255,255,255,200">

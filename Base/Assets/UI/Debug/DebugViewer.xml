@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<Context Name="DebugViewer">
+	<Box Size="parent,parent" Color="40,40,40" ConsumeMouse="1"/>
+	<Container ID="ViewContainer"/>
+</Context>

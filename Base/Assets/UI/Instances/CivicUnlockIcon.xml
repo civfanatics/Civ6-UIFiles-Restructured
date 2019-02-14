@@ -1,6 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 
-<Root>
+<Include File="CivicUnlockIcon" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="..\..\..\..\..\..\CivTech\Libs\ForgeUI\ForgeUI_Assets\Controls.xsd">
 
 	<Instance Name="CivicUnlockInstance">
 		<Button ID="Top" Style="UnlockFrames" NoStateChange="1">
@@ -9,9 +9,11 @@
 	</Instance>
 
 	<Instance Name="CivicUnlockNumberedInstance">
-		<GridButton ID="Top" Texture="Controls_FrameInfo" Anchor="C,C" Size="42,28" Offset="4,0" SliceCorner="9,9" SliceSize="5,5" SliceTextureSize="23,23">
-			<Label ID="NumberLabel" Anchor="L,C" Offset="5,1" Style="FontNormal18"/>
-			<Label ID="FontIcon" Anchor="R,C" Offset="6,-1" Style="FontNormal16"/>
+		<GridButton ID="Top" Texture="Controls_FrameInfo" Anchor="C,C" Size="auto,28" Offset="4,0" SliceCorner="9,9" SliceSize="5,5" SliceTextureSize="23,23">
+			<Stack Anchor="C,C" StackGrowth="Right" StackPadding="0" AutoSizePadding="5,0" >
+				<Label ID="NumberLabel" Anchor="L,C" Offset="5,0" Style="FontNormal18"/>
+				<Label ID="FontIcon"		Anchor="L,C" Offset="0,-1" Style="FontNormal16"/>
+			</Stack>
 		</GridButton>
 	</Instance>
 	
@@ -22,4 +24,4 @@
 		</Button>
 	</Instance>
 
-</Root>
+</Include>

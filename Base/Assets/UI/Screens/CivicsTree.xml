@@ -3,15 +3,16 @@
 
   <Include File="CivicUnlockIcon"/>
 
-  <Container Style="FullScreenVignetteConsumer"/>
+  <Container ID="Vignette" Style="FullScreenVignetteConsumer"/>
   <AlphaAnim ID="SearchResultsTimer" Begin="0" End="1" Speed="2" Cycle="Once" Stopped="1"/>
 
   <Container Anchor="C,C" Size="full,768">
     <Box Color="7,30,50,255" Anchor="L,B" Size="parent,5"/>
     <Grid Anchor="C,B" Offset="0,-8" Size="parent,52" Texture="Controls_Timeline" SliceCorner="54,27" SliceSize="6,1" SliceTextureSize="114,52"/>
-    <Image ID="ScrollbarBackgroundArt" Anchor="C,B" Offset="0,2" Size="parent-108,32" Texture="Controls_TimelineTile" StretchMode="Tile"/>
-    <ScrollPanel ID="FarBackArtScroller" Offset="0,-2" Size="parent,parent" Vertical="0" ScrollBar="0">
-      <Image ID="Background" Size="parent,parent" Texture="Parchment_Pattern" StretchMode="Tile" ConsumeMouse="1"/>
+		<Image ID="Background" Size="parent,parent" Texture="Parchment_Pattern" StretchMode="Tile" ConsumeMouse="1" />
+		<Image ID="ScrollbarBackgroundArt" Anchor="C,B" Offset="0,2" Size="parent-108,32" Texture="Controls_TimelineTile" StretchMode="Tile"/>
+    <ScrollPanel ID="EraArtScroller" Offset="0,-2" Size="parent,parent" Vertical="0" ScrollBar="0">
+			<Container ID="ForceArtSizeX" Size="1,1"/>
     </ScrollPanel>
     <Image Anchor="L,B" Offset="0,33" Size="parent,22" Texture="Controls_GradientSmall" Color="0,0,0,150" FlipY="1"/>
     <ScrollPanel ID="ArtScroller" Offset="0,-2" Size="parent,parent" Vertical="0" ScrollBar="0">
@@ -27,7 +28,11 @@
       <Container ID="ForceSizeX" Size="1,1"/>
     </ScrollPanel>
 
-    <ScrollPanel ID="NodeScroller" Offset="0,0" Size="parent,parent" Vertical="0">
+		<ScrollPanel ID="LineScroller" Offset="0,0" Size="parent,parent" Vertical="0" ScrollBar="0">
+			<Container ID="LineForceSizeX" Size="1,1"/>
+		</ScrollPanel>
+
+		<ScrollPanel ID="NodeScroller" Offset="0,0" Size="parent,parent" Vertical="0">
       <Image ID="TreeStart" Texture="Tree_Start"/>
       <ScrollBar ID="TimelineScrollbar" Anchor="C,B" Offset="0,15" Size="12,8" Texture="Controls_TimeSlider" Vertical="0" StateOffsetIncrement="0,0" SliceCorner="6,0" SliceTextureSize="12,8">
         <Thumb ID="TimelineThumb" Size="63,36" Texture="Controls_TimeSlider" StateOffsetIncrement="0,0" SliceCorner="22,18" SliceSize="19,1" SliceTextureSize="63,36"/>
@@ -208,7 +213,7 @@
         <Image ID="BoostIcon" Offset="9,7" Anchor="L,B" Texture="BoostTech"/> 
         <Label ID="BoostText" Offset="47,7" Anchor="L,B" Style="TreeBoostText" String="?BoostText"/>
         <Stack Offset="68,8" StackGrowth="Right" StackPadding="4">
-          <Label ID="NodeName" Style="TreeNodeText" String="?NodeName"/>
+          <Label ID="NodeName" Style="TreeNodeText" String="?NodeName" TruncateWidth="260"/>
           <Image ID="RecommendedIcon" Offset="0,-8" Size="22,22" Texture="AdvisorRec22" ConsumeMouse="1" ToolTip="LOC_TECH_FILTER_RECOMMENDED">
             <FlipAnim Texture="AdvisorRecAnim22" Size="26,26" Anchor="C,C" FrameCount="12" Columns="4" Speed="14" EndPause="3" Color="255,255,255,200"/>
           </Image>
@@ -263,7 +268,7 @@
 
   <Instance Name="GovernmentIcon">
     <GridButton ID="GovernmentInstanceGrid" Texture="CivicsTree_GovtUnlock" Size="160,43" Offset="0,-3" SliceCorner="17,6" SliceSize="6,4" SliceTextureSize="40,30">
-      <Label ID="GovernmentName" Offset="12,5" Style="FontNormalMedium14" SmallCaps="14" String="?"/>
+      <Label ID="GovernmentName" Offset="12,5" Style="FontNormalMedium14" SmallCaps="14" String="?" TruncateWidth="140"/>
       <Image ID="MilitaryPolicyImage" Offset="12,18" Size="20,20" Texture="CivicsGovtCardMilitary" StretchMode="Fill"/>
       <Label ID="MilitaryPolicyLabel" Offset="37,22" Style="FontNormalMedium12" SmallCaps="14" String="?"/>
       <Image ID="EconomicPolicyImage" Offset="47,18" Size="20,20" Texture="CivicsGovtCardEconomic" StretchMode="Fill"/>
@@ -333,7 +338,7 @@
 
   <Instance Name="EraArtInstance">
     <Container ID="Top" Anchor="L,B" Offset="0,0">
-      <Image ID="BG" Anchor="L,B" Texture="Parchment_Pattern" StretchMode="Auto" Color="0,0,0,50"/>
+      <Image ID="BG" Anchor="L,B" Texture="Parchment_Pattern" StretchMode="Auto" Color="0,0,0,50" />
     </Container>
   </Instance>
 

@@ -30,7 +30,7 @@ function GetAdjacentIconArtdefName( targetDistrictType:string, plot:table, pkCit
 	local eDistrict = GameInfo.Districts[targetDistrictType].Index;
 	local eType = -1;
 	local iSubType = -1;
-	eType, iSubType = plot:GetAdjacencyBonusType(Game:GetLocalPlayer(), pkCity:GetID(), eDistrict, direction);
+	eType, iSubType = plot:GetAdjacencyBonusType(Game.GetLocalPlayer(), pkCity:GetID(), eDistrict, direction);
 
 	if eType == AdjacencyBonusTypes.NO_ADJACENCY then
 		return "";
@@ -41,6 +41,8 @@ function GetAdjacentIconArtdefName( targetDistrictType:string, plot:table, pkCit
 			return "Terrain_Jungle";
 		elseif iSubType == g_FEATURE_FOREST then
 			return "Terrain_Forest";
+		elseif iSubType == g_FEATURE_GEOTHERMAL_FISSURE then
+			return "Terrain_Generic_Resource";
 		end
 	elseif eType == AdjacencyBonusTypes.ADJACENCY_IMPROVEMENT then
 		if iSubType == 1 then
@@ -75,6 +77,72 @@ function GetAdjacentIconArtdefName( targetDistrictType:string, plot:table, pkCit
 	end
 	
 	return "";	-- None (or error)
+end
+
+-- ===========================================================================
+--	Obtain a table of adjacency bonuses
+-- ===========================================================================
+function AddAdjacentPlotBonuses( kPlot:table, districtType:string, pSelectedCity:table, tCurrentBonuses:table )
+	local adjacentPlotBonuses:table = {};
+	local x		:number = kPlot:GetX();
+	local y		:number = kPlot:GetY();
+
+	for _,direction in pairs(DirectionTypes) do			
+		if direction ~= DirectionTypes.NO_DIRECTION and direction ~= DirectionTypes.NUM_DIRECTION_TYPES then
+			local adjacentPlot	:table= Map.GetAdjacentPlot( x, y, direction);
+			if adjacentPlot ~= nil then
+				local artdefIconName:string = GetAdjacentIconArtdefName( districtType, adjacentPlot, pSelectedCity, direction );
+			
+				if artdefIconName ~= nil and artdefIconName ~= "" then
+
+		
+					local districtViewInfo:table = GetViewPlotInfo( adjacentPlot, tCurrentBonuses );
+					local oppositeDirection :number = -1;
+					if direction == DirectionTypes.DIRECTION_NORTHEAST	then oppositeDirection = DirectionTypes.DIRECTION_SOUTHWEST; end
+					if direction == DirectionTypes.DIRECTION_EAST		then oppositeDirection = DirectionTypes.DIRECTION_WEST; end
+					if direction == DirectionTypes.DIRECTION_SOUTHEAST	then oppositeDirection = DirectionTypes.DIRECTION_NORTHWEST; end
+					if direction == DirectionTypes.DIRECTION_SOUTHWEST	then oppositeDirection = DirectionTypes.DIRECTION_NORTHEAST; end
+					if direction == DirectionTypes.DIRECTION_WEST		then oppositeDirection = DirectionTypes.DIRECTION_EAST; end
+					if direction == DirectionTypes.DIRECTION_NORTHWEST	then oppositeDirection = DirectionTypes.DIRECTION_SOUTHEAST; end
+
+					table.insert( districtViewInfo.adjacent, {
+						direction	= oppositeDirection,
+						iconArtdef	= artdefIconName,
+						inBonus		= false,
+						outBonus	= true					
+						}
+					);				
+
+					adjacentPlotBonuses[adjacentPlot:GetIndex()] = districtViewInfo;
+				end
+			end		
+		end
+	end
+
+	return adjacentPlotBonuses;
+end
+
+-- ===========================================================================
+--	Adds a plot and all the adjacencent plots, unless already added.
+--	ARGS:		kPlot,			gamecore plot object
+--	ARGS:		kExistingTable,	table of existing plot into to check if we already have info about this plot
+--	RETURNS:	A new/updated plotInfo table
+-- ===========================================================================
+function GetViewPlotInfo( kPlot:table, kExistingTable:table )
+	local plotId	:number = kPlot:GetIndex();
+	local plotInfo	:table = kExistingTable[plotId];
+	if plotInfo == nil then 
+		plotInfo = {
+			index	= plotId, 
+			x		= kPlot:GetX(), 
+			y		= kPlot:GetY(),
+			adjacent= {},				-- adjacent edge bonuses
+			selectable = false,			-- change state with mouse over?
+			purchasable = false
+		}; 
+	end
+	--print( "   plot: " .. plotInfo.x .. "," .. plotInfo.y..": " .. tostring(plotInfo.iconArtdef) );
+	return plotInfo;
 end
 
 -- ===========================================================================
@@ -114,7 +182,7 @@ function GetAdjacentYieldBonusString( eDistrict:number, pkCity:table, plot:table
 	-- Special handling for Neighborhoods
 	if (GameInfo.Districts[eDistrict].OnePerCity == false) then
 
-		tooltipText, requiredText = plot:GetAdjacencyBonusTooltip(Game:GetLocalPlayer(), pkCity:GetID(), eDistrict, 0);
+		tooltipText, requiredText = plot:GetAdjacencyBonusTooltip(Game.GetLocalPlayer(), pkCity:GetID(), eDistrict, 0);
 		-- Ensure required text is NIL if none was returned.
 		if requiredText ~= nil and string.len(requiredText) < 1 then
 			requiredText = nil;
@@ -124,7 +192,7 @@ function GetAdjacentYieldBonusString( eDistrict:number, pkCity:table, plot:table
 		local iBaseHousing = GameInfo.Districts[eDistrict].Housing;
 
 		-- Default is Mbanza case (no appeal change)
-		iconString = "+" .. tostring(iBaseHousing);
+		local iTotalHousing:number = iBaseHousing;
 
 		for row in GameInfo.AppealHousingChanges() do
 			if (row.DistrictType == GameInfo.Districts[eDistrict].DistrictType) then
@@ -132,34 +200,42 @@ function GetAdjacentYieldBonusString( eDistrict:number, pkCity:table, plot:table
 				local iAppealChange = row.AppealChange;
 				local szDescription = row.Description;
 				if (iAppeal >= iMinimumValue) then
-					iconString = "+" .. tostring(iBaseHousing + iAppealChange);
+					iTotalHousing = iBaseHousing + iAppealChange;
 					tooltipText = Locale.Lookup("LOC_DISTRICT_ZONE_NEIGHBORHOOD_TOOLTIP", iBaseHousing + iAppealChange, szDescription);
 					break;
 				end
 			end
 		end
-		iconString = iconString .. " [ICON_Housing]";
+
+		if iTotalHousing ~= 0 then
+			iconString = "[ICON_Housing]+" .. tostring(iTotalHousing);
+		end
 
 	-- Normal handling for all other districts
 	else
 		-- Check each neighbor if it matches criteria with the adjacency rules
-		local iBonus = 0;
-		local iBonusYield = -1;
-		for iI = START_INDEX, END_INDEX do
-			iBonus = plot:GetAdjacencyYield(Game:GetLocalPlayer(), pkCity:GetID(), eDistrict, iI); 
+		for iBonusYield = START_INDEX, END_INDEX do
+			local iBonus:number = plot:GetAdjacencyYield(Game.GetLocalPlayer(), pkCity:GetID(), eDistrict, iBonusYield); 
 			if (iBonus > 0) then
-				iBonusYield = iI;
-				break;
+				local yieldTooltip, yieldRequireText = plot:GetAdjacencyBonusTooltip(Game.GetLocalPlayer(), pkCity:GetID(), eDistrict, iBonusYield);
+				if tooltipText == "" then
+					tooltipText = yieldTooltip;
+				else
+					tooltipText = tooltipText .. "[NEWLINE]" .. yieldTooltip;
+				end
+
+				-- There is always only one requiredText so just replace it
+				requiredText = yieldRequireText;
+
+				local yieldString:string = GetYieldString( GameInfo.Yields[iBonusYield].YieldType, iBonus );
+				if iconString == "" then
+					iconString = yieldString;
+				else
+					iconString = iconString .. "[NEWLINE]" .. yieldString;
+				end
 			end
 		end
 			
-		if iBonusYield == nil or iBonusYield == -1 then 
-			iconString = "";
-		else
-			iconString = GetYieldString( GameInfo.Yields[iBonusYield].YieldType, iBonus );
-		end
-
-		tooltipText, requiredText = plot:GetAdjacencyBonusTooltip(Game:GetLocalPlayer(), pkCity:GetID(), eDistrict, iBonusYield);
 		-- Ensure required text is NIL if none was returned.
 		if requiredText ~= nil and string.len(requiredText) < 1 then
 			requiredText = nil;

@@ -96,7 +96,7 @@
                           <Grid Style="ShellGameDetailsContainerR" Size="72,55" Anchor="R,C"/>
                           <Stack StackGrowth="Right" Anchor="C,C" Offset="0,1" Padding="-3">
                             <Container Size="62,62">
-                              <MakeInstance Name="CivilizationIconShaded44"/>
+                              <MakeInstance Name="CivilizationIcon44" Anchor="C,C" />
                               <Image Texture="Controls_CircleRim50" Size="50,50" Anchor="C,C" Offset="-1,-1" Color="2,119,186"/>
                             </Container>
                             <Container Size="62,62">
@@ -131,7 +131,12 @@
                 <Stack StackGrowth="Down"  Anchor="C,T" Padding="2">
                   <!-- Stack of Selector Controls
                   <GridButton ID="AutoCheck" String="LOC_AUTOSAVES" Style="CheckBoxControl"  Size="340,24" Hidden="1"/>-->
-                  <GridButton ID="CloudCheck" String="LOC_STEAMCLOUD" Style="CheckBoxControl" Size="340,24" Hidden="1"/>
+                  <GridButton ID="CloudCheck" String="LOC_STEAMCLOUD" Style="CheckBoxControl" Size="340,24" Hidden="1">
+                      <Label ID="CheckNewIndicator" String="[ICON_New]" Anchor="L,T" Hidden="0"/>
+                  </GridButton>
+                  <GridButton ID="CloudDummy" String="LOC_2K_CLOUD" Style="CheckBoxControl" TextColor="114,114,114,255" Size="340,24" Hidden="1">
+                      <Label ID="DummyNewIndicator" String="[ICON_New]" Anchor="L,T" Hidden="0"/>
+                  </GridButton>
                   <PullDown			ID="SortByPullDown" Anchor="C,T" Style="PullDownBlue" Size="340,24" ScrollThreshold="110" AutoSizePopUp="1" SpaceForScroll="0" Offset="0,0"/>
                   <PullDown ID="DirectoryPullDown" Anchor="C,T" Style="PullDownBlue" Size="340,24" ScrollThreshold="400" AutoSizePopUp="1" SpaceForScroll="0" Offset="0,0"/>
 									<!-- USE THIS WITH CLOUD CHECK ENABLED:
@@ -178,8 +183,8 @@
 						<Stack Offset="0,60" StackGrowth="Down" Anchor="C,T" Padding="15">
 							<Label ID="Message" Anchor="C,T" WrapWidth="400" String="LOC_CONFIRM_TXT" Style="BodyTextDark18" Align="Center"/>
 							<Stack ID="ButtonStack" Anchor="C,T" StackPadding="15" StackGrowth="Right">
-								<GridButton ID="No" Style="MainButton" Size="200,41" Anchor="C,T" Offset="0,0"  Hidden="0" String="LOC_NO_BUTTON"/>
 								<GridButton ID="Yes" Style="ButtonRed" Size="200,41" Anchor="C,T" Offset="0,0"  Hidden="0" String="LOC_YES_BUTTON"/>
+								<GridButton ID="No" Style="MainButton" Size="200,41" Anchor="C,T" Offset="0,0"  Hidden="0" String="LOC_NO_BUTTON"/>
 							</Stack>
 						</Stack>
 					</Grid>

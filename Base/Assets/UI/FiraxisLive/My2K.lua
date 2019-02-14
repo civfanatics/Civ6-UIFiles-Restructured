@@ -209,12 +209,14 @@ end
 function ChangeMy2KTexture( control, labelControl, my2KLinked )
 	if( control ~= nil and control.SetTexture ~= nil ) then
 		if( my2KLinked ) then
-			control:SetTexture("My2KLogoButtonLoggedIn.dds");
+			control:SetTexture("My2KLogoButtonLoggedIn");
+			control:SetToolTipString( Locale.Lookup("TXT_KEY_MY2K_MODE_LINKED_TOOLTIP"));
 			if (labelControl ~= nil and labelControl.LocalizeAndSetText ~= nil) then
 				labelControl:LocalizeAndSetText("TXT_KEY_MY2K_ADDITION_UNLINK_ACCOUNT_TITLE");
 			end
 		else
-			control:SetTexture("My2KLogoButton.dds");
+			control:SetTexture("My2KLogoButton");
+			control:SetToolTipString( Locale.Lookup("TXT_KEY_MY2K_MODE_UNLINKED_TOOLTIP"));
 			if (labelControl ~= nil and labelControl.LocalizeAndSetText ~= nil) then
 				labelControl:LocalizeAndSetText("TXT_KEY_MY2K_ADDITION_LINK_ACCOUNT_TITLE");
 			end
@@ -232,11 +234,11 @@ function LoggedIn()
 		-- TODO(asherburne): Find another method to determine if my2k is logged in but offline.
 		if( kandoConnected ) then
 			control:SetDisabled(false);
-			ChangeMy2KTexture( control, labelControl, my2KLinked );
+			ChangeMy2KTexture( control, labelControl, my2KLinked );			
 		else
 			ChangeMy2KTexture( control, labelControl, false );
 			control:SetDisabled(true);
-			labelControl:LocalizeAndSetText("TXT_KEY_MY2K_MODE_ANONYMOUS");
+			labelControl:LocalizeAndSetText("TXT_KEY_MY2K_MODE_ANONYMOUS");			
 		end
 	end
 end

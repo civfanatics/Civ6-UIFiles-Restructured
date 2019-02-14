@@ -3,9 +3,9 @@
     
 	<Box						ID="BGBlock"  Style="BGBlock" />
 
-	<Stack StackGrowth="Right" Anchor="L,B">
-		<GridButton			ID="BackButton"			Anchor="L,B" Offset="10,10" Size="220,32" Style="ShellFlag" TextAnchor="L,C" TextOffset="10,0" String="LOC_CREDITS_BACK_BUTTON" />
-		<GridButton			ID="NextButton"			Anchor="L,B" Offset="10,10" Size="220,32" Style="ShellFlag" TextAnchor="L,C" TextOffset="10,0" String="LOC_CREDITS_NEXT_BUTTON" />
+	<Stack StackGrowth="Top" Anchor="L,B">
+		<GridButton ID="BackButton" Anchor="L,B" Offset="10,10" Size="250,32" Style="ShellFlag" TextAnchor="L,C" TextOffset="10,0" String="LOC_CREDITS_BACK_BUTTON" />
+		<PullDown ID="CreditsChoice" Anchor="C,C" Style="PullDownBlue" AutoFlip="1" Size="250,24"/>
 	</Stack>
 	<ScrollPanel		ID="MajorScroll"		Anchor="C,C" Size="1024,parent" Vertical="1" AutoScrollBar="0" Disabled="1">
 		<SlideAnim		ID="SlideAnim"			Anchor="C,C" Size="1024,parent" Start="0,0" End="0,0" Cycle="Once" Speed="0.0015" >
@@ -14,7 +14,7 @@
 			</Stack>
 		</SlideAnim>
 	</ScrollPanel>
-
+	
 	<Instance Name="MajorTitleInstance">
 		<Label ID="Text" Anchor="C,C" Size="1024,36" Style="FontNormal28" SmallCapsType="FirstOnly" SmallCaps="40" Color0="255,255,212,255" Color1="0,0,0,200" />
 	</Instance>

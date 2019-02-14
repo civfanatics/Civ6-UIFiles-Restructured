@@ -1,8 +1,8 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Context>
 
   <!-- Darken the screen -->
-  <Box Color="0,0,0,0" Size="parent,parent" ConsumeMouse="0"/>
+  <Box Color="0,0,0,0" Size="parent,parent" />
   <Image ID="GradientL" Texture="Controls_GradientSmall" Size="20,parent"  Color="0,0,0,255" Anchor="L,T" Rotate="270"/>
   <Image ID="GradientR" Texture="Controls_GradientSmall" Size="20,parent"  Color="0,0,0,255" Anchor="R,T" Rotate="90"/>
   <Image ID="GradientB" Texture="Controls_Gradient" Size="parent,150"  Color="0,0,0,255" Anchor="L,B"/>
@@ -14,7 +14,7 @@
   </Grid>
   
   <!-- Lens Key -->
-  <Grid									ID="KeyPanel"			Anchor="L,T"			Offset="10,86" Size="195,auto"	AutoSizePadding="0,10" Texture="Controls_PanelBlue"  SliceCorner="25,28" SliceSize="33,18" SliceTextureSize="83,75">
+  <Grid									ID="KeyPanel"		Anchor="R,T"			Offset="10,86" Size="195,auto"	AutoSizePadding="0,10" Texture="Controls_PanelBlue"  SliceCorner="25,28" SliceSize="33,18" SliceTextureSize="83,75">
     <Line																Start="20,16"			End="174,16"		Color="55,95,126,255" Width="2" />
     <Label															Anchor="C,T"			Offset="0,20"		Style="FontFlair16" SmallCaps="20" String="LOC_TREE_KEY" Color0="78,119,151,255" Color1="0,0,0,0" Color2="25,65,96,255" />
     <Line																Start="20,40"			End="174,40"		Color="55,95,126,255" Width="2" />

@@ -116,7 +116,7 @@ Events.CombatVisBegin.Add( OnCombatVisBegin );
 -------------------------------------------------------------------------------
 function OnAutomationGameStarted()
 	-- Look at the local observer's capitol
-	OnPlayerTurnActivated(Game:GetLocalObserver(), true);
+	OnPlayerTurnActivated(Game.GetLocalObserver(), true);
 end
 LuaEvents.AutomationGameStarted.Add( OnAutomationGameStarted );
 

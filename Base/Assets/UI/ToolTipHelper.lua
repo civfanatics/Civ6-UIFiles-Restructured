@@ -79,6 +79,11 @@ ToolTipHelper.GetAdjacencyBonuses = function(t, field, key)
 
 				local key = (row.TilesRequired > 1) and "LOC_TYPE_TRAIT_ADJACENT_BONUS_PER" or "LOC_TYPE_TRAIT_ADJACENT_BONUS";
 
+				-- Exception - Adjacent river gold bonuses can only be gained once
+				if row.AdjacentRiver == true then
+					key = "LOC_TYPE_TRAIT_ADJACENT_BONUS_ONCE";
+				end
+
 				local value = Locale.Lookup(key, row.YieldChange, yield.IconString, yield.Name, row.TilesRequired, object);
 
 				if(row.PrereqCivic or row.PrereqTech) then
@@ -184,25 +189,11 @@ ToolTipHelper.GetBuildingToolTip = function(buildingHash, playerId, city)
 		end
 	end
 
+	AddBuildingExtraCostTooltip(buildingHash, toolTipLines);
+
 	local stats = {};
 
-	if city == nil then
-		for row in GameInfo.Building_YieldChanges() do
-			if(row.BuildingType == buildingType) then
-				local yield = GameInfo.Yields[row.YieldType];
-				if(yield) then
-					table.insert(stats, Locale.Lookup("LOC_TYPE_TRAIT_YIELD", row.YieldChange, yield.IconString, yield.Name)); 
-				end
-			end
-		end
-	else
-		for yield in GameInfo.Yields() do
-			local yieldChange = city:GetBuildingPotentialYield(buildingHash, yield.YieldType);
-			if yieldChange ~= 0 then
-				table.insert(stats, Locale.Lookup("LOC_TYPE_TRAIT_YIELD", yieldChange, yield.IconString, yield.Name)); 
-			end
-		end
-	end
+	AddBuildingYieldTooltip(buildingHash, city, stats);
 
 	for row in GameInfo.Building_YieldDistrictCopies() do
 		if(row.BuildingType == buildingType) then
@@ -218,13 +209,7 @@ ToolTipHelper.GetBuildingToolTip = function(buildingHash, playerId, city)
 		table.insert(stats, Locale.Lookup("LOC_TYPE_TRAIT_HOUSING", housing));
 	end
 
-	local entertainment = building.Entertainment or 0;
-	if(entertainment ~= 0) then
-		if district ~= nil and building.RegionalRange ~= 0 then
-			entertainment = entertainment + district:GetExtraRegionalEntertainment();
-		end
-		table.insert(stats, Locale.Lookup("LOC_TYPE_TRAIT_AMENITY_ENTERTAINMENT", entertainment));
-	end
+	AddBuildingEntertainmentTooltip(buildingHash, city, district, stats);
 
 	local citizens = building.CitizenSlots or 0;
 	if(citizens ~= 0) then
@@ -271,7 +256,7 @@ ToolTipHelper.GetBuildingToolTip = function(buildingHash, playerId, city)
 		table.insert(toolTipLines, "[NEWLINE]" .. Locale.Lookup(description));	
 	end
 	
-	if playerId ~= nil then
+	if playerId ~= nil and playerId ~= -1 then
 		local kPlayerCulture:table = Players[playerId]:GetCulture();
 		-- Determine the unlocked Policy, if any
 		if building.UnlocksGovernmentPolicy == true then
@@ -398,6 +383,46 @@ ToolTipHelper.GetBuildingToolTip = function(buildingHash, playerId, city)
 	-- Return the composite tooltip!
 	return table.concat(toolTipLines, "[NEWLINE]");
 
+end
+-------------------------------------------------------------------------------
+function AddBuildingExtraCostTooltip(buildingHash, tooltipLines)
+end
+-------------------------------------------------------------------------------
+function AddBuildingYieldTooltip(buildingHash, city, tooltipLines)
+	local buildingReference:table = GameInfo.Buildings[buildingHash];
+	if (buildingReference ~= nil) then
+		local buildingType:string = buildingReference.BuildingType;
+		if (city == nil) then
+			for row in GameInfo.Building_YieldChanges() do
+				if(row.BuildingType == buildingType) then
+					local yield = GameInfo.Yields[row.YieldType];
+					if(yield) then
+						table.insert(tooltipLines, Locale.Lookup("LOC_TYPE_TRAIT_YIELD", row.YieldChange, yield.IconString, yield.Name)); 
+					end
+				end
+			end
+		else
+			for yield in GameInfo.Yields() do
+				local yieldChange = city:GetBuildingPotentialYield(buildingHash, yield.YieldType);
+				if yieldChange ~= 0 then
+					table.insert(tooltipLines, Locale.Lookup("LOC_TYPE_TRAIT_YIELD", yieldChange, yield.IconString, yield.Name)); 
+				end
+			end
+		end
+	end
+end
+-------------------------------------------------------------------------------
+function AddBuildingEntertainmentTooltip(buildingHash, city, district, tooltipLines)
+	local buildingReference:table = GameInfo.Buildings[buildingHash];
+	if (buildingReference ~= nil) then
+		local entertainment:number = buildingReference.Entertainment or 0;
+		if (entertainment ~= 0) then
+			if district ~= nil and buildingReference.RegionalRange ~= 0 then
+				entertainment = entertainment + district:GetExtraRegionalEntertainment();
+			end
+			table.insert(tooltipLines, Locale.Lookup("LOC_TYPE_TRAIT_AMENITY_ENTERTAINMENT", entertainment));
+		end
+	end
 end
 -------------------------------------------------------------------------------
 ToolTipHelper.GetCivicToolTip = function(civicType, playerId)
@@ -617,6 +642,10 @@ ToolTipHelper.GetUnitToolTip = function(unitType, formationType, pBuildQueue)
 		end
 	end
 
+	if(unitReference.StrategicResource) then
+		AddUnitStrategicResourceTooltip(unitReference, formationType, pBuildQueue, toolTipLines);
+	end
+
 	if(maintenance ~= 0) then
 		local yield = GameInfo.Yields["YIELD_GOLD"];
 		if(yield) then
@@ -624,6 +653,7 @@ ToolTipHelper.GetUnitToolTip = function(unitType, formationType, pBuildQueue)
 		end
 	end
 
+	AddUnitResourceMaintenanceTooltip(unitReference, formationType, pBuildQueue, toolTipLines);
 	
 	if(not Locale.IsNilOrWhitespace(description)) then
 		description = "[NEWLINE]" .. Locale.Lookup(description);
@@ -658,19 +688,33 @@ ToolTipHelper.GetUnitToolTip = function(unitType, formationType, pBuildQueue)
 			table.insert(toolTipLines, v);
 		end
 	end
-
-	if(unitReference.StrategicResource) then
-		local resource = GameInfo.Resources[unitReference.StrategicResource];
-		if(resource) then
-			table.insert(toolTipLines, "[NEWLINE]" .. Locale.Lookup("LOC_TOOLTIP_BUILDING_REQUIRES"));
-			table.insert(toolTipLines, "[ICON_BULLET] " .. "[ICON_" .. resource.ResourceType .. "]" .. Locale.Lookup(resource.Name));
-		end
-	end
 	
 	-- Return the composite tooltip!
 	return table.concat(toolTipLines, "[NEWLINE]");
 	
 end
+
+------------------------------------------------------------------------------
+function AddUnitStrategicResourceTooltip(unitReference, formationType, pBuildQueue, toolTip)
+	local resource = GameInfo.Resources[unitReference.StrategicResource];
+	if(resource) then
+		table.insert(toolTip, "[NEWLINE]" .. Locale.Lookup("LOC_TOOLTIP_BUILDING_REQUIRES"));
+		table.insert(toolTip, "[ICON_BULLET] " .. "[ICON_" .. resource.ResourceType .. "]" .. Locale.Lookup(resource.Name));
+	end
+end
+
+-------------------------------------------------------------------------------
+function AddUnitResourceMaintenanceTooltip(unitReference, formationType, pBuildQueue, toolTip)
+end
+
+-------------------------------------------------------------------------------
+function AddProjectStrategicResourceTooltip(projectReference, toolTip)
+end
+
+-------------------------------------------------------------------------------
+function AddReactorProjectData(projectReference, toolTipLines)
+end
+
 -------------------------------------------------------------------------------
 ToolTipHelper.GetDistrictToolTip = function(districtType)
 
@@ -819,9 +863,13 @@ ToolTipHelper.GetProjectToolTip = function(projectType)
 		end
 	end
 
+	AddProjectStrategicResourceTooltip(projectReference, toolTipLines);
+
 	if(not Locale.IsNilOrWhitespace(description)) then
 		table.insert(toolTipLines,  "[NEWLINE]" .. Locale.Lookup(description));
 	end
+
+	AddReactorProjectData(projectReference, toolTipLines);
 
 	if (amenitiesWhileActive ~= nil and amenitiesWhileActive > 0) then
 		table.insert(toolTipLines, Locale.Lookup("LOC_PROJECT_AMENITIES_WHILE_ACTIVE", amenitiesWhileActive));
@@ -1002,6 +1050,7 @@ ToolTipHelper.GetPolicyToolTip = function(policyType)
 	-- <Name>
 	-- <Slot Type>
 	-- <Static Description>
+	-- (<Required Goverment>)
 	local policyReference = GameInfo.Policies[policyType];
 
 	local name = policyReference.Name;
@@ -1021,6 +1070,26 @@ ToolTipHelper.GetPolicyToolTip = function(policyType)
 	if(not Locale.IsNilOrWhitespace(description)) then
 		table.insert(toolTipLines, "[NEWLINE]" .. Locale.Lookup(description));
 	end
+
+	-- If policy only works for certain government(s), add a "Required" section.
+	local requiredGovernments={};
+	if GameInfo.Policy_GovernmentExclusives_XP2 ~= nil then
+		for row in GameInfo.Policy_GovernmentExclusives_XP2() do
+			if(row.PolicyType == policyType) then
+				table.insert(requiredGovernments, row.GovernmentType);
+			end
+		end
+	end
+	local numGovernments = table.count(requiredGovernments);
+	if numGovernments > 0 then
+		table.insert(toolTipLines, "[NEWLINE] " .. Locale.Lookup("LOC_TOOLTIP_POLICY_REQUIRES_GOVERNMENT",numGovernments));
+		for i,governmentType in ipairs(requiredGovernments) do
+			local governmentName = GameInfo.Governments[governmentType].Name;
+			table.insert(toolTipLines, "[ICON_Bullet] " .. Locale.Lookup(governmentName));
+		end
+	end
+
+
 
 	-- Return the composite tooltip!
 	return table.concat(toolTipLines, "[NEWLINE]");
@@ -1055,9 +1124,15 @@ ToolTipHelper.GetGovernmentToolTip = function(governmentType)
 		table.insert(toolTipLines, Locale.Lookup("{LOC_GOVERNMENT_INFLUENCE_BONUS}: {1}", influencePointBonusDescription));
 	end
 
+	AddGovernmentExtraInfoTooltip(governmentReference, toolTipLines);
+
 	-- Return the composite tooltip!
 	return table.concat(toolTipLines, "[NEWLINE]");
 end
+-------------------------------------------------------------------------------
+function AddGovernmentExtraInfoTooltip(governmentReference, toolTipLines)
+end
+
 -------------------------------------------------------------------------------
 ToolTipHelper.GetResourceToolTip = function(resourceType)
 	-- Gather up all the information
@@ -1213,10 +1288,11 @@ g_ToolTipGenerators = {
 	KIND_DIPLOMATIC_ACTION = ToolTipHelper.GetDiplomaticActionToolTip,
 };
 
-
--- Load all lua scripts prefixed with ToolTip_  so that they can hook into tooltip 
--- creation.
-include ("ToolTip_", true);
+-------------------------------------------------------------------------------
+-- Load all lua scripts prefixed with ToolTipLoader_  
+-- so that they can hook into tooltip creation
+-------------------------------------------------------------------------------
+include ("ToolTipLoader_", true);
 
 ToolTipHelper.GetToolTip = function(typeName, playerId)
 	local handler = g_ToolTipGenerators[typeName];

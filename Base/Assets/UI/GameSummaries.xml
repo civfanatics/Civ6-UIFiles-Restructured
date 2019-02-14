@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Context xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="..\..\..\..\..\CivTech\Libs\ForgeUI\ForgeUI_Assets\Controls.xsd"
+		ColorSet="BodyTextCool" Style="FontNormal22" FontEffect="Stroke">
+
+	<Include File="PopupDialog" />
+	<Include File="CivilizationIcon" />
+	<Box ID="MainGrid" Size="1024,parent" Anchor="C,T" Color="9,44,72,200" TutorialActive="1">
+		<Image Texture="Controls_GradientSmall" Size="22,parent" AnchorSide="O,I" Anchor="R,T" Color="0,0,0,200" Rotate="270" Offset="0,0"/>
+		<Image Texture="Controls_GradientSmall" Size="22,parent" AnchorSide="O,I" Anchor="L,T" Color="0,0,0,200" Rotate="90" Offset="0,0"/>
+		<Box Color="32,70,101,150" Anchor="L,T" Size="2,parent"/>
+		<Box Color="32,70,101,150" Anchor="R,T" Size="2,parent"/>
+
+		<Container ID="MainWindow" Size="1024,768" Anchor="C,C">
+			<!-- Logo -->
+			<Grid ID="LogoContainer" Style="SubContainer4" Size="parent-10,116" Anchor="C,T" Color="7,28,50" AnchorSide="I,O" Offset="0,4">
+				<Image ID="Logo" Anchor="C,C" Texture="MainLogo.dds" StretchMode="Auto"/>
+			</Grid>
+
+			<!-- Header -->
+			<Container Size="parent,54">
+				<Grid Anchor="C,T" Size="parent-10,39" Texture="Controls_DecoFrame" SliceCorner="19,18" SliceSize="1,1" SliceTextureSize="40,38" Color="41,74,108,255" Offset="0,6">
+					<GridButton ID="CloseButton" Style="ShellButtonOrnateFlat" Anchor="R,C" Size="150,36" Offset="1,0" String="LOC_MULTIPLAYER_BACK"/>
+				</Grid>
+				<Label Style="ShellHeader" Anchor="C,C" String="LOC_GAMESUMMARY_TITLE"/>
+				<Grid Style="Divider3Grid" Size="parent+4, 8" Anchor="L,B" Offset="-2,0"/>
+				<Grid Style="Divider3Grid" Size="parent+4, 8" Anchor="L,T" Offset="-2,0" Color="150,150,150,255"/>
+			</Container>
+
+			<!-- Top Menu -->
+			<PullDown ID="RulesetPullDown" Anchor="R,T" Offset="5,68" Style="PullDownBlue" Size="350,24" ScrollThreshold="110" AutoSizePopUp="1" SpaceForScroll="0" />
+			<Stack ID="TabStack" Anchor="L,T" Offset="15,60" Padding="5" StackGrowth="Right">
+				<Container Size="auto,auto">
+					<GridButton		ID="OverviewTab"					Style="ShellTab"					Size="300,41" String="LOC_GAMESUMMARY_OVERVIEW" />
+					<GridButton		ID="SelectedOverviewTab"	Style="ShellTabSelected"	Size="300,41" String="LOC_GAMESUMMARY_OVERVIEW" Hidden="1" />
+				</Container>
+				<Container Size="auto,auto">
+					<GridButton		ID="HistoryTab"					Style="ShellTab"					Size="300,41" String="LOC_GAMESUMMARY_HISTORY" />
+					<GridButton		ID="SelectedHistoryTab" Style="ShellTabSelected"	Size="300,41" String="LOC_GAMESUMMARY_HISTORY" Hidden="1" />
+				</Container>
+			</Stack>
+
+			<!-- Tab Panels -->
+			<Container Hidden="1" ID="OverviewTabPanel" Size="parent-30,parent-115"  Anchor="L,T" Offset="15,115">
+				<Grid Style="SubContainer" Size="parent,parent"  Anchor="R,T" Offset="0,0"  >
+					<Grid Style="DecoGrid" Anchor="C,C" Size="parent-10,parent-10" Color="26,61,90,255">
+						<Image Anchor="C,C" Size="457,469" Texture="AdditionalContent_Watermark"/>
+						<Container ID="OverviewContainer" Size="parent,parent">
+							<!-- Main details panel -->
+							<ScrollPanel ID="OverviewScrollPanel" Anchor="L,T" Vertical="1" Offset="0,10" Size="parent-20,parent-30" AutoScrollBar="1">
+								<Stack Anchor="L,T" ID="OverviewStack" StackGrowth="Bottom" Padding="10" Size="parent,10">
+									<Grid Hidden="1" ID="Highlights" Size="parent-20,120" Anchor="C,T" Offset="0,0" Style="SubContainer">
+										<Image Hidden="1" Texture="AdditionalContent_IconBacking50" Size="70,70" Anchor="L,C" Offset="6,6">
+											<Image ID="OfficialIcon" Anchor="C,C"	Size="50,50" Offset="4,0" Texture="OfficialContent_50"/>
+										</Image>
+
+										<Stack Anchor="C,T" Offset="0,8" StackPadding="7">
+											<Label Anchor="C,T" Style="FontNormal18" String="LOC_GAMESUMMARY_HIGHLIGHTS"/>
+											<Box Offset="30,0" Color="10,60,78,255" Anchor="C,T" Size="Parent-120,3"/>
+											<Stack ID="HighlightsStack" StackGrowth="Right" WrapGrowth="Bottom" WrapWidth="1024" Offset="10,0" Anchor="C,T" Size="auto,64" Padding="5" />
+										</Stack>
+									</Grid>
+
+									<Stack Anchor="C,T" Offset="0,8" StackPadding="7">								
+										<Label Anchor="C,T" Style="FontNormal18" String="LOC_GAMESUMMARY_VICTORYPROGRESS"/>
+										<Box Color="10,60,78,255" Anchor="C,T" Size="Parent-120,3"/>
+										<Stack ID="VictoryProgressStack" StackGrowth="Right" WrapWidth="parent-20" Anchor="C,T" Size="auto,64" Padding="50" />
+									</Stack>
+									<Stack Anchor="C,T" Offset="0,8" StackPadding="7">								
+										<Label Anchor="C,T" Style="FontNormal18" String="LOC_GAMESUMMARY_LEADERPROGRESS"/>
+										<Box Color="10,60,78,255" Anchor="C,T" Size="Parent-120,3"/>
+										<Stack ID="LeaderProgressStack" StackGrowth="Right" WrapWidth="parent-20" Anchor="C,T" Size="auto,20" Padding="20" />
+									</Stack>
+									<Stack ID="StatisticsStack" Anchor="C,T" Offset="0,8" StackPadding="10" />		
+								</Stack>
+
+								<!-- Scroll Controls -->
+								<ScrollBar Style="Slider_Blue" Length="530" Offset="3,0" Anchor="R,T" AnchorSide="O,I" />
+
+							</ScrollPanel>
+						</Container>
+					</Grid>
+				</Grid>
+			</Container>
+			<Container Hidden="1" ID="HistoryTabPanel" Size="parent-30,parent-115"  Anchor="L,T" Offset="15,115">
+				<Grid Style="SubContainer" Size="parent,parent-50"  Anchor="L,T" Offset="0,0">
+					<Stack StackGrowth="Right" Size="auto,40">
+						<GridButton ID="ScoreColumn" Style="ButtonControl"  Size="100,40">
+							<Label Anchor="C,C" Style="FontNormal18"  String="LOC_GAMESUMMARY_HISTORY_SCORE" />
+						</GridButton>
+						<GridButton ID="YouColumn" Style="ButtonControl" Size="260,40">
+							<Label Anchor="C,C" Style="FontNormal18"  String="LOC_GAMESUMMARY_HISTORY_YOU" />
+						</GridButton>
+						<GridButton ID="ResultsColumn" Style="ButtonControl" Size="150,40">
+							<Label Anchor="C,C" Style="FontNormal18"  String="LOC_GAMESUMMARY_HISTORY_RESULTS" />
+						</GridButton>
+						<GridButton ID="VictoryColumn" Style="ButtonControl" Size="240,40">
+							<Label Anchor="C,C" Style="FontNormal18"  String="LOC_GAMESUMMARY_HISTORY_VICTORY" />
+						</GridButton>
+						<GridButton ID="SettingsColumn" Style="ButtonControl" Size="220,40">
+							<Label Anchor="C,C" Style="FontNormal18"  String="LOC_GAMESUMMARY_HISTORY_SETTINGS" />
+						</GridButton>
+					</Stack>
+					<ScrollPanel ID="Listings" Anchor="L,T" Vertical="1" Offset="0,45" Size="parent,parent-40" AutoScrollBar="1" >
+						<!-- Listing Stack (Dynamic) -->
+						<Stack Anchor="L,T" ID="ListingsStack" StackGrowth="Bottom" Padding="5" />
+
+						<!-- Scroll Controls -->
+						<ScrollBar Style="Slider_Blue" Offset="3,0" Anchor="R,T" AnchorSide="O,I" />
+
+					</ScrollPanel>
+				</Grid>
+				<GridButton Anchor="R,B" Offset="0,5" ID="ViewGameDetails" Style="ButtonConfirm" Size="300,41" FontStyle="Stroke" ColorSet="ButtonCS" String="LOC_GAMESUMMARY_VIEWDETAILS" />
+				<GridButton Anchor="L,B" Offset="0,5" ID="DeleteGame" Style="ButtonRed" Size="200,31" FontStyle="Stroke" ColorSet="ButtonCS" String="LOC_GAMESUMMARY_DELETE_GAME" ToolTip="LOC_GAMESUMMARY_DELETE_GAME_TOOLTIP" />
+
+				<GridButton Hidden="1" Anchor="L,B" Offset="0,5" ID="ReplayGame" Style="MainButton" Size="300,41" FontStyle="Stroke" ColorSet="ButtonCS" String="LOC_GAMESUMMARY_LOADCONFIGURATION" ToolTip="Not yet implemented" />
+			</Container>
+		</Container>
+		
+	</Box>
+
+	<!-- Dialog Support -->
+	<MakeInstance Name="PopupDialog" />
+	<LuaContext	ID="GameDetails" DeferLoad="1" FileName="GameSummaries_GameDetails" Hidden="1" />
+
+	<Instance Name="StatBlockInstance">
+		<Stack ID="RootStack" Anchor="C,T" Offset="0,8" StackPadding="7">								
+			<Label ID="StatsTitle" Anchor="C,T" Style="FontNormal18" String="$Additional Stats$"/>
+			<Box Color="0,60,78,255" Anchor="C,T" Size="Parent-120,3"/>
+			<Stack ID="StatisticsStack" StackGrowth="Right"  WrapGrowth="Bottom" WrapWidth="parent" Offset="2,0" Anchor="C,T" Size="parent,default" Padding="5" />
+		</Stack>
+	</Instance>
+	<Instance Name="StatInstance">
+		<Container ID="Root" Size="470,32">
+			<Container Size="200,32">
+				<Stack ID="TitleStack" Anchor="R,C" Size="auto,parent" StackGrowth="Right">
+					<Image ID="TitleIcon" Size="32,32" Icon="ICON_LEADER_CLEOPATRA"/>	
+					
+					<Label ID="TitleCaption" Style="FontNormal16" Anchor="L,C" WrapWidth="parent" String="$Favorite Leader$"/>	
+				</Stack>
+			</Container>
+			<Box Anchor="L,C" Size="6,2" Offset="204,0" Color="46,70,95,255" />
+			<Stack ID="ValueStack" StackGrowth="Right" Size="auto,parent" Anchor="L,C" Offset="214,0" Padding="5">
+				<Image ID="ValueIcon" Size="32,32" Icon="ICON_LEADER_CLEOPATRA"/>
+				<Stack ID="AnnotationStack" Size="parent,auto" StackGrowth="Bottom" Anchor="L,C">
+					<Label ID="ValueCaption" Style="FontNormal16" Anchor="L,T" WrapWidth="240" String="$Cleopatra$"/>
+					<Label ID="Annotation" Style="FontNormal14" Anchor="L,T" WrapWidth="240" String="$(12 wars won)$"/>
+				</Stack>
+				
+			</Stack>
+		</Container>
+	</Instance>
+	
+	<Instance Name="LeaderProgressInstance">
+		<Image ID="Icon" Size="64,64" Icon="ICON_LEADER_CLEOPATRA" Color="255,255,255,50" />
+	</Instance>
+	<Instance Name="VictoryProgressInstance">
+		<Image ID="Root" Size="41,111" Offset="0,60" TextureOffset="0,30" Texture="Controls_Pennant">
+			<Image ID="Icon" Anchor="C,T" Offset="0,-62" Size="80,80" Icon="ICON_VICTORY_SCORE"/>
+		</Image>
+	</Instance>
+	<Instance Name="GameInstance">
+		<GridButton ID="Button" Style="ButtonControl" Size="parent,80">
+			<Stack StackGrowth="Right" Offset="5,0" Size="auto,80" Anchor="L,T">
+				<!-- Score -->
+				<Container Size="95,parent">
+					<Label ID="Score" Anchor="C,C" Style="FontNormal22" ColorSet="BodyTextCool" FontStyle="stroke" String="$Score$" />		
+				</Container>
+
+				<!-- You -->
+				<Container Size="260,parent">
+					<Stack Anchor="L,C" StackGrowth="Right" Padding="5">
+						<Image ID="PlayerLeaderIcon" Size="64,64" Icon="ICON_LEADER_GANDHI" />
+						<Stack Anchor="L,C" StackGrowth="Bottom">
+							<Label ID="PlayerLeaderName" Anchor="L,T" WrapWidth="parent-70" Style="FontNormal18" ColorSet="BodyTextCool" FontStyle="stroke" String="$Gandhi$" />
+							<Stack Anchor="L,T" StackGrowth="Right" Padding="5">
+								<Container Size="22,22">
+									<Image ID="PlayerCivilizationIconBG" Size="22,22" Texture="CircleBacking22" />
+									<Image ID="PlayerCivilizationIcon" Size="22,22" Icon="ICON_CIVILIZATION_INDIA"/>
+								</Container>
+								<Label ID="PlayerCivilizationName" Anchor="L,C" TruncateWidth="170" TruncatedTooltip="1" Style="FontNormal16" ColorSet="BodyTextCool" FontStyle="stroke" String="$India$" />
+							</Stack>
+						</Stack>
+					</Stack>
+				</Container>
+
+				<!-- Results -->
+				<Container Size="150,parent">
+					<Label ID="VictoryOrDefeat" Anchor="C,C" Style="FontNormal22" ColorSet="BodyTextCool" FontStyle="stroke" String="$VICTORY!$" />												
+				</Container>
+
+				<!-- Victory -->
+				<Container Size="240,parent">
+					<Stack Anchor="L,C" StackGrowth="Right" Padding="5">
+						<Image ID="VictoryIcon" Size="64,64" Icon="ICON_VICTORY_CONQUEST" />
+						<Stack Anchor="L,C" StackGrowth="Bottom">
+							<Label ID="VictorName" WrapWidth="parent-69" Style="FontNormal18" ColorSet="BodyTextCool" FontStyle="stroke" String="$You$" />
+							<Label ID="VictoryName" WrapWidth="parent-69" Style="FontNormal14" ColorSet="BodyTextCool" FontStyle="stroke" String="$Conquest Victory$" />
+
+						</Stack>
+					</Stack>
+				</Container>
+
+				<!-- Settings -->
+				<Container Size="220,parent">
+					<Stack Anchor="R,C" Size="parent,default">
+						<Stack Anchor="C,T" Size="default,32" StackGrowth="Right">
+							<Image ID="GameSpeedIcon" Size="32,32" Icon="ICON_GAMESPEED_STANDARD"/>
+							<Image ID="PlayerDifficultyIcon" Size="32,32" Icon="ICON_DIFFICULTY_DEITY"/>
+							<Label ID="Turns" Anchor="L,C" WrapWidth="parent" Style="FontNormal14" ColorSet="BodyTextCool" FontStyle="stroke" String="$TURN [ICON_TURN] 500$"/>
+
+						</Stack>
+						<Label ID="StartEra" Anchor="C,T" WrapWidth="parent" Style="FontNormal14" ColorSet="BodyTextCool" FontStyle="stroke" String="$Started in Ancient Era$" />
+						<Label ID="LastPlayed" Anchor="C,T" WrapWidth="parent" Style="FontNormal14" ColorSet="BodyTextCool" FontStyle="stroke" String="$5/22/2018 10:30 AM$" />
+					</Stack>
+				</Container>
+			</Stack>
+		</GridButton>
+	</Instance>
+</Context>

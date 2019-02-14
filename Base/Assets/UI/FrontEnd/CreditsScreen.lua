@@ -21,22 +21,32 @@ local m_ImageIM		:table = InstanceManager:new("ImageInstance",		"Image",Controls
 local m_MajorTitleIM:table = InstanceManager:new("MajorTitleInstance",	"Text", Controls.CreditsList);
 local m_MinorTitleIM:table = InstanceManager:new("MinorTitleInstance",	"Text", Controls.CreditsList);
 local m_TurboMode   :boolean = false;
-local m_CreditsKeyList :table = { { TextKey="LOC_CREDITS" }, { TextKey="LOC_EXPANSION1_CREDITS", ModID="1B28771A-C749-434B-9053-D1380C553DE9"} };
-local m_CurrentCreditListIndex:number = 1;
+
+CreditsData = nil;
+CreditsIndex = 1;
 
 -- ===========================================================================
 function OnClose()
+
+	-- Stop the scrolling to prevent callbacks while the screen is closed.
+	Controls.SlideAnim:Stop();
+
+	-- Cleanup instances.
+	removeEntries();
+
 	UIManager:DequeuePopup( ContextPtr );
 end
 
 -- ===========================================================================
-function OnNext()
-	DisplayCredits(m_CurrentCreditListIndex + 1);
-end
-
--- ===========================================================================
 function OnCreditScrollComplete()
-	OnNext();
+	if ContextPtr:IsVisible() and CreditsData ~= nil then
+		CreditsIndex = CreditsIndex + 1;
+		if(CreditsIndex > #CreditsData) then
+			CreditsIndex = 1;
+		end
+
+		DisplayCredits(CreditsIndex);
+	end
 end
 -- ===========================================================================
 --	Key Down Processing
@@ -96,10 +106,30 @@ end
 -- ===========================================================================
 function OnShow()
 
-	DisplayCredits(1);
+	CreditsData = DB.ConfigurationQuery("SELECT * FROM Credits ORDER BY SortOrder ASC");
+	if(CreditsData and #CreditsData > 0) then
+		local choice = Controls.CreditsChoice;
+		if(#CreditsData == 1) then
+			choice:SetHide(true);
+		else
+			choice:ClearEntries();
+			for i,v in ipairs(CreditsData) do
+				local entry = {};
+				choice:BuildEntry( "InstanceOne", entry );
+				entry.Button:SetText(Locale.Lookup(v.DisplayName));
+				entry.Button:RegisterCallback(Mouse.eLClick, function()	
+					DisplayCredits(i);
+				end);
+			end
+			choice:CalculateInternals();
+			choice:SetHide(false);
+		end
+
+		DisplayCredits(1);
+	end
+
     m_TurboMode = false;
 end
-
 
 -- ===========================================================================
 function Resize()
@@ -111,26 +141,16 @@ function Resize()
 end
 
 -- ===========================================================================
-function CanShowCreditEntry(entry:table)
-	if Locale.HasTextKey(entry.TextKey) and (entry.ModID == nil or Modding.CanEnableMod(entry.ModID) == "OK") then
-		return true;
-	else
-		return false;
-	end
-end
+function DisplayCredits(creditsIndex)
+	CreditsIndex = creditsIndex;
+	local credits = CreditsData[CreditsIndex];
 
--- ===========================================================================
-function DisplayCredits(creditsIndex:number)
+	-- Update the drop-down to reflect the current selection.
+	local button = Controls.CreditsChoice:GetButton();
+	button:LocalizeAndSetText(credits.DisplayName);
 
-	m_CurrentCreditListIndex = creditsIndex;
-	while #m_CreditsKeyList >= m_CurrentCreditListIndex and not CanShowCreditEntry(m_CreditsKeyList[m_CurrentCreditListIndex]) do
-		m_CurrentCreditListIndex = m_CurrentCreditListIndex + 1;
-	end
-
-	if #m_CreditsKeyList < m_CurrentCreditListIndex then
-		OnClose();
-	else
-		
+	removeEntries();
+	if(credits) then
 		removeEntries();
 		local initialSpaceSize1 = -Controls.InitialSpace:GetSizeY();
 		Controls.SlideAnim:SetRelativeEndVal(0, 0);
@@ -138,7 +158,7 @@ function DisplayCredits(creditsIndex:number)
 		Controls.CreditsList:CalculateSize();		
 		Controls.MajorScroll:CalculateInternalSize();
 
-		generateCredits(m_CreditsKeyList[m_CurrentCreditListIndex].TextKey);
+		generateCredits(credits.Credits);
 			
 		Controls.CreditsList:CalculateSize();		
 		Controls.CreditsList:ReprocessAnchoring();		
@@ -150,23 +170,12 @@ function DisplayCredits(creditsIndex:number)
 		Controls.SlideAnim:SetRelativeEndVal(0, sizeY );
    		Controls.SlideAnim:SetToBeginning();
    		Controls.SlideAnim:Play();
-		Controls.SlideAnim:SetSpeed(0.001);
 
-		-- Show the Next button if we have more credits to show.
-		Controls.NextButton:SetShow( hasMoreCredits(m_CurrentCreditListIndex + 1) );
-
+		local speed = math.abs(65/sizeY);
+		Controls.SlideAnim:SetSpeed(speed);
 	end
 end
 
-----------------------------------------------------------------        
----------------------------------------------------------------- 
-function hasMoreCredits(creditsIndex)
-	while #m_CreditsKeyList >= creditsIndex and not CanShowCreditEntry(m_CreditsKeyList[creditsIndex]) do
-		creditsIndex = creditsIndex + 1;
-	end
-
-	return #m_CreditsKeyList >= creditsIndex;
-end
 ----------------------------------------------------------------        
 ---------------------------------------------------------------- 
 function removeEntries()
@@ -273,12 +282,7 @@ function Initialize()
 	Controls.BackButton:RegisterCallback( Mouse.eLClick, OnClose );
 	Controls.BackButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 
-	Controls.NextButton:RegisterCallback( Mouse.eLClick, OnNext );
-	Controls.NextButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
-
 	Controls.SlideAnim:RegisterEndCallback( OnCreditScrollComplete );
 	
 end
 Initialize();
-
---Controls.Test:SetText("Tomáš");

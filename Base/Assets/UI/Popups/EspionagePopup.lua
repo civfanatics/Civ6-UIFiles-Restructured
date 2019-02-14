@@ -1,6 +1,5 @@
--- ===========================================================================
--- Popup - Show mission briefings as well as when a mission is completed/failed
--- ===========================================================================
+--	Copyright 2018, Firaxis Games
+
 include("InstanceManager");
 include("EspionageSupport");
 
@@ -46,10 +45,9 @@ function Refresh()
 		local operationInfo:table = GameInfo.UnitOperations[m_operation.Hash];
 		local textureOffsetX, textureOffsetY, textureSheet = IconManager:FindIconAtlas(operationInfo.Icon,200);
 		Controls.MissionIcon:SetTexture(textureOffsetX, textureOffsetY, textureSheet);
-	end
 
-	-- Refresh Info Stack
-	RefreshStack();
+		RefreshStack();
+	end
 end
 
 -- ===========================================================================
@@ -68,12 +66,9 @@ function RefreshStack()
 		Controls.MissionOutcomeContainer:SetHide(false);
 	end
 
-	-- Get operation index
-	local eOperation:number = GameInfo.UnitOperations[m_operation.Hash].Index;
-
 	-- Update Mission Duration
-	if m_currentPopupState == EspionagePopupStates.MISSION_BRIEFING then
-		Controls.MissionDurationLabel:SetText(Locale.Lookup("LOC_ESPIONAGEPOPUP_TURNS", UnitManager.GetTimeToComplete(eOperation, m_spy)));
+	if m_currentPopupState == EspionagePopupStates.MISSION_BRIEFING and m_operation ~= nil then
+	    Controls.MissionDurationLabel:SetText(Locale.Lookup("LOC_ESPIONAGEPOPUP_TURNS", UnitManager.GetTimeToComplete(m_operation.Index, m_spy)));
 		Controls.MissionDurationContainer:SetHide(false);
 	elseif m_currentPopupState == EspionagePopupStates.ABORT_MISSION then
 		local remainingTurns = m_spy:GetSpyOperationEndTurn() - Game.GetCurrentGameTurn();
@@ -93,20 +88,26 @@ function RefreshStack()
 	-- Only show appropriate buttons
 	if m_currentPopupState == EspionagePopupStates.MISSION_BRIEFING then
 		Controls.AcceptButton:SetHide(false);
+		Controls.RenewButton:SetHide(true);
 		Controls.AbortButton:SetHide(true);
 		Controls.CancelButton:SetHide(false);
-		Controls.MissionSucceedButton:SetHide(true)
+		Controls.MissionSucceedButton:SetHide(true);
 		Controls.MissionFailureButton:SetHide(true);
+		Controls.RenewableMissionContainer:SetHide(true);
 	elseif m_currentPopupState == EspionagePopupStates.ABORT_MISSION then
 		Controls.AcceptButton:SetHide(true);
+		Controls.RenewButton:SetHide(true);
 		Controls.AbortButton:SetHide(false);
 		Controls.CancelButton:SetHide(false);
-		Controls.MissionSucceedButton:SetHide(true)
+		Controls.MissionSucceedButton:SetHide(true);
 		Controls.MissionFailureButton:SetHide(true);
+		Controls.RenewableMissionContainer:SetHide(true);
 	else
 		Controls.AcceptButton:SetHide(true);
 		Controls.AbortButton:SetHide(true);
 		Controls.CancelButton:SetHide(true);
+		Controls.RenewButton:SetHide(true);
+		Controls.RenewableMissionContainer:SetHide(true);
 
 		-- Show proper button depending on mission outcome
 		local missionWasSuccess:boolean = false;
@@ -124,11 +125,67 @@ function RefreshStack()
 			Controls.MissionSucceedButton:SetHide(true);
 			Controls.MissionFailureButton:SetHide(false);
 		end
+
+		if TryRefreshRenewableMission(m_missionHistory) then
+			Controls.RenewButton:SetHide(false);
+			Controls.RenewableMissionContainer:SetHide(false);
+		end
 	end
 
 	Controls.OutcomeStack:CalculateSize();
-	Controls.OutcomeStack:ReprocessAnchoring();
-	Controls.OperationInfoStack:ReprocessAnchoring();
+end
+
+-- ===========================================================================
+function TryRefreshRenewableMission( kMissionHistory:table )
+    if not CanMissionBeRenewed(kMissionHistory) then
+		return false;
+	end
+
+	local pPlayer:table = Players[Game.GetLocalPlayer()];
+	if pPlayer == nil then
+		return false;
+	end
+	
+	-- Find the spy by name because misison history doesn't contain the spies ID because they might be dead
+	local pPlayerUnits:table = pPlayer:GetUnits();
+	for i, pUnit in pPlayerUnits:Members() do
+	    local kUnitInfo:table = GameInfo.Units[pUnit:GetUnitType()];
+	    if kUnitInfo.Spy and pUnit:GetName() == kMissionHistory.Name then
+	        m_spy = pUnit;
+		end
+	end
+
+	-- Find the city where the mission took place
+	local pTargetPlot:table = Map.GetPlotByIndex(kMissionHistory.PlotIndex);
+	m_city = Cities.GetPlotPurchaseCity( pTargetPlot );
+	local pCityPlot:table = Map.GetPlot(m_city:GetX(), m_city:GetY());
+
+	-- Bail early if we weren't able to find the spy or city
+	if m_spy == nil or m_city == nil then
+		return false;
+	end
+
+	if m_operation.Hash == UnitOperationTypes.SPY_COUNTERSPY then
+		local kDistrictInfo:table = GameInfo.Districts[pTargetPlot:GetDistrictType()];
+		Controls.RenewableMissionDetails:SetText(Locale.Lookup("LOC_ESPIONAGECHOOSER_COUNTERSPY", Locale.Lookup(kDistrictInfo.Name)));
+	else
+		local detailText:string = GetFormattedOperationDetailText(m_operation, m_spy, m_city);
+		if detailText ~= "" then
+			Controls.RenewableMissionDetails:SetText(detailText);
+		else
+			return false;
+		end
+	end
+
+	local canStart:boolean, results:table = UnitManager.CanStartOperation( m_spy, m_operation.Hash, pCityPlot, false, true);
+	if canStart then
+		RefreshMissionStats(Controls, m_operation, results, m_spy, m_city, pTargetPlot);
+		Controls.RenewButton:RegisterCallback( Mouse.eLClick, function() RenewMission(m_spy, m_operation.Hash, pTargetPlot:GetX(), pTargetPlot:GetY()); Close(); end);
+	else
+		return false;
+	end
+
+	return true;
 end
 
 -- ===========================================================================
@@ -154,7 +211,12 @@ function RefreshMissionOutcome()
 					Controls.SpyLootGrid:SetHide(true);
 				end
 
-				Controls.MissionRewardsContainer:SetHide(false);
+				if ShouldShowRewards(m_missionHistory.Operation) then
+					Controls.MissionRewardsContainer:SetHide(false);
+				else
+					Controls.MissionRewardsContainer:SetHide(true);
+				end
+
 				Controls.MissionConsequencesContainer:SetHide(true);
 			else
 				Controls.MissionOutcomeLabel:SetText(Locale.Lookup("LOC_ESPIONAGEPOPUP_FAILURE"));
@@ -188,8 +250,20 @@ function RefreshMissionOutcome()
 			Controls.MissionOutcomeDescription:SetText(outcomeDetails.Description);
 		end
 	end
+end
 
-	Controls.MissionOutcomeContainer:ReprocessAnchoring();
+-- ===========================================================================
+function ShouldShowRewards( eOperation:number )
+	local kOpDef:table = GameInfo.UnitOperations[m_missionHistory.Operation];
+	if kOpDef ~= nil then
+		if kOpDef.Hash == UnitOperationTypes.SPY_COUNTERSPY or
+		   kOpDef.Hash == UnitOperationTypes.SPY_LISTENING_POST or
+	       kOpDef.Hash == UnitOperationTypes.SPY_GAIN_SOURCES then
+			return false;
+		end
+	end
+		
+	return true;
 end
 
 -- ===========================================================================
@@ -202,8 +276,7 @@ function RefreshPossibleOutcomes()
 	end
 
 	local cityPlot:table = Map.GetPlot(m_city:GetX(), m_city:GetY());
-	local eOperation:number = GameInfo.UnitOperations[m_operation.Hash].Index;
-	local resultProbability:table = UnitManager.GetResultProbability(eOperation, m_spy, cityPlot);
+    local resultProbability:table = UnitManager.GetResultProbability(m_operation.Index, m_spy, cityPlot);
 	if resultProbability["ESPIONAGE_SUCCESS_UNDETECTED"] then
 		local successProbability:number = resultProbability["ESPIONAGE_SUCCESS_UNDETECTED"];
 
@@ -248,6 +321,15 @@ function RefreshPossibleOutcomes()
 			end
 		end
 	end
+end
+
+-- ===========================================================================
+function RenewMission( spy:table, operationType:number, plotX:number, plotY:number )
+	local tParameters:table = {};
+	tParameters[UnitOperationTypes.PARAM_X] = plotX;
+	tParameters[UnitOperationTypes.PARAM_Y] = plotY;
+
+	UnitManager.RequestOperation(spy, operationType, tParameters);
 end
 
 -- ===========================================================================
@@ -314,6 +396,11 @@ function ShowMissionCompletedPopup(playerID:number, missionID:number)
 	
 	-- Cache operation
 	m_operation = GameInfo.UnitOperations[mission.Operation];
+
+	-- For counterspy missions ignore them if they finish before you turn is active
+	if m_operation.Hash == UnitOperationTypes.SPY_COUNTERSPY and not pPlayer:IsTurnActive() then
+		return;
+	end
 
 	m_currentPopupState = EspionagePopupStates.MISSION_COMPLETED;
 
@@ -393,8 +480,7 @@ end
 -- ===========================================================================
 function Open()
 	-- Queue Popup
-	UIManager:QueuePopup( ContextPtr, PopupPriority.Current);
-
+	UIManager:QueuePopup( ContextPtr, PopupPriority.Low);
 	Refresh();
 end
 
@@ -454,6 +540,7 @@ end
 --	UI EVENT
 -- ===========================================================================
 function OnShutdown()
+    LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "isHidden", ContextPtr:IsHidden());
 	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "spy", m_spy);
 	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "city", m_city);
 	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "operation", m_operation);
@@ -483,7 +570,9 @@ function OnGameDebugReturn(context:string, contextTable:table)
 			m_operation = contextTable["operation"];
 		end
 
-		Refresh();
+		if contextTable["isHidden"] ~= nil and not contextTable["isHidden"] then			
+		    Refresh();
+		end
 	end
 end
 

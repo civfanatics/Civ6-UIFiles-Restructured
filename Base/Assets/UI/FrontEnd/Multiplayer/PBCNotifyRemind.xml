@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Context ColorSet="Beige_Black" Style="FontNormal22" FontStyle="Shadow" >
+	<Grid Size="auto,auto" AutoSizePadding="25,25" Anchor="C,C" Offset="0,0" Padding="0,0" Style="WindowFrame" >
+		<Stack ID="Contents" Anchor="C,C" Offset="0,0" StackGrowth="Down" StackPadding="20" InnerPadding="0,0">
+			<Label ID="RemindTitle" Anchor="C,T" Style="HeaderFont" Offset="0,5" WrapWidth="400" String="LOC_PBC_NOTIFY_REMINDER_TITLE"/>
+			<Label ID="RemindText"	Anchor="C,T" Style="BodyFont"	WrapWidth="600" String="LOC_PBC_OVERVIEW_DESC"/>
+			
+			<CheckBox ID="DoNotRemindCheckbox" Anchor="L,C" Style="MainMenuCheck" FontStyle="Shadow" Color0="5,29,51,255" Color1="0,0,0,50" Offset="0,0" String="LOC_DO_NOT_REMIND" ToolTip="LOC_DO_NOT_REMIND_TT" BoxOnLeft="1" IsChecked="0"/>
+			<!-- Bottom Buttons  -->
+			<Stack ID="BottomContents" Anchor="C,B" Offset="0,0" StackGrowth="Right" StackPadding="30" InnerPadding="0,0">
+				<GridButton		ID="OptionsButton"			Size="160,42"		Style="MainButton" String="LOC_MAIN_MENU_OPTIONS" />
+				<GridButton		ID="AcceptButton"			Size="160,42"		Style="MainButton" String="LOC_OK" />
+			</Stack>			
+		</Stack>
+	</Grid>
+</Context>

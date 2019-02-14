@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Context xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="..\..\..\..\..\CivTech\Libs\ForgeUI\ForgeUI_Assets\Controls.xsd">
 
 	<Container Style="FullScreenVignetteConsumer" ConsumeAllMouse="0" ConsumeMouseButton="1" ConsumeMouseWheel="1" ConsumeMouseOver="1"/>
@@ -8,7 +8,7 @@
 		<Image																														Size="parent,40"						Texture="Controls_SubHeader2"  />
 		<Grid																							Offset="-5,-5"	Size="parent+10,parent+10"	Style="WindowFrameAlpha"/>
 		<Label				ID="ModalScreenTitle" Anchor="C,T"	Offset="0,5"																Style="FontFlair28" FontStyle="glow" Color="206,218,225,255" EffectColor="74,108,37,191" />
-		<Button				ID="ModalScreenClose" Anchor="R,T"																							Style="CloseButtonSmall" Offset="0,0" />
+    	<Button				ID="ModalScreenClose" Anchor="R,T"																							Style="CloseButtonLarge" Offset="-8,-5" />
 
 		
 		<GridButton	ID="ViewGallery" Offset="17,51" Size="250,26" Style="ButtonControlTan" String="LOC_GREAT_WORKS_VIEW_GALLERY"/>

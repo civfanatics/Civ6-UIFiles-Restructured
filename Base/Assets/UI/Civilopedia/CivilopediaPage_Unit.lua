@@ -130,6 +130,13 @@ PageLayouts["Unit" ] = function(page)
 						local leader = GameInfo.Leaders[leader_trait.LeaderType];
 						if(leader) then
 							other_unique_to[leader_trait.LeaderType] = true;
+
+							-- Include Leader's civiliazations
+							for cl in GameInfo.CivilizationLeaders() do
+								if(cl.LeaderType == leader_trait.LeaderType) then
+									other_unique_to[cl.CivilizationType] = true;
+								end
+							end
 						end
 					end
 				end
@@ -139,6 +146,13 @@ PageLayouts["Unit" ] = function(page)
 						local civ = GameInfo.Civilizations[civ_trait.CivilizationType];
 						if(civ) then
 							other_unique_to[civ_trait.CivilizationType] = true;
+
+							-- Include Civilization's Leaders
+							for cl in GameInfo.CivilizationLeaders() do
+								if(cl.CivilizationType == civ_trait.CivilizationType) then
+									other_unique_to[cl.LeaderType] = true;
+								end
+							end
 						end
 					end
 				end
@@ -169,9 +183,9 @@ PageLayouts["Unit" ] = function(page)
 					table.insert(upgrades_to, {"ICON_" .. u.UnitType, u.Name, u.UnitType});
 				end
 
-				for replaces in GameInfo.UnitReplaces() do
-					if(replaces.ReplacesUnitType == u.UnitType) then
-						local replaced_unit = GameInfo.Units[replaces.CivUniqueUnitType];
+				for r in GameInfo.UnitReplaces() do
+					if(r.ReplacesUnitType == u.UnitType) then
+						local replaced_unit = GameInfo.Units[r.CivUniqueUnitType];
 						if(replaced_unit and matches_unique(replaced_unit)) then
 							table.insert(upgrades_to, {"ICON_" .. replaced_unit.UnitType, replaced_unit.Name, replaced_unit.UnitType});
 						end
@@ -189,8 +203,8 @@ PageLayouts["Unit" ] = function(page)
 		end
 
 		-- For unique units, check the upgrade path of the unit they replace. (but make sure another unique unit isn't in the path).
-		for replaces in GameInfo.UnitReplaces() do
-			if(replaces.CivUniqueUnitType == unitType and row.UpgradeUnit == replaces.ReplacesUnitType) then
+		for r in GameInfo.UnitReplaces() do
+			if(r.CivUniqueUnitType == unitType and row.UpgradeUnit == r.ReplacesUnitType) then
 				local u = GameInfo.Units[row.Unit];
 				if(u and u.TraitType ~= "TRAIT_BARBARIAN" and matches_unique(u)) then
 					table.insert(upgrades_from, {"ICON_" .. u.UnitType, u.Name, u.UnitType});

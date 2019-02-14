@@ -17,15 +17,16 @@ local m_PlayerEntries          : table = {};
 local m_PlayerIndexToEntry     : table = {};
 local m_CityEntries            : table = {};
 local m_IDsToCityEntry         : table = {};
+local m_CoastalLowlandEntries  : table = {};
 
 local m_StartPosTypeEntries : table =
 {
-	{ Type = "None",         Text = "None",              Control = nil },
-	{ Type = "Player",       Text = "Player",            Control = Controls.StartPosPlayerPulldown },
-	{ Type = "Leader",       Text = "Leader",            Control = Controls.StartPosLeaderPulldown },
-	{ Type = "Civilization", Text = "Civilization",      Control = Controls.StartPosCivPulldown },
-	{ Type = "RandomMajor",  Text = "Random Player",     Control = nil },
-	{ Type = "RandomMinor",  Text = "Random City State", Control = nil }
+	{ Type = "None",         Text = "LOC_WORLDBUILDER_NONE",              Control = nil },
+	{ Type = "Player",       Text = "LOC_WORLDBUILDER_PLAYER",            Control = Controls.StartPosPlayerPulldown },
+	{ Type = "Leader",       Text = "LOC_WORLDBUILDER_LEADER",            Control = Controls.StartPosLeaderPulldown },
+	{ Type = "Civilization", Text = "LOC_WORLDBUILDER_CIVILIZATION",      Control = Controls.StartPosCivPulldown },
+	{ Type = "RandomMajor",  Text = "LOC_WORLDBUILDER_RANDOM_PLAYER",     Control = nil },
+	{ Type = "RandomMinor",  Text = "LOC_WORLDBUILDER_RANDOM_CITY_STATE", Control = nil }
 };
 
 local m_DirectionTypeEntries : table = 
@@ -48,6 +49,10 @@ end
 -- ===========================================================================
 --	FUNCTIONS
 -- ===========================================================================
+function IsExpansion2()
+	return Modding.IsModActive("4873eb62-8ccc-4574-b784-dda455e74e68");
+end
+
 function UpdateActiveStartPosControl(startPostType)
 	if startPostType.Control ~= nil then
 		Controls.StartPosTabControl:SelectTab( startPostType.Control );
@@ -65,8 +70,8 @@ function UpdatePlotInfo()
 		local isWater = plot:IsWater();
 		local hasOwner = plot:IsOwned();
 		local terrainType = plot:GetTerrainType();
-		local owner = hasOwner and WorldBuilder.CityManager():GetPlotOwner( m_SelectedPlot ) or nil;
-		
+        local owner = hasOwner and WorldBuilder.CityManager():GetPlotOwner( m_SelectedPlot ) or nil;
+                		
 		local plotFeature = plot:GetFeature();
 		Controls.TerrainPullDown:SetSelectedIndex(     terrainType+1,               false );
 		Controls.FeaturePullDown:SetSelectedIndex(     plotFeature:GetType()+2,     false );
@@ -74,6 +79,11 @@ function UpdatePlotInfo()
 		Controls.ResourcePullDown:SetSelectedIndex(    plot:GetResourceType()+2,    false );
 		Controls.ImprovementPullDown:SetSelectedIndex( plot:GetImprovementType()+2, false );
 		Controls.RoutePullDown:SetSelectedIndex(       plot:GetRouteType()+2,       false );
+
+        if IsExpansion2() then
+            local eCoastalLowlandType:number = TerrainManager.GetCoastalLowlandType( m_SelectedPlot );
+            Controls.LowlandTypePulldown:SetSelectedIndex( eCoastalLowlandType + 2, false );
+        end
 
 		Controls.ImprovementPillagedButton:SetSelected( plot:IsImprovementPillaged() );
 		Controls.RoutePillagedButton:SetSelected( plot:IsRoutePillaged() );
@@ -89,9 +99,14 @@ function UpdatePlotInfo()
 			Controls.ResourceAmount:SetDisabled( true );
 		end
 
+		local plotDir = plotFeature:GetDirection();
 		for i, entry in ipairs(m_FeatureTypeEntries) do
 			if entry.Type ~= nil then
-				entry.Button:SetDisabled(not WorldBuilder.MapManager():CanPlaceFeature(m_SelectedPlot, entry.Type.Index));
+				if plotDir == -1 then
+					entry.Button:SetDisabled(not WorldBuilder.MapManager():CanPlaceFeature(m_SelectedPlot, entry.Type.Index));
+				else
+					entry.Button:SetDisabled(false);
+				end
 			end
 		end
 
@@ -156,6 +171,7 @@ function UpdateSelectedPlot(plotID)
 	Controls.StartPosTabControl:SetDisabled(not plotSelected);
 	Controls.OwnerPulldown:SetDisabled(not plotSelected);
 	Controls.FeatureDirectionPulldown:SetDisabled(not plotSelected);
+	Controls.LowlandTypePulldown:SetDisabled(not plotSelected);
 	
 	if plotSelected then
 		local plot = Map.GetPlotByIndex( m_SelectedPlot );
@@ -214,15 +230,17 @@ function UpdatePlayerEntries()
 	m_PlayerIndexToEntry[-1] = { PlayerIndex=-1, EntryIndex=0 };
 	
 	local playerCount = 0;
-	for i = 0, GameDefines.MAX_PLAYERS-2 do -- Use MAX_PLAYERS-2 to ignore the barbarian player
+	for i = 0, GameDefines.MAX_PLAYERS-1 do
 
 		local eStatus = WorldBuilder.PlayerManager():GetSlotStatus(i); 
 		if eStatus ~= SlotStatus.SS_CLOSED then
 			local playerConfig = WorldBuilder.PlayerManager():GetPlayerConfig(i);
-			local playerEntry = { Text=playerConfig.Name, PlayerIndex=i, EntryIndex=playerCount+1 };
-			table.insert(m_PlayerEntries, playerEntry);
-			m_PlayerIndexToEntry[i] = playerEntry;
-			playerCount = playerCount + 1;
+			if playerConfig.IsBarbarian == false then		-- Skipping the Barbarian player
+				local playerEntry = { Text=playerConfig.Name, PlayerIndex=i, EntryIndex=playerCount+1 };
+				table.insert(m_PlayerEntries, playerEntry);
+				m_PlayerIndexToEntry[i] = playerEntry;
+				playerCount = playerCount + 1;
+			end
 		end
 	end
 	
@@ -260,9 +278,10 @@ end
 
 -- ===========================================================================
 function OnTerrainTypeSelected(entry)
-
-	if m_SelectedPlot ~= nil then
-		WorldBuilder.MapManager():SetTerrainType( m_SelectedPlot, entry.Type.Index );
+	if entry ~= nil then
+		if m_SelectedPlot ~= nil then
+			WorldBuilder.MapManager():SetTerrainType( m_SelectedPlot, entry.Type.Index );
+		end
 	end
 end
 
@@ -275,6 +294,10 @@ function OnFeatureTypeSelected(entry)
 		else
 			WorldBuilder.MapManager():SetFeatureType( m_SelectedPlot, -1 );
 		end
+
+		local plot = Map.GetPlotByIndex( m_SelectedPlot );
+		local terrainType = plot:GetTerrainType();
+        OnTerrainTypeSelected(m_TerrainTypeEntries[terrainType]);
 	end
 end
 
@@ -284,8 +307,16 @@ function OnFeatureDirectionSelected(entry)
 	if m_SelectedPlot ~= nil then
 		if entry.Type~= nil then
 			WorldBuilder.MapManager():SetPlotValue( m_SelectedPlot, "Feature", "Direction", entry.Type );
+			for i, entry in ipairs(m_FeatureTypeEntries) do
+				entry.Button:SetDisabled(false);
+			end
 		else
 			WorldBuilder.MapManager():SetPlotValue( m_SelectedPlot, "Feature", "Direction", DirectionTypes.NO_DIRECTION );
+			for i, entry in ipairs(m_FeatureTypeEntries) do
+				if entry.Type ~= nil then
+					entry.Button:SetDisabled(not WorldBuilder.MapManager():CanPlaceFeature(m_SelectedPlot, entry.Type.Index));
+				end
+			end
 		end
 	end
 end
@@ -395,6 +426,18 @@ function OnOwnerSelected(entry)
 end
 
 -- ===========================================================================
+function OnLowlandSelected(entry)
+	if m_SelectedPlot ~= nil then
+		local plot = Map.GetPlotByIndex( m_SelectedPlot );
+		if entry.Type ~= nil then
+			WorldBuilder.MapManager():SetCoastalLowland( m_SelectedPlot, entry.Type.RowId-1 );
+		else
+			WorldBuilder.MapManager():SetCoastalLowland( m_SelectedPlot, -1 );
+		end
+	end
+end
+
+-- ===========================================================================
 function OnStartPosTypeSelected(entry)
 	
 	UpdateActiveStartPosControl( entry );
@@ -453,7 +496,6 @@ end
 --	Init
 -- ===========================================================================
 function OnInit()
-
 	-- TerrainPullDown
 	for type in GameInfo.Terrains() do
 		table.insert(m_TerrainTypeEntries, { Text=type.Name, Type=type });
@@ -525,6 +567,20 @@ function OnInit()
 	Controls.StartPosCivPulldown:SetEntries( m_CivEntries, 1 );
 	Controls.StartPosCivPulldown:SetEntrySelectedCallback( OnStartPosCivSelected );
 
+    if IsExpansion2() then
+        -- LowlandTypePulldown
+    	table.insert(m_CoastalLowlandEntries, { Text="LOC_WORLDBUILDER_NO_LOWLAND" });
+    	for type in GameInfo.CoastalLowlands() do
+    		table.insert(m_CoastalLowlandEntries, { Text=type.Name, Type=type });
+    	end
+    	Controls.LowlandTypePulldown:SetEntries( m_CoastalLowlandEntries, 1 );
+    	Controls.LowlandTypePulldown:SetEntrySelectedCallback( OnLowlandSelected );
+        Controls.LowlandTypePulldown:SetHide(false);
+        Controls.LowlandLabel:SetHide(false);
+    else
+        Controls.LowlandTypePulldown:SetHide(true);
+        Controls.LowlandLabel:SetHide(true);
+    end
 
 	-- Register for events
 	ContextPtr:SetShowHandler( OnShow );
@@ -557,6 +613,5 @@ function OnInit()
 	LuaEvents.WorldBuilder_PlayerRemoved.Add( UpdatePlayerEntries );
 	LuaEvents.WorldBuilder_PlayerEdited.Add( UpdatePlayerEntries );
 	LuaEvents.WorldBuilder_StartPositionChanged.Add( OnStartPositionChanged );
-
 end
 ContextPtr:SetInitHandler( OnInit );

@@ -1,0 +1,113 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Context xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="..\..\..\..\..\CivTech\Libs\ForgeUI\ForgeUI_Assets\Controls.xsd">
+
+  <Container Anchor="R,B" Size="1024,parent-31" ConsumeMouse="1">
+    <!-- Background -->
+    <Box Size="parent,parent" Anchor="C,C" Color="11,27,40,255"/>
+
+    <!-- Title -->
+    <Grid	Size="parent,40" Texture="Controls_SubHeader2" ConsumeMouse="1" SliceCorner="20,2" SliceTextureSize="40,40">
+      <Label Anchor="L,C" Offset="265,0" String="{LOC_PRODUCTION_PANEL_MULTI_QUEUE:upper}" Style="FontFlair24" FontStyle="glow" ColorSet="ShellHeader" SmallCaps="28" SmallCapsLeading="0" SmallCapsType="EveryWord"/>
+    </Grid>
+
+    <!-- Frame -->
+    <Grid Offset="-8,-8" Size="parent+16,parent+16"	Style="ScreenFrame"/>
+
+    <!-- Filter Pulldown -->
+    <PullDown ID="FilterPulldown" Size="200,26" Offset="16,47" ScrollThreshold="450" SpaceForScroll="0">
+      <ButtonData>
+        <GridButton ID="FilterPulldownButton" Size="194,26" Style="TreeOptionText">
+          <GridData Texture="Controls_Dropdown2" StateOffsetIncrement="0,26" SliceCorner="30,14" SliceSize="1,1" SliceTextureSize="41,26"/>
+        </GridButton>
+      </ButtonData>
+      <GridData Offset="0,25" Texture="Controls_OptionPanel" SliceCorner="3,3" SliceSize="10,52" SliceTextureSize="16,64"/>
+      <ScrollPanelData Anchor="C,C" Vertical="1" Size="18,18" AutoScrollBar="1">
+        <ScrollBar Style="Slider_Vert" Anchor="R,C" AnchorSide="O,I"/>
+        <UpButton Style="Scroll_Up" Anchor="R,T" AnchorSide="O,I"/>
+        <DownButton Style="Scroll_Down" Anchor="R,B" AnchorSide="O,I"/>
+      </ScrollPanelData>
+      <StackData StackGrowth="Bottom" Anchor="C,T" Padding="0"/>
+      <InstanceData Name="FilterItemInstance">
+        <GridButton ID="Button" Style="ButtonControl" Anchor="L,T" Size="194,30">
+          <Label ID="DescriptionText" Offset="8,8" Style="FontNormal14" Color="255,255,255,255"/>
+        </GridButton>
+      </InstanceData>
+    </PullDown>
+    
+    <!-- Body -->
+    <ScrollPanel ID="CityStackScroll" Size="auto,parent-90" Anchor="L,B" Offset="17,8" Vertical="1">
+      <Stack ID="CityStack" StackGrowth="Bottom" StackPadding="2"/>
+      <ScrollBar				Anchor="L,T" AnchorSide="O,I"  Offset="2,1"	Style="ScrollVerticalBar" />
+    </ScrollPanel>
+  </Container>
+
+  <Container Anchor="C,C" Size="1024,768">
+    <Image ID="MovingIcon" Icon="ICON_BUILDING_BARRACKS" IconSize="38" Size="38,38" Hidden="1"/>
+  </Container>
+  
+  <!-- ==================================================================	-->
+  <!--	Instances																													-->
+  <!-- ==================================================================	-->
+  <Instance Name="CityInstance">
+    <GridButton ID="CityButton" Size="656,90" Style="ButtonControl">
+      <!-- City Name and Capital Indicator -->
+      <Label ID="CapitalIcon"	Anchor="L,T" Offset="10,6" Style="FontNormal16" String="[ICON_Capital]"/>
+      <Label ID="CityName" Offset="36,6" Style="FontNormal16"/>
+
+      <GridButton ID="NoProductionContainer" Anchor="L,B" Offset="5,10" Size="300,48" Texture="QueueSlot_Button" SliceCorner="20,23" SliceSize="2,2" SliceTextureSize="42,48" StateOffsetIncrement="0,48" Disabled="1">
+        <Label Anchor="C,C" Align="Center" Style="FontNormal16" Color="255,255,255,75" String="1"/>
+      </GridButton>
+      
+      <!-- Current Production -->
+      <GridButton ID="CurrentProductionGrid" Size="300,48" Anchor="L,B" Offset="5,10" Texture="QueueSlot_Button" SliceCorner="20,23" SliceSize="2,2" SliceTextureSize="42,48" StateOffsetIncrement="0,48">
+        <!-- Progress-->
+        <Image Texture="CityPanel_MeterSmallBacking" Size="71,21" Anchor="R,T" Offset="5,5">
+          <TextureBar ID="CurrentProductionProgress" Texture="CityPanel_ProductionMeterSmall" Size="67,17" Anchor="C,C" Speed="1" Direction="Right" ShadowColor="255,255,255,200"/>
+          <Label				ID="CurrentProductionCost"						String="XX [ICON_Turn]" Style="WhiteSemiBold14" Anchor="C,C"/>
+        </Image>
+
+        <!-- Completed Area-->
+        <Image  ID="CompletedArea" Texture="ProductionPanel_ChooserButtonTile" StretchMode="Tile" Size="parent-6,48" Anchor="C,B">
+          <Grid Texture="ProductionPanel_ChooserButton" Size="parent+6,parent" SliceStart="0,192" SliceTextureSize="102,48" SliceCorner="51,25" Anchor="C,C"/>
+        </Image>
+
+        <Stack Anchor="L,C" Offset="70,0" StackPadding="">
+          <Label ID="CurrentProductionStatus" Style="HeaderSmallCaps" WrapWidth="160"/>
+          <Label ID="CurrentProductionName"		Style="WhiteSemiBold14" WrapWidth="160"/>
+        </Stack>
+
+        <Label ID="CurrentProductionProgressString" Style="WhiteSemiBold14" Color0="172,173,168" Anchor="R,B" Offset="6,6"/>
+
+        <!--Icon and Gear-->
+        <Container Size="72,72" Anchor="L,C" Offset="0,0">
+          <FlipAnim   ID="GearAnim" Texture="CivicPanel_MeterFrameAnim" FrameCount="3" Columns="3" Anchor="L,T" Speed="10" Size="40,40" Stopped="1"/>
+          <Image Texture="ProductionPanel_MeterFrame" Size="72,72">
+            <Image ID="ProductionIcon" Size="50,50" Texture="Buildings50" Anchor="C,C"/>
+          </Image>
+        </Container>
+      </GridButton>
+      
+      <!-- Production Queue -->
+      <Stack Anchor="R,B" Offset="7,10" StackGrowth="Right" StackPadding="1">
+        <Stack ID="QueueStack" StackGrowth="Right" StackPadding="1"/>
+        <GridButton ID="TrashButton" Size="42,48" Texture="QueueSlot_Button" SliceCorner="20,23" SliceSize="2,2" SliceTextureSize="42,48" StateOffsetIncrement="0,48" Disabled="1">
+          <Image Anchor="C,C" Size="32,32" Texture="QueueTrash"/>
+        </GridButton>
+      </Stack>
+
+      <Box ID="DarkenBox" Size="parent,parent" Color="0,0,0,80" Hidden="1" ConsumeMouse="1">
+        <Button ID="DarkenButton" Size="parent,parent"/>
+      </Box>
+    </GridButton>
+  </Instance>
+
+  <Instance Name="ProductionQueueItem">
+    <GridButton ID="Top" Size="42,48" Texture="QueueSlot_Button" SliceCorner="20,23" SliceSize="2,2" SliceTextureSize="42,48" StateOffsetIncrement="0,48">
+      <Image ID="ProductionIcon" Anchor="C,C" Size="38,38" IconSize="38" Icon="ICON_UNIT_BUILDER_PORTRAIT" Hidden="1"/>
+      <Label ID="CorpsMarker" Anchor="L,B" String="[ICON_Corps]"/>
+      <Label ID="ArmyMarker"  Anchor="L,B" String="[ICON_Army]"/>
+      <Label ID="Num"	 Anchor="C,C" Style="FontNormal16" String="#" Color="255,255,255,75" />
+    </GridButton>
+  </Instance>
+  
+</Context>

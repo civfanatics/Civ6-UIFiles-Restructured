@@ -3,6 +3,13 @@ g_PanelHasFocus = false;
 
 g_SelectedInstanceID = -1;
 g_SortList = true;
+g_FilterString = "";
+g_MoveIncrement = 1;
+g_RotateIncrement = 15;
+g_ScaleIncrement = 0.1;
+g_AnimStateFrom = "ANY";
+g_AnimStateTo = "ANY";
+g_AssetState = "";
 
 g_AssetPlacement =
 {
@@ -26,6 +33,31 @@ g_AssetPlacement =
 	function(plot, worldX, worldY, worldZ)
 		AssetPreview.DestroyAt(plot);
 	end
+}
+g_AssetMovement =
+{
+	Place =
+	function(plot, worldX, worldY, worldZ)
+		if (g_SelectedInstanceID ~= -1) then
+			AssetPreview.SetInstancePosition(g_SelectedInstanceID, worldX, worldY);
+			AssetPreview.SetInstanceAssetState(g_SelectedInstanceID, g_AssetState);
+			AssetPreview.SetInstanceAnimation(g_SelectedInstanceID, g_AnimStateFrom, g_AnimStateTo);
+		end
+	end,
+	
+	Remove =
+	function(plot, worldX, worldY, worldZ)
+		AssetPreview.DestroyAt(plot);
+	end
+}
+
+g_LandmarkPlacement = 
+{
+	Type = "Nothing",
+	Place = function() print( "Dummy Place" ); end,
+	Remove = function( plot, x, y, z )
+			AssetPreview.ClearLandmarkAt( plot:GetX(), plot:GetY() );
+		end
 }
 
 -------------------------------------------------------------------------------
@@ -90,9 +122,17 @@ LuaEvents.UIDebugModeEntered.Add(OnUIDebugModeEntered);
 g_SelectedEra = nil;
 g_SelectedCiv = nil;
 g_SelectedState = "Worked";
+g_SelectedAppeal = 0;
 g_SelectedPopulation = 0;
 g_SelectedDistrictIdx = 0;
 g_SelectedDistrictBaseName = nil;
 g_SelectedDistrictBldgName = nil;
 g_AddCitySpacing = true;
 
+
+-- Exposure for City panel to be able to spoof different city civilizations without changing panels.
+-- (Spoofing is an app-side operation, while the City panel is game-side)
+function OnSetCityCiv( x, y, civ )
+	AssetPreview.SpoofCityCivAt( x, y, civ );
+end
+LuaEvents.SetCityCiv.Add( OnSetCityCiv );

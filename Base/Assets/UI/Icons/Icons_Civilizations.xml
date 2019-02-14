@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <GameInfo>
 	<IconTextureAtlases>
-    
 		<Row Name="ICON_ATLAS_CIVILIZATIONS" IconSize="22" IconsPerRow="8" IconsPerColumn="8" Filename="CivSymbols22.dds"/>
     <Row Name="ICON_ATLAS_CIVILIZATIONS" IconSize="30" IconsPerRow="8" IconsPerColumn="8" Filename="CivSymbols30.dds"/>
     <Row Name="ICON_ATLAS_CIVILIZATIONS" IconSize="36" IconsPerRow="8" IconsPerColumn="8" Filename="CivSymbols36.dds"/>
-    <Row Name="ICON_ATLAS_CIVILIZATIONS" IconSize="45" IconsPerRow="8" IconsPerColumn="8" Filename="CivDefaults45.dds"/> <!--Baked in color-->
-    <Row Name="ICON_ATLAS_CIVILIZATIONS" IconSize="44" IconsPerRow="8" IconsPerColumn="8" Filename="CivSymbols44.dds"/> <!-- city state ribbon -->
-	  <Row Name="ICON_ATLAS_CIVILIZATIONS" IconSize="48" IconsPerRow="8" IconsPerColumn="8" Filename="CivSymbols48.dds"/>
+		<Row Name="ICON_ATLAS_CIVILIZATIONS" IconSize="44" IconsPerRow="8" IconsPerColumn="8" Filename="CivSymbols44.dds"/>
+		<Row Name="ICON_ATLAS_CIVILIZATIONS" IconSize="45" IconsPerRow="8" IconsPerColumn="8" Filename="CivDefaults45.dds"/><!--Baked in color-->
+		<Row Name="ICON_ATLAS_CIVILIZATIONS" IconSize="48" IconsPerRow="8" IconsPerColumn="8" Filename="CivSymbols48.dds"/>
     <Row Name="ICON_ATLAS_CIVILIZATIONS" IconSize="50" IconsPerRow="8" IconsPerColumn="8" Filename="CivSymbols50.dds"/>
 	  <Row Name="ICON_ATLAS_CIVILIZATIONS" IconSize="64" IconsPerRow="8" IconsPerColumn="8" Filename="CivSymbols64.dds"/>
     <Row Name="ICON_ATLAS_CIVILIZATIONS" IconSize="80" IconsPerRow="8" IconsPerColumn="8" Filename="CivSymbols80.dds"/>
@@ -15,8 +14,9 @@
 
     <Row Name="ICON_ATLAS_CIVILIZATION_AZTEC" IconSize="22"   IconsPerRow="1" IconsPerColumn="1" Filename="CivAztec22.dds"/>
     <Row Name="ICON_ATLAS_CIVILIZATION_AZTEC" IconSize="30"   IconsPerRow="1" IconsPerColumn="1" Filename="CivAztec30.dds"/>
-    <Row Name="ICON_ATLAS_CIVILIZATION_AZTEC" IconSize="36"   IconsPerRow="1" IconsPerColumn="1" Filename="CivAztec36.dds"/>
-    <Row Name="ICON_ATLAS_CIVILIZATION_AZTEC" IconSize="45"   IconsPerRow="1" IconsPerColumn="1" Filename="CivAztec45.dds"/> <!--Baked in color-->
+		<Row Name="ICON_ATLAS_CIVILIZATION_AZTEC" IconSize="36"   IconsPerRow="1" IconsPerColumn="1" Filename="CivAztec36.dds"/>
+		<Row Name="ICON_ATLAS_CIVILIZATION_AZTEC" IconSize="44"   IconsPerRow="1" IconsPerColumn="1" Filename="CivAztec44.dds"/>
+		<Row Name="ICON_ATLAS_CIVILIZATION_AZTEC" IconSize="45"   IconsPerRow="1" IconsPerColumn="1" Filename="CivAztec45.dds"/> <!--Baked in color-->
     <Row Name="ICON_ATLAS_CIVILIZATION_AZTEC" IconSize="48"   IconsPerRow="1" IconsPerColumn="1" Filename="CivAztec48.dds"/>
     <Row Name="ICON_ATLAS_CIVILIZATION_AZTEC" IconSize="50"   IconsPerRow="1" IconsPerColumn="1" Filename="CivAztec50.dds"/>
     <Row Name="ICON_ATLAS_CIVILIZATION_AZTEC" IconSize="64"   IconsPerRow="1" IconsPerColumn="1" Filename="CivAztec64.dds"/>

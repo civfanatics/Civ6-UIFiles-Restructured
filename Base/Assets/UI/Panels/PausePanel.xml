@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Context Style="FontNormal20">
-	<AlphaAnim AlphaBegin="0" AlphaEnd="1" Function="Root" Speed="4" Cycle="Once" Size="parent,parent" ID="AlphaIn" Stopped="1">
-		<SlideAnim Begin="0,-50" End="0,0" Function="Root" Speed="4" Cycle="Once" Size="parent,parent" ID="SlideIn" Stopped="1">
-			<AlphaAnim AlphaBegin="1" AlphaEnd="0" Function="Root" Pause="0" Speed="4" Cycle="Once" Size="parent,parent" ID="AlphaOut" Stopped="1">
-				<SlideAnim Begin="0,0" End="0,-50" Function="Root" Pause="0" Speed="4" Cycle="Once" Size="parent,parent" ID="SlideOut" Stopped="1">
-					<!-- Window Containers -->
-					<Grid Style="DropShadow" Size="450,100" Offset="0,100" Anchor="C,T" ID="Root" Hidden="1">
-						<Stack ID="PauseStack" Anchor="C,T" Offset="0,10" StackGrowth="Bottom" Padding="10">
-							<Label String="UNKNOWN PAUSE STATE" Style="FontNormal22" Anchor="C,T" Align="center" ID="WaitingLabel"/>
-						</Stack>
-					</Grid>
-				</SlideAnim>
-			</AlphaAnim>
+<Context  ColorSet="Beige_Black" FontStyle="Shadow">
+	<AlphaAnim        ID="PopupAlphaIn"      Size="parent,parent"  AlphaBegin="0"  AlphaEnd="1"  Speed="3" Function="Root" Cycle="Once">
+		<SlideAnim      ID="PopupSlideIn"      Size="parent,parent"  Start="0,-20"   End="0,0"     Speed="3" Function="Root" Cycle="Once">
+			<Grid                           Size="auto,auto"              Anchor="C,C" Offset="0,0" Style="DropShadow2"     Color="255,255,255,200" AutoSizePadding="25,25" ConsumeMouse="1">
+				<Grid                         Size="500,auto"              Anchor="C,C" Offset="0,0" Style="WindowFrameTitle" AutoSizePadding="0,10">
+					<Container                  Size="parent,38"                         Offset="0,4">
+						<Label  ID="PauseTitle"   Style="WindowHeader"        Anchor="C,C" String="{LOC_GAME_PAUSED_TITLE}" />
+					</Container>
+					<Stack		ID="PauseStack"  	Size="parent,100"				    Anchor="C,T" Offset="0,50" StackGrowth="Bottom" StackPadding="30">
+						<Label        ID="WaitingLabel"       Anchor="C,T" Style="BodyTextDark18" Align="Center" WrapWidth="430"/>
+					</Stack>
+				</Grid>
+			</Grid>
 		</SlideAnim>
 	</AlphaAnim>
 </Context>

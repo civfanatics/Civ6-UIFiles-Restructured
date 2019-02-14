@@ -3,7 +3,8 @@
 -- ===========================================================================
 include( "InstanceManager" );
 include( "Civ6Common" ); -- AutoSizeGridButton
-include( "SupportFunctions" ); -- DarkenLightenColor
+include( "Colors" );
+include( "SupportFunctions" );
 include( "PopupDialog" );
 include( "ToolTipHelper_PlayerYields" );
 include( "CivilizationIcon" );
@@ -35,7 +36,7 @@ local ms_OtherPlayerIsHuman = false;
 
 local ms_InitiatedByPlayerID = -1;
 
-local ms_bIsDemand = false;
+ms_bIsDemand = false;
 local ms_bExiting = false;
 
 local ms_LastIncomingDealProposalAction = DealProposalAction.PENDING;
@@ -78,6 +79,8 @@ local ms_DefaultMultiTurnGoldAmount = 10;
 local ms_DefaultMultiTurnGoldDuration = 30;
 
 local ms_bForceUpdateOnCommit = false;
+
+local ms_bDontUpdateOnBack = false;
 
 local MAX_DEAL_ITEM_EDIT_HEIGHT = 300;
 
@@ -1350,30 +1353,35 @@ function OnSelectAgreementOption(agreementType, agreementTurns, agreementValue, 
 
 		-- Already there?
 		local pDealItem = pDeal:FindItemByType(DealItemTypes.AGREEMENTS, agreementType, fromPlayerId);
-		if (pDealItem == nil) then
-			-- No
-			pDealItem = pDeal:AddItemOfType(DealItemTypes.AGREEMENTS, fromPlayerId);
-			if (pDealItem ~= nil) then
-				pDealItem:SetSubType(agreementType);
-				pDealItem:SetDuration(agreementTurns);
-			end
-		end
-
 		if (pDealItem ~= nil) then
-			-- Modify the selection of this agreement
-			pDealItem:SetValueType(agreementValue);
-
-			if (agreementType == DealAgreementTypes.JOINT_WAR or
-				agreementType == DealAgreementTypes.THIRD_PARTY_WAR) then
-				pDealItem:SetParameterValue("WarType", agreementParameters.WarType);
-			end
+            -- deal manager doesn't update properly unless we delete the deal item
+            -- and add a new one.
+			if (not pDealItem:IsLocked()) then
+                local itemID = pDealItem:GetID();
+                DetachValueEdit(itemID);
+				pDeal:RemoveItemByID(itemID);
+                pDealItem = pDeal:AddItemOfType(DealItemTypes.AGREEMENTS, fromPlayerId);
+            end
+        else
+            pDealItem = pDeal:AddItemOfType(DealItemTypes.AGREEMENTS, fromPlayerId);
 		end
 
-		UpdateDealPanel(ms_LocalPlayer);
-		UpdateProposedWorkingDeal();
-		UI.PlaySound("UI_GreatWorks_Put_Down");
+        if (pDealItem ~= nil) then
+            pDealItem:SetSubType(agreementType);
+            pDealItem:SetDuration(agreementTurns);
+            pDealItem:SetValueType(agreementValue);
 
-		Controls.ValueEditPopupBackground:SetHide(true);
+            if (agreementType == DealAgreementTypes.JOINT_WAR or
+                agreementType == DealAgreementTypes.THIRD_PARTY_WAR) then
+                pDealItem:SetParameterValue("WarType", agreementParameters.WarType);
+            end
+
+    		UpdateDealPanel(ms_LocalPlayer);
+    		UpdateProposedWorkingDeal();
+    		UI.PlaySound("UI_GreatWorks_Put_Down");
+        end
+
+   		Controls.ValueEditPopupBackground:SetHide(true);
 	end
 end
 
@@ -1384,6 +1392,13 @@ function ShowAgreementOptionPopup(agreementType, agreementTurns, fromPlayerId)
 	ms_AgreementOptionIM:ResetInstances();
 	Controls.ValueEditIconGrid:SetHide(true);
 	Controls.ValueAmountEditBoxContainer:SetHide(true);
+
+    -- don't update when backing out of this on a war
+    if ((agreementType == DealAgreementTypes.JOINT_WAR) or
+        (agreementType == DealAgreementTypes.THIRD_PARTY_WAR)) then
+        ms_bDontUpdateOnBack = true;
+    end
+
 
 	if agreementType == DealAgreementTypes.RESEARCH_AGREEMENT then
 		Controls.ValueEditHeaderLabel:SetText(Locale.Lookup("LOC_DIPLOMACY_DEAL_SELECT_TECH"));
@@ -1476,8 +1491,11 @@ end
 
 -- ===========================================================================
 function OnAgreementBackButton()
-	UpdateDealPanel(ms_LocalPlayer);
-	UpdateProposedWorkingDeal();
+    if not ms_bDontUpdateOnBack then
+        UpdateDealPanel(ms_LocalPlayer);
+        UpdateProposedWorkingDeal();
+    end
+    ms_bDontUpdateOnBack = false;
 	Controls.ValueEditPopupBackground:SetHide(true);
 end
 
@@ -1570,7 +1588,7 @@ end
 
 -- ===========================================================================
 function OnValueEditButton(itemID)
-	local pDeal = DealManager.GetWorkingDeal(DealDirection.OUTGOING, ms_LocalPlayer:GetID(), ms_OtherPlayer:GetID());
+   	local pDeal = DealManager.GetWorkingDeal(DealDirection.OUTGOING, ms_LocalPlayer:GetID(), ms_OtherPlayer:GetID());
 	if pDeal then
 		local pDealItem = pDeal:FindItemByID(itemID);
 		if pDealItem then
@@ -1578,14 +1596,28 @@ function OnValueEditButton(itemID)
 			newAmount = clip(newAmount, 1, pDealItem:GetMaxAmount());
 
 			if (newAmount ~= pDealItem:GetAmount()) then
+				local subtype = pDealItem:GetSubType();
+				local duration = pDealItem:GetDuration();
+				local valueType = pDealItem:GetValueType();
+				local fromPlayerId = pDealItem:GetFromPlayerID();
+				local type = pDealItem:GetType();
+                if (not pDealItem:IsLocked()) then
+                    DetachValueEdit(itemID);
+                    pDeal:RemoveItemByID(itemID);
+                    pDealItem = pDeal:AddItemOfType(type, fromPlayerId);
+                    pDealItem:SetSubType(subtype);
+                    pDealItem:SetDuration(duration);
+                    pDealItem:SetValueType(valueType);
+                end
+
 				pDealItem:SetAmount(newAmount);
 				ms_bForceUpdateOnCommit = true;
 				UpdateProposedWorkingDeal();
 			end
 
-			if ms_ValueEditDealItemControlTable then
-				ms_ValueEditDealItemControlTable.AmountText:SetText(newAmount);
-				ms_ValueEditDealItemControlTable.AmountText:SetHide(false);
+			if g_ValueEditDealItemControlTable then
+				g_ValueEditDealItemControlTable.AmountText:SetText(newAmount);
+				g_ValueEditDealItemControlTable.AmountText:SetHide(false);
 			end
 			UpdateDealStatus();
 		end
@@ -2112,9 +2144,26 @@ function PopulateDealAgreements(player : table, iconList : table)
 					end
 
 					icon.AmountText:SetHide(true);
-					local subTypeDisplayName = pDealItem:GetSubTypeNameID();
-					if (subTypeDisplayName ~= nil) then
-						icon.IconText:LocalizeAndSetText(subTypeDisplayName);
+
+					local pWarItem = pDeal:FindItemByType(DealItemTypes.AGREEMENTS, DealAgreementTypes.JOINT_WAR);
+
+					if pWarItem == nil then
+						pWarItem = pDeal:FindItemByType(DealItemTypes.AGREEMENTS, DealAgreementTypes.THIRD_PARTY_WAR);
+					end
+
+					local iWarType = nil;
+					if pWarItem ~= nil then
+						iWarType = pDealItem:GetParameterValue("WarType");
+					end
+
+					if iWarType ~= nil then
+						local warDef = GameInfo.Wars[iWarType]
+						icon.IconText:LocalizeAndSetText(warDef.Name);
+					else
+						local subTypeDisplayName = pDealItem:GetSubTypeNameID();
+						if (subTypeDisplayName ~= nil) then
+							icon.IconText:LocalizeAndSetText(subTypeDisplayName);
+						end
 					end
 					icon.SelectButton:SetToolTipString(nil);		-- We recycle the entries, so make sure this is clear.
 

@@ -2,7 +2,7 @@
 
 <Context Name="WorldBuilderMapTools">
 
-    <TabControl ID="TabControl" Anchor="R,B" Offset="4,0" Size="390,600">
+    <Tab ID="TabControl" Anchor="R,B" Offset="4,0" Size="390,600">
         <!--Tab Container-->
         <Box ID="MainGrid" Anchor="R,B" Size="400,560" Offset="0,38" Color="9,44,72,200" IgnoreTutorial="1" ConsumeMouse="1">
           <Box Color="32,70,101,150" Anchor="L,T" Size="2,parent"/>
@@ -34,6 +34,6 @@
           <!--<GridButton ID="SelectTab_EditUnits"  Style="TabButton" Size="80,35" String="Units"  />-->
           <!--<GridButton ID="SelectTab_EditCities" Style="TabButton" Size="80,35" String="Cities" />-->
         </Stack>
-    </TabControl>
+    </Tab>
 	
 </Context>

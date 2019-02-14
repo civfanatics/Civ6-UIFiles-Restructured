@@ -1,23 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Context Style="FontNormal18" ColorSet="Beige_Black" FontStyle="Shadow">
-  <!--
-  <Container ID="RazeCityPanel" Anchor="C,C" Size="500,600" ConsumeMouse="true">
-    <Grid ID="RazeCityWindow" Size="Parent,Parent" Style="WindowFrameHUD">
-      <Label ID="PanelHeader" Anchor="C,T" Offset="0,10" Style="FontFlair28" />
-      <Label ID="CityHeader" Anchor="L,T" Offset="25,80" />
-      <Label ID="CityName" Anchor="L,T" Offset="270,80" />
-      <Label ID="CityPopulation" Anchor="L,T" Offset="25,130" />
-      <Label ID="NumPeople" Anchor="L,T" Offset="270,130" />
-      <Label ID="CityDistricts" Anchor="L,T" Offset="25,180" />
-      <Label ID="NumDistricts" Anchor="L,T" Offset="270,180" />
-      <GridButton ID="Button1" Anchor="C,T" Offset="0,230" Size="350,40" Style="MainButton" FontStyle="Shadow"/>
-      <GridButton ID="Button2" Anchor="C,T" Offset="0,300" Size="350,40" Style="MainButton" FontStyle="Shadow"/>
-      <GridButton ID="Button3" Anchor="C,T" Offset="0,370" Size="350,40" Style="MainButton" FontStyle="Shadow"/>
-      <GridButton ID="Button4" Anchor="C,T" Offset="0,440" Size="350,40" Style="MainButton" FontStyle="Shadow"/>
-    </Grid>
-      </Container>
--->
-    <Box     ID="RazeCityPanel"      Size="parent,parent" ConsumeMouse="1" Color="0,0,0,150">
+	<Box     ID="RazeCityPanel"      Size="parent,parent" ConsumeMouse="1" Color="0,0,0,150">
       <AlphaAnim        ID="PopupAlphaIn"       Size="parent,parent"  AlphaBegin="0"  AlphaEnd="1"  Speed="3" Function="Root" Cycle="Once">
         <SlideAnim      ID="PopupSlideIn"       Size="parent,parent"  Start="0,-20"   End="0,0"     Speed="3" Function="Root" Cycle="Once">
           <Grid                                 Size="auto,auto"        Anchor="C,C" Offset="0,0" Style="DropShadow2"     Color="255,255,255,200" AutoSizePadding="25,25" ConsumeMouse="1">
@@ -59,8 +42,7 @@
                   <GridButton   ID="Button4"     Size="200,41"   Style="MainButton" Hidden="0"/>
                 </Stack>
               </Stack>
-              <!-- Close Button -->
-              <Button	ID="ModalScreenClose" Anchor="R,T" Style="CloseButtonLarge" Offset="-8,-5"/>
+              <Button	ID="CloseButton" Anchor="R,T" Style="CloseButtonLarge" Offset="-8,-5"/>
             </Grid>
           </Grid>
         </SlideAnim>

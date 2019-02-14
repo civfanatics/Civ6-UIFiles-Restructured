@@ -89,37 +89,17 @@
 		</Container>
     
     <!-- Section Tab Area -->
-    <Stack ID="CivilopediaSectionTabStack" StackGrowth="Right" Offset="45,23" Padding="0">
-      <PullDown ID="AdditionalSectionsPullDown" Hidden="1" Style="SmallPullDown" Offset="0,-10" Size="100,29" AutoSizePopUp="1" SpaceForScroll="0" ScrollThreshold="450">
-        <ButtonData>
-          <GridButton ID="AdditionalSectionsPullDownButton" Offset="0,30" Size="194,26" String="More" Style="TreeOptionText" >
-            <GridData Texture="Controls_Dropdown2" StateOffsetIncrement="0,26"	SliceCorner="30,14"	SliceSize="1,1"		SliceTextureSize="41,26" />
-          </GridButton>
-        </ButtonData>
-
-        <GridData Offset="0,50" Texture="Controls_OptionPanel" SliceCorner="3,3" SliceSize="10,52" SliceTextureSize="16,64" />
-        <ScrollPanelData Anchor="C,C" Vertical="1" Size="18,18" AutoScrollBar="1" >
-          <ScrollBar Style="Slider_Vert" Anchor="R,C" AnchorSide="O,I"   />
-          <UpButton Style="Scroll_Up" Anchor="R,T" AnchorSide="O,I"   />
-          <DownButton Style="Scroll_Down" Anchor="R,B" AnchorSide="O,I"   />
-        </ScrollPanelData>
-        <StackData StackGrowth="Bottom" Anchor="C,T" Padding="0"/>
-        <InstanceData Name="AdditionalSectionsPullDownInstance" >
-          <Button ID="Button" Anchor="L,T"	Size="194,30"	>
-            <Label ID="IconText" Offset="4,8"	String="a" Style="FontNormal14" Color="255,255,255,255" Hidden="1"/>
-            <Label ID="DescriptionText" Offset="4,8" String="b" Style="FontNormal14" Color="255,255,255,255" />
-          </Button>
-        </InstanceData>
-      </PullDown>
-    </Stack>
-		<Container ID="SearchResultsPanelContainer" Anchor="L,T"	Offset="0,125"	 Size="193,auto" Hidden="1">
-			<ScrollPanel ID="SearchResultsPanel"  Size="parent,693"  Vertical="1" AutoScrollBar="1">
+    <Stack					ID="CivilopediaSectionTabStack" StackGrowth="Right" Offset="45,23" />
+		
+		<Container			ID="SearchResultsPanelContainer" Anchor="L,T"	Offset="0,125"	 Size="193,auto" Hidden="1">
+			<ScrollPanel	ID="SearchResultsPanel"  Size="parent,693"  Vertical="1" AutoScrollBar="1">
 				<ScrollBar Style="Slider_Blue" Anchor="R,C" AnchorSide="O,I"/>
 				<Grid Texture="Controls_OptionPanel" 	SliceCorner="3,3"		SliceSize="10,52" SliceTextureSize="16,64" Size="250,auto" AutoSizePadding="0,5">
-					<Stack ID="SearchResultsStack" StackGrowth="Bottom" Padding="2" Offset="0,5"/>
+					<Stack		ID="SearchResultsStack" StackGrowth="Bottom" Padding="2" Offset="0,5"/>
 				</Grid>
 			</ScrollPanel>
 		</Container>
+		
 	</Container>
 
 	<Instance Name="SearchResultInstance">

@@ -16,7 +16,36 @@
 
     <!-- Mission Icon -->
     <Grid Anchor="L,T" Size="parent-420,parent-130" Offset="12,70" Color="EspionagePopup_Deco" Texture="Controls_DecoFaded" SliceCorner="36,58" SliceSize="1,3" SliceTextureSize="73,73">
-      <Image ID="MissionIcon" Anchor="C,C" Size="200,200" Color="EspionagePopup_Body" Texture="EspionageMissions200"/>
+      <Stack Anchor="C,C" StackGrowth="Down" StackPadding="10">
+        <Image ID="MissionIcon" Anchor="C,C" Size="200,200" Color="EspionagePopup_Body" Texture="EspionageMissions200"/>
+        <Container ID="RenewableMissionContainer" Anchor="C,C" Size="parent,auto">
+          <Stack Anchor="C,C" StackGrowth="Down" StackPadding="0">
+            <Label Anchor="C,T" Style="FontFlair20" SmallCaps="26" SmallCapsType="EveryWord" Color="EspionagePopup_Header" String="LOC_ESPIONAGEPOPUP_MISSION_DETAILS"/>
+            <Grid Anchor="C,T" Size="parent,8" AutoSizePadding="0,0" Offset="0,4" Color="EspionagePopup_Deco" Texture="Controls_DecoFaded" SliceCorner="36,58" SliceSize="1,3" SliceTextureSize="73,73"/>
+            <Label ID="RenewableMissionDetails" Anchor="C,C" Style="FontNormal16" Align="Center" Color="EspionagePopup_Body" WrapWidth="parent-12"/>
+            <Stack ID="MissionStatsStack" Anchor="C,B" Offset="0,5" StackGrowth="Right" StackPadding="4">
+              <Grid  Size="auto,20" AutoSizePadding="-3,0" Texture="Controls_ItemContainer" SliceCorner="8,8" SliceTextureSize="16,16">
+                <Stack Offset="-2,0" StackGrowth="Right" StackPadding="0">
+                  <Label Offset="-2,5" Style="FontNormal14" String="[Icon_LocationPip]"/>
+                  <Label ID="MissionDistrictName" Anchor="L,C" Offset="-3,-2" Style="FontNormal14" String="City Center" FontStyle="Shadows" EffectColor="EspionagePopup_Body"/>
+                  <Image ID="MissionDistrictIcon" Offset="0,-1" Size="22,22" IconSize="22" Icon="ICON_DISTRICT_CITY_CENTER"/>
+                </Stack>
+              </Grid>
+
+              <Grid Size="auto,auto" AutoSizePadding="2,1" Texture="Controls_ItemContainer" SliceCorner="8,8" SliceTextureSize="16,16">
+                <Stack Offset="0,2" StackGrowth="Right" StackPadding="-3">
+                  <Label Offset="0,0" Style="FontNormal14" String="[Icon_Turn]"/>
+                  <Label ID="TurnsToCompleteLabel" Offset="0,0" Style="FontNormal14" FontStyle="Shadows" EffectColor="EspionagePopup_Body"/>
+                </Stack>
+              </Grid>
+
+              <Grid ID="ProbabilityGrid" Size="auto,auto" AutoSizePadding="1,1" Texture="Controls_ItemContainer" SliceCorner="8,8" SliceTextureSize="16,16">
+                <Label ID="ProbabilityLabel" Offset="3,2" Style="FontNormal14" FontStyle="Shadows" EffectColor="EspionagePopup_Body"/>
+              </Grid>
+            </Stack>
+          </Stack>
+        </Container>
+      </Stack>
     </Grid>
     
     <Stack ID="OperationInfoStack" Anchor="R,T" Offset="15,45" StackGrowth="Down" StackPadding="-20">
@@ -110,33 +139,38 @@
         </Grid>
       </Container>
     </Stack>
+
+    <Stack Anchor="C,B" Offset="0,4" StackGrowth="Right" StackPadding="2">
+      <!-- Accept Button -->
+      <GridButton ID="AcceptButton" Size="230,32" Anchor="C,C" String="LOC_ESPIONAGEPOPUP_ACCEPT_MISSION" Style="FontFlair14" FontStyle="Shadows" TextOffset="0,2" EffectColor="0,0,0,255" SmallCaps="20" SmallCapsType="EveryWord">
+        <GridData Texture="Controls_ConfirmSmall" StateOffsetIncrement="0,26" SliceCorner="26,13" SliceSize="2,2" SliceTextureSize="51,26"/>/>
+      </GridButton>
+
+      <!-- Renew Button -->
+      <GridButton ID="RenewButton" Size="230,32" Anchor="C,C" String="LOC_ESPIONAGEPOPUP_RENEW_MISSION" Style="FontFlair14" FontStyle="Shadows" TextOffset="0,2" EffectColor="0,0,0,255" SmallCaps="20" SmallCapsType="EveryWord">
+        <GridData Texture="Controls_ConfirmSmall" StateOffsetIncrement="0,26" SliceCorner="26,13" SliceSize="2,2" SliceTextureSize="51,26"/>/>
+      </GridButton>
+
+      <!-- Abort Button -->
+      <GridButton ID="AbortButton" Size="230,32" Anchor="C,C" String="LOC_ESPIONAGEPOPUP_ABORT_MISSION" Style="FontFlair14" FontStyle="Shadows" TextOffset="0,2" EffectColor="0,0,0,255" SmallCaps="20" SmallCapsType="EveryWord">
+        <GridData Texture="Controls_DenySmall" StateOffsetIncrement="0,26" SliceCorner="26,13" SliceSize="2,2" SliceTextureSize="51,26"/>/>
+      </GridButton>
     
-    <!-- Accept Button -->
-    <GridButton ID="AcceptButton" Size="230,26" Offset="95,5" Anchor="C,B" String="LOC_ESPIONAGEPOPUP_ACCEPT_MISSION" Style="FontFlair14" FontStyle="Shadows" TextOffset="0,2" EffectColor="0,0,0,255" SmallCaps="20" SmallCapsType="EveryWord">
-      <GridData Texture="Controls_ConfirmSmall" StateOffsetIncrement="0,26" SliceCorner="26,13" SliceSize="2,2" SliceTextureSize="51,26"/>/>
-    </GridButton>
+      <!-- Cancel Button -->
+      <GridButton ID="CancelButton" Size="180,32" Anchor="C,C" String="LOC_ESPIONAGEPOPUP_CANCEL" Style="FontFlair14" FontStyle="Shadows" TextOffset="0,3" EffectColor="0,0,0,255" SmallCaps="20" SmallCapsType="EveryWord">
+        <GridData Style="ButtonLightWeightGrid"/>
+      </GridButton>
 
-    <!-- Abort Button -->
-    <GridButton ID="AbortButton" Size="230,26" Offset="95,5" Anchor="C,B" String="LOC_ESPIONAGEPOPUP_ABORT_MISSION" Style="FontFlair14" FontStyle="Shadows" TextOffset="0,2" EffectColor="0,0,0,255" SmallCaps="20" SmallCapsType="EveryWord">
-      <GridData Texture="Controls_DenySmall" StateOffsetIncrement="0,26" SliceCorner="26,13" SliceSize="2,2" SliceTextureSize="51,26"/>/>
-    </GridButton>
-    
-    <!-- Cancel Button -->
-    <GridButton ID="CancelButton" Size="180,24" Offset="-120,5" Anchor="C,B" String="LOC_ESPIONAGEPOPUP_CANCEL" Style="FontFlair14" FontStyle="Shadows" TextOffset="0,2" EffectColor="0,0,0,255" SmallCaps="20" SmallCapsType="EveryWord">
-      <GridData Style="ButtonLightWeightGrid"/>
-    </GridButton>
+      <!-- Mission Succeed Button -->
+      <GridButton ID="MissionSucceedButton" Size="auto,32" Anchor="C,C" AutoSizePadding="20,0" MinSize="150,0" String="LOC_ESPIONAGEPOPUP_SUCCESSBUTTON" Style="FontFlair14" FontStyle="Shadows" TextOffset="0,3" EffectColor="0,0,0,255" SmallCaps="20" SmallCapsType="EveryWord">
+        <GridData Style="ButtonLightWeightGrid"/>
+      </GridButton>
 
-    <!-- Mission Succeed Button -->
-    <GridButton ID="MissionSucceedButton" Size="auto,24" Offset="0,5" Anchor="C,B" AutoSizePadding="20,0" MinSize="150,0">
-      <GridData Style="ButtonLightWeightGrid"/>
-      <Label Anchor="C,C" Offset="0,2" String="LOC_ESPIONAGEPOPUP_SUCCESSBUTTON" Style="FontFlair14" FontStyle="Shadows" TextOffset="0,2" EffectColor="0,0,0,255" SmallCaps="20" SmallCapsType="EveryWord"/>
-    </GridButton>
-
-    <!-- Mission Failure Button -->
-    <GridButton ID="MissionFailureButton" Size="auto,24" Offset="0,5" Anchor="C,B" AutoSizePadding="20,0" MinSize="150,0">
-      <GridData Style="ButtonLightWeightGrid"/>
-      <Label Anchor="C,C" Offset="0,2" String="LOC_ESPIONAGEPOPUP_FAILUREBUTTON" Style="FontFlair14" FontStyle="Shadows" TextOffset="0,2" EffectColor="0,0,0,255" SmallCaps="20" SmallCapsType="EveryWord"/>
-    </GridButton>
+      <!-- Mission Failure Button -->
+      <GridButton ID="MissionFailureButton" Size="auto,32" Anchor="C,C" AutoSizePadding="20,0" MinSize="150,0" String="LOC_ESPIONAGEPOPUP_FAILUREBUTTON" Style="FontFlair14" FontStyle="Shadows" TextOffset="0,3" EffectColor="0,0,0,255" SmallCaps="20" SmallCapsType="EveryWord">
+        <GridData Style="ButtonLightWeightGrid"/>
+      </GridButton>
+    </Stack>
   </Grid>
 
   <!-- Instances -->

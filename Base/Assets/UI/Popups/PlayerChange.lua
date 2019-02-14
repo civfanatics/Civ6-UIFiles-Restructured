@@ -3,11 +3,11 @@
 --
 -- Screen used for when the player changes in hotseat mode.
 ----------------------------------------------------------------  
+include("PopupPriorityLoader_", true);
 
 ----------------------------------------------------------------  
 -- Defines
 ---------------------------------------------------------------- 
-
 
 
 ----------------------------------------------------------------  
@@ -16,6 +16,7 @@
 local PopupTitleSuffix = Locale.Lookup( "LOC_PLAYER_CHANGE_POPUP_TITLE_SUFFIX" );
 local bPlayerChanging :boolean = false; -- Are we in the "Please Wait" mode?
 local bLocalPlayerTurnEnded :boolean = false;
+local bLocalPlayerDestroyed :boolean = false;
 
 
 ----------------------------------------------------------------        
@@ -23,12 +24,13 @@ local bLocalPlayerTurnEnded :boolean = false;
 ----------------------------------------------------------------        
 function OnInputHandler( uiMsg, wParam, lParam )
 	if uiMsg == KeyEvents.KeyUp then
-		if wParam == Keys.VK_RETURN or wParam == Keys.VK_ESCAPE then
+		if wParam == Keys.VK_RETURN then
 			OnKeyUp_Return();
-			return true;
+		elseif wParam == Keys.VK_ESCAPE then
+			OnMenu();
 		end
 	end
-	return false;
+	return true; -- Consume all input
 end
 
 -- ===========================================================================
@@ -37,14 +39,15 @@ function OnKeyUp_Return()
 	if (not Controls.PopupAlphaIn:IsHidden()) then
 		local localPlayerID = Game.GetLocalPlayer();
 		local localPlayer = PlayerConfigurations[localPlayerID];
-		if(localPlayer ~= nil and localPlayer:GetHotseatPassword() == "") then
+		if(localPlayer ~= nil 
+			and localPlayer:GetHotseatPassword() == "") then
 			OnOk();
 		end
 	end
 end
 -- ===========================================================================
 function OnSave()
-	UIManager:QueuePopup(Controls.SaveGameMenu, PopupPriority.Current);	
+	UIManager:QueuePopup(Controls.SaveGameMenu, PopupPriority.PlayerChange);	
 end
 
 -- ===========================================================================
@@ -60,8 +63,19 @@ function OnOk()
 end
 
 -- ===========================================================================
+function OnCancelUpload()
+   	UIManager:SetUICursor( 1 );
+	UITutorialManager:EnableOverlay( false );	
+	UITutorialManager:HideAll();
+
+	UIManager:Log("Shutting down via player change exit-to-main-menu.");
+	Events.ExitToMainMenu();
+end
+	
+
+-- ===========================================================================
 function OnMenu()
-    UIManager:QueuePopup( LookUpControl( "/InGame/TopOptionsMenu" ), PopupPriority.Utmost );
+    LuaEvents.PlayerChange_OpenInGameOptionsMenu();
 end
 
 -- ===========================================================================
@@ -75,15 +89,17 @@ function OnLocalPlayerTurnBegin()
 	end
 end
 
-function OnRemotePlayerTurnBegin( playerID :number)
-end
-
-function OnPlayerTurnDeactivated( ePlayer:number )
-	if ePlayer == Game.GetLocalPlayer() then	
+function OnLocalPlayerTurnEnd()
+	if not bLocalPlayerDestroyed then	-- Don't show if the local player has died.  We are showing the endgamemenu instead.	
 		bLocalPlayerTurnEnded = true;	
-		bPlayerChanging = true;
+		bPlayerChanging = true; 
+		-- [TTP 40166] In Hotseat, we have to ensure the game is unpaused in case the local player's turn deactivated before the player clicked Start Turn. 
+		-- This was happening during World Congress phases in the past.  It is now just a fallback mechanic just in case.
+		if(GameConfiguration.IsHotseat()) then
+			SetPause(false);
+		end 
 		--if(GetNumAliveHumanPlayers() > 1) then
-			UIManager:QueuePopup( ContextPtr, PopupPriority.Utmost);
+			UIManager:QueuePopup( ContextPtr, PopupPriority.PlayerChange);
 		--end
 	end
 end
@@ -115,7 +131,7 @@ function BuildTurnControls()
 		end
 
 		if(ContextPtr:IsHidden()) then
-			UIManager:QueuePopup( ContextPtr, PopupPriority.Utmost);
+			UIManager:QueuePopup( ContextPtr, PopupPriority.PlayerChange);
 		else
 			ShowTurnControls();
 		end
@@ -137,7 +153,7 @@ function OnLoadScreenClose()
 	
 	-- No, just show the Please Wait, we will get a turn begin event later.
 	bPlayerChanging = true;
-	UIManager:QueuePopup( ContextPtr, PopupPriority.Utmost);
+	UIManager:QueuePopup( ContextPtr, PopupPriority.PlayerChange);
 end
 
 -- ===========================================================================
@@ -199,16 +215,20 @@ function ShowSaveButton()
 end
 
 -- ===========================================================================
+-- This function can be called with the same pause state multiple times to the ensure pause state is correct in edge cases.
 function SetPause(bNewPause)
 	local localPlayerID = Game.GetLocalPlayer();
 	local localPlayerConfig = PlayerConfigurations[localPlayerID];
 	if (localPlayerConfig ~= nil) then
-		local bIsTurnActive = Players[localPlayerID]:IsTurnActive();
-		if (bIsTurnActive or bNewPause == false) then
-			localPlayerConfig:SetWantsPause(bNewPause);
+		local oldPause = localPlayerConfig:GetWantsPause();
+		if(bNewPause ~= oldPause) then
+			local bIsTurnActive = Players[localPlayerID]:IsTurnActive();
+			if (bIsTurnActive or bNewPause == false) then
+				localPlayerConfig:SetWantsPause(bNewPause);
+				Network.BroadcastPlayerInfo();
+			end
 		end
 	end
-	Network.BroadcastPlayerInfo();
 end
 
 -- ===========================================================================
@@ -248,16 +268,25 @@ function OnTeamVictory(team, victory, eventID)
 	if(not ContextPtr:IsHidden()) then
 		UIManager:DequeuePopup(ContextPtr);
 		Events.LocalPlayerTurnBegin.Remove(OnLocalPlayerTurnBegin);
-		Events.PlayerTurnDeactivated.Remove(OnPlayerTurnDeactivated);
+		Events.LocalPlayerTurnEnd.Remove(OnLocalPlayerTurnEnd);
 		Events.LoadScreenClose.Remove(OnLoadScreenClose);
 	end
 end
 
 -- ===========================================================================
+function OnPlayerDestroyed(playerID)
+	local localPlayerID = Game.GetLocalPlayer();
+	if(localPlayerID == playerID) then
+		bLocalPlayerDestroyed = true;
+	end
+end
+
+
+-- ===========================================================================
 function OnEndGameMenu_OneMoreTurn()
 	print("OnEndGameMenu_OneMoreTurn");
 	Events.LocalPlayerTurnBegin.Add(OnLocalPlayerTurnBegin);
-	Events.PlayerTurnDeactivated.Add(OnPlayerTurnDeactivated);
+	Events.LocalPlayerTurnEnd.Add(OnLocalPlayerTurnEnd);
 	Events.LoadScreenClose.Add(OnLoadScreenClose);
 end
 
@@ -277,10 +306,7 @@ end
 -- ===========================================================================
 function Initialize()
 
-	-- If not in a hotseat, do not register for events.
-	if (GameConfiguration.IsHotseat() == false) then
-		return;
-	end
+	
 
 	-- NOTE: LuaEvents. are events that only exist inside the Lua system. Nothing native.
 
@@ -289,10 +315,10 @@ function Initialize()
 	--Events.LocalPlayerChanged.Add(OnLocalPlayerChanged);
 	-- changing to listen for TurnBegin so that on the initial turn, the first player will get this popup screen. this is consistent with Civ V's behavior.
 	Events.LocalPlayerTurnBegin.Add(OnLocalPlayerTurnBegin);
-	Events.RemotePlayerTurnBegin.Add( OnRemotePlayerTurnBegin );
-	Events.PlayerTurnDeactivated.Add(OnPlayerTurnDeactivated);
+	Events.LocalPlayerTurnEnd.Add(OnLocalPlayerTurnEnd);
 	Events.LoadScreenClose.Add(OnLoadScreenClose);
 	Events.TeamVictory.Add(OnTeamVictory);
+	Events.PlayerDestroyed.Add(OnPlayerDestroyed);
 
 	LuaEvents.EndGameMenu_OneMoreTurn.Add(OnEndGameMenu_OneMoreTurn);
 	LuaEvents.EndGameMenu_ViewingPlayerDefeat.Add(OnEndGameMenu_ViewingPlayerDefeat);
@@ -306,6 +332,9 @@ function Initialize()
 	Controls.PasswordEntry:RegisterStringChangedCallback(OnPasswordEntryStringChanged);
 	Controls.PasswordEntry:RegisterCommitCallback(OnPasswordEntryCommit);
 end
-Initialize();
+-- If not in a hotseat do not register for events.
+if GameConfiguration.IsHotseat() then
+	Initialize();
+end
 
 

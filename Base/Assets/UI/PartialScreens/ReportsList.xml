@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Context xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="..\..\..\..\..\CivTech\Libs\ForgeUI\ForgeUI_Assets\Controls.xsd">
+
+  <Grid ID="Background" Size="200,auto" Anchor="R,T" Padding="10,5" Offset="0,69" SizePadding="0,20" Style="EventPopupFrame" ConsumeMouse="1">
+    <Stack ID="MainStack" Padding="3" Anchor="C,T" Offset="0,26">
+      <Label Anchor="C,C" Offset="5,0" Style="ReportBottomLabelText" String="LOC_REPORTS_LIST_EMPIRE" />
+      <Stack ID="EmpireReportsStack"		Anchor="C,C" StackGrowth="Down" Align="Center" />
+    
+			<Label ID="GlobalTitle"					Anchor="C,C" Offset="5,5" Style="ReportBottomLabelText" String="LOC_REPORTS_LIST_GLOBAL" />
+      <Stack ID="GlobalReportsStack"	Anchor="C,C" StackGrowth="Down" Align="Center" />
+    </Stack>
+  </Grid>
+
+  <Instance					Name="ReportButtonInstance">
+    <GridButton			ID="Button"																				Size="160,34" Style="TabButton" FontSize="14" TextOffset="0,2">
+      <AlphaAnim		ID="Selection"											Offset="-2,0"	Size="parent+3,parent" Speed="4" AlphaBegin="0" AlphaEnd="1" Cycle="Once" Function="Root" Hidden="1" >
+        <GridButton																										Size="parent,parent" Style="TabButtonSelected" ConsumeMouseButton="0" ConsumeMouseOver="1" />
+      </AlphaAnim>
+    </GridButton>
+  </Instance>
+
+</Context>

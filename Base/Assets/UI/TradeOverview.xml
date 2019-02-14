@@ -3,9 +3,8 @@
   <SlideAnim Style="RundownAnimBG">
     <!-- Title Area -->
     <Grid Anchor="C,T" Size="parent-6,135" Offset="0,50" Texture="Controls_TitleBarDark" SliceCorner="21,17" SliceTextureSize="42,34">
-      <!-- ==================================================================	-->
-      <!--	Tab Container																												-->
-      <!-- ==================================================================	-->
+
+			<!--	Tab Container																												-->
       <Container ID="TabHeader" Anchor="C,T" Offset="0,-10"	Size="540,61">
         <Grid Anchor="L,T" Size="parent,61" Texture="Controls_TabLedge2"  SliceCorner="194,18" SliceSize="52,26" SliceTextureSize="438,61">
           <!-- My Routes Button	-->
@@ -34,9 +33,7 @@
         </Grid>
       </Container>
 
-      <!-- ==================================================================	-->
-      <!--	Header																									-->
-      <!-- ==================================================================	-->
+      <!--	Header	-->
       <Grid	ID="HeaderFrame" Anchor="C,T" Offset="0,44" Size="parent-40,50" Texture="Controls_DecoFrame" SliceCorner="19,18" SliceSize="1,1" SliceTextureSize="40,38" Color="31,44,53,255">
         <Stack ID="HeaderStack" Anchor="C,T" Offset="0,15" StackGrowth="Right" StackPadding="6">
           <Label ID="HeaderLabel" Style="TradeOverviewHeader"/>
@@ -44,9 +41,7 @@
         </Stack>
       </Grid>
 
-      <!-- ==================================================================	-->
       <!--	Sub Header - Contains Column Names and Show Filter                -->
-      <!-- ==================================================================	-->
       <Container Anchor="C,T" Size="parent-40, 35" Offset="0,95">
         <!-- Origin Column Label -->
         <Grid Style="ColumnHeader" Anchor="L,C" Size="130, 25" Offset="2,0">
@@ -64,9 +59,6 @@
         </GridButton>
       </Container>
 
-      <!-- ==================================================================	-->
-      <!--	Close Button																										-->
-      <!-- ==================================================================	-->
       <Button ID="CloseButton" Anchor="R,T" Offset="5,40" Style="CloseButtonSmall" />
     </Grid>
 
@@ -96,14 +88,15 @@
     
   </SlideAnim>
 
+	
   <!-- ==================================================================	-->
   <!--	Instances																													-->
   <!-- ==================================================================	-->
 
   <!-- Section Header -->
   <Instance	Name="HeaderInstance">
-    <Container ID="Top" Size="486,38" Offset="10,2">
-      <Grid Texture="TradeOverview_Subheader" SliceCorner="16,16" SliceSize="1,1" Size="parent,43">
+    <Container ID="Top" Size="482,38" Offset="10,2">
+      <Grid Texture="TradeOverview_Subheader" SliceCorner="13,13" SliceSize="1,1" Size="parent,43">
         <Label ID="HeaderLabel" Anchor="L,C" Offset="14,-1" Style="FontFlair16" Color0="225,225,225,255" SmallCaps="20" SmallCapsLeading="0" SmallCapsType="FirstWord" />
         
         <!-- Visibility Bonus -->
@@ -129,10 +122,10 @@
         <GridData Texture="Controls_ListButton" SliceCorner="209,29"  SliceTextureSize="417,51" StateOffsetIncrement="0,51"/>
         
         <!-- Route Status Font Icon -->
-        <Label ID="RouteStatusFontIcon" Anchor="L,T" Offset="11,8" String="[Icon_TradeRouteLarge]" Hidden="1"/>
+        <Label ID="RouteStatusFontIcon" Anchor="L,T" Offset="11,10" String="[Icon_TradeRouteLarge]" Hidden="1"/>
         
         <!-- Route Label -->
-        <Label ID="RouteLabel" Anchor="L,T" Offset="38,8" Style="FontFlair14" Color="190,190,190,255" SmallCaps="18" SmallCapsLeading="0" SmallCapsType="EveryWord" />
+        <Label ID="RouteLabel" Anchor="L,T" Offset="38,10" Style="FontFlair14" Color="190,190,190,255" SmallCaps="18" SmallCapsLeading="0" SmallCapsType="EveryWord" />
 
         <!-- Trading Post Indicator -->
         <Label ID="TradingPostIndicator" Anchor="R,T" Offset="60,7" Style="FontNormal16" String="[Icon_TradingPost]"/>
@@ -152,7 +145,7 @@
 
         <!-- Origin Civ Icon -->
         <Image ID="OriginCivIconBacking" Anchor="L,B" Size="30,30" Offset="8,12" Texture="CircleBacking30" Color="100,100,100,255">
-          <Image ID="OriginCivIcon" Anchor="C,C" Size="30,30" Offset="0,0" Icon="ICON_CIVILIZATION_UNKNOWN" IconSize="30"/>
+          <Image ID="OriginCivIcon" Anchor="C,C" Size="30,30" Offset="0,0" Icon="ICON_CIVILIZATION_UNKNOWN" IconSize="30" />
         </Image>
 
         <!-- Origin Civ Arrow -->

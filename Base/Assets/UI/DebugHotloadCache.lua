@@ -41,6 +41,10 @@ end
 -- ===========================================================================
 function OnGetValues( context:string )	
 	local contextTable :table = m_cachedValues[context];
+	if contextTable == nil then
+		contextTable = {};
+		UI.DataError("Unable to find contextTable values for '"..context.."'");
+	end
 	LuaEvents.GameDebug_Return( context, contextTable );
 end
 

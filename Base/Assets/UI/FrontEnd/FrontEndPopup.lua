@@ -49,6 +49,7 @@ end
 -- ===========================================================================
 function OnPopupClose()
 	UIManager:DequeuePopup( ContextPtr );
+	LuaEvents.FrontEndPopup_CloseConfirmationWithoutAction();
 end
 
 -- ===========================================================================

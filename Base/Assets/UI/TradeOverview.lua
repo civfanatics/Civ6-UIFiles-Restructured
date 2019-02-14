@@ -219,7 +219,7 @@ function ViewAvailableRoutes()
 	local pLocalPlayerCities:table = pLocalPlayer:GetCities();
 	local hasTradeRouteWithPlayer:boolean = false;
 	local hasTradeRouteWithCityStates:boolean = false;
-	local players:table = Game:GetPlayers();
+	local players:table = Game.GetPlayers();
 	for i, destinationPlayer in ipairs(players) do
 		local playerHeader:table = nil;
 		hasTradeRouteWithPlayer = false;
@@ -231,7 +231,7 @@ function ViewAvailableRoutes()
 				if originCity ~= nil then
 					if tradeManager:CanStartRoute(originCity:GetOwner(), originCity:GetID(), destinationCity:GetOwner(), destinationCity:GetID(), true) then
 						-- Add Civ/CityState Header
-						local pPlayerInfluence:table = Players[destinationPlayer:GetID()]:GetInfluence();
+						local pPlayerInfluence:table = destinationPlayer:GetInfluence();
 						if not pPlayerInfluence:CanReceiveInfluence() then
 							-- If first available route with this city add a city header
 							if not hasTradeRouteWithPlayer then
@@ -247,7 +247,7 @@ function ViewAvailableRoutes()
 						end
 						
 						-- Add Route
-						AddRoute(Players[Game.GetLocalPlayer()], originCity, destinationPlayer, destinationCity, -1);
+						AddRoute(pLocalPlayer, originCity, destinationPlayer, destinationCity, -1);
 					end
 				end
 			end
@@ -333,22 +333,29 @@ function AddRoute(originPlayer:table, originCity:table, destinationPlayer:table,
 	-- Update Route Yields
 	routeInstance.ResourceStack:DestroyAllChildren();
 	routeInstance.NoBenefitsLabel:SetHide(false);
-	for yieldInfo in GameInfo.Yields() do
-		local yieldValue = 0;
 
-		-- XOR used to show right benefits when origin/destination switch between tabs
-		if m_showMyBenefits == not (m_currentTab == TRADE_TABS.ROUTES_TO_CITIES) then
-			yieldValue = GetYieldFromCity(yieldInfo.Index, originCity, destinationCity);
-		else
-			yieldValue = GetYieldForDestinationCity(yieldInfo.Index, originCity, destinationCity);
-		end
+	-- XOR used to show right benefits when origin/destination switch between tabs
+	local yieldValues = {};
+
+	if m_showMyBenefits == not (m_currentTab == TRADE_TABS.ROUTES_TO_CITIES) then
+		yieldValues = GetYieldsFromCity(originCity, destinationCity);
+	else
+		yieldValues = GetYieldsForDestinationCity(originCity, destinationCity);
+	end
+
+	for yieldIndex=1, #yieldValues, 1 do
+
+		local yieldValue = yieldValues[yieldIndex];
 
 		if (yieldValue ~= 0 ) then
+
+			local yieldInfo = GameInfo.Yields[yieldIndex - 1];
+
 			local resourceInstance:table = {};
 			ContextPtr:BuildInstanceForControl( "ResourceInstance", resourceInstance, routeInstance.ResourceStack );
 								
 			resourceInstance.ResourceIconLabel:SetText(yieldInfo.IconString);
-			resourceInstance.ResourceValueLabel:SetText("+" .. yieldValue);
+			resourceInstance.ResourceValueLabel:SetText("+" .. Round(yieldValue,1));
 
 			-- Set tooltip to resouce name
 			resourceInstance.Top:LocalizeAndSetToolTip(yieldInfo.Name);
@@ -645,33 +652,48 @@ function CreateUnusedRoutesHeader()
 end
 
 -- ===========================================================================
-function GetYieldFromCity(yieldIndex:number, originCity:table, destinationCity:table)
+function GetYieldsFromCity(originCity:table, destinationCity:table)
 	local tradeManager = Game.GetTradeManager();
 
 	-- From route
-	local yieldValue = tradeManager:CalculateOriginYieldFromPotentialRoute(originCity:GetOwner(), originCity:GetID(), destinationCity:GetOwner(), destinationCity:GetID(), yieldIndex);
+	local routeYields = tradeManager:CalculateOriginYieldsFromPotentialRoute(originCity:GetOwner(), originCity:GetID(), destinationCity:GetOwner(), destinationCity:GetID());
 	-- From path
-	yieldValue = yieldValue + tradeManager:CalculateOriginYieldFromPath(originCity:GetOwner(), originCity:GetID(), destinationCity:GetOwner(), destinationCity:GetID(), yieldIndex);
+	local pathYields = tradeManager:CalculateOriginYieldsFromPath(originCity:GetOwner(), originCity:GetID(), destinationCity:GetOwner(), destinationCity:GetID());
 	-- From modifiers
-	local resourceID = -1;
-	yieldValue = yieldValue + tradeManager:CalculateOriginYieldFromModifiers(originCity:GetOwner(), originCity:GetID(), destinationCity:GetOwner(), destinationCity:GetID(), yieldIndex, resourceID);
+	local modifierYields = tradeManager:CalculateOriginYieldsFromModifiers(originCity:GetOwner(), originCity:GetID(), destinationCity:GetOwner(), destinationCity:GetID());
 
-	return yieldValue;
+	-- Add the yields together and return the result
+	local i;
+	local yieldCount = #routeYields;
+
+	for i=1, yieldCount, 1 do
+		routeYields[i] = routeYields[i] + pathYields[i] + modifierYields[i];
+	end
+
+	return routeYields;
+
 end
 
 -- ===========================================================================
-function GetYieldForDestinationCity(yieldIndex:number, originCity:table, destinationCity:table)
+function GetYieldsForDestinationCity(originCity:table, destinationCity:table)
 	local tradeManager = Game.GetTradeManager();
 
 	-- From route
-	local yieldValue = tradeManager:CalculateDestinationYieldFromPotentialRoute(originCity:GetOwner(), originCity:GetID(), destinationCity:GetOwner(), destinationCity:GetID(), yieldIndex);
+	local routeYields = tradeManager:CalculateDestinationYieldsFromPotentialRoute(originCity:GetOwner(), originCity:GetID(), destinationCity:GetOwner(), destinationCity:GetID());
 	-- From path
-	yieldValue = yieldValue + tradeManager:CalculateDestinationYieldFromPath(originCity:GetOwner(), originCity:GetID(), destinationCity:GetOwner(), destinationCity:GetID(), yieldIndex);
+	local pathYields = tradeManager:CalculateDestinationYieldsFromPath(originCity:GetOwner(), originCity:GetID(), destinationCity:GetOwner(), destinationCity:GetID());
 	-- From modifiers
-	local resourceID = -1;
-	yieldValue = yieldValue + tradeManager:CalculateDestinationYieldFromModifiers(originCity:GetOwner(), originCity:GetID(), destinationCity:GetOwner(), destinationCity:GetID(), yieldIndex, resourceID);
+	local modifierYields = tradeManager:CalculateDestinationYieldsFromModifiers(originCity:GetOwner(), originCity:GetID(), destinationCity:GetOwner(), destinationCity:GetID());
 
-	return yieldValue;
+	-- Add the yields together and return the result
+	local i;
+	local yieldCount = #routeYields;
+
+	for i=1, yieldCount, 1 do
+		routeYields[i] = routeYields[i] + pathYields[i] + modifierYields[i];
+	end
+
+	return routeYields;
 end
 
 -- ===========================================================================

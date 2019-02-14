@@ -75,7 +75,9 @@ end
 -- ===========================================================================
 function OnShutdown()
 
-	Controls.BackgroundMovie:Close();
+	if (Controls.BackgroundMovie ~= nil) then
+		Controls.BackgroundMovie:Close();
+	end
 
     Events.SystemUpdateUI.Remove( OnUpdateUI );
     Events.MultiplayerJoinRoomAttempt.Remove( OnMultiplayerJoinRoomAttempt );
@@ -85,7 +87,9 @@ end
 function OnUpdateUI(type:number, tag:string, iData1:number, iData2:number, strData1:string)
     if type == SystemUpdateUI.ScreenResize then
 		--Resize();
-        Controls.BackgroundMovie:ReprocessAnchoring();
+		if (Controls.BackgroundMovie ~= nil) then
+			Controls.BackgroundMovie:ReprocessAnchoring();
+		end
 	end
 end
 

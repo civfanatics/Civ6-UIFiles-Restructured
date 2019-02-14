@@ -60,6 +60,7 @@ UNIT_ICON_TOOLTIPS["UNIT_GURU"] = {
 -- ===========================================================================
 --	SCREEN VARIABLES
 -- ===========================================================================
+local m_TopPanelConsideredHeight:number = 0;
 local m_Beliefs:table;
 local m_PendingBeliefs:table;
 local m_ReligionTabs:table; -- TabSupport
@@ -1418,7 +1419,9 @@ function Open()
 	end
 
 	-- From ModalScreen_PlayerYieldsHelper
-	RefreshYields();
+	if not RefreshYields() then
+		Controls.Vignette:SetSizeY(m_TopPanelConsideredHeight);
+	end
 
 	-- From Civ6_styles: FullScreenVignetteConsumer
 	Controls.ScreenAnimIn:SetToBeginning();
@@ -1570,6 +1573,7 @@ function Initialize()
 	Controls.ModalScreenTitle:SetText(Locale.ToUpper(TXT_SCREEN_TITLE));
 	Controls.ModalScreenClose:RegisterCallback(Mouse.eLClick, OnClose);
     Controls.ModalScreenClose:RegisterCallback(Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end); 
+	m_TopPanelConsideredHeight = Controls.Vignette:GetSizeY() - TOP_PANEL_OFFSET;
 
 end
 Initialize();
