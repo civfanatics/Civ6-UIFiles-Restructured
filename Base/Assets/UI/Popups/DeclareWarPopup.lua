@@ -155,8 +155,8 @@ function PopulateTargetInstance(controls, ePlayer)
 	local iconName = "ICON_"..pPlayerCfg:GetCivilizationTypeName();
 
 	local backColor, frontColor = UI.GetPlayerColors( ePlayer );
-	local darkerBackColor = DarkenLightenColor(backColor,(-85),238);
-	local brighterBackColor = DarkenLightenColor(backColor,90,255);
+	local darkerBackColor = UI.DarkenLightenColor(backColor,(-85),238);
+	local brighterBackColor = UI.DarkenLightenColor(backColor,90,255);
 	controls.CivIcon:SetIcon(iconName);
 	controls.CircleBacking:SetColor(backColor);
 	controls.CircleDarker:SetColor(darkerBackColor);

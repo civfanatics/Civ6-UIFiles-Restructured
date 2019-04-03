@@ -706,7 +706,7 @@ function SetupLeaderPulldown(playerId:number, instance:table, pulldownControlNam
 					else
 						civIcon:SetSizeVal(45,45);
 						civIcon:SetIcon(icons.CivIcon, 45);
-        				civIcon:SetColor(1,1,1,1);
+        				civIcon:SetColor(UI.GetColorValue(1,1,1,1));
 						civIconBG:SetHide(true);
 					end
 										
@@ -783,7 +783,7 @@ function SetupLeaderPulldown(playerId:number, instance:table, pulldownControlNam
 					else
 						entry.CivIcon:SetSizeVal(45,45);
 						entry.CivIcon:SetIcon(icons.CivIcon, 45);
-        				entry.CivIcon:SetColor(1,1,1,1);
+        				entry.CivIcon:SetColor(UI.GetColorValue(1,1,1,1));
 						entry.CivIconBG:SetHide(true);
 					end
 

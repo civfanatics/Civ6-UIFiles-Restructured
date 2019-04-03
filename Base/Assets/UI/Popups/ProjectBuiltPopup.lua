@@ -1,7 +1,7 @@
--- Copyright 2016-2018, Firaxis Games
--- For some projects (not all) play a movie showing off the completion)
+-- Copyright 2016-2019, Firaxis Games
+-- For some projects (not all) play a movie showing off the completion.
 
-include("PopupSupport");
+include("PopupManager");
 
 
 -- ===========================================================================
@@ -13,8 +13,9 @@ local RELOAD_CACHE_ID:string = "ProjectBuiltPopup";
 -- ===========================================================================
 --	MEMBERS
 -- ===========================================================================
-local m_kQueuedPopups		:table = {};	
-local m_kCurrentPopup		:table	= nil;
+local m_kPopupMgr		:table	 = ExclusivePopupManager:new("ProjectBuiltPopup");
+local m_kQueuedPopups	:table = {};	
+local m_kCurrentPopup	:table	= nil;
 
 
 -- ===========================================================================
@@ -35,7 +36,7 @@ function OnProjectComplete(playerID:number, cityID:number, projectIndex, buildin
 		return;	
 	end
 
-	-- TEMP (ZBR): Ignore if pause-menu is up; prevents stuck camera bug.
+	-- Ignore if pause-menu is up; prevents stuck camera bug.
 	local uiInGameOptionsMenu:table = ContextPtr:LookUpControl("/InGame/TopOptionsMenu");
 	if (uiInGameOptionsMenu and uiInGameOptionsMenu:IsHidden()==false) then
 		return;
@@ -61,8 +62,8 @@ function OnProjectComplete(playerID:number, cityID:number, projectIndex, buildin
 				projectPopupText = projectPopupText
 			};
 
-			if not IsLocked() then
-				LockPopupSequence( "ProjectBuiltPopup", PopupPriority.High );
+			if not m_kPopupMgr:IsLocked() then
+				m_kPopupMgr:Lock( ContextPtr, PopupPriority.High );
 				ShowPopup( kData );
 				LuaEvents.ProjectBuiltPopup_Shown();	-- Signal other systems (e.g., bulk hide UI)
 			else
@@ -75,6 +76,12 @@ end
 
 -- ===========================================================================
 function ShowPopup( kData:table )
+
+	if(UI.GetInterfaceMode() ~= InterfaceModeTypes.CINEMATIC) then
+		UILens.SaveActiveLens();
+		UILens.SetActive("Cinematic");
+		UI.SetInterfaceMode(InterfaceModeTypes.CINEMATIC);
+	end
 
 	UI.PlaySound("Mute_Narrator_Advisor_All");
 
@@ -129,7 +136,9 @@ function Close()
 	if isDone then
 		m_kCurrentPopup = nil;		
 		LuaEvents.ProjectBuiltPopup_Closed();	-- Signal other systems (e.g., bulk hide UI)
-		UnlockPopupSequence();
+		UI.SetInterfaceMode(InterfaceModeTypes.SELECTION);		
+		UILens.RestoreActiveLens();		
+		m_kPopupMgr:Unlock();
 	end		
 end
 
@@ -162,7 +171,7 @@ end
 function OnShutdown()
 	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "isHidden", ContextPtr:IsHidden());
 	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "m_kCurrentPopup", m_kCurrentPopup);
-	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "m_popupSupportEventID", m_popupSupportEventID);	-- In popupsupport
+	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "m_kPopupMgr", m_kPopupMgr.ToTable() );
 end
 
 -- ===========================================================================
@@ -174,7 +183,7 @@ function OnGameDebugReturn(context:string, contextTable:table)
 				ShowPopup(m_kCurrentPopup);
 			end
 		end
-		m_popupSupportEventID = contextTable["m_popupSupportEventID"];
+		m_kPopupMgr.FromTable( contextTable["m_kPopupMgr"], ContextPtr );
 	end
 end
 

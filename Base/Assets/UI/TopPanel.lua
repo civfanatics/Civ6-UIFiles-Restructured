@@ -126,7 +126,7 @@ function RefreshYields()
 	m_CultureYieldButton.YieldPerTurn:SetColorByName("ResCultureLabelCS");
 
 	m_CultureYieldButton.YieldBacking:SetToolTipString( GetCultureTooltip() );
-	m_CultureYieldButton.YieldBacking:SetColor(0x99fe2aec);
+	m_CultureYieldButton.YieldBacking:SetColor(UI.GetColorValueFromHexLiteral(0x99fe2aec));
 	m_CultureYieldButton.YieldIconString:SetText("[ICON_CultureLarge]");
 	m_CultureYieldButton.YieldButtonStack:CalculateSize();
 

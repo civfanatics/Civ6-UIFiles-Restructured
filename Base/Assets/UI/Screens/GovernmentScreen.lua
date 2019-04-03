@@ -1,5 +1,5 @@
 -- Copyright 2018, Firaxis Games
-include("DragSupport");
+
 include("InstanceManager");
 include("SupportFunctions");	-- Clamp
 include("TabSupport");
@@ -25,9 +25,9 @@ local m_isAllowAnythingInWildcardSlot	:boolean = true;	-- Currently engine doesn
 local m_isAllowWildcardsAnywhere		:boolean = false;	-- ...
 local m_isLocalPlayerTurn				:boolean = true;
 
-local COLOR_GOVT_UNSELECTED			:number = 0xffe9dfc7;				-- Background for unselected background (or forground text color on non-selected).
-local COLOR_GOVT_SELECTED			:number = 0xff261407;				-- Background for selected background (or forground text color on non-selected).
-local COLOR_GOVT_LOCKED				:number = 0xffAAAAAA;
+local COLOR_GOVT_UNSELECTED			:number = UI.GetColorValueFromHexLiteral(0xffe9dfc7); -- Background for unselected background (or forground text color on non-selected).
+local COLOR_GOVT_SELECTED			:number = UI.GetColorValueFromHexLiteral(0xff261407); -- Background for selected background (or forground text color on non-selected).
+local COLOR_GOVT_LOCKED				:number = UI.GetColorValueFromHexLiteral(0xffAAAAAA);
 local DATA_FIELD_CURRENT_FILTER		:string = "_CURRENT_FILTER";
 local DATA_FIELD_TOTAL_SLOTS		:string = "_TOTAL_SLOTS";			-- Total slots for a government item in the "tree-like" view
 
@@ -661,10 +661,11 @@ function RealizeGovernmentInstance(governmentType:string, inst:table, isCivilope
 		inst.Top:ClearCallback(Mouse.eLClick);
 		inst.UnlockedIcon:SetHide( false );
 	else
-		inst.Top:SetColor( 0xffffffff );
-		inst.ImageFrame:SetColor( 0xffffffff );
-		inst.ArtLeft:SetColor( 0xffffffff );
-		inst.ArtRight:SetColor( 0xffffffff );
+		local COLOR_WHITE = UI.GetColorValue("COLOR_WHITE");
+		inst.Top:SetColor(COLOR_WHITE);
+		inst.ImageFrame:SetColor(COLOR_WHITE);
+		inst.ArtLeft:SetColor(COLOR_WHITE);
+		inst.ArtRight:SetColor(COLOR_WHITE);
 		inst.Top:RegisterCallback(Mouse.eLClick, function() OnGovernmentSelected( governmentType ) end );
 		inst.UnlockedIcon:SetHide( true );
 		inst.Disabled:SetHide( true );
@@ -971,7 +972,7 @@ end
 function RealizeTabs()
 	
 	if not m_tabs then
-		m_tabs = CreateTabs( Controls.TabContainer, 42, 34, 0xFF331D05 );
+		m_tabs = CreateTabs( Controls.TabContainer, 42, 34, UI.GetColorValueFromHexLiteral(0xFF331D05) );
 	else
 		m_tabs.tabControls = {};
 	end
@@ -1880,39 +1881,43 @@ end
 -- ===========================================================================
 --
 -- ===========================================================================
-function GetCurrentDragTargetRowIndex( tDraggedControl:table, strPolicyType:string )
-	local tViableDragTargets :table = {};
+function GetCurrentDragTargetRowIndex( pDraggedControl:table, strPolicyType:string )
+	local kViableDragTargets :table = {};
+	local kTargetToTypeMap :table = {};
+
 	if ( IsPolicyTypeLegalInRow( ROW_INDEX.MILITARY, strPolicyType ) ) then
-		table.insert( tViableDragTargets, Controls.RowMilitary );
-		tViableDragTargets[Controls.RowMilitary] = ROW_INDEX.MILITARY;
+		table.insert( kViableDragTargets, Controls.RowMilitary );
+		kTargetToTypeMap[Controls.RowMilitary] = ROW_INDEX.MILITARY;
 	end
 	if ( IsPolicyTypeLegalInRow( ROW_INDEX.ECONOMIC, strPolicyType ) ) then
-		table.insert( tViableDragTargets, Controls.RowEconomic );
-		tViableDragTargets[Controls.RowEconomic] = ROW_INDEX.ECONOMIC;
+		table.insert( kViableDragTargets, Controls.RowEconomic );
+		kTargetToTypeMap[Controls.RowEconomic] = ROW_INDEX.ECONOMIC;
 	end
 	if ( IsPolicyTypeLegalInRow( ROW_INDEX.DIPLOMAT, strPolicyType ) ) then
-		table.insert( tViableDragTargets, Controls.RowDiplomatic );
-		tViableDragTargets[Controls.RowDiplomatic] = ROW_INDEX.DIPLOMAT;
+		table.insert( kViableDragTargets, Controls.RowDiplomatic );
+		kTargetToTypeMap[Controls.RowDiplomatic] = ROW_INDEX.DIPLOMAT;
 	end
 	if ( IsPolicyTypeLegalInRow( ROW_INDEX.WILDCARD, strPolicyType ) ) then
-		table.insert( tViableDragTargets, Controls.RowWildcard );
-		tViableDragTargets[Controls.RowWildcard] = ROW_INDEX.WILDCARD;
+		table.insert( kViableDragTargets, Controls.RowWildcard );
+		kTargetToTypeMap[Controls.RowWildcard] = ROW_INDEX.WILDCARD;
 	end
 
-	local tBest :table = DragSupport_GetBestOverlappingControl( tDraggedControl, tViableDragTargets );
-	return tBest ~= nil and tViableDragTargets[tBest] or -1;
+	local pBest:table = pDraggedControl:GetBestOverlappingControl( kViableDragTargets );
+	return pBest ~= nil and kTargetToTypeMap[pBest] or -1;
 end
-function IsDragOverRow( tDraggedControl:table )
-	local tTargets :table = {};
-	table.insert( tTargets, Controls.RowMilitary );
-	table.insert( tTargets, Controls.RowEconomic );
-	table.insert( tTargets, Controls.RowDiplomatic );
-	table.insert( tTargets, Controls.RowWildcard );
 
-	local tBest :table = DragSupport_GetBestOverlappingControl( tDraggedControl, tTargets );
-	return tBest ~= nil;
+function IsDragOverRow( pDraggedControl:table )
+	local kTargets :table = {};
+	table.insert( kTargets, Controls.RowMilitary );
+	table.insert( kTargets, Controls.RowEconomic );
+	table.insert( kTargets, Controls.RowDiplomatic );
+	table.insert( kTargets, Controls.RowWildcard );
+
+	local pBest:table = pDraggedControl:GetBestOverlappingControl( kTargets );
+	return pBest ~= nil;
 end
-function GetCurrentDragTargetInst( nDropRow:number, tDraggedControl:table, strDraggedCardPolicyType:string )
+
+function GetCurrentDragTargetInst( nDropRow:number, pDraggedControl:table, strDraggedCardPolicyType:string )
 	-- Row can't accept card? Don't bother checking anything else, the answer is no.
 	if not IsPolicyTypeLegalInRow( nDropRow, strDraggedCardPolicyType ) then
 		return nil;
@@ -1925,15 +1930,16 @@ function GetCurrentDragTargetInst( nDropRow:number, tDraggedControl:table, strDr
 	end
 
 	-- Check all the active card controls to see if we're targetting any with our drag.
-	local tViableDragTargets :table = {}; -- also is its own map to get parent table from specific control.
+	local kViableDragTargets :table = {};
+	local kControlToParentMap:table = {};
 	for _,tSlotData in ipairs(m_ActivePolicyRows[nDropRow].SlotArray) do
 		local inst :table = m_ActiveCardInstanceArray[tSlotData.GC_SlotIndex+1];
-		table.insert( tViableDragTargets, inst[KEY_DRAG_TARGET_CONTROL] );
-		tViableDragTargets[inst[KEY_DRAG_TARGET_CONTROL]] = inst;
+		table.insert( kViableDragTargets, inst[KEY_DRAG_TARGET_CONTROL] );
+		kControlToParentMap[inst[KEY_DRAG_TARGET_CONTROL]] = inst;
 	end
-	local tBestTarget :table = DragSupport_GetBestOverlappingControl( tDraggedControl, tViableDragTargets );
 
-	return tBestTarget and tViableDragTargets[tBestTarget] or nil;
+	local pBestTarget:table = pDraggedControl:GetBestOverlappingControl( kViableDragTargets );
+	return pBestTarget and kControlToParentMap[pBestTarget] or nil;
 end
 
 function OnStartDragFromCatalog( dragStruct:table, cardInstance:table )

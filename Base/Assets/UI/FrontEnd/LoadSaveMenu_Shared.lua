@@ -339,7 +339,7 @@ function UpdateGameType()
 	end
 
 	-- Set some strings that change whether this is a Game State or Configuration operation
-	if g_GameType == SaveTypes.WORLDBUILDER_MAP or g_GameType == SaveTypes.TILED_MAP then
+	if (g_GameType == SaveTypes.WORLDBUILDER_MAP or g_GameType == SaveTypes.TILED_MAP) and g_FileType == SaveFileTypes.GAME_STATE then
 		Controls.NoGames:LocalizeAndSetText( "{LOC_NO_SAVED_MAPS:upper}" );
 	else
 		if g_FileType == SaveFileTypes.GAME_CONFIGURATION then
@@ -350,7 +350,7 @@ function UpdateGameType()
 	end
 
 	-- Update Title text
-	if g_GameType == SaveTypes.WORLDBUILDER_MAP then
+	if g_GameType == SaveTypes.WORLDBUILDER_MAP and g_FileType == SaveFileTypes.GAME_STATE then
 		if g_MenuType == SAVE_GAME then
 			Controls.WindowHeader:LocalizeAndSetText( "{LOC_SAVE_MAP_BUTTON:upper}" );
 		else

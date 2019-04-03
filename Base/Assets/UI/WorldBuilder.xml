@@ -27,6 +27,7 @@
     <LuaContext ID="WorldBuilderPlayerEditor" FileName="WorldBuilderPlayerEditor" Hidden="1" />
     <LuaContext ID="WorldBuilderMapEditor" FileName="WorldBuilderMapEditor" Hidden="1" />
   </Container>
+  <LuaContext ID="WorldBuilderResourceGen" FileName="WorldBuilderResourceGen" />
   <LuaContext ID="PausePanel" FileName="PausePanel" Hidden="0" />
   <!-- Always very last/top: the in-game 'SHELL' menu. -->
   <LuaContext ID="TopOptionsMenu" FileName="InGameTopOptionsMenu" Hidden="1" />

@@ -21,6 +21,11 @@ local m_tabIM			   : table = InstanceManager:new("TabInstance",				"Button",	Con
 local m_LanguageEntries		: table = {};
 local m_TextEntries			: table = {};
 
+local m_ItemAnnotations :table = 
+{
+	{ "LOC_WORLDBUILDER_MAPEDIT_MODTITLE" }, { "LOC_WORLDBUILDER_MAPEDIT_MODDESC" }, { "LOC_WORLDBUILDER_MAPEDIT_MAPTITLE" }, { "LOC_WORLDBUILDER_MAPEDIT_MAPDESC" },
+};
+
 -- ===========================================================================
 --	FUNCTIONS
 -- ===========================================================================
@@ -69,6 +74,35 @@ function CalculatePrimaryTabScrollArea()
 end
 
 -- ===========================================================================
+function RefreshAnnotations()
+	for i, entry in ipairs(m_TextEntries) do
+		local controlEntry = m_ViewingTab.TextInstance.KeyStringList:GetIndexedEntry( i );
+		if controlEntry ~= nil then
+			if controlEntry.Root.Button ~= nil then
+				if i < 5 then
+					TruncateString(controlEntry.Root.Annotation, controlEntry.Root.Button:GetSizeX()-20, Locale.Lookup(m_ItemAnnotations[i][1]), "");
+				else
+					TruncateString(controlEntry.Root.Annotation, controlEntry.Root.Button:GetSizeX()-20, Locale.Lookup("LOC_WORLDBUILDER_MAPEDIT_ADDLDATA"), "");
+				end
+				-- Set button text as 
+				TruncateString(controlEntry.Root.Button, controlEntry.Root.Button:GetSizeX()-20, entry.Text, "");
+			end
+		end
+	end
+end
+
+-- ===========================================================================
+function ChangeRemoveStatus(selected)
+	if selected < 5 then
+		m_ViewingTab.TextInstance.RemoveText:SetDisabled(true);
+		m_ViewingTab.TextInstance.RemoveText:SetColor(0.5,0.5,0.5);
+	else
+		m_ViewingTab.TextInstance.RemoveText:SetDisabled(false);
+		m_ViewingTab.TextInstance.RemoveText:SetColor(1.0,1.0,1.0);
+	end
+end
+
+-- ===========================================================================
 function PopulateTextEntries(forLanguage)
 
 	m_TextEntries = {};
@@ -93,9 +127,46 @@ function PopulateTextEntries(forLanguage)
 	end
 
 	m_ViewingTab.TextInstance.KeyStringList:SetEntries( m_TextEntries, selected );
-	
+	ChangeRemoveStatus(selected);
+	RefreshAnnotations();
+
 	-- Manually call selection callback since SetEntries does not trigger it
 	OnKeyStringListSelection(m_TextEntries[selected]);
+end
+
+-- ===========================================================================
+function UpdateTextEntries()
+
+	if (m_ViewingTab ~= nil and m_ViewingTab.TextInstance ~= nil) then
+		
+		local selectedLanguageEntry = m_LanguageEntries[ m_ViewingTab.TextInstance.LanguagePullDown:GetSelectedIndex() ];
+		if selectedLanguageEntry ~= nil then
+
+			m_TextEntries = {};
+
+			local iIndex = 1;
+
+			while true do
+
+				local key, text = WorldBuilder.ModManager():GetKeyStringPairByIndex(iIndex, selectedLanguageEntry.Type);
+				if key == nil then 
+					break;
+				end
+
+				table.insert(m_TextEntries, { Key = key, Text = text, Index = iIndex, ForLanguage = selectedLanguageEntry.Type });
+
+				iIndex = iIndex + 1;
+			end
+			
+			if iIndex == 1 then
+				selected = 0;
+			end
+
+			m_ViewingTab.TextInstance.KeyStringList:SetEntries( m_TextEntries, selected );
+			ChangeRemoveStatus(selected);
+			RefreshAnnotations();
+		end
+	end
 end
 
 -- ===========================================================================
@@ -106,7 +177,17 @@ function OnCommitTextKey(text, control)
 	if controlEntry ~= nil then
 		controlEntry.Key = text;
 		WorldBuilder.ModManager():SetKeyStringPairByIndex(controlEntry.Index, controlEntry.Key, controlEntry.Text, controlEntry.ForLanguage);		
+		m_TextEntries[controlEntry.Index].Key = text;
+		m_ViewingTab.TextInstance.KeyStringList:SetEntries( m_TextEntries, i );
+		ChangeRemoveStatus(i);
+		RefreshAnnotations();
 	end
+end
+
+-- ===========================================================================
+function OnChangedTextKey(ctrl)
+	local str = ctrl:GetText();
+	OnCommitTextKey(str, ctrl);
 end
 
 -- ===========================================================================
@@ -116,8 +197,18 @@ function OnCommitTextString(text, control)
 	local controlEntry = m_ViewingTab.TextInstance.KeyStringList:GetIndexedEntry( i );
 	if controlEntry ~= nil then
 		controlEntry.Text = text;
-		WorldBuilder.ModManager():SetKeyStringPairByIndex(controlEntry.Index, controlEntry.Key, controlEntry.Text, controlEntry.ForLanguage);		
+		WorldBuilder.ModManager():SetKeyStringPairByIndex(controlEntry.Index, controlEntry.Key, controlEntry.Text, controlEntry.ForLanguage);
+		m_TextEntries[controlEntry.Index].Text = text;
+		m_ViewingTab.TextInstance.KeyStringList:SetEntries( m_TextEntries, i );
+		ChangeRemoveStatus(i);
+		RefreshAnnotations();
 	end
+end
+
+-- ===========================================================================
+function OnChangedTextString(ctrl)
+	local str = ctrl:GetText();
+	OnCommitTextString(str, ctrl);
 end
 
 -- ===========================================================================
@@ -129,16 +220,6 @@ function UpdateTextPage()
 		if selectedLanguageEntry ~= nil then
 
 			PopulateTextEntries(selectedLanguageEntry.Type);
-
-			for i, entry in ipairs(m_TextEntries) do
-				local controlEntry = m_ViewingTab.TextInstance.KeyStringList:GetIndexedEntry( i );
-				if controlEntry ~= nil then
-					if controlEntry.Root.Button ~= nil then
-						-- Set button text as 
-						TruncateString(controlEntry.Root.Button, controlEntry.Root.Button:GetSizeX()-20, entry.Text, "");
-					end
-				end
-			end
 		end
 	end
 
@@ -154,17 +235,27 @@ function OnKeyStringListSelection(entry)
 	if entry ~= nil then
 		if m_ViewingTab.TextInstance ~= nil then
 			-- Set text tag and callback
-			if m_ViewingTab.TextInstance.TextTagEditBox ~= nil then
-				m_ViewingTab.TextInstance.TextTagEditBox:SetText(entry.Key);
+			if m_ViewingTab.TextInstance.TextTagEditBox ~= nil then 
+				-- must set void1 before SetText, because SetText triggers the Commit callback, which expects void1 to be valid!
 				m_ViewingTab.TextInstance.TextTagEditBox:SetVoid1(entry.Index);
-				m_ViewingTab.TextInstance.TextTagEditBox:RegisterCommitCallback(OnCommitTextKey);
+				m_ViewingTab.TextInstance.TextTagEditBox:SetText(entry.Key);
+				if WorldBuilder.GetWBAdvancedMode() then
+					m_ViewingTab.TextInstance.TextTagEditBox:SetDisabled(false);
+					m_ViewingTab.TextInstance.TextTagEditBox:RegisterCommitCallback(OnCommitTextKey);
+					m_ViewingTab.TextInstance.TextTagEditBox:RegisterStringChangedCallback(OnChangedTextKey);
+				else
+					m_ViewingTab.TextInstance.TextTagEditBox:SetDisabled(true);
+				end
+
 			end
 
 			-- Set text string and callback
 			if m_ViewingTab.TextInstance.TextStringEditBox ~= nil then
-				m_ViewingTab.TextInstance.TextStringEditBox:SetText(entry.Text);
+				-- must set void1 before SetText, because SetText triggers the Commit callback, which expects void1 to be valid!
 				m_ViewingTab.TextInstance.TextStringEditBox:SetVoid1(entry.Index);
+				m_ViewingTab.TextInstance.TextStringEditBox:SetText(entry.Text);
 				m_ViewingTab.TextInstance.TextStringEditBox:RegisterCommitCallback(OnCommitTextString);						
+				m_ViewingTab.TextInstance.TextStringEditBox:RegisterStringChangedCallback(OnChangedTextString);
 			end
 		end
 	end
@@ -176,7 +267,7 @@ function OnAddText()
 
 		local selectedLanguageEntry = m_LanguageEntries[ m_ViewingTab.TextInstance.LanguagePullDown:GetSelectedIndex() ];
 		if selectedLanguageEntry ~= nil then
-			WorldBuilder.ModManager():SetString("DUMMY_ID", "Dummy Text", selectedLanguageEntry.Type);
+			WorldBuilder.ModManager():SetString(Locale.Lookup("LOC_WORLDBUILDER_MAPEDIT_DUMMYID"), Locale.Lookup("LOC_WORLDBUILDER_MAPEDIT_DUMMYTEXT"), selectedLanguageEntry.Type);
 
 			UpdateTextPage();	-- This is overkill/inefficient
 		end
@@ -276,10 +367,29 @@ function OnRulesetEdited( text, control )
 end
 
 -- ===========================================================================
+function OnGenerateID()
+	local newID :string = WorldBuilder.GenerateID();
+	WorldBuilder:SetID(newID);
+	if (m_ViewingTab ~= nil and m_ViewingTab.GeneralInstance ~= nil) then
+		m_ViewingTab.GeneralInstance.IDEdit:SetText( WorldBuilder.GetID() );
+	end
+end
+
+-- ===========================================================================
 function UpdateGeneralPage()	
 
 	if (m_ViewingTab ~= nil and m_ViewingTab.GeneralInstance ~= nil) then
 		
+		if WorldBuilder.GetWBAdvancedMode() then
+			m_ViewingTab.GeneralInstance.GenerateNewIDButton:SetHide(false);
+			m_ViewingTab.GeneralInstance.GenerateNewIDButton:RegisterCallback(Mouse.eLClick, OnGenerateID);
+			m_ViewingTab.GeneralInstance.GenerateNewIDButton:RegisterCallback(Mouse.eMouseEnter, function()
+				UI.PlaySound("Main_Menu_Mouse_Over");
+			end);
+		else
+			m_ViewingTab.GeneralInstance.GenerateNewIDButton:SetHide(true);
+		end
+
 		m_ViewingTab.GeneralInstance.IDEdit:SetText( WorldBuilder.GetID() );
 		local attribs = WorldBuilder.ConfigurationManager():GetMapValues();
 		m_ViewingTab.GeneralInstance.WidthEdit:SetText( tostring( attribs.Width ) );
@@ -314,10 +424,38 @@ function ViewMapGeneralPage()
 end
 
 -- ===========================================================================
+function KeyHandler( key:number )
+	if key == Keys.VK_ESCAPE and not ContextPtr:IsHidden() then
+		ContextPtr:SetHide(true);
+		return true;
+	end
+
+	return false;
+end
+
+function OnInputHandler( pInputStruct:table )
+	local uiMsg = pInputStruct:GetMessageType();
+
+	if uiMsg == KeyEvents.KeyUp then 
+		return KeyHandler( pInputStruct:GetKey() ); 
+	end;
+
+	return false;
+end
+
+-- ===========================================================================
 function OnShow()
 
 	if m_tabs.selectedControl == nil then
 		m_tabs.SelectTab(1);
+	end
+
+	if (m_ViewingTab ~= nil and m_ViewingTab.GeneralInstance ~= nil) then
+		if WorldBuilder.GetWBAdvancedMode() then
+			m_ViewingTab.GeneralInstance.GenerateNewIDButton:SetHide(false);
+		else
+			m_ViewingTab.GeneralInstance.GenerateNewIDButton:SetHide(true);
+		end
 	end
 end
 
@@ -350,11 +488,15 @@ end
 function OnInit()
 
 	-- Title
-	Controls.ModalScreenTitle:SetText( Locale.ToUpper("Map Editor") );
+	Controls.ModalScreenTitle:SetText( Locale.ToUpper("LOC_WORLDBUILDER_MAP_EDITOR") );
 
-	m_tabs = CreateTabs( Controls.TabContainer, 42, 34, 0xFF331D05 );
+	ContextPtr:SetInputHandler( OnInputHandler, true );
+
+	m_tabs = CreateTabs( Controls.TabContainer, 42, 34, UI.GetColorValueFromHexLiteral(0xFF331D05) );
 	AddTabSection( m_tabs, "LOC_WORLDBUILDER_TAB_GENERAL", ViewMapGeneralPage, Controls.TabContainer );
-	AddTabSection( m_tabs, "LOC_WORLDBUILDER_TAB_MOD", ViewMapModPage, Controls.TabContainer );
+	if WorldBuilder.GetWBAdvancedMode() then
+		AddTabSection( m_tabs, "LOC_WORLDBUILDER_TAB_MOD", ViewMapModPage, Controls.TabContainer );
+	end
 	AddTabSection( m_tabs, "LOC_WORLDBUILDER_TAB_TEXT", ViewMapTextPage, Controls.TabContainer );
 
 	m_tabs.SameSizedTabs(50);

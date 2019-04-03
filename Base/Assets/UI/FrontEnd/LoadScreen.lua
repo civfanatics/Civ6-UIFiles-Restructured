@@ -177,15 +177,15 @@ function OnLoadScreenContentReady()
 	local primaryColor, secondaryColor  = UI.GetPlayerColors( localPlayer );
 
 	if primaryColor == nil then
-		primaryColor = 0xff99aaaa;
+		primaryColor = UI.GetColorValueFromHexLiteral(0xff99aaaa);
 		UI.DataError("NIL primary color; likely player object not ready... using default color.");
 	end
 	if secondaryColor == nil then
-		secondaryColor = 0xffaa9999;
+		secondaryColor = UI.GetColorValueFromHexLiteral(0xffaa9999);
 		UI.DataError("NIL secondary color; likely player object not ready... using default color.");
 	end
 
-	local backColor						= DarkenLightenColor(primaryColor, DARKEN_AMOUNT, 255);
+	local backColor						= UI.DarkenLightenColor(primaryColor, DARKEN_AMOUNT, 255);
 	Controls.Banner:SetColor(backColor);
 	
 	local playerConfig		:table = PlayerConfigurations[localPlayer];

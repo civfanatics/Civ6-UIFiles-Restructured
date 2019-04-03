@@ -527,8 +527,8 @@ function AdjustResolutionPulldown(window_mode, is_in_game )
 		resolution_button:SetText(current_width .. "x" .. current_height .. " (" .. refresh_rate .. " Hz)");
 	end
 
-	local isTunerEnabled:boolean = Options.GetUserOption("Debug", "EnableTuner");	-- When debugging allow game resolution change. TODO: Evaluate allowing change for everyone.
-    if is_in_game and isTunerEnabled then
+	local debug_enabled = Options.GetAppOption("Debug", "EnableDebugMenu");	-- When debugging allow game resolution change. TODO: Evaluate allowing change for everyone.
+    if is_in_game and debug_enabled==0 then
         Controls.ResolutionPullDown:SetDisabled(true);
     else
         if(window_mode == BORDERLESS_OPTION) then
@@ -1139,7 +1139,7 @@ function PopulateGraphicsOptions()
     -- Water Shader
     PopulateCheckBox(Controls.WaterShaderCheckbox, InvertOptionInt(Options.GetGraphicsOption("General", "UseLowQualityWaterShader")),
         function(option)
-            -- Only high-resolution water shader has reflections
+            -- Only high-quality water shader has reflections
             Controls.ReflectionPassesPullDown:SetDisabled(not option);
 
             Controls.PerformanceSlider:SetStepAndCall(performance_customStep);              -- It's enough to set just one of the Impact sliders to "custom", the logic sets the other one
@@ -1152,16 +1152,6 @@ function PopulateGraphicsOptions()
     -- Advanced Settings - Reflections
     -------------------------------------------------------------------------------
 
-	-- Reflections enabled
-	PopulateCheckBox(Controls.ReflectionsEnabledCheckbox, Options.GetGraphicsOption("General", "EnableReflections"),
-        function(option)
-            Controls.PerformanceSlider:SetStepAndCall(performance_customStep);  -- It's enough to set just one of the Impact sliders to "custom", the logic sets the other one
-            Options.SetGraphicsOption("General", "EnableReflections", option);      -- First set the sliders to "custom", then set the new value, otherwise ProcessExternally() will overwrite the new value with a preset
-            Controls.ReflectionPassesPullDown:SetDisabled(not option);
-			Controls.ConfirmButton:SetDisabled(false);
-        end
-    );
-
 	 -- Screen-space Reflection Passes
     PopulateComboBox(Controls.ReflectionPassesPullDown, reflectionPasses_options, Options.GetGraphicsOption("General", "SSReflectPasses"), 
         function(option)
@@ -1169,7 +1159,7 @@ function PopulateGraphicsOptions()
 		    Options.SetGraphicsOption("General", "SSReflectPasses", option);    -- First set the sliders to "custom", then set the new value, otherwise ProcessExternally() will overwrite the new value with a preset
 			Controls.ConfirmButton:SetDisabled(false);
 		end,
-		Options.GetGraphicsOption("General", "EnableReflections") == 0
+		Options.GetGraphicsOption("General", "UseLowQualityWaterShader") == 1
     );
 
     -------------------------------------------------------------------------------
@@ -1317,6 +1307,13 @@ function TemporaryHardCodedGoodness()
 		{"LOC_OPTIONS_PLAYBYCLOUD_END_TURN_BEHAVIOR_EXIT_TO_MAINMENU", PlayByCloudEndTurnBehaviorType.PBC_ENDTURN_EXIT_MAINMENU},	
 	};
 
+		-- Pulldown options for PlayByCloudClientReadyBehavior.
+	local playByCloud_ready_options = {
+		{"LOC_OPTIONS_PLAYBYCLOUD_READY_BEHAVIOR_ASK_ME", PlayByCloudReadyBehaviorType.PBC_READY_ASK_ME},
+		{"LOC_OPTIONS_PLAYBYCLOUD_READY_BEHAVIOR_DO_NOTHING", PlayByCloudReadyBehaviorType.PBC_READY_DO_NOTHING},
+		{"LOC_OPTIONS_PLAYBYCLOUD_READY_BEHAVIOR_EXIT_TO_LOBBY", PlayByCloudReadyBehaviorType.PBC_READY_EXIT_LOBBY},	
+	};
+
 	-- Pulldown options for ColorblindAdaptation.
 	local colorblindAdaptation_options = {
 		{"LOC_OPTIONS_CBADAPT_DO_NOTHING", 0},
@@ -1445,6 +1442,13 @@ function TemporaryHardCodedGoodness()
 	PopulateComboBox(Controls.PlayByCloudEndTurnBehavior, playByCloud_endturn_options, Options.GetUserOption("Interface", "PlayByCloudEndTurnBehavior"), 
 		function(option)
 			Options.SetUserOption("Interface", "PlayByCloudEndTurnBehavior", option);
+			Controls.ConfirmButton:SetDisabled(false);
+		end
+	);
+
+		PopulateComboBox(Controls.PlayByCloudClientReadyBehavior, playByCloud_ready_options, Options.GetUserOption("Interface", "PlayByCloudClientReadyBehavior"), 
+		function(option)
+			Options.SetUserOption("Interface", "PlayByCloudClientReadyBehavior", option);
 			Controls.ConfirmButton:SetDisabled(false);
 		end
 	);

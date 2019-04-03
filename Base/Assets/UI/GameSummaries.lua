@@ -326,11 +326,11 @@ function Overview_PopulateVictoryProgress()
 		
 			if(tonumber(v.Count) > 0) then
 				tooltip = tooltip .. "[NEWLINE]" .. Locale.Lookup("LOC_GAMESUMMARY_VICTORYPROGRESS_COUNT", v.Count);	
-				instance.Icon:SetColor(1,1,1,1);
-				instance.Root:SetColor(1,1,1,1);
+				instance.Icon:SetColor(UI.GetColorValue(1,1,1,1));
+				instance.Root:SetColor(UI.GetColorValue(1,1,1,1));
 			else
-				instance.Icon:SetColor(1,1,1,0.25);
-				instance.Root:SetColor(1,1,1,0.25);
+				instance.Icon:SetColor(UI.GetColorValue(1,1,1,0.25));
+				instance.Root:SetColor(UI.GetColorValue(1,1,1,0.25));
 			end
 		
 			if(v.MostRecentLeaderType ~= nil) then
@@ -377,14 +377,14 @@ function Overview_PopulateLeaderProgress()
 			if(victory) then
 				tooltip = tooltip .. "[NEWLINE]" .. Locale.Lookup("LOC_GAMESUMMARY_LEADERPROGRESS_VICTORY", victory.Name);
 			end
-			instance.Icon:SetColor(1,1,1,1);
+			instance.Icon:SetColor(UI.GetColorValue(1,1,1,1));
 		else
 			if(tonumber(v.PlayCount) > 0) then
 				tooltip = tooltip .. "[NEWLINE]" .. Locale.Lookup("LOC_GAMESUMMARY_LEADERPROGRESS_PLAYCOUNT", v.PlayCount);
-				instance.Icon:SetColor(1,1,1,0.50);
+				instance.Icon:SetColor(UI.GetColorValue(1,1,1,0.50));
 	
 			else
-				instance.Icon:SetColor(1,1,1,0.25);
+				instance.Icon:SetColor(UI.GetColorValue(1,1,1,0.25));
 			end
 		end
 		

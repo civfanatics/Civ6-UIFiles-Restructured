@@ -45,9 +45,7 @@ function TutorialItemBank1()
 
 	-- ello there!
 	local item:TutorialItem = TutorialItem:new("FIRST_GREETING");
-	-- Setting to -1 to ensure question is always asked, even when user has manually
-	-- selected a tutorial level in the options menu before starting their first game.
-	item:SetTutorialLevel(0);
+	item:SetTutorialLevel( TutorialLevel.LEVEL_TBS_FAMILIAR );		-- May be switched upon answering question.
 	item:SetIsEndOfChain(true)
 	item:SetIsQueueable(true)
 	item:SetShowPortrait(true);
@@ -79,7 +77,6 @@ function TutorialItemBank1()
 			-- Has the user already chosen?
 			local tutorialLevel = UserConfiguration.TutorialLevel();
 			local hasChosenTutorialLevel = Options.GetUserOption("Tutorial", "HasChosenTutorialLevel");
-
 			if ((tutorialLevel == 0 or tutorialLevel == 1) and hasChosenTutorialLevel == 0) then
 				return true;
 			else

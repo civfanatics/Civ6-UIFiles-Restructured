@@ -304,7 +304,7 @@ function ShowPurchases()
 						pInstance.PurchaseButton:GetTextControl():SetColorByName("ResGoldLabelCS");
 					end
 					pInstance.PurchaseButton:RegisterCallback( Mouse.eLClick, function() OnClickPurchasePlot( index ); end );											
-					pInstance.PurchaseAnim:SetColor( (goldCost > playerGold ) and 0xbb808080 or 0xffffffff ) ;
+					pInstance.PurchaseAnim:SetColor( (goldCost > playerGold ) and UI.GetColorValueFromHexLiteral(0xbb808080) or UI.GetColorValueFromHexLiteral(0xffffffff) ) ;
 					pInstance.PurchaseAnim:RegisterEndCallback( OnSpinningCoinAnimDone );
 					if (goldCost > playerGold ) then
 						pInstance.PurchaseButton:ClearMouseEnterCallback();
@@ -605,7 +605,7 @@ function DebugStressTest()
 			ContextPtr:BuildInstance("DebugPixelInstance",pInst);
 			pInst.Pixel:SetOffsetVal(x*sizex,y*sizey);
 			pInst.Pixel:SetSizeVal(sizex,sizey);
-			pInst.Pixel:SetColor( RGBAValuesToABGRHex( (x/MAX_X), (y/MAX_Y), ((x+y)%2), 0.5) );
+			pInst.Pixel:SetColor((x/MAX_X), (y/MAX_Y), ((x+y)%2), 0.5);
 		end
 	end
 end

@@ -313,7 +313,7 @@
 					<!-- Unit Promotion Chooser -->
 					<Grid						ID="PromotionPanel"				Anchor="R,T" 										Size="300,287"	Style="WindowFrameHUD"  Hidden="1" ConsumeMouse="1">
 						<Label				ID="PromotionPanelHeader" Anchor="C,T"	Offset="0,5"											Style="FontNormal16" String="LOC_HUD_UNIT_CHOOSE_PROMOTION_TEXT" />
-						<ScrollPanel	ID="PromotionScrollPanel" Anchor="C,T"	Offset="0,24" 		Size="Parent-10, Parent-30" Vertical="1">
+						<ScrollPanel	ID="PromotionScrollPanel" Anchor="C,T"	Offset="0,24" 		Size="Parent-10, Parent-28" Vertical="1">
 							<Stack			ID="PromotionList" StackGrowth="Bottom" StackPadding="1" />
 							<ScrollBar														Anchor="R,T"	Offset="-12,0" AnchorSide="I,I"	Style="Slider_Blue" Length="parent" />
 						</ScrollPanel>

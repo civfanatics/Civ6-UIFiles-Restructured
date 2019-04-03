@@ -22,12 +22,27 @@ function( pInputStruct )
 		end
 	elseif uiKey == Keys.Z and pInputStruct:IsControlDown() then
 		if pInputStruct:IsShiftDown() then
-			WorldBuilder.Redo();
+			if WorldBuilder.CanRedo() then
+				WorldBuilder.Redo();
+				LuaEvents.WorldBuilder_SetPlacementStatus(Locale.Lookup("LOC_WORLDBUILDER_STATUS_REDO"));
+			else
+				LuaEvents.WorldBuilder_SetPlacementStatus(Locale.Lookup("LOC_WORLDBUILDER_STATUS_CANT_REDO"));
+			end
 		else
-			WorldBuilder.Undo();
+			if WorldBuilder.CanUndo() then
+				WorldBuilder.Undo();
+				LuaEvents.WorldBuilder_SetPlacementStatus(Locale.Lookup("LOC_WORLDBUILDER_STATUS_UNDO"));
+			else
+				LuaEvents.WorldBuilder_SetPlacementStatus(Locale.Lookup("LOC_WORLDBUILDER_STATUS_CANT_UNDO"));
+			end
 		end
 	elseif uiKey == Keys.Y and pInputStruct:IsControlDown() then
-		WorldBuilder.Redo();
+		if WorldBuilder.CanRedo() then
+			WorldBuilder.Redo();
+			LuaEvents.WorldBuilder_SetPlacementStatus(Locale.Lookup("LOC_WORLDBUILDER_STATUS_REDO"));
+		else
+			LuaEvents.WorldBuilder_SetPlacementStatus(Locale.Lookup("LOC_WORLDBUILDER_STATUS_CANT_REDO"));
+		end
 	elseif uiKey == Keys.VK_F5 then
 		-- TODO: Quick save maps in world builder?
 	end
@@ -69,11 +84,19 @@ end
 function OnOpenMapEditor()
 	LuaEvents.WorldBuilder_ShowMapEditor( Controls.WorldBuilderMapEditor:IsHidden() );
 end
+		   
+-- ===========================================================================    
+function OnOpenInGameMenu()
+UIManager:QueuePopup( Controls.TopOptionsMenu, PopupPriority.Utmost );
+end
 
 -- ===========================================================================
 --	Init
 -- ===========================================================================
 function OnInit()
+	UserConfiguration.ShowMapResources(true);
+	UserConfiguration.ShowMapGrid(false);
+	UserConfiguration.ShowMapYield(false);
 
 	-- Register for events
 	ContextPtr:SetShowHandler( OnShow );
@@ -81,6 +104,6 @@ function OnInit()
 	Events.LoadGameViewStateDone.Add( OnLoadGameViewStateDone );
 	LuaEvents.WorldBuilderLaunchBar_OpenPlayerEditor.Add( OnOpenPlayerEditor );
 	LuaEvents.WorldBuilderLaunchBar_OpenMapEditor.Add( OnOpenMapEditor );
-
+	LuaEvents.WorldBuilderLaunchBar_OpenInGameMenu.Add( OnOpenInGameMenu );
 end
 ContextPtr:SetInitHandler( OnInit );

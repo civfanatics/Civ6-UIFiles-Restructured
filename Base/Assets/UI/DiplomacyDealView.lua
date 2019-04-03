@@ -1393,13 +1393,9 @@ function ShowAgreementOptionPopup(agreementType, agreementTurns, fromPlayerId)
 	Controls.ValueEditIconGrid:SetHide(true);
 	Controls.ValueAmountEditBoxContainer:SetHide(true);
 
-    -- don't update when backing out of this on a war
-    if ((agreementType == DealAgreementTypes.JOINT_WAR) or
-        (agreementType == DealAgreementTypes.THIRD_PARTY_WAR)) then
-        ms_bDontUpdateOnBack = true;
-    end
-
-
+    -- don't update when backing out
+    ms_bDontUpdateOnBack = true;
+	
 	if agreementType == DealAgreementTypes.RESEARCH_AGREEMENT then
 		Controls.ValueEditHeaderLabel:SetText(Locale.Lookup("LOC_DIPLOMACY_DEAL_SELECT_TECH"));
 	elseif agreementType == DealAgreementTypes.ALLIANCE then

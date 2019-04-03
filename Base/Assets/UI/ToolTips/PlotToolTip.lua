@@ -762,21 +762,22 @@ function ShowPlotInfo( plotId:number, bIsUpdate:boolean )
 				local plotOwner = plot:GetOwner();
 				local plotPlayer = Players[plotOwner];
 				local district = plotPlayer:GetDistricts():FindID(new_data.DistrictID);
+				if district ~= nil then
+					for row in GameInfo.Yields() do
+						local yield = plot:GetYield(row.Index);
+						local workers = plot:GetWorkerCount();
+						if (yield > 0 and workers > 0) then
+							yield = yield * workers;
+							new_data.Yields[row.YieldType] = yield;
+						end
 
-				for row in GameInfo.Yields() do
-					local yield = plot:GetYield(row.Index);
-					local workers = plot:GetWorkerCount();
-					if (yield > 0 and workers > 0) then
-						yield = yield * workers;
-						new_data.Yields[row.YieldType] = yield;
+						local districtYield = district:GetYield(row.Index);
+						if (districtYield > 0) then
+							new_data.DistrictYields[row.YieldType] = districtYield;
+						end
+
 					end
-
-					local districtYield = district:GetYield(row.Index);
-					if (districtYield > 0) then
-						new_data.DistrictYields[row.YieldType] = districtYield;
-					end
-
-				end									
+				end
 			end
 
 			View(new_data, bIsUpdate);

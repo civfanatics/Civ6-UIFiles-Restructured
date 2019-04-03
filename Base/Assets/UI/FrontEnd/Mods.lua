@@ -124,8 +124,11 @@ function RefreshListings()
 				instance.ModEnabled:SetText("[COLOR_RED]" .. Locale.Lookup("LOC_MODS_DISABLED") .. "[ENDCOLOR]");
 			end
 
-			instance.OfficialIcon:SetHide(v.Official ~= true);
-			instance.CommunityIcon:SetHide(v.Official == true);
+			local bOfficial = v.Official;
+			local bIsMap = v.Source == "Map";
+			instance.MapIcon:SetHide(not bIsMap);
+			instance.OfficialIcon:SetHide(bIsMap or not bOfficial);
+			instance.CommunityIcon:SetHide(bIsMap or bOfficial);
 		end
 
 		if(hasEnabledMods) then
@@ -247,7 +250,11 @@ function RefreshModDetails()
 		local modHandle = g_SelectedModHandle;
 		local info = Modding.GetModInfo(modHandle);
 
-		if(info.Official) then
+		local bIsMap = info.Source == "Map";
+
+		if(bIsMap) then
+			Controls.ModContent:LocalizeAndSetText("LOC_MODS_WORLDBUILDER_CONTENT");
+		elseif(info.Official) then
 			Controls.ModContent:LocalizeAndSetText("LOC_MODS_FIRAXIAN_CONTENT");
 		else
 			Controls.ModContent:LocalizeAndSetText("LOC_MODS_USER_CONTENT");
@@ -266,8 +273,11 @@ function RefreshModDetails()
 		end
 
 		-- Official/Community Icons
-		Controls.OfficialIcon:SetHide(not info.Official);
-		Controls.CommunityIcon:SetHide(info.Official);
+		local bIsOfficial = info.Official;
+		local bIsMap = info.Source == "Map";
+		Controls.MapIcon:SetHide(not bIsMap);
+		Controls.OfficialIcon:SetHide(bIsMap or not bIsOfficial);
+		Controls.CommunityIcon:SetHide(bIsMap or bIsOfficial);
 
 		local enableButton = Controls.EnableButton;
 		local disableButton = Controls.DisableButton;
@@ -433,6 +443,16 @@ function RefreshModDetails()
 		else
 			Controls.ModSpecialThanksCaption:SetHide(true);
 			Controls.ModSpecialThanksValue:SetHide(true);
+		end
+
+		local created = info.Created;
+		if(created) then
+			Controls.ModCreatedValue:LocalizeAndSetText("{1_Created : date long}", created);
+			Controls.ModCreatedCaption:SetHide(false);		
+			Controls.ModCreatedValue:SetHide(false);
+		else
+			Controls.ModCreatedCaption:SetHide(true);
+			Controls.ModCreatedValue:SetHide(true);
 		end
 
 		if(info.Official and info.Allowance ~= nil) then
@@ -883,20 +903,44 @@ end
 -- Must exist below callback function names
 ---------------------------------------------------------------------------
 function SortListingsByName(mods)
+	-- Keep XP1 and XP2 at the top of the list, regardless of sort.
+	local sortOverrides = {
+		["4873eb62-8ccc-4574-b784-dda455e74e68"] = -2,
+		["1B28771A-C749-434B-9053-D1380C553DE9"] = -1
+	};
+
 	table.sort(mods, function(a,b) 
-		return Locale.Compare(a.StrippedDisplayName, b.StrippedDisplayName) == -1;
+		local aSort = sortOverrides[a.Id] or 0;
+		local bSort = sortOverrides[b.Id] or 0;
+
+		if(aSort ~= bSort) then
+			return aSort < bSort;
+		else
+			return Locale.Compare(a.StrippedDisplayName, b.StrippedDisplayName) == -1;
+		end
 	end);
 end
 ---------------------------------------------------------------------------
 function SortListingsByEnabled(mods)
-	table.sort(mods, function(a,b)
-		if(a.Enabled == b.Enabled) then
+	-- Keep XP1 and XP2 at the top of the list, regardless of sort.
+	local sortOverrides = {
+		["4873eb62-8ccc-4574-b784-dda455e74e68"] = -2,
+		["1B28771A-C749-434B-9053-D1380C553DE9"] = -1
+	};
+
+	table.sort(mods, function(a,b) 
+		local aSort = sortOverrides[a.Id] or 0;
+		local bSort = sortOverrides[b.Id] or 0;
+
+		if(aSort ~= bSort) then
+			return aSort < bSort;
+		elseif(a.Enabled ~= b.Enabled) then
+			return a.Enabled;
+		else
 			-- Sort by Name.
 			return Locale.Compare(a.StrippedDisplayName, b.StrippedDisplayName) == -1;
-		else
-			return a.Enabled;
 		end
-	end);	
+	end);
 end
 ---------------------------------------------------------------------------
 local g_SortListingsOptions = {
@@ -939,13 +983,9 @@ function Initialize()
 	Controls.SearchEditBox:RegisterStringChangedCallback(OnSearchCharCallback);
 	Controls.SearchEditBox:RegisterHasFocusCallback(OnSearchBarGainFocus);
 
-	Controls.ShowOfficialContent:RegisterCallback(Mouse.eLClick, function()
-		RefreshListings();
-	end);
-
-	Controls.ShowCommunityContent:RegisterCallback(Mouse.eLClick, function()
-		RefreshListings();
-	end);
+	local refreshListings = function() RefreshListings(); end;
+	Controls.ShowOfficialContent:RegisterCallback(Mouse.eLClick, refreshListings);
+	Controls.ShowCommunityContent:RegisterCallback(Mouse.eLClick, refreshListings);
 
 	Controls.CancelBindingButton:RegisterCallback(Mouse.eLClick, function()
 		Controls.NameModGroupPopup:SetHide(true);

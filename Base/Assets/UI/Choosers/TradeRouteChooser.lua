@@ -542,8 +542,8 @@ function RefreshChooserPanel()
 	-- Send Trade Route Paths to Engine
 	UILens.ClearLayerHexes( m_TradeRoute );
 
-	local DEFAULT_TINT = RGBAValuesToABGRHex(1, 1, 1, 1);
-	local FADED_TINT = RGBAValuesToABGRHex(0.3, 0.3, 0.3, 1);
+	local DEFAULT_TINT = UI.GetColorValue(1, 1, 1, 1);
+	local FADED_TINT = UI.GetColorValue(0.3, 0.3, 0.3, 1);
 
 	-- If a city is selected, fade the other routes
 	local kUnselectedColor = DEFAULT_TINT;
@@ -626,10 +626,10 @@ function AddCityToDestinationStack(city:table)
 
 	-- Update Selector Brace
 	if destinationCity ~= nil and city:GetName() == destinationCity:GetName() then
-		cityEntry.SelectorBrace:SetColor(1,1,1,1);
+		cityEntry.SelectorBrace:SetColor(UI.GetColorValue(1,1,1,1));
 		cityEntry.Button:SetSelected(true);
 	else
-		cityEntry.SelectorBrace:SetColor(1,1,1,0);
+		cityEntry.SelectorBrace:SetColor(UI.GetColorValue(1,1,1,0));
 		cityEntry.Button:SetSelected(false);
 	end
 

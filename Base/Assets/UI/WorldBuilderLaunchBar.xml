@@ -16,10 +16,36 @@
             </Button>
             <Image Anchor="L,C" Offset="0,-2" Size="7,7" Texture="LaunchBar_TrackPip" Color="255,255,255,200" />
           </Stack>
-
         </Grid>
       </Image>
     </Grid>
+  </Container>
+
+  <Container Anchor="C,L" Size="600,28">
+	  <Box Size="parent,parent" Color="32,70,101,150">
+		  <Label ID="StatusLine" Style="FontFlair24" Anchor="C,L"/>
+	  </Box>
+  </Container>
+
+  <Container Anchor="R,T" Size="60,28" Offset="244,-76">
+	  <Stack ID="ButtonStack2" Offset="63,77" Padding="0" StackGrowth="Bottom" >
+		  <GridButton ID="LaunchMenu" String="LOC_OPTIONS_HOTKEY_GLOBAL_PAUSEMENU" Size="240,30" Style="ButtonControl" ToolTip="LOC_OPTIONS_HOTKEY_GLOBAL_PAUSEMENU_HELP"/>
+		  <GridButton ID="ToggleAdvanced" String="LOC_WORLDBUILDER_SWITCH_ADV" Size="240,30" Style="ButtonControl" ToolTip="LOC_WORLDBUILDER_SWITCH_ADV_POPUP_TEXT"/>
+	  </Stack>
+  </Container>
+
+  <Container ID="SwitchPopup" Anchor="C,C" Size="640,280">
+	  <Image ID="ModalBG" Size="640,280" Offset="0,0" Texture="WorldBuilder_BG" StretchMode="Tile" ConsumeMouse="1"/>
+	  <Grid																														  Size="parent,40"						Texture="Controls_SubHeader2" ConsumeMouse="1" SliceCorner="20,2" SliceTextureSize="40,40">
+		<Label ID="ModalScreenTitle" String="LOC_WORLDBUILDER_SWITCH_ADV_POPUP_TITLE" Anchor="C,C" Style="FontFlair24" FontStyle="glow" ColorSet="ShellHeader" SmallCaps="28" SmallCapsLeading="0" SmallCapsType="EveryWord"/>
+	  </Grid>
+	  <Grid	Offset="-8,-8"	Size="parent+16,parent+16"	Style="ScreenFrame"/>
+
+	  <Grid Size="603,170" Offset="20,50" Texture="Religion_OverviewFrame" SliceCorner="15,15" SliceTextureSize="34,33">
+			  <Label Offset="20,20" WrapWidth="560" Style="FontNormal20" FontStyle="shadow" ColorSet="ShellHeader" String="LOC_WORLDBUILDER_SWITCH_ADV_POPUP_TEXT" />
+	  </Grid>
+	  <GridButton ID="ConfirmButton" Size="200,48" Offset="17,8" String="LOC_CONTINUE" Style="ButtonConfirm" Anchor="R,B"/>
+	  <GridButton ID="CancelButton" Size="200,48" Offset="20,8" String="LOC_CANCEL" Style="ButtonRed" Anchor="L,B"/>
   </Container>
 
 </Context>

@@ -326,16 +326,18 @@ end
 -------------------------------------------------
 -------------------------------------------------
 function UpdatePlayerEntry(iPlayerID :number)
+	local playerEntry :table = m_playerListEntries[iPlayerID];
+	local pPlayerConfig :table = PlayerConfigurations[iPlayerID];
+	local entryChanged :boolean = false;
+	if(pPlayerConfig ~= nil and pPlayerConfig:IsAlive() == true) then
 
-	local playerEntry:table = m_playerListEntries[iPlayerID];
-	if(playerEntry == nil) then
-		playerEntry = {};
-		ContextPtr:BuildInstanceForControl( "PlayerListEntry", playerEntry, Controls.PlayerListStack);
-		m_playerListEntries[iPlayerID] = playerEntry;
-	end
-
-	local pPlayerConfig = PlayerConfigurations[iPlayerID];
-	if(playerEntry ~= nil and pPlayerConfig ~= nil) then
+		-- Create playerEntry if it does not exist.
+		if(playerEntry == nil) then
+			playerEntry = {};
+			ContextPtr:BuildInstanceForControl( "PlayerListEntry", playerEntry, Controls.PlayerListStack);
+			m_playerListEntries[iPlayerID] = playerEntry;
+			entryChanged = true;
+		end
 
 		playerEntry.PlayerName:SetText(pPlayerConfig:GetSlotName()); 
 		
@@ -350,6 +352,19 @@ function UpdatePlayerEntry(iPlayerID :number)
 			connectionText = "[ICON_Host] " .. connectionText;
 			playerEntry.ConnectionLabel:SetText(connectionText);
 		end
+	else
+		-- playerEntry should not exist for this player.  Delete it if it exists.
+		if(playerEntry ~= nil) then
+			Controls.PlayerListStack:DestroyChild(playerEntry);
+			m_playerListEntries[iPlayerID] = nil;
+			playerEntry = nil;
+			entryChanged = true;
+		end
+	end
+
+	if(entryChanged == true) then
+		Controls.PlayerListStack:CalculateSize();
+		Controls.PlayerListStack:ReprocessAnchoring();
 	end
 end
 

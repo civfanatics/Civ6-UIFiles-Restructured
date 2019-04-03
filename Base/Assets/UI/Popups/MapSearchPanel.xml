@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<Context Style="FontNormal16">
+
+	<AlphaAnim ID="SearchSuggestionsTimer" Begin="0" End="1" Speed="4" Cycle="Once" Stopped="1"/>
+	
+	<!-- Map Search List Panel -->
+	<Grid Anchor="L,B" ID="MapSearchPanel" Size="320,auto" Texture="Tracker_OptionsBacking" SliceCorner="55,61" SliceSize="1,1" SliceTextureSize="121,119" ConsumeAllMouse="1" MinSize="121,119" AutoSizePadding="0,15">
+		<Stack Size="parent,auto">
+			<Label Anchor="C,T" String="{LOC_HUD_MAP_SEARCH:upper}" Offset="-5,12" Style="FontFlair16" Color0="106,93,69,255" Color1="0,0,0,150" Color2="146,133,109,255" FontStyle="Glow" SmallCaps="20" SmallCapsLeading="0" SmallCapsType="EveryWord" KerningAdjustment="0"/>
+
+			<Grid ID="SearchSuggestions" Size="parent-88,auto" Offset="0,-6" Anchor="C,T" AnchorSide="I,O" Texture="Controls_DropdownPanel" InnerPadding="6,6" SliceCorner="10,10" SliceTextureSize="22,22" Hidden="1">
+				<Stack ID="SearchSuggestionStack" Anchor="C,C" Size="parent,auto" StackGrowth="Top"/>
+			</Grid>
+			<Grid ID="FilterSuggestions" Size="parent-88,auto" Offset="0,-6" Anchor="C,T" AnchorSide="I,O" Texture="Controls_DropdownPanel" InnerPadding="6,6" SliceCorner="10,10" SliceTextureSize="22,22" Hidden="1">
+				<Stack ID="FilterSuggestionStack" Anchor="C,C" Size="parent,auto" StackGrowth="Top"/>
+			</Grid>
+			
+			<Grid Texture="Controls_Search2" SliceCorner="30,13" SliceTextureSize="41,26" Anchor="C,T" Offset="-5,0" Size="parent-50,26" ToolTip="LOC_HUD_MAP_SEARCH_TOOLTIP">
+				<EditBox ID="MapSearchBox" Style="EditTextArea" Size="parent-30,22" Anchor="L,C" Offset="24,0" EditMode="0" FocusStop="0" KeepFocus="1"/>
+			</Grid>
+			<Bar ID="ProgressBar" Anchor="C,T" Size="parent-60,1" Offset="-5,0" Direction="Right" FGColor="DarkBlue" Percent="1.0"/>
+			<Grid Texture="Controls_Filter" SliceCorner="30,13" SliceTextureSize="41,26" Anchor="C,T" Offset="-5,0" Size="parent-50,26" ToolTip="LOC_HUD_MAP_SEARCH_FILTER_TOOLTIP">
+				<EditBox ID="MapSearchFilterBox" Style="EditTextArea" Size="parent-30,22" Anchor="L,C" Offset="24,0" EditMode="0" FocusStop="1" KeepFocus="1"/>
+			</Grid>
+			
+			<Container Anchor="C,T" Size="parent-50,auto" Offset="-5,10">
+				<Button ID="PrevResultButton" Anchor="L,C" Offset="10,0" Style="ArrowButtonLeft" Disabled="1"/>
+				<Label ID="ResultsLabel" Anchor="C,C" String=""/>
+				<Button ID="NextResultButton" Anchor="R,C" Offset="10,0" Style="ArrowButtonRight" Disabled="1"/>
+			</Container>
+
+			<Container Anchor="C,T" Size="parent-50,auto" Offset="-5,10">
+				<GridButton ID="ClearButton" Anchor="L,C" Offset="10,0" Size="100,30" Style="ButtonControl" String="LOC_HUD_MAP_SEARCH_CLEAR_SEARCH"/>
+				<GridButton ID="SearchButton" Anchor="R,C" Offset="10,0" Size="100,30" Style="ButtonControl" String="LOC_HUD_MAP_SEARCH_BEGIN_SEARCH"/>
+			</Container>
+		</Stack>
+		
+		<Image Texture="Controls_ButtonExtendSmall" TextureOffset="0,60" Size="20,20" Anchor="L,B" Offset="20,10"/>
+	</Grid>
+
+	<!-- ==================================================================== -->
+	<!--  INSTANCES                                                           -->
+	<!-- ==================================================================== -->
+	<Instance     Name="SuggestionEntry">
+		<GridButton ID="SuggestionButton" Style="ButtonControl" Anchor="C,T" Size="parent,26" TruncateWidth="parent-10"/>
+	</Instance>
+
+</Context>

@@ -20,9 +20,12 @@ include( "CivilizationIcon" );
 g_ActionListIM		= InstanceManager:new( "ActionButton",  "Button" );
 g_SubActionListIM	= InstanceManager:new( "ActionButton",  "Button" );
 MAX_BEFORE_TRUNC_BUTTON_INST		= 350;
-COLOR_BUTTONTEXT_NORMAL			= 0xFFC9DAE7;
-COLOR_BUTTONTEXT_DISABLED			= 0xFF90999F;
-
+COLOR_BLUE_GRAY						= UI.GetColorValueFromHexLiteral(0xFF9c8772);
+COLOR_BUTTONTEXT_SELECTED			= UI.GetColorValueFromHexLiteral(0xFF291F10);
+COLOR_BUTTONTEXT_SELECTED_SHADOW	= UI.GetColorValueFromHexLiteral(0xAAD8B489);
+COLOR_BUTTONTEXT_NORMAL				= UI.GetColorValueFromHexLiteral(0xFFC9DAE7);
+COLOR_BUTTONTEXT_NORMAL_SHADOW		= UI.GetColorValueFromHexLiteral(0xA291F10);
+COLOR_BUTTONTEXT_DISABLED			= UI.GetColorValueFromHexLiteral(0xFF90999F);
 g_bIsLocalPlayerTurn = true;
 
 
@@ -44,12 +47,7 @@ local INTEL_ACCESS_LEVEL_PANEL		= 0;
 local INTEL_RELATIONSHIP_PANEL		= 1;
 local INTEL_GOSSIP_HISTORY_PANEL	= 2;
 local INTEL_AGENDA_PANEL			= 3;
-local COLOR_BLUE_GRAY				= 0xFF9c8772;
-local COLOR_BUTTONTEXT_SELECTED			= 0xFF291F10;
-local COLOR_BUTTONTEXT_SELECTED_SHADOW	= 0xAAD8B489;
-local COLOR_BUTTONTEXT_NORMAL			= 0xFFC9DAE7;
-local COLOR_BUTTONTEXT_NORMAL_SHADOW	= 0xA291F10;
-local COLOR_BUTTONTEXT_DISABLED			= 0xFF90999F;
+
 local DIPLOMACY_RIBBON_OFFSET			= 64;
 local MAX_BEFORE_TRUNC_BUTTON_INST		= 280;
 local PADDING_FOR_SCROLLPANEL			= 220;
@@ -136,6 +134,7 @@ local m_eventID:number = 0;
 local m_firstOpened = true;
 local m_LeaderCoordinates		:table = {};
 local m_lastLeaderPlayedMusicFor = -1;
+local m_bCurrentMusicIsModder : boolean = false;
 local ms_LastDealResponseAnimation = nil;
 
 -- VOICEOVER SUPPORT
@@ -1502,9 +1501,7 @@ function AddOverviewOtherRelationships(overviewInstance:table)
 	local overviewOtherRelationshipsInst:table = ms_IntelOverviewOtherRelationshipsIM:GetInstance(overviewInstance.IntelOverviewStack);
 
 	--Set data for relationship area
-	local localPlayerDiplomacy = ms_LocalPlayer:GetDiplomacy();
-	local selectedPlayerConfig = PlayerConfigurations[ms_SelectedPlayer:GetID()];
-	local leaderDesc = selectedPlayerConfig:GetLeaderName();
+	local pLocalPlayerDiplomacy:table = ms_LocalPlayer:GetDiplomacy();
 	
 	ms_RelationshipIconsIM:ResetInstances();
 
@@ -1512,22 +1509,34 @@ function AddOverviewOtherRelationships(overviewInstance:table)
 	local selectedPlayerDiplomacy = ms_SelectedPlayer:GetDiplomacy();
 	local aPlayers = PlayerManager.GetAliveMajors();
 	for _, pPlayer in ipairs(aPlayers) do
-		if (pPlayer:IsMajor() and pPlayer:GetID() ~= ms_LocalPlayerID and pPlayer:GetID() ~= ms_SelectedPlayer:GetID() and selectedPlayerDiplomacy:HasMet(pPlayer:GetID())) then
-			local playerConfig = PlayerConfigurations[pPlayer:GetID()];
-			local leaderTypeName = playerConfig:GetLeaderTypeName();
+		local playerID :number = pPlayer:GetID();
+		if (pPlayer:IsMajor() and playerID ~= ms_LocalPlayerID and playerID ~= ms_SelectedPlayer:GetID() and selectedPlayerDiplomacy:HasMet(playerID)) then
+			local playerConfig		:table = PlayerConfigurations[playerID];
+			local leaderTypeName	:string = playerConfig:GetLeaderTypeName();
 			if (leaderTypeName ~= nil) then
-				local relationshipIcon = ms_RelationshipIconsIM:GetInstance(overviewOtherRelationshipsInst.RelationshipsStack);
-				local iPlayerDiploState = pPlayer:GetDiplomaticAI():GetDiplomaticStateIndex(ms_SelectedPlayer:GetID());
-				relationshipIcon.Status:SetVisState( iPlayerDiploState );
-				local relationshipState = GameInfo.DiplomaticStates[iPlayerDiploState];
-				-- No diplo state icon if both players are human, except for the war state
-				if ( ((ms_SelectedPlayer:IsAI() or pPlayer:IsAI()) and relationshipState.Hash ~= DiplomaticStates.NEUTRAL) or IsValidRelationship(relationshipState.StateType)) then
-					relationshipIcon.Status:SetToolTipString(Locale.Lookup(GameInfo.DiplomaticStates[iPlayerDiploState].Name));
+				local relationshipIcon	:table = ms_RelationshipIconsIM:GetInstance(overviewOtherRelationshipsInst.RelationshipsStack);
+				local iPlayerDiploState	:number= pPlayer:GetDiplomaticAI():GetDiplomaticStateIndex(ms_SelectedPlayer:GetID());				
+				local kRelationship		:table = GameInfo.DiplomaticStates[iPlayerDiploState];
+				local isRelationHidden	:boolean = true;
+
+				-- If a state other than neutral exsits, then look up the corresponding 
+				-- relationship rules for AI or human, based on the players.
+				if (kRelationship.Hash ~= DiplomaticStates.NEUTRAL) then
+					local isHuman		:boolean= not (ms_SelectedPlayer:IsAI() or pPlayer:IsAI());
+					local relationType	:string = kRelationship.StateType;
+					local isValid		:boolean= (isHuman and Relationship.IsValidWithHuman( relationType )) or (not isHuman and Relationship.IsValidWithAI( relationType ));
+					if isValid then
+						relationshipIcon.Status:SetToolTipString( Locale.Lookup(kRelationship.Name) );
+						relationshipIcon.Status:SetVisState( iPlayerDiploState );
+						isRelationHidden = false;
+					end
 				end
-				if(localPlayerDiplomacy:HasMet(pPlayer:GetID())) then
+				relationshipIcon.Status:SetHide( isRelationHidden );
+
+				if( pLocalPlayerDiplomacy:HasMet(playerID) ) then
 					relationshipIcon.Icon:SetTexture(IconManager:FindIconAtlas("ICON_" .. playerConfig:GetLeaderTypeName(), 32));
 					-- Tool tip
-					local leaderDesc = playerConfig:GetLeaderName();
+					local leaderDesc :string = playerConfig:GetLeaderName();
 					relationshipIcon.Background:LocalizeAndSetToolTip("LOC_DIPLOMACY_DEAL_PLAYER_PANEL_TITLE", leaderDesc, playerConfig:GetCivilizationDescription());
 					
 					-- Show team ribbon for ourselves and civs we've met
@@ -1703,15 +1712,6 @@ function PopulateLeader(leaderIcon : table, player : table, isUniqueLeader : boo
 				leaderIcon:RegisterCallback(Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 				leaderIcon:RegisterCallback(Mouse.eLClick, OnPlayerSelected);
 
-				-- Set the score.
-				leaderIcon.Controls.Score:SetText( tostring( player:GetScore() ) );
-				-- Set the gold per turn
-				local goldYield = player:GetTreasury():GetGoldYield();
-				if (goldYield > 0) then
-					leaderIcon.Controls.GoldPerTurn:SetText( "(+" .. string.format("%.1f", goldYield) .. " [ICON_Gold])" );			
-				else
-					leaderIcon.Controls.GoldPerTurn:SetText( "(" .. string.format("%.1f", goldYield) .. " [ICON_Gold])" );			
-				end
 				-- The selection background
 				leaderIcon.Controls.SelectedBackground:SetHide(playerID ~= ms_SelectedPlayerID);
 			end
@@ -2322,6 +2322,7 @@ function OnLeaderLoaded()
 		ContextPtr:SetHide(false);
         bDoAudio = true;
         m_lastLeaderPlayedMusicFor = -1;
+		m_bCurrentMusicIsModder = false;
 	end
 	Controls.FallbackLeaderImage:SetHide(false);
 
@@ -2350,7 +2351,7 @@ function OnLeaderLoaded()
         UI.PlaySound("Stop_Speech_GreatWriting");
         UI.PlaySound("Stop_Speech_NaturalWonders");
 
-		-- if current civ is unknown, give mods a chance to handle it
+		-- if the local player civ is unknown, pause any music the mod may be supplying
 		if (UI.GetCivilizationSoundSwitchValueByLeader(ms_LocalPlayerLeaderID) == -1) then
 			UI.PauseModCivMusic();
 		end
@@ -2359,26 +2360,31 @@ function OnLeaderLoaded()
         if (m_lastLeaderPlayedMusicFor ~= ms_OtherLeaderID) then
 
 			-- stop modder civ's leader music if necessary
-			if (m_lastLeaderPlayedMusicFor ~= -1) then
+			if m_bCurrentMusicIsModder then
 				UI.StopModCivLeaderMusic(m_lastLeaderPlayedMusicFor);
+				UI.PlaySound("Resume_Game_Music");
 			end
 
             -- always duck ambience here
             UI.SetSoundStateValue("Game_Views", "Leader_Screen");
 
-			-- and Wwise IDs don't match
-			if (UI.GetCivilizationSoundSwitchValueByLeader(m_lastLeaderPlayedMusicFor) ~= UI.GetCivilizationSoundSwitchValueByLeader(ms_OtherLeaderID)) then
-                -- if new leader is also a modder civ, take care of that
-				UI.SetSoundSwitchValue("LEADER_SCREEN_CIVILIZATION", UI.GetCivilizationSoundSwitchValueByLeader(ms_OtherLeaderID));
-				UI.SetSoundSwitchValue("Game_Location", UI.GetNormalEraSoundSwitchValue(ms_OtherID));
-				UI.PlaySound("Play_Leader_Music");
-				m_lastLeaderPlayedMusicFor = ms_OtherLeaderID;
-			end
-
 			-- always restart modder music if the leader IDs don't match
 			if (UI.GetCivilizationSoundSwitchValueByLeader(ms_OtherLeaderID) == -1) then
+				UI.PlaySound("Stop_Leader_Music");
+				UI.PlaySound("Pause_Game_Music");
 				UI.PlayModCivLeaderMusic(ms_OtherID);
 				m_lastLeaderPlayedMusicFor = ms_OtherID;
+				m_bCurrentMusicIsModder = true;
+			else
+				-- and Wwise IDs don't match
+				if (UI.GetCivilizationSoundSwitchValueByLeader(m_lastLeaderPlayedMusicFor) ~= UI.GetCivilizationSoundSwitchValueByLeader(ms_OtherLeaderID)) then
+					-- if new leader is also a modder civ, take care of that
+					UI.SetSoundSwitchValue("LEADER_SCREEN_CIVILIZATION", UI.GetCivilizationSoundSwitchValueByLeader(ms_OtherLeaderID));
+					UI.SetSoundSwitchValue("Game_Location", UI.GetNormalEraSoundSwitchValue(ms_OtherID));
+					UI.PlaySound("Play_Leader_Music");
+					m_lastLeaderPlayedMusicFor = ms_OtherLeaderID;
+				end
+				m_bCurrentMusicIsModder = false;
 			end
         end
     end
@@ -2778,8 +2784,9 @@ function Close()
     UI.PlaySound("Stop_Leader_Music");
 
     -- check if we need to also stop modder civ music
-    if (UI.GetCivilizationSoundSwitchValueByLeader(m_lastLeaderPlayedMusicFor) == -1) then
+    if m_bCurrentMusicIsModder then
 		UI.StopModCivLeaderMusic(m_lastLeaderPlayedMusicFor);
+		UI.PlaySound("Resume_Game_Music");
     end
 
     -- if it's not an observer game...

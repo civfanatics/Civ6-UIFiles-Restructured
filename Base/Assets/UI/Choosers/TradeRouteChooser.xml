@@ -29,8 +29,8 @@
             </Grid>
 
             <!-- Destination Resource Information -->
-            <Box ID="DestinationResourcesLeftColumn" Size="53,35" Offset="77,62" Color="0,0,0,22"/>
-            <Box ID="DestinationResourcesRightColumn" Size="53,35" Offset="183,62" Color="0,0,0,22"/>
+            <Box ID="DestinationResourcesLeftColumn" Size="60,35" Offset="84,62" Color="0,0,0,22"/>
+            <Box ID="DestinationResourcesRightColumn" Size="60,35" Offset="204,62" Color="0,0,0,22"/>
             <Grid	ID="DestinationResources" Size="279,auto" MinSize="0,35" Anchor="C,T"	Offset="0,62"		Texture="Controls_ItemContainerDestination" SliceCorner="6,2" SliceSize="2,31" SliceTextureSize="24,35" >
               <Label ID="DestinationResourceHeader" Size="300,20" Anchor="L,T" Offset="2,-15" Style="FontNormal14" Color="0,0,0,150" TruncateWidth="279" TruncatedTooltip="1"/>
               <Stack ID="DestinationResourceList" Anchor="L,C" Offset="4,-1" StackGrowth="Right" WrapWidth="280" WrapGrowth="Bottom"/>
@@ -38,8 +38,8 @@
             </Grid>
 
             <!-- Origin Resource Information -->
-            <Box ID="OriginResourcesLeftColumn" Size="53,35" Offset="77,122" Color="0,0,0,22"/>
-            <Box ID="OriginResourcesRightColumn" Size="53,35" Offset="183,122" Color="0,0,0,22"/>
+            <Box ID="OriginResourcesLeftColumn" Size="60,35" Offset="84,122" Color="0,0,0,22"/>
+            <Box ID="OriginResourcesRightColumn" Size="60,35" Offset="204,122" Color="0,0,0,22"/>
             <Grid	ID="OriginResources" Size="279,auto" MinSize="0,35" Anchor="C,T"	Offset="0,122"		Texture="Controls_ItemContainerOrigin" SliceCorner="14,2" SliceSize="3,31" SliceTextureSize="24,35">
               <Label ID="OriginResourceHeader" Size="250,20" Anchor="L,T" Offset="10,-15" Style="FontNormal14" Color="0,0,0,150" TruncateWidth="279" TruncatedTooltip="1"/>
               <Stack ID="OriginResourceList" Anchor="L,C" Offset="10,0" StackGrowth="Right" WrapWidth="280" WrapGrowth="Bottom"/>
@@ -173,8 +173,8 @@
           </Grid>
 
           <!-- Resource Info -->
-          <Box ID="ResourceInfoLeftColumn" Size="53,32" Offset="64,38" Color="0,0,0,22"/>
-          <Box ID="ResourceInfoRightColumn" Size="53,32" Offset="168,38" Color="0,0,0,22"/>
+          <Box ID="ResourceInfoLeftColumn" Size="60,32" Offset="70,38" Color="0,0,0,22"/>
+          <Box ID="ResourceInfoRightColumn" Size="60,32" Offset="190,38" Color="0,0,0,22"/>
           <Grid	ID="ResourceInfoGrid" Size="274,auto" MinSize="0,32" Anchor="C,T" Offset="-1,38" Texture="Controls_ItemContainer" SliceCorner="8,8" SliceTextureSize="16,16" >
             <Stack ID="ResourceList" Anchor="L,C" Offset="5,1" StackGrowth="Right" WrapWidth="280" WrapGrowth="Bottom"/>
           </Grid>
@@ -184,20 +184,20 @@
   </Instance>
 
   <Instance Name="ResourceEntryInstance">
-    <Container ID="Top" Size="52,28">
-      <Stack ID="ResourceEntryStack" Anchor="C,C" Offset="-2,0" StackGrowth="Right" >
-        <Label ID="ResourceEntryIcon" Anchor="C,C" Style="FontNormal12"/>
-        <Label ID="ResourceEntryText" Size="50,10" KerningAdjustment="1" Style="FontNormal14"/>
+    <Container ID="Top" Size="60,28">
+      <Stack ID="ResourceEntryStack" Anchor="L,C" Offset="-2,0" StackGrowth="Right" >
+        <Label ID="ResourceEntryIcon" Anchor="L,C" Style="FontNormal12"/>
+        <Label ID="ResourceEntryText" Anchor="L,C" Style="FontNormal14"/>
       </Stack>
     </Container>
   </Instance>
 	<Instance Name="ReligionPressureEntryInstance">
-		<Container ID="Top" Size="56,28">
-			<Stack ID="ResourceEntryStack" Anchor="C,C" Offset="-2,0" StackGrowth="Right" >
-				<Image ID="ReligionIconBacking" Anchor="C,C" Texture="Religion_FollowersSlot" Size="30,30">
+		<Container ID="Top" Size="60,28">
+			<Stack ID="ResourceEntryStack" Anchor="L,C" Offset="-2,0" StackGrowth="Right" >
+				<Image ID="ReligionIconBacking" Anchor="L,C" Texture="Religion_FollowersSlot" Size="30,30">
 					<Image ID="ReligionIcon" Anchor="C,C" Size="22,22" IconSize="22"/>
 				</Image>
-				<Label ID="ResourceEntryText" Size="50,10" Offset="0,8" Style="FontNormal14"/>
+				<Label ID="ResourceEntryText" Anchor="L,C" Style="FontNormal14"/>
 			</Stack>
 		</Container>
 	</Instance>

@@ -51,7 +51,21 @@ function OnInputHandler( pInputStruct:table )
 	return true;
 end
 
--- Override for SetupParameters to filter ruleset values by scenario only.
+local _UI_BeforeRefresh = UI_BeforeRefresh;
+function UI_BeforeRefresh()
+	
+	if(_UI_BeforeRefresh) then
+		_UI_BeforeRefresh();
+	end
+
+	-- Reset basic setup container states
+	Controls.CreateGame_GameDifficultyContainer:SetHide(true);
+	Controls.CreateGame_SpeedPulldownContainer:SetHide(true);
+	Controls.CreateGame_MapTypeContainer:SetHide(true);
+	Controls.CreateGame_MapSizeContainer:SetHide(true);
+end
+
+-- Override for SetupParameters to filter ruleset values by non-scenario only.
 function GameParameters_FilterValues(o, parameter, values)
 	values = o.Default_Parameter_FilterValues(o, parameter, values);
 	if(parameter.ParameterId == "Ruleset") then
@@ -158,10 +172,12 @@ function CreatePulldownDriver(o, parameter, c, container)
 				c:CalculateInternals();
 			end			
 		end,
-		SetEnabled = function(enabled)
-			c:SetDisabled(not enabled);
+		SetEnabled = function(enabled, parameter)
+			c:SetDisabled(not enabled or #parameter.Values <= 1);
 		end,
-		SetVisible = nil,	-- Never hide the basic pulldown.
+		SetVisible = function(visible, parameter)
+			container:SetHide(not visible or parameter.Value == nil or #parameter.Values <= 1);
+		end,	
 		Destroy = nil,		-- It's a fixed control, no need to delete.
 	};
 	
@@ -191,7 +207,7 @@ g_ParameterFactories["Ruleset"] = function(o, parameter)
 	local drivers = {};
 	-- Basic setup version.
 	-- Use an explicit table.
-	table.insert(drivers, CreatePulldownDriver(o, parameter, Controls.CreateGame_GameRuleset));
+	table.insert(drivers, CreatePulldownDriver(o, parameter, Controls.CreateGame_GameRuleset, Controls.CreateGame_RulesetContainer));
 
 	table.insert(drivers, CreateRightPanelDescriptionDriver(o, parameter));
 
@@ -455,8 +471,8 @@ function CreateSimpleParameterDriver(o, parameter, parent)
 			SetEnabled = function(enabled, parameter)
 				c.PullDown:SetDisabled(not enabled or #parameter.Values <= 1);
 			end,
-			SetVisible = function(visible)
-				c.Root:SetHide(not visible);
+			SetVisible = function(visible, parameter)
+				c.Root:SetHide(not visible or parameter.Value == nil or #parameter.Values <= 1);
 			end,
 			Destroy = function()
 				g_SimplePullDownParameterManager:ReleaseInstance(c);

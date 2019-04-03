@@ -1,7 +1,6 @@
 -- ===========================================================================
---	Drag and Drop support, common functions
+-- HERE BE DEPRECATED DRAG AND DROP STUFF.  DON'T USE IF YOU WORK AT FIRAXIS.
 -- ===========================================================================
-
 
 -- Returns a control from targetControlArray that is the most likely to be the player's intention.
 -- Cursor position is the first priority. If the cursor is over multiple targets, the target with the centroid nearest the cursor is used.
@@ -58,25 +57,9 @@ function GetOverlapRatio( x:number, y:number, w:number, h:number, tx:number, ty:
 		   math.max(0, math.min(y+h, ty+th) - math.max(y, ty))) / (tw * th);
 end
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
---------------------------------------------------------------------------------
--- HERE BE DEPRECATED DRAG AND DROP STUFF.  DON'T USE IF YOU WORK AT FIRAXIS. --
---------------------------------------------------------------------------------
+-- ===========================================================================
+-- HERE BE DEPRECATED DRAG AND DROP STUFF.  DON'T USE IF YOU WORK AT FIRAXIS.
+-- ===========================================================================
 
 -- COPY THIS STRUCT to your local file to use it
 hstructure DropAreaStruct

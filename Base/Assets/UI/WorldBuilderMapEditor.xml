@@ -131,7 +131,7 @@
             <Label Anchor="L,C" Offset="10,0" Style="ShellOptionText" String="LOC_OPTIONS_LANGUAGE"/>
             <SimplePullDown ID="LanguagePullDown" Anchor="R,C" Offset="10,0" Style="PullDownBlue" ScrollThreshold="400" Size="120,24" SpaceForScroll="0" EntryInstance="InstanceOne"/>
           </Container>
-
+								   
           <!-- Key/String List-->
           <ListBox ID="KeyStringList" Anchor="C,T" Size="parent-20,280" ListContainer="KeyStringListContainer">
 
@@ -146,8 +146,9 @@
             </Grid>
 
             <InstanceData Name="EntryInstance" >
-              <GridButton ID="Button" Size="parent,48" Style="ButtonControl" Anchor="C,T">
+              <GridButton ID="Button" Size="parent,54" Style="ButtonControl" Anchor="C,T">
                 <Stack StackGrowth="Bottom" Anchor="L,T" StackPadding="3">
+  				  <Label ID="Annotation" Style="FontNormal12" Anchor="L,C" Size="320,30" Offset="10,6"/>
                   <EditBox ID="KeyEdit" Style="FontNormal14" Anchor="L,C" Size="parent,30" EditMode="1" Hidden="1"/>
                   <EditBox ID="StringEdit" Style="FontNormal14" Anchor="L,C" Size="parent,30" EditMode="1" Hidden="1"/>
                 </Stack>

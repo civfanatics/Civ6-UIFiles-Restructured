@@ -348,8 +348,8 @@ end
 -- ===========================================================================
 function OnCivicChanged( ePlayer:number, eCivic:number )
 	local localPlayer = Game.GetLocalPlayer();
-	ResetOverflowArrow( m_civicsInstance );
 	if localPlayer ~= -1 and localPlayer == ePlayer then		
+		ResetOverflowArrow( m_civicsInstance );
 		local pPlayerCulture:table = Players[localPlayer]:GetCulture();
 		m_currentCivicID = pPlayerCulture:GetProgressingCivic();
 		m_lastCivicCompletedID = -1;
@@ -395,9 +395,8 @@ end
 --	but an item deeper in the tree that was just boosted by a player action.
 -- ===========================================================================
 function OnResearchChanged( ePlayer:number, eTech:number )
-	ResetOverflowArrow( m_researchInstance );
-
 	if ShouldUpdateResearchPanel(ePlayer, eTech) then
+		ResetOverflowArrow( m_researchInstance );
 		UpdateResearchPanel();
 	end
 end

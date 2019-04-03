@@ -1,5 +1,4 @@
 --	Copyright 2019, Firaxis Games
--- TODO: Future patch add sorting/filtering
 
 -- ===========================================================================
 include("InstanceManager");
@@ -27,7 +26,7 @@ local ASSETS			:table = {
 		ResourceClass  = "RESOURCECLASS_LUXURY",
 		EmptyText      = "LOC_REPORTS_CIVS_NO_LUXURY_RESOURCES";
 	}
-};
+}
 
 
 -- ===========================================================================
@@ -35,14 +34,40 @@ local ASSETS			:table = {
 -- ===========================================================================
 local m_kResourceGroupIM	:table = InstanceManager:new( "ResourceGroupStartLabel","Top",	Controls.ResourceStack);
 local m_kResourceLineIM		:table = InstanceManager:new( "ResourceLineItem",		"Top",	Controls.ResourceStack);
-local m_kSpaceIM			:table = InstanceManager:new( "SpaceInstance",			"Space",Controls.ResourceStack);
 local m_kEmptyMessageIM		:table = InstanceManager:new( "EmptyMessageInstance",	"Top",	Controls.ResourceStack);
+local m_kSpaceIM			:table = InstanceManager:new( "SpaceInstance",			"Space" );
 local m_kLeaderInstanceIM	:table = InstanceManager:new( "LeaderInstance",			"Top");
 local m_kNoLeaderInstanceIM	:table = InstanceManager:new( "NoLeaderMessageInstance","Top");
+local m_kData				:table = nil;
+local m_isAddingSpaceForEmptyCivs :boolean = false;
+
 
 -- ===========================================================================
 --	FUNCTIONS
 -- ===========================================================================
+
+function SortOrderAmount(a,b)
+	if (a.amount==b.amount) then return a.playerID < b.playerID; end
+	return a.amount > b.amount;
+end
+
+function SortOrderPlayer(a,b) 
+	return a.playerID < b.playerID; 
+end
+
+function SortOrderSlot(a, b) 
+	return a.playerID < b.playerID; 
+end
+
+function SortScarcity(a,b)
+	return a.total < b.total;
+end
+
+function SortName(a,b) 
+	return Locale.Lookup(a.name) < Locale.Lookup(b.name); 
+end
+
+
 
 -- ===========================================================================
 function Open()	
@@ -51,9 +76,12 @@ function Open()
 	Controls.Main:SetSizeY( y - topPanelSizeY );
 	Controls.Main:SetOffsetY( topPanelSizeY * 0.5 );
 
-	local kData:table = PopulateData();
-	if kData then
-		View( kData );
+	m_kData = PopulateData();
+	if m_kData then
+		-- TODO: Consider storing the selects per player (for hotseat) and realizing on re-open rather than using the defaults.
+		RealizeSort("LOC_REPORTS_SORT_SCARCITY", SortScarcity );
+		RealizeOrder("LOC_REPORTS_ORDER_AMOUNT", SortOrderAmount );
+		View( m_kData );
 		UIManager:QueuePopup( ContextPtr, PopupPriority.Medium );
 	end
 end
@@ -117,6 +145,8 @@ function GetResourcesForTrade( localPlayerID:number, otherPlayerID:number )
 end
 
 -- ===========================================================================
+--	Determines data to be displayed.
+-- ===========================================================================
 function PopulateData()	
 
 	local localPlayerID:number = Game.GetLocalPlayer();
@@ -138,63 +168,109 @@ function PopulateData()
 		if ShouldPlayerBeAdded(pPlayer) then			
 			local isMet		:boolean = pDiplomacy:HasMet(iPlayerID);
 			local isSelf	:boolean = (iPlayerID == localPlayerID);
-			local kResources:table = GetResourcesForTrade( localPlayerID, iPlayerID);
+			local kResources:table = GetResourcesForTrade( localPlayerID, iPlayerID );
 			for _,kInfo in ipairs(kResources) do
 				local kPlayerEntry :table = {
-					playerID	= iPlayerID,
-					playerAmount= kInfo.Amount,
-					isMet		= isMet,
-					isSelf		= isSelf
+					playerID= iPlayerID,
+					amount	= kInfo.Amount,
+					isMet	= isMet,
+					isSelf	= isSelf
 				};
-				if kResourceReport[kInfo.Type] == nil then
-					kResourceReport[kInfo.Type]	= {};
+
+				local type:string = kInfo.Type;
+
+				-- First time resource seen?  Add an entry.
+				if kResourceReport[type] == nil then
+					local kResourceInfo :table = GameInfo.Resources[type];
+					kResourceReport[type]	= {
+						name		= kResourceInfo.Name,				-- Unlocalized name
+						type		= type,								-- resource type
+						class		= kResourceInfo.ResourceClassType,	-- classification of resource
+						kOwnerList	= {},								-- List of owners
+						isPossessed = false,							-- Any met own this resource?
+						total		= 0									-- Total known amount
+					};
 				end
-				table.insert(kResourceReport[kInfo.Type], kPlayerEntry);
+
+				-- Mark if this resource is considered possessed by any known players (and therefor visible in the report.)
+				if kPlayerEntry.isMet or kPlayerEntry.isSelf then
+					kResourceReport[type].isPossessed = true;					
+				end
+
+				table.insert(kResourceReport[type].kOwnerList, kPlayerEntry);
+				kResourceReport[type].total = kResourceReport[type].total + kPlayerEntry.amount;
 			end
 		end
 	end
 
-	--Sort by highest amount of resources
-	for type,kOwnerList in pairs( kResourceReport ) do
-		table.sort(kOwnerList, function(a, b) return a.playerAmount > b.playerAmount; end);				
-		kResourceReport[type] = kOwnerList;		
+	-- Convert to table without key (for later sorting).
+	local kData :table = {};
+	for k,v in pairs(kResourceReport) do
+		table.insert(kData, v);
 	end
-
-	return kResourceReport;
+	return kData;
 end
 
--- ===========================================================================
---	Build a single row of resources
---	RETURNS: true if conditions exist to build a row, false otherwise.
--- ===========================================================================
-function BuildRow( kResourceInfo:table, kOwnerList:table, backgroundTexture:string )	
-	local isPossessed :boolean = false;	
-	for _,kPlayerEntry in pairs(kOwnerList) do
-		if kPlayerEntry.isMet or kPlayerEntry.isSelf then
-			isPossessed = true;			
-			break;
-		end
-	end	
-	if isPossessed == false then	-- No one has the resource?  Ignore it.
-		return false;
-	end
-	
-	local uiResourceRow	:table = m_kResourceLineIM:GetInstance();	
-	uiResourceRow.ResourceIcon:SetIcon("ICON_" .. kResourceInfo.ResourceType);
-	uiResourceRow.Top:SetTexture( backgroundTexture );
-	uiResourceRow.ResourceName:SetText(Locale.Lookup(kResourceInfo.Name));
 
+
+-- ===========================================================================
+--	Build a single row of resources to be realized in the UI.
+-- ===========================================================================
+function RealizeRow( kResourceData:table, backgroundTexture:string )	
+
+	local kOwnerList	:table = kResourceData.kOwnerList;	
+	local uiResourceRow	:table = m_kResourceLineIM:GetInstance();	
+	uiResourceRow.ResourceIcon:SetIcon("ICON_" .. kResourceData.type);
+	uiResourceRow.Top:SetTexture( backgroundTexture );
+	uiResourceRow.ResourceName:SetText(Locale.Lookup(kResourceData.name));
+
+	local kFullOwnerList:table = {};
+	
+
+	if m_isAddingSpaceForEmptyCivs then		
+		local safe	:number = 0;	--safety
+		local lastID:number = -1;
+		for i,kPlayer in ipairs(kOwnerList) do
+			-- If there is more than a difference of one between ids add spacing.
+			while (kPlayer.playerID - lastID) ~= 1 do
+				lastID = lastID + 1;
+				table.insert(kFullOwnerList, {			-- Create empty slot
+					playerID = lastID, 
+					isEmpty = true 
+				});			
+				safe = safe + 1;
+				if (safe > 999) then UI.DataError("Infinite or extremely large amount of space being added between civs for report.!"); break; end
+			end
+			kPlayer.isEmpty  = (not kPlayer.isMet) and (not kPlayer.isSelf);
+			table.insert( kFullOwnerList, kPlayer );	-- Copy real player
+			lastID = kPlayer.playerID;		
+		end
+	else	
+		-- Copy real player
+		for i,kPlayer in ipairs(kOwnerList) do
+			table.insert( kFullOwnerList, kPlayer );	
+		end
+	end
+
+
+	-- Constants, including temporary instantion to figure out spacing.
 	local USE_UNIQUE_LEADER_ICON_STYLE	:boolean = false;
-		
-	for _,kPlayerEntry in pairs(kOwnerList) do
-		if kPlayerEntry.isMet or kPlayerEntry.isSelf then
-				local uiLeaderInstance	:table = m_kLeaderInstanceIM:GetInstance(uiResourceRow.LeaderStack);
+	local uiLeaderInstance	:table = m_kLeaderInstanceIM:GetInstance(uiResourceRow.LeaderStack);
+	local emptyWidth		:number= uiLeaderInstance.Top:GetSizeX();
+	m_kLeaderInstanceIM:ReleaseInstance( uiLeaderInstance );
+
+	for _,kPlayerEntry in pairs(kFullOwnerList) do
+		if (kPlayerEntry.isEmpty and m_isAddingSpaceForEmptyCivs) then
+			local uiSpaceInstance	:table = m_kSpaceIM:GetInstance(uiResourceRow.LeaderStack);
+			uiSpaceInstance.Space:SetSizeX( emptyWidth );
+		elseif kPlayerEntry.isMet or kPlayerEntry.isSelf then
+			local uiLeaderInstance	:table = m_kLeaderInstanceIM:GetInstance(uiResourceRow.LeaderStack);
 			local leaderName		:string = PlayerConfigurations[kPlayerEntry.playerID]:GetLeaderTypeName();
 			local iconName			:string = "ICON_" .. leaderName;	
 			local kLeaderIconManager, uiLeaderIcon = LeaderIcon:AttachInstance(uiLeaderInstance.Icon);
 			kLeaderIconManager:UpdateIcon(iconName, kPlayerEntry.playerID, USE_UNIQUE_LEADER_ICON_STYLE );
 			uiLeaderIcon.SelectButton:RegisterCallback(Mouse.eLClick, function() OnLeaderClicked(kPlayerEntry.playerID); end);
-			uiLeaderInstance.AmountLabel:SetText(kPlayerEntry.playerAmount);			
+			uiLeaderInstance.AmountLabel:SetText(kPlayerEntry.amount);			
 		end
 	end
 		
@@ -202,14 +278,14 @@ function BuildRow( kResourceInfo:table, kOwnerList:table, backgroundTexture:stri
 	uiResourceRow.MainStack:CalculateSize();
 	uiResourceRow.DividerLine:SetSizeY( uiResourceRow.MainStack:GetSizeY() - 20 );
 
-	local colorNameInAtlas:string = kResourceInfo.ResourceClassType;	-- Color name is same as class.
+	local colorNameInAtlas:string = kResourceData.class;	-- Color name is same as class.
 	uiResourceRow.DividerLine:SetColorByName( colorNameInAtlas );
-
-	return true;
 end
 
 -- ===========================================================================
-function BuildHeaderRow( title:string, backgroundTexture:string )
+--	Builds a section header row to be realized in the UI.
+-- ===========================================================================
+function RealizeHeaderRow( title:string, backgroundTexture:string )
 	local uiRow:table = m_kResourceGroupIM:GetInstance();
 	local text:string = Locale.Lookup( title );
 	uiRow.Name:SetString( text );
@@ -217,8 +293,10 @@ function BuildHeaderRow( title:string, backgroundTexture:string )
 end
 
 -- ===========================================================================
-function AddSpace( pixels:number )
-	local uiSpace:table = m_kSpaceIM:GetInstance();
+--	Add spacing between rows (used between sections),
+-- ===========================================================================
+function AddRowSpace( pixels:number )
+	local uiSpace:table = m_kSpaceIM:GetInstance( Controls.ResourceStack );
 	uiSpace.Space:SetSizeY( pixels );
 end
 
@@ -229,21 +307,20 @@ function AddEmptyMessage( message:string )
 end
 
 -- ===========================================================================
-function BuildSection( section:string, kData:table )
+function RealizeSection( section:string, kData:table )
 	local backgroundTexture :string = ASSETS[section].BackgroundTexture;
 	local headerRowTitle	:string = ASSETS[section].HeaderRowTitle;
 	local resourceClass		:string = ASSETS[section].ResourceClass;
 	local emptyText			:string = ASSETS[section].EmptyText;
 	local isAnyBuilt		:boolean = false;
-	BuildHeaderRow(headerRowTitle, backgroundTexture);
 
-	for resourceType,kOwnerList in pairs(kData) do
-		if (table.count(kOwnerList) > 0) then
-			local kResourceInfo = GameInfo.Resources[resourceType];
-			if (kResourceInfo.ResourceClassType == resourceClass) then
-				if BuildRow(kResourceInfo, kOwnerList, backgroundTexture) then
-					isAnyBuilt = true;
-				end
+	RealizeHeaderRow(headerRowTitle, backgroundTexture);
+
+	for _,kResourceData in ipairs(kData) do
+		if (table.count(kResourceData.kOwnerList) > 0) and kResourceData.isPossessed then
+			if (kResourceData.class == resourceClass) then
+				RealizeRow( kResourceData, backgroundTexture );
+				isAnyBuilt = true;				
 			end
 		end
 	end	
@@ -263,9 +340,56 @@ function View( kData:table )
 	m_kLeaderInstanceIM:ResetInstances();	
 	m_kNoLeaderInstanceIM:ResetInstances();	
 
-	BuildSection("strategic", kData);
-	AddSpace(30);
-	BuildSection("luxury", kData);
+	RealizeSection("strategic", kData);
+	AddRowSpace(20);
+	RealizeSection("luxury", kData);
+end
+
+
+-- ===========================================================================
+function RealizeSort(name:string, sortFunc:ifunction)
+	Controls.SortPulldown:GetButton():SetText( Locale.Lookup(name) );			
+	table.sort(m_kData, sortFunc );	
+end
+
+-- ===========================================================================
+--	Which order to display each resource row.
+-- ===========================================================================
+function AddSortOption( name:string, sortFunc:ifunction )
+	local uiInstance:table = {};       
+	Controls.SortPulldown:BuildEntry( "SortItemInstance", uiInstance );
+	uiInstance.DescriptionText:SetText( Locale.Lookup(name) );
+	uiInstance.Button:RegisterCallback( Mouse.eLClick, 
+		function() 
+			RealizeSort( name, sortFunc ); 
+			View( m_kData );
+		end
+	);
+end
+
+-- ===========================================================================
+function RealizeOrder(name:string, sortFunc:ifunction)
+	m_isAddingSpaceForEmptyCivs = (name == "LOC_REPORTS_ORDER_PLAYER_SLOT");	--kluge :'(
+	Controls.OrderPulldown:GetButton():SetText( Locale.Lookup(name) );
+	for _,kResourceData in pairs(m_kData) do
+		local kOwnerList:table = kResourceData.kOwnerList;
+		table.sort(kOwnerList, sortFunc );
+	end
+end
+
+-- ===========================================================================
+--	How items within a row are ordered.  (Essentially sorting on the row
+-- ===========================================================================
+function AddOrderOption( name:string, sortFunc:ifunction )
+	local uiInstance:table = {};       
+	Controls.OrderPulldown:BuildEntry( "OrderItemInstance", uiInstance );
+	uiInstance.DescriptionText:SetText( Locale.Lookup(name) );
+	uiInstance.Button:RegisterCallback( Mouse.eLClick, 
+		function() 
+			RealizeOrder(name, sortFunc);
+			View( m_kData );
+		end
+	);
 end
 
 -- ===========================================================================
@@ -284,8 +408,7 @@ end
 function Close()
 	if not ContextPtr:IsHidden() then
 		UI.PlaySound("UI_Screen_Close");
-	end
-		
+	end		
 	UIManager:DequeuePopup(ContextPtr);
 end
 
@@ -315,10 +438,22 @@ function LateInitialize()
 	LuaEvents.GameDebug_Return.Add(OnGameDebugReturn);
 	LuaEvents.GlobalReportsList_OpenResources.Add(Open);
 	Controls.CloseButton:RegisterCallback( Mouse.eLClick, Close);
+	
+	AddSortOption("LOC_REPORTS_SORT_SCARCITY", SortScarcity );
+	AddSortOption("LOC_REPORTS_SORT_NAME", SortName );
+	Controls.SortPulldown:CalculateInternals();
+
+	AddOrderOption("LOC_REPORTS_ORDER_AMOUNT", SortOrderAmount );
+	AddOrderOption("LOC_REPORTS_ORDER_PLAYER", SortOrderPlayer );
+	AddOrderOption("LOC_REPORTS_ORDER_PLAYER_SLOT", SortOrderSlot );
+	Controls.OrderPulldown:CalculateInternals();
+
+	Controls.SortPulldown:GetButton():SetText( Locale.Lookup("LOC_REPORTS_SORT_SCARCITY") );			
+	Controls.OrderPulldown:GetButton():SetText( Locale.Lookup("LOC_REPORTS_ORDER_AMOUNT") );			
 end
 
 -- ===========================================================================
---	Hot Reload Related Events
+--	Context Callback 
 -- ===========================================================================
 function OnInit(isReload:boolean)
 	LateInitialize();

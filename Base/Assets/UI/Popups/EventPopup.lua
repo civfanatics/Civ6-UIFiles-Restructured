@@ -344,6 +344,9 @@ function Initialize()
 
 	-- Handle open events
 	Events.EventPopupRequest.Add( OnAddEventPopupRequest );
+	-- This is an alternate way where a script can pass in the request.
+	LuaEvents.EventPopupRequest.Add( OnAddEventPopupRequest );
+
 	Events.SystemUpdateUI.Add( OnUpdateUI );
 	Events.UIIdle.Add( OnUIIdle );
 end

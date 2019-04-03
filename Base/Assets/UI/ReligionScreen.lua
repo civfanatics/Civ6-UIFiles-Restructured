@@ -161,7 +161,7 @@ function UpdateTabs()
 	end
 
 	-- Create TabSupport object
-	m_ReligionTabs = CreateTabs( Controls.TabContainer, 42, 34, 0xFF331D05 );
+	m_ReligionTabs = CreateTabs( Controls.TabContainer, 42, 34, UI.GetColorValueFromHexLiteral(0xFF331D05) );
 
 	-- Create my pantheon/religion tab
 	local religionData:table;
@@ -435,13 +435,13 @@ end
 function SetBeliefSlotDisabled(beliefInst:table, bDisable:boolean)
 	beliefInst.BeliefButton:SetDisabled(bDisable);
 	if(bDisable) then
-		beliefInst.BeliefIcon:SetColor(0xFF808080);
-		beliefInst.BeliefLabel:SetColor(0xFF808080);
-		beliefInst.BeliefDescription:SetColor(0xFF808080);
+		beliefInst.BeliefIcon:SetColor(UI.GetColorValueFromHexLiteral(0xFF808080));
+		beliefInst.BeliefLabel:SetColor(UI.GetColorValueFromHexLiteral(0xFF808080));
+		beliefInst.BeliefDescription:SetColor(UI.GetColorValueFromHexLiteral(0xFF808080));
 	else
-		beliefInst.BeliefIcon:SetColor(0xFFFFFFFF);
-		beliefInst.BeliefLabel:SetColor(0xFFB2A797); 
-		beliefInst.BeliefDescription:SetColor(0xFFB2A797);
+		beliefInst.BeliefIcon:SetColor(UI.GetColorValue("COLOR_WHITE"));
+		beliefInst.BeliefLabel:SetColor(UI.GetColorValueFromHexLiteral(0xFFB2A797)); 
+		beliefInst.BeliefDescription:SetColor(UI.GetColorValueFromHexLiteral(0xFFB2A797));
 	end
 end
 
@@ -771,7 +771,7 @@ function SelectReligionBeliefs()
 		for _, beliefIndex in ipairs(religion.Beliefs) do
 			belief = GameInfo.Beliefs[beliefIndex];
 			local beliefInst:table = m_ExistingReligionBeliefsIM:GetInstance();
-			beliefInst.BeliefBG:SetColor(0xFFFFFFFF);
+			beliefInst.BeliefBG:SetColor(UI.GetColorValue("COLOR_WHITE"));
 			beliefInst.BeliefLabel:LocalizeAndSetText(Locale.ToUpper(belief.Name));
 			beliefInst.BeliefDescription:LocalizeAndSetText(belief.Description);
 			SetBeliefIcon(beliefInst.BeliefIcon, belief.BeliefType, SIZE_BELIEF_ICON_LARGE);
@@ -933,8 +933,8 @@ function SetReligionIcon(targetControl:table, religionType:string, iconSize:numb
 		Controls.PendingReligionImage:SetSizeVal(SIZE_RELIGION_ICON_HUGE, SIZE_RELIGION_ICON_HUGE);
 	end
 	if(religionColor == nil) then
-		targetControl:SetColor(0xFFFFFFFF);
-		Controls.PendingReligionImage:SetColor(0xFFFFFFFF);
+		targetControl:SetColor(UI.GetColorValue("COLOR_WHITE"));
+		Controls.PendingReligionImage:SetColor(UI.GetColorValue("COLOR_WHITE"));
 	else
 		targetControl:SetColor(UI.GetColorValue(religionColor));
 		Controls.PendingReligionImage:SetColor(UI.GetColorValue(religionColor));
@@ -1223,7 +1223,7 @@ function AddUnlockedBeliefs(religion)
 	for _, beliefIndex in ipairs(religion.Beliefs) do
 		belief = GameInfo.Beliefs[beliefIndex];
 		local beliefInst:table = m_ReligionBeliefsIM:GetInstance();
-		beliefInst.BeliefBG:SetColor(0xFFFFFFFF);
+		beliefInst.BeliefBG:SetColor(UI.GetColorValue("COLOR_WHITE"));
 		beliefInst.BeliefLabel:SetText(Locale.ToUpper(belief.Name));
 		beliefInst.BeliefDescription:LocalizeAndSetText(belief.Description);
 		SetBeliefIcon(beliefInst.BeliefIcon, belief.BeliefType, SIZE_BELIEF_ICON_LARGE);
@@ -1236,7 +1236,7 @@ function AddLockedBeliefs(religion)
 	local numLockedBeliefs:number = NUM_MAX_BELIEFS - table.count(religion.Beliefs);
 	for i = 1, numLockedBeliefs do
 		local beliefInst:table = m_ReligionBeliefsIM:GetInstance();
-		beliefInst.BeliefBG:SetColor(0xFF808080);
+		beliefInst.BeliefBG:SetColor(UI.GetColorValueFromHexLiteral(0xFF808080));
 		beliefInst.BeliefLabel:SetText(Locale.ToUpper(Locale.Lookup("LOC_UI_RELIGION_LOCKED_BELIEF")));
 		if religion.Founder == Game.GetLocalPlayer() then
 			beliefInst.BeliefDescription:LocalizeAndSetText("LOC_UI_RELIGION_LOCKED_BELIEF_DESCRIPTION");

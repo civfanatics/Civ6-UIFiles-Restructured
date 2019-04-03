@@ -29,7 +29,7 @@
 										<PullDown ID="CreateGame_GameRuleset" Anchor="C,C" Style="PullDownBlue" Size="325,24"/>
 									</Box>
 								</Container>
-								<Container Size="parent+10,70">
+								<Container  ID="CreateGame_LocalPlayerContainer" Size="parent+10,70" Hidden="1">
 									<Box Color="62,152,203,20" Anchor="C,C" Size="parent,55">
 										<Label Anchor="C,T" Style="ShellSubHeaderText" String="{LOC_SETUP_CIVILIZATION:upper}" AnchorSide="I,O"/>
 										<PullDown ID="Basic_LocalPlayerPulldown" Anchor="C,C" Offset="0,0" Size="325,50"  AutoSizePopup="1" ScrollThreshold="520" SpaceForScroll="15">
@@ -71,28 +71,28 @@
 									</Box>
 								</Container>
 
-								<Container ID="CreateGame_GameDifficultyContainer" Size="parent+10,50">
+								<Container ID="CreateGame_GameDifficultyContainer" Size="parent+10,50" Hidden="1">
 									<Box Color="62,152,203,20" Anchor="C,B" Size="parent,30">
 										<Label Anchor="C,T" Style="ShellSubHeaderText" String="{LOC_SETUP_DIFFICULTY:upper}" AnchorSide="I,O"/>
 										<PullDown ID="CreateGame_GameDifficulty" Anchor="C,C" Style="PullDownBlue" Size="220,24"/>
 									</Box>
 								</Container>
 
-								<Container ID="CreateGame_SpeedPulldownContainer" Size="parent+10,70">
+								<Container ID="CreateGame_SpeedPulldownContainer" Size="parent+10,70" Hidden="1">
 									<Box Color="62,152,203,20" Anchor="C,B" Size="parent,30">
 										<Label Anchor="C,T" Style="ShellSubHeaderText" String="{LOC_SETUP_SPEED:upper}" AnchorSide="I,O"/>
 										<PullDown ID="CreateGame_SpeedPulldown" Anchor="C,C" Style="PullDownBlue" Size="220,24"/>
 									</Box>
 								</Container>
 
-								<Container ID="CreateGame_MapTypeContainer" Size="parent+10,70">
+								<Container ID="CreateGame_MapTypeContainer" Size="parent+10,70" Hidden="1">
 									<Box Color="62,152,203,20" Anchor="C,B" Size="parent,30">
 										<Label Anchor="C,T" Style="ShellSubHeaderText" String="{LOC_SETUP_MAP_TYPE:upper}" AnchorSide="I,O"/>
-										<PullDown ID="CreateGame_MapType" Anchor="C,C" Style="PullDownBlue" Size="220,24"/>
+										<PullDown ID="CreateGame_MapType" Anchor="C,C" Style="PullDownBlue" ScrollThreshold="350" Size="220,24"/>
 									</Box>
 								</Container>
 
-								<Container ID="CreateGame_MapSizeContainer" Size="parent+10,70">
+								<Container ID="CreateGame_MapSizeContainer" Size="parent+10,70" Hidden="1">
 									<Box Color="62,152,203,20" Anchor="C,B" Size="parent,30">
 										<Label Anchor="C,T" Style="ShellSubHeaderText" String="{LOC_SETUP_MAP_SIZE:upper}" AnchorSide="I,O"/>
 										<PullDown ID="CreateGame_MapSize" Anchor="C,C" Style="PullDownBlue" Size="220,24"/>
@@ -119,8 +119,10 @@
 
 			<Container ID="AdvancedOptionsWindow" Hidden="1" Size="parent,parent">
 				<Grid Style="SubContainer4" Size="parent-10,670" Anchor="C,T" Color="7,28,50" Offset="0,55"  InnerPadding="10,10">
-					<Stack StackGrowth="Right" Padding="10"><!-- Players Stack (Left Side Panel) -->
-						<Grid Style="DecoGrid" Size="445,parent" Anchor="L,T" Color="30,66,96,255">
+					<Stack Anchor="C,T" StackGrowth="Right" Padding="10">
+						
+						<!-- Players Stack (Left Side Panel) -->
+						<Grid ID="PlayersSection" Style="DecoGrid" Size="445,parent" Anchor="L,T" Color="30,66,96,255">
 							<Grid Size="parent,21" Texture="Shell_SectionHeader" SliceCorner="154,10" SliceTextureSize="308,21" Color="20,144,140,100" Offset="0,8">
 								<Image Texture="Controls_Gradient_HalfRadial" Color="20,144,140,100" FlipY="1" Anchor="C,T" Size="225,94"/>
 								<Label Anchor="C,C" Style="ShellOptionText" WrapWidth="320" String="LOC_PLAYERS"/>
@@ -194,7 +196,7 @@
 						</Grid>
 
 						<!-- Parameters Panel (Right Side Panel) -->
-						<Grid Style="DecoGrid" Size="545,parent" Anchor="R,T" Color="30,66,96,240">
+						<Grid ID="OptionsSection" Style="DecoGrid" Size="545,parent" Anchor="R,T" Color="30,66,96,240">
 							<ScrollPanel Anchor="L,T" ID="ParametersScrollPanel" Vertical="1" Size="Parent,Parent" >
 								<!-- Scroll Controls -->
 								<Stack ID="ParametersStack" Anchor="L,T" Offset="0,0" Padding="20" StackGrowth="Bottom" >
@@ -206,7 +208,7 @@
 									<!-- Primary Parameters Stack -->
 									<Stack Anchor="L,T"  Padding="0" Size="parent,auto" StackGrowth="Bottom" ID="PrimaryParametersStack"/>
 
-									<Grid Size="parent,21" Texture="Shell_SectionHeader" SliceCorner="154,10" SliceTextureSize="308,21" Color="20,144,140,100" Offset="0,8">
+									<Grid ID="VictoryParametersHeader" Size="parent,21" Texture="Shell_SectionHeader" SliceCorner="154,10" SliceTextureSize="308,21" Color="20,144,140,100" Offset="0,8">
 										<Image Texture="Controls_Gradient_HalfRadial" Color="20,144,140,100" FlipY="1" Anchor="C,T" Size="225,94"/>
 										<Label Anchor="C,C" Style="ShellOptionText" WrapWidth="320" String="LOC_SETUP_VICTORY_CONDITIONS"/>
 									</Grid>
@@ -214,7 +216,7 @@
 									<Stack Anchor="L,T"  Padding="0" Size="parent,auto" StackGrowth="Bottom" ID="VictoryParameterStack" />
 
 									<!-- Secondary Parameters Stack -->
-									<Grid Size="parent,21" Texture="Shell_SectionHeader" SliceCorner="154,10" SliceTextureSize="308,21" Color="20,144,140,100" Offset="0,8">
+									<Grid ID="SecondaryParametersHeader" Size="parent,21" Texture="Shell_SectionHeader" SliceCorner="154,10" SliceTextureSize="308,21" Color="20,144,140,100" Offset="0,8">
 										<Image Texture="Controls_Gradient_HalfRadial" Color="20,144,140,100" FlipY="1" Anchor="C,T" Size="225,94"/>
 										<Label Anchor="C,C" Style="ShellOptionText" WrapWidth="320" String="LOC_ADVANCED_OPTIONS"/>
 									</Grid>
@@ -300,11 +302,11 @@
 
 	<!-- Simplified string instance -->
 	<Instance Name="SimpleStringParameterInstance">
-		<Container ID="Root" Size="parent,70"  Anchor="R,T" Offset="40,0">
-			<Box Color="62,152,203,20" Size="parent,30">
-				<Label ID="StringName" Style="ShellSubHeaderText" String="$Name$"/>
-				<Container  Size="auto,auto" Offset="145,0">
-					<Grid Style="EditTextArea" Size="160,30">
+		<Container ID="Root" Size="parent,70">
+			<Box Color="62,152,203,20" Anchor="C,B" Size="parent,30">
+				<Label ID="StringName" Anchor="C,T" Style="ShellSubHeaderText" String="$Name$" AnchorSide="I,O"/>
+				<Container  Size="auto,auto" Anchor="C,B" Offset="0,0">
+					<Grid Style="EditTextArea" Size="270,30">
 						<EditBox ID="StringEdit" Anchor="L,C" Offset="6,0" Size="248,23" EditMode="1" Style="FontNormal18" ColorSet="BodyTextCool" FontStyle="stroke" MaxLength="32"/>
 					</Grid>
 				</Container>
@@ -328,7 +330,7 @@
 	<Instance Name="SimplePullDownParameterInstance">
 		<Container ID="Root" Size="parent,70">
 			<Box Color="62,152,203,20" Anchor="C,B" Size="parent,30">
-				<Label Anchor="C,T" Style="ShellSubHeaderText" String="$Name$" AnchorSide="I,O"/>
+				<Label ID="StringName" Anchor="C,T" Style="ShellSubHeaderText" String="$Name$" AnchorSide="I,O"/>
 				<PullDown ID="PullDown" Anchor="C,C" Style="PullDownBlue" Size="220,24"/>
 			</Box>
 		</Container>

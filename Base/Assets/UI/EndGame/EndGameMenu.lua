@@ -56,6 +56,7 @@ local m_bAllowBack = true;
 
 local m_MovieWasPlayed	= false;
 local m_teamVictory		= false;
+local m_viewerPlayer :number = PlayerTypes.NO_PLAYER;	-- The screen is being generated from the perspective of this player.  This might not be the same as the local player in hotseat.
 
 local g_RankIM = InstanceManager:new( "RankEntry", "Root", Controls.RankingStack );
 local g_GraphLegendInstanceManager = InstanceManager:new("GraphLegendInstance", "GraphLegend", Controls.GraphLegendStack);
@@ -269,9 +270,17 @@ end
 ----------------------------------------------------------------
 ----------------------------------------------------------------
 function OnNextPlayer()
-    UI.UnloadSoundBankGroup(5);
-	UIManager:DequeuePopup( ContextPtr );
-	UI.RequestAction(ActionTypes.ACTION_ENDTURN);
+	-- If the end game screen was for the local player and they are turn active, we need to send end turn so the game will advance.
+	-- Otherwise, the screen will simply pop and the current turn active player can keep playing.
+	local localPlayerID :number = Game.GetLocalPlayer();
+	local pLocalPlayer :table = Players[localPlayerID];
+	if(m_viewerPlayer ~= PlayerTypes.NO_PLAYER 
+		and m_viewerPlayer == localPlayerID 
+		and pLocalPlayer:IsTurnActive() == true) then
+		UI.RequestAction(ActionTypes.ACTION_ENDTURN);
+	end
+
+	Close();
 end
 TruncateStringWithTooltip(Controls.NextPlayerButton, MAX_BUTTON_SIZE, Locale.Lookup("LOC_UI_ENDGAME_MP_PLAYER_CHANGE_CONTINUE"));
 Controls.NextPlayerButton:RegisterCallback( Mouse.eLClick, OnNextPlayer );
@@ -622,6 +631,8 @@ function View(data:table)
 		Controls.PlayerPortrait:UnloadTexture();
 	end
 
+	m_viewerPlayer = data.viewerPlayer;
+
 	---- Movie begins play-back when UI is shown.
 	g_Movie = data.RibbonStyle.Movie;
     g_SoundtrackStart = data.RibbonStyle.SndStart;
@@ -647,6 +658,7 @@ function DefaultData()
 	local data:table = {};
 		
 	data.PlayerPortrait = "";
+	data.viewerPlayer = PlayerTypes.NO_PLAYERS;
 
 	data.RibbonText = "";
 	data.RibbonIcon = "";
@@ -674,6 +686,8 @@ end
 ----------------------------------------------------------------
 function PlayerDefeatedData(playerID:number, defeatType:string)
 	local data:table = DefaultData();
+
+	data.viewerPlayer = playerID;
 
 	-- Gather player portrait data
 	local pPlayerConfig = PlayerConfigurations[playerID];
@@ -736,6 +750,8 @@ function TeamVictoryData(winningTeamID:number, victoryType:string)
 	local localPlayerID:number = Game.GetLocalPlayer();
 	local pLocalPlayer:table = Players[localPlayerID];
 	local localPlayerTeamID:number = pLocalPlayer:GetTeam();
+
+	data.viewerPlayer = localPlayerID;  -- team victory is always displayed from the perspective of the local player.
 	
 	-- Determine if the local player is a winner
 	data.IsWinnerLocalPlayer = winningTeamID == localPlayerTeamID;
@@ -852,23 +868,21 @@ end
 
 ----------------------------------------------------------------
 -- Called when a player has been defeated.
--- The UI is only displayed if this player is you.
 ----------------------------------------------------------------
 function OnPlayerDefeat( player, defeat, eventID)
 	local localPlayer = Game.GetLocalPlayer();
-	if (localPlayer and localPlayer >= 0) then		-- Check to see if there is any local player
-		-- Was it the local player?
-		if (localPlayer == player) then
-			UI.SetPauseEventID( eventID );
-			-- You have been defeated :(
-			local defeatInfo = GameInfo.Defeats[defeat];
-			defeat = defeatInfo and defeatInfo.DefeatType or "DEFEAT_DEFAULT";
-			View(PlayerDefeatedData(player, defeat));
-
-			-- In hotseat games, it is possible for a human player to get defeated by an AI civ during turn processing.
-			-- We trigger an event so the PlayerChange screen can hide itself.
-			LuaEvents.EndGameMenu_ViewingPlayerDefeat();
-		end
+	local defeatPlayer = Players[player];
+	if ((localPlayer and localPlayer >= 0 and localPlayer == player) -- local player was defeated, show screen
+		or (GameConfiguration.IsHotseat() and defeatPlayer ~= nil and defeatPlayer:IsHuman())) then -- Hotseat Only - Another human player was defeated 
+		-- Show the defeat screen.
+		UI.SetPauseEventID( eventID );
+		local defeatInfo = GameInfo.Defeats[defeat];
+		defeat = defeatInfo and defeatInfo.DefeatType or "DEFEAT_DEFAULT";
+		View(PlayerDefeatedData(player, defeat));
+		
+		-- In hotseat games, it is possible for a human player to get defeated by an AI civ during turn processing.
+		-- We trigger an event so the PlayerChange screen can hide itself.
+		LuaEvents.EndGameMenu_ViewingPlayerDefeat();
 	end
 end
 

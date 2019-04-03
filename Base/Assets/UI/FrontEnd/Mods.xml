@@ -83,6 +83,7 @@
 								<Image Texture="AdditionalContent_IconBacking50" Size="70,70" Anchor="L,C" Offset="6,0">
 									<Image ID="OfficialIcon" Anchor="C,C"	Size="50,50" Offset="4,0" Texture="OfficialContent_50"/>
 									<Image ID="CommunityIcon" Anchor="C,C"	Size="50,50" Offset="4,0" Texture="CommunityContent_50"/>
+									<Image ID="MapIcon" Anchor="C,C"	Size="50,50" Offset="4,0" Texture="WorldBuilderMap_50"/>
 								</Image>
 
 								<Stack Anchor="C,T" Offset="30,8" StackPadding="7">
@@ -110,6 +111,7 @@
 											<Container ID="ModSpecialThanksCaption" Anchor="R,T" Offset="0,5" Size="auto,22">
 												<Label Style="FontNormal16" String="LOC_MODS_DETAILS_SPECIAL_THANKS" />
 											</Container>
+											<Label ID="ModCreatedCaption" Style="FontNormal16" Anchor="R,T" Offset="0,5" String="LOC_MODS_DETAILS_CREATED" />
 											<Label ID="ModOwnershipCaption" Style="FontNormal16" Anchor="R,T" Offset="0,5" String="LOC_MODS_DETAILS_OWNERSHIP" />
 											<Label ID="ModAffectsSavedGamesCaption" Style="FontNormal16" Anchor="R,T" Offset="0,5" String="LOC_MODS_DETAILS_AFFECTS_SAVED_GAMES" />
 											<Label ID="ModSupportsSinglePlayerCaption" Style="FontNormal16" Anchor="R,T" Offset="0,5" String="LOC_MODS_DETAILS_SINGLEPLAYER" />
@@ -118,6 +120,7 @@
 										<Stack ID="ModPropertiesValuesStack">
 											<Label ID="ModAuthorsValue" Style="FontNormal16" Anchor="L,T" Offset="0,5" String="Joe Bob" WrapWidth="300" />
 											<Label ID="ModSpecialThanksValue" Style="FontNormal16" Anchor="L,T" Offset="0,5" WrapWidth="300"/>
+											<Label ID="ModCreatedValue" Style="FontNormal16" Anchor="L,T" Offset="0,5" WrapWidth="300"/>
 											<Label ID="ModOwnershipValue" Style="FontNormal16" Anchor="L,T" Offset="0,5" String="LOC_MODS_DETAILS_OWNERSHIP_NO" />
 											<Label ID="ModAffectsSavedGamesValue" Style="FontNormal16" Anchor="L,T" Offset="0,5" String="LOC_MODS_NO" />
 											<Label ID="ModSupportsSinglePlayerValue" Style="FontNormal16" Anchor="L,T" Offset="0,5" String="LOC_MODS_YES" />
@@ -198,6 +201,7 @@
 				<Image Texture="AdditionalContent_IconBacking36" Size="53,49" Anchor="L,C" Offset="6,0">
 					<Image ID="OfficialIcon" Anchor="C,C"	Size="36,36" Offset="2,0" Texture="OfficialContent_36"/>
 					<Image ID="CommunityIcon" Anchor="C,C"	Size="36,36" Offset="2,0" Texture="CommunityContent_36"/>
+					<Image ID="MapIcon" Anchor="C,C" Size="36,36" Offset="2,0" Texture="WorldBuilderMap_36" />
 				</Image>			
 
 				<Label ID="ModTitle" Style="FontNormal16" Anchor="L,C" Offset="64,0" WrapWidth="265" />

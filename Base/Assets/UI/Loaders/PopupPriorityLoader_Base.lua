@@ -10,6 +10,6 @@ end
 
 PopupPriority.HotSeatBackground = PopupPriority.Utmost + Increment();
 PopupPriority.PausePanel = PopupPriority.Utmost + Increment();
-PopupPriority.EndGameMenu = PopupPriority.Utmost + Increment(); 
 PopupPriority.PlayerChange = PopupPriority.Utmost + Increment();
+PopupPriority.EndGameMenu = PopupPriority.Utmost + Increment(); 
 PopupPriority.InGameTopOptionsMenu = PopupPriority.Utmost + Increment();

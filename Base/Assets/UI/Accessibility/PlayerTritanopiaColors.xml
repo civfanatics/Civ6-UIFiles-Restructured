@@ -39,7 +39,7 @@
     </Replace>
     <Replace>
       <Type>COLOR_STANDARD_GREEN_LT</Type>
-      <Color>152,255,112,255</Color>
+      <Color>190,239,255,255</Color>
     </Replace>
     <Replace>
       <Type>COLOR_STANDARD_GREEN_MD</Type>

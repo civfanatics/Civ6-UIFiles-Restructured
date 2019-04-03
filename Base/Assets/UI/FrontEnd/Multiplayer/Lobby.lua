@@ -34,6 +34,7 @@ local g_InstanceManager = InstanceManager:new( "ListingButtonInstance", "Button"
 local g_InstanceList = {};
 local g_TabInstances = {};	-- indexed by browser mode ID
 local m_kPopupDialog:table;
+local m_joinCodeText :string = "";	-- The current join code entered in the Join Code popup.
 
 local LIST_LOBBIES				:number = 0;
 local LIST_SERVERS				:number = 1;
@@ -369,13 +370,14 @@ end
 -- Join Code Button Handler
 -------------------------------------------------
 function OnJoinCodeButtonClick()
-		m_kPopupDialog:Close();
-		m_kPopupDialog:AddTitle( Locale.Lookup("LOC_JOIN_CODE_POPUP_TITLE") );
-		m_kPopupDialog:AddText( Locale.Lookup("LOC_JOIN_CODE_POPUP_TEXT"));
-		m_kPopupDialog:AddEditBox( Locale.Lookup("LOC_JOIN_CODE_POPUP_EDITBOX"), OnJoinCodeCommit, JOINCODE_EDITBOX_COMMAND );
-		m_kPopupDialog:AddButton( Locale.Lookup("LOC_CANCEL_BUTTON") );
-		m_kPopupDialog:AddButton( Locale.Lookup("LOC_MULTIPLAYER_JOIN_GAME"), OnJoinCodeOK );
-		m_kPopupDialog:Open();
+	m_joinCodeText = "";
+	m_kPopupDialog:Close();
+	m_kPopupDialog:AddTitle( Locale.Lookup("LOC_JOIN_CODE_POPUP_TITLE") );
+	m_kPopupDialog:AddText( Locale.Lookup("LOC_JOIN_CODE_POPUP_TEXT"));
+	m_kPopupDialog:AddEditBox( Locale.Lookup("LOC_JOIN_CODE_POPUP_EDITBOX"), OnJoinCodeCommit, OnJoinCodeStringChange, JOINCODE_EDITBOX_COMMAND );
+	m_kPopupDialog:AddButton( Locale.Lookup("LOC_CANCEL_BUTTON"), nil );
+	m_kPopupDialog:AddButton( Locale.Lookup("LOC_MULTIPLAYER_JOIN_GAME"), OnJoinCodeOK );
+	m_kPopupDialog:Open();
 end
 
 -------------------------------------------------
@@ -486,16 +488,27 @@ end
 -------------------------------------------------
 -- Event Handler: CloudTurnCheckComplete
 -------------------------------------------------
-function OnCloudTurnCheckComplete(notifyType :number, turnGameName :string, inGames :boolean)
+function OnCloudTurnCheckComplete(notifyType :number, turnGameName :string, inGames :boolean, notifyMatchID :number)
 	m_inPBCGames = inGames;
 end
 
 -------------------------------------------------
 -- Event Handler: CloudUnseenCompleteCheckComplete
 -------------------------------------------------
-function OnCloudUnseenCompleteCheckComplete(haveCompletedGame :boolean, gameName :string)
+function OnCloudUnseenCompleteCheckComplete(haveCompletedGame :boolean, gameName :string, matchID :number)
 	SetCloudUnseenComplete(haveCompletedGame);
 end
+
+-------------------------------------------------
+-- Event Handler: OnJoinGameComplete
+-------------------------------------------------
+function OnJoinGameComplete()
+	-- When we joined into a PlayByCloud match, activate m_inPBCGames.  We know we are in a match now and we don't want to wait for the next cloud notify check.
+	if(GameConfiguration.IsPlayByCloud() == true) then
+		m_inPBCGames = true;
+	end
+end
+
 
 -------------------------------------------------
 -- Event Handler: ChangeMPLobbyMode
@@ -1076,13 +1089,6 @@ function AdjustScreenSize()
 	local screenX, screenY:number = UIManager:GetScreenSizeVal();
 	local hideLogo = true;
 
-	-- adjust for the lowest resolutions
-	if(screenY < 864) then
-		Controls.MainGrid:SetOffsetY(0);
-	else
-		Controls.MainGrid:SetOffsetY(50);
-	end
-
 	if(screenY >= Controls.MainWindow:GetSizeY() + Controls.LogoContainer:GetSizeY() + Controls.LogoContainer:GetOffsetY()) then
 		hideLogo = false;
 	end
@@ -1122,6 +1128,10 @@ function OnLoadButtonClick()
 	--LuaEvents.Lobby_ShowLoadScreen();
 end
 
+function OnJoinCodeStringChange(editBox :table)
+	m_joinCodeText = editBox:GetText();
+end
+
 function OnJoinCodeCommit(joinCodeString)
 	m_kPopupDialog:Close(); -- Close popup dialog.
 	if(joinCodeString ~= nil and joinCodeString ~= "") then
@@ -1133,8 +1143,7 @@ function OnJoinCodeCommit(joinCodeString)
 end
 
 function OnJoinCodeOK()
-	local joinCodeString :string = m_kPopupDialog:GetEditBoxText(JOINCODE_EDITBOX_COMMAND);
-	OnJoinCodeCommit(joinCodeString);
+	OnJoinCodeCommit(m_joinCodeText);
 end
 
 function OnListingScrollUpEnd()
@@ -1152,7 +1161,7 @@ end
 
 function OnListingScrollDownEnd()
 	if(ContextPtr:IsVisible()) then
-		if(IsOffsetScrolling() and Matchmaking.GetGameListIsFull() and not Matchmaking.IsRefreshingGameList()) then
+		if(IsOffsetScrolling() and not Matchmaking.IsGameListAtEnd() and not Matchmaking.IsRefreshingGameList()) then
 			-- new offset should be the one past the last listID we have.
 			local lastListID = GetLastGameListID();
 			SetBrowserOffset(lastListID+1);
@@ -1523,6 +1532,7 @@ function Initialize()
 	Events.BeforeMultiplayerInviteProcessing.Add( OnBeforeMultiplayerInviteProcessing );
 	Events.CloudTurnCheckComplete.Add( OnCloudTurnCheckComplete );
 	Events.CloudUnseenCompleteCheckComplete.Add( OnCloudUnseenCompleteCheckComplete );
+	Events.MultiplayerJoinGameComplete.Add( OnJoinGameComplete);
 	Events.SystemUpdateUI.Add( OnUpdateUI );
 	
 	LuaEvents.GameDebug_Return.Add(OnGameDebugReturn);
@@ -1535,6 +1545,7 @@ function Initialize()
 
 	-- Custom popup setup	
 	m_kPopupDialog = PopupDialog:new( "LobbyPopupDialog" );
+	m_kPopupDialog:SetInstanceNames(nil, nil, nil, nil, nil, nil, nil, nil, nil, Controls.LobbyPopupEditboxInstance);
 end
 Initialize();
 

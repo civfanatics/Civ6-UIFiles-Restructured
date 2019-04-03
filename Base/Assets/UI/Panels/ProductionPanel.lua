@@ -15,7 +15,7 @@ include( "ProductionHelper" );
 --	Constants
 -- ===========================================================================
 local RELOAD_CACHE_ID	:string = "ProductionPanel";
-local COLOR_LOW_OPACITY	:number = 0x3fffffff;
+local COLOR_LOW_OPACITY	:number = UI.GetColorValueFromHexLiteral(0x3fffffff);
 local HEADER_Y			:number	= 41;
 local WINDOW_HEADER_Y	:number	= 150;
 local TOPBAR_Y			:number	= 28;
@@ -734,7 +734,7 @@ function PopulateGenericItemData( kInstance:table, kItem:table )
 	else
 		kInstance.Button:SetHide(false);
 		kInstance.Disabled:SetHide(true);
-		kInstance.Button:SetColor(0xffffffff);
+		kInstance.Button:SetColor(UI.GetColorValue("COLOR_WHITE"));
 	end
 	kInstance.Button:SetDisabled(kItem.Disabled);
 end
@@ -1200,10 +1200,10 @@ function PopulateUnits(data:table, listMode:number, listIM:table)
 	local unitList = listIM:GetInstance();
 	
 	local primaryColor, secondaryColor  = UI.GetPlayerColors( Players[Game.GetLocalPlayer()]:GetID() );
-	local darkerFlagColor	:number = DarkenLightenColor(primaryColor,(-85),255);
-	local brighterFlagColor :number = DarkenLightenColor(primaryColor,90,255);
-	local brighterIconColor :number = DarkenLightenColor(secondaryColor,20,255);
-	local darkerIconColor	:number = DarkenLightenColor(secondaryColor,-30,255);
+	local darkerFlagColor	:number = UI.DarkenLightenColor(primaryColor,(-85),255);
+	local brighterFlagColor :number = UI.DarkenLightenColor(primaryColor,90,255);
+	local brighterIconColor :number = UI.DarkenLightenColor(secondaryColor,20,255);
+	local darkerIconColor	:number = UI.DarkenLightenColor(secondaryColor,-30,255);
 	
 	local sHeaderText:string = Locale.ToUpper("LOC_TECH_FILTER_UNITS");
 	unitList.Header:SetText(sHeaderText);
@@ -2485,7 +2485,7 @@ function CreateCorrectTabs()
 		tabArrowControl = Controls.TabArrow;
 	end
 
-	m_tabs = CreateTabs( Controls.TabRow, tabSizeX, tabSizeY, 0xFF331D05 );
+	m_tabs = CreateTabs( Controls.TabRow, tabSizeX, tabSizeY, UI.GetColorValueFromHexLiteral(0xFF331D05) );
 	m_tabs.AddTab( m_productionTab,	OnTabChangeProduction );
 	if GameCapabilities.HasCapability("CAPABILITY_GOLD") then
 		m_tabs.AddTab( m_purchaseTab,	OnTabChangePurchase );

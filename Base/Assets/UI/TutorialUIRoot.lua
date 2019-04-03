@@ -21,9 +21,9 @@ local isDebugVerbose			:boolean = false;						-- (false) when true, lots of logg
 --	CONSTANTS-
 -- ===========================================================================
 
-local COLOR_DEBUG_SEEN_ID		:number = 0xff909090;
-local COLOR_DEBUG_ACTIVE		:number = 0xff99ffff;
-local COLOR_DEBUG_NORMAL		:number = 0xfff0c8c8;
+local COLOR_DEBUG_SEEN_ID		:number = UI.GetColorValueFromHexLiteral(0xff909090);
+local COLOR_DEBUG_ACTIVE		:number = UI.GetColorValueFromHexLiteral(0xff99ffff);
+local COLOR_DEBUG_NORMAL		:number = UI.GetColorValueFromHexLiteral(0xfff0c8c8);
 local DEBUG_CACHE_NAME			:string = "TutorialUIRoot";	--debug: hotload value restoring
 local NOT_CHAINED				:number = -1;
 local TUTORIAL_LEVEL_DISABLED	:number = -1;
@@ -154,7 +154,7 @@ local m_debugSeenItems			: table			= {};								-- DEBUG      ONLY: track seen i
 local m_uiDebugItemList			: table			= {};								-- DEBUG MODE ONLY: ui list of instances
 local m_isGoalsAutoRemove		: boolean		= false;							-- Are goals automatically removed (1 turn after completing)
 local m_MovieStopCallback		: ifunction		= nil;								-- Function to callback once movie is stopped (or click stopped).
-local m_beforeEveryOpen			: ifunction		= nil;								-- Function to run before every Open() is called
+local m_preActivateFunc			: ifunction		= nil;								-- Function to run before every Open() is called
 local m_turn					: number		= -1;								-- Track the current turn; required to prevent edge case where local player turn can be re-signaled with same turn when there are remaining moves for a unit.
 local m_itemsCompleted			: table			= {};								-- List of items/events that have already been checked.
 
@@ -492,7 +492,7 @@ end
 -- ===========================================================================
 function RaiseDetailedTutorial( item:TutorialItem )
 	if table.count(item.UITriggers) < 1 then
-		DeActivateItem( item, true );
+		DeActivateItem( item );
 		return;
 	end
 	
@@ -587,10 +587,11 @@ end
 
 
 -- ===========================================================================
--- (nil) Set the function called before every item is opened
+--	Set function to executed each time an item is about to be activated. 
+--	func,	Function to execute or nil to run no function/reset.
 -- ===========================================================================
-function SetFunctionBeforeEveryOpen(func) 
-	m_beforeEveryOpen = func;
+function SetGlobalPreActivateFunction( func ) 
+	m_preActivateFunc = func;
 end	
 
 -- ===========================================================================
@@ -1538,8 +1539,8 @@ function ActivateItem( item:TutorialItem )
 	DisableTutorialCheck();		
 	
 		-- A "global" function to run before every item
-		if m_beforeEveryOpen ~= nil then
-			m_beforeEveryOpen();
+		if m_preActivateFunc ~= nil then
+			m_preActivateFunc();
 		end
 
 		if item.OpenFunc ~= nil then
@@ -1588,7 +1589,7 @@ end
 
 
 -- ===========================================================================
-function DeActivateItem( item:TutorialItem, bActivateChained:boolean )
+function DeActivateItem( item:TutorialItem )
 	if isDebugVerbose then
 		print("deactivating item: "..item.ID)
 	end
@@ -1602,7 +1603,7 @@ function DeActivateItem( item:TutorialItem, bActivateChained:boolean )
 			end
 		end
 
-		-- Local copy so active can be zeroed out before signal function runs (listeners may cascade to check if acitve is NIL)
+		-- Local copy so active can be zeroed out before signal function runs (listeners may cascade to check if active is NIL)
 		local item:TutorialItem = m_active;
 		m_active = nil;
 		if item.CleanupFunc ~= nil then
@@ -1621,11 +1622,9 @@ function DeActivateItem( item:TutorialItem, bActivateChained:boolean )
 
 	m_active = nil;
 
-	if( bActivateChained ) then
-		-- if the item has been seen - activate the next item if appropriate
-		if not IsUnseen( item ) then
-			ActivateIfChained( item )
-		end
+	-- if the item has been seen - activate the next item if appropriate
+	if not IsUnseen( item ) then
+		ActivateIfChained( item );
 	end
 
 	if item.IsEndOfChain then
@@ -1683,6 +1682,49 @@ function MarkTutorialItemSeen( item:TutorialItem, bSerialIzeItem: boolean )
 end
 
 -- ===========================================================================
+--	Add an item to the queue, which means it will be delivered next, after
+--	the current item (or chain of items).
+-- ===========================================================================
+function AddItemToQueue( item )
+	-- Ensure item is not already active, in queue, or seen list.
+	local isInQueue :boolean = false
+	for _,queuedItem in pairs(m_queue) do
+		if queuedItem.ID == item.ID then
+			isInQueue = true
+		end
+	end
+
+	if isInQueue then
+		print("ignoring item already in queue: "..item.ID)
+	else
+		if m_active==nil or item.ID ~= m_active.ID then			
+			table.insert(m_queue, item);
+			if (isDebugVerbose) then print("adding item '"..item.ID.."' to queue slot #"..tostring(#m_queue)); end
+		else
+			print("ignoring queue for item which is already active item: "..item.ID);
+		end
+	end
+end
+
+-- ===========================================================================
+--	Add an event that was fired at the start of the game but the player had
+--	not yet dismissed the loading screen.
+-- ===========================================================================
+function AddPreLoadListener( listenerName:string )
+	local isNew:boolean = true;
+	for _,existingName in pairs(m_preLoadEvents) do
+		if existingName == listenerName then			
+			if (isDebugVerbose) then print("ignoring preload event already in list: "..listenerName); end
+			isNew = false;
+			break;
+		end		
+	end
+	if isNew then
+		table.insert( m_preLoadEvents, listenerName ); 
+	end
+end
+
+-- ===========================================================================
 --	DEBUG Only
 -- ===========================================================================
 function OnForceMarkUnseen( scenarioName:string, itemID:string )
@@ -1713,7 +1755,7 @@ end
 function OnForceMarkDone( scenarioName:string, itemID:string )		
 	if m_unseen[scenarioName][itemID] ~= nil then
 		if m_unseen[scenarioName][itemID] == m_active then
-			DeActivateItem( m_unseen[scenarioName][itemID], true );
+			DeActivateItem( m_unseen[scenarioName][itemID] );
 			MarkTutorialItemSeen( m_unseen[scenarioName][itemID], true );
 		else
 			MarkTutorialItemSeen( m_unseen[scenarioName][itemID], true );
@@ -1756,7 +1798,7 @@ function TutorialCheck( listenerName:string )
 
 	-- If game has just started and load screen is still up, save name for later and immediately bail.
 	if m_isLoadScreenUp then
-		table.insert( m_preLoadEvents, listenerName ); 
+		AddPreLoadListener( listenerName );
 		return;
 	end
 
@@ -1778,7 +1820,7 @@ function TutorialCheck( listenerName:string )
 		-- Current item?  If so, mark it useen if done matches
 		if m_active ~= nil then
 			if IsMatchingDoneListener( m_active, listenerName ) and m_active.IsDoneFunc() then
-				DeActivateItem( m_active, true );
+				DeActivateItem( m_active );
 			end
 		end
 
@@ -1791,25 +1833,7 @@ function TutorialCheck( listenerName:string )
 							ActivateItem( item );
 							m_lastRaiseListener = listenerName;
 						elseif item.IsQueueable then
-							-- Ensure item is not already active, in queue, or seen list.
-							local itemInQueue = false
-
-							for _,queuedItem in pairs(m_queue) do
-								if queuedItem.ID == item.ID then
-									itemInQueue = true
-								end
-							end
-
-							if false == itemInQueue then
-								if item.ID ~= m_active.ID then
-									print("adding item '"..item.ID.."' to queue because another item is already active: "..m_active.ID)
-									table.insert(m_queue, item)
-								else
-									print("ignoring queue for item which is already active item: "..item.ID)
-								end
-							else
-								print("ignoring item already in queue: "..item.ID)
-							end
+							AddItemToQueue( item );
 						else
 							if isDebugVerbose then
 								print("ignoring check for '"..listenerName.."' because another item is already active: "..m_active.ID)
@@ -2916,20 +2940,7 @@ function OnAdvisorPopupClearActive( advisorInfo:AdvisorItem )
 		end
 	end
 
-	DeActivateItem( item, true );
-end
-
--- ===========================================================================
---	LUA Event
---	Advisor Dialog Action, turn off the tutorial.
--- ===========================================================================
-function OnAdvisorPopupDisableTutorial( advisorInfo:AdvisorItem )
-	m_tutorialLevel = TUTORIAL_LEVEL_DISABLED;
-	UserConfiguration.TutorialLevel( m_tutorialLevel );
-	if( m_active ~= nil ) then
-		local item:TutorialItem = m_active;
-		DeActivateItem( item, false );
-	end
+	DeActivateItem( item );
 end
 
 -- ===========================================================================
@@ -3062,7 +3073,6 @@ function OnShutdown()
 	LuaEvents.ActionPanel_ActivateNotification.Remove(		OnActiveNotification );
 	LuaEvents.AdvisorPopup_ShowDetails.Remove(				OnAdvisorPopupShowDetails );
 	LuaEvents.AdvisorPopup_ClearActive.Remove(				OnAdvisorPopupClearActive );
-	LuaEvents.AdvisorPopup_DisableTutorial.Remove(			OnAdvisorPopupDisableTutorial );
 	LuaEvents.CityPanel_ProductionOpen.Remove(				OnProductionPanelViaCityOpen );
 	LuaEvents.CivicsTree_CloseCivicsTree.Remove(			OnCivicsTreeClosed);
 	LuaEvents.GameDebug_Return.Remove(						OnGameDebugReturn );		-- hotloading help
@@ -3351,7 +3361,6 @@ function Initialize()
 	LuaEvents.ActionPanel_ActivateNotification.Add(		OnActiveNotification );
 	LuaEvents.AdvisorPopup_ShowDetails.Add(				OnAdvisorPopupShowDetails );
 	LuaEvents.AdvisorPopup_ClearActive.Add(				OnAdvisorPopupClearActive );
-	LuaEvents.AdvisorPopup_DisableTutorial.Add(			OnAdvisorPopupDisableTutorial );
 	LuaEvents.CityPanel_ProductionOpen.Add(				OnProductionPanelViaCityOpen );
 	LuaEvents.CivicsTree_CloseCivicsTree.Add(			OnCivicsTreeClosed);
 	LuaEvents.DiploScene_SceneClosed.Add(				OnDiploScene_SceneClosed );

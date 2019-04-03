@@ -240,4 +240,5 @@ end
 -- ===========================================================================
 function DisableMouseIcon()
 	Controls.MovingIcon:SetHide(true);
+	ContextPtr:ClearUpdate();
 end

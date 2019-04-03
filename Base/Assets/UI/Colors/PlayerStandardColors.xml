@@ -7,7 +7,7 @@
 		</Row>
 		<Row>
 			<Type>COLOR_STANDARD_RED_MD</Type>
-			<Color>204,0,1,255</Color>
+			<Color>202,20,21,255</Color>
 		</Row>
 		<Row>
 			<Type>COLOR_STANDARD_RED_DK</Type>
@@ -23,11 +23,11 @@
 		</Row>
 		<Row>
 			<Type>COLOR_STANDARD_ORANGE_DK</Type>
-			<Color>148,74,1,255</Color>
+			<Color>120,61,2,255</Color>
 		</Row>
 		<Row>
 			<Type>COLOR_STANDARD_YELLOW_LT</Type>
-			<Color>250,236,127,255</Color>
+			<Color>234,225,157,255</Color>
 		</Row>
 		<Row>
 			<Type>COLOR_STANDARD_YELLOW_MD</Type>
@@ -39,15 +39,15 @@
 		</Row>
 		<Row>
 			<Type>COLOR_STANDARD_GREEN_LT</Type>
-			<Color>152,255,112,255</Color>
+			<Color>136,249,78,255</Color>
 		</Row>
 		<Row>
 			<Type>COLOR_STANDARD_GREEN_MD</Type>
-			<Color>76,188,0,255</Color>
+			<Color>97,191,34,255</Color>
 		</Row>
 		<Row>
 			<Type>COLOR_STANDARD_GREEN_DK</Type>
-			<Color>7,110,39,255</Color>
+			<Color>21,108,48,255</Color>
 		</Row>
 		<Row>
 			<Type>COLOR_STANDARD_AQUA_LT</Type>

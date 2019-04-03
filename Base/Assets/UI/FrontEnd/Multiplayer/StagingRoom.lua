@@ -12,6 +12,14 @@ include( "PopupDialog" );
 include( "Civ6Common" );
 include( "TeamSupport" );
 
+
+----------------------------------------------------------------  
+-- Constants
+---------------------------------------------------------------- 
+local READY_COUNTDOWN_DURATION :number		= 60; -- How long does the ready up countdown last in seconds?
+local READY_COUNTDOWN_TICK_START :number	= 10; -- How long before the end of the ready countdown time does the ticking start?
+
+
 ----------------------------------------------------------------  
 -- Globals
 ----------------------------------------------------------------  
@@ -34,8 +42,11 @@ local m_kPopupDialog:table;
 local m_shownPBCReadyPopup = false;			-- Remote clients in a new PlayByCloud game get a ready-to-go popup when
 											-- This variable indicates this popup has already been shown in this instance
 											-- of the staging room.
+local m_savePBCReadyChoice :boolean = false;	-- Should we save the user's PlayByCloud ready choice when they have decided?
+local m_exitReadyWait :boolean = false;		-- Are we waiting on a local player ready change to propagate prior to exiting the match?
 local m_numPlayers:number;
 local m_teamColors = {};
+local m_sessionID :number = FireWireTypes.FIREWIRE_INVALID_ID;
 
 -- Additional Content 
 local m_modsIM = InstanceManager:new("AdditionalContentInstance", "Root", Controls.AdditionalContentStack);
@@ -71,10 +82,16 @@ local g_isBuildingPlayerList = false;
 local m_iFirstClosedSlot = -1;					-- Closed slot to show Add player line
 
 local NO_COUNTDOWN = -1;
-local g_fCountdownTimer = NO_COUNTDOWN;				-- Start game countdown timer.  Set to -1 when not in use.
-local g_fCountdownInitialTime = NO_COUNTDOWN;		-- Initial time for the current countdown.
-local g_fCountdownTickSoundTime	= NO_COUNTDOWN;		-- When was the last time we make a countdown tick sound?
-local g_fCountdownReadyButtonTime = NO_COUNTDOWN;	-- When was the last time we updated the ready button countdown time?
+
+-- Defines for m_countdownMode.
+local COUNTDOWN_LAUNCH :number	= 0;			-- Countdown to launching the match.
+local COUNTDOWN_READY :number	= 1;			-- Countdown to auto ready the player.
+
+local m_countdownMode :number				= COUNTDOWN_LAUNCH;	-- What is the countdown for?
+local g_fCountdownTimer :number 			= NO_COUNTDOWN;		-- Start game countdown timer.  Set to -1 when not in use.
+local g_fCountdownInitialTime :number 		= NO_COUNTDOWN;		-- Initial time for the current countdown.
+local g_fCountdownTickSoundTime	:number 	= NO_COUNTDOWN;		-- When was the last time we make a countdown tick sound?
+local g_fCountdownReadyButtonTime :number	= NO_COUNTDOWN;		-- When was the last time we updated the ready button countdown time?
 
 -- hotseatOnly - Only available in hotseat mode.
 -- hotseatInProgress = Available for active civs (AI/HUMAN) when loading a hotseat game
@@ -117,8 +134,8 @@ local gameInProgressGameStr = Locale.Lookup("LOC_STAGING_ROOM_GAME_IN_PROGRESS")
 local onlineIconStr = "[ICON_OnlinePip]";
 local offlineIconStr = "[ICON_OfflinePip]";
 
-local COLOR_GREEN				:number = 0xFF00FF00;
-local COLOR_RED					:number = 0xFF0000FF;
+local COLOR_GREEN				:number = UI.GetColorValueFromHexLiteral(0xFF00FF00);
+local COLOR_RED					:number = UI.GetColorValueFromHexLiteral(0xFF0000FF);
 local ColorString_ModGreen		:string = "[color:ModStatusGreen]";
 local PLAYER_LIST_SIZE_DEFAULT	:number = 325;
 local PLAYER_LIST_SIZE_HOTSEAT	:number = 535;
@@ -215,9 +232,38 @@ function IsCloudInProgressAndNotTurn()
 		end
 	end
 
+	-- TTP 44083 - It is always the host's turn if the match is "in progress" but the match has not been started.  
+	-- This can happen if the game host disconnected from the match right as the launch countdown hit zero.
+	if(Network.IsGameHost() and not Network.IsCloudMatchStarted()) then
+		return false;
+	end
+
 	return true;
 end
 
+function IsLaunchCountdownActive()
+	if(g_fCountdownTimer ~= NO_COUNTDOWN and m_countdownMode == COUNTDOWN_LAUNCH) then
+		return true;
+	end
+
+	return false;
+end
+
+function IsReadyCountdownActive()
+	if(g_fCountdownTimer ~= NO_COUNTDOWN and m_countdownMode == COUNTDOWN_READY) then
+		return true;
+	end
+
+	return false;
+end
+
+function IsUseReadyCountdown()
+	if(GameConfiguration.IsPlayByCloud()) then
+		return true;
+	end
+
+	return false;
+end
 ----------------------------------------------------------------  
 -- Event Handlers
 ---------------------------------------------------------------- 
@@ -312,6 +358,13 @@ function OnPlayerInfoChanged(playerID)
 		
 		-- Update chat target pulldown.
 		PlayerTarget_OnPlayerInfoChanged( playerID, Controls.ChatPull, Controls.ChatEntry, Controls.ChatIcon, m_playerTargetEntries, m_playerTarget, false);
+	end
+end
+
+function OnUploadCloudPlayerConfigComplete(success :boolean)
+	if(m_exitReadyWait == true) then
+		m_exitReadyWait = false;
+		FinishExitGame();
 	end
 end
 
@@ -857,6 +910,13 @@ function SetLocalReady(newReady)
 	if(IsCloudInProgress() and newReady == false) then
 		return;
 	end
+
+	-- When using the ready countdown, the player can not unready themselves outside of the ready countdown.
+	if(IsUseReadyCountdown() 
+		and newReady == false
+		and not IsReadyCountdownActive()) then
+		return;
+	end
 	
 	if(newReady ~= localPlayerConfig:GetReady()) then
 		
@@ -868,7 +928,6 @@ function SetLocalReady(newReady)
 		if(newReady 
 			and GameConfiguration.IsPlayByCloud()
 			and GameConfiguration.GetGameState() ~= GameStateTypes.GAMESTATE_LAUNCHED
-			and not Network.IsGameHost()
 			and not m_shownPBCReadyPopup) then
 			ShowPBCReadyPopup();
 		end
@@ -882,13 +941,42 @@ end
 
 function ShowPBCReadyPopup()
 	m_shownPBCReadyPopup = true;
+	local readyUpBehavior :number = UserConfiguration.GetPlayByCloudClientReadyBehavior();
+	if(readyUpBehavior == PlayByCloudReadyBehaviorType.PBC_READY_ASK_ME) then
+		m_kPopupDialog:Close();	-- clear out the popup incase it is already open.
+		m_kPopupDialog:AddTitle(  Locale.ToUpper(Locale.Lookup("LOC_PLAYBYCLOUD_REMOTE_READY_POPUP_TITLE")));
+		m_kPopupDialog:AddText(	  Locale.Lookup("LOC_PLAYBYCLOUD_REMOTE_READY_POPUP_TEXT"));
+		m_kPopupDialog:AddCheckBox(Locale.Lookup("LOC_REMEMBER_MY_CHOICE"), false, OnPBCReadySaveChoice);
+		m_kPopupDialog:AddButton( Locale.Lookup("LOC_PLAYBYCLOUD_REMOTE_READY_POPUP_OK"), OnPBCReadyOK );
+		m_kPopupDialog:AddButton( Locale.Lookup("LOC_PLAYBYCLOUD_REMOTE_READY_POPUP_LOBBY_EXIT"), OnPBCReadyExitGame, nil, nil );
+		m_kPopupDialog:Open();
+	elseif(readyUpBehavior == PlayByCloudReadyBehaviorType.PBC_READY_EXIT_LOBBY) then
+		StartExitGame();
+	end
 
-	m_kPopupDialog:Close();	-- clear out the popup incase it is already open.
-	m_kPopupDialog:AddTitle(  Locale.ToUpper(Locale.Lookup("LOC_PLAYBYCLOUD_REMOTE_READY_POPUP_TITLE")));
-	m_kPopupDialog:AddText(	  Locale.Lookup("LOC_PLAYBYCLOUD_REMOTE_READY_POPUP_TEXT"));
-	m_kPopupDialog:AddButton( Locale.Lookup("LOC_PLAYBYCLOUD_REMOTE_READY_POPUP_OK"), nil );
-	m_kPopupDialog:AddButton( Locale.Lookup("LOC_PLAYBYCLOUD_REMOTE_READY_POPUP_LOBBY_EXIT"), OnExitGame, nil, nil );
-	m_kPopupDialog:Open();
+	-- Nothing needs to happen for the PlayByCloudReadyBehaviorType.PBC_READY_DO_NOTHING.  Obviously.
+
+end
+
+function OnPBCReadySaveChoice()
+	m_savePBCReadyChoice = true;
+end
+
+function OnPBCReadyOK()
+	-- OK means do nothing and remain in the staging room.
+	if(m_savePBCReadyChoice == true) then
+		Options.SetUserOption("Interface", "PlayByCloudClientReadyBehavior", PlayByCloudReadyBehaviorType.PBC_READY_DO_NOTHING);
+		Options.SaveOptions();
+	end	
+end
+
+function OnPBCReadyExitGame()
+	if(m_savePBCReadyChoice == true) then
+		Options.SetUserOption("Interface", "PlayByCloudClientReadyBehavior", PlayByCloudReadyBehaviorType.PBC_READY_EXIT_LOBBY);
+		Options.SaveOptions();
+	end	
+
+	StartExitGame();
 end
 
 -------------------------------------------------
@@ -927,23 +1015,19 @@ end
 function CheckGameAutoStart()
 	-- PlayByCloud Only - Autostart if we are the active turn player.
 	if(IsCloudInProgress() and Network.IsCloudTurnPlayer() == true) then
+		-- Reset global blocking variables so the ready button i not possibly dirty from a previous session.
+		ResetAutoStartFlags();
+
 		SetLocalReady(true);
-		StartCountdown();
+		StartLaunchCountdown();
 	-- Check to see if we should start/stop the multiplayer game.
 	elseif(not Network.IsPlayerHotJoining(Network.GetLocalPlayerID())
-		and not IsCloudInProgressAndNotTurn()) then
+		and not IsCloudInProgressAndNotTurn()
+		and not Network.IsCloudLaunching()) then -- We should not autostart if we are already launching into a PlayByCloud match.
 		local startCountdown = true;
 
-		--reset global blocking variables because we're going to recalculate them.
-		g_everyoneReady = true;
-		g_everyoneConnected = true;
-		g_badPlayerForMapSize = false;
-		g_notEnoughPlayers = false;
-		g_everyoneModReady = true;
-		g_duplicateLeaders = false;
-		g_humanRequiredFilled = true;
-		g_pbcNewGameCheck = true;
-		g_pbcMinHumanCheck = true;
+		-- Reset global blocking variables because we're going to recalculate them.
+		ResetAutoStartFlags();
 
 		-- Count players and check to see if a human player isn't ready.
 		local totalPlayers = 0;
@@ -1041,14 +1125,28 @@ function CheckGameAutoStart()
 		if not GameConfiguration.IsHotseat() then
 			if(startCountdown) then
 				-- Everyone has readied up and we can start.
-				StartCountdown();
+				StartLaunchCountdown();
 			else
-				-- We can't autostart now, stop the countdown incase we started it earlier.
-				StopCountdown();
+				-- We can't autostart now, stop the countdown if we started it earlier.
+				if(IsLaunchCountdownActive()) then
+					StopCountdown();
+				end
 			end
 		end
 	end
 	UpdateReadyButton();
+end
+
+function ResetAutoStartFlags()
+	g_everyoneReady = true;
+	g_everyoneConnected = true;
+	g_badPlayerForMapSize = false;
+	g_notEnoughPlayers = false;
+	g_everyoneModReady = true;
+	g_duplicateLeaders = false;
+	g_humanRequiredFilled = true;
+	g_pbcNewGameCheck = true;
+	g_pbcMinHumanCheck = true;
 end
 
 -------------------------------------------------
@@ -1520,7 +1618,7 @@ function UpdatePlayerEntry(playerID)
 				and Network.IsGameHost() 
 				and not localPlayerConfig:GetReady() -- Hide when the host is ready (to be consistent with the player slot behavior)
 				and not gameInProgress 
-				and g_fCountdownTimer == -1 then -- Don't show Add Player button while in the countdown.
+				and not IsLaunchCountdownActive() then -- Don't show Add Player button while in the launch countdown.
 					m_iFirstClosedSlot = playerID;
 					playerEntry.AddPlayerButton:SetHide(false);
 					playerEntry.Root:SetHide(false);
@@ -1620,8 +1718,8 @@ function UpdatePlayerEntry(playerID)
 										local primary, secondary = UI.GetPlayerColorValues(playerColor, j);
 										m_teamColors[playerID] = {primary, secondary}
 
-										local parameter = parameters.Parameters["PlayerColorAlternate"];
-										parameters:SetParameterValue(parameter, j);
+										local colorParameter = parameters.Parameters["PlayerColorAlternate"];
+										parameters:SetParameterValue(colorParameter, j);
 									end);
 								end           
 							end
@@ -1854,8 +1952,13 @@ function UpdateReadyButton()
 	local localPlayerButton = localPlayerEntry.ReadyImage;
 	if(g_fCountdownTimer ~= -1) then
 		-- Countdown is active, just show that.
+		local startLabel :string = Locale.ToUpper(Locale.Lookup("LOC_GAMESTART_COUNTDOWN_FORMAT"));  -- Defaults to COUNTDOWN_LAUNCH
+		if(m_countdownMode == COUNTDOWN_READY) then
+			startLabel = Locale.ToUpper(Locale.Lookup("LOC_READY_COUNTDOWN_FORMAT"));
+		end
+
 		local intTime = math.floor(g_fCountdownTimer);
-		Controls.StartLabel:SetText( Locale.ToUpper(Locale.Lookup("LOC_GAMESTART_COUNTDOWN_FORMAT")) );
+		Controls.StartLabel:SetText( startLabel );
 		Controls.ReadyButton:LocalizeAndSetText(  intTime );
 		Controls.ReadyButton:LocalizeAndSetToolTip( "" );
 		Controls.ReadyCheck:LocalizeAndSetToolTip( "" );
@@ -1969,8 +2072,10 @@ end
 -------------------------------------------------
 -- Start Game Launch Countdown
 -------------------------------------------------
-function StartCountdown()
-	--print("StartCountdown");
+function StartLaunchCountdown()
+	--print("StartLaunchCountdown");
+	m_countdownMode = COUNTDOWN_LAUNCH;	
+
 	local gameState = GameConfiguration.GetGameState();
 	if(GameConfiguration.IsPlayByCloud() and gameState == GameStateTypes.GAMESTATE_LAUNCHED) then
 		-- Joining a PlayByCloud game already in progress has a much faster countdown to be less annoying.
@@ -1993,8 +2098,24 @@ function StartCountdown()
 	ShowHideReadyButtons();
 end
 
+function StartReadyCountdown()
+	if(not IsReadyCountdownActive()) then
+		--print("StartReadyCountdown");
+		m_countdownMode = COUNTDOWN_READY;	
+
+		local gameState = GameConfiguration.GetGameState();
+		g_fCountdownTimer = READY_COUNTDOWN_DURATION;
+		g_fCountdownTickSoundTime = READY_COUNTDOWN_TICK_START; 
+		g_fCountdownInitialTime = g_fCountdownTimer;
+		g_fCountdownReadyButtonTime = g_fCountdownTimer;
+		ContextPtr:SetUpdate( OnUpdateTimers );
+
+		ShowHideReadyButtons();
+	end
+end
+
 -------------------------------------------------
--- Stop Game Launch Countdown
+-- Stop Launch Countdown
 -------------------------------------------------
 function StopCountdown()
 	--print("StopCountdown");
@@ -2009,6 +2130,8 @@ function StopCountdown()
 	end
 
 	ShowHideReadyButtons();
+
+	ContextPtr:ClearUpdate();
 end
 
 -------------------------------------------------
@@ -2083,15 +2206,20 @@ function OnUpdateTimers( fDTime )
 	if(g_fCountdownInitialTime ~= NO_COUNTDOWN) then
 		g_fCountdownTimer = g_fCountdownTimer - fDTime;
 		Controls.TurnTimerMeter:SetPercent(g_fCountdownTimer / g_fCountdownInitialTime);
-		if( not Network.IsEveryoneConnected() ) then
+		if( m_countdownMode == COUNTDOWN_LAUNCH and not Network.IsEveryoneConnected() ) then
 			-- not all players are connected anymore.  This is probably due to a player join in progress.
 			StopCountdown();
 		elseif( g_fCountdownTimer <= 0 ) then
-			-- Timer elapsed, launch the game if we're the netsession host.
-			if(Network.IsNetSessionHost()) then
-				Network.LaunchGame();
+			if( m_countdownMode == COUNTDOWN_LAUNCH ) then
+				-- Timer elapsed, launch the game if we're the netsession host.
+				if(Network.IsNetSessionHost()) then
+					Network.LaunchGame();
+				end
+			elseif( m_countdownMode == COUNTDOWN_READY ) then
+				-- Force ready the local player
+				SetLocalReady(true);
 			end
-			StopCountdown();
+			StopCountdown(); 
 		else
 			-- Update countdown tick sound.
 			if( g_fCountdownTimer < g_fCountdownTickSoundTime) then
@@ -2116,10 +2244,10 @@ end
 -------------------------------------------------
 -------------------------------------------------
 function OnShow()
-	
 	-- Fetch g_currentMaxPlayers because it might be stale due to loading a save.
 	g_currentMaxPlayers = math.min(MapConfiguration.GetMaxMajorPlayers(), 12);
 	m_shownPBCReadyPopup = false;
+	m_exitReadyWait = false;
 
 	InitializeReadyUI();
 	ShowHideInviteButton();	
@@ -2147,6 +2275,21 @@ function OnShow()
 			SetLocalReady(true);
 		end
 	end
+
+	if(m_sessionID ~= Network.GetSessionID()) then
+		-- This is a fresh session.
+		m_sessionID = Network.GetSessionID();
+
+		-- When using the ready countdown mode, start the ready countdown if the player is not already readied up.
+		-- If the player is already readied up, we just don't allow them to unready.
+		local localPlayerID :number = Network.GetLocalPlayerID();
+		local localPlayerConfig :table = PlayerConfigurations[localPlayerID];
+		if(IsUseReadyCountdown() 
+			and localPlayerConfig ~= nil
+			and localPlayerConfig:GetReady() == false) then
+			StartReadyCountdown();
+		end
+	end
 end
 ContextPtr:SetShowHandler(OnShow);
 
@@ -2159,7 +2302,6 @@ end
 -------------------------------------------------
 -------------------------------------------------
 function OnHide()
-	
 end
 ContextPtr:SetHideHandler(OnHide);
 
@@ -2411,12 +2553,12 @@ function SetupSplitLeaderPulldown(playerId:number, instance:table, pulldownContr
 					 m_teamColors[playerId] = {primaryColor, secondaryColor};
 
                     -- set default alternate color to the primary
-					parameter = parameters.Parameters["PlayerColorAlternate"]; 
-					parameters:SetParameterValue(parameter, 0);
+					local colorParameter = parameters.Parameters["PlayerColorAlternate"]; 
+					parameters:SetParameterValue(colorParameter, 0);
 
                     -- set the team
-                    local parameter = parameters.Parameters["PlayerLeader"];
-					parameters:SetParameterValue(parameter, v);
+                    local leaderParameter = parameters.Parameters["PlayerLeader"];
+					parameters:SetParameterValue(leaderParameter, v);
 
 					if(playerId == 0) then
 						m_currentInfo = info;
@@ -2759,6 +2901,10 @@ end
 function OnRaise(resetChat:boolean)
 	-- Make sure HostGame screen is on the stack
 	LuaEvents.StagingRoom_EnsureHostGame();
+
+	-- The screen is being started fresh from the joining room/host room screens.  We need to reset the countdown state.
+	StopCountdown();
+
 	UIManager:QueuePopup( ContextPtr, PopupPriority.Current );
 end
 
@@ -2779,7 +2925,25 @@ function OnUpdateUI( type:number, tag:string, iData1:number, iData2:number, strD
   end
 end
 
-function OnExitGame()
+function StartExitGame()
+	if(IsUseReadyCountdown()) then
+		-- If we are using the ready countdown, the local player needs to be set to ready before they can leave.
+		-- If we are not ready, we set ready and wait for that change to propagate to the backend.
+		local localPlayerID :number = Network.GetLocalPlayerID();
+		local localPlayerConfig :table = PlayerConfigurations[localPlayerID];
+		if(localPlayerConfig:GetReady() == false) then
+			m_exitReadyWait = true;
+			SetLocalReady(true);
+
+			-- Next step will be in OnUploadCloudPlayerConfigComplete.
+			return;
+		end
+	end
+
+	FinishExitGame();
+end
+
+function FinishExitGame()
 	LuaEvents.Multiplayer_ExitShell();
 end
 
@@ -2810,7 +2974,7 @@ end
 function OnExitGameAskAreYouSure()
 	if(GameConfiguration.IsPlayByCloud()) then
 		-- PlayByCloud immediately exits to streamline the process and avoid confusion with the popup text.
-		OnExitGame();
+		StartExitGame();
 		return;
 	end
 
@@ -2818,7 +2982,7 @@ function OnExitGameAskAreYouSure()
 	m_kPopupDialog:AddTitle(  Locale.ToUpper(Locale.Lookup("LOC_GAME_MENU_QUIT_TITLE")));
 	m_kPopupDialog:AddText(	  Locale.Lookup("LOC_GAME_MENU_QUIT_WARNING"));
 	m_kPopupDialog:AddButton( Locale.Lookup("LOC_COMMON_DIALOG_NO_BUTTON_CAPTION"), nil );
-	m_kPopupDialog:AddButton( Locale.Lookup("LOC_COMMON_DIALOG_YES_BUTTON_CAPTION"), OnExitGame, nil, nil, "PopupButtonInstanceRed" );
+	m_kPopupDialog:AddButton( Locale.Lookup("LOC_COMMON_DIALOG_YES_BUTTON_CAPTION"), StartExitGame, nil, nil, "PopupButtonInstanceRed" );
 	m_kPopupDialog:Open();
 end
 
@@ -2873,6 +3037,7 @@ function Initialize()
 	Events.MultiplayerPrePlayerDisconnected.Add( OnMultiplayerPrePlayerDisconnected );
 	Events.GameConfigChanged.Add(OnGameConfigChanged);
 	Events.PlayerInfoChanged.Add(OnPlayerInfoChanged);
+	Events.UploadCloudPlayerConfigComplete.Add(OnUploadCloudPlayerConfigComplete);
 	Events.ModStatusUpdated.Add(OnModStatusUpdated);
 	Events.MultiplayerChat.Add( OnMultiplayerChat );
 	Events.MultiplayerGameAbandoned.Add( OnAbandoned );

@@ -17,8 +17,8 @@ local m_debugNotificationNum:number = 0;		-- (0) The # of fake notifications to 
 --	CONSTANTS
 -- ===========================================================================
 
-local COLOR_PIP_CURRENT						:number = 0xffffffff;
-local COLOR_PIP_OTHER						:number = 0xff3c3c3c;
+local COLOR_PIP_CURRENT = UI.GetColorValue("COLOR_WHITE");
+local COLOR_PIP_OTHER						:number = UI.GetColorValueFromHexLiteral(0xff3c3c3c);
 local DEBUG_NOTIFICATION_TYPE				:number = 999999;
 local SIZE_PIP								:number = 12;
 local SIZE_TOP_SPACE_Y						:number = 140;
@@ -191,6 +191,8 @@ function RegisterHandlers()
     g_notificationHandlers[NotificationTypes.WONDER_COMPLETED]                      = MakeDefaultHandlers();
     g_notificationHandlers[NotificationTypes.MY_CULTURE_VICTORY_SOON]			    = MakeDefaultHandlers();
     g_notificationHandlers[NotificationTypes.MY_DOMINANT_CULTURE]					= MakeDefaultHandlers();
+	g_notificationHandlers[NotificationTypes.PLAYBYCLOUD_YOURTURN]					= MakeDefaultHandlers();
+	g_notificationHandlers[NotificationTypes.PLAYBYCLOUD_UNSEENCOMPLETE]			= MakeDefaultHandlers();
 
 	-- Custom function handlers for the "Activate" signal:	
 	g_notificationHandlers[DEBUG_NOTIFICATION_TYPE].Activate						= OnDebugActivate;
@@ -220,6 +222,18 @@ function RegisterHandlers()
 	g_notificationHandlers[NotificationTypes.TECH_DISCOVERED].Activate				= OnTechDiscoveredActivateNotification;
     g_notificationHandlers[NotificationTypes.MY_CULTURE_VICTORY_SOON].Activate      = OnLaunchWorldRankings;
     g_notificationHandlers[NotificationTypes.MY_DOMINANT_CULTURE].Activate			= OnLaunchWorldRankings;
+	g_notificationHandlers[NotificationTypes.PLAYBYCLOUD_YOURTURN].Activate			= OnPBCYourTurnActivate;
+	g_notificationHandlers[NotificationTypes.PLAYBYCLOUD_UNSEENCOMPLETE].Activate	= OnPBCUnseenCompleteActivate;
+
+	g_notificationHandlers[NotificationTypes.USER_DEFINED_1].Activate				= OnUserNotificationActivate;
+	g_notificationHandlers[NotificationTypes.USER_DEFINED_2].Activate				= OnUserNotificationActivate;
+	g_notificationHandlers[NotificationTypes.USER_DEFINED_3].Activate				= OnUserNotificationActivate;
+	g_notificationHandlers[NotificationTypes.USER_DEFINED_4].Activate				= OnUserNotificationActivate;
+	g_notificationHandlers[NotificationTypes.USER_DEFINED_5].Activate				= OnUserNotificationActivate;
+	g_notificationHandlers[NotificationTypes.USER_DEFINED_6].Activate				= OnUserNotificationActivate;
+	g_notificationHandlers[NotificationTypes.USER_DEFINED_7].Activate				= OnUserNotificationActivate;
+	g_notificationHandlers[NotificationTypes.USER_DEFINED_8].Activate				= OnUserNotificationActivate;
+	g_notificationHandlers[NotificationTypes.USER_DEFINED_9].Activate				= OnUserNotificationActivate;	
 
 	-- Sound to play when added
 	g_notificationHandlers[NotificationTypes.SPY_KILLED].AddSound			        = "ALERT_NEGATIVE";	
@@ -262,8 +276,11 @@ function RegisterHandlers()
     g_notificationHandlers[NotificationTypes.SPY_ENEMY_STOLE_TECH_BOOST].AddSound   = "NOTIFICATION_ESPIONAGE_OP_FAILED";
     g_notificationHandlers[NotificationTypes.SPY_ENEMY_DISRUPTED_ROCKETRY].AddSound = "NOTIFICATION_ESPIONAGE_OP_FAILED";
     g_notificationHandlers[NotificationTypes.SPY_ENEMY_CAPTURED].AddSound           = "NOTIFICATION_ESPIONAGE_OP_SUCCESS";
-    g_notificationHandlers[NotificationTypes.SPY_ENEMY_KILLED].AddSound             = "NOTIFICATION_ESPIONAGE_OP_SUCCESS";
-    
+    g_notificationHandlers[NotificationTypes.SPY_ENEMY_KILLED].AddSound				= "NOTIFICATION_ESPIONAGE_OP_SUCCESS";
+
+	g_notificationHandlers[NotificationTypes.PLAYBYCLOUD_YOURTURN].AddSound			= "ALERT_POSITIVE";
+	g_notificationHandlers[NotificationTypes.PLAYBYCLOUD_UNSEENCOMPLETE].AddSound	= "ALERT_POSITIVE";
+	
 	-- Custom function handlers for the "Add" signal:
 	g_notificationHandlers[DEBUG_NOTIFICATION_TYPE].Add								= OnDebugAdd;
     g_notificationHandlers[NotificationTypes.PLAYER_MET].Add                        = OnMetCivAddNotification;
@@ -1319,6 +1336,34 @@ function OnLaunchWorldRankings( notificationEntry : NotificationType )
 end
 
 -- =======================================================================================
+-- Play By Cloud Your Turn Notification Handler
+-- =======================================================================================
+function OnPBCYourTurnActivate( notificationEntry : NotificationType )
+	if (notificationEntry ~= nil and notificationEntry.m_PlayerID == Game.GetLocalPlayer()) then
+		local pNotification :table = GetActiveNotificationFromEntry(notificationEntry, notificationID);
+		if pNotification ~= nil then
+			local matchID :number = pNotification:GetValue("MatchID");
+			local matchName :string = pNotification:GetValue("MatchName");
+			LuaEvents.PBCNotificationPopup_ShowYourTurn(matchID, matchName);
+		end
+	end
+end
+
+-- =======================================================================================
+-- Play By Cloud Unseen Completed Game Notification Handler
+-- =======================================================================================
+function OnPBCUnseenCompleteActivate( notificationEntry : NotificationType )
+	if (notificationEntry ~= nil and notificationEntry.m_PlayerID == Game.GetLocalPlayer()) then
+		local pNotification :table = GetActiveNotificationFromEntry(notificationEntry, notificationID);
+		if pNotification ~= nil then
+			local matchID :number = pNotification:GetValue("MatchID");
+			local matchName :string = pNotification:GetValue("MatchName");
+			LuaEvents.PBCNotificationPopup_ShowUnseenComplete(matchID, matchName);
+		end
+	end
+end
+
+-- =======================================================================================
 -- Espionage Handlers
 -- =======================================================================================
 function OnChooseEscapeRouteActivate( notificationEntry : NotificationType )
@@ -1431,6 +1476,17 @@ function OnMetCivAddNotification( pNotification:table )
         UI.PlaySound("NOTIFICATION_MISC_NEUTRAL"); 
     end
 	OnDefaultAddNotification( pNotification );
+end
+
+-- =======================================================================================
+function OnUserNotificationActivate( notificationEntry : NotificationType, notificationID:number, activatedByUser:boolean )
+	if (notificationEntry ~= nil and notificationEntry.m_PlayerID == Game.GetLocalPlayer()) then
+		local pNotification :table = GetActiveNotificationFromEntry(notificationEntry, notificationID);
+		if pNotification ~= nil then
+			LookAtNotification( pNotification );
+			LuaEvents.NotificationPanel_UserNotificationActivate( pNotification:GetPlayerID(), pNotification:GetID() );
+		end
+	end
 end
 
 -- =======================================================================================

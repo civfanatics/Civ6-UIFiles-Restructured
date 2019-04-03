@@ -162,8 +162,6 @@ local ICON_UNKNOWN_CIV:string = "ICON_CIVILIZATION_UNKNOWN";
 local LOC_UNKNOWN_CIV:string = Locale.Lookup("LOC_WORLD_RANKING_UNMET_PLAYER");
 local LOC_UNKNOWN_CIV_COLORED:string = Locale.Lookup("LOC_WORLD_RANKING_UNMET_PLAYER_COLORED");
 
-local UNKNOWN_COLOR:number = RGBAValuesToABGRHex(1, 1, 1, 1);
-
 --antonjs: Removed the other state and related text, in favor of showing all information together. Leaving state functionality intact in case we want to use it in the future.
 --[[
 local CULTURE_HOW_TO_VICTORY:string = Locale.Lookup("LOC_WORLD_RANKINGS_CULTURE_HOW_TO_VICTORY");
@@ -316,7 +314,7 @@ function PopulateTabs()
 	end
 
 	-- Create TabSupport object
-	g_TabSupport = CreateTabs(Controls.TabContainer, 42, 34, 0xFF331D05);
+	g_TabSupport = CreateTabs(Controls.TabContainer, 42, 34, UI.GetColorValueFromHexLiteral(0xFF331D05));
 
 	local defaultTab = AddTab(TAB_OVERALL, ViewOverall);
 
@@ -1697,11 +1695,11 @@ function PopulateCultureInstance(instance:table, playerData:table)
 	instance.VisitingUsContainer:SetHide(playerData.PlayerID == m_LocalPlayerID);
 
 	local backColor, _ = UI.GetPlayerColors(playerData.PlayerID);
-	local brighterBackColor = DarkenLightenColor(backColor,35,255);
+	local brighterBackColor = UI.DarkenLightenColor(backColor,35,255);
 	if(playerData.PlayerID == m_LocalPlayerID or m_LocalPlayer == nil or m_LocalPlayer:GetDiplomacy():HasMet(playerData.PlayerID)) then
 		instance.DomesticTouristsIcon:SetColor(brighterBackColor);
 	else
-		instance.DomesticTouristsIcon:SetColor(RGBAValuesToABGRHex(1, 1, 1, 0.35));
+		instance.DomesticTouristsIcon:SetColor(UI.GetColorValue(1, 1, 1, 0.35));
 	end
 	instance.DomesticTourists:SetText(playerData.NumStaycationers);
 

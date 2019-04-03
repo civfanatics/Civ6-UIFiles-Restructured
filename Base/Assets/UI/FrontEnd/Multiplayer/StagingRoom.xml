@@ -151,14 +151,14 @@
 						<Label ID="GameStateText" Anchor="C,C" Style="ShellHeader" WrapWidth="320"/>
 
 						<!-- Join Code, an edit box that the user can copy/paste from.-->
-						<Container Size="auto,auto" ID="JoinCodeRoot" Hidden="1">
+						<Container ID="JoinCodeRoot"  Size="auto,auto" Hidden="1">
 							<Container Size="auto,auto">
-								<Box Size="180,30" Color="0,0,0,0"/>
-								<Label ID="JoinCodeLabel" Anchor="R,C" Offset="0,0" Style="ShellHeader" String="LOC_STAGING_ROOM_JOIN_CODE"/>
+								<Box Size="186,50" Color="0,0,0,0"/>
+								<Label ID="JoinCodeLabel" Anchor="R,C" Style="ShellHeader" String="LOC_STAGING_ROOM_JOIN_CODE"/>
 							</Container>
 							<Container Size="auto,auto" Offset="185,0">
-								<Grid Style="EditTextArea" Size="208,33">
-									<EditBox ID="JoinCodeText" Anchor="L,C" Offset="6,0" Size="248,23" EditMode="1" TextLocked="1" HighlightOnFocus="1" Style="WonderHeader" MaxLength="10"/>
+								<Grid Style="EditTextArea" Size="208,54">
+									<EditBox ID="JoinCodeText" Anchor="L,C" Offset="6,0" Size="248,46" Style="FontFlair40" ColorSet="ShellHeader" EditMode="1" TextLocked="1" HighlightOnFocus="1" MaxLength="10"/>
 								</Grid>
 							</Container>
 						</Container>

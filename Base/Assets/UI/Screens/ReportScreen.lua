@@ -991,7 +991,7 @@ function ViewYieldsPage()
 			end
 		end
 		for _,kDistrict in ipairs(kCityData.BuildingsAndDistricts) do
-			if (kDistrict.Maintenance > 0 and kDistrict.isPillaged == false) then
+			if (kDistrict.Maintenance > 0 and kDistrict.isPillaged == false and kDistrict.isBuilt == true) then
 				local pDistrictInstance:table = {};		
 				ContextPtr:BuildInstanceForControl( "BuildingExpensesEntryInstance", pDistrictInstance, instance.ContentStack ) ;		
 				TruncateStringWithTooltip(pDistrictInstance.CityName, 224, Locale.Lookup(cityName)); 
@@ -1346,7 +1346,7 @@ end
 function LateInitialize()
 	Resize();	
 
-	m_tabs = CreateTabs( Controls.TabContainer, 42, 34, 0xFF331D05 );
+	m_tabs = CreateTabs( Controls.TabContainer, 42, 34, UI.GetColorValueFromHexLiteral(0xFF331D05) );
 	--AddTabSection( "Test",								ViewTestPage );			--TRONSTER debug
 	--AddTabSection( "Test2",								ViewTestPage );			--TRONSTER debug
 	AddTabSection( "LOC_HUD_REPORTS_TAB_YIELDS",		ViewYieldsPage );

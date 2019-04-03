@@ -12,10 +12,58 @@
     <Image														Anchor="C,T"									Size="parent,44"					Color="61,112,154,255"	Texture="Controls_Gradient_HalfRadial"  />
     <Label														Anchor="C,T"	Offset="0,16"															Style="FontFlair20"			String="{LOC_GLOBAL_RESOURCES_TITLE:upper}" FontStyle="Glow" Color0="133,205,235,255" Color1="203,215,225,100" Color2="254,254,254,255" SmallCaps="28" SmallCapsType="EveryWord" />
     <Grid															Anchor="C,T"	Offset="0,44"		Size="parent-6,8"					Style="Divider3Grid" />
-    <ScrollPanel	ID="CrisisDetailScrollPanel" Anchor="C,T" Offset="0,50" Size="parent-30,parent-56" Vertical="1">
-      <Stack			ID="ResourceStack" Padding="2" Anchor="C,T"/>
-      <ScrollBar											Anchor="R,C" AnchorSide="O,I" Style="ScrollVerticalBarHighContrast"/>
-    </ScrollPanel>
+		
+		<Stack Anchor="C,T" Offset="0,50" StackGrowth="Right">
+
+			<Label Anchor="L,C" String="LOC_REPORTS_SORT_BY" />
+			<PullDown ID="SortPulldown" Size="200,26" ScrollThreshold="450" SpaceForScroll="0">
+				<ButtonData>
+					<GridButton ID="SortButton" Size="194,26" Style="TreeOptionText">
+						<GridData Texture="Controls_Dropdown2" StateOffsetIncrement="0,26" SliceCorner="30,14" SliceSize="1,1" SliceTextureSize="41,26"/>
+					</GridButton>
+				</ButtonData>
+				<GridData Offset="0,25" Texture="Controls_OptionPanel" SliceCorner="3,3" SliceSize="10,52" SliceTextureSize="16,64"/>
+				<ScrollPanelData Anchor="C,C" Vertical="1" Size="18,18" AutoScrollBar="1">
+					<ScrollBar Style="Slider_Vert" Anchor="R,C" AnchorSide="O,I"/>
+					<UpButton Style="Scroll_Up" Anchor="R,T" AnchorSide="O,I"/>
+					<DownButton Style="Scroll_Down" Anchor="R,B" AnchorSide="O,I"/>
+				</ScrollPanelData>
+				<StackData StackGrowth="Bottom" Anchor="C,T" Padding="0"/>
+				<InstanceData Name="SortItemInstance">
+					<GridButton ID="Button" Style="ButtonControl" Anchor="L,T" Size="192,30">
+						<Label		ID="DescriptionText" Offset="8,8" Style="FontNormal14" Color="255,255,255,255"/>
+					</GridButton>
+				</InstanceData>
+			</PullDown>
+
+			<Container Size="30,1" />
+
+			<Label Anchor="L,C" String="LOC_REPORTS_ORDER_CIVS_BY" /> 
+			<PullDown ID="OrderPulldown" Size="200,26" ScrollThreshold="450" SpaceForScroll="0">
+				<ButtonData>
+					<GridButton ID="OrderButton" Size="194,26" Style="TreeOptionText">
+						<GridData Texture="Controls_Dropdown2" StateOffsetIncrement="0,26" SliceCorner="30,14" SliceSize="1,1" SliceTextureSize="41,26"/>
+					</GridButton>
+				</ButtonData>
+				<GridData Offset="0,25" Texture="Controls_OptionPanel" SliceCorner="3,3" SliceSize="10,52" SliceTextureSize="16,64"/>
+				<ScrollPanelData Anchor="C,C" Vertical="1" Size="18,18" AutoScrollBar="1">
+					<ScrollBar Style="Slider_Vert" Anchor="R,C" AnchorSide="O,I"/>
+					<UpButton Style="Scroll_Up" Anchor="R,T" AnchorSide="O,I"/>
+					<DownButton Style="Scroll_Down" Anchor="R,B" AnchorSide="O,I"/>
+				</ScrollPanelData>
+				<StackData StackGrowth="Bottom" Anchor="C,T" Padding="0"/>
+				<InstanceData Name="OrderItemInstance">
+					<GridButton ID="Button" Style="ButtonControl" Anchor="L,T" Size="192,30">
+						<Label		ID="DescriptionText" Offset="8,8" Style="FontNormal14" Color="255,255,255,255"/>
+					</GridButton>
+				</InstanceData>
+			</PullDown>
+		</Stack>
+		<Grid															Anchor="C,T"	Offset="0,78"		Size="parent-6,8"					Style="Divider3Grid" />
+		<ScrollPanel	ID="CrisisDetailScrollPanel" Anchor="C,T" Offset="0,84" Size="parent-30,parent-90" Vertical="1">
+			<Stack			ID="ResourceStack" Padding="2" Anchor="C,T"/>
+			<ScrollBar											Anchor="R,C" AnchorSide="O,I" Style="ScrollVerticalBarHighContrast"/>
+		</ScrollPanel>
   </Box>
 
 	

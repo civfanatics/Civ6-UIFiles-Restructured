@@ -2,20 +2,24 @@
 <Database>
 	<Colors>
 		<Row>
-			<Type>COLOR_CLEAR</Type>
-			<Color>COLOR_STANDARD_WHITE_LT,0</Color>
+			<Type>COLOR_UNKNOWN</Type>
+			<Color>255,255,255,255</Color>
 		</Row>
 		<Row>
-			<Type>COLOR_ALPHA_GREY</Type>
-			<Color>COLOR_STANDARD_WHITE_MD2,115</Color>
+			<Type>COLOR_CLEAR</Type>
+			<Color>255,255,255,0</Color>
 		</Row>
 		<Row>
 			<Type>COLOR_WHITE</Type>
-			<Color>COLOR_STANDARD_WHITE_LT</Color>
+			<Color>255,255,255,255</Color>
 		</Row>
 		<Row>
 			<Type>COLOR_BLACK</Type>
 			<Color>0,0,0,255</Color>
+		</Row>
+		<Row>
+			<Type>COLOR_ALPHA_GREY</Type>
+			<Color>COLOR_STANDARD_WHITE_MD2,115</Color>
 		</Row>
 		<Row>
 			<Type>COLOR_DARK_GREY</Type>

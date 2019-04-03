@@ -1409,7 +1409,7 @@ function AddPortrait(icon, color)
 				instance.PortraitIcon:SetColor(color);
 			end
 		else
-			instance.PortraitIcon:SetColor(1,1,1);
+			instance.PortraitIcon:SetColor(UI.GetColorValue(1,1,1));
 		end
 		instance.Root:SetHide(not success);
 

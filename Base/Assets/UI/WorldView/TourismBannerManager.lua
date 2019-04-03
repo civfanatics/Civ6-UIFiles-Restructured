@@ -160,7 +160,7 @@ function TourismBanner.Refresh( self:TourismBanner )
 		
 			-- Update tourism animation
 			local backColor:number, frontColor:number  = UI.GetPlayerColors( self.m_PlayerID );
-			local brighterBackColor = DarkenLightenColor(backColor,90,255);
+			local brighterBackColor = UI.DarkenLightenColor(backColor,90,255);
 			local tourismScore:number = pPlayerCulture:GetTourismAt( self.m_PlotID );
 			if tourismScore >= TOURISM_SCORE_HIGH then
 				-- High tourism
@@ -233,15 +233,19 @@ function RefreshBanners()
 				-- Check if we need to delete a banner because the plot no longer has any tourism value
 				local shouldDelete:boolean = true;
 
-				local pPlayer:table = Players[instance.m_PlayerID];
-				if pPlayer then
-					local pPlayerCulture:table = pPlayer:GetCulture();
-					if pPlayerCulture then
-						-- If we have a tourism value make sure we don't delete it and update the tourism value and number of tourists
-						local tourismValue:number = pPlayerCulture:GetTourismAt( instance.m_PlotID );
-						if tourismValue > 0 then
-							shouldDelete = false;
-							instance:Refresh();
+				-- Confirm the player still owns this plot
+				local pPlot:table = Map.GetPlotByIndex(instance.m_PlotID);
+				if pPlot:GetOwner() == instance.m_PlayerID then
+					local pPlayer:table = Players[instance.m_PlayerID];
+					if pPlayer then
+						local pPlayerCulture:table = pPlayer:GetCulture();
+						if pPlayerCulture then
+							-- If we have a tourism value make sure we don't delete it and update the tourism value and number of tourists
+							local tourismValue:number = pPlayerCulture:GetTourismAt( instance.m_PlotID );
+							if tourismValue > 0 then
+								shouldDelete = false;
+								instance:Refresh();
+							end
 						end
 					end
 				end
@@ -289,14 +293,14 @@ function OnLensLayerOn( layerNum:number )
 		CreateTourismBanners( Game.GetLocalPlayer() );
 
 		-- Refresh all banners
-		RefreshBanners(false);
+		RefreshBanners();
 	end
 end
 
 -- ===========================================================================
 function OnLensLayerOff( layerNum:number )
 	if layerNum == m_TouristTokens then
-		RefreshBanners(false);
+		RefreshBanners();
 	end
 end
 
@@ -305,8 +309,16 @@ function OnContextInitialize( isReload:boolean )
 	if isReload then
 		if UILens.IsLayerOn( m_TouristTokens ) then
 			CreateTourismBanners( Game.GetLocalPlayer() );
-			RefreshBanners(false);
+			RefreshBanners();
 		end
+	end
+end
+
+-- ===========================================================================
+function OnCityOccupationChanged( playerID: number, cityID : number )
+	if UILens.IsLayerOn( m_TouristTokens ) then
+		CreateTourismBanners( Game.GetLocalPlayer() );
+		RefreshBanners();
 	end
 end
 
@@ -316,6 +328,7 @@ function Initialize()
 	Events.Camera_Updated.Add( OnCameraUpdate );
 	Events.LensLayerOn.Add(	OnLensLayerOn );
 	Events.LensLayerOff.Add( OnLensLayerOff );
+	Events.CityOccupationChanged.Add( OnCityOccupationChanged );
 
 	ContextPtr:SetInitHandler( OnContextInitialize );
 end

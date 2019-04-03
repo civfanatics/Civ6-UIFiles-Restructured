@@ -137,13 +137,23 @@
 	</Instance>
 
 	<Instance						Name="PastRecruitmentInstance">
-		<Grid							ID="Content"																						Size="parent-20,68" 	Color="GreatPeopleRowUnOwned"	Style="SubContainer2">
-			<Label					ID="EarnDate"							Anchor="L,T"	Offset="0,16"													Color="GreatPeopleRow"				Style="FontNormal14"	String="$EarnDate$" WrapWidth="64" />
-			<Line																			Start="90,2" End="90,41" Width="2" Color="42,57,72,255" />
-			<Label					ID="ClassName"						Anchor="L,T"	Offset="100,7"	WrapWidth="250"				Color="GreatPeopleRow"				Style="FontBoldFlair18"		SmallCaps="22" SmallCapsType="Every" String="$ClassName$" />
-			<Label					ID="GreatPersonInfo"			Anchor="L,T"	Offset="100,25"	WrapWidth="250"				Color="GreatPeopleRow"				Style="FontNormal14"			String="$GreatPersonInfo" />
-			<Line																			Start="340,2" End="340,41"		Width="2" Color="42,57,72,255" />
-      <Container Anchor="L,T" Offset="345,0" Size="68,68">
+		<Grid							ID="Content"																						Size="parent-20,75" 	Color="GreatPeopleRowUnOwned"	Style="SubContainer2">
+			<Container Size="64,parent">
+				<Label ID="EarnDate" Anchor="C,C"	Offset="0,0" Color="GreatPeopleRow" Style="FontNormal14"	String="$EarnDate$" WrapWidth="64" />
+			</Container>
+			<Container Size="2,40" Offset="70,0" Anchor="L,C">
+				<Line Start="0,2" End="0,41" Width="2" Color="42,57,72,255" />
+			</Container>
+			<Container Size="260,parent" Offset="75,0">
+				<Stack StackGrowth="Bottom" Size="parent,auto" Anchor="L,C">
+					<Label ID="ClassName" WrapWidth="260" Color="GreatPeopleRow" Style="FontBoldFlair18" SmallCaps="22" SmallCapsType="Every" String="$ClassName$" />
+					<Label ID="GreatPersonInfo" WrapWidth="260" Color="GreatPeopleRow" Style="FontNormal14" String="$GreatPersonInfo" />
+				</Stack>
+			</Container>
+			<Container Size="2,40" Offset="340,0" Anchor="L,C">
+				<Line Start="0,2" End="0,41" Width="2" Color="42,57,72,255" />
+			</Container>
+      <Container Anchor="L,C" Offset="345,0" Size="68,68">
         <Image Texture="Controls_CircleBacking68" Size="68,68" Anchor="C,C"/>
         <Image  ID="YouIndicator" Hidden="1" Size="64,62" Texture="Diplomacy_YouIndicator" Anchor="C,C"/>
         <Image  ID="RecruitedImage" Anchor="C,C" Size="55,55" Texture="Leaders55" />
@@ -151,7 +161,9 @@
           <Image ID="CivIcon" Anchor="C,C" Texture="CivSymbols22" Size="22,22"/>
         </Image>
 			</Container>
-			<Line																			Start="415,2" End="415,41" Width="2" Color="42,57,72,255" />
+			<Container Size="2,40" Anchor="L,C" Offset="418,0">
+				<Line																			Start="0,2" End="0,41" Width="2" Color="42,57,72,255" />
+			</Container>
 			<Stack					ID="EffectStack"											Offset="420,0" StackGrowth="Right" />
 		</Grid>
 	</Instance>

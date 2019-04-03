@@ -359,8 +359,8 @@ function UpdatePlayerEntry(playerEntry)
 
 	-- Update icon if we're a specific civ
 	if playerEntry.Civ ~= "UNDEFINED" and playerEntry.Civ ~= "RANDOM" then
-		playerEntry.playerInstance.CivIcon:SetIcon("ICON_" .. playerConfig.Name);
-	
+		playerEntry.playerInstance.CivIcon:SetIcon("ICON_" .. playerConfig.Civ);
+
 		local backColor, frontColor = UI.GetPlayerColors(playerEntry.Index);
 		playerEntry.playerInstance.CivIcon:SetColor(frontColor);
 		playerEntry.playerInstance.CivIconBacking:SetColor(backColor);
@@ -1010,7 +1010,7 @@ function ViewPlayerCitiesPage()
 		m_ViewingTab.CitiesInstance.CityList:SetEntrySelectedCallback( OnCitySelected );
 		m_ViewingTab.CitiesInstance.CityList:SetEntries( m_CityEntries, 0 );
 	
-		m_ViewingTab.m_subTabs = CreateTabs( m_ViewingTab.CitiesInstance.TabContainer, 42, 34, 0xFF331D05 );
+		m_ViewingTab.m_subTabs = CreateTabs( m_ViewingTab.CitiesInstance.TabContainer, 42, 34, UI.GetColorValueFromHexLiteral(0xFF331D05) );
 		AddTabSection( m_ViewingTab.m_subTabs, "LOC_WORLDBUILDER_TAB_GENERAL",		ViewPlayerCityGeneralPage, m_ViewingTab.CitiesInstance.TabContainer );
 		AddTabSection( m_ViewingTab.m_subTabs, "LOC_WORLDBUILDER_TAB_DISTRICTS",	ViewPlayerCityDistrictsPage, m_ViewingTab.CitiesInstance.TabContainer );
 		AddTabSection( m_ViewingTab.m_subTabs, "LOC_WORLDBUILDER_TAB_BUILDINGS",	ViewPlayerCityBuildingsPage, m_ViewingTab.CitiesInstance.TabContainer );
@@ -1049,6 +1049,26 @@ function OnLoadGameViewStateDone()
 		OnShow();
 	end 
 
+end
+
+-- ===========================================================================
+function KeyHandler( key:number )
+	if key == Keys.VK_ESCAPE and not ContextPtr:IsHidden() then
+		ContextPtr:SetHide(true);
+		return true;
+	end
+
+	return false;
+end
+
+function OnInputHandler( pInputStruct:table )
+	local uiMsg = pInputStruct:GetMessageType();
+
+	if uiMsg == KeyEvents.KeyUp then 
+		return KeyHandler( pInputStruct:GetKey() ); 
+	end;
+
+	return false;
 end
 
 -- ===========================================================================
@@ -1268,6 +1288,8 @@ function OnInit()
 	-- Title
 	Controls.ModalScreenTitle:SetText( Locale.ToUpper(Locale.Lookup("LOC_WORLD_BUILDER_PLAYER_EDITOR_TT")) );
 
+	ContextPtr:SetInputHandler( OnInputHandler, true );
+
 	-- EraPullDown
 	table.insert(m_EraEntries, { Text="LOC_WORLDBUILDER_DEFAULT", Type="DEFAULT" });
 	for type in GameInfo.Eras() do
@@ -1277,7 +1299,7 @@ function OnInit()
 	-- CivLevelPullDown
 	for type in GameInfo.CivilizationLevels() do
 		local name = type.Name ~= nil and type.Name or type.CivilizationLevelType;
-		table.insert(m_CivLevelEntries, { Text=name, Type=type.CivilizationLevelType });
+		table.insert(m_CivLevelEntries, { Text="LOC_WORLDBUILDER_"..name, Type=type.CivilizationLevelType });
 	end
 
 	-- CivPullDown
@@ -1304,7 +1326,9 @@ function OnInit()
 	table.insert(m_LeaderEntries, { Text="LOC_WORLDBUILDER_RANDOM", Type="RANDOM" });
 	table.insert(m_LeaderEntries, { Text="LOC_WORLDBUILDER_ANY", Type="UNDEFINED" });
 	for type in GameInfo.Leaders() do
-		table.insert(m_LeaderEntries, { Text=type.Name, Type=type.LeaderType });
+		if type.Name ~= "LOC_EMPTY" and type.Name ~= "LOC_LEADER_FREE_CITIES_NAME" then
+			table.insert(m_LeaderEntries, { Text=type.Name, Type=type.LeaderType });
+		end
 	end
 
 	-- TechList
@@ -1327,7 +1351,7 @@ function OnInit()
 		table.insert(m_BuildingEntries, { Text=type.Name, Type=type });
 	end
 
-	m_tabs = CreateTabs( Controls.TabContainer, 42, 34, 0xFF331D05 );
+	m_tabs = CreateTabs( Controls.TabContainer, 42, 34, UI.GetColorValueFromHexLiteral(0xFF331D05) );
 	AddTabSection( m_tabs, "LOC_WORLDBUILDER_TAB_GENERAL",		ViewPlayerGeneralPage, Controls.TabContainer );
 	AddTabSection( m_tabs, "LOC_WORLDBUILDER_TAB_TECHS",		ViewPlayerTechsPage, Controls.TabContainer );
 	AddTabSection( m_tabs, "LOC_WORLDBUILDER_TAB_CIVICS",		ViewPlayerCivicsPage, Controls.TabContainer );

@@ -358,6 +358,10 @@ end
 function OnLocalPlayerTurnEnd()
 	if(GameConfiguration.IsHotseat()) then
 		HideScreen();
+		m_GreatWorks = {};
+		m_GreatWorkIndex = -1;
+		Controls.PreviousGreatWork:SetHide(true);
+		Controls.NextGreatWork:SetHide(true);
 	end
 end
 

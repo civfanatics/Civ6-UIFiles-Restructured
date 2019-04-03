@@ -1,8 +1,5 @@
--- ===========================================================================
---	View list of slots representing districts that can house great works.
---
---	Original Author: Sam Batista
--- ===========================================================================
+-- Copyright 2018-2019, Firaxis Games
+
 include("InstanceManager");
 include("PopupDialog")
 include("GameCapabilities");
@@ -16,28 +13,30 @@ local RELOAD_CACHE_ID:string = "GreatWorksOverview"; -- Must be unique (usually 
 local SIZE_SLOT_TYPE_ICON:number = 40;
 local SIZE_GREAT_WORK_ICON:number = 64;
 local PADDING_PROVIDING_LABEL:number = 10;
-local PADDING_PLACING_DETAILS:number = 5;
-local PADDING_PLACING_ICON:number = 10;
-local PADDING_BUTTON_EDGES:number = 20;
 local MIN_PADDING_SLOTS:number = 2;
 local MAX_PADDING_SLOTS:number = 30;
 local MAX_NUM_SLOTS:number = 6;
+local DEFAULT_LOCK_TURNS:number = 10;
 
 local NUM_RELIC_TEXTURES:number = 24;
 local NUM_ARIFACT_TEXTURES:number = 25;
 local GREAT_WORK_RELIC_TYPE:string = "GREATWORKOBJECT_RELIC";
 local GREAT_WORK_ARTIFACT_TYPE:string = "GREATWORKOBJECT_ARTIFACT";
 
-local LOC_PLACING:string = Locale.Lookup("LOC_GREAT_WORKS_PLACING");
 local LOC_TOURISM:string = Locale.Lookup("LOC_GREAT_WORKS_TOURISM");
 local LOC_THEME_BONUS:string = Locale.Lookup("LOC_GREAT_WORKS_THEMED_BONUS");
 local LOC_SCREEN_TITLE:string = Locale.Lookup("LOC_GREAT_WORKS_SCREEN_TITLE");
-local LOC_ORGANIZE_GREAT_WORKS:string = Locale.Lookup("LOC_GREAT_WORKS_ORGANIZE_GREAT_WORKS");
 
 local DATA_FIELD_SLOT_CACHE:string = "SlotCache";
 local DATA_FIELD_GREAT_WORK_IM:string = "GreatWorkIM";
 local DATA_FIELD_TOURISM_YIELD:string = "TourismYield";
 local DATA_FIELD_THEME_BONUS_IM:string = "ThemeBonusIM";
+
+local DATA_FIELD_CITY_ID			:string = "DataField_CityID";
+local DATA_FIELD_BUILDING_ID		:string = "DataField_BuildingID";
+local DATA_FIELD_GREAT_WORK_INDEX	:string = "DataField_GreatWorkIndex";
+local DATA_FIELD_SLOT_INDEX			:string = "DataField_SlotIndex";
+local DATA_FIELD_GREAT_WORK_TYPE	:string = "DataField_GreatWorkType";
 
 local YIELD_FONT_ICONS:table = {
 	YIELD_FOOD				= "[ICON_FoodLarge]",
@@ -59,11 +58,6 @@ local DEFAULT_GREAT_WORKS_ICONS:table = {
 	GREATWORKSLOT_RELIC		= "ICON_GREATWORKOBJECT_RELIC"
 };
 
-local m_during_move:boolean = false;
-local m_dest_building:number = 0;
-local m_dest_city;
-local m_isLocalPlayerTurn:boolean = true;
-
 -- ===========================================================================
 --	SCREEN VARIABLES
 -- ===========================================================================
@@ -74,12 +68,20 @@ local m_GreatWorkBuildings:table = nil;
 local m_GreatWorkSlotsIM:table = InstanceManager:new("GreatWorkSlot", "TopControl", Controls.GreatWorksStack);
 local m_TotalResourcesIM:table = InstanceManager:new("AgregateResource", "Resource", Controls.TotalResources);
 
+local m_kViableDropTargets:table = {};
+local m_kControlToInstanceMap:table = {};
+local m_uiSelectedDropTarget:table = nil;
 
 -- ===========================================================================
 --	PLAYER VARIABLES
 -- ===========================================================================
 local m_LocalPlayer:table;
 local m_LocalPlayerID:number;
+
+local m_during_move:boolean = false;
+local m_dest_building:number = 0;
+local m_dest_city;
+local m_isLocalPlayerTurn:boolean = true;
 
 -- ===========================================================================
 --	Called every time screen is shown
@@ -99,9 +101,7 @@ function UpdateGreatWorks()
 	m_FirstGreatWork = nil;
 	m_GreatWorkSelected = nil;
 	m_GreatWorkSlotsIM:ResetInstances();
-	Controls.MovingOverlay:SetHide(true);
 	Controls.PlacingContainer:SetHide(true);
-	Controls.PlacingTitle:SetText(LOC_ORGANIZE_GREAT_WORKS);
 	Controls.HeaderStatsContainer:SetHide(false);
 
 	if (m_LocalPlayer == nil) then
@@ -171,8 +171,6 @@ function PopulateGreatWorkSlot(instance:table, pCity:table, pCityBldgs:table, pB
 	instance.DefaultBG:SetHide(false);
 	instance.DisabledBG:SetHide(true);
 	instance.HighlightedBG:SetHide(true);
-	instance.DefaultBG:RegisterCallback(Mouse.eLClick, function() end); -- clear callback
-	instance.HighlightedBG:RegisterCallback(Mouse.eLClick, function() end); -- clear callback
 
 	local buildingType:string = pBuildingInfo.BuildingType;
 	local buildingIndex:number = pBuildingInfo.Index;
@@ -221,7 +219,7 @@ function PopulateGreatWorkSlot(instance:table, pCity:table, pCityBldgs:table, pB
 
 		if firstGreatWork ~= nil and themeDescription ~= nil then
 			local slotTypeIcon:string = "ICON_" .. firstGreatWork.GreatWorkObjectType;
-			if firstGreatWork.GreatWorkObjectType == "GREATWORKOBJECT_ARTIFACT" then
+			if firstGreatWork.GreatWorkObjectType == GREAT_WORK_ARTIFACT_TYPE then
 				slotTypeIcon = slotTypeIcon .. "_" .. firstGreatWork.EraType;
 			end
 
@@ -419,12 +417,19 @@ function PopulateGreatWork(instance:table, pCityBldgs:table, pBuildingInfo:table
 	
 	local buildingIndex:number = pBuildingInfo.Index;
 	local slotTypeIcon:string = DEFAULT_GREAT_WORKS_ICONS[slotType];
+
 	local textureOffsetX:number, textureOffsetY:number, textureSheet:string = IconManager:FindIconAtlas(slotTypeIcon, SIZE_SLOT_TYPE_ICON);
 	if(textureSheet == nil or textureSheet == "") then
 		UI.DataError("Could not find slot type icon in PopulateGreatWork: icon=\""..slotTypeIcon.."\", iconSize="..tostring(SIZE_SLOT_TYPE_ICON));
 	else
 		instance.SlotTypeIcon:SetTexture(textureOffsetX, textureOffsetY, textureSheet);
 	end
+
+	instance[DATA_FIELD_CITY_ID] = pCityBldgs:GetCity():GetID();
+	instance[DATA_FIELD_BUILDING_ID] = buildingIndex;
+	instance[DATA_FIELD_SLOT_INDEX]	= slotIndex;
+	instance[DATA_FIELD_GREAT_WORK_INDEX] = greatWorkIndex;
+	instance[DATA_FIELD_GREAT_WORK_TYPE] = -1;
 	
 	if greatWorkIndex == -1 then
 		instance.GreatWorkIcon:SetHide(true);
@@ -439,25 +444,106 @@ function PopulateGreatWork(instance:table, pCityBldgs:table, pBuildingInfo:table
 			end
 		end
 
-		instance.EmptySlot:RegisterCallback(Mouse.eLClick, function() end); -- clear callback
+		instance.EmptySlot:ClearCallback(Mouse.eLClick);
 		instance.EmptySlot:SetToolTipString(Locale.Lookup("LOC_GREAT_WORKS_EMPTY_TOOLTIP", validWorks));
 	else
 		instance.GreatWorkIcon:SetHide(false);
 
+		local srcGreatWork:number = pCityBldgs:GetGreatWorkInSlot(buildingIndex, slotIndex);
+		local srcGreatWorkType:number = pCityBldgs:GetGreatWorkTypeFromIndex(srcGreatWork);
+		local srcGreatWorkObjectType:string = GameInfo.GreatWorks[srcGreatWorkType].GreatWorkObjectType;
+
+		instance[DATA_FIELD_GREAT_WORK_TYPE] = srcGreatWorkType;
+
 		local greatWorkType:number = pCityBldgs:GetGreatWorkTypeFromIndex(greatWorkIndex);
 		local textureOffsetX:number, textureOffsetY:number, textureSheet:string = GetGreatWorkIcon(GameInfo.GreatWorks[greatWorkType]);
 		instance.GreatWorkIcon:SetTexture(textureOffsetX, textureOffsetY, textureSheet);
-		instance.GreatWorkIcon:SetOffsetVal(-13,-2);
 
 		instance.EmptySlot:SetToolTipString(GetGreatWorkTooltip(pCityBldgs, greatWorkIndex, greatWorkType, pBuildingInfo));
-		instance.EmptySlot:RegisterCallback(Mouse.eLClick, function() OnClickGreatWork(instance.GreatWorkIcon, pCityBldgs, buildingIndex, greatWorkIndex, slotIndex); end);
+		
+		local bAllowMove:boolean = true;
+
+		-- Don't allow moving artifacts if the museum is not full
+		if bAllowMove and srcGreatWorkObjectType == GREAT_WORK_ARTIFACT_TYPE then
+			if not IsBuildingFull(pCityBldgs, buildingIndex) then
+				instance.GreatWorkDraggable:RegisterCallback(Drag.eDragDisabled, function() ShowCannotMoveMessage(Locale.Lookup("LOC_GREAT_WORKS_ARTIFACT_LOCKED_FROM_MOVE")); end);
+				bAllowMove = false;
+			end
+		end
+
+		-- Don't allow moving art that has been recently created
+		if bAllowMove and srcGreatWorkObjectType == "GREATWORKOBJECT_SCULPTURE" or
+			srcGreatWorkObjectType == "GREATWORKOBJECT_LANDSCAPE" or
+			srcGreatWorkObjectType == "GREATWORKOBJECT_PORTRAIT" or
+			srcGreatWorkObjectType == "GREATWORKOBJECT_RELIGIOUS" then
+
+			local iTurnCreated:number = pCityBldgs:GetTurnFromIndex(greatWorkIndex);
+			local iCurrentTurn:number = Game.GetCurrentGameTurn();
+			local iTurnsBeforeMove:number = GlobalParameters.GREATWORK_ART_LOCK_TIME or DEFAULT_LOCK_TURNS;
+			local iTurnsToWait = iTurnCreated + iTurnsBeforeMove - iCurrentTurn;
+			if iTurnsToWait > 0 then
+				instance.GreatWorkDraggable:RegisterCallback(Drag.eDragDisabled, function() ShowCannotMoveMessage(Locale.Lookup("LOC_GREAT_WORKS_LOCKED_FROM_MOVE", iTurnsToWait)); end);
+				bAllowMove = false;
+			end
+		end
+
+		if bAllowMove then
+			instance.GreatWorkDraggable:SetDisabled(false);
+			instance.GreatWorkDraggable:RegisterCallback(Drag.eDown, function(kDragStruct) OnClickGreatWork( kDragStruct,pCityBldgs, buildingIndex, greatWorkIndex, slotIndex ); end);
+			instance.GreatWorkDraggable:RegisterCallback(Drag.eDrop, function(kDragStruct) OnGreatWorkDrop( kDragStruct, instance ); end);
+			instance.GreatWorkDraggable:RegisterCallback(Drag.eDrag, function(kDragStruct) OnGreatWorkDrag( kDragStruct, instance ); end);
+		else
+			instance.GreatWorkDraggable:SetDisabled(true);
+		end
 
 		if m_FirstGreatWork == nil then
 			m_FirstGreatWork = {Index=greatWorkIndex, Building=buildingIndex, CityBldgs=pCityBldgs};
 		end
 	end
 	instance.EmptySlotHighlight:SetHide(true);
+end
+
+-- ===========================================================================
+function OnGreatWorkDrop( kDragStruct:table, kInstance:table )
+	if m_uiSelectedDropTarget ~= nil then
+		if m_uiSelectedDropTarget == Controls.ViewGreatWork then
+			OnViewGreatWork()
+		else
+			local kSelectedDropInstance = m_kControlToInstanceMap[m_uiSelectedDropTarget];
+			if kSelectedDropInstance then
+				MoveGreatWork(kInstance, kSelectedDropInstance);
+			end
+		end
+	end
+	ClearGreatWorkTransfer();
+end
+
+-- ===========================================================================
+function OnGreatWorkDrag( kDragStruct:table, kInstance:table )
+	local uiDragControl:table = kDragStruct:GetControl();
+	local uiBestDropTarget = uiDragControl:GetBestOverlappingControl( m_kViableDropTargets );
 	
+	if uiBestDropTarget then
+		HighlightDropTarget(uiBestDropTarget);
+		m_uiSelectedDropTarget = uiBestDropTarget;
+	else
+		HighlightDropTarget();
+		m_uiSelectedDropTarget = nil;
+	end
+end
+
+-- ===========================================================================
+function HighlightDropTarget( uiBestDropTarget:table )
+	for _,uiDropTarget in ipairs(m_kViableDropTargets) do
+		if uiDropTarget == Controls.ViewGreatWork then
+			Controls.ViewGreatWork:SetSelected(uiBestDropTarget == Controls.ViewGreatWork);
+		else
+			local pDropInstance = m_kControlToInstanceMap[uiDropTarget];
+			if pDropInstance ~= nil then
+				pDropInstance.EmptySlotHighlight:SetHide(uiDropTarget ~= uiBestDropTarget);
+			end
+		end
+	end
 end
 
 -- IMPORTANT: This logic is largely duplicated in GreatWorkFitsTheme() - if you make an update here, make sure to update that function as well
@@ -614,7 +700,7 @@ function AddYield(instance:table, yieldName:string, yieldIcon:string, yieldValue
 	instance.Resource:SetToolTipString(yieldName);
 end
 
-function OnClickGreatWork(greatWorkIcon:table, pCityBldgs:table, buildingIndex:number, greatWorkIndex:number, slotIndex:number)
+function OnClickGreatWork(kDragStruct:table, pCityBldgs:table, buildingIndex:number, greatWorkIndex:number, slotIndex:number)
 
 	-- Don't allow moving great works unless it's the local player's turn
 	if not m_isLocalPlayerTurn then return; end
@@ -623,43 +709,18 @@ function OnClickGreatWork(greatWorkIcon:table, pCityBldgs:table, buildingIndex:n
 	if not CanMoveWorkAtAll(pCityBldgs, buildingIndex, slotIndex) then
 		return;
 	end
-
-	-- If we're already moving a great work, attempt to swap great works
-	if m_GreatWorkSelected ~= nil then
-		local srcSlot:number = m_GreatWorkSelected.Slot;
-		local srcBldgs:table = m_GreatWorkSelected.CityBldgs;
-		local srcBuilding:number = m_GreatWorkSelected.Building;
-
-		if CanMoveGreatWork(srcBldgs, srcBuilding, srcSlot,  pCityBldgs, buildingIndex, slotIndex) then
-			OnClickSlot(pCityBldgs, buildingIndex, slotIndex);
-		end
-		return;
-	end
-	
-	-- TODO: Check to make sure player can move this great work
-	greatWorkIcon:SetHide(true);
 	
 	local greatWorkType:number = pCityBldgs:GetGreatWorkTypeFromIndex(greatWorkIndex);
-	local textureOffsetX:number, textureOffsetY:number, textureSheet:string = GetGreatWorkIcon(GameInfo.GreatWorks[greatWorkType]);
-	Controls.MovingIcon:SetTexture(textureOffsetX, textureOffsetY, textureSheet);
-	Controls.PlacingIcon:SetTexture(textureOffsetX, textureOffsetY, textureSheet);
 
 	-- Subscribe to updates to keep great work icon attached to mouse
-	Controls.MovingOverlay:SetHide(false);
-	m_GreatWorkSelected = {Icon=Controls.MovingIcon, Index=greatWorkIndex, Slot=slotIndex, Building=buildingIndex, CityBldgs=pCityBldgs};
-	m_GreatWorkSelected.Icon:SetOffsetVal(UIManager:GetMousePos());
-	ContextPtr:SetUpdate(OnMouseMove);
-	OnMouseMove();
+	m_GreatWorkSelected = {Index=greatWorkIndex, Slot=slotIndex, Building=buildingIndex, CityBldgs=pCityBldgs};
 
 	-- Set placing label and details
 	Controls.PlacingContainer:SetHide(false);
 	Controls.HeaderStatsContainer:SetHide(true);
-	Controls.PlacingTitle:SetText(LOC_PLACING);
 	Controls.PlacingName:SetText(Locale.ToUpper(Locale.Lookup(GameInfo.GreatWorks[greatWorkType].Name)));
-	Controls.PlacingIcon:SetOffsetX(Controls.PlacingTitle:GetOffsetX() + Controls.PlacingTitle:GetSizeX() + PADDING_PLACING_ICON);
-	Controls.PlacingName:SetOffsetX(Controls.PlacingIcon:GetOffsetX() + Controls.PlacingIcon:GetSizeX() + PADDING_PLACING_DETAILS);
-	Controls.ViewGreatWork:SetSizeX(Controls.ViewGreatWork:GetTextControl():GetSizeX() + PADDING_BUTTON_EDGES);
-	Controls.ViewGreatWork:SetOffsetX(PADDING_BUTTON_EDGES);
+	local textureOffsetX:number, textureOffsetY:number, textureSheet:string = GetGreatWorkIcon(GameInfo.GreatWorks[greatWorkType]);
+	Controls.PlacingIcon:SetTexture(textureOffsetX, textureOffsetY, textureSheet);
 
 	for _:number, destination:table in ipairs(m_GreatWorkBuildings) do
 		local firstValidSlot:number = -1;
@@ -673,21 +734,16 @@ function OnClickGreatWork(greatWorkIcon:table, pCityBldgs:table, buildingIndex:n
 				if firstValidSlot == -1 then
 					firstValidSlot = index;
 				end
-				-- Cache index in local var to ensure it gets boxed in lambda callback
-				local tmpIndex:number = index;
-				local clickSlotCallbak:ifunction = function() OnClickSlot(dstBldgs, dstBuilding, tmpIndex); end
 
 				local slotInstance:table = slotCache[index + 1];
-				slotInstance.EmptySlot:RegisterCallback(Mouse.eLClick, clickSlotCallbak);
-				slotInstance.EmptySlotHighlight:RegisterCallback(Mouse.eLClick, clickSlotCallbak);
-				slotInstance.EmptySlotHighlight:SetHide(false);
+				if slotInstance then
+					table.insert(m_kViableDropTargets, slotInstance.TopControl);
+					m_kControlToInstanceMap[slotInstance.TopControl] = slotInstance;
+				end
 			end
 		end
 
 		if firstValidSlot ~= -1 then
-			local clickSlotCallbak:ifunction = function() OnClickSlot(dstBldgs, dstBuilding, firstValidSlot); end
-			instance.DefaultBG:RegisterCallback(Mouse.eLClick, clickSlotCallbak);
-			instance.HighlightedBG:RegisterCallback(Mouse.eLClick, clickSlotCallbak);
             UI.PlaySound("UI_GreatWorks_Pick_Up");
 		end
 
@@ -695,26 +751,21 @@ function OnClickGreatWork(greatWorkIcon:table, pCityBldgs:table, buildingIndex:n
 		instance.DefaultBG:SetHide(firstValidSlot == -1);
 		instance.DisabledBG:SetHide(firstValidSlot ~= -1);
 	end
+
+	-- Add ViewGreatWorks button to drop targets so we can view specific works
+	table.insert(m_kViableDropTargets, Controls.ViewGreatWork);
 end
 
-function CanMoveWorkAtAll(srcBldgs:table, srcBuilding:number, srcSlot:number, showCannotMovePopup:boolean)
+-- ===========================================================================
+function CanMoveWorkAtAll(srcBldgs:table, srcBuilding:number, srcSlot:number)
 	local srcGreatWork:number = srcBldgs:GetGreatWorkInSlot(srcBuilding, srcSlot);
 	local srcGreatWorkType:number = srcBldgs:GetGreatWorkTypeFromIndex(srcGreatWork);
 	local srcGreatWorkObjectType:string = GameInfo.GreatWorks[srcGreatWorkType].GreatWorkObjectType;
 
-	-- Defaults to true
-	if showCannotMovePopup == nil then showCannotMovePopup = true; end
-
 	-- Don't allow moving artifacts if the museum is not full
-	if (srcGreatWorkObjectType == "GREATWORKOBJECT_ARTIFACT") then
-		local numSlots:number = srcBldgs:GetNumGreatWorkSlots(srcBuilding);
-		for index:number = 0, numSlots - 1 do
-			local greatWorkIndex:number = srcBldgs:GetGreatWorkInSlot(srcBuilding, index);
-			if (greatWorkIndex == -1) then
-				local cannotMoveWorkDialog = PopupDialogInGame:new("CannotMoveWork");
-				cannotMoveWorkDialog:ShowOkDialog(Locale.Lookup("LOC_GREAT_WORKS_ARTIFACT_LOCKED_FROM_MOVE"));
-				return false;
-			end
+	if (srcGreatWorkObjectType == GREAT_WORK_ARTIFACT_TYPE) then
+		if not IsBuildingFull(srcBldgs, srcBuilding) then
+			return false;
 		end
 	end
 
@@ -726,13 +777,9 @@ function CanMoveWorkAtAll(srcBldgs:table, srcBuilding:number, srcSlot:number, sh
 
 		local iTurnCreated:number = srcBldgs:GetTurnFromIndex(srcGreatWork);
 		local iCurrentTurn:number = Game.GetCurrentGameTurn();
-		local iTurnsBeforeMove:number = GlobalParameters.GREATWORK_ART_LOCK_TIME or 10;
+		local iTurnsBeforeMove:number = GlobalParameters.GREATWORK_ART_LOCK_TIME or DEFAULT_LOCK_TURNS;
 		local iTurnsToWait = iTurnCreated + iTurnsBeforeMove - iCurrentTurn;
 		if iTurnsToWait > 0 then
-			if showCannotMovePopup then
-				local cannotMoveWorkDialog = PopupDialogInGame:new("CannotMoveWork");
-				cannotMoveWorkDialog:ShowOkDialog(Locale.Lookup("LOC_GREAT_WORKS_LOCKED_FROM_MOVE", iTurnsToWait));
-			end
 			return false;
 		end
 	end
@@ -740,12 +787,32 @@ function CanMoveWorkAtAll(srcBldgs:table, srcBuilding:number, srcSlot:number, sh
 	return true;
 end
 
+-- ===========================================================================
+function IsBuildingFull( pBuildings:table, buildingIndex:number )
+	local numSlots:number = pBuildings:GetNumGreatWorkSlots(buildingIndex);
+	for index:number = 0, numSlots - 1 do
+		local greatWorkIndex:number = pBuildings:GetGreatWorkInSlot(buildingIndex, index);
+		if (greatWorkIndex == -1) then
+			return false;
+		end
+	end
+
+	return true;
+end
+
+-- ===========================================================================
+function ShowCannotMoveMessage(sMessage:string)
+	local cannotMoveWorkDialog = PopupDialogInGame:new("CannotMoveWork");
+	cannotMoveWorkDialog:ShowOkDialog(sMessage);
+end
+
+-- ===========================================================================
 function CanMoveToSlot(destBldgs:table, destBuilding:number)
 
 	-- Don't allow moving artifacts if the museum is not full
 	local srcGreatWorkType:number = m_GreatWorkSelected.CityBldgs:GetGreatWorkTypeFromIndex(m_GreatWorkSelected.Index);
 	local srcGreatWorkObjectType:string = GameInfo.GreatWorks[srcGreatWorkType].GreatWorkObjectType;
-	if (srcGreatWorkObjectType ~= "GREATWORKOBJECT_ARTIFACT") then
+	if (srcGreatWorkObjectType ~= GREAT_WORK_ARTIFACT_TYPE) then
 	    return true;
 	end
 
@@ -761,6 +828,7 @@ function CanMoveToSlot(destBldgs:table, destBuilding:number)
 	return true;
 end
 
+-- ===========================================================================
 function CanMoveGreatWork(srcBldgs:table, srcBuilding:number, srcSlot:number, dstBldgs:table, dstBuilding:number, dstSlot:number)
 
 	local srcGreatWork:number = srcBldgs:GetGreatWorkInSlot(srcBuilding, srcSlot);
@@ -775,7 +843,9 @@ function CanMoveGreatWork(srcBldgs:table, srcBuilding:number, srcSlot:number, ds
 		-- Ensure source great work can be placed into destination slot
 		if dstSlotTypeString == row.GreatWorkSlotType and srcGreatWorkObjectType == row.GreatWorkObjectType then
 			if dstGreatWork == -1 then
-				return true;
+				-- Artifacts can never be moved to an empty slot as
+				-- they can only be swapped between other full museums
+				return row.GreatWorkObjectType ~= GREAT_WORK_ARTIFACT_TYPE;
 			else -- If destination slot has a great work, ensure it can be swapped to the source slot
 				local srcSlotType:number = srcBldgs:GetGreatWorkSlotType(srcBuilding, srcSlot);
 				local srcSlotTypeString:string = GameInfo.GreatWorkSlotTypes[srcSlotType].GreatWorkSlotType;
@@ -785,7 +855,7 @@ function CanMoveGreatWork(srcBldgs:table, srcBuilding:number, srcSlot:number, ds
 				
 				for row in GameInfo.GreatWork_ValidSubTypes() do
 					if srcSlotTypeString == row.GreatWorkSlotType and dstGreatWorkObjectType == row.GreatWorkObjectType then
-						return CanMoveWorkAtAll(dstBldgs, dstBuilding, dstSlot, false);
+						return CanMoveWorkAtAll(dstBldgs, dstBuilding, dstSlot);
 					end
 				end
 			end
@@ -794,40 +864,64 @@ function CanMoveGreatWork(srcBldgs:table, srcBuilding:number, srcSlot:number, ds
 	return false;
 end
 
-function OnClickSlot(pCityBldgs:table, buildingIndex:number, slotIndex:number)
-	if m_GreatWorkSelected ~= nil and m_GreatWorkSelected.CityBldgs:GetCity() ~= nil then
-		print("moving great work ["..slotIndex.."] from "..Locale.Lookup(m_GreatWorkSelected.CityBldgs:GetCity():GetName()).." to "..Locale.Lookup(pCityBldgs:GetCity():GetName()));
-
-		-- Don't allow moving artifacts to a museum that is not full
-		if not CanMoveToSlot(pCityBldgs, buildingIndex, slotIndex) then
-			return;
+-- ===========================================================================
+function MoveGreatWork( kSrcInstance:table, kDestInstance:table )
+	if kSrcInstance ~= nil and kDestInstance ~= nil then
+		-- Swap instance great work icons while we wait for the game core to update
+		local sourceGreatWorkType:number = kSrcInstance[DATA_FIELD_GREAT_WORK_TYPE];
+		local destGreatWorkType:number = kDestInstance[DATA_FIELD_GREAT_WORK_TYPE];
+		
+		if destGreatWorkType == -1 then
+			kSrcInstance.GreatWorkIcon:SetHide(true);
+		else
+			local textureOffsetX:number, textureOffsetY:number, textureSheet:string = GetGreatWorkIcon(GameInfo.GreatWorks[destGreatWorkType]);
+			kSrcInstance.GreatWorkIcon:SetHide(false);
+			kSrcInstance.GreatWorkIcon:SetTexture(textureOffsetX, textureOffsetY, textureSheet);
 		end
 
-		m_dest_building = buildingIndex;
-		m_dest_city = pCityBldgs:GetCity():GetID();
+		if sourceGreatWorkType == -1 then
+			kDestInstance.GreatWorkIcon:SetHide(true);
+		else
+			local textureOffsetX:number, textureOffsetY:number, textureSheet:string = GetGreatWorkIcon(GameInfo.GreatWorks[sourceGreatWorkType]);
+			kDestInstance.GreatWorkIcon:SetHide(false);
+			kDestInstance.GreatWorkIcon:SetTexture(textureOffsetX, textureOffsetY, textureSheet);
+		end
+		
+		m_dest_building = kDestInstance[DATA_FIELD_BUILDING_ID];
+		m_dest_city = kDestInstance[DATA_FIELD_CITY_ID];
 	
 		local tParameters = {};
 		tParameters[PlayerOperations.PARAM_PLAYER_ONE] = Game.GetLocalPlayer();
-		tParameters[PlayerOperations.PARAM_CITY_SRC] = m_GreatWorkSelected.CityBldgs:GetCity():GetID();
-		tParameters[PlayerOperations.PARAM_CITY_DEST] = pCityBldgs:GetCity():GetID();
-		tParameters[PlayerOperations.PARAM_GREAT_WORK_INDEX] = m_GreatWorkSelected.Index;
-		tParameters[PlayerOperations.PARAM_BUILDING_SRC] = m_GreatWorkSelected.Building;
-		tParameters[PlayerOperations.PARAM_BUILDING_DEST] = buildingIndex;
-		tParameters[PlayerOperations.PARAM_SLOT] = slotIndex;
+		tParameters[PlayerOperations.PARAM_CITY_SRC] = kSrcInstance[DATA_FIELD_CITY_ID];
+		tParameters[PlayerOperations.PARAM_CITY_DEST] = kDestInstance[DATA_FIELD_CITY_ID];
+		tParameters[PlayerOperations.PARAM_BUILDING_SRC] = kSrcInstance[DATA_FIELD_BUILDING_ID];
+		tParameters[PlayerOperations.PARAM_BUILDING_DEST] = kDestInstance[DATA_FIELD_BUILDING_ID];
+		tParameters[PlayerOperations.PARAM_GREAT_WORK_INDEX] = kSrcInstance[DATA_FIELD_GREAT_WORK_INDEX];
+		tParameters[PlayerOperations.PARAM_SLOT] = kDestInstance[DATA_FIELD_SLOT_INDEX];
 		UI.RequestPlayerOperation(Game.GetLocalPlayer(), PlayerOperations.MOVE_GREAT_WORK, tParameters);
 
 		UI.PlaySound("UI_GreatWorks_Put_Down");
-
-		-- Clear the transfer, but don't do an update, that will be handled when the move completes.
-		m_GreatWorkSelected = nil;
 	end
 	ContextPtr:ClearUpdate();
 end
 
+-- ===========================================================================
 function ClearGreatWorkTransfer()
 	m_GreatWorkSelected = nil;
+	m_kViableDropTargets = {};
+	m_kControlToInstanceMap = {};
+
+	for _:number, destination:table in ipairs(m_GreatWorkBuildings) do
+		local instance:table = destination.Instance;
+		instance.HighlightedBG:SetHide(true);
+		instance.DefaultBG:SetHide(false);
+		instance.DisabledBG:SetHide(true);
+	end
+
+	Controls.PlacingContainer:SetHide(true);
+	Controls.HeaderStatsContainer:SetHide(false);
+
 	ContextPtr:ClearUpdate();
-	UpdateData();
 end
 
 -- ===========================================================================
@@ -901,16 +995,7 @@ function OnInputHandler(pInputStruct:table)
 	end
 	return false;
 end
--- ===========================================================================
-function OnMouseMove()
-	if m_GreatWorkSelected ~= nil then
-		local mouseX:number, mouseY:number = UIManager:GetMousePos();
-		local screenWidth:number, screenHeight:number = UIManager:GetScreenSizeVal();
-		mouseX = mouseX - (screenWidth - 1024) / 2;
-		mouseY = mouseY - (screenHeight - 768) / 2;
-		m_GreatWorkSelected.Icon:SetOffsetVal(mouseX, mouseY);
-	end
-end
+
 -- ===========================================================================
 function OnViewGallery()
 	if m_FirstGreatWork ~= nil then
@@ -921,11 +1006,13 @@ function OnViewGallery()
         UI.PlaySound("Play_GreatWorks_Gallery_Ambience");
 	end
 end
+
 -- ===========================================================================
 function OnViewGreatWork()
 	if m_GreatWorkSelected ~= nil then
 		ViewGreatWork(m_GreatWorkSelected);
 		ClearGreatWorkTransfer();
+		UpdateData();
         UI.PlaySound("Play_GreatWorks_Gallery_Ambience");
 	end
 end

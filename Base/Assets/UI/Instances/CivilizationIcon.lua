@@ -1,7 +1,4 @@
---[[
--- Created by Samuel Batista on Friday Apr 19 2017
--- Copyright (c) Firaxis Games
---]]
+-- Copyright 2017-2019, Firaxis Games
 
 include("LuaClass");
 include("Colors");
@@ -18,7 +15,6 @@ CivilizationIcon = LuaClass:Extend()
 CivilizationIcon.m_CivTooltip = {};
 TTManager:GetTypeControlTable("CivTooltip", CivilizationIcon.m_CivTooltip);
 
-CivilizationIcon.UNKNOWN_COLOR = RGBAValuesToABGRHex(1, 1, 1, 1);
 CivilizationIcon.ICON_UNKNOWN_CIV = "ICON_CIVILIZATION_UNKNOWN";
 CivilizationIcon.DATA_FIELD_CLASS = "CIVILIZATION_ICON_CLASS";
 
@@ -95,17 +91,18 @@ function CivilizationIcon:ColorCivIcon(playerID:number, showCivIcon:boolean)
 			self.Controls.CivIconBacking:SetColor(backColor);
 		else
 			self.Controls.CivBacking_Base:SetColor(backColor);
-			self.Controls.CivBacking_Lighter:SetColor(DarkenLightenColor(backColor, 80, 255));
-			self.Controls.CivBacking_Darker:SetColor(DarkenLightenColor(backColor, -55, 230));
+			self.Controls.CivBacking_Lighter:SetColor(UI.DarkenLightenColor(backColor, 80, 255));
+			self.Controls.CivBacking_Darker:SetColor(UI.DarkenLightenColor(backColor, -55, 230));
 		end
 	else
-		self.Controls.CivIcon:SetColor(self.UNKNOWN_COLOR);
+		local COLOR_UNKNOWN = UI.GetColorValue("COLOR_UNKNOWN");
+		self.Controls.CivIcon:SetColor(COLOR_UNKNOWN);
 		if self.Controls.CivIconBacking then
-			self.Controls.CivIconBacking:SetColor(self.UNKNOWN_COLOR);
+			self.Controls.CivIconBacking:SetColor(COLOR_UNKNOWN);
 		else
-			self.Controls.CivBacking_Base:SetColor(self.UNKNOWN_COLOR);
-			self.Controls.CivBacking_Lighter:SetColor(self.UNKNOWN_COLOR);
-			self.Controls.CivBacking_Darker:SetColor(self.UNKNOWN_COLOR);
+			self.Controls.CivBacking_Base:SetColor(COLOR_UNKNOWN);
+			self.Controls.CivBacking_Lighter:SetColor(COLOR_UNKNOWN);
+			self.Controls.CivBacking_Darker:SetColor(COLOR_UNKNOWN);
 		end
 	end
 end

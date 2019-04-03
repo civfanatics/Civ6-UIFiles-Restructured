@@ -544,6 +544,7 @@ function BuildGameSetup(createParameterFunc)
 	g_GameParameters.Parameter_PostProcess = GameParameters_PostProcess;
 	g_GameParameters.Parameter_SyncAuxConfigurationValues = GameParameters_SyncAuxConfigurationValues;
 	g_GameParameters.Config_WriteAuxParameterValues = GameParameters_WriteAuxParameterValues;
+	g_GameParameters.UI_BeforeRefresh = UI_BeforeRefresh;
 	g_GameParameters.UI_AfterRefresh = GameParameters_UI_AfterRefresh;
 	g_GameParameters.UI_CreateParameter = createParameterFunc ~= nil and createParameterFunc or GameParameters_UI_CreateParameter;
 	g_GameParameters.UI_DestroyParameter = UI_DestroyParameter;

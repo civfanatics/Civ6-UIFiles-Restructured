@@ -7,18 +7,20 @@
 --	it will fire twice for a local player when starting at a later era.
 -- ===========================================================================
 
-include("PopupSupport");
+include("PopupManager");
 
 
 -- ===========================================================================
 --	CONSTANTS
 -- ===========================================================================
 local debugTest:boolean = false;		-- (false) when true run test on hotload
-local RELOAD_CACHE_AND_LOCK_ID	:string = "EraCompletePopup";
+local RELOAD_CACHE_ID	:string = "EraCompletePopup";
+
 
 -- ===========================================================================
---	VARIABLES
+--	MEMBERS
 -- ===========================================================================
+local m_kPopupMgr			:table	 = ExclusivePopupManager:new("EraCompletePopupBase");
 local m_lastShownEraIndex	:number = -1;
 local m_isClosing			:boolean = false;
 
@@ -47,8 +49,7 @@ end
 
 -- ===========================================================================
 function StartEraShow()
-
-	LockPopupSequence(RELOAD_CACHE_AND_LOCK_ID, PopupPriority.High);
+	m_kPopupMgr:Lock( ContextPtr, PopupPriority.High );	
 	m_isClosing = false;
 	
 	local eraName :string = GameInfo.Eras[m_lastShownEraIndex].Name;
@@ -97,7 +98,7 @@ end
 function Close()
 	if not m_isClosing then
 		m_isClosing = true;
-		UnlockPopupSequence();
+		m_kPopupMgr:Unlock();
 		Controls.EraPopupAnimation:Stop();
 		Controls.HeaderSlide:Stop();		
 	end
@@ -144,6 +145,7 @@ function OnGameDebugReturn( context:string, contextTable:table )
 	end
 	
 	m_lastShownEraIndex = contextTable["m_lastShownEraIndex"];
+	m_kPopupMgr.FromTable( contextTable["m_kPopupMgr"], ContextPtr );
 	if (contextTable["isHidden"]==false) then
 		StartEraShow()
 	end
@@ -155,7 +157,7 @@ end
 -- ===========================================================================
 function OnInit( isReload:boolean )
 	if isReload or debugTest then
-		LuaEvents.GameDebug_GetValues(RELOAD_CACHE_AND_LOCK_ID);				
+		LuaEvents.GameDebug_GetValues(RELOAD_CACHE_ID);				
 	end
 end
 
@@ -163,11 +165,12 @@ end
 --	UI Event Handler
 -- ===========================================================================
 function OnShutdown()
-	if IsLocked() then
-		UnlockPopupSequence();
+	if m_kPopupMgr:IsLocked() then								
+		m_kPopupMgr:Unlock();
 	end
-	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_AND_LOCK_ID, "isHidden", ContextPtr:IsHidden() );
-	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_AND_LOCK_ID, "m_lastShownEraIndex", m_lastShownEraIndex );
+	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "isHidden", ContextPtr:IsHidden() );
+	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "m_lastShownEraIndex", m_lastShownEraIndex );
+	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "m_kPopupMgr", m_kPopupMgr.ToTable() );	
 end
 
 -- ===========================================================================

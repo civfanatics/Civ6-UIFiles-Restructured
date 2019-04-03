@@ -303,6 +303,7 @@ end
 -- ===========================================================================
 function SetupButtons()
 
+	local bWorldBuilder = WorldBuilder and WorldBuilder:IsActive();
 	local bIsAutomation = Automation.IsActive();
 	local bIsMultiplayer = GameConfiguration.IsAnyMultiplayer();
 	local bCanSave = CanLocalPlayerSaveGame();
@@ -314,6 +315,14 @@ function SetupButtons()
 					or (GameConfiguration.IsHotseat() and not GameConfiguration.IsSavedGame());
 	local bIsLocalPlayersTurn = IsLocalPlayerTurnActive();
 
+	if(bWorldBuilder) then
+		Controls.ReturnButton:LocalizeAndSetText("{LOC_GAME_MENU_RETURN_TO_WORLDBUILDER:upper}");
+		Controls.SaveGameButton:LocalizeAndSetText("{LOC_SAVE_MAP_BUTTON:upper}");
+	else
+		Controls.ReturnButton:LocalizeAndSetText("{LOC_GAME_MENU_RETURN_TO_GAME:upper}");
+		Controls.SaveGameButton:LocalizeAndSetText("{LOC_GAME_MENU_SAVE:upper}");
+	end
+
 	Controls.QuickSaveButton:SetDisabled( not bCanSave );
 	Controls.SaveGameButton:SetDisabled( not bCanSave );
 	Controls.LoadGameButton:SetDisabled( not bCanLoad );
@@ -322,9 +331,9 @@ function SetupButtons()
 	-- Hide the restart button until functionality is implemented and stable.
 	Controls.RestartGameButton:SetHide(true); -- m_isSimpleMenu or bIsAutomation or bIsMultiplayer);
 
-	Controls.QuickSaveButton:SetHide(m_isSimpleMenu or bIsAutomation);
+	Controls.QuickSaveButton:SetHide(m_isSimpleMenu or bIsAutomation or bWorldBuilder);
 	Controls.SaveGameButton:SetHide(m_isSimpleMenu or bIsAutomation);			
-	Controls.LoadGameButton:SetHide(m_isSimpleMenu or bIsAutomation or bIsMultiplayer);
+	Controls.LoadGameButton:SetHide(m_isSimpleMenu or bIsAutomation or bIsMultiplayer or bWorldBuilder);
 	Controls.OptionsButton:SetHide(bIsAutomation or not CanLocalPlayerChangeOptions());	
 
 	-- Eventually remove this check.  Retiring after winning is perfectly fine
@@ -352,7 +361,7 @@ function SetupButtons()
 		Controls.PBCQuitButton:SetHide(true);
 	end
 
-	Controls.RetireButton:SetHide(m_isSimpleMenu or bIsAutomation or bIsMultiplayer or bAlreadyWon);
+	Controls.RetireButton:SetHide(m_isSimpleMenu or bIsAutomation or bIsMultiplayer or bAlreadyWon or bWorldBuilder);
 	Controls.RestartButton:SetHide( not bCanRestart );
 
 	Controls.ExitGameButton:SetHide(false);	
@@ -375,8 +384,8 @@ function RefreshIconData()
 	m_pPlayer= Players[eLocalPlayer];
 
 	m_primaryColor, m_secondaryColor  = UI.GetPlayerColors( m_pPlayer:GetID() );
-	local darkerBackColor = DarkenLightenColor(m_primaryColor,(-85),100);
-	local brighterBackColor = DarkenLightenColor(m_primaryColor,90,255);
+	local darkerBackColor = UI.DarkenLightenColor(m_primaryColor,(-85),100);
+	local brighterBackColor = UI.DarkenLightenColor(m_primaryColor,90,255);
 
 	-- Icon colors
 	Controls.CivBacking_Base:SetColor(m_primaryColor);

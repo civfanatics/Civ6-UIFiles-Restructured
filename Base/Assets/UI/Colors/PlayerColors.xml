@@ -1,12 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Database>
-	<PlayerColors>
-		<Row>
-			<Type>PLAYERCOLOR_DARK_GRAY</Type>
-			<Usage>Major</Usage>
-			<PrimaryColor>COLOR_STANDARD_WHITE_DK</PrimaryColor>
-			<SecondaryColor>COLOR_STANDARD_YELLOW_MD</SecondaryColor>
-		</Row>
+	<PlayerColors>		
 		<Row>
 			<Type>PLAYERCOLOR_GREEN</Type>
 			<Usage>Major</Usage>
@@ -48,13 +42,7 @@
 			<Usage>Major</Usage>
 			<PrimaryColor>COLOR_STANDARD_YELLOW_MD</PrimaryColor>
 			<SecondaryColor>COLOR_STANDARD_BLUE_DK</SecondaryColor>
-		</Row>
-		<Row>
-			<Type>PLAYERCOLOR_LIGHT_GREEN</Type>
-			<Usage>Major</Usage>
-			<PrimaryColor>COLOR_STANDARD_GREEN_LT</PrimaryColor>
-			<SecondaryColor>COLOR_STANDARD_BLUE_DK</SecondaryColor>
-		</Row>
+		</Row>		
 		<Row>
 			<Type>PLAYERCOLOR_LIGHT_BLUE</Type>
 			<Usage>Major</Usage>
@@ -70,8 +58,8 @@
 		<Row>
 			<Type>PLAYERCOLOR_PURPLE</Type>
 			<Usage>Major</Usage>
-			<PrimaryColor>COLOR_STANDARD_PURPLE_MD</PrimaryColor>
-			<SecondaryColor>COLOR_STANDARD_WHITE_DK</SecondaryColor>
+			<PrimaryColor>COLOR_STANDARD_PURPLE_LT</PrimaryColor>
+			<SecondaryColor>COLOR_STANDARD_PURPLE_DK</SecondaryColor>
 		</Row>
 		<Row>
 			<Type>PLAYERCOLOR_LIGHT_PURPLE</Type>
@@ -83,31 +71,25 @@
 			<Type>PLAYERCOLOR_MIDDLE_PURPLE</Type>
 			<Usage>Major</Usage>
 			<PrimaryColor>COLOR_STANDARD_PURPLE_MD</PrimaryColor>
-			<SecondaryColor>COLOR_STANDARD_YELLOW_DK</SecondaryColor>
+			<SecondaryColor>COLOR_STANDARD_AQUA_LT</SecondaryColor>
 		</Row>
 		<Row>
 			<Type>PLAYERCOLOR_LIGHT_ORANGE</Type>
 			<Usage>Major</Usage>
-			<PrimaryColor>COLOR_STANDARD_ORANGE_LT</PrimaryColor>
-			<SecondaryColor>COLOR_STANDARD_GREEN_DK</SecondaryColor>
+			<PrimaryColor>COLOR_STANDARD_ORANGE_MD</PrimaryColor>
+			<SecondaryColor>COLOR_STANDARD_WHITE_DK</SecondaryColor>
 		</Row>
 		<Row>
 			<Type>PLAYERCOLOR_MIDDLE_GREEN</Type>
 			<Usage>Major</Usage>
 			<PrimaryColor>COLOR_STANDARD_GREEN_MD</PrimaryColor>
 			<SecondaryColor>COLOR_STANDARD_AQUA_LT</SecondaryColor>
-		</Row>
-		<Row>
-			<Type>PLAYERCOLOR_DARK_LEMON</Type>
-			<Usage>Major</Usage>
-			<PrimaryColor>COLOR_STANDARD_YELLOW_DK</PrimaryColor>
-			<SecondaryColor>COLOR_STANDARD_WHITE_DK</SecondaryColor>
-		</Row>
+		</Row>		
 		<Row>
 			<Type>PLAYERCOLOR_MIDDLE_BLUE</Type>
 			<Usage>Major</Usage>
 			<PrimaryColor>COLOR_STANDARD_BLUE_MD</PrimaryColor>
-			<SecondaryColor>COLOR_STANDARD_RED_DK</SecondaryColor>
+			<SecondaryColor>COLOR_STANDARD_WHITE_LT</SecondaryColor>
 		</Row>
 		<Row>
 			<Type>PLAYERCOLOR_DARK_BLUE</Type>
@@ -124,7 +106,7 @@
 		<Row>
 			<Type>PLAYERCOLOR_LIGHT_BROWN</Type>
 			<Usage>Major</Usage>
-			<PrimaryColor>COLOR_STANDARD_ORANGE_DK</PrimaryColor>
+			<PrimaryColor>COLOR_STANDARD_ORANGE_LT</PrimaryColor>
 			<SecondaryColor>COLOR_STANDARD_WHITE_DK</SecondaryColor>
 		</Row>
 		<Row>
@@ -134,11 +116,35 @@
 			<SecondaryColor>COLOR_STANDARD_WHITE_LT</SecondaryColor>
 		</Row>
 		<Row>
-			<Type>PLAYERCOLOR_GRAY</Type>
+			<Type>PLAYERCOLOR_DARK_GREEN_AND_YELLOW</Type>
 			<Usage>Major</Usage>
-			<PrimaryColor>COLOR_STANDARD_WHITE_DK</PrimaryColor>
-			<SecondaryColor>COLOR_STANDARD_WHITE_MD2</SecondaryColor>
-		</Row>
+			<PrimaryColor>COLOR_STANDARD_GREEN_DK</PrimaryColor>
+			<SecondaryColor>COLOR_STANDARD_YELLOW_MD</SecondaryColor>
+		</Row>	
+		<Row>
+			<Type>PLAYERCOLOR_DARK_GREEN_AND_LIGHT_GREEN</Type>
+			<Usage>Major</Usage>
+			<PrimaryColor>COLOR_STANDARD_GREEN_DK</PrimaryColor>
+			<SecondaryColor>COLOR_STANDARD_GREEN_LT</SecondaryColor>
+		</Row>	
+		<Row>
+			<Type>PLAYERCOLOR_DARK_RED_AND_CREAM</Type>
+			<Usage>Major</Usage>
+			<PrimaryColor>COLOR_STANDARD_RED_DK</PrimaryColor>
+			<SecondaryColor>COLOR_STANDARD_YELLOW_LT</SecondaryColor>
+		</Row>	
+		<Row>
+			<Type>PLAYERCOLOR_BLUE_AND_AQUA</Type>
+			<Usage>Major</Usage>
+			<PrimaryColor>COLOR_STANDARD_BLUE_MD</PrimaryColor>
+			<SecondaryColor>COLOR_STANDARD_AQUA_LT</SecondaryColor>
+		</Row>		
+		<Row>
+			<Type>PLAYERCOLOR_AQUA_DARK_AND_AQUA_LIGHT</Type>
+			<Usage>Major</Usage>
+			<PrimaryColor>COLOR_STANDARD_BLUE_MD</PrimaryColor>
+			<SecondaryColor>COLOR_STANDARD_AQUA_LT</SecondaryColor>
+		</Row>			
 		<Row>
 			<Type>PLAYERCOLOR_DARK_DARK_GREEN</Type>
 			<Usage>Major</Usage>
@@ -152,10 +158,52 @@
 			<SecondaryColor>COLOR_STANDARD_ORANGE_MD</SecondaryColor>
 		</Row>
 		<Row>
+			<Type>PLAYERCOLOR_LIGHT_GREEN</Type>
+			<Usage>Major</Usage>
+			<PrimaryColor>COLOR_STANDARD_GREEN_LT</PrimaryColor>
+			<SecondaryColor>COLOR_STANDARD_WHITE_DK</SecondaryColor>
+		</Row>
+		<Row>
+			<Type>PLAYERCOLOR_PEACH_AND_GREEN</Type>
+			<Usage>Major</Usage>
+			<PrimaryColor>COLOR_STANDARD_ORANGE_LT</PrimaryColor>
+			<SecondaryColor>COLOR_STANDARD_GREEN_DK</SecondaryColor>
+		</Row>
+		<Row>
+			<Type>PLAYERCOLOR_CREAM_AND_BROWN</Type>
+			<Usage>Major</Usage>
+			<PrimaryColor>COLOR_STANDARD_YELLOW_LT</PrimaryColor>
+			<SecondaryColor>COLOR_STANDARD_ORANGE_DK</SecondaryColor>
+		</Row>
+		<Row>
+			<Type>PLAYERCOLOR_BROWN_AND_CREAM</Type>
+			<Usage>Major</Usage>
+			<PrimaryColor>COLOR_STANDARD_ORANGE_DK</PrimaryColor>
+			<SecondaryColor>COLOR_STANDARD_YELLOW_LT</SecondaryColor>
+		</Row>
+		<Row>
+			<Type>PLAYERCOLOR_DARK_MAGENTA</Type>
+			<Usage>Major</Usage>
+			<PrimaryColor>COLOR_STANDARD_MAGENTA_DK</PrimaryColor>
+			<SecondaryColor>COLOR_STANDARD_WHITE_LT</SecondaryColor>
+		</Row>
+		<Row>
+			<Type>PLAYERCOLOR_DARK_MAGENTA_AND_YELLOW</Type>
+			<Usage>Major</Usage>
+			<PrimaryColor>COLOR_STANDARD_MAGENTA_DK</PrimaryColor>
+			<SecondaryColor>COLOR_STANDARD_YELLOW_MD</SecondaryColor>
+		</Row>
+		<Row>
+			<Type>PLAYERCOLOR_DARK_MAGENTA_AND_BLUE</Type>
+			<Usage>Major</Usage>
+			<PrimaryColor>COLOR_STANDARD_MAGENTA_DK</PrimaryColor>
+			<SecondaryColor>COLOR_STANDARD_BLUE_LT</SecondaryColor>
+		</Row>
+		<Row>
 			<Type>PLAYERCOLOR_RED_AND_GOLD</Type>
 			<Usage>Major</Usage>
 			<PrimaryColor>COLOR_STANDARD_RED_MD</PrimaryColor>
-			<SecondaryColor>COLOR_STANDARD_YELLOW_DK</SecondaryColor>
+			<SecondaryColor>COLOR_STANDARD_YELLOW_MD</SecondaryColor>
 		</Row>
 		<Row>
 			<Type>PLAYERCOLOR_GREEN_AND_BLACK</Type>
@@ -167,7 +215,7 @@
 			<Type>PLAYERCOLOR_DARK_CYAN_AND_LEMON</Type>
 			<Usage>Major</Usage>
 			<PrimaryColor>COLOR_STANDARD_AQUA_DK</PrimaryColor>
-			<SecondaryColor>COLOR_STANDARD_YELLOW_LT</SecondaryColor>
+			<SecondaryColor>COLOR_STANDARD_ORANGE_LT</SecondaryColor>
 		</Row>
 		<Row>
 			<Type>PLAYERCOLOR_BLACK_AND_GREEN</Type>
@@ -196,8 +244,20 @@
 		<Row>
 			<Type>PLAYERCOLOR_ORANGE_AND_GREEN</Type>
 			<Usage>Major</Usage>
-			<PrimaryColor>COLOR_STANDARD_ORANGE_MD</PrimaryColor>
+			<PrimaryColor>COLOR_STANDARD_ORANGE_LT</PrimaryColor>
 			<SecondaryColor>COLOR_STANDARD_GREEN_DK</SecondaryColor>
+		</Row>
+		<Row>
+			<Type>PLAYERCOLOR_DARK_GRAY</Type>
+			<Usage>Major</Usage>
+			<PrimaryColor>COLOR_STANDARD_WHITE_MD</PrimaryColor>
+			<SecondaryColor>COLOR_STANDARD_YELLOW_LT</SecondaryColor>
+		</Row>
+		<Row>
+			<Type>PLAYERCOLOR_GRAY</Type>
+			<Usage>Major</Usage>
+			<PrimaryColor>COLOR_STANDARD_WHITE_MD2</PrimaryColor>
+			<SecondaryColor>COLOR_STANDARD_WHITE_DK</SecondaryColor>
 		</Row>
 		<Row>
 			<Type>CIVILIZATION_BARBARIAN</Type>
@@ -208,7 +268,7 @@
 		<Row>
 			<Type>LEADER_T_ROOSEVELT</Type>
 			<Usage>Unique</Usage>
-			<PrimaryColor>COLOR_STANDARD_BLUE_MD</PrimaryColor>
+			<PrimaryColor>COLOR_STANDARD_BLUE_DK</PrimaryColor>
 			<SecondaryColor>COLOR_STANDARD_WHITE_LT</SecondaryColor>
 			<Alt1PrimaryColor>COLOR_STANDARD_RED_MD</Alt1PrimaryColor>
 			<Alt1SecondaryColor>COLOR_STANDARD_WHITE_LT</Alt1SecondaryColor>
@@ -220,14 +280,14 @@
 		<Row>
 			<Type>LEADER_SALADIN</Type>
 			<Usage>Unique</Usage>
-			<PrimaryColor>COLOR_STANDARD_YELLOW_DK</PrimaryColor>
-			<SecondaryColor>COLOR_STANDARD_GREEN_MD</SecondaryColor>
+			<PrimaryColor>COLOR_STANDARD_YELLOW_MD</PrimaryColor>
+			<SecondaryColor>COLOR_STANDARD_GREEN_DK</SecondaryColor>
 			<Alt1PrimaryColor>COLOR_STANDARD_GREEN_DK</Alt1PrimaryColor>
-			<Alt1SecondaryColor>COLOR_STANDARD_GREEN_MD</Alt1SecondaryColor>
-			<Alt2PrimaryColor>COLOR_STANDARD_GREEN_DK</Alt2PrimaryColor>
-			<Alt2SecondaryColor>COLOR_STANDARD_WHITE_LT</Alt2SecondaryColor>
-			<Alt3PrimaryColor>COLOR_STANDARD_YELLOW_MD</Alt3PrimaryColor>
-			<Alt3SecondaryColor>COLOR_STANDARD_WHITE_LT</Alt3SecondaryColor>
+			<Alt1SecondaryColor>COLOR_STANDARD_GREEN_LT</Alt1SecondaryColor>
+			<Alt2PrimaryColor>COLOR_STANDARD_GREEN_LT</Alt2PrimaryColor>
+			<Alt2SecondaryColor>COLOR_STANDARD_WHITE_DK</Alt2SecondaryColor>
+			<Alt3PrimaryColor>COLOR_STANDARD_YELLOW_DK</Alt3PrimaryColor>
+			<Alt3SecondaryColor>COLOR_STANDARD_GREEN_MD</Alt3SecondaryColor>
 		</Row>
 		<Row>
 			<Type>LEADER_PEDRO</Type>
@@ -237,9 +297,9 @@
 			<Alt1PrimaryColor>COLOR_STANDARD_GREEN_MD</Alt1PrimaryColor>
 			<Alt1SecondaryColor>COLOR_STANDARD_BLUE_DK</Alt1SecondaryColor>
 			<Alt2PrimaryColor>COLOR_STANDARD_YELLOW_MD</Alt2PrimaryColor>
-			<Alt2SecondaryColor>COLOR_STANDARD_GREEN_MD</Alt2SecondaryColor>
+			<Alt2SecondaryColor>COLOR_STANDARD_GREEN_DK</Alt2SecondaryColor>
 			<Alt3PrimaryColor>COLOR_STANDARD_BLUE_DK</Alt3PrimaryColor>
-			<Alt3SecondaryColor>COLOR_STANDARD_GREEN_MD</Alt3SecondaryColor>
+			<Alt3SecondaryColor>COLOR_STANDARD_GREEN_LT</Alt3SecondaryColor>
 		</Row>
 		<Row>
 			<Type>LEADER_QIN</Type>
@@ -258,7 +318,7 @@
 			<Usage>Unique</Usage>
 			<PrimaryColor>COLOR_STANDARD_AQUA_DK</PrimaryColor>
 			<SecondaryColor>COLOR_STANDARD_YELLOW_LT</SecondaryColor>
-			<Alt1PrimaryColor>COLOR_STANDARD_YELLOW_MD</Alt1PrimaryColor>
+			<Alt1PrimaryColor>COLOR_STANDARD_YELLOW_LT</Alt1PrimaryColor>
 			<Alt1SecondaryColor>COLOR_STANDARD_PURPLE_MD</Alt1SecondaryColor>
 			<Alt2PrimaryColor>COLOR_STANDARD_YELLOW_LT</Alt2PrimaryColor>
 			<Alt2SecondaryColor>COLOR_STANDARD_AQUA_DK</Alt2SecondaryColor>
@@ -358,7 +418,7 @@
 			<Alt1SecondaryColor>COLOR_STANDARD_YELLOW_MD</Alt1SecondaryColor>
 			<Alt2PrimaryColor>COLOR_STANDARD_GREEN_LT</Alt2PrimaryColor>
 			<Alt2SecondaryColor>COLOR_STANDARD_ORANGE_MD</Alt2SecondaryColor>
-			<Alt3PrimaryColor>COLOR_STANDARD_ORANGE_MD</Alt3PrimaryColor>
+			<Alt3PrimaryColor>COLOR_STANDARD_ORANGE_DK</Alt3PrimaryColor>
 			<Alt3SecondaryColor>COLOR_STANDARD_GREEN_LT</Alt3SecondaryColor>
 		</Row>
 		<Row>
@@ -370,13 +430,13 @@
 			<Alt1SecondaryColor>COLOR_STANDARD_BLUE_MD</Alt1SecondaryColor>
 			<Alt2PrimaryColor>COLOR_STANDARD_BLUE_MD</Alt2PrimaryColor>
 			<Alt2SecondaryColor>COLOR_STANDARD_WHITE_LT</Alt2SecondaryColor>
-			<Alt3PrimaryColor>COLOR_STANDARD_BLUE_MD</Alt3PrimaryColor>
+			<Alt3PrimaryColor>COLOR_STANDARD_BLUE_DK</Alt3PrimaryColor>
 			<Alt3SecondaryColor>COLOR_STANDARD_RED_LT</Alt3SecondaryColor>
 		</Row>
 		<Row>
 			<Type>LEADER_TOMYRIS</Type>
 			<Usage>Unique</Usage>
-			<PrimaryColor>COLOR_STANDARD_YELLOW_LT</PrimaryColor>
+			<PrimaryColor>COLOR_STANDARD_ORANGE_LT</PrimaryColor>
 			<SecondaryColor>COLOR_STANDARD_RED_DK</SecondaryColor>
 			<Alt1PrimaryColor>COLOR_STANDARD_ORANGE_DK</Alt1PrimaryColor>
 			<Alt1SecondaryColor>COLOR_STANDARD_WHITE_LT</Alt1SecondaryColor>
@@ -429,7 +489,7 @@
 			<Alt1PrimaryColor>COLOR_STANDARD_RED_DK</Alt1PrimaryColor>
 			<Alt1SecondaryColor>COLOR_STANDARD_YELLOW_MD</Alt1SecondaryColor>
 			<Alt2PrimaryColor>COLOR_STANDARD_YELLOW_MD</Alt2PrimaryColor>
-			<Alt2SecondaryColor>COLOR_STANDARD_PURPLE_MD</Alt2SecondaryColor>
+			<Alt2SecondaryColor>COLOR_STANDARD_PURPLE_DK</Alt2SecondaryColor>
 			<Alt3PrimaryColor>COLOR_STANDARD_PURPLE_MD</Alt3PrimaryColor>
 			<Alt3SecondaryColor>COLOR_STANDARD_WHITE_LT</Alt3SecondaryColor>
 		</Row>

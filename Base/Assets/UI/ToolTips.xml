@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Context Name="ToolTips" >
- 
-  <AlphaAnim Cycle="Once" Speed="5" AlphaStart="0" AlphaEnd="1" ID="ToolTipRoot" Hidden="1" TutorialActive="1">
-      <SlideAnim Start="20,0" End="0,0" Cycle="once" Speed="7" ID="ToolTipStore" Anchor="L,T" >
-          <Grid Offset="30,5" Size="auto,auto" SizePadding="10,10" Style="TTGrid" Color="White,240" Anchor="L,T" ID="ToolTipGrid" >
-              <Label Offset="-3,-3" Anchor="c,c" ID="ToolTipText" String="Words" Style="TTText" WrapWidth="450" />
-          </Grid>
-      </SlideAnim>
-  </AlphaAnim>
+
+	<AlphaAnim		ID="ToolTipRoot"	Cycle="Once" Speed="5" AlphaStart="0" AlphaEnd="1" Hidden="1" TutorialActive="1">
+		<SlideAnim	ID="ToolTipStore"	Start="20,0" End="0,0" Cycle="once" Speed="7" Anchor="L,T" >
+			<Grid			ID="ToolTipGrid"	Offset="30,5" Size="auto,auto" SizePadding="10,10" Style="TTGrid" Color="White,240" Anchor="L,T"  >
+				<Label	ID="ToolTipText"	Offset="-3,-3" Anchor="c,c" String="Words" Style="TTText" WrapWidth="450" />
+			</Grid>
+		</SlideAnim>
+	</AlphaAnim>
     
     <!-- NOTE:     
                     NEW TOOL TIP TYPES CANNOT BE DEFINED HERE

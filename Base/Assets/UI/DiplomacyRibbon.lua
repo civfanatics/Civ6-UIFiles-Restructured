@@ -37,6 +37,9 @@ function ResetLeaders()
 	m_leadersMet = 0;
 	m_uiLeadersByID = {};
 	m_kLeaderIM:ResetInstances();
+	m_scrollPercent = 0;
+	m_scrollIndex = 0;
+	RealizeScroll();
 end
 
 -- ===========================================================================
@@ -98,8 +101,10 @@ function UpdateLeaders()
 			local isMet			:boolean = kMetPlayers[playerID];
 			local pPlayerConfig	:table = PlayerConfigurations[playerID];
 			if (isMet or (GameConfiguration.IsAnyMultiplayer() and pPlayerConfig:IsHuman())) then
-				if isMet then
-					local leaderName:string = pPlayerConfig:GetLeaderTypeName();
+				local leaderName:string = pPlayerConfig:GetLeaderTypeName();
+				
+				-- If in an MP game and a player leaves the name returned will be NIL.
+				if isMet and (leaderName ~= nil) then					
 					AddLeader("ICON_"..leaderName, playerID, kUniqueLeaders[leaderName]);
 				else
 					AddLeader("ICON_LEADER_DEFAULT", playerID);
@@ -110,6 +115,10 @@ function UpdateLeaders()
 
 	Controls.LeaderStack:CalculateSize();
 	RealizeSize();
+
+	if localPlayer:IsTurnActive() then
+		OnLocalTurnBegin();
+	end
 end
 
 -- ===========================================================================
@@ -278,6 +287,7 @@ function OnDiplomacyWarStateChange(player1ID:number, player2ID:number)
 end
 
 -- ===========================================================================
+--	EVENT
 --	Diplomacy Callback
 -- ===========================================================================
 function OnDiplomacySessionClosed(sessionID:number)
@@ -291,7 +301,6 @@ function OnDiplomacySessionClosed(sessionID:number)
 			UpdateLeaders();
 		end
 	end
-
 end
 
 -- ===========================================================================
@@ -306,27 +315,44 @@ function OnInterfaceModeChanged(eOldMode:number, eNewMode:number)
 	end
 end
 
+
 -- ===========================================================================
 --	EVENT
 -- ===========================================================================
-function OnTurnBegin(playerID:number)
-	local leader:table = m_uiLeadersByID[playerID];
-	if(leader ~= nil) then
-		leader.LeaderContainer:SetToBeginning();
-		leader.LeaderContainer:Play();
+function OnTurnBegin( playerID:number )
+	local uiLeader	:table = m_uiLeadersByID[playerID];
+	if(uiLeader ~= nil) then
+		uiLeader.LeaderContainer:SetToBeginning();
+		uiLeader.LeaderContainer:Play();
 	end
 end
 
 -- ===========================================================================
 --	EVENT
 -- ===========================================================================
-function OnTurnEnd(playerID:number)
-	if(playerID ~= -1) then
-		local leader = m_uiLeadersByID[playerID];
-		if(leader ~= nil) then
-			leader.LeaderContainer:Reverse();
-		end
+function OnTurnEnd( playerID:number )
+	local uiLeader :table = m_uiLeadersByID[playerID];
+	if(uiLeader ~= nil) then
+		uiLeader.LeaderContainer:Reverse();
 	end
+end
+
+-- ===========================================================================
+--	EVENT
+-- ===========================================================================
+function OnLocalTurnBegin()
+	local playerID	:number = Game.GetLocalPlayer();
+	if playerID == -1 then return; end;
+	OnTurnBegin( playerID );
+end
+
+-- ===========================================================================
+--	EVENT
+-- ===========================================================================
+function OnLocalTurnEnd()
+	local playerID	:number = Game.GetLocalPlayer();
+	if playerID == -1 then return; end;
+	OnTurnEnd( playerID );
 end
 
 -- ===========================================================================
@@ -387,6 +413,18 @@ function OnChatPanelShown(fromPlayer:number, stayOnScreen:boolean)
 end
 
 -- ===========================================================================
+function OnLoadGameViewStateDone()
+	if(GameConfiguration.IsAnyMultiplayer()) then
+		for leaderID, uiLeader in pairs(m_uiLeadersByID) do
+			if Players[leaderID]:IsTurnActive() then
+				uiLeader.LeaderContainer:SetToBeginning();
+				uiLeader.LeaderContainer:Play();
+			end
+		end
+	end
+end
+
+-- ===========================================================================
 function LateInitialize()
 	Controls.NextButton:RegisterCallback( Mouse.eLClick, OnScrollLeft );
 	Controls.PreviousButton:RegisterCallback( Mouse.eLClick, OnScrollRight );
@@ -401,14 +439,15 @@ function LateInitialize()
 	Events.InterfaceModeChanged.Add( OnInterfaceModeChanged );
 	Events.RemotePlayerTurnBegin.Add( OnTurnBegin );
 	Events.RemotePlayerTurnEnd.Add( OnTurnEnd );
-	Events.LocalPlayerTurnBegin.Add( function() OnTurnBegin(Game.GetLocalPlayer()); end );
-	Events.LocalPlayerTurnEnd.Add( function() OnTurnEnd(Game.GetLocalPlayer()); end );
+	Events.LocalPlayerTurnBegin.Add( OnLocalTurnBegin );
+	Events.LocalPlayerTurnEnd.Add( OnLocalTurnEnd );
 	Events.MultiplayerPlayerConnected.Add(UpdateLeaders);
 	Events.MultiplayerPostPlayerDisconnected.Add(UpdateLeaders);
 	Events.LocalPlayerChanged.Add(UpdateLeaders);
 	Events.PlayerInfoChanged.Add(UpdateLeaders);
 	Events.PlayerDefeat.Add(UpdateLeaders);
 	Events.PlayerRestored.Add(UpdateLeaders);
+	Events.LoadGameViewStateDone.Add( OnLoadGameViewStateDone );
 
 	LuaEvents.ChatPanel_OnChatReceived.Add(OnChatReceived);
 	LuaEvents.WorldTracker_OnChatShown.Add(OnChatPanelShown);

@@ -19,8 +19,8 @@
               </Grid>
               
               <Container ID="TabContainer" Offset="4,44">
+				<LuaContext	ID="WorldBuilderPlacement"	FileName="WorldBuilderPlacement"/>
                 <LuaContext	ID="WorldBuilderPlotEditor" FileName="WorldBuilderPlotEditor"/>
-                <LuaContext	ID="WorldBuilderPlacement"	FileName="WorldBuilderPlacement"/>
               </Container>
             </Grid>
           </Grid>
@@ -28,8 +28,8 @@
         
         <!--Tab Buttons-->
         <Stack ID="TabButtons" Anchor="R,B" Offset="0,4" StackGrowth="Right">
+		  <GridButton ID="SelectTab_WorldBuilderPlacement"  Style="TabButton" Size="80,35" String="Place" />
           <GridButton ID="SelectTab_WorldBuilderPlotEditor" Style="TabButton" Size="80,35" String="Plot"  />
-          <GridButton ID="SelectTab_WorldBuilderPlacement"  Style="TabButton" Size="80,35" String="Place" />
           <!--<GridButton ID="SelectTab_Paint"      Style="TabButton" Size="80,35" String="Paint"  />-->
           <!--<GridButton ID="SelectTab_EditUnits"  Style="TabButton" Size="80,35" String="Units"  />-->
           <!--<GridButton ID="SelectTab_EditCities" Style="TabButton" Size="80,35" String="Cities" />-->

@@ -1,7 +1,7 @@
--- Copyright 2016-2018, Firaxis Games
+-- Copyright 2016-2019, Firaxis Games
 -- Popup for Natural Wonders
 
-include("PopupSupport");
+include("PopupManager");
 
 
 -- ===========================================================================
@@ -11,8 +11,9 @@ local RELOAD_CACHE_ID:string = "NaturalWonderPopup";
 
 
 -- ===========================================================================
---	CONSTANTS / MEMBERS
+--	MEMBERS
 -- ===========================================================================
+local m_kPopupMgr		:table	 = ExclusivePopupManager:new("NaturalWonderPopup");
 local m_kQueuedPopups	:table	 = {};
 local m_kCurrentPopup	:table	 = nil;
 local m_eCurrentFeature	:number  = -1;
@@ -53,7 +54,7 @@ function Close()
 		LuaEvents.NaturalWonderPopup_Closed();	-- Signal other systems (e.g., bulk show UI)
 		UI.SetInterfaceMode(InterfaceModeTypes.SELECTION);		
 		UILens.RestoreActiveLens();
-		UnlockPopupSequence();		
+		m_kPopupMgr:Unlock();		
 	end		
 end
 
@@ -143,8 +144,8 @@ function OnNaturalWonderRevealed( plotx:number, ploty:number, eFeature:number, i
 		}
 
 		-- Add to queue if already showing a popup
-		if not IsLocked() then								
-			LockPopupSequence( "NaturalWonder", PopupPriority.High );
+		if not m_kPopupMgr:IsLocked() then								
+			m_kPopupMgr:Lock( ContextPtr, PopupPriority.High );
 			ShowPopup( kData );
 			LuaEvents.NaturalWonderPopup_Shown();	-- Signal other systems (e.g., bulk hide UI)
 		else		
@@ -165,7 +166,7 @@ end
 
 -- ===========================================================================
 function OnLocalPlayerTurnEnd()
-	if IsLocked() then
+	if m_kPopupMgr:IsLocked() then
 		m_kQueuedPopups = {};	-- Ensure queue is empty to close immediately.
 		Close();
 	end
@@ -197,7 +198,7 @@ end
 function OnShutdown()
 	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "isHidden", ContextPtr:IsHidden());
 	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "m_kCurrentPopup", m_kCurrentPopup);
-	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "m_popupSupportEventID", m_popupSupportEventID);	-- In popupsupport
+	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "m_kPopupMgr", m_kPopupMgr.ToTable() );
 	if not ContextPtr:IsHidden() then
 		UILens.RestoreActiveLens();
 	end
@@ -212,8 +213,8 @@ function OnGameDebugReturn(context:string, contextTable:table)
 				m_kCurrentPopup = contextTable["m_kCurrentPopup"];
 				ShowPopup(m_kCurrentPopup);
 			end
-		end
-		m_popupSupportEventID = contextTable["m_popupSupportEventID"];
+		end		
+		m_kPopupMgr.FromTable( contextTable["m_kPopupMgr"], ContextPtr );
 	end
 end
 

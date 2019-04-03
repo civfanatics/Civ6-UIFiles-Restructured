@@ -339,6 +339,26 @@ local sectionId = page.SectionId;
 			end		
 		end
 	end
+	
+	local pillageAwards = improvement.PlunderType or NO_PLUNDER;
+	if(pillageAwards ~= nil and  pillageAwards ~= "NO_PLUNDER") then
+		if(pillageAwards == "PLUNDER_CULTURE") then
+			local culture = GameInfo.Yields["YIELD_CULTURE"];
+			table.insert(stats, Locale.Lookup("LOC_TYPE_TRAIT_PILLAGE_AWARD", culture.IconString, culture.Name));
+		elseif (pillageAwards == "PLUNDER_SCIENCE") then
+			local science = GameInfo.Yields["YIELD_SCIENCE"];
+			table.insert(stats, Locale.Lookup("LOC_TYPE_TRAIT_PILLAGE_AWARD", science.IconString, science.Name));
+		elseif (pillageAwards == "PLUNDER_FAITH") then
+			local faith = GameInfo.Yields["YIELD_FAITH"];
+			table.insert(stats, Locale.Lookup("LOC_TYPE_TRAIT_PILLAGE_AWARD", faith.IconString, faith.Name));
+		elseif (pillageAwards == "PLUNDER_GOLD") then
+			local gold = GameInfo.Yields["YIELD_GOLD"];
+			table.insert(stats, Locale.Lookup("LOC_TYPE_TRAIT_PILLAGE_AWARD", gold.IconString, gold.Name));
+		elseif (pillageAwards == "PLUNDER_HEAL") then
+			local faith = GameInfo.Yields["YIELD_FAITH"];
+			table.insert(stats, Locale.Lookup("LOC_TYPE_TRAIT_PILLAGE_AWARD_NO_ICON", "LOC_TYPE_TRAIT_PILLAGE_AWARD_HEALING"));
+		end
+	end
 
 	-- placement requirements
 	local placement_requirements = {};

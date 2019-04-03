@@ -52,8 +52,8 @@ local m_targetStatStackIM		:table	= InstanceManager:new( "TargetStatInstance",	"
 local m_combatResults			:table = nil;
 local m_currentIconGroup		:table = nil;				--	Tracks the current icon group as they are built.
 local m_selectedPlayerId		:number	= -1;
-local m_primaryColor			:number = 0xdeadbeef;
-local m_secondaryColor			:number = 0xbaadf00d;
+local m_primaryColor			:number = UI.GetColorValueFromHexLiteral(0xdeadbeef);
+local m_secondaryColor			:number = UI.GetColorValueFromHexLiteral(0xbaadf00d);
 local m_UnitId					:number = -1;
 local m_numIconsInCurrentIconGroup :number = 0;
 local m_kHotkeyActions			:table = {};
@@ -182,7 +182,9 @@ function InitTargetData()
 		UnitType                    = -1,
 		UnitID						= 0,
 		HasDefenses					= false, --Tells is whether we need to display combat data
-		HasImprovementOrDistrict	= false -- Only used if the tile does not have defenses
+		HasImprovementOrDistrict	= false, -- Only used if the tile does not have defenses
+		PrimaryColor				= 0xdeadbeef,
+		SecondaryColor				= 0xbaadf00d;
 	};
 end
 
@@ -935,8 +937,8 @@ function View(data)
 	end
 
 	if(data.CivIconName ~= nil) then
-		local darkerBackColor = DarkenLightenColor(m_primaryColor,(-85),238);
-		local brighterBackColor = DarkenLightenColor(m_primaryColor,90,255);
+		local darkerBackColor = UI.DarkenLightenColor(m_primaryColor,(-85),238);
+		local brighterBackColor = UI.DarkenLightenColor(m_primaryColor,90,255);
 		Controls.CircleBacking:SetColor(m_primaryColor);
 		Controls.CircleLighter:SetColor(brighterBackColor);
 		Controls.CircleDarker:SetColor(darkerBackColor);
@@ -1086,12 +1088,12 @@ function ViewTarget(data)
 	Controls.TargetUnitIconArea:SetHide(not isIconSet);
 	
 	if(data.CivIconName ~= nil) then
-		local darkerBackColor = DarkenLightenColor(m_primaryColor,(-85),238); 
-		local brighterBackColor = DarkenLightenColor(m_primaryColor,90,255);
-		Controls.TargetCircleBacking:SetColor(m_primaryColor);
+		local darkerBackColor = UI.DarkenLightenColor(data.PrimaryColor,(-85),238); 
+		local brighterBackColor = UI.DarkenLightenColor(data.PrimaryColor,90,255);
+		Controls.TargetCircleBacking:SetColor(data.PrimaryColor);
 		Controls.TargetCircleLighter:SetColor(brighterBackColor);
 		Controls.TargetCircleDarker:SetColor(darkerBackColor);
-		Controls.TargetCivIcon:SetColor(m_secondaryColor);
+		Controls.TargetCivIcon:SetColor(data.SecondaryColor);
 		Controls.TargetCivIcon:SetIcon(data.CivIconName);
 		Controls.TargetCityIconArea:SetHide(false);
 		Controls.TargetUnitIcon:SetHide(true);
@@ -2227,8 +2229,8 @@ function OnUnitSelectionChanged(player, unitId, locationX, locationY, locationZ,
 	else
 		m_selectedPlayerId	= -1;
 		m_UnitId			= nil;
-		m_primaryColor		= 0xdeadbeef;
-		m_secondaryColor	= 0xbaadf00d;
+		m_primaryColor		= UI.GetColorValueFromHexLiteral(0xdeadbeef);
+		m_secondaryColor	= UI.GetColorValueFromHexLiteral(0xbaadf00d);
 
 		-- This event is raised on deselected units too; only hide if there
 		-- is no selected units left.
@@ -3286,7 +3288,7 @@ function ReadTargetData_District(pDistrict)
 	m_targetData.ShowCombatData				= true;
 	m_targetData.HasDefenses				= true;
 
-	m_primaryColor, m_secondaryColor = UI.GetPlayerColors(districtOwner);
+	m_targetData.PrimaryColor, m_targetData.SecondaryColor = UI.GetPlayerColors(districtOwner);
 
 	local civTypeName:string = PlayerConfigurations[districtOwner]:GetCivilizationTypeName();
 	if civTypeName ~= nil then
@@ -3308,7 +3310,7 @@ function ReadTargetData_Plot(pkPlot)
 	end
 
 	local owner = pkPlot:GetOwner();
-	m_primaryColor, m_secondaryColor = UI.GetPlayerColors(owner);
+	m_targetData.PrimaryColor, m_targetData.SecondaryColor = UI.GetPlayerColors(owner);
 
 	local impType = pkPlot:GetImprovementType();
 	local districtType = pkPlot:GetDistrictType();

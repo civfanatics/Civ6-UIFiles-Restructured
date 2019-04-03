@@ -267,7 +267,7 @@ function OnCloudTurnCheckComplete(notifyType :number, turnGameName :string, inGa
 end
 
 -- ===========================================================================
-function OnCloudUnseenCompleteCheckComplete(haveCompletedGame :boolean, gameName :string)
+function OnCloudUnseenCompleteCheckComplete(haveCompletedGame :boolean, gameName :string, matchID :number)
 	m_hasCloudUnseenComplete = haveCompletedGame;
 	if (not ContextPtr:IsHidden()) then
 		UpdateCloudGamesButton();
@@ -1024,6 +1024,8 @@ function OnShow()
 			reasonString = "LOC_GAME_START_ERROR_MOD_CONFIG";
 		elseif error == DB.MakeHash("MOD_OWNERSHIP") then
 			reasonString = "LOC_GAME_START_ERROR_MOD_OWNERSHIP";
+		elseif error == DB.MakeHash("SCRIPT_PROCESSING") then
+			reasonString = "LOC_GAME_START_ERROR_SCRIPT_PROCESSING";
 		else
 			reasonString = string.format("%X", error);
 		end

@@ -19,7 +19,7 @@ function CreateTabs( tabContainerControl, sizeX, sizeY, selectedFontColor)
 	if sizeX == nil then sizeX = 64; end;
 	if sizeY == nil then sizeY = 32; end;
 
-	local defaultFontColor:number = 0xffffffff;
+	local defaultFontColor:number = UI.GetColorValue("COLOR_WHITE");
 	local tabs = {};
 	tabs.containerControl	= tabContainerControl;
 	tabs.tabControls		= {};
@@ -61,7 +61,7 @@ function CreateTabs( tabContainerControl, sizeX, sizeY, selectedFontColor)
 					Controls[oldSelectedTabID]:SetToBeginning();
 				end
 				if (tabs.selectedControl:GetTextControl() ~= nil and tabs.defaultFontColor ~= nil) then
-					tabs.selectedControl:GetTextControl():SetColor(0xFFefe7e1);
+					tabs.selectedControl:GetTextControl():SetColor(UI.GetColorValueFromHexLiteral(0xFFefe7e1));
 				end
 				tabs.selectedControl:SetTextureOffsetVal( 0, 0 );
 				tabs.selectedControl = nil;
@@ -164,7 +164,7 @@ function CreateTabs( tabContainerControl, sizeX, sizeY, selectedFontColor)
 			
 			if ( tabControl:GetTextControl() ~= nil ) then
 				--tabs.defaultFontColor = tabControl:GetTextControl():GetColor();
-				tabs.defaultFontColor = 0xffffff;
+				tabs.defaultFontColor = UI.GetColorValue("COLOR_WHITE");
 			end
 			-- Protect the flock
 			if ( focusCallBack == nil ) then

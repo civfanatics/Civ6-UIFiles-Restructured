@@ -163,5 +163,19 @@
       <Label ID="ListText" Anchor="L,C" Offset="10,0"/>
     </GridButton>
   </Instance>
-  -->	
+-->
+	
+<!--
+	<Box Anchor="C,C" Size="500,300" Color="0,0,0,200">
+		<Box Size="auto,auto" Color="255,255,0,100">
+			<Stack EndPadding="10" >
+				<Box Color="255,0,0,200" Size="100,40" />
+				<Box Color="0,255,0,200" Size="90,40" />
+				<Box Color="0,0,255,200" Size="80,40" />
+			</Stack>
+		</Box>
+	</Box>
+	-->
+
+
 </Context>

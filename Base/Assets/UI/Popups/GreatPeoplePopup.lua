@@ -1065,7 +1065,7 @@ function Initialize()
 	end
 
 	-- Tab setup and setting of default tab.
-	m_tabs = CreateTabs( Controls.TabContainer, 42, 34, 0xFF331D05 );
+	m_tabs = CreateTabs( Controls.TabContainer, 42, 34, UI.GetColorValueFromHexLiteral(0xFF331D05) );
 	m_tabs.AddTab( Controls.ButtonGreatPeople,			OnGreatPeopleClick );
 	m_tabs.AddTab( Controls.ButtonPreviouslyRecruited,	OnPreviousRecruitedClick );
 	m_tabs.CenterAlignTabs(-10);

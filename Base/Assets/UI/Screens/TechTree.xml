@@ -121,11 +121,6 @@
       </InstanceData>
     </PullDown>
 
-    <!-- TODO: Remove ??TRON
-			<GridButton ID="SearchButton"													Offset="0,52"	Size="194,26"		String="LOC_TREE_SEARCH_W_DOTS" Style="TreeOptionText" >
-				<GridData Texture="Controls_Search2"								StateOffsetIncrement="0,26"	SliceCorner="30,14"	SliceSize="1,1"		SliceTextureSize="41,26" />
-			</GridButton>		
-			-->
     <Grid Offset="0,52" Size="194,26" Texture="Controls_Search2" StateOffsetIncrement="0,26" SliceCorner="30,14" SliceSize="1,1" SliceTextureSize="41,26">
       <EditBox ID="SearchEditBox" Offset="32,3" Size="parent-24,22" CallOnChar="1" EditMode="1" Style="TreeOptionText" MaxLength="24" String="LOC_TREE_SEARCH_W_DOTS"/>
     </Grid>

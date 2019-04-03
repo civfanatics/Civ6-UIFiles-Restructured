@@ -278,7 +278,7 @@ end
 -- ===========================================================================
 --	Assumes instance has a root control called "EditBoxRoot", <Label> named "EditLabel", and a <EditBox> named "EditBox".
 --	optionalActivatedCommand	A string that when matched will "virtually" call the editbox commit callback.
-function PopupDialog:AddEditBox( label:string, commitCallback:ifunction, optionalActivateCommand:string )
+function PopupDialog:AddEditBox( label:string, commitCallback:ifunction, stringChangedCallback:ifunction, optionalActivateCommand:string )
 	
 	if self:IsOpen() then
 		UI.DataError("Called AddEditBox on an already opened PopupDialog, ID: " .. self.ID);
@@ -295,6 +295,10 @@ function PopupDialog:AddEditBox( label:string, commitCallback:ifunction, optiona
 	if(commitCallback) then
 		-- Use custom wrapper function to include editbox string in function arguments.
 		pInstance.EditBox:RegisterCommitCallback(commitCallback); 
+	end
+
+	if(stringChangedCallback) then
+		pInstance.EditBox:RegisterStringChangedCallback(stringChangedCallback); 
 	end
 	
 	table.insert(self.PopupControls, { Type = "EditBox", Control = pInstance.EditBox, Command = optionalActivateCommand });

@@ -58,10 +58,8 @@ end
 function TunerUtilities:GetModalNavigationOptions()
 	self.modalNavOptions = self.modalNavSelected or UIManager:GetModalContexts();
 	if self.modalNavOptions then
-		if self.modalNavSelected and self.modalNavSelected.GetChildren then
-			self.modalNavOptions = self.modalNavSelected:GetChildren();
-		end
-		return self:Stringify(self.modalNavOptions);
+		-- need to investigate this further.
+		--		return self:Stringify(self.modalNavOptions);
 	end
 end
 
@@ -289,6 +287,10 @@ end
 --	UI Event Handler
 -- ===========================================================================
 function TunerUtilities.OnInputHandler( pInputStruct:table )
+	if pInputStruct == nil or KeyEvents == nil then
+		return false;
+	end
+
 	if ( pInputStruct:GetMessageType() == KeyEvents.KeyUp ) then
 		local key:number = pInputStruct:GetKey();
 		if ( key == Keys.VK_CAPITAL ) then

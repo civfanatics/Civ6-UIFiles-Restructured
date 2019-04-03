@@ -64,7 +64,7 @@ function Initialize()
 
 	-- If in hotseat mode; make background 100% hidden
 	if GameConfiguration.IsHotseat() then
-		Controls.BGBlock:SetColor(0xff000000);
+		Controls.BGBlock:SetColor(UI.GetColorValue("COLOR_BLACK"));
 	end
 
 end

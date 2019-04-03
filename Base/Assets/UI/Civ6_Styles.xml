@@ -42,7 +42,7 @@
   <HeaderSmallCaps					Style="FontFlair16"			FontStyle="glow"		Color0="208,212,217,255"	Color1="0,0,0,200" SmallCaps="18" SmallCapsType="EveryWord"/>
   <PauseMenuButtonFont      Style="FontFlair16"     FontStyle="glow"    ColorSet="ShellHeader"                 SmallCaps="18" SmallCapsLeading="0" SmallCapsType="EveryWord"/>
   <HeaderLargeCaps					Style="FontFlair18"			FontStyle="glow"		Color0="208,212,217,255"	Color1="0,0,0,200" SmallCaps="24" SmallCapsLeading="0" SmallCapsType="EveryWord"/>
-  <WonderHeader              Style="FontFlair24"     FontStyle="glow"    ColorSet="ShellHeader" />
+  <WonderHeader             Style="FontFlair24"     FontStyle="glow"    ColorSet="ShellHeader" />
   <ShellHeader              Style="FontFlair24"     FontStyle="glow"    ColorSet="ShellHeader"                 SmallCaps="28" SmallCapsLeading="0" SmallCapsType="EveryWord"/>
   <WindowHeader             Style="FontFlair22"     FontStyle="glow"    ColorSet="ShellHeader"                 SmallCaps="26" SmallCapsLeading="0" SmallCapsType="EveryWord"/>
 
@@ -179,15 +179,6 @@
   <EditTextArea Texture="Controls_TextArea" SliceTextureSize="22,22" SliceCorner="11,15" Style="ButtonFont"/>
 
   <EditTextButton Texture="Controls_TextEntry" SliceTextureSize="44,26" SliceCorner="30,13" StateOffsetIncrement="0,26"/>
-
-	<CivTooltip Size="220,75">
-		<Grid ID="BG" Size="auto,auto" SliceCorner="10,10" SliceTextureSize="33,32" Texture="Controls_Tooltip" InnerPadding="25,25" InnerOffset="10,10" >
-			<Image ID="LeaderIcon" Offset="0,0" Size="55,55" Texture="Leaders55"/>
-			<Image ID="YouIndicator" Offset="0,0" Hidden="1" Size="55,55" Texture="Diplomacy_YouIndicatorSmall"/>
-			<Label ID="LeaderName" Anchor="L,C" Offset="65,0" Style="FontNormal16" Color="0,0,0,255"/>
-		</Grid>
-	</CivTooltip>
-
 
 
 	<!-- ******************************************************************** -->

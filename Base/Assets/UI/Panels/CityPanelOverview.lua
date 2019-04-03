@@ -86,7 +86,6 @@ local m_kEspionageViewManager = EspionageViewManager:CreateManager();
 --       with everywhere else that uses lenses, border growth, minimap panel, religious units, etc.
 function SetDesiredLens(desiredLens)
 	m_desiredLens = desiredLens;
-	UI.SetInterfaceMode(InterfaceModeTypes.SELECTION);
 	if m_isShowingPanel then
 		UILens.SetActive(m_desiredLens);
 		ContextPtr:SetUpdate(EnsureDesiredLens);
@@ -118,8 +117,6 @@ function HideAll()
 	Controls.PanelProductionNow:SetHide(true);
 	Controls.PanelQueue:SetHide(true);
 	Controls.PanelDynamicTab:SetHide(true);
-
-	SetDesiredLens("Default");
 end
 
 -- ===========================================================================
@@ -269,7 +266,7 @@ function ViewPanelBreakdown( data:table )
 
 			local iconName:string = "";
 			local iconSize:number = SIZE_LEADER_ICON;
-			local iconColor = 0xFFFFFFFF;
+			local iconColor = UI.GetColorValue("COLOR_WHITE");
 			if pTradePostPlayer:IsMinor() then
 				-- If we're a city-state display our city-state icon instead of leader since we don't have one
 				local civType:string = pTradePostPlayerConfig:GetCivilizationTypeName();
@@ -809,6 +806,7 @@ function Close()
 	Controls.OverviewSlide:Reverse();
 	UI.PlaySound("UI_CityPanel_Closed");
 	SetDesiredLens("Default");
+	UI.SetInterfaceMode(InterfaceModeTypes.SELECTION);
 end
 
 -- ===========================================================================

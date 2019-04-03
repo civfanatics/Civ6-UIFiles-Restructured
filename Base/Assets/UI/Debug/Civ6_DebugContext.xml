@@ -73,10 +73,11 @@
 		<Grid Style="DebugPanelFrame" Anchor="L,T"  Size="auto,auto" ID="DebugPanel" Hidden="1" >
 			<Stack StackGrowth="Right" StackPadding="3">
 
-				<Grid Style="DebugPanelFrame" Anchor="R,T" Size="210,260" ID="DebugViewPanel" Hidden="0" >
+				<Grid Style="DebugPanelFrame" Anchor="R,T" Size="210,280" ID="DebugViewPanel" Hidden="0" >
 					<Stack StackPadding="8" Offset="5,10" >
 						<Label String="Debug View" Anchor="C,C" />
 						<CheckBox Style="MainMenuCheck" BoxOnLeft="1" ID="ShowFrameStats" String="Show Frame Statistics" />
+            <CheckBox Style="MainMenuCheck" BoxOnLeft="1" ID="ShowFrameGraph" String="Show Frame Graph" />
 						<CheckBox Style="MainMenuCheck" BoxOnLeft="1" ID="ShowVFXStats" String="Show VFX Statistics"/>
 						<CheckBox Style="MainMenuCheck" BoxOnLeft="1" ID="ShowTOD" String="Show Time Of Day"/>
 						<CheckBox Style="MainMenuCheck" BoxOnLeft="1" ID="ShowCamera" String="Show Camera"/>
@@ -84,11 +85,12 @@
 						<CheckBox Style="MainMenuCheck" BoxOnLeft="1" ID="ShowUIStats" String="Show UI Statistics"/>
 						<CheckBox Style="MainMenuCheck" BoxOnLeft="1" ID="ShowMemory" String="Show Memory"/>
 						<CheckBox Style="MainMenuCheck" BoxOnLeft="1" ID="ShowGameCoreStats" String="Show Game Core Statistics"/>
+            <CheckBox Style="MainMenuCheck" BoxOnLeft="1" ID="ShowVRSDemo" String="Show VRS Demo Panel" />
 					</Stack>
 				</Grid>
 
-				<Grid Style="DebugPanelFrame" Anchor="R,T" Size="700,400" ID="FrameStatsPanel" Hidden="1" >
-					<ScrollPanel Size="290,parent-10" Anchor="L,C" Vertical="1" >
+				<Grid Style="DebugPanelFrame" Anchor="R,T" Size="290,400" ID="FrameStatsPanel" Hidden="1" >
+					<ScrollPanel Size="parent,parent-10" Anchor="L,C" Vertical="1" >
 						<ScrollBar Style="ScrollVerticalBar" Length="364" Offset="4,16" Anchor="R,T" AnchorSide="I,I" />
 						<UpButton Style="ScrollUpButton" Anchor="R,T" />
 						<DownButton Style="ScrollDownButton" Anchor="R,B" />
@@ -121,9 +123,11 @@
 							<Label ID="TotalTurnTime" String="Blank" />
 						</Stack>
 					</ScrollPanel>
-					<!--TODO several of these attributes could be packed into a "GraphStyle"-->
-					<Graph ID="FrameGraph" Size="390,380" Anchor="R,C" Offset="10,0" Domain="0,100" Range="0,33" TickInterval="0,5" NumberInterval="0,5" ShowTicks="0,1" ShowGridLines="1,1" ShowNumbers="0,1" ShowAxes="0,1" GridColor="Civ6Green" />
 				</Grid>
+        
+        <Grid Style="DebugPanelFrame" Anchor="R,T" Size="400,400" ID="FrameGraphPanel" Hidden="1" >
+            <Graph ID="FrameGraph" Size="390,380" Anchor="R,C" Offset="10,0" Domain="0,100" Range="0,33" TickInterval="0,5" NumberInterval="0,5" ShowTicks="0,1" ShowGridLines="1,1" ShowNumbers="0,1" ShowAxes="0,1" GridColor="Civ6Green" />
+        </Grid>
 
 				<Grid Style="DebugPanelFrame" Anchor="R,T" Size="240,260" ID="VFX_StatsPanel" Hidden="1" >
 					<ScrollPanel Size="230,250" Anchor="C,C" Vertical="1" >
@@ -183,6 +187,26 @@
 					</ScrollPanel>
 				</Grid>
 
+        <Grid Style="DebugPanelFrame" Anchor="R,T" Size="300,400" ID="VRSDemoPanel" Hidden="1" >
+          <ScrollPanel Size="290,parent-10" Anchor="L,C" Vertical="1" >
+            <ScrollBar Style="ScrollVerticalBar" Length="200" Offset="4,16" Anchor="R,T" AnchorSide="I,I" />
+            <UpButton Style="ScrollUpButton" Anchor="R,T" />
+            <DownButton Style="ScrollDownButton" Anchor="R,B" />
+            <Stack StackPadding="8" Offset="2,10" Anchor="L,T" ID="VRSDemoStack" >
+              <Label String="Environment Rendering Mode" />
+              <CheckBox Style="MainMenuCheck" BoxOnLeft="1" ID="DefaultVRS" String="Default" />
+              <CheckBox Style="MainMenuCheck" BoxOnLeft="1" ID="ObjectVRS" String="Per Object VRS [Tier 1]" />
+              <CheckBox Style="MainMenuCheck" BoxOnLeft="1" ID="ObjectVRSMultiRes" String="Per Object VRS (custom resolve) [Tier 1]" />
+              <CheckBox Style="MainMenuCheck" BoxOnLeft="1" ID="ImageVRS" String="Image Based VRS [Tier 2]" />
+              <Label String="Debug Options" />
+              <CheckBox Style="MainMenuCheck" BoxOnLeft="1" ID="ShowVRSImage" String="Show Environment Shading Rate" />
+              <Label String="Frame Stats" />
+              <Label ID="VRS_FPSText" String="Blank" />
+              <Label String="White: Frame Time (ms)" />
+              <Label String="Blue: GPU Wait Time (ms)" />
+            </Stack>
+          </ScrollPanel>
+        </Grid>
 
 				<Grid Style="DebugPanelFrame" Anchor="R,T" Size="220,260" ID="MemoryPanel" Hidden="1" >
 					<ScrollPanel Size="210,250" Anchor="C,C" Vertical="1" >

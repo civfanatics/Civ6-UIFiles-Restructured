@@ -217,8 +217,10 @@
                 </PullDown>
 
                 <!--Filters are added dynamically through AddFilterTabButtons-->
-                <Stack ID="FilterStack" StackGrowth="Right" Offset="0,6" Anchor="C,T"/>
-
+                <ScrollPanel Anchor="C,T" Offset="6,6" Size="parent,parent" Vertical="0" AutoScrollBar="1">
+                  <Stack ID="FilterStack" Anchor="C,T" StackGrowth="Right"/>
+                </ScrollPanel>
+                
                 <Box ID="CatalogInputShield" Offset="0,0" Size="parent,parent" ConsumeMouseButton="1" Color="0,0,0,150"/>
 
                 <GridButton ID="UnlockPolicies" Anchor="C,B" Offset="0,4" Size="240,41" Style="ButtonConfirm"/>
@@ -276,8 +278,6 @@
       </GridButton>
     </Grid>
 
-    <Container Style="ModalScreenWide"/>
-
     <Container ID="TabArea" Anchor="C,T" Offset="0,35" Size="parent,31">
       <Image Texture="Controls_TabLedgeFill" Size="parent-100,23" StretchMode="Tile" Anchor="C,T" Offset="0,4"/>
       <Grid Style="WoodenTabBacking" Size="parent-7,31" Anchor="C,T"/>
@@ -304,6 +304,8 @@
       </Container>
     </Container>
 
+    <Container Style="ModalScreenWide"/>
+    
     <Tutorial ID="TutChangePolicies" Style="TutorialContainer" Anchor="C,T" AnchorSide="I,I" Offset="-30,126" TriggerBy="TutorialChangePolicies">
       <Grid Style="TutorialCalloutGrid">
         <Label Style="TutorialHeaderText" String="LOC_META_95b_HEAD"/>

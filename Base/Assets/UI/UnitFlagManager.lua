@@ -13,9 +13,9 @@ include( "Civ6Common" );
 local YOFFSET_2DVIEW			:number = 26;
 local ZOFFSET_3DVIEW			:number = 36;
 local ALPHA_DIM					:number = 0.65;
-local COLOR_RED					:number = 0xFF0101F5;
-local COLOR_YELLOW				:number = 0xFF2DFFF8;
-local COLOR_GREEN				:number = 0xFF4CE710;
+local COLOR_RED					:number = UI.GetColorValueFromHexLiteral(0xFF0101F5);
+local COLOR_YELLOW				:number = UI.GetColorValueFromHexLiteral(0xFF2DFFF8);
+local COLOR_GREEN				:number = UI.GetColorValueFromHexLiteral(0xFF4CE710);
 local FLAGSTATE_NORMAL			:number= 0;
 local FLAGSTATE_FORTIFIED		:number= 1;
 local FLAGSTATE_EMBARKED		:number= 2;
@@ -467,11 +467,13 @@ end
 
 -- ===========================================================================
 function OnUnitSelected( playerID:number, unitID:number )
-	local playerUnits:table = Players[playerID]:GetUnits();
-	if playerUnits then
-		local selectedUnit:table = playerUnits:FindID(unitID);
-		if selectedUnit then
-			UI.SelectUnit( selectedUnit );
+	if playerID == Game.GetLocalPlayer() then	-- The local player can only select their own units.
+		local playerUnits:table = Players[playerID]:GetUnits();
+		if playerUnits then
+			local selectedUnit:table = playerUnits:FindID(unitID);
+			if selectedUnit then
+				UI.SelectUnit( selectedUnit );
+			end
 		end
 	end
 end

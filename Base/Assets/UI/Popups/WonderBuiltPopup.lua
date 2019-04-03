@@ -1,13 +1,14 @@
--- Copyright 2016-2018, Firaxis Games
+-- Copyright 2016-2019, Firaxis Games
 
-include("PopupSupport");
+include("PopupManager");
 
 
 -- ===========================================================================
 --	MEMBERS
 -- ===========================================================================
-local m_kQueuedPopups		:table = {};	
-local m_kCurrentPopup		:table	= nil;
+local m_kPopupMgr		:table	 = ExclusivePopupManager:new("WonderBuiltPopup");
+local m_kQueuedPopups	:table = {};	
+local m_kCurrentPopup	:table	= nil;
 
 
 -- ===========================================================================
@@ -50,8 +51,8 @@ function OnWonderCompleted( locX:number, locY:number, buildingIndex:number, play
 				currentBuildingType = currentBuildingType
 			};
 
-			if not IsLocked() then
-				LockPopupSequence( "WonderBuiltPopup", PopupPriority.High );
+			if not m_kPopupMgr:IsLocked() then								
+				m_kPopupMgr:Lock( ContextPtr, PopupPriority.High );
 				ShowPopup( kData );
 				LuaEvents.WonderBuiltPopup_Shown();	-- Signal other systems (e.g., bulk hide UI)
 			else
@@ -142,7 +143,7 @@ function Close()
 		LuaEvents.WonderBuiltPopup_Closed();	-- Signal other systems (e.g., bulk show UI)	
 		UI.SetInterfaceMode(InterfaceModeTypes.SELECTION);		
 		UILens.RestoreActiveLens();
-		UnlockPopupSequence();
+		m_kPopupMgr:Unlock();
 	end		
 end
 
