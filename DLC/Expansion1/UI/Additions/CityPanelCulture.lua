@@ -16,12 +16,6 @@ function OnRefresh()
 		return;
 	end
 	
-	local playerID = Game.GetLocalPlayer();
-	local pPlayer = Players[playerID];
-	if (pPlayer == nil) then
-		return;
-	end
-
 	local pCity = UI.GetHeadSelectedCity();
 	if (pCity == nil) then
 		pCity = m_kEspionageViewManager:GetEspionageViewCity();
@@ -30,6 +24,12 @@ function OnRefresh()
 		end
 	else
 		m_kEspionageViewManager:ClearEspionageViewCity();
+	end
+
+	local playerID = pCity:GetOwner();
+	local pPlayer = Players[playerID];
+	if (pPlayer == nil) then
+		return;
 	end
 
 	if pPlayer == nil or pCity == nil then
@@ -149,7 +149,7 @@ function OnRefresh()
 	totalLineInstance.LineValue:SetText(Locale.Lookup(pCulturalIdentity:GetLoyaltyPerTurnStatus()) .. " " .. Round(pCulturalIdentity:GetLoyaltyPerTurn(), 1));
 	Controls.IdentityBreakdownStack:CalculateSize();
 	Controls.BreakdownBox:SetSizeY(Controls.IdentityBreakdownStack:GetSizeY() + 15);
-	totalLineInstance.Top:SetColor(RGBAValuesToABGRHex(.3, .3, .3, .85));
+	totalLineInstance.Top:SetColor(UI.GetColorValue(.3, .3, .3, .85));
 
 	-- Identity Totals
 	if (loyaltyLevel < 3) then

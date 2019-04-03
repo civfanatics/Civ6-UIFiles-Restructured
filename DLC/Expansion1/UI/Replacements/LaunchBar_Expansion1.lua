@@ -3,11 +3,7 @@
 --	Copyright (c) 2017-2018 Firaxis Games
 -- ===========================================================================
 
--- ===========================================================================
--- Base File
--- ===========================================================================
 include("LaunchBar");
-include("GameCapabilities");
 
 
 -- ===========================================================================
@@ -16,9 +12,8 @@ include("GameCapabilities");
 BASE_LateInitialize			= LateInitialize;
 BASE_CloseAllPopups			= CloseAllPopups;
 BASE_OnInputActionTriggered = OnInputActionTriggered;
-BASE_OnTurnBegin			= OnTurnBegin;
-BASE_RealizeHookVisibility	= RealizeHookVisibility;
 BASE_RefreshView			= RefreshView;
+BASE_RealizeHookVisibility	= RealizeHookVisibility;
 
 -- ===========================================================================
 --	CONSTANTS: Keep these in sync with PrideMoments.lua
@@ -30,15 +25,11 @@ local PRIDE_MOMENT_HASH:number = DB.MakeHash("NOTIFICATION_PRIDE_MOMENT_RECORDED
 -- ===========================================================================
 --	MEMBERS
 -- ===========================================================================
-local m_GovernorsInstance = {};
-local m_GovernorsInstancePip = {};
-
-local m_HistorianInstance = {};
-local m_HistorianInstancePip = {};
-local m_isGovernorPanelOpen:boolean = false;
-local m_isHistoricMomentsOpen:boolean = false;
-
-local m_isGovernorsAvailable:boolean = false;
+local m_GovernorsInstance		:table = {};
+local m_HistorianInstance		:table = {};
+local m_isGovernorPanelOpen		:boolean = false;
+local m_isHistoricMomentsOpen	:boolean = false;
+local m_isGovernorsAvailable	:boolean = false;
 local m_isHistoricMomentsAvailable:boolean = false;
 
 
@@ -146,22 +137,13 @@ function RefreshGovernors()
 end
 
 -- ===========================================================================
-function OnTurnBegin()
-	if Game.GetLocalPlayer() == -1 then return; end	-- Autoplay
-	local localPlayer = Players[Game.GetLocalPlayer()];
-	if (localPlayer == nil) then
-		return;
-	end
-
-	BASE_OnTurnBegin();
-	RefreshGovernors();
-end
-
--- ===========================================================================
 function RefreshView()
 	if Game.GetLocalPlayer() == -1 then return; end	-- Autoplay
 	BASE_RefreshView();
 	RefreshGovernors();
+	if XP1_RefreshView == nil then		-- No MODs, then wrap this up.
+		RealizeBacking();
+	end
 end
 
 -- ===========================================================================
@@ -173,7 +155,7 @@ function LateInitialize()
 	m_GovernorsInstance.LaunchItemButton:SetTexture("LaunchBar_Hook_GovernorsButton");
 	m_GovernorsInstance.LaunchItemButton:SetToolTipString(Locale.Lookup("LOC_HUD_LAUNCHBAR_GOVERNOR_BUTTON"));
 	m_GovernorsInstance.LaunchItemIcon:SetTexture("LaunchBar_Hook_Governors");	
-	ContextPtr:BuildInstanceForControl( "LaunchBarPinInstance", m_GovernorsInstancePip, Controls.ButtonStack );	-- Add a pin to the stack for each new item
+	ContextPtr:BuildInstanceForControl( "LaunchBarPinInstance", {}, Controls.ButtonStack );
 
 	-- Historic Momements Related:
 	ContextPtr:BuildInstanceForControl("LaunchBarItem", m_HistorianInstance, Controls.ButtonStack );
@@ -181,15 +163,10 @@ function LateInitialize()
 	m_HistorianInstance.LaunchItemButton:SetTexture("LaunchBar_Hook_TimelineButton");
 	m_HistorianInstance.LaunchItemButton:SetToolTipString(Locale.Lookup("LOC_HUD_LAUNCHBAR_HISTORIAN_BUTTON"));
 	m_HistorianInstance.LaunchItemIcon:SetTexture("LaunchBar_Hook_Timeline");
-	ContextPtr:BuildInstanceForControl( "LaunchBarPinInstance", m_HistorianInstancePip, Controls.ButtonStack );		-- Add a pin to the stack for each new item
+	
+	ContextPtr:BuildInstanceForControl( "LaunchBarPinInstance", {}, Controls.ButtonStack );
 
-
-	Events.CivicCompleted.Add( RealizeHookVisibility );
 	Events.NotificationActivated.Add( OnProcessNotification );
-	Events.TurnBegin.Remove( BASE_OnTurnBegin );		--Overwrite events...
-	Events.TurnBegin.Add( OnTurnBegin );
-
-
 	LuaEvents.GovernorPanel_Opened.Add( OnGovernorPanelOpened );
 	LuaEvents.GovernorPanel_Closed.Add( OnGovernorPanelClosed );	
 	LuaEvents.HistoricMoments_Opened.Add( OnHistoricMomentsOpened );

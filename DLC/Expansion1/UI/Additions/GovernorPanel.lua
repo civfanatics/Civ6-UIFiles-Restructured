@@ -179,8 +179,11 @@ function AddGovernorCandidate(governorDef:table, canAppoint:boolean)
 		governorInstance.AppointButton:SetVoid1( governorDef.Index );
 		governorInstance.AppointButton:RegisterCallback( Mouse.eLClick, OnAppointGovernor );
 		governorInstance.AppointButton:SetDisabled(false);
+		governorInstance.AppointButton:SetToolTipString("");
 	else
 		governorInstance.AppointButton:SetDisabled(true);
+		governorInstance.AppointButton:SetToolTipString(Locale.Lookup("LOC_NO_GOVERNORS_TITLE_AVAILABLE"));
+
 	end
 
 	SetGovernorStatus(governorInstance, governorDef);

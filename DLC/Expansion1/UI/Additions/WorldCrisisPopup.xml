@@ -48,7 +48,10 @@
             <Line Color="150,153,157,35" Anchor="C,L" Offset="0,4" Start="0,0" End="554,0" Width="2"/>
             <Label Style="FontFlair16" Align="center" Anchor="C,T" Offset="0,3" SmallCapsType="EveryWord" SmallCaps="22" FontSize="18" String="LOC_EMERGENCY_PARTICIPANTS" FontStyle="glow" Color0="225,225,225,250" Color1="255,255,255,70"/>
             <Box ID="LeaderBar" Offset="0,10" Anchor="C,T" Color="232,68,9,0" Size="557,35">
-              <ScrollPanel ID="LeaderBarScrollPanel" Anchor="L,T" Offset="11,1" Size="parent-21,155" Vertical="0">
+              <ScrollPanel ID="LeaderBarScrollPanel" Anchor="L,T" Offset="11,1" Size="parent-21,50" Vertical="0">
+                <ScrollBar Anchor="C,B"	Offset="0,0" Size="parent,4" Style="ScrollHorizontalBackingAlt">
+                  <Thumb Style="ScrollThumbHAlt" />
+                </ScrollBar>
                 <Stack ID="LeaderIconStack" Offset="0,-8" Anchor="C,T" Padding="5" StackGrowth="Right"/>
               </ScrollPanel>
             </Box>

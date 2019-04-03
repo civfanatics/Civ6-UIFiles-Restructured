@@ -83,21 +83,21 @@ function OnRefresh()
 	local goldenAgeThreshold = gameEras:GetPlayerGoldenAgeThreshold(ePlayer);
 	local ageIconName = "[ICON_GLORY_NORMAL_AGE]";
 	Controls.TurnTimerMeterWarning:SetHide(true);
-	Controls.AgeLabelCurrent:SetColor(RGBAValuesToABGRHex(.7, .7, .7, 1));
+	Controls.AgeLabelCurrent:SetColorByName("Age_Normal");
 	if score >= darkAgeThreshold then
 		--We are working towards, or scored Golden age
 		ageIconName = gameEras:HasDarkAge(ePlayer) and "[ICON_GLORY_GOLDEN_AGE]" or "[ICON_GLORY_SUPER_GOLDEN_AGE]";
 		if score >= goldenAgeThreshold then
 			--Just working toward a golden age
 			Controls.TurnTimerMeterGolden:SetTexture("ActionPanel_AgeMeterFill_Golden");
-			Controls.AgeLabelCurrent:SetColor(RGBAValuesToABGRHex(.8, .8, 0, 1));
+			Controls.AgeLabelCurrent:SetColorByName("Age_Golden");
 		end
 	else
 		--Is the age ending? If so, show the red warning
 		local eraCountdown = gameEras:GetNextEraCountdown() + 1; -- 0 turns remaining is the last turn, shift by 1 to make sense to non-programmers
 		if eraCountdown ~= nil and eraCountdown ~= 0 then
 			Controls.TurnTimerMeterWarning:SetHide(false);
-			Controls.AgeLabelCurrent:SetColor(RGBAValuesToABGRHex(.8, .1, .1, 1));
+			Controls.AgeLabelCurrent:SetColorByName("Age_Warning");
 			ageIconName = "[ICON_GLORY_DARK_AGE]";
 		end
 	end
@@ -128,7 +128,7 @@ function OnRefresh()
 		Controls.TurnTimerMeterWarning:SetHide(true);
 		Controls.AgeLabelTotal:SetHide(true);
 		Controls.AgeLabelDivider:SetHide(true);
-		Controls.AgeLabelCurrent:SetColor(RGBAValuesToABGRHex(.7, .7, .7, 1));
+		Controls.AgeLabelCurrent:SetColorByName("Age_Normal");
 		if gameEras:HasDarkAge() then
 			Controls.AgeLabelCurrent:SetText("[ICON_GLORY_DARK_AGE]" .. score);
 		elseif gameEras:HasGoldenAge() then

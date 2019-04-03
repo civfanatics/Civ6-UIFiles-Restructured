@@ -109,6 +109,9 @@ function AddGovernorInstance(governorInst:table, governor:table, governorDef:tab
 		-- Governor Icon
 		UpdateGovernorIcon(governorInst, governor);
 
+		--This is one area where we do not want the tooltip
+		governorInst.GovernorIcon:SetToolTipString("");
+
 		-- Culture Identity Pressure
 		governorInst.IdentityPressureContainer:SetHide(true);
 		if (city ~= nil and Game.GetLocalPlayer() ~= nil) then
@@ -219,8 +222,8 @@ function AddCityInstance( city:table, bDisabled:boolean, sFailureText:string )
 
 	-- Get colors
 	local backColor:number, frontColor:number = UI.GetPlayerColors(cityOwner);
-	local darkerBackColor:number = DarkenLightenColor(backColor,(-85),238);
-	local brighterBackColor:number = DarkenLightenColor(backColor,90,255);
+	local darkerBackColor:number = UI.DarkenLightenColor(backColor,(-85),238);
+	local brighterBackColor:number = UI.DarkenLightenColor(backColor,90,255);
 
 	-- Update colors
 	instance.BannerBase:SetColor( backColor );

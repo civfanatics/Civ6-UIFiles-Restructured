@@ -7,12 +7,12 @@ include("SupportFunctions");
 -- ===========================================================================
 --	CONSTANTS
 -- ===========================================================================
-local COLOR_TARGETED_PRIMARY = RGBAValuesToABGRHex		(	 1,	.176, .207,	1);
-local COLOR_TARGETED_SECONDARY = RGBAValuesToABGRHex	( .384, .411, .447, 1);
-local COLOR_JOINED_PRIMARY = RGBAValuesToABGRHex		( .835, .835, .835, 1);
-local COLOR_JOINED_SECONDARY = RGBAValuesToABGRHex		( .384, .411, .447, 1);
-local COLOR_INVITED_PRIMARY = RGBAValuesToABGRHex		( .415, .427, .450, 1);
-local COLOR_INVITED_SECONDARY = RGBAValuesToABGRHex		( .415, .427, .450, 1);
+local COLOR_TARGETED_PRIMARY = UI.GetColorValue(1, .176, .207, 1);
+local COLOR_TARGETED_SECONDARY = UI.GetColorValue(.384, .411, .447, 1);
+local COLOR_JOINED_PRIMARY = UI.GetColorValue(.835, .835, .835, 1);
+local COLOR_JOINED_SECONDARY = UI.GetColorValue( .384, .411, .447, 1);
+local COLOR_INVITED_PRIMARY = UI.GetColorValue( .415, .427, .450, 1);
+local COLOR_INVITED_SECONDARY = UI.GetColorValue(.415, .427, .450, 1);
 
 
 -- ===========================================================================

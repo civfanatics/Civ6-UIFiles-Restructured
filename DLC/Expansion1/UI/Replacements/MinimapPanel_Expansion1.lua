@@ -140,14 +140,13 @@ function SetGovernmentHexes()
 end
 
 function SetContinentHexes() -- override
-	local ContinentColor:number = 0x02000000;
 	GetContinentsCache();
 	local localPlayerVis:table = PlayersVisibility[Game.GetLocalPlayer()];
 	if (localPlayerVis ~= nil) then
 		local kContinentColors:table = {};
 		for loopNum, ContinentID in ipairs(g_ContinentsCache) do
 			local visibleContinentPlots:table = Map.GetVisibleContinentPlots(ContinentID);
-			ContinentColor = UI.GetColorValue("COLOR_" .. GameInfo.Continents[ loopNum-1 ].ContinentType);
+			local ContinentColor:number = UI.GetColorValue("COLOR_" .. GameInfo.Continents[ loopNum-1 ].ContinentType);
 			if(table.count(visibleContinentPlots) > 0) then
 				UILens.SetLayerHexesColoredArea( g_HexColoringContinent, loopNum-1, visibleContinentPlots, ContinentColor );		
 				kContinentColors[ContinentID] = ContinentColor;

@@ -91,6 +91,7 @@
 		<LuaContext ID="WonderBuiltPopup" FileName="WonderBuiltPopup" Hidden="1"/>
 		<LuaContext ID="ProjectBuiltPopup" FileName="ProjectBuiltPopup" Hidden="1"/>
 		<LuaContext ID="MapPinPopup" FileName="MapPinPopup" Hidden="1"/>
+		<LuaContext ID="PBCNotificationPopup" FileName="PBCNotificationPopup" Hidden="1"/>
 		<LuaContext ID="RazeCity" FileName="RazeCity" Hidden="1"/>
 		<LuaContext ID="BoostUnlockedPopup" FileName="BoostUnlockedPopup" Hidden="1"/>
 		<LuaContext ID="TechCivicCompletedPopup" FileName="TechCivicCompletedPopup" Hidden="1"/>

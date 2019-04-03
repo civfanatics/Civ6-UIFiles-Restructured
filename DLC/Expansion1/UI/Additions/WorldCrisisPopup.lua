@@ -401,6 +401,7 @@ function Initialize()
 	LuaEvents.GameDebug_Return.Add(OnGameDebugReturn);	
 	LuaEvents.NotificationPanel_EmergencyClicked.Add( OnCrisisReceived );
 	LuaEvents.WorldCrisisTracker_EmergencyClicked.Add( OnCrisisReceived );
+	LuaEvents.DiploScene_SceneOpened.Add(OnClose);
 
 	if debugForceRaiseCrisis then
 		OnCrisisReceived();

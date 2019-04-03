@@ -6,7 +6,13 @@ function OnExpansionIntro()
 end
 
 function Initialize()
-	Controls.ExpansionNewFeatures:RegisterCallback( Mouse.eLClick, OnExpansionIntro );
-	Controls.ExpansionNewFeatures:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
+	local bWorldBuilder = WorldBuilder and WorldBuilder:IsActive();
+	if(bWorldBuilder) then
+		Controls.ExpansionNewFeatures:SetHide(true);
+	else
+		Controls.ExpansionNewFeatures:SetHide(false);
+		Controls.ExpansionNewFeatures:RegisterCallback( Mouse.eLClick, OnExpansionIntro );
+		Controls.ExpansionNewFeatures:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
+	end
 end
 Initialize();
