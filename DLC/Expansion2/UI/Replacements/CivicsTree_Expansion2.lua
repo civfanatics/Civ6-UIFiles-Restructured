@@ -11,8 +11,8 @@ local BASE_GetCurrentData = GetCurrentData;
 
 -- Add to item status table. Instead of enum use hash of "UNREVEALED"; special case.
 ITEM_STATUS["UNREVEALED"] = 0xB87BE593;
-STATUS_ART[ITEM_STATUS.UNREVEALED]		= { Name="UNREVEALED",	TextColor0=0xff202726, TextColor1=0x00000000, FillTexture="CivicsTree_GearButtonTile_Disabled.dds",		BGU=0,BGV=(SIZE_NODE_Y*3),		HideIcon=true,  IsButton=false,	BoltOn=false,	IconBacking=PIC_METER_BACK  };
-STATUS_ART_LARGE[ITEM_STATUS.UNREVEALED]= { Name="UNREVEALED",	TextColor0=0xff202726, TextColor1=0x00000000, FillTexture="CivicsTree_GearButton2Tile_Disabled.dds",	BGU=0,BGV=(SIZE_NODE_LARGE_Y*3),HideIcon=true,  IsButton=false,	BoltOn=false,	IconBacking=PIC_METER_BACK  };
+STATUS_ART[ITEM_STATUS.UNREVEALED]		= { Name="UNREVEALED",	TextColor0=UI.GetColorValueFromHexLiteral(0xff202726), TextColor1=UI.GetColorValueFromHexLiteral(0x00000000), FillTexture="CivicsTree_GearButtonTile_Disabled.dds",		BGU=0,BGV=(SIZE_NODE_Y*3),		HideIcon=true,  IsButton=false,	BoltOn=false,	IconBacking=PIC_METER_BACK  };
+STATUS_ART_LARGE[ITEM_STATUS.UNREVEALED]= { Name="UNREVEALED",	TextColor0=UI.GetColorValueFromHexLiteral(0xff202726), TextColor1=UI.GetColorValueFromHexLiteral(0x00000000), FillTexture="CivicsTree_GearButton2Tile_Disabled.dds",	BGU=0,BGV=(SIZE_NODE_LARGE_Y*3),HideIcon=true,  IsButton=false,	BoltOn=false,	IconBacking=PIC_METER_BACK  };
 
 
 -- ===========================================================================
@@ -228,8 +228,8 @@ function PopulateNode(uiNode, playerTechData)
 		uiNode.NodeButton:SetToolTipString(Locale.Lookup("LOC_CIVICS_TREE_UNREVEALED_TOOLTIP"));	
 		uiNode.Icon:SetIcon("ICON_TECH_UNREVEALED");
 		uiNode.IconBacking:SetHide(true);
-		uiNode.BoostMeter:SetColor(0x66ffffff);
-		uiNode.BoostIcon:SetColor(0x66000000);
+		uiNode.BoostMeter:SetColor(UI.GetColorValueFromHexLiteral(0x66ffffff));
+		uiNode.BoostIcon:SetColor(UI.GetColorValueFromHexLiteral(0x66000000));
 	else
 		uiNode.NodeButton:SetToolTipString(ToolTipHelper.GetToolTip(item.Type, Game.GetLocalPlayer()));
 
@@ -238,13 +238,13 @@ function PopulateNode(uiNode, playerTechData)
 			if (artInfo.Name == "BLOCKED" or artInfo.Name == "LARGEBLOCKED") then
 				uiNode.IconBacking:SetHide(true);
 				iconName = iconName .. "_FOW";
-				uiNode.BoostMeter:SetColor(0x66ffffff);
-				uiNode.BoostIcon:SetColor(0x66000000);
+				uiNode.BoostMeter:SetColor(UI.GetColorValueFromHexLiteral(0x66ffffff));
+				uiNode.BoostIcon:SetColor(UI.GetColorValueFromHexLiteral(0x66000000));
 			else
 				uiNode.IconBacking:SetHide(false);
 				iconName = iconName;
-				uiNode.BoostMeter:SetColor(0xffffffff);
-				uiNode.BoostIcon:SetColor(0xffffffff);
+				uiNode.BoostMeter:SetColor(UI.GetColorValue("COLOR_WHITE"));
+				uiNode.BoostIcon:SetColor(UI.GetColorValue("COLOR_WHITE"));
 			end
 			local textureOffsetX, textureOffsetY, textureSheet = IconManager:FindIconAtlas(iconName,42);
 			if (textureOffsetX ~= nil) then

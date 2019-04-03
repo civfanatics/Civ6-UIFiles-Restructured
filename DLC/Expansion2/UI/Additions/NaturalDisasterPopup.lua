@@ -1,57 +1,67 @@
--- Copyright 2018, Firaxis Games
+-- Copyright 2018-2019, Firaxis Games
 -- Popup for Natural Disasters (aka: Random events)
 
-include("PopupSupport");
+include("PopupManager");
 
 
 -- ===========================================================================
 --	CONSTANTS
 -- ===========================================================================
-local RELOAD_CACHE_ID:string = "NaturalDisasterPopup";
+local RELOAD_CACHE_ID		:string = "NaturalDisasterPopup";
+local NUCLEAR_OPERATOR_TYPE	:string = "NUCLEAR_ACCIDENT";
 
-local NUCLEAR_OPERATOR_TYPE:string = "NUCLEAR_ACCIDENT";
 
 -- ===========================================================================
 --	MEMBERS
 -- ===========================================================================
-local m_kQueuedPopups:table = {};
-local m_kCurrentPopup:table = nil;
+local m_kPopupMgr		:table	 = ExclusivePopupManager:new("NaturalDisasterPopup");
+local m_kQueuedPopups	:table = {};
+local m_kCurrentPopup	:table = nil;
 
 
 -- ===========================================================================
 --	FUNCTIONS
 -- ===========================================================================
 
+
 -- ===========================================================================
--- Natural wonders can be multiple hexes, and require their own code to find all affected hexes
+--	Natural wonders can be multiple hexes, and require their own code to find all affected hexes
+-- ===========================================================================
 function GetAffectedPlots_NaturalWonder(plotx:number, ploty:number)
 	local pPlot = Map.GetPlot(plotx, ploty);
 	if (pPlot ~= nil and pPlot:IsNaturalWonder()) then
 		local pFeature = pPlot:GetFeature();
 		return pFeature:GetPlots();
 	else
-		-- ASSERT
+		UI.DataAssert("No plot("..tostring(plotx)..","..tostring(ploty)..") was affected by a natural wonder (disaster).");
 		return nil;
 	end
 end
 
--- River floodplains can be multiple hexes, and require their own code to find all affected hexes
+-- ===========================================================================
+--	River floodplains can be multiple hexes, and require their own code to find all affected hexes
+-- ===========================================================================
 function GetAffectedPlots_Flood(plotx:number, ploty:number)
 	local eRiver = RiverManager.GetRiverForFloodplain(plotx, ploty);
 	if (eRiver >= 0) then
 		return RiverManager.GetFloodplainPlots(eRiver);
 	else
+		UI.DataAssert("No plot("..tostring(plotx)..","..tostring(ploty)..") was affected by a flood.");
 		return nil;
 	end
 end
 
--- Storms can be multiple hexes, and require their own code to find all affected hexes
+-- ===========================================================================
+--	Storms can be multiple hexes, and require their own code to find all affected hexes
+-- ===========================================================================
 function GetAffectedPlots_Storm(plotx:number, ploty:number)
 	local iStormID = GameClimate.GetActiveStormIDAtPlot(plotx, ploty);
 	return GameClimate.GetStormPlotsByID(iStormID)
 end
 
--- Droughts can be multiple hexes, and require their own code to find all affected hexes
+-- ===========================================================================
+--	Droughts can be multiple hexes, and require their own code to find all affected hexes
+-- ===========================================================================
 function GetAffectedPlots_Drought(plotx:number, ploty:number)
 	local iDroughtID = GameClimate.GetActiveDroughtIDAtPlot(plotx, ploty);
 	return GameClimate.GetDroughtPlotsByID(iDroughtID);
@@ -125,7 +135,7 @@ function Close()
 		LuaEvents.NaturalDisasterPopup_Closed();	-- Signal other systems (e.g., bulk show UI)
 		UI.SetInterfaceMode(InterfaceModeTypes.SELECTION);		
 		UILens.RestoreActiveLens();
-		UnlockPopupSequence();
+		m_kPopupMgr:Unlock();
 	end
 end
 
@@ -189,6 +199,13 @@ function ShowPopup( kData:table )
 
 	if kData.Description then
 		Controls.DisasterDescription:SetText( kData.Description );
+	end
+
+	if kData.FertilityAdded ~= nil and kData.FertilityAdded < 0 then
+		Controls.PlotLostFertileLabel:SetText(math.abs(kData.FertilityAdded));
+		Controls.PlotLostFertileContainer:SetHide(false);
+	else
+		Controls.PlotLostFertileContainer:SetHide(true);
 	end
 
 	if kData.FertilityAdded ~= nil and kData.FertilityAdded > 0 then
@@ -314,8 +331,8 @@ function OnRandomEventOccurred(type:number, severity:number, plotx:number, ploty
 		end
 
 		-- Add to queue if already showing a popup
-		if not IsLocked() then
-			LockPopupSequence( "NaturalDisaster", PopupPriority.Medium );
+		if not m_kPopupMgr:IsLocked() then								
+			m_kPopupMgr:Lock( ContextPtr, PopupPriority.Medium );
 			ShowPopup( kData );
 			LuaEvents.NaturalDisasterPopup_Shown(); -- Signal other systems (e.g., bulk hide UI)
 		else
@@ -326,7 +343,7 @@ end
 
 -- ===========================================================================
 function OnLocalPlayerTurnEnd()
-	if IsLocked() then
+	if m_kPopupMgr:IsLocked() then
 		m_kQueuedPopups = {};	-- Ensure queue is empty to close immediately.
 		Close();
 	end
@@ -358,7 +375,7 @@ end
 function OnShutdown()
 	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "isHidden", ContextPtr:IsHidden());
 	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "m_kCurrentPopup", m_kCurrentPopup);
-	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "m_popupSupportEventID", m_popupSupportEventID);		-- In popupsupport
+	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "m_kPopupMgr", m_kPopupMgr.ToTable() );
 end
 
 -- ===========================================================================
@@ -370,7 +387,7 @@ function OnGameDebugReturn(context:string, contextTable:table)
 				ShowPopup(m_kCurrentPopup);
 			end
 		end
-		m_popupSupportEventID = contextTable["m_popupSupportEventID"];
+		m_kPopupMgr.FromTable( contextTable["m_kPopupMgr"], ContextPtr );
 	end
 end
 

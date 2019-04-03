@@ -108,6 +108,9 @@ function AddGovernorInstance(governorInst:table, governor:table, governorDef:tab
 		-- Governor Icon
 		UpdateGovernorIcon(governorInst, governor);
 
+		--This is one area where we do not want the tooltip
+		governorInst.GovernorIcon:SetToolTipString("");
+
 		-- Culture Identity Pressure
 		governorInst.IdentityPressureContainer:SetHide(true);
 		if (city ~= nil and Game.GetLocalPlayer() ~= nil) then
@@ -199,18 +202,20 @@ function RefreshBottomPanel()
 				local bDisabled:boolean = false;
 				local sFailureText = "";
 				local playerGovernors = localPlayer:GetGovernors();
-				local bCanAssign, results = playerGovernors:CanAssignGovernor(m_SelectedGovernorDef.Hash, pCapital, true);
-				bDisabled = not bCanAssign;
-				if (results ~= nil) then
-					local pFailureReasons : table = results[PlayerOperationResults.FAILURE_REASONS];
-					if pFailureReasons ~= nil and table.count( pFailureReasons ) > 0 then
-						-- Collect them all!
-						for i,v in ipairs(pFailureReasons) do
-							sFailureText = sFailureText .. "[NEWLINE]" .. Locale.Lookup(v);
+				if (pCapital ~= nil) then
+					local bCanAssign, results = playerGovernors:CanAssignGovernor(m_SelectedGovernorDef.Hash, pCapital, true);
+					bDisabled = not bCanAssign;
+					if (results ~= nil) then
+						local pFailureReasons : table = results[PlayerOperationResults.FAILURE_REASONS];
+						if pFailureReasons ~= nil and table.count( pFailureReasons ) > 0 then
+							-- Collect them all!
+							for i,v in ipairs(pFailureReasons) do
+								sFailureText = sFailureText .. "[NEWLINE]" .. Locale.Lookup(v);
+							end
 						end
 					end
+					AddCityInstance(pCapital, bDisabled, sFailureText);
 				end
-				AddCityInstance(pCapital, bDisabled, sFailureText);
 			end
 		end
 	end
@@ -248,8 +253,8 @@ function AddCityInstance( city:table, bDisabled:boolean, sFailureText:string )
 
 	-- Get colors
 	local backColor:number, frontColor:number = UI.GetPlayerColors(cityOwner);
-	local darkerBackColor:number = DarkenLightenColor(backColor,(-85),238);
-	local brighterBackColor:number = DarkenLightenColor(backColor,90,255);
+	local darkerBackColor:number = UI.DarkenLightenColor(backColor,(-85),238);
+	local brighterBackColor:number = UI.DarkenLightenColor(backColor,90,255);
 
 	-- Update colors
 	instance.BannerBase:SetColor( backColor );

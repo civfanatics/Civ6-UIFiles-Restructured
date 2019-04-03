@@ -350,8 +350,22 @@ end
 function TutorialLoader:CreateTutorialItems(AddToListener:ifunction)
 
 	-- ===========================================================================		
-	item = TutorialItem:new("REVEAL_FIRST_FLOODPLAIN");
+	local item = TutorialItem:new("REVEAL_FIRST_FLOODPLAIN");
 	item:SetRaiseEvents("RevealFirstFloodplain");
+	item:SetRaiseFunction(
+		function()
+			-- If first turn and starting at an XP2 feature, let normal intro play first.
+			local tutorialLevel :number = UserConfiguration.TutorialLevel() ;
+			local hasChosenTutorialLevel :number = Options.GetUserOption("Tutorial", "HasChosenTutorialLevel");
+			if ((tutorialLevel == 0 or tutorialLevel == 1) and hasChosenTutorialLevel == 0) then
+				local isCompleted = TutorialItemCompleted("FIRST_GREETING");
+				if isCompleted==false then
+					AddItemToQueue( item );	-- Force queue for after intro.
+				end
+				return isCompleted;
+			end
+			return true;
+		end);			
 	item:SetTutorialLevel(TutorialLevel.LEVEL_EXPERIENCED_PLAYER);
 	item:SetIsEndOfChain(true);
 	item:SetIsQueueable(true);
@@ -376,8 +390,16 @@ function TutorialLoader:CreateTutorialItems(AddToListener:ifunction)
 	AddToListener("RevealFirstFloodplain", item);
 
 	-- ===========================================================================		
-	item = TutorialItem:new("REVEAL_FIRST_VOLCANO");
+	local item = TutorialItem:new("REVEAL_FIRST_VOLCANO");
 	item:SetRaiseEvents("RevealFirstVolcano");
+	item:SetRaiseFunction(
+		function()
+			-- If first turn and starting at an XP2 feature, let normal intro play first.
+			if UserConfiguration.TutorialLevel() == TutorialLevel.LEVEL_TBS_FAMILIAR then
+				return TutorialItemCompleted("FIRST_GREETING");
+			end
+			return true;
+		end);				
 	item:SetTutorialLevel(TutorialLevel.LEVEL_EXPERIENCED_PLAYER);
 	item:SetIsEndOfChain(true);
 	item:SetIsQueueable(true);
@@ -402,8 +424,16 @@ function TutorialLoader:CreateTutorialItems(AddToListener:ifunction)
 	AddToListener("RevealFirstVolcano", item);
 
 	-- ===========================================================================		
-	item = TutorialItem:new("REVEAL_FIRST_GEOTHERMAL_FISSURE");
+	local item = TutorialItem:new("REVEAL_FIRST_GEOTHERMAL_FISSURE");
 	item:SetRaiseEvents("RevealFirstGeothermalFissure");
+	item:SetRaiseFunction(
+		function()
+			-- If first turn and starting at an XP2 feature, let normal intro play first.
+			if UserConfiguration.TutorialLevel() == TutorialLevel.LEVEL_TBS_FAMILIAR then
+				return TutorialItemCompleted("FIRST_GREETING");
+			end
+			return true;
+		end);			
 	item:SetTutorialLevel(TutorialLevel.LEVEL_EXPERIENCED_PLAYER);
 	item:SetIsEndOfChain(true);
 	item:SetIsQueueable(true);
@@ -424,11 +454,11 @@ function TutorialLoader:CreateTutorialItems(AddToListener:ifunction)
 	item:SetIsDoneFunction(
 		function()
 			return false;
-		end );
+		end );	
 	AddToListener("RevealFirstGeothermalFissure", item);
 
 	-- ===========================================================================		
-	item = TutorialItem:new("FIRST_CLIMATE_CHANGE");
+	local item = TutorialItem:new("FIRST_CLIMATE_CHANGE");
 	item:SetRaiseEvents("FirstClimateChange");
 	item:SetTutorialLevel(TutorialLevel.LEVEL_EXPERIENCED_PLAYER);
 	item:SetIsEndOfChain(true);
@@ -454,7 +484,7 @@ function TutorialLoader:CreateTutorialItems(AddToListener:ifunction)
 	AddToListener("FirstClimateChange", item);
 	
 		-- ===========================================================================		
-	item = TutorialItem:new("CONSUME_FIRST_POWER_RESOURCE");
+	local item = TutorialItem:new("CONSUME_FIRST_POWER_RESOURCE");
 	item:SetRaiseEvents("ConsumeFirstPowerResource");
 	item:SetTutorialLevel(TutorialLevel.LEVEL_EXPERIENCED_PLAYER);
 	item:SetIsEndOfChain(true);
@@ -480,7 +510,7 @@ function TutorialLoader:CreateTutorialItems(AddToListener:ifunction)
 	AddToListener("ConsumeFirstPowerResource", item);
 
 	-- ===========================================================================		
-	item = TutorialItem:new("FIRST_STORM_REVEAL");
+	local item = TutorialItem:new("FIRST_STORM_REVEAL");
 	item:SetRaiseEvents("FirstStormReveal");
 	item:SetTutorialLevel(TutorialLevel.LEVEL_EXPERIENCED_PLAYER);
 	item:SetIsEndOfChain(true);
@@ -506,7 +536,7 @@ function TutorialLoader:CreateTutorialItems(AddToListener:ifunction)
 	AddToListener("FirstStormReveal", item);
 
 	-- ===========================================================================
-	item = TutorialItem:new("EMERGENCY_TRIGGER_HOSTILE");
+	local item = TutorialItem:new("EMERGENCY_TRIGGER_HOSTILE");
 	item:SetRaiseEvents("EmergencyTriggerHostile");
 	item:SetTutorialLevel(TutorialLevel.LEVEL_EXPERIENCED_PLAYER);
 	item:SetIsEndOfChain(true);
@@ -525,7 +555,7 @@ function TutorialLoader:CreateTutorialItems(AddToListener:ifunction)
 	AddToListener("EmergencyTriggerHostile", item);
 
 	-- ===========================================================================
-	item = TutorialItem:new("EMERGENCY_TRIGGER_NON_HOSTILE");
+	local item = TutorialItem:new("EMERGENCY_TRIGGER_NON_HOSTILE");
 	item:SetRaiseEvents("EmergencyTriggerNonHostile");
 	item:SetTutorialLevel(TutorialLevel.LEVEL_EXPERIENCED_PLAYER);
 	item:SetIsEndOfChain(true);
@@ -544,7 +574,7 @@ function TutorialLoader:CreateTutorialItems(AddToListener:ifunction)
 	AddToListener("EmergencyTriggerNonHostile", item);
 
 	-- ===========================================================================		
-	item = TutorialItem:new("INTRO_TO_WORLD_CONGRESS");
+	local item = TutorialItem:new("INTRO_TO_WORLD_CONGRESS");
 	item:SetRaiseEvents("IntroToWorldCongress");
 	item:SetTutorialLevel(TutorialLevel.LEVEL_EXPERIENCED_PLAYER);
 	item:SetIsEndOfChain(true);
@@ -569,7 +599,7 @@ function TutorialLoader:CreateTutorialItems(AddToListener:ifunction)
 	AddToListener("IntroToWorldCongress", item);
 
 	-- ===========================================================================		
-	item = TutorialItem:new("WORLD_CONGRESS_STAGE_2");
+	local item = TutorialItem:new("WORLD_CONGRESS_STAGE_2");
 	item:SetRaiseEvents("WorldCongressStage2");
 	item:SetTutorialLevel(TutorialLevel.LEVEL_EXPERIENCED_PLAYER);
 	item:SetIsEndOfChain(true);
@@ -594,7 +624,7 @@ function TutorialLoader:CreateTutorialItems(AddToListener:ifunction)
 	AddToListener("WorldCongressStage2", item);
 
 	-- ===========================================================================		
-	item = TutorialItem:new("WORLD_CONGRESS_EMERGENCY_AVAILABLE");
+	local item = TutorialItem:new("WORLD_CONGRESS_EMERGENCY_AVAILABLE");
 	item:SetRaiseEvents("WorldCongressEmergencyAvailable");
 	item:SetTutorialLevel(TutorialLevel.LEVEL_EXPERIENCED_PLAYER);
 	item:SetIsEndOfChain(true);
@@ -612,7 +642,7 @@ function TutorialLoader:CreateTutorialItems(AddToListener:ifunction)
 	AddToListener("WorldCongressEmergencyAvailable", item);
 
 	-- ===========================================================================		
-	item = TutorialItem:new("WORLD_CONGRESS_SPECIAL_SESSION_AND_EMERGENCY_AVAILABLE");
+	local item = TutorialItem:new("WORLD_CONGRESS_SPECIAL_SESSION_AND_EMERGENCY_AVAILABLE");
 	item:SetRaiseEvents("WorldCongressSpecialIncomingCanPropose");
 	item:SetTutorialLevel(TutorialLevel.LEVEL_EXPERIENCED_PLAYER);
 	item:SetIsEndOfChain(true);
@@ -630,7 +660,7 @@ function TutorialLoader:CreateTutorialItems(AddToListener:ifunction)
 	AddToListener("WorldCongressSpecialIncomingCanPropose", item);
 
 	-- ===========================================================================		
-	item = TutorialItem:new("WORLD_CONGRESS_OVER");
+	local item = TutorialItem:new("WORLD_CONGRESS_OVER");
 	item:SetRaiseEvents("WorldCongressFinished");
 	item:SetTutorialLevel(TutorialLevel.LEVEL_EXPERIENCED_PLAYER);
 	item:SetIsEndOfChain(true);
@@ -650,7 +680,7 @@ function TutorialLoader:CreateTutorialItems(AddToListener:ifunction)
 	AddToListener("WorldCongressFinished", item);
 
 	-- ===========================================================================		
-	item = TutorialItem:new("WORLD_CONGRESS_INITIAL_ERA");
+	local item = TutorialItem:new("WORLD_CONGRESS_INITIAL_ERA");
 	item:SetRaiseEvents("WorldCongressInitialEra");
 	item:SetTutorialLevel(TutorialLevel.LEVEL_EXPERIENCED_PLAYER);
 	item:SetIsEndOfChain(true);
@@ -676,7 +706,7 @@ function TutorialLoader:CreateTutorialItems(AddToListener:ifunction)
 	AddToListener("WorldCongressInitialEra", item);
 
 	-- ===========================================================================
-	item = TutorialItem:new("CITY_UNPOWERED");
+	local item = TutorialItem:new("CITY_UNPOWERED");
 	item:SetRaiseEvents("CityUnpowered");
 	item:SetTutorialLevel(TutorialLevel.LEVEL_EXPERIENCED_PLAYER);
 	item:SetIsEndOfChain(true);
@@ -708,7 +738,7 @@ function TutorialLoader:CreateTutorialItems(AddToListener:ifunction)
 	AddToListener("CityUnpowered", item);
 
 	-- ===========================================================================
-	item = TutorialItem:new("EXOPLANET_PROJECT_AVAILABLE");
+	local item = TutorialItem:new("EXOPLANET_PROJECT_AVAILABLE");
 	item:SetRaiseEvents("ExoplanetProjectAvailable");
 	item:SetTutorialLevel(TutorialLevel.LEVEL_EXPERIENCED_PLAYER);
 	item:SetIsEndOfChain(true);
@@ -734,7 +764,7 @@ function TutorialLoader:CreateTutorialItems(AddToListener:ifunction)
 	AddToListener("ExoplanetProjectAvailable", item);
 
 	-- ===========================================================================
-	item = TutorialItem:new("EXOPLANET_SUPPORT_PROJECTS_AVAILABLE");
+	local item = TutorialItem:new("EXOPLANET_SUPPORT_PROJECTS_AVAILABLE");
 	item:SetRaiseEvents("ExoplanetSupportProjectsAvailable");
 	item:SetTutorialLevel(TutorialLevel.LEVEL_EXPERIENCED_PLAYER);
 	item:SetIsEndOfChain(true);
@@ -760,7 +790,7 @@ function TutorialLoader:CreateTutorialItems(AddToListener:ifunction)
 	AddToListener("ExoplanetSupportProjectsAvailable", item);
 
 	-- ===========================================================================
-	item = TutorialItem:new("UNLOCKED_CANALS_TECH");
+	local item = TutorialItem:new("UNLOCKED_CANALS_TECH");
 	item:SetRaiseEvents("UnlockedCanalsTech");
 	item:SetTutorialLevel(TutorialLevel.LEVEL_EXPERIENCED_PLAYER);
 	item:SetIsEndOfChain(true);
@@ -786,7 +816,7 @@ function TutorialLoader:CreateTutorialItems(AddToListener:ifunction)
 	AddToListener("UnlockedCanalsTech", item);
 
 	-- ===========================================================================
-	item = TutorialItem:new("UNLOCKED_DAMS_TECH");
+	local item = TutorialItem:new("UNLOCKED_DAMS_TECH");
 	item:SetRaiseEvents("UnlockedDamsTech");
 	item:SetTutorialLevel(TutorialLevel.LEVEL_EXPERIENCED_PLAYER);
 	item:SetIsEndOfChain(true);
@@ -812,7 +842,7 @@ function TutorialLoader:CreateTutorialItems(AddToListener:ifunction)
 	AddToListener("UnlockedDamsTech", item);
 
 	-- ===========================================================================
-	item = TutorialItem:new("UNLOCKED_RAILROADS_TECH");
+	local item = TutorialItem:new("UNLOCKED_RAILROADS_TECH");
 	item:SetRaiseEvents("UnlockedRailroadsTech");
 	item:SetTutorialLevel(TutorialLevel.LEVEL_EXPERIENCED_PLAYER);
 	item:SetIsEndOfChain(true);
@@ -838,7 +868,7 @@ function TutorialLoader:CreateTutorialItems(AddToListener:ifunction)
 	AddToListener("UnlockedRailroadsTech", item);
 
 	-- ===========================================================================
-	item = TutorialItem:new("UNLOCKED_MOUNTAIN_ROUTE_TECH");
+	local item = TutorialItem:new("UNLOCKED_MOUNTAIN_ROUTE_TECH");
 	item:SetRaiseEvents("UnlockedMountainRouteTech");
 	item:SetTutorialLevel(TutorialLevel.LEVEL_EXPERIENCED_PLAYER);
 	item:SetIsEndOfChain(true);
@@ -864,7 +894,7 @@ function TutorialLoader:CreateTutorialItems(AddToListener:ifunction)
 	AddToListener("UnlockedMountainRouteTech", item);
 
 	-- ===========================================================================
-	item = TutorialItem:new("UNLOCKED_QHAPAQ_NAN");
+	local item = TutorialItem:new("UNLOCKED_QHAPAQ_NAN");
 	item:SetRaiseEvents("UnlockedQhpaqNan");
 	item:SetTutorialLevel(TutorialLevel.LEVEL_EXPERIENCED_PLAYER);
 	item:SetIsEndOfChain(true);
@@ -890,7 +920,7 @@ function TutorialLoader:CreateTutorialItems(AddToListener:ifunction)
 	AddToListener("UnlockedQhpaqNan", item);
 
 	-- ===========================================================================
-	item = TutorialItem:new("UNLOCKED_DIRTY_POWER_CHECK");
+	local item = TutorialItem:new("UNLOCKED_DIRTY_POWER_CHECK");
 	item:SetRaiseEvents("UnlockedDirtyPowerTech");
 	item:SetTutorialLevel(TutorialLevel.LEVEL_EXPERIENCED_PLAYER);
 	item:SetIsEndOfChain(true);
@@ -916,7 +946,7 @@ function TutorialLoader:CreateTutorialItems(AddToListener:ifunction)
 	AddToListener("UnlockedDirtyPowerTech", item);
 
 	-- ===========================================================================
-	item = TutorialItem:new("UNLOCKED_CLEAN_POWER_CHECK");
+	local item = TutorialItem:new("UNLOCKED_CLEAN_POWER_CHECK");
 	item:SetRaiseEvents("UnlockedCleanPowerTech");
 	item:SetTutorialLevel(TutorialLevel.LEVEL_EXPERIENCED_PLAYER);
 	item:SetIsEndOfChain(true);
@@ -942,7 +972,7 @@ function TutorialLoader:CreateTutorialItems(AddToListener:ifunction)
 	AddToListener("UnlockedCleanPowerTech", item);
 
 	-- ===========================================================================
-	item = TutorialItem:new("FUTURE_ERA_IMMINENT");
+	local item = TutorialItem:new("FUTURE_ERA_IMMINENT");
 	item:SetRaiseEvents("FutureEraImminent");
 	item:SetTutorialLevel(TutorialLevel.LEVEL_EXPERIENCED_PLAYER);
 	item:SetIsEndOfChain(true);
@@ -962,7 +992,7 @@ function TutorialLoader:CreateTutorialItems(AddToListener:ifunction)
 	AddToListener("FutureEraImminent", item);
 
 	-- ===========================================================================
-	item = TutorialItem:new("FIRST_POWER_REQUIRED_BUILDABLE");
+	local item = TutorialItem:new("FIRST_POWER_REQUIRED_BUILDABLE");
 	item:SetRaiseEvents("FirstPowerRequiredBuildable");
 	item:SetTutorialLevel(TutorialLevel.LEVEL_EXPERIENCED_PLAYER);
 	item:SetIsEndOfChain(true);
@@ -988,7 +1018,7 @@ function TutorialLoader:CreateTutorialItems(AddToListener:ifunction)
 	AddToListener("FirstPowerRequiredBuildable", item);
 
 	-- ===========================================================================
-	item = TutorialItem:new("UNIT_REQUIRES_FUEL_BUILT");
+	local item = TutorialItem:new("UNIT_REQUIRES_FUEL_BUILT");
 	item:SetRaiseEvents("UnitRequiresFuelBuilt");
 	item:SetTutorialLevel(TutorialLevel.LEVEL_EXPERIENCED_PLAYER);
 	item:SetIsEndOfChain(true);
@@ -1014,7 +1044,7 @@ function TutorialLoader:CreateTutorialItems(AddToListener:ifunction)
 	AddToListener("UnitRequiresFuelBuilt", item);
 
 	-- ===========================================================================
-	item = TutorialItem:new("NEGATIVE_RESOURCE_RATE");
+	local item = TutorialItem:new("NEGATIVE_RESOURCE_RATE");
 	item:SetRaiseEvents("NegativeResourceRate");
 	item:SetTutorialLevel(TutorialLevel.LEVEL_EXPERIENCED_PLAYER);
 	item:SetIsEndOfChain(true);
@@ -1040,7 +1070,7 @@ function TutorialLoader:CreateTutorialItems(AddToListener:ifunction)
 	AddToListener("NegativeResourceRate", item);
 
 	-- ===========================================================================
-	item = TutorialItem:new("STRATEGIC_RESOURCE_EARNED");
+	local item = TutorialItem:new("STRATEGIC_RESOURCE_EARNED");
 	item:SetRaiseEvents("FirstStrategicResourceEarned");
 	item:SetTutorialLevel(TutorialLevel.LEVEL_EXPERIENCED_PLAYER);
 	item:SetIsEndOfChain(true);
@@ -1065,8 +1095,8 @@ function TutorialLoader:CreateTutorialItems(AddToListener:ifunction)
 		end );
 	AddToListener("FirstStrategicResourceEarned", item);
 
--- ===========================================================================
-	item = TutorialItem:new("ROCK_BAND_AVAILABLE");
+	-- ===========================================================================
+	local item = TutorialItem:new("ROCK_BAND_AVAILABLE");
 	item:SetRaiseEvents("RockBandAvailable");
 	item:SetTutorialLevel(TutorialLevel.LEVEL_EXPERIENCED_PLAYER);
 	item:SetIsEndOfChain(true);
@@ -1091,8 +1121,8 @@ function TutorialLoader:CreateTutorialItems(AddToListener:ifunction)
 		end );
 	AddToListener("RockBandAvailable", item);
 
--- ===========================================================================
-	item = TutorialItem:new("COASTAL_LOWLANDS");
+	-- ===========================================================================
+	local item = TutorialItem:new("COASTAL_LOWLANDS");
 	item:SetRaiseEvents("CoastalLowlands");
 	item:SetTutorialLevel(TutorialLevel.LEVEL_EXPERIENCED_PLAYER);
 	item:SetIsEndOfChain(true);

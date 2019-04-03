@@ -70,7 +70,7 @@ function AddOverviewAgendas(overviewInstance:table)
 		if ( numHiddenAgendas > 0 ) then
 				local hiddenAgenda = GetIntelOverviewAgendaEntries():GetInstance(overviewAgendasInst.OverviewAgendasStack);
                 hiddenAgenda.Text:LocalizeAndSetText("LOC_DIPLOMACY_HIDDEN_AGENDAS", numHiddenAgendas, numHiddenAgendas>1 );
-                if ( numHiddenAgendas > 1 ) then
+                if ( numHiddenAgendas > 1  or numRandomAgendas == 1 ) then
                     hiddenAgenda.Text:LocalizeAndSetToolTip("LOC_DIPLOMACY_HIDDEN_AGENDAS_TT");
                 else
                     hiddenAgenda.Text:LocalizeAndSetToolTip("LOC_DIPLOMACY_HIDDEN_AGENDAS_TT_LATE");
@@ -280,6 +280,7 @@ function LateInitialize()
 	BASE_LateInitialize();
 	LuaEvents.WorldCongress_OpenDiplomacyActionViewLite.Add(OnOpenDiplomacyActionViewLite);
 	LuaEvents.WorldCongress_OpenDiplomacyActionView.Add(OnOpenDiplomacyActionView);
+	LuaEvents.NotificationPanel_GrievanceTalkToLeader.Add(OnTalkToLeader);
 
 	local isCongressInSession:boolean = false;
 	
@@ -295,8 +296,10 @@ function LateInitialize()
 			LuaEvents.DiplomacyActionView_ResumeCongress();
 		end
 	end);
+	
 	Controls.LaunchBacking:SetSizeX(Controls.TabBar:GetSizeX() + 144);
 	Controls.LaunchBackingTile:SetSizeX(Controls.TabBar:GetSizeX() + 10);
 	Controls.LaunchBarDropShadow:SetSizeX(Controls.TabBar:GetSizeX());
+	
 	ContextPtr:SetShowHandler( OnShow );
 end

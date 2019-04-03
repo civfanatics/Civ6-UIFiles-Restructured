@@ -28,7 +28,7 @@ BASE_PopulatePlayerAvailablePanel = PopulatePlayerAvailablePanel;
 -- ===========================================================================
 function OnClickAvailableResource(player, resourceType)
 
-	if (ms_bIsDemand == true and ms_InitiatedByPlayerID == ms_OtherPlayerID) then
+	if ((ms_bIsDemand == true or ms_bIsGift == true) and ms_InitiatedByPlayerID == ms_OtherPlayerID) then
 		-- Can't modifiy demand that is not ours
 		return;
 	end
@@ -228,7 +228,7 @@ end
 -- ===========================================================================
 function OnClickAvailableOneTimeFavor(player, iAddAmount: number)
 
-	if (ms_bIsDemand == true and ms_InitiatedByPlayerID == ms_OtherPlayerID) then
+	if ((ms_bIsDemand == true or ms_bIsGift == true) and ms_InitiatedByPlayerID == ms_OtherPlayerID) then
 		-- Can't modifiy demand that is not ours
 		return;
 	end

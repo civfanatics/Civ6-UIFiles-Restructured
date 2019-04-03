@@ -392,5 +392,6 @@ function Initialize()
 	LuaEvents.WorldCongress_ShowEmergency.Add( OnEmergencyAvailable );
 	LuaEvents.WorldCrisisTracker_EmergencyClicked.Add( OnEmergencyAvailable );
 	LuaEvents.NotificationPanel_EmergencyClicked.Add( OnEmergencyAvailable );
+	LuaEvents.DiploScene_SceneOpened.Add(OnClose);
 end
 Initialize();

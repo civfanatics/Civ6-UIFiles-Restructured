@@ -245,6 +245,24 @@ function GetDetails(data)
 		table.insert(details, Locale.Lookup("LOC_TOOLTIP_CONTINENT", GameInfo.Continents[data.Continent].Description));
 	end
 
+	-- Flooding (XP2)
+	if (data.CoastalLowland ~= -1) then
+		local szDetailsText = "";
+		if (data.CoastalLowland == 0) then
+			szDetailsText = Locale.Lookup("LOC_COASTAL_LOWLAND_1M_NAME");
+		elseif (data.CoastalLowland == 1) then
+			szDetailsText = Locale.Lookup("LOC_COASTAL_LOWLAND_2M_NAME");
+		elseif (data.CoastalLowland == 2) then
+			szDetailsText = Locale.Lookup("LOC_COASTAL_LOWLAND_3M_NAME");
+		end
+		if (data.Submerged) then
+			szDetailsText = szDetailsText .. " " .. Locale.Lookup ("LOC_COASTAL_LOWLAND_SUBMERGED");
+		elseif (data.Flooded) then
+			szDetailsText = szDetailsText .. " " .. Locale.Lookup ("LOC_COASTAL_LOWLAND_FLOODED");
+		end
+		table.insert(details, szDetailsText);
+	end
+
 	-- Conditional display based on tile type
 
 	-- WONDER TILE
@@ -484,23 +502,6 @@ function GetDetails(data)
 
 	if (data.Fallout > 0) then
 		table.insert(details, Locale.Lookup("LOC_TOOLTIP_PLOT_CONTAMINATED_TEXT", data.Fallout));
-	end
-
-	if (data.CoastalLowland ~= -1) then
-		local szDetailsText = "";
-		if (data.CoastalLowland == 0) then
-			szDetailsText = Locale.Lookup("LOC_COASTAL_LOWLAND_1M_NAME");
-		elseif (data.CoastalLowland == 1) then
-			szDetailsText = Locale.Lookup("LOC_COASTAL_LOWLAND_2M_NAME");
-		elseif (data.CoastalLowland == 2) then
-			szDetailsText = Locale.Lookup("LOC_COASTAL_LOWLAND_3M_NAME");
-		end
-		if (data.Submerged) then
-			szDetailsText = szDetailsText .. " " .. Locale.Lookup ("LOC_COASTAL_LOWLAND_SUBMERGED");
-		elseif (data.Flooded) then
-			szDetailsText = szDetailsText .. " " .. Locale.Lookup ("LOC_COASTAL_LOWLAND_FLOODED");
-		end
-		table.insert(details, szDetailsText);
 	end
 
 	return details;

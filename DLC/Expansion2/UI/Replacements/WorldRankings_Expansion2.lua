@@ -551,7 +551,7 @@ function PopulateTabs()
 	end
 
 	-- Create TabSupport object
-	g_TabSupport = CreateTabs(Controls.TabContainer, 42, 44, 0xFF331D05);
+	g_TabSupport = CreateTabs(Controls.TabContainer, 42, 44, UI.GetColorValueFromHexLiteral(0xFF331D05));
 
 	local defaultTab = AddTab(TAB_OVERALL, ViewOverall);
 

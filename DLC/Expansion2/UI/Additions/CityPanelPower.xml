@@ -15,9 +15,9 @@
           <Grid Size="125,55" Style="CityPanelSubPanelContainer">
             <Stack Anchor="C,C" StackGrowth="Right" StackPadding="6">
               <Stack StackPadding="2">
-                <Label ID="ConsumingPowerLabel" Anchor="C,T" Style="CityPanelText"/>
+                <Label ID="ConsumingPowerLabel" Anchor="L,T" Style="CityPanelText"/>
                 <Label Anchor="C,T" Style="CityPanelText" String="LOC_POWER_PANEL_OF"/>
-                <Label ID="RequiredPowerLabel" Anchor="C,T" Style="CityPanelText"/>
+                <Label ID="RequiredPowerLabel" Anchor="L,T" Style="CityPanelText"/>
               </Stack>
             </Stack>
           </Grid>

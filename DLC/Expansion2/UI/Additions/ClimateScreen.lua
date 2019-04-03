@@ -1,5 +1,5 @@
 --	Copyright 2018, Firaxis Games
-
+ 
 -- ===========================================================================
 include("InstanceManager");
 include("SupportFunctions");	--Round
@@ -131,7 +131,7 @@ function GetWorstCO2PlayerID()
 
 	if CO2Total > 0 then
 		for _,pPlayer in ipairs(PlayerManager.GetAliveMajors()) do			
-			local CO2:number = GameClimate.GetPlayerCO2Footprint( pPlayer:GetID() );
+			local CO2:number = GameClimate.GetPlayerCO2Footprint( pPlayer:GetID(), false );
 			if CO2 > worstCO2 then
 				CO2TopPlayer = pPlayer:GetID();
 				worstCO2 = CO2;
@@ -316,6 +316,14 @@ function RefreshCurrentEvent()
 			-- Buff/Debuff
 			local bAnyBuff:boolean = false;
 
+			if kCurrentEvent.FertilityAdded ~= nil and kCurrentEvent.FertilityAdded < 0 then
+				Controls.PlotLostFertileLabel:SetText(math.abs(kCurrentEvent.FertilityAdded));
+				Controls.PlotLostFertileContainer:SetHide(false);
+				bAnyBuff = true;
+			else
+				Controls.PlotLostFertileContainer:SetHide(true);
+			end
+
 			if kCurrentEvent.FertilityAdded ~= nil and kCurrentEvent.FertilityAdded > 0 then
 				Controls.PlotFertileLabel:SetText(kCurrentEvent.FertilityAdded);
 				Controls.PlotFertileContainer:SetHide(false);
@@ -378,7 +386,7 @@ function TabSelectOverview()
 	end
 	
 	local CO2Total				:number = GameClimate.GetTotalCO2Footprint();
-	local CO2Player				:number = GameClimate.GetPlayerCO2Footprint( m_playerID );
+	local CO2Player				:number = GameClimate.GetPlayerCO2Footprint( m_playerID, false  );
 	local CO2TopPlayer			:number = GetWorstCO2PlayerID();
 	local CO2Modifier			:number = GameClimate.GetCO2FootprintModifier();
 	
@@ -537,7 +545,7 @@ function BuildPieChart( uiHolder:table, sliceIM:table, kSliceAmounts:table, kCol
 
 	-- If colors were not passed in, generate a table.
 	if kColors == nil or table.count(kColors)==0 then
-		kColors = { 0xff000099, 0xff008888, 0xff009900, 0xff888800, 0xff990000, 0xff880088 };
+		kColors = { UI.GetColorValueFromHexLiteral(0xff000099), UI.GetColorValueFromHexLiteral(0xff008888), UI.GetColorValueFromHexLiteral(0xff009900), UI.GetColorValueFromHexLiteral(0xff888800), UI.GetColorValueFromHexLiteral(0xff990000), UI.GetColorValueFromHexLiteral(0xff880088) };
 	end
 	local maxColors:number = #kColors;
 
@@ -581,7 +589,7 @@ function TabSelectCO2Levels()
 	RealizePlayerCO2();
 
 	local CO2Total		:number = GameClimate.GetTotalCO2Footprint();
-	local CO2Player		:number = GameClimate.GetPlayerCO2Footprint(m_playerID);
+	local CO2Player		:number = GameClimate.GetPlayerCO2Footprint(m_playerID, false );
 	local CO2Modifier	:number = GameClimate.GetCO2FootprintModifier();
 
 	local sGlobalTotal:string = "";
@@ -670,9 +678,17 @@ function CreateEventInstance( kEvent:table, kEventDef:table, iTurn:number )
 	-- Effects
 	if kEvent.FertilityAdded > 0 then
 		kInstance.FertilizedTilesIcon:SetHide(false);
+		kInstance.LosingFertilizedTilesIcon:SetHide(true);
 		kInstance.FertilizedTiles:SetText(kEvent.FertilityAdded);
+		kInstance.FertilizedContainer:SetToolTipString(Locale.Lookup("LOC_CLIMATE_FERTILIZED_TILES"));
+	elseif kEvent.FertilityAdded < 0 then
+		kInstance.FertilizedTilesIcon:SetHide(true);
+		kInstance.LosingFertilizedTilesIcon:SetHide(false);
+		kInstance.FertilizedTiles:SetText(math.abs(kEvent.FertilityAdded));
+		kInstance.FertilizedContainer:SetToolTipString(Locale.Lookup("LOC_CLIMATE_LOST_FERTILIZED_TILES"));
 	else
 		kInstance.FertilizedTilesIcon:SetHide(true);
+		kInstance.LosingFertilizedTilesIcon:SetHide(true);
 		kInstance.FertilizedTiles:SetText("");
 	end
 
@@ -723,32 +739,30 @@ function RealizePlayerCO2()
 	m_kYourCO2IM:ResetInstances();
 
 	for kResourceInfo in GameInfo.Resources() do
-		local resourceIndex	:number = kResourceInfo.Index;
-		if pResources:HasResource(resourceIndex) or pResources:HasExportedResource(resourceIndex) then
 
-			-- Player has the resource, but does the resource contribute to CO2?
-			local kConsumption:table = GameInfo.Resource_Consumption[kResourceInfo.ResourceType];
-			if kConsumption ~= nil and kConsumption.CO2perkWh ~= nil and kConsumption.CO2perkWh > 0 then
+		-- Does the resource contribute to CO2?
+		local kConsumption:table = GameInfo.Resource_Consumption[kResourceInfo.ResourceType];
+		if kConsumption ~= nil and kConsumption.CO2perkWh ~= nil and kConsumption.CO2perkWh > 0 then
 
-				-- Is the player using the resource?			
-				local amount :number = GameClimate.GetPlayerResourceCO2Footprint( m_playerID, kResourceInfo.Index );
-				if amount > 0 then
+			-- Is the player using the resource?			
+			local amount :number = GameClimate.GetPlayerResourceCO2Footprint( m_playerID, kResourceInfo.Index, false );
+			if amount > 0 then
 
-					local uiResource	:table = m_kYourCO2IM:GetInstance();
-					local resourceName	:string = Locale.Lookup( kResourceInfo.Name );
-					local co2Amount		:number = amount;
-					local color			:number = kColors[colorIndex];
+				local uiResource		:table = m_kYourCO2IM:GetInstance();
+				local co2Amount			:number = amount;
+				local color				:number = kColors[colorIndex];
+				local amountLastTurn	:number = GameClimate.GetPlayerResourceCO2Footprint( m_playerID, kResourceInfo.Index, true );
+				local resourceLastTurn	:number = GameClimate.GetPlayerResourceConsumption( m_playerID, kResourceInfo.Index, true );
 
-					uiResource.Amount:SetText( co2Amount );
-					uiResource.Icon:SetIcon("ICON_" .. kResourceInfo.ResourceType);
-					uiResource.Palette:SetColor( color );
-					uiResource.Icon:SetToolTipString( resourceName );
+				uiResource.Amount:SetText( co2Amount );
+				uiResource.Icon:SetIcon("ICON_" .. kResourceInfo.ResourceType);
+				uiResource.Palette:SetColor( color );
+				uiResource.Top:SetToolTipString( Locale.Lookup("LOC_CLIMATE_RESOURCE_CONSUMED_LAST_TURN", resourceLastTurn, kResourceInfo.Name, amountLastTurn) );
 
-					table.insert( kResourceUseAmounts, amount);
-					total = total + co2Amount;
+				table.insert( kResourceUseAmounts, amount);
+				total = total + co2Amount;
 
-					colorIndex = (colorIndex + 1) % maxColors;
-				end
+				colorIndex = (colorIndex + 1) % maxColors;
 			end
 		end
 	end
@@ -757,10 +771,6 @@ function RealizePlayerCO2()
 	for i,amount in ipairs( kResourceUseAmounts ) do
 		table.insert(kSliceAmounts, amount/total );
 	end
-
-	-- TODO remove, ??TRON debug data
-	-- kSliceAmounts = { 0.02, 0.03, 0.2, 0.05, 0.1, 0.07, 0.13, 0.21, 0.04, 0.15 };			
-	-- kSliceAmounts ={ 0.02, 0.03, 0.2, 0.05, 0.1 };
 	
 	BuildPieChart( Controls.TotalContributionsPie, m_kSliceIM, kSliceAmounts, kColors );
 end
@@ -789,9 +799,11 @@ function TabCO2ByCiviliation()
 	for _, pPlayer in ipairs(pPlayers) do
 		
 		local playerID			:number = pPlayer:GetID();
-		local CO2FootprintNum	:number = GameClimate.GetPlayerCO2Footprint( playerID );
+		local CO2FootprintNum	:number = GameClimate.GetPlayerCO2Footprint( playerID, false  );
 
-		total = total + CO2FootprintNum;
+		if CO2FootprintNum > 0 then
+			total = total + CO2FootprintNum;
+		end
 		
 		-- Only chart a slice if player has been met.
 		if pPlayerDiplomacy:HasMet(playerID) or m_playerID == playerID then			
@@ -852,8 +864,7 @@ function TabCO2ByResource()
 
 	-- For all the resources in the game
 	for kResourceInfo in GameInfo.Resources() do
-		local resourceIndex	:number = kResourceInfo.Index;
-		
+
 		-- Does the resource contribute to CO2?
 		local kConsumption:table = GameInfo.Resource_Consumption[kResourceInfo.ResourceType];
 		if kConsumption ~= nil and kConsumption.CO2perkWh ~= nil and kConsumption.CO2perkWh > 0 then
@@ -861,7 +872,7 @@ function TabCO2ByResource()
 			-- Loop through all players and sum up the CO2
 			local amount	:number = 0;			
 			for _,pPlayer in ipairs(PlayerManager.GetAliveMajors()) do			
-				amount = amount + GameClimate.GetPlayerResourceCO2Footprint( pPlayer:GetID(), kResourceInfo.Index );
+				amount = amount + GameClimate.GetPlayerResourceCO2Footprint( pPlayer:GetID(), kResourceInfo.Index, false );
 			end
 
 			-- If more than 0, add a UI element.
@@ -947,7 +958,7 @@ function UpdatePhaseBar( phase:number, realismAmount:number, globalTemp:number )
 	if (phase > 0) then
 		for i=1,phase,1 do
 			local uiSegment:table = m_kBarSegments[i];
-			uiSegment.Progress:SetColor(0xFFFFFFFF);
+			uiSegment.Progress:SetColor(UI.GetColorValue("COLOR_WHITE"));
 			uiSegment.Pip:SetTexture("Climate_PhaseMeterPip_On");
 		end
 	end
@@ -969,7 +980,7 @@ function InitPhaseSegment( segmentNum:number )
 	uiSegment.Name:SetText(Locale.ToRomanNumeral(segmentNum));	
 	m_kBarSegments[segmentNum] = uiSegment;	
 	uiSegment.Progress:SetTexture("Climate_PhaseMeter_" .. segmentNum);
-	uiSegment.Progress:SetColor(0x00FFFFFF);
+	uiSegment.Progress:SetColor(UI.GetColorValue("COLOR_CLEAR"));
 	uiSegment.Pip:SetTexture("Climate_PhaseMeterPip_Off");
 
 	UpdatePhaseTooltips(segmentNum);
@@ -987,13 +998,16 @@ function UpdatePhaseTooltips( segmentNum:number )
 	local szPhaseType = kEventDef.RandomEventType;
 	local iPoints = kEventDef.ClimateChangePoints;
 	local szAtOrAboveString = "";
+	local szLongDescription = "";
 
 	for row in GameInfo.CoastalLowlands() do
 		if (row.FloodedEvent == szPhaseType) then
 			szAtOrAboveString = Locale.Lookup("LOC_CLIMATE_TILES_AT_OR_BELOW_FLOOD_TOOLTIP", row.Name);
+			szLongDescription = GameInfo.RandomEvents[row.FloodedEvent].LongDescription;
 			break;
 		elseif (row.SubmergedEvent == szPhaseType) then
 			szAtOrAboveString = Locale.Lookup("LOC_CLIMATE_TILES_AT_OR_BELOW_SUBMERGE_TOOLTIP", row.Name);
+			szLongDescription = GameInfo.RandomEvents[row.SubmergedEvent].LongDescription;
 			break;
 		end
 	end
@@ -1011,6 +1025,10 @@ function UpdatePhaseTooltips( segmentNum:number )
 		..szAtOrAboveString
 		.."[NEWLINE]"
 		.."[NEWLINE]"..Locale.Lookup("LOC_CLIMATE_POLAR_ICE_MELT_TOOLTIP", kEventDef.IceLoss);
+
+	if (szLongDescription ~= nil and szLongDescription ~= "") then
+		tooltip = tooltip .. "[NEWLINE][NEWLINE]" .. Locale.Lookup(szLongDescription);
+	end
 
 	m_kBarSegments[segmentNum].Progress:SetToolTipString( tooltip );
 end
@@ -1041,7 +1059,7 @@ end
 function LateInitialize()
 
 	-- Tab setup and setting of default tab.
-	m_tabs = CreateTabs( Controls.TabContainer, 42, 34, 0xFF331D05 );
+	m_tabs = CreateTabs( Controls.TabContainer, 42, 34, UI.GetColorValueFromHexLiteral(0xFF331D05) );
 	m_tabs.AddTab( Controls.ButtonOverview,		TabSelectOverview );
 	m_tabs.AddTab( Controls.ButtonCO2Levels,	TabSelectCO2Levels );
 	m_tabs.AddTab( Controls.ButtonEventHistory,	TabSelectEventHistory );

@@ -355,18 +355,9 @@
 
   <!-- An instance of a diplomacy ribbon leader -->
   <Instance Name="DiplomacyRibbonLeader">
-    <Container ID="Root" Size="parent,64">
-      <Grid ID="SelectedBackground" Style="DiplomacySelectedLeaderBackgroundGrid" Offset="-5,-2" Size="75,67" />
-       <Stack StackGrowth="Right">
-				<MakeInstance Name="LeaderIcon55"/>
-         <Stack StackGrowth="Bottom" Anchor="C,B" Hidden="1">
-           <Label ID="Score" Anchor="L,C" Offset="4,0" Style="FontNormal14" Hidden="false" String="0"/>
-           <Label ID="GoldPerTurn" Anchor="L,C" Offset="4,0" Style="FontNormal14" ColorSet="ResGoldLabelCS" Hidden="false" String="+0"/>
-           <Container Size="parent,16">
-             <Stack ID="AvailableResources" StackGrowth="Left" Anchor="C,B"/>
-           </Container>
-         </Stack>
-       </Stack>
+    <Container			ID="Root" Size="parent,64">
+      <Grid					ID="SelectedBackground" Style="DiplomacySelectedLeaderBackgroundGrid" Offset="-5,-2" Size="75,67" />
+			<MakeInstance Name="LeaderIcon55"/>
     </Container>
   </Instance>
 
@@ -432,22 +423,21 @@
         </Stack>
       </SlideAnim>
     </AlphaAnim>
-    <Container ID="TabContainer" Offset="0,-5" Size="auto,auto" ConsumeMouseOver="1">
-      <Grid ID="LaunchBarDropShadow" Offset="0,7" Size="310,60" Texture="Controls_Glow2" SliceCorner="25,25" SliceTextureSize="50,50" Color="0,0,0,200"/>
-      <Image ID="LaunchBackingTile" Offset="5,6" Size="200,41" Texture="LaunchBar_Backing_Tile" StretchMode="Tile"/>
-      <Grid ID="LaunchBacking" Offset="-64,-28" Size="330,77" Texture="LaunchBar_BackingLeft_Backing" SliceCorner="114,32" SliceSize="1,1" SliceTextureSize="226,77"/>
-
-      <Stack ID="TabBar" StackGrowth="Right" Padding="3" Offset="10,5">
-        <Button ID="WCButton" Anchor="L,C" Size="49,49" Texture="LaunchBar_Hook_GovernmentButton" Style="ButtonNormalText" StateOffsetIncrement="0,49" ToolTip="LOC_TOOLTIP_CONGRESS_CONGRESS_BUTTON">
+    
+		<Container		ID="TabContainer"					Offset="0,-5"			Size="auto,auto" >
+      <Grid				ID="LaunchBarDropShadow"	Offset="0,7"			Size="310,60" Texture="Controls_Glow2" SliceCorner="25,25" SliceTextureSize="50,50" Color="0,0,0,200"/>
+      <Image			ID="LaunchBackingTile"		Offset="5,6"			Size="200,41" Texture="LaunchBar_Backing_Tile" StretchMode="Tile"/>
+      <Grid				ID="LaunchBacking"				Offset="-64,-28"	Size="330,77" Texture="LaunchBar_BackingLeft_Backing" SliceCorner="114,32" SliceSize="1,1" SliceTextureSize="226,77" ConsumeMouseOver="1" />
+      <Stack			ID="TabBar" StackGrowth="Right" Padding="3" Offset="10,5" >
+        <Button		ID="WCButton" Anchor="L,C" Size="49,49" Texture="LaunchBar_Hook_GovernmentButton" Style="ButtonNormalText" StateOffsetIncrement="0,49" ToolTip="LOC_TOOLTIP_CONGRESS_CONGRESS_BUTTON">
           <Image Texture="LaunchBar_Hook_WCOn" Size="38,38" Anchor="C,C"/>
         </Button>
-        <Button ID="DiploButton" Anchor="L,C" Size="49,49" Texture="LaunchBar_Hook_GovernmentButton" Style="ButtonNormalText" StateOffsetIncrement="0,49" Selected="1" ToolTip="LOC_TOOLTIP_DIPLOMACY_CONGRESS_BUTTON">
+        <Button		ID="DiploButton" Anchor="L,C" Size="49,49" Texture="LaunchBar_Hook_GovernmentButton" Style="ButtonNormalText" StateOffsetIncrement="0,49" Selected="1" ToolTip="LOC_TOOLTIP_DIPLOMACY_CONGRESS_BUTTON">
           <Image Texture="LaunchBar_Hook_Diplomacy" Size="38,38" Anchor="C,C"/>
         </Button>
       </Stack>
-    </Container>
-    <!-- Close button -->
-    <Button ID="CloseButton" Anchor="R,T" Style="CloseButtonSmall"/>
+    </Container>    
+    <Button ID="CloseButton" Anchor="R,T" Style="CloseButtonSmall" />
   </Container>
 
   <!-- Controls for when the local player is in a diplomacy conversation, the other controls are hidden when these are visible. -->

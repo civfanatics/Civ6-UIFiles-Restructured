@@ -30,7 +30,7 @@ function AppendXP2ResourceData(kResourceData:table)
 			local importResources:number = pResources:GetResourceImportPerTurn(resourceHash);
 			
 			if resourceUnitCostPerTurn > 0 then
-				AddResourceData(kResourceData, row.Index, "LOC_PRODUCITON_PANEL_UNITS_TOOLTIP", "-", -resourceUnitCostPerTurn);
+				AddResourceData(kResourceData, row.Index, "LOC_PRODUCTION_PANEL_UNITS_TOOLTIP", "-", -resourceUnitCostPerTurn);
 			end
 
 			if resourcePowerCostPerTurn > 0 then

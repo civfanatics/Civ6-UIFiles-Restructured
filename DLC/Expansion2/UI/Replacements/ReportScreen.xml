@@ -127,15 +127,15 @@
 			<Grid																	Anchor="C,T"	Offset="0,0"		Size="parent,8"							Style="Divider3Grid" />
 			<Image																Anchor="C,B"	Offset="0,2"		Size="parent,parent"				Texture="Controls_Gradient" Color="255,255,255,32">
 				<Grid			ID="StrategicGrid"											Offset="5,10"		Size="parent-515,46"				Style="SubContainer4"				Color="36,50,62,255" InnerPadding="2,2">
-					<Label																					Offset="5,0"																Style="ReportResourceText"	String="LOC_HUD_REPORTS_STRATEGICS" />
+					<Label																					Offset="5,0"																Style="ReportResourceText"	String="LOC_HUD_REPORTS_STRATEGICS" TruncateWidth="100" TruncatedTooltip="1"/>
 					<Stack ID="StrategicResources"		Anchor="L,C"	Offset="110,0"	WrapWidth="400"	WrapGrowth="Down"	StackGrowth="Right" Padding="1"/>
 				</Grid>				
 				<Grid			ID="BonusGrid"													Offset="510,10"	Size="parent-515,46"				Style="SubContainer4"				Color="36,50,62,255" InnerPadding="2,2">
-					<Label																					Offset="5,0"																Style="ReportResourceText"	String="LOC_HUD_REPORTS_BONUSES" />
+					<Label																					Offset="5,0"																Style="ReportResourceText"	String="LOC_HUD_REPORTS_BONUSES" TruncateWidth="100" TruncatedTooltip="1"/>
 					<Stack	ID="BonusResources"				Anchor="L,C"	Offset="150,0"	WrapWidth="340"	WrapGrowth="Down"	StackGrowth="Right" />
 				</Grid>
 				<Grid			ID="LuxuryGrid"													Offset="5,55"		Size="parent-10,40"					Style="SubContainer4"				Color="36,50,62,255" InnerPadding="2,2">
-					<Label																					Offset="5,0"																Style="ReportResourceText"	String="LOC_HUD_REPORTS_LUXURIES" />
+					<Label																					Offset="5,0"																Style="ReportResourceText"	String="LOC_HUD_REPORTS_LUXURIES" TruncateWidth="100" TruncatedTooltip="1"/>
 					<Stack	ID="LuxuryResources"			Anchor="L,C"	Offset="150,0"	WrapWidth="840"	WrapGrowth="Down"	StackGrowth="Right" />
 				</Grid>
 			</Image>

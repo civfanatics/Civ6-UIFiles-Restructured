@@ -77,16 +77,29 @@ function OnCityUnpoweredNotification(notificationEntry)
 end
 
 -- ===========================================================================
+function OnGrievancesAgainstYouActivated(notificationEntry)
+	if (notificationEntry ~= nil and notificationEntry.m_PlayerID == Game.GetLocalPlayer()) then
+		local pNotification :table = GetActiveNotificationFromEntry(notificationEntry);
+		if pNotification ~= nil then
+			local aggrievingPlayer:number = pNotification:GetValue( "PARAM_PLAYER0" );
+			LuaEvents.NotificationPanel_GrievanceTalkToLeader(aggrievingPlayer);
+		end
+	end
+end
+
+-- ===========================================================================
 function RegisterHandlers()	
 	
 	XP1_RegisterHandlers();
 
 	LuaEvents.WorldCongressPopup_DismissSpecialSessionNotification.Add(OnDismissSpecialSessionNotification);
 	
-	g_notificationHandlers[NotificationTypes.NOTIFICATION_WORLD_CONGRESS_SPECIAL_SESSION_BLOCKING]				= MakeDefaultHandlers();	
+	g_notificationHandlers[NotificationTypes.NOTIFICATION_WORLD_CONGRESS_SPECIAL_SESSION_BLOCKING]			= MakeDefaultHandlers();	
 	g_notificationHandlers[NotificationTypes.NOTIFICATION_WORLD_CONGRESS_SPECIAL_SESSION_NON_BLOCKING]		= MakeDefaultHandlers();
 	g_notificationHandlers[NotificationTypes.NOTIFICATION_WORLD_CONGRESS_SPECIAL_SESSION_CAN_BE_CALLED]		= MakeDefaultHandlers();
-	g_notificationHandlers[NotificationTypes.NOTIFICATION_WORLD_CONGRESS_EMERGENCY_CAN_BE_CALLED]					= MakeDefaultHandlers();
+	g_notificationHandlers[NotificationTypes.NOTIFICATION_WORLD_CONGRESS_EMERGENCY_CAN_BE_CALLED]			= MakeDefaultHandlers();
+	g_notificationHandlers[NotificationTypes.NOTIFICATION_GRIEVANCES_AGAINST_YOU]							= MakeDefaultHandlers();
+
 
 	g_notificationHandlers[NotificationTypes.NOTIFICATION_WORLD_CONGRESS_SPECIAL_SESSION_BLOCKING].Add			= OnAddSpecialSession;
 	g_notificationHandlers[NotificationTypes.NOTIFICATION_WORLD_CONGRESS_SPECIAL_SESSION_NON_BLOCKING].Add		= OnAddSpecialSession;
@@ -111,4 +124,7 @@ function RegisterHandlers()
 
 	g_notificationHandlers[NotificationTypes.CITY_UNPOWERED]										= MakeDefaultHandlers();
 	g_notificationHandlers[NotificationTypes.CITY_UNPOWERED].Activate								= OnCityUnpoweredNotification;
+
+	g_notificationHandlers[NotificationTypes.NOTIFICATION_GRIEVANCES_AGAINST_YOU].Activate			= OnGrievancesAgainstYouActivated;
+
 end

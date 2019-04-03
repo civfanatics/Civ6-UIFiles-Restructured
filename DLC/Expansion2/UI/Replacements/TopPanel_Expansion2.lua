@@ -69,11 +69,11 @@ function RefreshResources()
 
 				local tooltip:string = iconName .. " " .. Locale.Lookup(resource.Name);
 				if (reservedAmount ~= 0) then
-					--instance.ResourceText:SetColor(0xFF2DFFF8); -- YELLOW
+					--instance.ResourceText:SetColor(UI.GetColorValue("COLOR_YELLOW"));
 					tooltip = tooltip .. "[NEWLINE]" .. totalAmount .. "/" .. stockpileCap .. " " .. Locale.Lookup("LOC_RESOURCE_ITEM_IN_STOCKPILE");
 					tooltip = tooltip .. "[NEWLINE]-" .. reservedAmount .. " " .. Locale.Lookup("LOC_RESOURCE_ITEM_IN_RESERVE");
 				else
-					--instance.ResourceText:SetColor(0xFFFFFFFF); -- WHITE
+					--instance.ResourceText:SetColor(UI.GetColorValue("COLOR_WHITE"));
 					tooltip = tooltip .. "[NEWLINE]" .. totalAmount .. "/" .. stockpileCap .. " " .. Locale.Lookup("LOC_RESOURCE_ITEM_IN_STOCKPILE");
 				end
 				if (totalAccumulationPerTurn >= 0) then

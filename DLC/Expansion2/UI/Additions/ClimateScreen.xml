@@ -93,8 +93,9 @@
         </Container>
         <Box Size="2,parent" Color="0,0,0,40"/>
         <!--Effects-->
-        <Container Size="70,parent" ToolTip="LOC_CLIMATE_FERTILIZED_TILES">
+        <Container ID="FertilizedContainer" Size="70,parent" ToolTip="LOC_CLIMATE_FERTILIZED_TILES">
           <Image ID="FertilizedTilesIcon" Size="22,22" Offset="8,0" Anchor="L,C" Texture="ClimateHex_Buffed"/>
+          <Image ID="LosingFertilizedTilesIcon" Size="22,22" Offset="8,0" Anchor="L,C" Texture="ClimateHex_NotFertile"/>
           <Label ID="FertilizedTiles" Offset="14,0" Anchor="C,C" Align="Center" WrapWidth="parent" Style="FontFlair20"/>
         </Container>
         <Box Size="2,parent" Color="0,0,0,40"/>
@@ -309,6 +310,10 @@
             <Label ID="WeatherEffect" Anchor="C,T" Style="WorldClimateText" Align="Center" WrapWidth="300"/>
             <Grid Anchor="C,T" Size="auto,auto" Texture="Climate_ImpactSlot" SliceCorner="11,11" SliceSize="2,2">
               <Stack ID="BuffStack" Anchor="C,C" StackGrowth="Right" StackPadding="4">
+                <Container ID="PlotLostFertileContainer" Size="40,26" ToolTip="LOC_CLIMATE_LOST_FERTILIZED_TILES">
+                  <Image Size="22,22" Anchor="L,C" Texture="ClimateHex_NotFertile"/>
+                  <Label ID="PlotLostFertileLabel" Anchor="C,C" Offset="8,0" Style="FontNormal16" String="0"/>
+                </Container>
                 <Container ID="PlotFertileContainer" Size="40,26" ToolTip="LOC_CLIMATE_FERTILIZED_TILES">
                   <Image Size="22,22" Anchor="L,C" Texture="ClimateHex_Buffed"/>
                   <Label ID="PlotFertileLabel" Anchor="C,C" Offset="8,0" Style="FontNormal16" String="0"/>

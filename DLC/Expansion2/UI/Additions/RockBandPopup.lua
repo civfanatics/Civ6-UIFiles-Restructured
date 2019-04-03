@@ -59,8 +59,8 @@ function Open( ownerID:number, unitID:number, resultID:number, totalTourism:numb
 			Controls.TierDescription:SetText(Locale.Lookup(kResultData.Description));
 
 			local pRockBand:table = pUnit:GetRockBand();
-			local backColor, _ = UI.GetPlayerColors(localPlayer);
-			Controls.GeneratedTourismIcon:SetColor(DarkenLightenColor(backColor,35,255));
+			local backColor, _ = UI.GetPlayerColors(ownerID);
+			Controls.GeneratedTourismIcon:SetColor(UI.DarkenLightenColor(backColor,35,255));
 			Controls.TourismTotal:SetText(totalTourism);
 			Controls.AlbumsSold:SetText(kResultData.AlbumSales);
 

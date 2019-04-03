@@ -1,4 +1,12 @@
-﻿-- Copyright 2018, Firaxis Games
+﻿-- Copyright 2018-2019, Firaxis Games
+--
+--   ###
+--   ###	WARNING: Modders, this replacement file may be REMOVED in a future 
+--	 ###	update as the base game's TopPanel with extensions is sufficient.
+--   ###
+--   
+--   ###
+--
 
 -- ===========================================================================
 --	HUD Top of Screen Area
@@ -105,7 +113,7 @@ function RefreshYields()
 	m_CultureYieldButton.YieldPerTurn:SetColorByName("ResCultureLabelCS");
 
 	m_CultureYieldButton.YieldBacking:SetToolTipString( GetCultureTooltip() );
-	m_CultureYieldButton.YieldBacking:SetColor(0x99fe2aec);
+	m_CultureYieldButton.YieldBacking:SetColor(UI.GetColorValueFromHexLiteral(0x99fe2aec));
 	m_CultureYieldButton.YieldIconString:SetText("[ICON_CultureLarge]");
 	m_CultureYieldButton.YieldButtonStack:CalculateSize();
 

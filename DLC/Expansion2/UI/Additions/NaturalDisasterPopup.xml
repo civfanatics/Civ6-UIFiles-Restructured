@@ -37,6 +37,10 @@
                   <Label	ID="DisasterName" Style="FontFlair20" SmallCaps="24" SmallCapsType="EveryWord" Anchor="R,C" Align="Right" Color0="214,225,228,255" Color1="214,225,228,80"/>
                   <Stack                    Anchor="R,C" StackGrowth="Right" StackPadding="4">
                     <Label        ID="MitigatedLabel" Anchor="R,C" String="LOC_CLIMATE_MITIGATED" Style="BodyText16"/>
+                    <Container    ID="PlotLostFertileContainer" Size="40,26" ToolTip="LOC_CLIMATE_LOST_FERTILIZED_TILES">
+                      <Image                Size="22,22" Anchor="L,C" Texture="ClimateHex_NotFertile"/>
+                      <Label      ID="PlotLostFertileLabel" Anchor="C,C" Offset="8,0" Style="FontNormal16" String="0"/>
+                    </Container>  
                     <Container    ID="PlotFertileContainer" Size="40,26" ToolTip="LOC_CLIMATE_FERTILIZED_TILES">
                       <Image                Size="22,22" Anchor="L,C" Texture="ClimateHex_Buffed"/>
                       <Label      ID="PlotFertileLabel" Anchor="C,C" Offset="8,0" Style="FontNormal16" String="0"/>

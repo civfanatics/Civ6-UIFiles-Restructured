@@ -41,7 +41,7 @@
             <Stack Anchor="C,C" StackGrowth="Right" StackPadding="6">
               <Stack StackPadding="2">
                 <Label Anchor="C,T" Style="FontNormal16" String="LOC_CULTURAL_IDENTITY_STATUS"/>
-                <Label ID="LoyaltyStatus" Anchor="C,T" Style="CityPanelText" WrapWidth="120"/>
+                <Label ID="LoyaltyStatus" Anchor="C,T" Align="Center" Style="CityPanelText" WrapWidth="115"/>
               </Stack>
             </Stack>
           </Grid>

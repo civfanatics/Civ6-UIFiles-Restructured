@@ -26,6 +26,8 @@ local ROCK_BAND_NAME_GRID_MINIMUM_SIZE:number = 415;
 -- ===========================================================================
 function Close()
 
+	UI.PlaySound("Stop_RockBand");
+
 	UI.ClearTemporaryPlotVisibility("RockBand");
 	
 	-- Release our hold on the event

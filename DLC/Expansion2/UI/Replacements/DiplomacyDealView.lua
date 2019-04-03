@@ -42,7 +42,7 @@ local ms_OtherPlayerIsHuman = false;
 
 ms_InitiatedByPlayerID = -1;
 
-local ms_bIsGift = false;
+ms_bIsGift = false;
 ms_bIsDemand = false;
 local ms_bExiting = false;
 
@@ -807,7 +807,7 @@ end
 -- ===========================================================================
 function OnClickAvailableOneTimeGold(player, iAddAmount : number)
 
-	if (ms_bIsDemand == true and ms_InitiatedByPlayerID == ms_OtherPlayerID) then
+	if ((ms_bIsDemand == true or ms_bIsGift == true) and ms_InitiatedByPlayerID == ms_OtherPlayerID) then
 		-- Can't modifiy demand that is not ours
 		return;
 	end
@@ -872,7 +872,7 @@ end
 -- ===========================================================================
 function OnClickAvailableMultiTurnGold(player, iAddAmount : number, iDuration : number)
 
-	if (ms_bIsDemand == true and ms_InitiatedByPlayerID == ms_OtherPlayerID) then
+	if ((ms_bIsDemand == true or ms_bIsGift == true) and ms_InitiatedByPlayerID == ms_OtherPlayerID) then
 		-- Can't modifiy demand that is not ours
 		return;
 	end
@@ -1254,7 +1254,7 @@ end
 -- ===========================================================================
 function OnClickAvailableBasic(itemType, player, valueType)
 
-	if (ms_bIsDemand == true and ms_InitiatedByPlayerID == ms_OtherPlayerID) then
+	if ((ms_bIsDemand == true or ms_bIsGift == true) and ms_InitiatedByPlayerID == ms_OtherPlayerID) then
 		-- Can't modifiy demand that is not ours
 		return;
 	end
@@ -1331,7 +1331,7 @@ end
 -- ===========================================================================
 function OnClickAvailableAgreement(player, agreementType, agreementTurns)
 
-	if (ms_bIsDemand == true and ms_InitiatedByPlayerID == ms_OtherPlayerID) then
+	if ((ms_bIsDemand == true or ms_bIsGift == true) and ms_InitiatedByPlayerID == ms_OtherPlayerID) then
 		-- Can't modifiy demand that is not ours
 		return;
 	end
@@ -1409,11 +1409,8 @@ function ShowAgreementOptionPopup(agreementType, agreementTurns, fromPlayerId)
 	Controls.ValueEditIconGrid:SetHide(true);
 	Controls.ValueAmountEditBoxContainer:SetHide(true);
 
-    -- don't update when backing out of this on a war
-    if ((agreementType == DealAgreementTypes.JOINT_WAR) or
-        (agreementType == DealAgreementTypes.THIRD_PARTY_WAR)) then
-        ms_bDontUpdateOnBack = true;
-    end
+    -- don't update when backing out of this
+    ms_bDontUpdateOnBack = true;
 
 	if agreementType == DealAgreementTypes.RESEARCH_AGREEMENT then
 		Controls.ValueEditHeaderLabel:SetText(Locale.Lookup("LOC_DIPLOMACY_DEAL_SELECT_TECH"));
@@ -1533,7 +1530,7 @@ end
 -- ===========================================================================
 function OnClickAvailableCity(player, valueType, subType)
 
-	if (ms_bIsDemand == true and ms_InitiatedByPlayerID == ms_OtherPlayerID) then
+	if ((ms_bIsDemand == true or ms_bIsGift == true) and ms_InitiatedByPlayerID == ms_OtherPlayerID) then
 		-- Can't modifiy demand that is not ours
 		return;
 	end

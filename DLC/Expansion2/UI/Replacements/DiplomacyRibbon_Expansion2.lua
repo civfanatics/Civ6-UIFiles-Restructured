@@ -69,15 +69,6 @@ function LateInitialize()
 
 	BASE_LateInitialize();
 
-	Events.DiplomacyRelationshipChanged.Add( UpdateLeaders ); 
-	Events.MultiplayerPlayerConnected.Add(UpdateLeaders);
-	Events.MultiplayerPostPlayerDisconnected.Add(UpdateLeaders);
-	Events.LocalPlayerChanged.Add(UpdateLeaders);
-	Events.PlayerInfoChanged.Add(UpdateLeaders);
-	Events.PlayerDefeat.Add(UpdateLeaders);
-	Events.PlayerRestored.Add(UpdateLeaders);
-	Events.LocalPlayerTurnBegin.Add(UpdateLeaders);
-
 	if HasCapability("CAPABILITY_WORLD_CONGRESS") then
 		m_kCongressButtonIM = InstanceManager:new("CongressButton", "Top", Controls.LeaderStack);
 	end

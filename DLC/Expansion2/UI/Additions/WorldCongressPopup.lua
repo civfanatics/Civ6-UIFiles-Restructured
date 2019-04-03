@@ -30,8 +30,8 @@ local UP_VOTE:number = 1;
 local DOWN_VOTE:number = -1;
 local PHASE_STEP_MAX:number = 2;
 
-local COLOR_RED:number = RGBAValuesToABGRHex(1, 0, 0, 1);
-local COLOR_GREEN:number = RGBAValuesToABGRHex(97/255, 197/255, 97/255, 1);
+local COLOR_RED:number = UI.GetColorValue(1, 0, 0, 1);
+local COLOR_GREEN:number = UI.GetColorValue(97/255, 197/255, 97/255, 1);
 
 -- ===========================================================================
 -- Members
@@ -656,6 +656,7 @@ function PopulateResolutions()
 	end
 end
 
+-- ===========================================================================
 function PopulateChoicePulldown(kResolutionChoice:table, kVoteData:table)
 	local kResolutionData:table = kVoteData.kResolutionData;
 	local instance:table = kResolutionChoice.choice == 1 and kVoteData.instance.Choice1 or kVoteData.instance.Choice2;
@@ -720,35 +721,59 @@ function PopulateChoicePulldown(kResolutionChoice:table, kVoteData:table)
 
 		instance.Pulldown:ClearEntries();
 		instance.Pulldown:GetButton():SetToolTipString(Locale.Lookup("LOC_WORLD_CONGRESS_TT_NO_VOTING_DOWN"));
-		local possibleTargets:table = kResolutionData.PossibleTargets;
-		if possibleTargets and table.count(possibleTargets) > 0 then
-			for i, v in pairs(possibleTargets) do
+				
+		-- Dup for sorting and save index order of targets in a reverse lookup table.
+		local kSortedTargets:table = {};
+		local kSortedIndex	:table = {};
+		local kGameIndexToName	:table = {};	-- game core's index to name
+		for i,targetName in ipairs(kResolutionData.PossibleTargets) do
+			table.insert( kSortedTargets, targetName );
+			kSortedIndex[targetName] = i;
+			kGameIndexToName[i] = targetName;
+		end
+		
+		--Sort based on name
+		table.sort(kSortedTargets, function(a, b)
+			return Locale.Lookup(a) < Locale.Lookup(b); 
+		end);
+		if kSortedTargets and table.count(kSortedTargets) > 0 then
+			for pulldownIndex, name in ipairs(kSortedTargets) do
 				local entry:table = {};
 				instance.Pulldown:BuildEntry( "InstanceOne", entry );
-				entry.Button:SetVoid1(i);
-				local text = GetPulldownEntryText(kResolutionData, i);
+				entry.Button:SetVoid1( pulldownIndex );
+				entry.Button:SetVoid2( kSortedIndex[name] );
+				local text = Locale.Lookup( kSortedTargets[pulldownIndex] );
 				entry.Button:SetText(text);
 			end
-			instance.Pulldown:CalculateInternals(); -- Is this still necessary? @kjones
+			instance.Pulldown:CalculateInternals();
 		else
 			UI.DataError("Resolution choice of Type '" .. kResolution.ResolutionType .. "' has no PossibleTargets");
 		end
-
-		local text:string = GetPulldownEntryText(kResolutionData, kResolutionChoice.target);
-		instance.Pulldown:GetButton():SetText(text);
-		instance.Pulldown:GetButton():SetToolTipString(Locale.Lookup("LOC_WORLD_CONGRESS_TT_NO_VOTING_DOWN"));
-		instance.Pulldown:RegisterSelectionCallback(function(i)
-			kResolutionChoice.target = i;
-			local text = GetPulldownEntryText(kResolutionData, i);
-			instance.Pulldown:GetButton():SetText(text);
+		
+		if kResolutionChoice.target == nil or kResolutionChoice.target < 0 then
+			instance.Pulldown:GetButton():SetText( Locale.Lookup("LOC_WORLD_CONGRESS_SELECT_TARGET") );
+			instance.Pulldown:GetButton():SetToolTipString(Locale.Lookup("LOC_WORLD_CONGRESS_TT_NO_VOTING_DOWN"));
+		else
+			local gameIndex:number = kResolutionChoice.target;		-- Game core's index
+			local name	:string = kGameIndexToName[ gameIndex ];	-- sorted index lookup
+			instance.Pulldown:GetButton():SetText( Locale.Lookup( name ) );
 			instance.Pulldown:GetButton():SetToolTipString("");
-			
-			UpdateResolutionChoice(kResolutionChoice);
-			UpdateNavButtons();
-		end);
+		end
+				
+		instance.Pulldown:RegisterSelectionCallback( 
+			function( pulldownIndex:number, gameIndex:number )
+				kResolutionChoice.target = gameIndex;
+				local text:string = Locale.Lookup( kSortedTargets[pulldownIndex] );
+				instance.Pulldown:GetButton():SetText(text);
+				instance.Pulldown:GetButton():SetToolTipString("");			
+				UpdateResolutionChoice( kResolutionChoice );
+				UpdateNavButtons();
+			end
+		);
 	end
 end
 
+-- ===========================================================================
 function GetPulldownEntryText(kResolutionData:table, index:number, metPlayers:table)
 	if index == nil or index < 0 then
 		return Locale.Lookup("LOC_WORLD_CONGRESS_SELECT_TARGET"), "ICON_LEADER_DEFAULT", "ICON_CIVILIZATION_UNKNOWN";
@@ -1227,7 +1252,7 @@ function UpdateAvailableProposal(kVoteData:table, kProposalCategory:table)
 	end
 
 	local lineColor:table = kVoteData.votes ~= 0 and {220/255, 190/255, 161/255} or {102/255, 91/255, 63/255 };
-	instance.Line:SetColor(RGBAValuesToABGRHex(lineColor[1], lineColor[2], lineColor[3], 1));
+	instance.Line:SetColor(lineColor[1], lineColor[2], lineColor[3], 1);
 end
 
 -- ===========================================================================
@@ -1344,6 +1369,7 @@ function PopulateSummary()
 		local resolutionCost:number = 0;
 		for i, kResolutionData in pairs(kResolutions) do
 			if type(i) == "number" then -- There's a "Stage" key kResolutions
+
 				local instance:table = m_kReviewResolutionIM:GetInstance();
 				local kVoteData:table = m_kResolutionVotes[i];
 				local kResolution:table = GameInfo.Resolutions[kResolutionData.Type];
@@ -1545,7 +1571,7 @@ function UpdateResolutionChoice(kResolutionChoice:table)
 	kResolutionChoice.instance.Root:SetTexture(isSelected and "WC_ProposalFrameOpen_Selected" or "WC_ProposalFrameOpen_Normal");
 
 	local lineColor:table = isSelected and {220/255, 190/255, 161/255} or {102/255, 91/255, 63/255 };
-	kResolutionChoice.instance.Line:SetColor(RGBAValuesToABGRHex(lineColor[1], lineColor[2], lineColor[3], 1));
+	kResolutionChoice.instance.Line:SetColor(lineColor[1], lineColor[2], lineColor[3], 1);
 end
 
 -- ===========================================================================
@@ -1620,7 +1646,6 @@ function PopulateReview()
 			local kResolution:table = GameInfo.Resolutions[kResolutionData.Type];
 
 			instance.Title:SetText(Locale.ToUpper(Locale.Lookup(kResolution.Name)));
-			instance.Status:SetText(Locale.Lookup("LOC_WORLD_CONGRESS_PROPOSAL_PASSED"));
 			instance.Description:SetText(Locale.Lookup(kResolutionData.ChosenOption));
 			instance.Cost:SetText("");
 			instance.TurnsLeft:SetText("");
@@ -1640,6 +1665,13 @@ function PopulateReview()
 			
 			local aTT:string = Locale.Lookup("LOC_WORLD_CONGRESS_REVIEW_A_VOTES_TT", aVotes);
 			local bTT:string = Locale.Lookup("LOC_WORLD_CONGRESS_REVIEW_B_VOTES_TT", bVotes);
+			if aVotes == bVotes then
+				instance.Status:SetText(Locale.Lookup("LOC_WORLD_CONGRESS_PROPOSAL_PASSED_TIE"));
+				instance.Status:SetToolTipString(Locale.Lookup("LOC_WORLD_CONGRESS_TT_TIE_EXPLANATION"));
+			else
+				instance.Status:SetText(Locale.Lookup("LOC_WORLD_CONGRESS_PROPOSAL_PASSED"));
+				instance.Status:SetToolTipString("");
+			end
 			instance.UpVoteIcon:SetToolTipString(bTT);
 			instance.UpVoteLabel:SetToolTipString(bTT);
 			instance.DownVoteIcon:SetToolTipString(aTT);

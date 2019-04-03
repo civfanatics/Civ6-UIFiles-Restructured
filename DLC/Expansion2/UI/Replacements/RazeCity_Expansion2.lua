@@ -38,7 +38,7 @@ function OnOpen()
 		iFavorForLiberation = GlobalParameters.FAVOR_FOR_LIBERATE_CITY_STATE;
 	end
 	local cities = originalOwnerPlayer:GetCities();
-	if (not isMinorCiv and cities:GetCount() == 0) then
+	if (not isMinorCiv and cities:GetCount() == 0 and not localPlayer:GetStats():GetHasRevivedPlayer(eOriginalOwner)) then
 		iFavorForLiberation = iFavorForLiberation + GlobalParameters.FAVOR_FOR_REVIVE_PLAYER;
 	end
 

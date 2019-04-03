@@ -12,12 +12,6 @@ function OnRefresh()
 		return;
 	end
 	
-	local playerID = Game.GetLocalPlayer();
-	local pPlayer = Players[playerID];
-	if (pPlayer == nil) then
-		return;
-	end
-
 	local pCity = UI.GetHeadSelectedCity();
 	if (pCity == nil) then
 		pCity = m_kEspionageViewManager:GetEspionageViewCity();
@@ -26,6 +20,12 @@ function OnRefresh()
 		end
 	else
 		m_kEspionageViewManager:ClearEspionageViewCity();
+	end
+
+	local playerID = pCity:GetOwner();
+	local pPlayer = Players[playerID];
+	if (pPlayer == nil) then
+		return;
 	end
 
 	if pPlayer == nil or pCity == nil then

@@ -1,11 +1,8 @@
 -- ===========================================================================
 --	HUD's Launch Bar XP2
---	Copyright (c) 2018 Firaxis Games
+--	Copyright (c) 2018-2019 Firaxis Games
 -- ===========================================================================
 
--- ===========================================================================
--- XP1 File
--- ===========================================================================
 include("LaunchBar_Expansion1");
 
 
@@ -15,7 +12,7 @@ include("LaunchBar_Expansion1");
 XP1_LateInitialize			= LateInitialize;
 XP1_CloseAllPopups			= CloseAllPopups;
 XP1_OnInputActionTriggered  = OnInputActionTriggered;
-XP1_OnTurnBegin				= OnTurnBegin;
+XP1_RefreshView				= RefreshView;
 
 -- ===========================================================================
 --	MEMBERS
@@ -62,9 +59,7 @@ function CloseAllPopups()
 end
 
 -- ===========================================================================
-function OnTurnBegin()
-	XP1_OnTurnBegin();
-
+function RefreshClimate()
 	local kCurrentEvent:table = GameRandomEvents.GetCurrentTurnEvent();
 	if kCurrentEvent ~= nil then
 		local kCurrentEventDef:table = GameInfo.RandomEvents[kCurrentEvent.RandomEvent];
@@ -73,6 +68,15 @@ function OnTurnBegin()
 				m_uiClimateInstance.AlertIndicator:SetHide(false);
 			end
 		end
+	end
+end
+
+-- ===========================================================================
+function RefreshView()
+	XP1_RefreshView();
+	RefreshClimate();
+	if XP2_RefreshView == nil then	-- No (more) MODs, then wrap this up.
+		RealizeBacking();
 	end
 end
 
@@ -99,6 +103,8 @@ function LateInitialize()
 		m_uiClimateInstance.LaunchItemButton:SetToolTipString(Locale.Lookup("LOC_LAUNCHBAR_CLIMATE_PROGRESS_TOOLTIP"));
 		m_uiClimateInstance.LaunchItemIcon:SetTexture("LaunchBar_Hook_Climate");
 		m_uiClimateInstance.AlertIndicator:SetToolTipString(Locale.Lookup("LOC_CLIMATE_LAUNCHBAR_BANG_TOOLTIP"));
+
+		ContextPtr:BuildInstanceForControl( "LaunchBarPinInstance", {}, Controls.ButtonStack );
 
 		LuaEvents.ClimateScreen_Opened.Add( OnClimateScreenOpened );
 		LuaEvents.ClimateScreen_Closed.Add( OnClimateScreenClosed );
