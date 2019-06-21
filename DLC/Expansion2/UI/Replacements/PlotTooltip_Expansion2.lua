@@ -12,27 +12,27 @@ BASE_GetDetails = GetDetails;
 -- ===========================================================================
 -- OVERRIDE BASE FUNCTIONS
 -- ===========================================================================
-function FetchData(plot)
-	local data = BASE_FetchData(plot);
+function FetchData( pPlot:table )
+	local data :table = BASE_FetchData(pPlot);
 
-	data.IsVolcano = MapFeatureManager.IsVolcano(plot);
-	data.RiverNames	= RiverManager.GetRiverName(plot);
-	data.VolcanoName = MapFeatureManager.GetVolcanoName(plot);
-	data.Active = MapFeatureManager.IsActiveVolcano(plot);
-	data.Erupting = MapFeatureManager.IsVolcanoErupting(plot);
-	data.Storm = GameClimate.GetActiveStormTypeAtPlot(plot);
-	data.Drought = GameClimate.GetActiveDroughtTypeAtPlot(plot);
-	data.DroughtTurns = GameClimate.GetDroughtTurnsAtPlot(plot);
-	data.CoastalLowland = TerrainManager.GetCoastalLowlandType(plot);
-	local territory = Territories.GetTerritoryAt(plot:GetIndex());
+	data.IsVolcano = MapFeatureManager.IsVolcano(pPlot);
+	data.RiverNames	= RiverManager.GetRiverName(pPlot);
+	data.VolcanoName = MapFeatureManager.GetVolcanoName(pPlot);
+	data.Active = MapFeatureManager.IsActiveVolcano(pPlot);
+	data.Erupting = MapFeatureManager.IsVolcanoErupting(pPlot);
+	data.Storm = GameClimate.GetActiveStormTypeAtPlot(pPlot);
+	data.Drought = GameClimate.GetActiveDroughtTypeAtPlot(pPlot);
+	data.DroughtTurns = GameClimate.GetDroughtTurnsAtPlot(pPlot);
+	data.CoastalLowland = TerrainManager.GetCoastalLowlandType(pPlot);
+	local territory = Territories.GetTerritoryAt(pPlot:GetIndex());
 	if (territory) then
 		data.TerritoryName = territory:GetName();
 	else
 		data.TerritoryName = nil;
 	end
 	if (data.CoastalLowland ~= -1) then
-		data.Flooded = TerrainManager.IsFlooded(plot);
-		data.Submerged = TerrainManager.IsSubmerged(plot);
+		data.Flooded = TerrainManager.IsFlooded(pPlot);
+		data.Submerged = TerrainManager.IsSubmerged(pPlot);
 	else
 		data.Flooded = false;
 		data.Submerged = false;
@@ -164,6 +164,14 @@ function GetDetails(data)
 
 				table.insert(details, resourceString);
 			end
+		elseif m_isWorldBuilder then
+			if (resourceTechType ~= nil and valid_feature == true and valid_terrain == true) then
+				local techType = GameInfo.Technologies[resourceTechType];
+				if (techType ~= nil) then
+					resourceString = resourceString .. "( " .. Locale.Lookup("LOC_TOOLTIP_REQUIRES") .. " " .. Locale.Lookup(techType.Name) .. ")[ENDCOLOR]";
+				end
+			end
+			table.insert(details, resourceString);
 		end
 	end
 	
@@ -224,19 +232,21 @@ function GetDetails(data)
 	if (data.FeatureType ~= nil) then
 	    feature = GameInfo.Features[data.FeatureType];
 	end
-	
-	if ((data.FeatureType ~= nil and feature.NaturalWonder) or not data.IsWater) then
-		local strAppealDescriptor;
-		for row in GameInfo.AppealHousingChanges() do
-			local iMinimumValue = row.MinimumValue;
-			local szDescription = row.Description;
-			if (data.Appeal >= iMinimumValue) then
-				strAppealDescriptor = Locale.Lookup(szDescription);
-				break;
+		
+	if GameCapabilities.HasCapability("CAPABILITY_LENS_APPEAL") then
+		if ((data.FeatureType ~= nil and feature.NaturalWonder) or not data.IsWater) then
+			local strAppealDescriptor;
+			for row in GameInfo.AppealHousingChanges() do
+				local iMinimumValue = row.MinimumValue;
+				local szDescription = row.Description;
+				if (data.Appeal >= iMinimumValue) then
+					strAppealDescriptor = Locale.Lookup(szDescription);
+					break;
+				end
 			end
-		end
-		if(strAppealDescriptor) then
-			table.insert(details, Locale.Lookup("LOC_TOOLTIP_APPEAL", strAppealDescriptor, data.Appeal));
+			if(strAppealDescriptor) then
+				table.insert(details, Locale.Lookup("LOC_TOOLTIP_APPEAL", strAppealDescriptor, data.Appeal));
+			end
 		end
 	end
 

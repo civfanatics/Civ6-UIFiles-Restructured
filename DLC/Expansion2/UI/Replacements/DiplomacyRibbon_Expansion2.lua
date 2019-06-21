@@ -1,19 +1,18 @@
--- Copyright 2018, Firaxis Games.
+-- Copyright 2018-2019, Firaxis Games.
 
--- ===========================================================================
--- INCLUDES
--- ===========================================================================
 include("DiplomacyRibbon_Expansion1.lua");
 include("GameCapabilities");
 include("CongressButton");
 
 
 -- ===========================================================================
--- OVERRIDE BASE FUNCTIONS
+-- OVERRIDES
 -- ===========================================================================
 BASE_LateInitialize = LateInitialize;
 BASE_UpdateLeaders = UpdateLeaders;
 BASE_RealizeSize = RealizeSize;
+BASE_FinishAddingLeader = FinishAddingLeader;
+BASE_UpdateStatValues = UpdateStatValues;
 
 
 -- ===========================================================================
@@ -22,6 +21,7 @@ BASE_RealizeSize = RealizeSize;
 local m_kCongressButtonIM		:table = nil;
 local m_uiCongressButtonInstance:table = nil;
 local m_congressButtonWidth		:number = 0;
+
 
 -- ===========================================================================
 --	FUNCTIONS
@@ -35,7 +35,7 @@ function UpdateLeaders()
 			m_kCongressButtonIM:ResetInstances();
 			local congressProgButtonClass:table = {};
 			kCongressButton, m_uiCongressButtonInstance = CongressButton:GetInstance( m_kCongressButtonIM );
-			m_congressButtonWidth = m_uiCongressButtonInstance.Top:GetSizeX();		
+			m_congressButtonWidth = m_uiCongressButtonInstance.Top:GetSizeX();
 		end
 	end
 
@@ -44,6 +44,8 @@ end
 
 
 -- ===========================================================================
+--	OVERRIDE
+-- ===========================================================================
 function RealizeSize( additionalElementsWidth:number )			
 	BASE_RealizeSize( m_congressButtonWidth );
 	--The Congress button takes up one leader slot, so the max num of leaders used to calculate scroll is reduced by one in XP2	
@@ -51,10 +53,38 @@ function RealizeSize( additionalElementsWidth:number )
 end
 
 -- ===========================================================================
+--	OVERRIDE
+-- ===========================================================================
+function FinishAddingLeader( playerID:number, uiLeader:table, kProps:table)	
+
+	local isMasked:boolean = false;
+	if kProps.isMasked then	isMasked = kProps.isMasked; end
+	
+	local isHideFavor	:boolean = isMasked or (not Game.IsVictoryEnabled("VICTORY_DIPLOMATIC"));		--TODO: Change to capability check when favor is added to capability system.
+	uiLeader.Favor:SetHide( isHideFavor );
+
+	BASE_FinishAddingLeader( playerID, uiLeader, kProps );
+end
+
+-- ===========================================================================
+--	OVERRIDE
+-- ===========================================================================
+function UpdateStatValues( playerID:number, uiLeader:table )	
+	BASE_UpdateStatValues( playerID, uiLeader );
+	local favor	:number = Round( Players[playerID]:GetFavor() );
+	if uiLeader.Favor:IsVisible() then uiLeader.Favor:SetText( " [ICON_Favor] "..tostring(favor)); end
+end
+
+-- ===========================================================================
 function OnLeaderClicked(playerID : number )
 	-- Send an event to open the leader in the diplomacy view (only if they met)
 	local pWorldCongress:table = Game.GetWorldCongress();
 	local localPlayerID:number = Game.GetLocalPlayer();
+
+	if localPlayerID == -1 or localPlayerID == 1000 then
+		return;
+	end
+
 	if playerID == localPlayerID or Players[localPlayerID]:GetDiplomacy():HasMet(playerID) then
 		if pWorldCongress:IsInSession() then
 			LuaEvents.DiplomacyActionView_OpenLite(playerID);

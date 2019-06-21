@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Context Layer="WorldAnchor" >
+
+  <Container ID="PowerLensContainer"/>
+
+  <Instance Name="PowerLabelInstance">
+    <WorldAnchor  ID="Anchor" Anchor="C,C" Size="2,2">
+      <Label      ID="Label" Anchor="C,C" Offset="0,-10" Style="FontNormal16" FontStyle="Glow" EffectColor="0,0,0,255"/>
+    </WorldAnchor>
+  </Instance>
+  
+</Context>

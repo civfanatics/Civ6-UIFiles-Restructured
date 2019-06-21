@@ -64,17 +64,17 @@ function OnRefresh()
 	-- Breakdown
 	m_kPowerBreakdownIM:ResetInstances();
 	-----Consumed 
-	local temporaryPowerBreakdown:table = pCityPower:GetTemporaryPowerSources();
 	local freePowerBreakdown:table = pCityPower:GetFreePowerSources();
+	local temporaryPowerBreakdown:table = pCityPower:GetTemporaryPowerSources();
 	local somethingToShow:boolean = false;
-	for _,innerTable in ipairs(temporaryPowerBreakdown) do
+	for _,innerTable in ipairs(freePowerBreakdown) do
 		somethingToShow = true;
 		local scoreSource, scoreValue = next(innerTable);
 		local lineInstance = m_kPowerBreakdownIM:GetInstance(Controls.ConsumedPowerBreakdownStack);
 		lineInstance.LineTitle:SetText(scoreSource);
 		lineInstance.LineValue:SetText("[ICON_Power]" .. Round(scoreValue, 1));
 	end
-	for _,innerTable in ipairs(freePowerBreakdown) do
+	for _,innerTable in ipairs(temporaryPowerBreakdown) do
 		somethingToShow = true;
 		local scoreSource, scoreValue = next(innerTable);
 		local lineInstance = m_kPowerBreakdownIM:GetInstance(Controls.ConsumedPowerBreakdownStack);

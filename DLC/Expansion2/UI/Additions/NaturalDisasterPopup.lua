@@ -18,6 +18,10 @@ local m_kPopupMgr		:table	 = ExclusivePopupManager:new("NaturalDisasterPopup");
 local m_kQueuedPopups	:table = {};
 local m_kCurrentPopup	:table = nil;
 
+-- ===========================================================================
+--	GLOBALS
+-- ===========================================================================
+g_AffectedPlots = nil;
 
 -- ===========================================================================
 --	FUNCTIONS
@@ -66,38 +70,6 @@ function GetAffectedPlots_Drought(plotx:number, ploty:number)
 	local iDroughtID = GameClimate.GetActiveDroughtIDAtPlot(plotx, ploty);
 	return GameClimate.GetDroughtPlotsByID(iDroughtID);
 end
-
--- Event handling lookup table:
---   Animation: camera animation to play if the event is close to your borders, if it is nil the event will be ignored
---   Sound: sound to play during the popup, if it is nil, no sound will be played but the popup will still happen
---   Callback: function to get a list of affected plots, if it is nil, the single hex sent with the event will be used
-local m_EventMap = {
-	["RANDOM_EVENT_VOLCANO_GENTLE"]                = { Animation="REVEAL_ERUPTION",         	Sound="Play_Disaster_Volcano_Movie_Loop",   Callback=nil                            ,VFX=nil};
-	["RANDOM_EVENT_VOLCANO_CATASTROPHIC"]          = { Animation="REVEAL_ERUPTION_CATASTROPHIC",Sound="Play_Disaster_Volcano_Movie_Loop",   Callback=nil                            ,VFX=nil};
-	["RANDOM_EVENT_VOLCANO_MEGACOLOSSAL"]          = { Animation="REVEAL_ERUPTION_MEGACOLOSSAL",Sound="Play_Disaster_Volcano_Movie_Loop",   Callback=nil                            ,VFX=nil};
-	["RANDOM_EVENT_VESUVIUS_MEGACOLOSSAL"]         = { Animation="REVEAL_ERUPTION_MEGACOLOSSAL",Sound="Play_Disaster_Volcano_Movie_Loop",   Callback=GetAffectedPlots_NaturalWonder ,VFX=nil};
-	["RANDOM_EVENT_KILIMANJARO_GENTLE"]            = { Animation="REVEAL_ERUPTION",         	Sound="Play_Disaster_Volcano_Movie_Loop",   Callback=GetAffectedPlots_NaturalWonder ,VFX=nil};
-	["RANDOM_EVENT_KILIMANJARO_CATASTROPHIC"]      = { Animation="REVEAL_ERUPTION_CATASTROPHIC",Sound="Play_Disaster_Volcano_Movie_Loop",   Callback=GetAffectedPlots_NaturalWonder ,VFX=nil};
-	["RANDOM_EVENT_EYJAFJALLAJOKULL_CATASTROPHIC"] = { Animation="REVEAL_ERUPTION_CATASTROPHIC",Sound="Play_Disaster_Volcano_Movie_Loop",   Callback=GetAffectedPlots_NaturalWonder ,VFX=nil};
-	["RANDOM_EVENT_EYJAFJALLAJOKULL_MEGACOLOSSAL"] = { Animation="REVEAL_ERUPTION_MEGACOLOSSAL",Sound="Play_Disaster_Volcano_Movie_Loop",   Callback=GetAffectedPlots_NaturalWonder ,VFX=nil};
-	["RANDOM_EVENT_FLOOD_MODERATE"]                = { Animation="REVEAL_FLOOD",            	Sound="Play_Disaster_Flood_Movie_Loop",     Callback=GetAffectedPlots_Flood         ,VFX=nil};
-	["RANDOM_EVENT_FLOOD_MAJOR"]                   = { Animation="REVEAL_FLOOD",            	Sound="Play_Disaster_Flood_Movie_Loop",     Callback=GetAffectedPlots_Flood         ,VFX=nil};
-	["RANDOM_EVENT_FLOOD_1000_YEAR"]               = { Animation="REVEAL_FLOOD",            	Sound="Play_Disaster_Flood_Movie_Loop",     Callback=GetAffectedPlots_Flood         ,VFX=nil};
-	["RANDOM_EVENT_BLIZZARD_SIGNIFICANT"]          = { Animation="REVEAL_STORM",            	Sound="Play_Disaster_Blizzard_Movie_Loop",  Callback=GetAffectedPlots_Storm         ,VFX=nil};
-	["RANDOM_EVENT_BLIZZARD_CRIPPLING"]            = { Animation="REVEAL_STORM",            	Sound="Play_Disaster_Blizzard_Movie_Loop",  Callback=GetAffectedPlots_Storm         ,VFX=nil};
-	["RANDOM_EVENT_DUST_STORM_GRADIENT"]           = { Animation="REVEAL_STORM_SMALL",          Sound="Play_Disaster_Sandstorm_Movie_Loop", Callback=GetAffectedPlots_Storm         ,VFX=nil};
-	["RANDOM_EVENT_DUST_STORM_HABOOB"]             = { Animation="REVEAL_STORM",            	Sound="Play_Disaster_Sandstorm_Movie_Loop", Callback=GetAffectedPlots_Storm         ,VFX=nil};
-	["RANDOM_EVENT_TORNADO_FAMILY"]                = { Animation="REVEAL_STORM_SMALL",          Sound="Play_Disaster_Tornado_Movie_Loop",   Callback=GetAffectedPlots_Storm         ,VFX=nil};
-	["RANDOM_EVENT_TORNADO_OUTBREAK"]              = { Animation="REVEAL_STORM",            	Sound="Play_Disaster_Tornado_Movie_Loop",   Callback=GetAffectedPlots_Storm         ,VFX=nil};
-	["RANDOM_EVENT_HURRICANE_CAT_4"]               = { Animation="REVEAL_STORM",            	Sound="Play_Disaster_Hurricane_Movie_Loop", Callback=GetAffectedPlots_Storm         ,VFX=nil};
-	["RANDOM_EVENT_HURRICANE_CAT_5"]               = { Animation="REVEAL_STORM",            	Sound="Play_Disaster_Hurricane_Movie_Loop", Callback=GetAffectedPlots_Storm         ,VFX=nil};
-	["RANDOM_EVENT_NUCLEAR_ACCIDENT_MINOR"]        = { Animation="REVEAL_FLOOD",                Sound="Play_Disaster_Meltdown_Movie_Loop",  Callback=nil                            ,VFX="DISASTER_NUCLEAR_MELTDOWN"};
-	["RANDOM_EVENT_NUCLEAR_ACCIDENT_MAJOR"]        = { Animation="REVEAL_FLOOD",                Sound="Play_Disaster_Meltdown_Movie_Loop",  Callback=nil                            ,VFX="DISASTER_NUCLEAR_MELTDOWN"};
-	["RANDOM_EVENT_NUCLEAR_ACCIDENT_CATASTROPHIC"] = { Animation="REVEAL_FLOOD",                Sound="Play_Disaster_Meltdown_Movie_Loop",  Callback=nil                            ,VFX="DISASTER_NUCLEAR_MELTDOWN"};
-	["RANDOM_EVENT_DROUGHT_MAJOR"]                 = { Animation="REVEAL_DROUGHT",          	Sound="Play_Disaster_Drought_Movie_Loop",   Callback=GetAffectedPlots_Drought       ,VFX=nil};
-	["RANDOM_EVENT_DROUGHT_EXTREME"]               = { Animation="REVEAL_DROUGHT",          	Sound="Play_Disaster_Drought_Movie_Loop",   Callback=GetAffectedPlots_Drought       ,VFX=nil};
-};
-
 
 -- ===========================================================================
 --	Closes the immediate popup, will raise more if queued.
@@ -283,40 +255,44 @@ function OnRandomEventOccurred(type:number, severity:number, plotx:number, ploty
 			description = Locale.Lookup(info.Description);
 		end
 
-		local kEventHandler = m_EventMap[info.RandomEventType];
-		if (kEventHandler == nil) then
-			UI.DataError("No table entry entry for random event: '"..tostring(info.RandomEventType).."'");
+		-- get the DB data
+		local result : table = nil;
+		result = GameInfo.RandomEvent_Presentation[info.RandomEventType];
+
+		if (result == nil) then
+			UI.DataError("No DB entry for random event: '"..tostring(info.RandomEventType).."'");
 			return;
 		end
 
-		if (kEventHandler.Animation == nil) then
+		if (result.Animation == nil) then
 			-- A handler exists, but the animation is nil, which means we should skip the popup
 			return;
 		end
 
 		-- Use the callback to determine which plots were affected
-		local kAffectedPlots = nil;
-		if (kEventHandler.Callback ~= nil) then
-			kAffectedPlots = kEventHandler.Callback(plotx, ploty);
+		g_AffectedPlots = nil;
+		if (result.Callback ~= nil) then
+			-- return here must be to a global variable because loadstring runs the called function outside of any scope
+			g_AffectedPlots = loadstring("return "..result.Callback.."(...)")(plotx, ploty);
 		end
 
 		-- Default to just a single hex
-		if (kAffectedPlots == nil or #kAffectedPlots == 0) then
-			kAffectedPlots = { Map.GetPlotIndex(plotx, ploty) };
+		if (g_AffectedPlots == nil or #g_AffectedPlots == 0) then
+			g_AffectedPlots = { Map.GetPlotIndex(plotx, ploty) };
 		end
 
-		local fCenterX, fCenterY = UI.GetRegionCenter(kAffectedPlots);
+		local fCenterX, fCenterY = UI.GetRegionCenter(g_AffectedPlots);
 		
 		local kData:table = { 			
 			EventType			= type,
 			Name				= Locale.ToUpper(Locale.Lookup(info.Name)),
 			Description			= description,
-			Animation			= kEventHandler.Animation,
+			Animation			= result.Animation,
 			Icon				= info.IconSmall,
 			Center				= { x=fCenterX, y=fCenterY },
-			Plots				= kAffectedPlots,
-            QuoteAudio			= kEventHandler.Sound,
-			VisualEffect		= kEventHandler.VFX,
+			Plots				= g_AffectedPlots,
+            QuoteAudio			= result.Sound,
+			VisualEffect		= result.VFX,
 			PlotX				= plotx,
 			PlotY				= ploty,
 			IsMitigated			= mitigationLevel == 1 and true or false,
@@ -417,9 +393,10 @@ function Initialize()
 	if GameConfiguration.IsAnyMultiplayer() or GameConfiguration.IsHotseat() then
 		return;
 	end
-
+	
 	ContextPtr:SetInputHandler( OnInputHander, true );	
 	Controls.Close:RegisterCallback(Mouse.eLClick, OnClose);
+	Controls.ScreenConsumer:RegisterCallback(Mouse.eRClick, OnClose);
 
 	-- Hot-Reload Events
 	ContextPtr:SetInitHandler( OnInit );

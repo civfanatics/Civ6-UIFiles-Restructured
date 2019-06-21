@@ -43,6 +43,7 @@ end
 
 -- ===========================================================================
 function RefreshPowerPanel()
+	UILens.SetActive("Power");
 	LuaEvents.CityPanelTabRefresh();
 end
 

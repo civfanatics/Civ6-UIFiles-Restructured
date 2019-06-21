@@ -171,6 +171,12 @@ end
 -- Set the era rotation and tooltip.
 -- ===========================================================================
 function RealizeEraIndicator()
+
+	if HasCapability("CAPABILITY_ERAS")==false then
+		Controls.EraIndicator:SetHide( true );
+		return;
+	end
+	
 	local displayEra:number = 1;
 	if (Game ~= nil and Game.GetEras() ~= nil) then
 		displayEra = Game.GetEras():GetCurrentEra() + 1; -- Engine is 0 Based

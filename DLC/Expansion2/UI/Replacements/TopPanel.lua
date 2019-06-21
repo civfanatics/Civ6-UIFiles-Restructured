@@ -95,41 +95,46 @@ function RefreshYields()
 	end
 
 	---- SCIENCE ----
-	m_ScienceYieldButton = m_ScienceYieldButton or m_YieldButtonSingleManager:GetInstance();
-	local playerTechnology		:table	= localPlayer:GetTechs();
-	local currentScienceYield	:number = playerTechnology:GetScienceYield();
-	m_ScienceYieldButton.YieldPerTurn:SetText( FormatValuePerTurn(currentScienceYield) );	
+	if GameCapabilities.HasCapability("CAPABILITY_SCIENCE") and GameCapabilities.HasCapability("CAPABILITY_DISPLAY_TOP_PANEL_YIELDS") then
+		m_ScienceYieldButton = m_ScienceYieldButton or m_YieldButtonSingleManager:GetInstance();
+		local playerTechnology		:table	= localPlayer:GetTechs();
+		local currentScienceYield	:number = playerTechnology:GetScienceYield();
+		m_ScienceYieldButton.YieldPerTurn:SetText( FormatValuePerTurn(currentScienceYield) );	
 
-	m_ScienceYieldButton.YieldBacking:SetToolTipString( GetScienceTooltip() );
-	m_ScienceYieldButton.YieldIconString:SetText("[ICON_ScienceLarge]");
-	m_ScienceYieldButton.YieldButtonStack:CalculateSize();
-	
+		m_ScienceYieldButton.YieldBacking:SetToolTipString( GetScienceTooltip() );
+		m_ScienceYieldButton.YieldIconString:SetText("[ICON_ScienceLarge]");
+		m_ScienceYieldButton.YieldButtonStack:CalculateSize();
+	end	
 	
 	---- CULTURE----
-	m_CultureYieldButton = m_CultureYieldButton or m_YieldButtonSingleManager:GetInstance();
-	local playerCulture			:table	= localPlayer:GetCulture();
-	local currentCultureYield	:number = playerCulture:GetCultureYield();
-	m_CultureYieldButton.YieldPerTurn:SetText( FormatValuePerTurn(currentCultureYield) );	
-	m_CultureYieldButton.YieldPerTurn:SetColorByName("ResCultureLabelCS");
+	if GameCapabilities.HasCapability("CAPABILITY_CULTURE") and GameCapabilities.HasCapability("CAPABILITY_DISPLAY_TOP_PANEL_YIELDS") then
+		m_CultureYieldButton = m_CultureYieldButton or m_YieldButtonSingleManager:GetInstance();
+		local playerCulture			:table	= localPlayer:GetCulture();
+		local currentCultureYield	:number = playerCulture:GetCultureYield();
+		m_CultureYieldButton.YieldPerTurn:SetText( FormatValuePerTurn(currentCultureYield) );	
+		m_CultureYieldButton.YieldPerTurn:SetColorByName("ResCultureLabelCS");
 
-	m_CultureYieldButton.YieldBacking:SetToolTipString( GetCultureTooltip() );
-	m_CultureYieldButton.YieldBacking:SetColor(UI.GetColorValueFromHexLiteral(0x99fe2aec));
-	m_CultureYieldButton.YieldIconString:SetText("[ICON_CultureLarge]");
-	m_CultureYieldButton.YieldButtonStack:CalculateSize();
+		m_CultureYieldButton.YieldBacking:SetToolTipString( GetCultureTooltip() );
+		m_CultureYieldButton.YieldBacking:SetColor(UI.GetColorValueFromHexLiteral(0x99fe2aec));
+		m_CultureYieldButton.YieldIconString:SetText("[ICON_CultureLarge]");
+		m_CultureYieldButton.YieldButtonStack:CalculateSize();
+	end
 
 	---- FAITH ----
-	m_FaithYieldButton = m_FaithYieldButton or m_YieldButtonDoubleManager:GetInstance();
-	local playerReligion		:table	= localPlayer:GetReligion();
-	local faithYield			:number = playerReligion:GetFaithYield();
-	local faithBalance			:number = playerReligion:GetFaithBalance();
-	m_FaithYieldButton.YieldBalance:SetText( Locale.ToNumber(faithBalance, "#,###.#") );	
-	m_FaithYieldButton.YieldPerTurn:SetText( FormatValuePerTurn(faithYield) );
-	m_FaithYieldButton.YieldBacking:SetToolTipString( GetFaithTooltip() );
-	m_FaithYieldButton.YieldIconString:SetText("[ICON_FaithLarge]");
-	m_FaithYieldButton.YieldButtonStack:CalculateSize();	
+	if GameCapabilities.HasCapability("CAPABILITY_FAITH") and GameCapabilities.HasCapability("CAPABILITY_DISPLAY_TOP_PANEL_YIELDS") then
+		m_FaithYieldButton = m_FaithYieldButton or m_YieldButtonDoubleManager:GetInstance();
+		local playerReligion		:table	= localPlayer:GetReligion();
+		local faithYield			:number = playerReligion:GetFaithYield();
+		local faithBalance			:number = playerReligion:GetFaithBalance();
+		m_FaithYieldButton.YieldBalance:SetText( Locale.ToNumber(faithBalance, "#,###.#") );	
+		m_FaithYieldButton.YieldPerTurn:SetText( FormatValuePerTurn(faithYield) );
+		m_FaithYieldButton.YieldBacking:SetToolTipString( GetFaithTooltip() );
+		m_FaithYieldButton.YieldIconString:SetText("[ICON_FaithLarge]");
+		m_FaithYieldButton.YieldButtonStack:CalculateSize();	
+	end
 
 	---- GOLD ----
-	if GameCapabilities.HasCapability("CAPABILITY_GOLD") then
+	if GameCapabilities.HasCapability("CAPABILITY_GOLD") and GameCapabilities.HasCapability("CAPABILITY_DISPLAY_TOP_PANEL_YIELDS") then
 		m_GoldYieldButton = m_GoldYieldButton or m_YieldButtonDoubleManager:GetInstance();
 		local playerTreasury:table	= localPlayer:GetTreasury();
 		local goldYield		:number = playerTreasury:GetGoldYield() - playerTreasury:GetTotalMaintenance();
@@ -145,10 +150,8 @@ function RefreshYields()
 		m_GoldYieldButton.YieldButtonStack:CalculateSize();	
 	end
 
-
-
 	---- TOURISM ----
-	if GameCapabilities.HasCapability("CAPABILITY_TOURISM") then
+	if GameCapabilities.HasCapability("CAPABILITY_TOURISM") and GameCapabilities.HasCapability("CAPABILITY_DISPLAY_TOP_PANEL_YIELDS") then
 		m_TourismYieldButton = m_TourismYieldButton or m_YieldButtonSingleManager:GetInstance();
 		local tourismRate = Round(localPlayer:GetStats():GetTourism(), 1);
 		local tourismRateTT:string = Locale.Lookup("LOC_WORLD_RANKINGS_OVERVIEW_CULTURE_TOURISM_RATE", tourismRate);
@@ -187,7 +190,8 @@ end
 function RefreshTrade()
 
 	local localPlayer = Players[Game.GetLocalPlayer()];
-	if (localPlayer == nil) then
+	if (localPlayer == nil) or not GameCapabilities.HasCapability("CAPABILITY_TRADE") then
+		Controls.TradeRoutes:SetHide(true);
 		return;
 	end
 
@@ -217,7 +221,6 @@ function RefreshTrade()
 	end
 
 	Controls.TradeStack:CalculateSize();
-	Controls.TradeStack:ReprocessAnchoring();
 end
 
 -- ===========================================================================
@@ -259,7 +262,6 @@ function RefreshInfluence()
 		Controls.EnvoysNumber:SetText(tostring(currentEnvoys));
 		Controls.Envoys:SetToolTipString(sTooltip);
 		Controls.EnvoysStack:CalculateSize();
-		Controls.EnvoysStack:ReprocessAnchoring();
 	else
 		Controls.Envoys:SetHide(true);
 	end
@@ -285,11 +287,14 @@ function RefreshTime()
 	Controls.Time:SetText( strTime );
 	local d = Locale.Lookup("{1_Time : datetime full}", os.time());
 	Controls.Time:SetToolTipString(d);
-	Controls.TimeArea:ReprocessAnchoring();
 end
 
 -- ===========================================================================
 function RefreshResources()
+	if not GameCapabilities.HasCapability("CAPABILITY_DISPLAY_TOP_PANEL_RESOURCES") then
+		m_kResourceIM:ResetInstances();
+		return;
+	end
 	local localPlayerID = Game.GetLocalPlayer();
 	if (localPlayerID ~= -1) then
 		m_kResourceIM:ResetInstances(); 
@@ -352,6 +357,10 @@ end
 --	Game Engine Event
 -- ===========================================================================
 function OnRefreshResources()
+	if not GameCapabilities.HasCapability("CAPABILITY_DISPLAY_TOP_PANEL_RESOURCES") then
+		m_kResourceIM:ResetInstances();
+		return;
+	end
 	RefreshResources();
 end
 
@@ -444,6 +453,7 @@ function RefreshAll()
 	RefreshInfluence();
 	RefreshYields();
 	RefreshTime();
+	RefreshResources();
 	OnWMDUpdate( Game.GetLocalPlayer() );
 end
 

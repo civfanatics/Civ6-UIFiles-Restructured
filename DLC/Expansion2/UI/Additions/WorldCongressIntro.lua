@@ -4,6 +4,7 @@
 --]]
 include("SupportFunctions");
 include("PopupPriorityLoader_", true);
+include("Civ6Common"); --FormatTimeRemaining
 
 -- ===========================================================================
 -- Constants
@@ -13,6 +14,11 @@ local RELOAD_CACHE_ID:string = "WorldCongressIntro";
 local WORLD_CONGRESS_STAGE_1:number = DB.MakeHash("TURNSEG_WORLDCONGRESS_1");
 local WORLD_CONGRESS_STAGE_2:number = DB.MakeHash("TURNSEG_WORLDCONGRESS_2");
 local WORLD_CONGRESS_RESOLUTION:number = DB.MakeHash("TURNSEG_WORLDCONGRESS_RESOLUTION");
+
+-- ===========================================================================
+-- Reload Members
+-- ===========================================================================
+local m_currStageNum:number = -1;
 
 -- ===========================================================================
 --	OnClose: Closes the popup
@@ -26,7 +32,6 @@ end
 --	OnOpen: Opens the popup 
 -- ===========================================================================
 function OnOpen(stageNum:number)
-
 	UI.PlaySound("WC_Open");
 	Controls.Title:LocalizeAndSetText(stageNum == 1 and "LOC_WORLD_CONGRESS_INTRO_TITLE" or "LOC_SPECIAL_CONGRESS_INTRO_TITLE");
 	Controls.Body1:LocalizeAndSetText(stageNum == 1 and "LOC_WORLD_CONGRESS_INTRO_BODY_1" or "LOC_SPECIAL_CONGRESS_INTRO_BODY_1");
@@ -34,6 +39,8 @@ function OnOpen(stageNum:number)
 
 	--TODO: Flash animation stuff
 	UIManager:QueuePopup(ContextPtr, PopupPriority.WorldCongressIntro, { AlwaysVisibleInQueue = true });
+
+	m_currStageNum = stageNum;
 end
 
 -- ===========================================================================
@@ -44,7 +51,7 @@ function OnGameDebugReturn(context:string, contextTable:table)
 		--Handle reloads
 		if contextTable["IsHidden"] ~= nil and not contextTable["IsHidden"] then
 			--Load stuff
-			OnOpen();
+			OnOpen(contextTable["m_currStageNum"]);
 		end
 	end
 end
@@ -62,8 +69,12 @@ end
 --	OnShutdown: Reload support
 -- ===========================================================================
 function OnShutdown()
+	--Stop Listening
+	LuaEvents.GameDebug_Return.Remove(OnGameDebugReturn);
+
 	--Setup reload variables
 	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "IsHidden", ContextPtr:IsHidden());
+	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "m_currStageNum", m_currStageNum);
 end
 
 -- ===========================================================================
@@ -101,7 +112,8 @@ function OnTurnTimerUpdated(elapsedTime :number, maxTurnTime :number)
 	if maxTurnTime <= 0 then
 		Controls.AcceptButton:SetText(Locale.Lookup("LOC_WORLD_CONGRESS_INTRO_ACCEPT"));
 	else
-		Controls.AcceptButton:SetText(Locale.Lookup("LOC_WORLD_CONGRESS_INTRO_ACCEPT") .. " (" .. SoftRound(maxTurnTime - elapsedTime) .. Locale.Lookup("LOC_TIME_SECONDS") .. " )");
+		local timeLeft:number = SoftRound(maxTurnTime - elapsedTime);
+		Controls.AcceptButton:SetText(Locale.Lookup("LOC_WORLD_CONGRESS_INTRO_ACCEPT") .. " (" .. FormatTimeRemaining(timeLeft, true) .. ")");
 	end
 end
 

@@ -369,8 +369,10 @@ PageLayouts["Unit" ] = function(page)
 			s:AddLabel(Locale.Lookup("LOC_TYPE_TRAIT_MAX_PROMOTIONS", iMaxLevel));
 		end
 
-		if(unit.BaseMoves ~= 0 and not unit.IgnoreMoves) then
-			s:AddIconNumberLabel({"ICON_MOVES", nil,"MOVEMENT_1"}, unit.BaseMoves, "LOC_UI_PEDIA_MOVEMENT_POINTS");
+		if(unit.BaseMoves ~= 0) then
+			if (not unit.IgnoreMoves or unit.Domain == "DOMAIN_AIR") then
+				s:AddIconNumberLabel({"ICON_MOVES", nil,"MOVEMENT_1"}, unit.BaseMoves, "LOC_UI_PEDIA_MOVEMENT_POINTS");
+			end
 		end
 
 		if(unit.Combat ~= 0) then
@@ -545,7 +547,36 @@ PageLayouts["Unit" ] = function(page)
 
 		s:AddSeparator();
 	end);
+	
+	AddRightColumnStatBox("LOC_UI_PEDIA_ESPIONAGE_MISSIONS", function(s)
+		s:AddSeparator();
+		if(unit ~= nil and unit.Spy == true) then
+			for row in GameInfo.UnitOperations() do
+				if(row.InterfaceMode == "INTERFACEMODE_SPY_CHOOSE_MISSION") then
+					s:AddIconLabel({row.Icon, row.Description, row.OperationType}, row.Description);
+					if(row.Turns > 0) then
+						s:AddLabel(Locale.Lookup("LOC_TYPE_TRAIT_TURNS", row.Turns));
+					end
+					if(row.BaseProbability > 0) then
+						iThreeDieSixProb = { 0, 0, 1, 3, 6, 10, 15, 21, 25, 27, 27, 25, 21, 15, 10, 6, 3, 1 };
+						local iRolls = 0;
+						for iI = row.BaseProbability, 18 do
+							 iRolls = iRolls + iThreeDieSixProb[iI];
+						end
+						
+						iRolls = iRolls / 216.0 * 100.0;
+					
+						s:AddLabel(Locale.Lookup("LOC_TYPE_TRAIT_BASE_PROBABILITY",  math.floor(iRolls + 0.5)))
+					end
+					if(row.TargetDistrict ~= nil) then
+						s:AddLabel(Locale.Lookup("LOC_TYPE_TRAIT_TARGET_DISTRICT",  GameInfo.Districts[row.TargetDistrict].Name));
+					end
+				end
+			end
+		end
 
+		s:AddSeparator();
+	end);
 	-- Left Column!
 	AddChapter("LOC_UI_PEDIA_DESCRIPTION", unit.Description);
 

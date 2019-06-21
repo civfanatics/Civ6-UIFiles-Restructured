@@ -22,6 +22,10 @@ local m_FavorYieldButton:table = nil;
 --	OVERRIDE
 -- ===========================================================================
 function RefreshResources()
+	if not GameCapabilities.HasCapability("CAPABILITY_DISPLAY_TOP_PANEL_RESOURCES") then
+		m_kResourceIM:ResetInstances();
+		return;
+	end
 	local localPlayerID = Game.GetLocalPlayer();
 	local localPlayer = Players[localPlayerID];
 	if (localPlayerID ~= -1) then

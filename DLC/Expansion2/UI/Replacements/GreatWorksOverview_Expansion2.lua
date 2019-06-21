@@ -203,9 +203,9 @@ function PopulateGreatWorkSlot(instance:table, pCity:table, pCityBldgs:table, pB
 		local slotRange:number = MAX_NUM_SLOTS - 2;
 		local paddingRange:number = MAX_PADDING_SLOTS - MIN_PADDING_SLOTS;
 		local finalPadding:number = ((MAX_NUM_SLOTS - numSlots) * paddingRange / slotRange) + MIN_PADDING_SLOTS;
-		instance.GreatWorks:SetPadding(finalPadding);
+		instance.GreatWorks:SetStackPadding(finalPadding);
 	else
-		instance.GreatWorks:SetPadding(0);
+		instance.GreatWorks:SetStackPadding(0);
 	end
 
 	-- Ensure we have Instance Managers for the theme bonuses

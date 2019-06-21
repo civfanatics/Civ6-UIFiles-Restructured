@@ -1,4 +1,4 @@
--- Copright 2017-2018, Firaxis Games
+-- Copright 2017-2019, Firaxis Games
 -- Full screen timeline of historic moments.
 
 include("InstanceManager");
@@ -449,6 +449,11 @@ function Close()
 end
 
 -- ===========================================================================
+function OnClose()
+	Close();
+end
+
+-- ===========================================================================
 function OnUpdateUI( type:number, tag:string, iData1:number, iData2:number, strData1:string)
 	if type == SystemUpdateUI.ScreenResize then
 		m_ScreenWidth = UIManager:GetScreenSizeVal();
@@ -541,7 +546,8 @@ function Initialize()
 	ContextPtr:SetHide(true);
 	ContextPtr:SetInputHandler(OnInputHandler, true);
 	
-	Controls.Close:RegisterCallback(Mouse.eLClick, Close);
+	Controls.Close:RegisterCallback(Mouse.eLClick, OnClose);
+	Controls.RightClickCloser:RegisterCallback(Mouse.eRClick, OnClose);
 	Controls.TimelineScroller:RegisterScrollCallback(OnScroll);
 
 	Events.SystemUpdateUI.Add( OnUpdateUI );
@@ -554,14 +560,12 @@ function Initialize()
 	LuaEvents.PrideMoments_ToggleTimeline.Add(ToggleHistoricMomentsScreen);
 	LuaEvents.Advisor_ToggleTimeline.Add(ToggleHistoricMomentsScreen);
 	LuaEvents.EndGameMenu_OpenHistoricMoments.Add(ToggleFromEndGame);
-	LuaEvents.HistoricMoments_Close.Add(Close);
+	LuaEvents.HistoricMoments_Close.Add( OnClose );		-- LaunchBar
 	LuaEvents.ShowEndGame.Add(OnEndGame);
 
 	CacheMomentIllustrations();
 
 	m_TopPanelConsideredHeight = Controls.Vignette:GetSizeY() - TOP_PANEL_OFFSET;
-
-	--DisplayTimeline();	-- DEBUG (should always be commented out)
 end
 if HasCapability("CAPABILITY_HISTORIC_MOMENTS") then
 	Initialize();

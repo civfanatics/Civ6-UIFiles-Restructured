@@ -25,7 +25,40 @@ local sectionId = page.SectionId;
 	
 	-- Right Column
 	-- AddPortrait("ICON_" .. governmentType);
+	
+	
+	local stats = {};
+	
+	for row in GameInfo.Governments_XP2() do
+		if(row.GovernmentType == governmentType and row.Favor > 0) then
+			table.insert(stats, Locale.Lookup("LOC_UI_PEDIA_TRAIT_FAVOR", row.Favor));
+		end
+	end
 
+	for row in GameInfo.Governments() do
+		if(row.GovernmentType == governmentType and row.OtherGovernmentIntolerance ~= 0) then
+			table.insert(stats, Locale.Lookup("LOC_UI_PEDIA_TRAIT_INTOLERANCE", row.OtherGovernmentIntolerance));
+		end
+	end
+
+	for row in GameInfo.Government_SlotCounts() do
+		if(row.GovernmentType == governmentType) then
+			table.insert(stats, Locale.Lookup("LOC_UI_PEDIA_TRAIT_SLOT_TYPE", row.NumSlots, GameInfo.GovernmentSlots[row.GovernmentSlotType].Name));
+		end
+	end
+
+	
+	AddRightColumnStatBox("LOC_UI_PEDIA_TRAITS", function(s)
+		s:AddSeparator();
+
+		if(#stats > 0) then
+			for _, v in ipairs(stats) do
+				s:AddLabel(v);
+			end
+			s:AddSeparator();
+		end
+	end);
+	
 	AddRightColumnStatBox("LOC_UI_PEDIA_REQUIREMENTS", function(s)
 		s:AddSeparator();
 
@@ -47,8 +80,14 @@ local sectionId = page.SectionId;
 		
 		s:AddSeparator();
 	end);
-
+	
 	-- Left Column
+	if((government.InherentBonusDesc ~= nil and government.AccumulatedBonusShortDesc ~= nil) or BonusType=="NO_GOVERNMENTBONUS") then
+		AddHeader("LOC_UI_PEDIA_DESCRIPTION");
+		AddHeaderBody("LOC_GOVERNMENT_INHERENT_BONUS",  government.InherentBonusDesc);
+		AddHeaderBody("LOC_GOVERNMENT_ACCUMULATED_BONUS",  government.AccumulatedBonusShortDesc);
+	end
+	
 	local chapters = GetPageChapters(page.PageLayoutId);
 	for i, chapter in ipairs(chapters) do
 		local chapterId = chapter.ChapterId;

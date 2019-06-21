@@ -8,17 +8,18 @@
 		<Grid																														  Size="parent,40"						Texture="Controls_SubHeader2" ConsumeMouse="1" SliceCorner="20,2" SliceTextureSize="40,40">
 			<Label				ID="ModalScreenTitle" Anchor="C,C"								Style="FontFlair24" FontStyle="glow" ColorSet="ShellHeader" SmallCaps="28" SmallCapsLeading="0" SmallCapsType="EveryWord"/>
 		</Grid>
-
+		
 		<!-- Moved the scrollbar backing out of the ScrollPanel so it's visible when the ScrollPanel is empty -->
-		<Container Anchor="C,B" Offset="0,0" Size="parent,38">
-			<Grid Anchor="C,C" Offset="0,0" Size="parent,52" Texture="Controls_Timeline" SliceCorner="54,27" SliceSize="6,1" SliceTextureSize="114,52"/>
-			<Image Anchor="C,C" Offset="0,0" Size="parent-108,32" Texture="Controls_TimelineTile" StretchMode="Tile" />
+		<Container	Anchor="C,B"	Size="parent,38">
+			<Grid			Anchor="C,C"	Size="parent,52"			Texture="Controls_Timeline" SliceCorner="54,27" SliceSize="6,1" SliceTextureSize="114,52"/>
+			<Image		Anchor="C,C"	Size="parent-108,32"	Texture="Controls_TimelineTile" StretchMode="Tile" />
 		</Container>
 
-    <Container Anchor="L,T" Offset="0,40" Size="parent,692">
-      <Image ID="BG" Size="parent,692" Texture="Historian_BGParchment" StretchMode="Tile"/>
-      <Image ID="Ink" Size="parent,692" Texture="Historian_BGInk" StretchMode="Tile"/>
-      <Image ID="BGWheel" Anchor="L,C" Offset="100,0" Size="776,692" Texture="Historian_BGWheel"/>
+    <Container	Anchor="L,T" Offset="0,40" Size="parent,692">
+			<BoxButton	ID="RightClickCloser" Size="parent,parent" Color="0,0,0,0"  />
+      <Image			ID="BG"								Size="parent,692" Texture="Historian_BGParchment" StretchMode="Tile"/>
+      <Image			ID="Ink"							Size="parent,692" Texture="Historian_BGInk" StretchMode="Tile"/>
+      <Image			ID="BGWheel" Anchor="L,C" Offset="100,0" Size="776,692" Texture="Historian_BGWheel"/>
     </Container>
     
 		<ScrollPanel ID="TimelineScroller" Anchor="L,T" Offset="0,40" Size="parent,692" AutoScrollBar="0">
@@ -29,9 +30,6 @@
 				<Thumb Size="63,36" Offset="0,-10" Texture="Controls_TimeSlider" StateOffsetIncrement="0,0" SliceCorner="22,18" SliceSize="19,1" SliceTextureSize="63,36" MinSize="63,36"/>
 			</ScrollBar>
 		</ScrollPanel>
-
-		<!-- CENTER LINE -->
-		<!-- <Line Anchor="C,T" Start="0,0" End="0,768" Width="2" Color="0,255,0,150"/> -->
 
 		<Grid	Offset="-8,-8"	Size="parent+16,parent+16"	Style="ScreenFrame"/>
 

@@ -9,6 +9,7 @@ include("SupportFunctions");
 include("WorldCrisisSupport");
 include("PopupPriorityLoader_", true);
 include("InputSupport");
+include("Civ6Common"); --FormatTimeRemaining
 
 -- ===========================================================================
 -- Constants
@@ -45,6 +46,7 @@ local m_HasAccepted:boolean = false; -- set to true when accept button is clicke
 local m_IsEmergencySession:boolean = false; -- if m_CurrentStage == 2
 local m_HasSpecialSessionNotification:boolean = false;
 local m_ReviewTab:number = REVIEW_TAB_RESULTS;
+local m_kPreviousTooltipEvaluators:table = {};
 
 -- The members below store state that initialize when the screen opens
 local m_kProposalVotes:table;
@@ -595,6 +597,8 @@ function PopulateResolutions()
 			instance.Vote2.UpButton:RegisterCallback(Mouse.eLClick, OnVoteResolution(2, UP_VOTE, kVoteData.B, kCostData));
 			instance.Vote2.DownButton:RegisterCallback(Mouse.eLClick, OnVoteResolution(2, DOWN_VOTE, kVoteData.B, kCostData));
 
+			EvaluateResolutionHistory(pWorldCongress, kResolutionData, instance);
+
 			instance.Choice1Container:SetSizeY(kResolutionData.TargetType == "PlayerType" and 65 or 30);
 			instance.Choice2Container:SetSizeY(kResolutionData.TargetType == "PlayerType" and 65 or 30);
 
@@ -654,6 +658,154 @@ function PopulateResolutions()
 			instance.Effect2:SetText(Locale.Lookup(kResolution.Effect2Description));
 		end
 	end
+end
+
+-- ===========================================================================
+-- Build the tooltip describing the previous time this resolution appeared
+-- in World Congress, if it has shown up before.
+-- ===========================================================================
+function EvaluateResolutionHistory(pWorldCongress:table, kResolutionData:table, uiResolutionInstance:table)
+	if pWorldCongress == nil then
+		UI.DataError("World Congress is nil. Something has gone incredibly wrong when Evaluating Resolution History.");
+		return;
+	end
+
+	--Get the stats for the last time this resolution was seen
+	if kResolutionData ~= nil then
+		local kPreviousResolutionData:table = pWorldCongress:GetPreviousVotesOnResolution(kResolutionData.Type);
+		if kPreviousResolutionData == nil then
+			uiResolutionInstance.MoreInfoButton:SetHide(true);
+			uiResolutionInstance.MoreInfoButton:SetToolTipString("");
+			return;
+		end
+
+		uiResolutionInstance.MoreInfoButton:SetHide(false);
+
+		--Our data format for evaluation
+		local kEvaluationData:table = {
+			aVotes = 0, 
+			bVotes = 0,
+			aVoters = 0,
+			bVoters = 0,
+			soleAPlayerID = -1,
+			soleBPlayerID = -1,
+			biggestAVotes = 0,
+			biggestBVotes = 0,
+			biggestAVoter = -1,
+			biggestBVoter = -1
+		};
+
+		--Generate data
+		for playerID, kData in pairs(kPreviousResolutionData.PlayerSelections) do
+			if kData.OptionChosen == 1 then
+				kEvaluationData.aVotes = kEvaluationData.aVotes + kData.Votes;
+				kEvaluationData.aVoters = kEvaluationData.aVoters + 1;
+				kEvaluationData.soleAPlayerID = playerID;
+				if kData.Votes > kEvaluationData.biggestAVotes then
+					kEvaluationData.biggestAVotes = kData.Votes;
+					kEvaluationData.biggestAVoter = playerID;
+				end
+			else
+				kEvaluationData.bVotes = kEvaluationData.bVotes + kData.Votes;
+				kEvaluationData.bVoters = kEvaluationData.bVoters + 1;
+				kEvaluationData.soleBPlayerID = playerID;
+				if kData.Votes > kEvaluationData.biggestBVotes then
+					kEvaluationData.biggestBVotes = kData.Votes;
+					kEvaluationData.biggestBVoter = playerID;
+				end
+			end
+		end
+
+		--Go through all of our evaluators and append to the tooltip string
+		local chosenThingString:string = Locale.Lookup(kPreviousResolutionData.ChosenThing);
+		if kPreviousResolutionData.TargetType == "PlayerType" then
+			chosenThingString = Locale.Lookup(GetPlayerName(tonumber(kPreviousResolutionData.ChosenThing)));
+		end
+		local tooltipString:string = kEvaluationData.aVotes > kEvaluationData.bVotes and Locale.Lookup("LOC_WORLD_CONGRESS_PREVIOUS_TOOLTIP_A_WON", chosenThingString) or Locale.Lookup("LOC_WORLD_CONGRESS_PREVIOUS_TOOLTIP_B_WON", chosenThingString);
+		for _, evaluate in pairs(m_kPreviousTooltipEvaluators) do
+			tooltipString = tooltipString .. evaluate(kEvaluationData);
+		end
+
+		uiResolutionInstance.MoreInfoButton:SetToolTipString(tooltipString);
+	else
+		UI.DataError("Resolution Data is nil! World Congress unable to evaluate Resolution History");
+		return;
+	end
+end
+
+-- ===========================================================================
+function EvaluateTiebroken(kEvaluationData:table)
+	--Evaluate if the last round was decided by tiebreaker
+	return kEvaluationData.aVotes == kEvaluationData.bVotes and "[NEWLINE]" .. Locale.Lookup("LOC_WORLD_CONGRESS_PREVIOUS_TOOLTIP_WAS_TIE") or "";
+end
+
+-- ===========================================================================
+function EvaluateSoleVoter(kEvaluationData:table)
+	--Did a category only have a single voter?
+	local soleVoterString:string = "";
+
+	if kEvaluationData.aVoters == 1 then
+		soleVoterString = soleVoterString .. "[NEWLINE]" .. Locale.Lookup("LOC_WORLD_CONGRESS_PREVIOUS_TOOLTIP_A_SOLE_VOTE", GetPlayerName(kEvaluationData.soleAPlayerID));
+	end
+
+	if kEvaluationData.bVoters == 1 then
+		soleVoterString = soleVoterString .. "[NEWLINE]" .. Locale.Lookup("LOC_WORLD_CONGRESS_PREVIOUS_TOOLTIP_B_SOLE_VOTE", GetPlayerName(kEvaluationData.soleBPlayerID));
+	end
+
+	return soleVoterString;
+end
+
+-- ===========================================================================
+function EvaluateNeckAndNeck(kEvaluationData:table)
+	--Evaluate if the voting was close
+	local voteDelta:number = math.abs(kEvaluationData.aVotes - kEvaluationData.bVotes);
+	local voteMargin:number = voteDelta / math.ceil(kEvaluationData.aVotes, kEvaluationData.bVotes);
+	
+	if voteMargin <= GlobalParameters.WORLD_CONGRESS_NEARLY_TIED_RANGE / 100 then
+		return "[NEWLINE]" .. (kEvaluationData.aVotes > kEvaluationData.bVotes and Locale.Lookup("LOC_WORLD_CONGRESS_PREVIOUS_TOOLTIP_NECK_AND_NECK_A") or Locale.Lookup("LOC_WORLD_CONGRESS_PREVIOUS_TOOLTIP_NECK_AND_NECK_B"));
+	end
+
+	return "";
+end
+
+-- ===========================================================================
+function EvaluateUnanimous(kEvaluationData:table)
+	--Was the decision unanimous?
+	if kEvaluationData.aVoters > 0 and kEvaluationData.bVoters == 0 then
+		return "[NEWLINE]" .. Locale.Lookup("LOC_WORLD_CONGRESS_PREVIOUS_TOOLTIP_UNANIMOUS_A");
+	end
+
+	if kEvaluationData.aVoters == 0 and kEvaluationData.bVoters > 0 then
+		return  "[NEWLINE]" .. Locale.Lookup("LOC_WORLD_CONGRESS_PREVIOUS_TOOLTIP_UNANIMOUS_B");
+	end
+
+	return "";	
+end
+
+-- ===========================================================================
+function EvaluateMajorityLeader(kEvaluationData:table)
+	--Was one player outstanding in their contribution?
+	local majorityString:string = "";
+	local aVoteMargin:number = -1;
+	local bVoteMargin:number = -1;
+
+	if kEvaluationData.aVotes > 0 then
+		aVoteMargin = kEvaluationData.biggestAVotes / kEvaluationData.aVotes;
+	end
+
+	if kEvaluationData.bVotes > 0 then
+		bVoteMargin = kEvaluationData.biggestBVotes / kEvaluationData.bVotes;
+	end
+
+	if aVoteMargin > GlobalParameters.WORLD_CONGRESS_MAJORITY_LEADER_MINIMUM then
+		majorityString = majorityString .. "[NEWLINE]" .. Locale.Lookup("LOC_WORLD_CONGRESS_PREVIOUS_TOOLTIP_MAJORITY_A", GetPlayerName(kEvaluationData.biggestAVoter));
+	end
+
+	if bVoteMargin > GlobalParameters.WORLD_CONGRESS_MAJORITY_LEADER_MINIMUM then
+		majorityString = majorityString .. "[NEWLINE]" .. Locale.Lookup("LOC_WORLD_CONGRESS_PREVIOUS_TOOLTIP_MAJORITY_B", GetPlayerName(kEvaluationData.biggestBVoter));
+	end
+
+	return majorityString;
 end
 
 -- ===========================================================================
@@ -2227,7 +2379,7 @@ function OnGameDebugReturn(context:string, contextTable:table)
 			m_kResolutionVotes = contextTable.ResolutionVotes;
 			m_kResolutionChoices = contextTable.ResolutionChoices;
 			m_HasSpecialSessionNotification = contextTable.HasSpecialSessionNotification;
-			SetStage(contextTable.CurrentStage);
+			SetStage(contextTable.CurrentStage, true);
 			SetPhase(contextTable.CurrentPhase);
 			ShowPopup(false, true);
 		end
@@ -2238,6 +2390,7 @@ end
 -- Reload support
 -- ===========================================================================
 function OnInit(isReload:boolean)
+	LateInitialize();
 	if isReload then
 		LuaEvents.GameDebug_GetValues(RELOAD_CACHE_ID);
 	end
@@ -2247,6 +2400,22 @@ end
 -- Reload support
 -- ===========================================================================
 function OnShutdown()	
+	--Stop listening
+	LuaEvents.GameDebug_Return.Remove(OnGameDebugReturn);
+	LuaEvents.WorldCongressIntro_ShowWorldCongress.Remove( OnShowFromIntro );
+	LuaEvents.CongressButton_ShowCongressResults.Remove(OnWorldCongressResults);
+	LuaEvents.DiplomacyActionView_ShowCongressResults.Remove(OnWorldCongressResults);
+	LuaEvents.NotificationPanel_ResumeCongress.Remove(OnResumeCongress);
+	LuaEvents.CongressButton_ResumeCongress.Remove(OnResumeCongress);
+	LuaEvents.DiplomacyActionView_ResumeCongress.Remove(OnResumeCongress);
+	LuaEvents.WorldCongressBetweenTurns_ResumeCongress.Remove(OnResumeCongress);
+	LuaEvents.DiplomacyActionView_HideCongress.Remove(OnCloseFromDiplomacy);
+	LuaEvents.DiploBasePopup_HideUI.Remove(OnCloseFromDiplomacy);
+	LuaEvents.NotificationPanel_OpenWorldCongressProposeEmergencies.Remove(OnWorldCongressEmergencyProposals);
+	LuaEvents.NotificationPanel_OpenWorldCongressResults.Remove(OnOpenWorldCongressResultsNotification);
+	LuaEvents.WorldCongressPopup_OnSpecialSessionNotificationAdded.Remove(OnSpecialSessionNotificationAdded);
+	LuaEvents.WorldCongressPopup_OnSpecialSessionNotificationDismissed.Remove(OnSpecialSessionNotificationDismissed);
+
 	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "IsVisible", ContextPtr:IsVisible());
 	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "ReviewTab", m_ReviewTab);
 	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "CurrentStage", m_CurrentStage);
@@ -2366,7 +2535,7 @@ function OnTurnTimerUpdated(elapsedTime :number, maxTurnTime :number)
 		Controls.ReturnButton:SetText(Locale.Lookup("LOC_WORLD_CONGRESS_RETURN"));
 	else
 		local timeLeft:number = SoftRound(maxTurnTime - elapsedTime);
-		local timeLeftLabel:string = " (" .. Locale.Lookup("LOC_KEY_TIME_SECONDS", timeLeft) .. ")";
+		local timeLeftLabel:string = " (" .. FormatTimeRemaining(timeLeft, true) .. ")";
 		Controls.NextButton:SetText(Locale.Lookup("LOC_WORLD_CONGRESS_NEXT") .. timeLeftLabel);
 		Controls.AcceptButton:SetText(Locale.Lookup("LOC_WORLD_CONGRESS_SUBMIT") .. timeLeftLabel);
 		Controls.ReturnButton:SetText(Locale.Lookup("LOC_WORLD_CONGRESS_RETURN") .. timeLeftLabel);
@@ -2393,19 +2562,7 @@ end
 -- ===========================================================================
 --	Initialize
 -- ===========================================================================
-function Initialize()
-	Events.SystemUpdateUI.Add(OnUpdateUI);
-	Events.LoadScreenClose.Add(OnLoadScreenClose);
-	Events.WorldCongressStage1.Add(function(i) OnWorldCongressStageChange(i, 1); end);
-	Events.WorldCongressStage2.Add(function(i) OnWorldCongressStageChange(i, 2); end);
-	Events.LocalPlayerTurnEnd.Add( OnLocalPlayerTurnEnd );
-	Events.TurnTimerUpdated.Add( OnTurnTimerUpdated );
-	Events.GameConfigChanged.Add( OnGameConfigChanged );
-	
-	ContextPtr:SetInputHandler(OnInputHandler, true);
-	ContextPtr:SetInitHandler(OnInit);
-	ContextPtr:SetShutdown(OnShutdown);
-	
+function LateInitialize()
 	Controls.AcceptButton:RegisterCallback(Mouse.eLClick, OnAccept);
 	Controls.ReturnButton:RegisterCallback(Mouse.eLClick, OnClose);
 	Controls.PassButton:RegisterCallback(Mouse.eLClick, OnPass);
@@ -2429,9 +2586,47 @@ function Initialize()
 	LuaEvents.DiplomacyActionView_HideCongress.Add(OnCloseFromDiplomacy);
 	LuaEvents.DiploBasePopup_HideUI.Add(OnCloseFromDiplomacy);
 	LuaEvents.NotificationPanel_OpenWorldCongressProposeEmergencies.Add(OnWorldCongressEmergencyProposals);
-	LuaEvents.NotificationPanel_OpenWorldCongressResults.Add(function() OnWorldCongressResults(REVIEW_TAB_RESULTS, true); end);
-	LuaEvents.WorldCongressPopup_OnSpecialSessionNotificationAdded.Add(function() m_HasSpecialSessionNotification = true; end);
-	LuaEvents.WorldCongressPopup_OnSpecialSessionNotificationDismissed.Add(function() m_HasSpecialSessionNotification = false; end);
+	LuaEvents.NotificationPanel_OpenWorldCongressResults.Add(OnOpenWorldCongressResultsNotification);
+	LuaEvents.WorldCongressPopup_OnSpecialSessionNotificationAdded.Add(OnSpecialSessionNotificationAdded);
+	LuaEvents.WorldCongressPopup_OnSpecialSessionNotificationDismissed.Add(OnSpecialSessionNotificationDismissed);
+
+	table.insert(m_kPreviousTooltipEvaluators, EvaluateTiebroken);
+	table.insert(m_kPreviousTooltipEvaluators, EvaluateNeckAndNeck);
+	table.insert(m_kPreviousTooltipEvaluators, EvaluateUnanimous);
+	table.insert(m_kPreviousTooltipEvaluators, EvaluateMajorityLeader);
+	table.insert(m_kPreviousTooltipEvaluators, EvaluateSoleVoter);
+end
+
+-- ===========================================================================
+--	Callback Helpers
+-- ===========================================================================
+function OnOpenWorldCongressResultsNotification() 
+	OnWorldCongressResults(REVIEW_TAB_RESULTS, true); 
+end
+
+function OnSpecialSessionNotificationAdded() 
+	m_HasSpecialSessionNotification = true;
+end
+
+function OnSpecialSessionNotificationDismissed() 
+	m_HasSpecialSessionNotification = false; 
+end
+
+-- ===========================================================================
+--	Initialize
+-- ===========================================================================
+function Initialize()
+	ContextPtr:SetInputHandler(OnInputHandler, true);
+	ContextPtr:SetInitHandler(OnInit);
+	ContextPtr:SetShutdown(OnShutdown);
+
+	Events.SystemUpdateUI.Add(OnUpdateUI);
+	Events.LoadScreenClose.Add(OnLoadScreenClose);
+	Events.WorldCongressStage1.Add(function(i) OnWorldCongressStageChange(i, 1); end);
+	Events.WorldCongressStage2.Add(function(i) OnWorldCongressStageChange(i, 2); end);
+	Events.LocalPlayerTurnEnd.Add( OnLocalPlayerTurnEnd );
+	Events.TurnTimerUpdated.Add( OnTurnTimerUpdated );
+	Events.GameConfigChanged.Add( OnGameConfigChanged );
 end
 
 --No capability means never initialize this so it can never be used.

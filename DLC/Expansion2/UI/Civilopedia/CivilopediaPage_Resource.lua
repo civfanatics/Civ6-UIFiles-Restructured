@@ -39,7 +39,29 @@ PageLayouts["Resource" ] = function(page)
 			table.insert(yield_changes, {change, row.IconString, Locale.Lookup(row.Name)}); 
 		end
 	end
+	
+	-- placement requirements
+	local placement_requirements = {};
+	for row in GameInfo.Resource_ValidFeatures() do
+		if(row.ResourceType == resourceType) then
+			local feature = GameInfo.Features[row.FeatureType];
+			if(feature ~= nil) then
+				table.insert(placement_requirements, {Locale.Lookup(feature.Name), feature.FeatureType});
+			end
+		end
+	end
+	
+	for row in GameInfo.Resource_ValidTerrains() do
+		if(row.ResourceType == resourceType) then
+			local terrain = GameInfo.Terrains[row.TerrainType];
+			if(terrain ~= nil) then
+				table.insert(placement_requirements, {Locale.Lookup(terrain.Name), terrain.TerrainType});
+			end
+		end
+	end
+	table.sort(placement_requirements, function(a,b) return Locale.Compare(a[1],b[1]) == -1 end);
 
+	
 	local improvements = {};
 	for row in GameInfo.Improvement_ValidResources() do
 		if(row.ResourceType == resourceType) then
@@ -282,6 +304,24 @@ PageLayouts["Resource" ] = function(page)
 			for i,v in ipairs(creators) do
 				s:AddIconLabel(v[1], v[2]);
 			end
+			s:AddSeparator();
+		end
+		
+		if(#placement_requirements > 0) then
+			s:AddHeader("LOC_UI_PEDIA_PLACEMENT");
+
+			for i, v in ipairs(placement_requirements) do
+				local t = type(v);
+				if(t == "table") then
+					local tName = v[1];
+					local tType = v[2];
+					s:AddIconLabel({"ICON_" .. tType, tName, tType}, tName);
+
+				elseif(t == "string") then
+					s:AddLabel("[ICON_Bullet] " .. v);
+				end
+			end
+
 			s:AddSeparator();
 		end
 	end);

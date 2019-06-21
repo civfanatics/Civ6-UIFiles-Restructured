@@ -159,29 +159,33 @@ function PopulateGenericInstance(instance:table, playerData:table, victoryType:s
 			local detailsText:string = "";
 			local innerRequirements:table = GameEffects.GetRequirementSetInnerRequirements(requirementSetID);
 	
-			for _, requirementID in ipairs(innerRequirements) do
+			if innerRequirements ~= nil then
+				for _, requirementID in ipairs(innerRequirements) do
 
-				if detailsText ~= "" then
-					detailsText = detailsText .. "[NEWLINE]";
-				end
-
-				local requirementKey:string = GameEffects.GetRequirementTextKey(requirementID, "VictoryProgress");
-				local requirementText:string = GameEffects.GetRequirementText(requirementID, requirementKey);
-
-				if requirementText ~= nil then
-					detailsText = detailsText .. requirementText;
-					local civIconClass = CivilizationIcon:AttachInstance(instance.CivilizationIcon or instance);
-					civIconClass:SetLeaderTooltip(playerData.PlayerID, requirementText);
-				else
-					local requirementState:string = GameEffects.GetRequirementState(requirementID);
-					local requirementDetails:table = GameEffects.GetRequirementDefinition(requirementID);
-					if requirementState == "Met" or requirementState == "AlwaysMet" then
-						detailsText = detailsText .. "[ICON_CheckmarkBlue] ";
-					else
-						detailsText = detailsText .. "[ICON_Bolt]";
+					if detailsText ~= "" then
+						detailsText = detailsText .. "[NEWLINE]";
 					end
-					detailsText = detailsText .. requirementDetails.ID;
+
+					local requirementKey:string = GameEffects.GetRequirementTextKey(requirementID, "VictoryProgress");
+					local requirementText:string = GameEffects.GetRequirementText(requirementID, requirementKey);
+
+					if requirementText ~= nil then
+						detailsText = detailsText .. requirementText;
+						local civIconClass = CivilizationIcon:AttachInstance(instance.CivilizationIcon or instance);
+						civIconClass:SetLeaderTooltip(playerData.PlayerID, requirementText);
+					else
+						local requirementState:string = GameEffects.GetRequirementState(requirementID);
+						local requirementDetails:table = GameEffects.GetRequirementDefinition(requirementID);
+						if requirementState == "Met" or requirementState == "AlwaysMet" then
+							detailsText = detailsText .. "[ICON_CheckmarkBlue] ";
+						else
+							detailsText = detailsText .. "[ICON_Bolt]";
+						end
+						detailsText = detailsText .. requirementDetails.ID;
+					end
 				end
+			else
+				detailsText = "";
 			end
 			instance.Details:SetText(detailsText);
 		else
@@ -300,16 +304,28 @@ function ViewScience()
 		else
 			progressText = progressText .. "[ICON_CheckmarkBlue] ";
 		end
-		progressText = progressText .. SCIENCE_REQUIREMENTS[i];
-		if(i < 4) then progressText = progressText .. "[NEWLINE]"; end
+		progressText = progressText .. SCIENCE_REQUIREMENTS[i] .. "[NEWLINE]";
 	end
+
+	-- Final milestone - Earning Victory Points (Light Years)
+	local totalLightYears:number = m_LocalPlayer:GetStats():GetScienceVictoryPointsTotalNeeded();
+	local lightYears = m_LocalPlayer:GetStats():GetScienceVictoryPoints();
+	if (lightYears < totalLightYears) then
+		progressText = progressText .. "[ICON_Bolt]";
+	else
+		progressText = progressText .. "[ICON_CheckmarkBlue]";
+	end
+	progressText = progressText .. Locale.Lookup("LOC_WORLD_RANKINGS_SCIENCE_REQUIREMENT_FINAL", totalLightYears);
 
 	m_ActiveHeader.AdvisorTextCentered:SetText(progressText);
     if (nextStep ~= "") then
         m_ActiveHeader.AdvisorTextNextStep:SetText(Locale.Lookup("LOC_WORLD_RANKINGS_SCIENCE_NEXT_STEP", nextStep));
 	else
-		local lightYears = m_LocalPlayer:GetStats():GetScienceVictoryPoints();
-		local totalLightYears = m_LocalPlayer:GetStats():GetScienceVictoryPointsTotalNeeded();
+		-- If the user One More Turns, this keeps rolling in the DLL and makes us look goofy.
+		if lightYears > totalLightYears then
+			lightYears = totalLightYears;
+		end
+
         m_ActiveHeader.AdvisorTextNextStep:SetText(Locale.Lookup("LOC_WORLD_RANKINGS_SCIENCE_HAS_MOVED", lightYears, totalLightYears));
     end
 
@@ -682,9 +698,21 @@ function ViewDiplomatic(victoryType:string)
 
 	for i, theData in ipairs(ourData) do
 		if #theData.teamData.PlayerData > 1 then
-			PopulateGenericTeamInstance(m_GenericTeamIM:GetInstance(), theData.teamData, victoryType);
+			local uiGenericInstance:table = m_GenericTeamIM:GetInstance()
+			uiGenericInstance.ButtonBG:SetToolTipString("");
+			PopulateGenericTeamInstance(uiGenericInstance, theData.teamData, victoryType);
 		else
-			PopulateGenericInstance(m_GenericIM:GetInstance(), theData.teamData.PlayerData[1], victoryType, true);
+			local uiGenericInstance:table = m_GenericIM:GetInstance();
+			local pPlayer:table = Players[theData.teamData.PlayerData[1].PlayerID];
+			if pPlayer ~= nil then
+				local pStats:table = pPlayer:GetStats();
+				if pStats == nil then
+					UI.DataError("Stats not found for PlayerID:" .. theData.teamData.PlayerData[1].PlayerID .. "! WorldRankings XP2");
+					return;
+				end
+				uiGenericInstance.ButtonBG:SetToolTipString(pStats:GetDiplomaticVictoryPointsTooltip());
+			end
+			PopulateGenericInstance(uiGenericInstance, theData.teamData.PlayerData[1], victoryType, true);
 		end
 	end
 

@@ -42,16 +42,16 @@
                 <Stack ID="ReviewTabs" Anchor="C,T" Size="auto,34" Offset="0,14" StackGrowth="Right" Padding="10">
                   <Container Size="20,1"/>
 									<Container ID="LastResults" Size="auto,41">
-										<GridButton ID="LastResultsButton" Style="WCTabButton" Size="parent,34" String="LOC_WORLD_CONGRESS_LAST_SESSION_RESULTS" SizeToText="20,0" MinSize="1,34"/>
-										<GridButton ID="LastResultsSelected" Style="WCTabButtonSelected" Size="parent,34" String="LOC_WORLD_CONGRESS_LAST_SESSION_RESULTS" SizeToText="20,0" MinSize="1,34"/>
+										<GridButton ID="LastResultsButton" Style="TabButton" Size="parent,34" String="LOC_WORLD_CONGRESS_LAST_SESSION_RESULTS" SizeToText="20,0" MinSize="1,34"/>
+										<GridButton ID="LastResultsSelected" Style="TabButtonSelected" Size="parent,34" String="LOC_WORLD_CONGRESS_LAST_SESSION_RESULTS" SizeToText="20,0" MinSize="1,34"/>
 									</Container>
                   <Container ID="CurrentEffects" Size="auto,41">
-                    <GridButton ID="CurrentEffectsButton" Style="WCTabButton" Size="parent,34" String="LOC_WORLD_CONGRESS_ACTIVE_EFFECTS" SizeToText="20,0" MinSize="1,34"/>
-                    <GridButton ID="CurrentEffectsSelected" Style="WCTabButtonSelected" Size="parent,34" String="LOC_WORLD_CONGRESS_ACTIVE_EFFECTS" SizeToText="20,0" MinSize="1,34"/>
+                    <GridButton ID="CurrentEffectsButton" Style="TabButton" Size="parent,34" String="LOC_WORLD_CONGRESS_ACTIVE_EFFECTS" SizeToText="20,0" MinSize="1,34"/>
+                    <GridButton ID="CurrentEffectsSelected" Style="TabButtonSelected" Size="parent,34" String="LOC_WORLD_CONGRESS_ACTIVE_EFFECTS" SizeToText="20,0" MinSize="1,34"/>
                   </Container>
                   <Container ID="AvailableProposals" Size="auto,41">
-                    <GridButton ID="AvailableProposalsButton" Style="WCTabButton" Size="parent,34" String="LOC_WORLD_CONGRESS_AVAILABLE_PROPOSALS" SizeToText="20,0" MinSize="1,34"/>
-                    <GridButton ID="AvailableProposalsSelected" Style="WCTabButtonSelected" Size="parent,34" String="LOC_WORLD_CONGRESS_AVAILABLE_PROPOSALS" SizeToText="20,0" MinSize="1,34"/>
+                    <GridButton ID="AvailableProposalsButton" Style="TabButton" Size="parent,34" String="LOC_WORLD_CONGRESS_AVAILABLE_PROPOSALS" SizeToText="20,0" MinSize="1,34"/>
+                    <GridButton ID="AvailableProposalsSelected" Style="TabButtonSelected" Size="parent,34" String="LOC_WORLD_CONGRESS_AVAILABLE_PROPOSALS" SizeToText="20,0" MinSize="1,34"/>
                   </Container>
                   <Container Size="20,1"/>
                 </Stack>
@@ -276,6 +276,7 @@
             <Label ID="Title" Anchor="L,C" WrapWidth="300" Style="WCProposalTitle"/>
             <Label ID="Description" Anchor="C,T" Style="WCProposalBody" Align="C"/>
           </Stack>
+          <Button ID="MoreInfoButton" Size="28,28" Texture="Controls_PreviousSession" NoStateChange="1" Anchor="R,C" Offset="12,0"/>
         </Container>
         <Label ID="Outcome" Offset="55,0" Style="WCProposalHeader" String="LOC_WORLD_CONGRESS_SELECT_AN_OUTCOME"/>
         <Container Size="1,2"/>

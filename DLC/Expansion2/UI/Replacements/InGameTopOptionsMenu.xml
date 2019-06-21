@@ -35,7 +35,6 @@
                 <Container Size="20,20"/>
                 <GridButton ID="ReturnButton"		      Anchor="C,T" Style="PauseMenuButton" String="{LOC_GAME_MENU_RETURN_TO_GAME:upper}" ToolTip="LOC_GAME_MENU_RETURN_TO_GAME_TOOLTIP" />
                 <Container Size="20,20"/>
-                <GridButton ID="RestartGameButton"		Anchor="C,T" Style="PauseMenuButton" Size="250,36" String="{LOC_GAME_MENU_RESTART:upper}" ToolTip="LOC_GAME_MENU_RESTART_TOOLTIP"/>
                 <GridButton ID="QuickSaveButton"			Anchor="C,T" Style="PauseMenuButton" Size="250,36" String="{LOC_GAME_MENU_QUICK_SAVE:upper}" ToolTip="LOC_GAME_MENU_QUICK_SAVE_TOOLTIP" />
                 <GridButton ID="SaveGameButton"				Anchor="C,T" Style="PauseMenuButton" Size="250,36" String="{LOC_GAME_MENU_SAVE:upper}" ToolTip="LOC_GAME_MENU_SAVE_TOOLTIP" />
                 <GridButton ID="LoadGameButton"				Anchor="C,T" Style="PauseMenuButton" Size="250,36" String="{LOC_GAME_MENU_LOAD:upper}" ToolTip="LOC_GAME_MENU_LOAD_TOOLTIP" />

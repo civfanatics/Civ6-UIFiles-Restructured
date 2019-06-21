@@ -180,7 +180,13 @@ function KeyHandler( key:number )
 end
 function OnInputHander( pInputStruct:table )
 	local uiMsg :number = pInputStruct:GetMessageType();
-	if (uiMsg == KeyEvents.KeyUp) then return KeyHandler( pInputStruct:GetKey() ); end;
+	if (uiMsg == KeyEvents.KeyUp) then 
+		return KeyHandler( pInputStruct:GetKey() ); 
+	end;
+	if (uiMsg == MouseEvents.LButtonUp) then 
+		Close();
+		return true;
+	end
 	return false;
 end
 
@@ -188,8 +194,10 @@ end
 --	UI EVENT
 -- ===========================================================================
 function OnShutdown()
-	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "ownerID", m_ownerID);
-	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "unitID", m_unitID);
+	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "m_ownerID", m_ownerID);
+	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "m_unitID", m_unitID);
+	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "ms_eventID", ms_eventID);
+	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "kData", kData);
 end
 
 -- ===========================================================================
@@ -198,7 +206,11 @@ end
 -- ===========================================================================
 function OnGameDebugReturn(context:string, contextTable:table)
 	if context == RELOAD_CACHE_ID and not ContextPtr:IsHidden() then
-		OnRockBandConcert(contextTable["ownerID"], contextTable["unitID"]);
+		ms_eventID = contextTable["ms_eventID"];
+		local kData :table = contextTable["KData"];
+		ShowPopup( KData );
+		m_ownerID = contextTable["m_ownerID"];
+		m_unitID = contextTable["m_unitID"];
 	end
 end
 
@@ -220,8 +232,9 @@ function Initialize()
 	ContextPtr:SetInitHandler(OnInit);
 	ContextPtr:SetShutdown(OnShutdown);
 
-	Controls.Close:RegisterCallback(Mouse.eLClick, OnClose);
-	
+	Controls.Close:RegisterCallback(Mouse.eLClick, OnClose);	
+	Controls.ScreenConsumer:RegisterCallback(Mouse.eRClick, OnClose);	
+
 	Events.PostTourismBomb.Add(OnRockBandConcert);
 	Events.LocalPlayerTurnEnd.Add( OnLocalPlayerTurnEnd );	
 

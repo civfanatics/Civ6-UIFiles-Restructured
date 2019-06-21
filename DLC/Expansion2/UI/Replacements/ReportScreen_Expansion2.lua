@@ -265,12 +265,3 @@ function GetCityResourceData( pCity:table )
 	end
 	return kResources;
 end
-
--- ===========================================================================
-function Resize()
-	local topPanelSizeY:number = 10;
-
-	x,y = UIManager:GetScreenSizeVal();
-	Controls.Main:SetSizeY( y - topPanelSizeY );
-	Controls.Main:SetOffsetY( topPanelSizeY * 0.5 );
-end

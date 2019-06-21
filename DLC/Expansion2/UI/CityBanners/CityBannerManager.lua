@@ -146,10 +146,9 @@ end
 function CityBanner:new( playerID: number, cityID : number, districtID : number, bannerType : number, bannerStyle : number )
 	self = LuaClass.new(CityBanner);
 	
-	self.m_eMajorityReligion = -1; -- << Assign default values
-	self.m_eLoyaltyWarningPlayer = -1; -- which player the city might flip to within 20 turns
-
-	if bannerStyle == nil then UI.DataError("Missing bannerStyle: "..tostring(playerID)..", "..tostring(cityID)..", "..tostring(districtID)..", "..tostring(bannerType) ); end
+	if bannerStyle == nil then 
+		UI.DataError("Missing bannerStyle: "..tostring(playerID)..", "..tostring(cityID)..", "..tostring(districtID)..", "..tostring(bannerType) ); 
+	end
 
 	self:Initialize(playerID, cityID, districtID, bannerType, bannerStyle);
 
@@ -170,6 +169,11 @@ end
 
 -- ===========================================================================
 function CityBanner:destroy()
+	self:Uninitialize( self.m_Player:GetID(), self.m_CityID, self.m_DistrictID, self.m_Type , self.m_Style );
+end
+
+-- ===========================================================================
+function CityBanner:Uninitialize()
 	if self.m_DetailStatusIM then
 		self.m_DetailStatusIM:DestroyInstances();
 	end
@@ -207,7 +211,6 @@ function CityBanner:destroy()
 	end
 end
 
-
 -- ===========================================================================
 function CityBanner:Initialize( playerID: number, cityID : number, districtID : number, bannerType : number, bannerStyle : number)
 
@@ -224,6 +227,10 @@ function CityBanner:Initialize( playerID: number, cityID : number, districtID : 
 	self.m_OverrideDim = false;
 	self.m_FogState = 0;
 	self.m_UnitListEnabled = false;
+
+	self.m_eMajorityReligion = -1;		-- Assign default values
+	self.m_eLoyaltyWarningPlayer = -1; -- which player the city might flip to within 20 turns
+
 
 	if (bannerType == BANNERTYPE_CITY_CENTER) then
 		local pCity = self:GetCity();

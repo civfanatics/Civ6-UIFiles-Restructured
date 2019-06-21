@@ -31,16 +31,17 @@
 		<Container	ID="SelectedUnitContainer"/>		<!-- Selected unit UI is dynamically attached/detached from here so that it renders last -->
 		<LuaContext ID="WorldViewPlotMessages"			FileName="WorldViewPlotMessages"/>
 		<LuaContext ID="SettlerWarningIconManager"	FileName="SettlerWarningIconManager"/>
+    <LuaContext ID="PowerLensManager"	          FileName="PowerLensManager"/>
 		<LuaContext ID="GenVFX"											FileName="GenVFX"									Hidden="1"/>	<!-- Generic VFX trigger support -->
 	</Container>
 	
 	<Container ID="HUD" Size="parent,parent">
 		<LuaContext ID="CameraManager"							FileName="CameraManager"					Hidden="1"/>
 		<LuaContext ID="PlotToolTip"								FileName="PlotToolTip"/>
+		<LuaContext ID="StatusMessagePanel"					FileName="StatusMessagePanel"/>
 		<LuaContext ID="NotificationPanel"					FileName="NotificationPanel"/>
 		<LuaContext ID="WorldTracker"								FileName="WorldTracker"/>
 		<LuaContext ID="MinimapPanel"								FileName="MinimapPanel"/>
-    <LuaContext	ID="FullscreenMapPopup"		      FileName="FullscreenMapPopup"			Hidden="1"	/>
     <LuaContext ID="CityPanel"									FileName="CityPanel"							Hidden="1"	/>
 		<LuaContext ID="UnitPanel"									FileName="UnitPanel"							Hidden="1"	/>
 		<LuaContext ID="ActionPanel"								FileName="ActionPanel"/>
@@ -64,6 +65,7 @@
 	<LuaContext ID="EdgeScroll" FileName="EdgeScroll"/>
 
 	<Container ID="Screens" Size="parent,parent">
+		<LuaContext	ID="FullscreenMapPopup"		      FileName="FullscreenMapPopup"			Hidden="1"/>
 		<LuaContext ID="TechTree"										FileName="TechTree"								Hidden="1"/>
 		<LuaContext ID="CivicsTree"									FileName="CivicsTree"							Hidden="1"/>
 		<LuaContext ID="ClimateScreen"							FileName="ClimateScreen"					Hidden="1"/>
@@ -83,9 +85,9 @@
 		<LuaContext ID="CivicsChooser"							FileName="CivicsChooser"					Hidden="1"/>
 		<LuaContext ID="ResearchChooser"						FileName="ResearchChooser"				Hidden="1"/>
 		<LuaContext ID="EspionageChooser"						FileName="EspionageChooser"				Hidden="1"/>
+    <LuaContext ID="PantheonChooser"            FileName="PantheonChooser"        Hidden="1"  />
 		<LuaContext ID="CityPanelOverview"					FileName="CityPanelOverview"			Hidden="1"/>
 		<LuaContext ID="ModalLensPanel"							FileName="ModalLensPanel"					Hidden="1"/>
-		<LuaContext ID="StatusMessagePanel"					FileName="StatusMessagePanel"/>
 	</Container>
 
 

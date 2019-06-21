@@ -13,6 +13,7 @@ local RELIGION_OFFSET_Y = -1 * HEX_WIDTH / 2;
 
 local CLASS_MOUNTAIN = GameInfo.TerrainClasses["TERRAIN_CLASS_MOUNTAIN"].Index;
 local CLASS_DESERT   = GameInfo.TerrainClasses["TERRAIN_CLASS_DESERT"].Index;
+local CLASS_WATER    = GameInfo.TerrainClasses["TERRAIN_CLASS_WATER"].Index;
 
 local NATURAL_WONDER_LAYER_HASH = UILens.CreateLensLayerHash("MapLabels_NaturalWonders");
 local NATIONAL_PARK_LAYER_HASH  = UILens.CreateLensLayerHash("MapLabels_NationalParks");
@@ -164,7 +165,7 @@ function FindNaturalWonders()
 end
 
 -- ===========================================================================
-function AddTerritoryLabel(pOverlay, pTerritory, eTerritoryClass)
+function AddTerritoryLabel(pOverlay, pTerritory)
 	local eTerritory = pTerritory:GetID();
 	if m_TerritoryTracker[eTerritory] == nil then
 		local pInstance = m_TerritoryCache[eTerritory];
@@ -173,10 +174,6 @@ function AddTerritoryLabel(pOverlay, pTerritory, eTerritoryClass)
 			return;
 		end
 	
-		if pInstance.eClass ~= eTerritoryClass then
-			return;
-		end
-		
 		local pName = pTerritory:GetName();
 		if (pName == nil) then
 			return;
@@ -184,26 +181,47 @@ function AddTerritoryLabel(pOverlay, pTerritory, eTerritoryClass)
 
 		m_TerritoryTracker[eTerritory] = true;
 		local szName = Locale.ToUpper(Locale.Lookup(pName));
+		
+		-- Special case for large bodies of water
+		if pTerritory:GetTerrainClass() == CLASS_WATER then
+			if (#pInstance.pPlots > 100) then
+				-- try to have approximately one label per 100 hexes
+				local pPositions = UI.GetRegionClusterPositions( pInstance.pPlots, 100, 100 );
+				if pPositions then
+					for _,pos in pairs(pPositions) do
+						print(szName .. " (" .. pos.x .. ", " .. pos.y .. ")");
+						pOverlay:CreateTextAtPos(szName, pos.x, pos.y, FontParams_MinorRegion);
+					end
+
+					-- we broke it up into multiple labels, return
+					-- otherwise we will fall back to generating a single label at the center
+					return;
+				end
+			end
+		end
+
 		local x, y = UI.GetRegionCenter(pInstance.pPlots);
 		pOverlay:CreateTextAtPos(szName, x, y, FontParams_MinorRegion);
 	end
 end
 
 -- ===========================================================================
-function UpdateTerritory(pOverlay, iPlotIndex, eTerritoryClass)
+function UpdateTerritory(pOverlay, iPlotIndex, pTerritorySelector)
 	local pTerritory = Territories.GetTerritoryAt(iPlotIndex);
-	if pTerritory then
-		AddTerritoryLabel(pOverlay, pTerritory, eTerritoryClass);
+	if pTerritory and pTerritorySelector(pTerritory) then
+		AddTerritoryLabel(pOverlay, pTerritory);
 	end
 end
 
 -- ===========================================================================
-function RefreshTerritories(pOverlay, eTerritoryClass)
+function RefreshTerritories(pOverlay, pTerritorySelector)
 	pOverlay:ClearAll();
 	m_TerritoryTracker = { };
 	for eTerritory,pInstance in pairs(m_TerritoryCache) do
 		local pTerritory = Territories.GetTerritory(eTerritory);
-		AddTerritoryLabel(pOverlay, pTerritory, eTerritoryClass);
+		if pTerritory and pTerritorySelector(pTerritory) then
+			AddTerritoryLabel(pOverlay, pTerritory);
+		end
 	end
 end
 
@@ -484,10 +502,7 @@ function RefreshTerritoryCache()
 				table.insert(m_TerritoryCache[eTerritory].pPlots, iPlot);
 			else
 				-- Instantiate a new territory
-				m_TerritoryCache[eTerritory] = { 
-					eClass = pTerritory:GetTerrainClass(),
-					pPlots = { iPlot },
-				};
+				m_TerritoryCache[eTerritory] = { pPlots = { iPlot } };
 			end
 		end
 	end
@@ -546,17 +561,30 @@ function Initialize()
 	ContextPtr:SetInitHandler( OnInit );
 	ContextPtr:SetShutdown( OnShutdown );
 	
-	local UpdateDeserts = function(pOverlay, iPlotIndex) UpdateTerritory(pOverlay, iPlotIndex, CLASS_DESERT); end
-	local UpdateMountainRanges = function(pOverlay, iPlotIndex) UpdateTerritory(pOverlay, iPlotIndex, CLASS_MOUNTAIN); end
-	local RefreshDeserts = function(pOverlay) RefreshTerritories(pOverlay, CLASS_DESERT); end
-	local RefreshMountainRanges = function(pOverlay) RefreshTerritories(pOverlay, CLASS_MOUNTAIN); end
-
-	CreateLabelManager( "MapLabels_Deserts",        "MapLabelOverlay_Deserts",        RefreshDeserts,        UpdateDeserts,        "FontFlair16"       ); -- Minion Semibold
-	CreateLabelManager( "MapLabels_MountainRanges", "MapLabelOverlay_MountainRanges", RefreshMountainRanges, UpdateMountainRanges, "FontFlair16"       ); -- Minion Semibold
 	CreateLabelManager( "MapLabels_NationalParks",  "MapLabelOverlay_NationalParks",  RefreshNationalParks,  nil,                  "FontNormal18"      ); -- Myriad Semibold
 	CreateLabelManager( "MapLabels_NaturalWonders", "MapLabelOverlay_NaturalWonders", RefreshNaturalWonders, UpdateNaturalWonders, "FontNormal18"      ); -- Myriad Semibold
 	CreateLabelManager( "MapLabels_Rivers",         "MapLabelOverlay_Rivers",         RefreshRivers,         UpdateRivers,         "FontItalicFlair18" ); -- Minion Italicized
 	CreateLabelManager( "MapLabels_Volcanoes",      "MapLabelOverlay_Volcanoes",      RefreshVolcanoes,      UpdateVolcanoes,      "FontNormal18"      ); -- Myriad Semibold
+
+	do
+		local CreateTerritoryLabelManager = function(szLensLayer, szOverlayName, pTerritorySelector, szFontStyle)
+			local pUpdateFunction = function(pOverlay, iPlotIndex) UpdateTerritory(pOverlay, iPlotIndex, pTerritorySelector); end
+			local pRebuildFunction = function(pOverlay) RefreshTerritories(pOverlay, pTerritorySelector); end
+			return CreateLabelManager(szLensLayer, szOverlayName, pRebuildFunction, pUpdateFunction, szFontStyle)
+		end
+
+		local IsDesert = function(pTerritory) return (pTerritory:GetTerrainClass() == CLASS_DESERT); end
+		local IsMountainRange = function(pTerritory) return (pTerritory:GetTerrainClass() == CLASS_MOUNTAIN) end
+		local IsLake = function(pTerritory) return (pTerritory:GetTerrainClass() == CLASS_WATER) and pTerritory:IsLake(); end
+		local IsOcean = function(pTerritory) return (pTerritory:GetTerrainClass() == CLASS_WATER) and not (pTerritory:IsLake() or pTerritory:IsSea()); end
+		local IsSea = function(pTerritory) return (pTerritory:GetTerrainClass() == CLASS_WATER) and pTerritory:IsSea(); end
+
+		CreateTerritoryLabelManager( "MapLabels_Deserts",        "MapLabelOverlay_Deserts",        IsDesert,        "FontFlair16"       ); -- Minion Semibold
+		CreateTerritoryLabelManager( "MapLabels_MountainRanges", "MapLabelOverlay_MountainRanges", IsMountainRange, "FontFlair16"       ); -- Minion Semibold
+		CreateTerritoryLabelManager( "MapLabels_Lakes",          "MapLabelOverlay_Lakes",          IsLake,          "FontItalicFlair18" ); -- Minion Italicized
+		CreateTerritoryLabelManager( "MapLabels_Oceans",         "MapLabelOverlay_Oceans",         IsOcean,         "FontItalicFlair18" ); -- Minion Italicized
+		CreateTerritoryLabelManager( "MapLabels_Seas",           "MapLabelOverlay_Seas",           IsSea,           "FontItalicFlair18" ); -- Minion Italicized
+	end
 
 	CreateLabelManager( "Hex_Coloring_Continent",   "MapLabelOverlay_Continents",     RefreshContinents,     nil,                  "FontNormal18"      ); -- Myriad Semibold
 	CreateLabelManager( "Hex_Coloring_Religion",    "MapLabelOverlay_Religions",      RefreshReligions,      nil,                  "FontNormal18"      ); -- Myriad Semibold
