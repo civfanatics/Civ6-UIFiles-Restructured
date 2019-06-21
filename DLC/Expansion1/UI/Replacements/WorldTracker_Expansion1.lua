@@ -1,67 +1,81 @@
---[[
--- Created by Tyler Berry, Aug 14 2017
--- Copyright (c) Firaxis Games
---]]
--- ===========================================================================
--- Base File
--- ===========================================================================
+-- Copyright 2017-2019, Firaxis Games
+
 include("WorldTracker");
 include("AllianceResearchSupport");
+
 
 -- ===========================================================================
 --	CACHE BASE FUNCTIONS
 -- ===========================================================================
+BASE_LateInitialize = LateInitialize;
 BASE_UpdateResearchPanel = UpdateResearchPanel;
 BASE_RealizeCurrentResearch = RealizeCurrentResearch;
 BASE_ShouldUpdateResearchPanel = ShouldUpdateResearchPanel;
 
+
 -- ===========================================================================
---	OVERRIDE BASE FUNCTIONS
+--	FUNCTIONS
+-- ===========================================================================
+
+
+-- ===========================================================================
+--	OVERRIDE
 -- ===========================================================================
 function UpdateResearchPanel( isHideResearch:boolean )
 	CalculateAllianceResearchBonus();
 	BASE_UpdateResearchPanel(isHideResearch);
 end
 
-function RealizeCurrentResearch( playerID:number, kData:table, kControl:table )
+-- ===========================================================================
+--	OVERRIDE
+-- ===========================================================================
+function RealizeCurrentResearch( playerID:number, kData:table, uiControl:table )
 
-	BASE_RealizeCurrentResearch(playerID, kData, kControl);
+	BASE_RealizeCurrentResearch(playerID, kData, uiControl);
 
-	if kControl == nil then
-		kControl = Controls;
+	-- If an instance is not passed in, remap to Context's main control table.
+	if uiControl == nil then
+		uiControl = Controls;
 	end
 
-	local showAllianceIcon = false;
+	local showAllianceIcon :boolean = false;
 	if kData ~= nil then
 		local techID = GameInfo.Technologies[kData.TechType].Index;
 		if AllyHasOrIsResearchingTech(techID) then
-			kControl.AllianceIcon:SetToolTipString(GetAllianceIconToolTip());
-			kControl.AllianceIcon:SetColor(GetAllianceIconColor());
+			uiControl.AllianceIcon:SetToolTipString(GetAllianceIconToolTip());
+			uiControl.AllianceIcon:SetColor(GetAllianceIconColor());
 			showAllianceIcon = true;
 		end
 	end
-	kControl.Alliance:SetShow(showAllianceIcon);
+	uiControl.Alliance:SetShow( showAllianceIcon );
 end
 
+-- ===========================================================================
+--	OVERRIDE
+-- ===========================================================================
 function ShouldUpdateResearchPanel(ePlayer:number, eTech:number)
 	return BASE_ShouldUpdateResearchPanel(ePlayer, eTech) or HasMaxLevelResearchAlliance(ePlayer);
 end
 
 -- ===========================================================================
-
+--	OVERRIDE
+-- ===========================================================================
 function RealizeEmptyMessage()
-	local crisisData = Game.GetEmergencyManager():GetEmergencyInfoTable(Game.GetLocalPlayer());
-	local foo = not crisisData;
-	if(m_hideChat and m_hideCivics and m_hideResearch and next(crisisData) == nil) then
+	local kCrisisData :table = Game.GetEmergencyManager():GetEmergencyInfoTable(Game.GetLocalPlayer());
+	if( IsChatHidden() and IsCivicsHidden() and IsResearchHidden() and next(kCrisisData) == nil) then
 		Controls.EmptyPanel:SetHide(false);
 	else
 		Controls.EmptyPanel:SetHide(true);
 	end
 end
 
-function Initialize()
+-- ===========================================================================
+--	OVERRIDE
+-- ===========================================================================
+function LateInitialize()
+	BASE_LateInitialize();
+	
 	ContextPtr:LoadNewContext("WorldCrisisTracker", Controls.PanelStack);
 	Controls.TutorialGoals:SetHide(true);
 	Controls.PanelStack:CalculateSize();
 end
-Initialize();

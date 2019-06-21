@@ -20,32 +20,40 @@ BASE_SetGovernmentHexes		= SetGovernmentHexes;
 -- ===========================================================================
 -- Members
 -- ===========================================================================
-local m_ToggleLoyaltyLensId = Input.GetActionId("LensLoyalty");
-
+local m_ToggleLoyaltyLensId		 : number = Input.GetActionId("LensLoyalty");
 local m_CulturalIdentityLens     : number = UILens.CreateLensLayerHash("Cultural_Identity_Lens");
 local m_UnknownCivilizationColor : number = UI.GetColorValue("COLOR_LOYALTY_UNKNOWN_CIVILIZATION");
 
+
+-- ===========================================================================
+--	FUNCTIONS
+-- ===========================================================================
+
+
+-- ===========================================================================
 function OnToggleLensList()
-		if Controls.LensPanel:IsHidden() then
-			Controls.LoyaltyLensButton:SetCheck(false);
-		else
-			Controls.EmpireLensButton:SetHide(not GameCapabilities.HasCapability("CAPABILITY_LENS_EMPIRE"));
-		end
+	if Controls.LensPanel:IsHidden() then
+		Controls.LoyaltyLensButton:SetCheck(false);
+	else
+		Controls.EmpireLensButton:SetHide(not GameCapabilities.HasCapability("CAPABILITY_LENS_EMPIRE"));
+	end
 	BASE_OnToggleLensList();
 end
 
+-- ===========================================================================
 function ToggleLoyaltyLens()
-		if Controls.LoyaltyLensButton:IsChecked() then
-			UILens.SetActive("Loyalty");
-			RefreshInterfaceMode();
-		else
-			g_shouldCloseLensMenu = false;
-			if UI.GetInterfaceMode() == InterfaceModeTypes.VIEW_MODAL_LENS then
-				UI.SetInterfaceMode(InterfaceModeTypes.SELECTION);
-			end
+	if Controls.LoyaltyLensButton:IsChecked() then
+		UILens.SetActive("Loyalty");
+		RefreshInterfaceMode();
+	else
+		g_shouldCloseLensMenu = false;
+		if UI.GetInterfaceMode() == InterfaceModeTypes.VIEW_MODAL_LENS then
+			UI.SetInterfaceMode(InterfaceModeTypes.SELECTION);
 		end
+	end
 end
 
+-- ===========================================================================
 function UpdateLoyaltyLens()
 	local localPlayer : number = Game.GetLocalPlayer(); 
 	local localPlayerVis:table = PlayersVisibility[localPlayer];
@@ -68,36 +76,38 @@ function UpdateLoyaltyLens()
 				local plot = Map.GetPlotIndex(pCity:GetX(), pCity:GetY());
 				if localPlayerVis:IsRevealed(plot) then
 					local pCulturalIdentity = pCity:GetCulturalIdentity();
-					local eOutcome:number = pCulturalIdentity:GetConversionOutcome();
-					if eOutcome == IdentityConversionOutcome.GAINING_LOYALTY then
-						table.insert(kGainingLoyaltyPositions, plot);
-					elseif eOutcome == IdentityConversionOutcome.LOSING_LOYALTY then
-						table.insert(kLosingLoyaltyPositions, plot);
-					else
-						--TODO is there an idle indicator?
-					end
+					if not pCulturalIdentity:IsAlwaysFullyLoyal() then
+						local eOutcome:number = pCulturalIdentity:GetConversionOutcome();
+						if eOutcome == IdentityConversionOutcome.GAINING_LOYALTY then
+							table.insert(kGainingLoyaltyPositions, plot);
+						elseif eOutcome == IdentityConversionOutcome.LOSING_LOYALTY then
+							table.insert(kLosingLoyaltyPositions, plot);
+						else
+							--TODO is there an idle indicator?
+						end
+					
+						local PressureSources = pCulturalIdentity:GetCityIdentityPressures();
+						for _,PressureSource in ipairs(PressureSources) do
+							local PlayerID = PressureSource.CityOwner;
+							local PlayerColor = UI.GetPlayerColors(PlayerID);
+							local pSrcCity = CityManager.GetCity(PlayerID, PressureSource.CityID);
+							if (pSrcCity ~= nil and PressureSource.IdentityPressureTotal > 0) then
+								local wave = {
+									pos1  = Map.GetPlotIndex(pSrcCity:GetX(), pSrcCity:GetY());
+									pos2  = plot;
+									color = PlayerColor;
+									speed = PressureSource.IdentityPressureTotal;
+									type  = PlayerConfigurations[PlayerID]:GetCivilizationTypeName();
+								};
 
-					local PressureSources = pCulturalIdentity:GetCityIdentityPressures();
-					for _,PressureSource in ipairs(PressureSources) do
-						local PlayerID = PressureSource.CityOwner;
-						local PlayerColor = UI.GetPlayerColors(PlayerID);
-						local pSrcCity = CityManager.GetCity(PlayerID, PressureSource.CityID);
-						if (pSrcCity ~= nil and PressureSource.IdentityPressureTotal > 0) then
-							local wave = {
-								pos1  = Map.GetPlotIndex(pSrcCity:GetX(), pSrcCity:GetY());
-								pos2  = plot;
-								color = PlayerColor;
-								speed = PressureSource.IdentityPressureTotal;
-								type  = PlayerConfigurations[PlayerID]:GetCivilizationTypeName();
-							};
+								if PlayerID ~= localPlayer and not pLocalPlayerDiplomacy:HasMet(PlayerID) then
+									wave.color = m_UnknownCivilizationColor;
+									wave.type  = "CIVILIZATION_UNKNOWN";
+								end
 
-							if PlayerID ~= localPlayer and not pLocalPlayerDiplomacy:HasMet(PlayerID) then
-								wave.color = m_UnknownCivilizationColor;
-								wave.type  = "CIVILIZATION_UNKNOWN";
-							end
-
-							if (wave.pos1 ~= wave.pos2) then
-								table.insert(waves, wave);
+								if (wave.pos1 ~= wave.pos2) then
+									table.insert(waves, wave);
+								end
 							end
 						end
 					end
@@ -111,6 +121,7 @@ function UpdateLoyaltyLens()
 	end
 end
 
+-- ===========================================================================
 function SetGovernmentHexes()
 	-- add everything else normally
 	BASE_SetGovernmentHexes();
@@ -139,7 +150,10 @@ function SetGovernmentHexes()
 	end
 end
 
-function SetContinentHexes() -- override
+-- ===========================================================================
+-- override
+-- ===========================================================================
+function SetContinentHexes() 
 	GetContinentsCache();
 	local localPlayerVis:table = PlayersVisibility[Game.GetLocalPlayer()];
 	if (localPlayerVis ~= nil) then
@@ -184,11 +198,12 @@ function OnInterfaceModeChanged(eOldMode:number, eNewMode:number)
 		if not Controls.LensPanel:IsHidden() then
 			Controls.LoyaltyLensButton:SetCheck(false);
 		end
-	else
-		BASE_OnInterfaceModeChanged(eOldMode, eNewMode);
 	end
+
+	BASE_OnInterfaceModeChanged(eOldMode, eNewMode);
 end
 
+-- ===========================================================================
 -- NOTE: OnInputActionTriggered from MinimapPanel.lua will still be registered and called.
 function OnInputActionTriggered( actionId )
 	-- dont show panel if there is no local player
@@ -205,6 +220,7 @@ function OnInputActionTriggered( actionId )
 	end
 end
 
+-- ===========================================================================
 function ToggleLensList( closeIfOpen )
 	if Controls.LensPanel:IsHidden() then
 		OnToggleLensList();

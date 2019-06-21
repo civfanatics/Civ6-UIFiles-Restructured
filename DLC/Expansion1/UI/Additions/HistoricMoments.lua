@@ -1,10 +1,9 @@
--- Copright 2017-2018, Firaxis Games
+-- Copright 2017-2019, Firaxis Games
 -- Full screen timeline of historic moments.
 
 include("InstanceManager");
 include("GameCapabilities");
 include("ModalScreen_PlayerYieldsHelper");
-include("PopupPriorityLoader_", true);
 
 -- ===========================================================================
 --	CONSTANTS
@@ -40,6 +39,7 @@ local DATA_TYPE_MAP:table = {
 	[MomentDataTypes.MOMENT_DATA_OLD_RELIGION]				= function(i) return GameInfo.Religions[i].ReligionType end,
 	[MomentDataTypes.MOMENT_DATA_PLAYER_ERA]				= function(i) return GameInfo.Eras[i].EraType end,
 	[MomentDataTypes.MOMENT_DATA_PROJECT]					= function(i) return GameInfo.Projects[i].ProjectType end,
+	-- n/a XP1 [MomentDataTypes.MOMENT_DATA_RANDOM_EVENT]				= function(i) return GameInfo.RandomEvents[i].RandomEventType end,
 	[MomentDataTypes.MOMENT_DATA_RELIGION]					= function(i) return GameInfo.Religions[i].ReligionType end,
 	[MomentDataTypes.MOMENT_DATA_RESOURCE]					= function(i) return GameInfo.Resources[i].ResourceType end,
 	[MomentDataTypes.MOMENT_DATA_TARGET_PLAYER]				= function(i) return Players[i] end,
@@ -83,7 +83,7 @@ local m_isOpenFromEndGame	:boolean = false;
 local m_kQueuedPopups		: table	 = {};
 
 -- Cause nil access on DATA_ILLUSTRATIONS_MAP to return m_LargeIllustrationIM
-setmetatable(DATA_ILLUSTRATIONS_MAP, { __index = function() return m_LargeIllustrationIM end });
+setmetatable(DATA_ILLUSTRATIONS_MAP, { __index = function() return m_LargeIllustrationIM; end });
 
 
 -- ===========================================================================
@@ -126,6 +126,7 @@ end
 function ShowNewTimelineMoment(popupData:table)
 	m_CurrentMoment = popupData.momentID;
 	DisplayTimeline(popupData.showAnim);
+	UI.PlaySound("UI_Screen_Open");
 	local localPlayerID:number = Game.GetLocalPlayer();
 	local pPlayerConfig:table = PlayerConfigurations[localPlayerID];
 	Controls.ModalScreenTitle:SetText(Locale.ToUpper(Locale.Lookup("LOC_HISTORY_NEW_MOMENT", pPlayerConfig:GetCivilizationDescription())));
@@ -153,15 +154,17 @@ function OnProcessNotification(playerID:number, notificationID:number, activated
 						return;
 					end
 
+					UI.PlaySound("Pride_Moment");
+
 					-- If this is not an appropriate time, queue this.
+
 					if not UI.CanShowPopup(GetPopupPriority()) then
 						-- Add to queue
 						table.insert(m_kQueuedPopups, popupData);
 						return;
 					end
 				end
-
-				UI.PlaySound("Pride_Moment");
+				
 				ShowNewTimelineMoment(popupData);
 
 			else
@@ -212,6 +215,7 @@ function DisplayTimeline(showAnim:boolean)
 	local allPrideMoments:table = Game.GetHistoryManager():GetAllMomentsData(localPlayerID, MIN_INTEREST_LEVEL);
 	local numPrideMoments:number = table.count(allPrideMoments);
 	if numPrideMoments > 0 then
+
 		for i, momentData in ipairs(allPrideMoments) do
 
 			if m_CurrentEra ~= momentData.GameEra then
@@ -325,7 +329,7 @@ function AddMoment(momentData:table, isNewMoment:boolean)
 		instance.Root:SetToolTipString(Locale.Lookup(momentInfo.Description));
 
 		if isNewMoment then
-			instance.Root:Play();
+			instance.Root:Play();			
 			UI.PlaySound("Pride_Moment_Anim");
 		end
 	else
@@ -394,7 +398,7 @@ function RealizeStackSize()
 	Controls.TimelineStack:SetAnchor(shouldScroll and "L,C" or "C,C");
 	Controls.TimelineStack:SetOffsetX(shouldScroll and TIMELINE_STACK_X_OFFSET_SCROLL or TIMELINE_STACK_X_OFFSET_NO_SCROLL);
 	Controls.TimelineScroller:HideScrollBar(not shouldScroll);
-	
+
 	if shouldScroll then
 		Controls.TimelineScroller:SetScrollValue(1);
 	end
@@ -428,11 +432,6 @@ function Show()
 		-- From ModalScreen_PlayerYieldsHelper
 		if not RefreshYields() then
 			Controls.Vignette:SetSizeY(m_TopPanelConsideredHeight);
-		end
-		
-		-- From ModalScreen_PlayerYieldsHelper
-		if not RefreshYields() then
-			Controls.Vignette:SetSizeY(m_TopPanelConsideredHeight);
 		else
 			Controls.YieldsContainer:SetHide(m_isOpenFromEndGame);
 		end
@@ -447,6 +446,11 @@ function Close()
 		UI.PlaySound("UI_Screen_Close");
 		LuaEvents.HistoricMoments_Closed();
 	end
+end
+
+-- ===========================================================================
+function OnClose()
+	Close();
 end
 
 -- ===========================================================================
@@ -542,7 +546,8 @@ function Initialize()
 	ContextPtr:SetHide(true);
 	ContextPtr:SetInputHandler(OnInputHandler, true);
 	
-	Controls.Close:RegisterCallback(Mouse.eLClick, Close);
+	Controls.Close:RegisterCallback(Mouse.eLClick, OnClose);
+	Controls.RightClickCloser:RegisterCallback(Mouse.eRClick, OnClose);
 	Controls.TimelineScroller:RegisterScrollCallback(OnScroll);
 
 	Events.SystemUpdateUI.Add( OnUpdateUI );
@@ -555,15 +560,12 @@ function Initialize()
 	LuaEvents.PrideMoments_ToggleTimeline.Add(ToggleHistoricMomentsScreen);
 	LuaEvents.Advisor_ToggleTimeline.Add(ToggleHistoricMomentsScreen);
 	LuaEvents.EndGameMenu_OpenHistoricMoments.Add(ToggleFromEndGame);
-	LuaEvents.HistoricMoments_Close.Add(Close);
-	
+	LuaEvents.HistoricMoments_Close.Add( OnClose );		-- LaunchBar
 	LuaEvents.ShowEndGame.Add(OnEndGame);
 
 	CacheMomentIllustrations();
 
 	m_TopPanelConsideredHeight = Controls.Vignette:GetSizeY() - TOP_PANEL_OFFSET;
-
-	--DisplayTimeline();	-- DEBUG (should always be commented out)
 end
 if HasCapability("CAPABILITY_HISTORIC_MOMENTS") then
 	Initialize();

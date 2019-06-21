@@ -100,7 +100,7 @@ end
 
 -- ===========================================================================
 function RefreshCulturalIdentityPanel()
-	SetDesiredLens("Loyalty");
+	UILens.SetActive("Loyalty");
 	LuaEvents.CityPanelTabRefresh();
 end
 
