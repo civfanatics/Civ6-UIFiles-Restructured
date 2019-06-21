@@ -378,6 +378,7 @@ function CreateLoginDialog()
 	instance.PasswordTitle:SetText( m_currentDialogData.passwordTitle );
 
 	instance.Email:SetText("");
+	instance.Email:TakeFocus();
 	instance.Email:RegisterStringChangedCallback(
 		function()
 			ValidateLoginButtons(instance);
@@ -482,6 +483,7 @@ function CreateNewUserDialog()
 
 	instance.Email:SetDisabled(false);
 	instance.Email:SetText("");
+	instance.Email:TakeFocus();
 	instance.Email:RegisterStringChangedCallback(
 		function()
 			RealizeOkForNewUserDialog( instance );
@@ -562,6 +564,7 @@ function CreateUserNameDialog()
 	instance.Message:SetText( m_currentDialogData.message );
 	instance.EMailTitle:SetText( m_currentDialogData.emailTitle );
 
+	instance.Email:TakeFocus();
 	instance.Email:RegisterCharCallback(
 		function()
 			RealizeOkForUserNameDialog( instance );

@@ -2,7 +2,9 @@
 <ContextDefaults ColorSet="BodyTextCool" Style="FontNormal22" FontStyle="Glow" Name="StagingRoom" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="..\..\ForgeUI_Assets\Controls.xsd">
 
 	<Include File="PopupDialog" />
-
+	
+	<AlphaAnim ID="CountdownTimerAnim" Size="1,1" AlphaStart="0" AlphaEnd="0" />	<!-- Animations always tick, even when hidden; use to update countdown timer -->
+	
 	<Box ID="MainGrid" Style="ShellBGBox">
 
 		<Container ID="MainWindow" Style="ShellWindowContainer">
@@ -216,7 +218,7 @@
 				</Container>
 			</AlphaAnim>
 
-			<Container ID="TooltipContainer" Size="340,670" Anchor="R,C" Offset="55,20"/>
+			<Container ID="TooltipContainer" Size="440,720" Anchor="R,C" Offset="55,20"/>
 		</Container>
 	</Box>
 
@@ -450,51 +452,51 @@
 	<MakeInstance Name="PopupDialog" />
 
 	<Instance			Name="IconInfoInstance">
-		<Container	ID="Top"				 Size="340,auto">
+		<Container	ID="Top"				 Size="400,auto">
 			<Image    Texture="Controls_CircleCompass" Size="52,53" Offset="0,-2" Color="34,58,80,150">
 				<Image		ID="Icon"					Size="38,38" Anchor="C,C" />
 			</Image>
 			<Stack		ID="TextStack"		StackGrowth="Bottom" StackPadding="4" Offset="55,0">
-				<Label	ID="Header"				WrapWidth="255" SmallCapsType="EveryWord" SmallCaps="20" Style="FontFlair14"		String="$Header$" ColorSet="ShellHeader"/>
-				<Label	ID="Description"	WrapWidth="255"	Style="DawnText"	String="$Description$"/>
+				<Label	ID="Header"				WrapWidth="340" SmallCapsType="EveryWord" SmallCaps="20" Style="FontFlair14"		String="$Header$" ColorSet="ShellHeader"/>
+				<Label	ID="Description"	WrapWidth="340"	Style="DawnText"	String="$Description$"/>
 			</Stack>
 		</Container>
 	</Instance>
 
 	<Instance		Name="HeaderInstance">
 		<Grid     ID="Top" Style="DivHeader" Anchor="C,T">
-			<Label  ID="Header"    Style="FontFlair18" FontStyle="glow" ColorSet="ShellHeader" SmallCaps="22" SmallCapsLeading="0" SmallCapsType="EveryWord" Anchor="C,C" Align="Center" Offset="0,1" WrapWidth="330"/>
+			<Label  ID="Header"    Style="FontFlair18" FontStyle="glow" ColorSet="ShellHeader" SmallCaps="22" SmallCapsLeading="0" SmallCapsType="EveryWord" Anchor="C,C" Align="Center" Offset="0,1" WrapWidth="340"/>
 		</Grid>
 	</Instance>
 
 	<Instance			Name="IconInstance">
-		<Container	ID="Top"				 Size="340,auto">
+		<Container	ID="Top"				 Size="400,auto">
 			<Image    Texture="Controls_CircleBacking45" Size="51,51" Offset="0,-2">
 				<Image		ID="Icon"					Size="45,45" Anchor="C,C" Offset="0,-1" />
 			</Image>
 			<Stack		ID="TextStack"		StackGrowth="Bottom" StackPadding="4" Offset="55,0">
-				<Label	ID="Header"				WrapWidth="255" SmallCapsType="EveryWord" SmallCaps="20" Style="FontFlair14"		String="$Header$" ColorSet="ShellHeader"/>
-				<Label	ID="Description"	WrapWidth="255"	Style="DawnText"	String="$Description$"/>
+				<Label	ID="Header"				WrapWidth="340" SmallCapsType="EveryWord" SmallCaps="20" Style="FontFlair14"		String="$Header$" ColorSet="ShellHeader"/>
+				<Label	ID="Description"	WrapWidth="340"	Style="DawnText"	String="$Description$"/>
 			</Stack>
 		</Container>
 	</Instance>
 
 	<Instance Name="CivIconInstance">
-		<Container	ID="Top"						Size="340,auto">
+		<Container	ID="Top"						Size="400,auto">
 			<Image		ID="IconBG"					Size="44,44" Texture="CircleBacking44">
 				<Image	ID="IconShadows"		Size="44,44" Texture="Circle44_Darker"  Color="0,0,0,50" />
 				<Image	ID="IconHighlights"	Size="44,44" Texture="Circle44_Lighter" Color="255,255,255,100" />
 				<Image	ID="Icon"						Size="44,44" />
 			</Image>
 			<Stack		ID="TextStack"		StackGrowth="Bottom" StackPadding="4" Offset="55,0">
-				<Label	ID="Header"				WrapWidth="255" SmallCapsType="EveryWord" SmallCaps="20" Style="FontFlair14"		String="$Header$" ColorSet="ShellHeader"/>
-				<Label	ID="Description"	WrapWidth="255"	Style="DawnText"	String="$Description$"/>
+				<Label	ID="Header"				WrapWidth="340" SmallCapsType="EveryWord" SmallCaps="20" Style="FontFlair14"		String="$Header$" ColorSet="ShellHeader"/>
+				<Label	ID="Description"	WrapWidth="340"	Style="DawnText"	String="$Description$"/>
 			</Stack>
 		</Container>
 	</Instance>
 
 	<Instance Name="CivToolTip">
-		<AlphaAnim    ID="CivToolTipAlpha" AlphaBegin="0" AlphaEnd="1" Speed="4" Function="Root" Cycle="Once" Size="340,670" Stopped="1">
+		<AlphaAnim    ID="CivToolTipAlpha" AlphaBegin="0" AlphaEnd="1" Speed="4" Function="Root" Cycle="Once" Size="parent,parent" Stopped="1">
 			<SlideAnim  ID="CivToolTipSlide" Start="-20,0" End="0,0" Speed="4" Function="Root" Cycle="Once" Size="parent,parent">
 				<Grid Style="EnhancedToolTip" Size="parent,parent">
 					<ScrollPanel  ID="InfoScrollPanel" Vertical="1" Size="parent-12,parent-25" AutoScrollBar="1" Anchor="C,T" Offset="0,9">

@@ -238,6 +238,10 @@ function AddKeyEntry(textString:string, colorValue:number, bonusIcon:string, bon
 end
 
 -- ===========================================================================
+function OnCloseModal( layerNum:number )
+	
+end
+-- ===========================================================================
 function OnLensLayerOn( layerNum:number )
 	if layerNum == m_HexColoringReligion then
 		Controls.LensText:SetText(Locale.ToUpper(Locale.Lookup("LOC_HUD_RELIGION_LENS")));
@@ -274,8 +278,10 @@ function OnInterfaceModeChanged(eOldMode:number, eNewMode:number)
 	if eNewMode == InterfaceModeTypes.VIEW_MODAL_LENS then
 		ContextPtr:SetHide(false);
 	end
-	if eOldMode == InterfaceModeTypes.VIEW_MODAL_LENS then
-		ContextPtr:SetHide(true);
+	if eOldMode == InterfaceModeTypes.VIEW_MODAL_LENS or eOldMode == InterfaceModeTypes.CITY_SELECTION then
+		if not ContextPtr:IsHidden() then
+			ContextPtr:SetHide(true);
+		end
 	end
 end
 

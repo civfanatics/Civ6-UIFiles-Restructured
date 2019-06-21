@@ -1,8 +1,4 @@
--- ===========================================================================--	ReligionScreen
---	Customize and review religions.
---
---	Original Authors: Ed Beach, Sam Batista
--- ===========================================================================
+-- Copyright 2017-2019, Firaxis Games
 include("TabSupport");
 include("InstanceManager");
 include("ModalScreen_PlayerYieldsHelper");
@@ -23,8 +19,10 @@ local PADDING_TAB_BUTTON_TEXT:number = 55;
 local SIZE_BELIEF_ICON_SMALL:number = 32;
 local SIZE_BELIEF_ICON_LARGE:number = 64;
 local SIZE_RELIGION_ICON_SMALL:number = 22;
+local SIZE_RELIGION_ICON_MEDIUM:number = 50;
 local SIZE_RELIGION_ICON_LARGE:number = 100;
 local SIZE_RELIGION_ICON_HUGE:number = 270;
+local SIZE_UNIT_ICON_NONE_ALPHA:number = 0.3;
 local OFFSET_WORKING_TOWARDS_PANTHEON:number = 405;
 local OFFSET_CHOOSING_PANTHEON_BELIEFS:number = -10;
 local OFFSET_CHOOSING_RELIGION_BELIEFS:number = -10;
@@ -1005,7 +1003,7 @@ function ViewReligion(religionType:number)
 
 	-- Update text and icons
 	SetBeliefIcon(Controls.ViewReligionPantheonIcon, belief.BeliefType, SIZE_BELIEF_ICON_LARGE);
-	SetReligionIcon(Controls.ViewReligionImage, religionData.ReligionType, SIZE_RELIGION_ICON_HUGE, religionData.Color);
+	SetReligionIcon(Controls.ViewReligionImage, religionData.ReligionType, SIZE_RELIGION_ICON_LARGE, religionData.Color);
 
 	Controls.CitiesHeader:LocalizeAndSetText(Locale.ToUpper("LOC_UI_RELIGION_CITIES"));
 	Controls.FollowersHeader:LocalizeAndSetText(Locale.ToUpper("LOC_UI_RELIGION_FOLLOWERS"));
@@ -1126,6 +1124,25 @@ function ViewReligion(religionType:number)
 				-- Update unit icon
 				local iconString:string = "ICON_" .. row.UnitType .. "_PORTRAIT";
 				unitIconInst.UnitIcon:SetIcon(iconString);
+
+				-- Determine how many of these units do we own
+				local howMany:number = 0;
+				local pLocalPlayerUnits = localPlayer:GetUnits();
+				for _, pUnit in pLocalPlayerUnits:Members() do
+					if row.Index == pUnit:GetType() then
+						howMany = howMany + 1;
+					end
+				end
+				
+				-- Display how many we own or alpha out icons when we don't own any
+				if howMany <= 0 then
+					unitIconInst.UnitCount:SetHide(true);
+					unitIconInst.UnitIconBacking:SetAlpha(SIZE_UNIT_ICON_NONE_ALPHA);
+				else
+					unitIconInst.UnitCount:SetText(howMany);
+					unitIconInst.UnitCount:SetHide(false);
+					unitIconInst.UnitIconBacking:SetAlpha(1.0);
+				end
 
 				if buildQueue:CanProduce(row.UnitType, false, true) then
 					-- If we can currently produce set tooltip to normal description
@@ -1350,7 +1367,7 @@ function ViewAllReligions()
 			
 			religionInst.ReligionName:SetText(Locale.ToUpper(Game.GetReligion():GetName(religionInfo.Religion)));
 			
-			SetReligionIcon(religionInst.ReligionImage, religionData.ReligionType, SIZE_RELIGION_ICON_HUGE, religionData.Color);
+			SetReligionIcon(religionInst.ReligionImage, religionData.ReligionType, SIZE_RELIGION_ICON_MEDIUM, religionData.Color);
 
 			local numDominantCities:number = dominantCities[religionInfo.Religion];
 			if numDominantCities == nil then numDominantCities = 0; end
@@ -1524,6 +1541,17 @@ end
 function OnShutdown()
 	-- Cache values for hotloading...
 	LuaEvents.GameDebug_AddValue("ReligionScreen", "isHidden", ContextPtr:IsHidden());
+
+	Events.BeliefAdded.Remove(OnBeliefAdded);
+	Events.PantheonFounded.Remove(OnPantheonFounded);
+	Events.ReligionFounded.Remove(OnReligionFounded);
+	Events.LocalPlayerTurnEnd.Remove( OnLocalPlayerTurnEnd );
+	
+	LuaEvents.GameDebug_Return.Remove(OnGameDebugReturn);	
+	LuaEvents.LaunchBar_OpenReligionPanel.Remove(OnShowScreen);
+	LuaEvents.LaunchBar_CloseReligionPanel.Remove(OnClose);
+	LuaEvents.NotificationPanel_OpenReligionPanel.Remove(OnShowScreen);
+	LuaEvents.PantheonChooser_OpenReligionPanel.Remove(OnShowScreen);
 end
 
 -- ===========================================================================
@@ -1569,6 +1597,7 @@ function Initialize()
 	LuaEvents.LaunchBar_OpenReligionPanel.Add(OnShowScreen);
 	LuaEvents.LaunchBar_CloseReligionPanel.Add(OnClose);
 	LuaEvents.NotificationPanel_OpenReligionPanel.Add(OnShowScreen);
+	LuaEvents.PantheonChooser_OpenReligionPanel.Add(OnShowScreen);
 
 	Controls.ModalScreenTitle:SetText(Locale.ToUpper(TXT_SCREEN_TITLE));
 	Controls.ModalScreenClose:RegisterCallback(Mouse.eLClick, OnClose);

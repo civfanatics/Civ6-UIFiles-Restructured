@@ -79,6 +79,11 @@ function OnRaiseGlobalResourcesReport()
 end
 
 -- ===========================================================================
+function OnRaiseGossipReport()
+	LuaEvents.ReportsList_OpenGossip();
+end
+
+-- ===========================================================================
 function AddReport( name:string, callback:ifunction, parentControl:table )
 	local buttonInst:table = m_ReportButtonIM:GetInstance(parentControl);
 	local label:string = Locale.Lookup(name);
@@ -89,9 +94,12 @@ end
 -- ===========================================================================
 function LateInitialize()	
 	m_ReportButtonIM:ResetInstances();
-	AddReport("LOC_PARTIALSCREEN_REPORTS_YIELDS",		OnRaiseYieldsReport,			Controls.EmpireReportsStack );
-	AddReport("LOC_PARTIALSCREEN_REPORTS_RESOURCES",	OnRaiseResourcesReport,			Controls.EmpireReportsStack );
-	AddReport("LOC_PARTIALSCREEN_REPORTS_CITY_STATUS",	OnRaiseCityStatusReport,		Controls.EmpireReportsStack );
+	AddReport("LOC_PARTIALSCREEN_REPORTS_YIELDS",			OnRaiseYieldsReport,			Controls.EmpireReportsStack );
+	AddReport("LOC_PARTIALSCREEN_REPORTS_RESOURCES",		OnRaiseResourcesReport,			Controls.EmpireReportsStack );
+	AddReport("LOC_PARTIALSCREEN_REPORTS_CITY_STATUS",		OnRaiseCityStatusReport,		Controls.EmpireReportsStack );
+	if GameCapabilities.HasCapability("CAPABILITY_GOSSIP_REPORT") then
+		AddReport("LOC_PARTIALSCREEN_REPORTS_GOSSIP",			OnRaiseGossipReport,		Controls.EmpireReportsStack );
+	end
 	
 	
 	-- Only add global resources if this game mode allows trade.
@@ -107,10 +115,26 @@ function OnInit( isReload:boolean )
 end
 
 -- ===========================================================================
+--	UI Callback
+-- ===========================================================================
+function OnInputHandler( pInputStruct:table )
+	local uiMsg :number = pInputStruct:GetMessageType();
+	if uiMsg == KeyEvents.KeyUp then 
+		local uiKey = pInputStruct:GetKey();
+		if uiKey == Keys.VK_ESCAPE then
+			Close();
+			return true;
+		end		
+	end
+	return false;
+end
+
+-- ===========================================================================
 --	Initialize
 -- ===========================================================================
 function Initialize()
-	ContextPtr:SetInitHandler( OnInit );	
+	ContextPtr:SetInitHandler( OnInit );
+	ContextPtr:SetInputHandler( OnInputHandler, true );
 	
 	LuaEvents.PartialScreenHooks_OpenReportsList.Add( OnOpen );
 	LuaEvents.PartialScreenHooks_CloseAllExcept.Add( OnCloseAllExcept );

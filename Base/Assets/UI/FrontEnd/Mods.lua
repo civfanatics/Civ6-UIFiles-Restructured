@@ -274,7 +274,6 @@ function RefreshModDetails()
 
 		-- Official/Community Icons
 		local bIsOfficial = info.Official;
-		local bIsMap = info.Source == "Map";
 		Controls.MapIcon:SetHide(not bIsMap);
 		Controls.OfficialIcon:SetHide(bIsMap or not bIsOfficial);
 		Controls.CommunityIcon:SetHide(bIsMap or bIsOfficial);
@@ -319,13 +318,27 @@ function RefreshModDetails()
 						tip[1] = Locale.Lookup("LOC_MODS_DISABLE_ERROR") .. err;
 					end
 
+					local unique_items = {};
 					for k,ref in ipairs(items) do
-						local item = "[ICON_BULLET] " .. Locale.Lookup(ref.Name);
-						if(error_suffix) then
-							item = item .. " " .. error_suffix;
-						end
+						if(unique_items[ref.Id] == nil) then
+							unique_items[ref.Id] = true;
 
-						table.insert(tip, item);
+							local name = ref.Id;
+							if(ref.Name) then
+								name = Locale.LookupBundle(ref.Name);
+								if(name == nil) then
+									name = Locale.Lookup(ref.Name);
+								end
+							end
+
+							local item = "[ICON_BULLET] " .. name;
+							if(error_suffix) then
+								item = item .. " " .. error_suffix;
+							end
+
+							table.insert(tip, item);
+						end
+						
 					end
 
 					disableButton:SetToolTipString(table.concat(tip, "[NEWLINE]"));
@@ -345,8 +358,24 @@ function RefreshModDetails()
 					if(xtra and #xtra > 0) then
 						-- Generate tip w/ list of mods to enable.
 						local tip = {Locale.Lookup("LOC_MODS_ENABLE_INCLUDE")};
+
+
+						local unique_items = {};
 						for k,ref in ipairs(xtra) do
-							table.insert(tip, "[ICON_BULLET] " .. Locale.Lookup(ref.Name));
+							if(unique_items[ref.Id] == nil) then
+								unique_items[ref.Id] = true;
+
+								local name = ref.Id;
+								if(ref.Name) then
+									name = Locale.LookupBundle(ref.Name);
+									if(name == nil) then
+										name = Locale.Lookup(ref.Name);
+									end
+								end
+
+								local item = "[ICON_BULLET] " .. name;
+								table.insert(tip, item);
+							end	
 						end
 
 						enableButton:SetToolTipString(table.concat(tip, "[NEWLINE]"));
@@ -388,13 +417,26 @@ function RefreshModDetails()
 						end
 
 						local tip = {Locale.Lookup("LOC_MODS_ENABLE_ERROR")};
-						for k,ref in ipairs(xtra) do
-							local item = "[ICON_BULLET] " .. Locale.Lookup(ref.Name);
-							if(error_suffix) then
-								item = item .. " " .. error_suffix;
-							end
 
-							table.insert(tip, item);
+						local unique_items = {};
+						for k,ref in ipairs(xtra) do
+							if(unique_items[ref.Id] == nil) then
+								unique_items[ref.Id] = true;
+
+								local name = ref.Id;
+								if(ref.Name) then
+									name = Locale.LookupBundle(ref.Name);
+									if(name == nil) then
+										name = Locale.Lookup(ref.Name);
+									end
+								end
+
+								local item = "[ICON_BULLET] " .. name;
+								if(error_suffix) then
+									item = item .. " " .. error_suffix;
+								end
+								table.insert(tip, item);
+							end	
 						end
 
 						enableButton:SetToolTipString(table.concat(tip, "[NEWLINE]"));
@@ -406,6 +448,12 @@ function RefreshModDetails()
 
 		Controls.ModTitle:LocalizeAndSetText(info.Name, 64);
 		Controls.ModIdVersion:SetText(info.Id);
+		if(bIsMap) then
+			Controls.ModFileName:SetText(info.SourceFileName);
+			Controls.ModFileName:SetHide(false);
+		else
+			Controls.ModFileName:SetHide(true);
+		end
 
 		local desc = Modding.GetModProperty(g_SelectedModHandle, "Description") or info.Teaser;
 		if(desc) then
@@ -492,13 +540,20 @@ function RefreshModDetails()
 
 		local dependencies, references, blocks = Modding.GetModAssociations(g_SelectedModHandle);
 
-	
-
 		g_DependencyListingsManager:ResetInstances();
 		if(dependencies) then
 			local dependencyStrings = {}
 			for i,v in ipairs(dependencies) do
-				dependencyStrings[i] = Locale.Lookup(v.Name);
+				
+				local name = v.Name;
+				if(name) then
+					local text = Locale.LookupBundle(name);
+					if(text == nil) then
+						text = Locale.Lookup(name);
+					end
+
+					dependencyStrings[i] = text or name;
+				end				
 			end
 			table.sort(dependencyStrings, function(a,b) return Locale.Compare(a,b) == -1 end);
 

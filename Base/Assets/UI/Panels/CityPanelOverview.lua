@@ -80,27 +80,6 @@ local m_tabs				= nil;
 local m_kEspionageViewManager = EspionageViewManager:CreateManager();
 
 -- ===========================================================================
--- HACK: Something in the event city selection event chain is overriding the active lens after we open this screen
---		 Check lens next frame to ensure we end up with the correct lens active
--- TODO: We need to do figure out why this is happening, having it reactivate the lens every frame does not play well
---       with everywhere else that uses lenses, border growth, minimap panel, religious units, etc.
-function SetDesiredLens(desiredLens)
-	m_desiredLens = desiredLens;
-	if m_isShowingPanel then
-		UILens.SetActive(m_desiredLens);
-		ContextPtr:SetUpdate(EnsureDesiredLens);
-	else
-		UILens.SetActive(m_desiredLens);
-	end
-end
-function EnsureDesiredLens()
-	if m_isShowingPanel then
-		UILens.SetActive(m_desiredLens);
-	end
-	ContextPtr:ClearUpdate();
-end
-
--- ===========================================================================
 function HideAll()
 	Controls.HealthButton:SetSelected(false);
 	Controls.HealthIcon:SetColorByName("White");
@@ -132,9 +111,9 @@ function OnSelectHealthTab()
 		ViewPanelHousing( m_kData );
 
 		if m_kData.Owner == Game.GetLocalPlayer() then
-			SetDesiredLens("CityDetails");
+			UILens.SetActive("CityDetails");
 		else
-			SetDesiredLens("EnemyCityDetails");
+			UILens.SetActive("EnemyCityDetails");
 			LuaEvents.ShowEnemyCityDetails( m_kData.Owner, m_kData.City:GetID() );
 		end
 	end
@@ -156,9 +135,9 @@ function OnSelectBuildingsTab()
 		ViewPanelBreakdown( m_kData );
 
 		if m_kData.Owner == Game.GetLocalPlayer() then
-			SetDesiredLens("CityDetails");
+			UILens.SetActive("CityDetails");
 		else
-			SetDesiredLens("EnemyCityDetails");
+			UILens.SetActive("EnemyCityDetails");
 			LuaEvents.ShowEnemyCityDetails( m_kData.Owner, m_kData.City:GetID() );
 		end
 	end
@@ -357,7 +336,7 @@ function ViewPanelReligion( data:table )
 	end
 	
 	if Controls.PanelReligion:IsVisible() then
-		SetDesiredLens("Religion");
+		UILens.SetActive("Religion");
 	end
 end
 
@@ -805,7 +784,7 @@ function Close()
 	end
 	Controls.OverviewSlide:Reverse();
 	UI.PlaySound("UI_CityPanel_Closed");
-	SetDesiredLens("Default");
+	UILens.SetActive("Default");
 	UI.SetInterfaceMode(InterfaceModeTypes.SELECTION);
 end
 
@@ -972,6 +951,7 @@ function OnShowOverviewPanel( isShowing: boolean )
 		Controls.OverviewSlide:SetToBeginning();
 		Controls.OverviewSlide:Play();
 		UI.PlaySound("UI_CityPanel_Open");
+		UI.SetInterfaceMode(InterfaceModeTypes.CITY_SELECTION);
 	else
 		local offsetx = Controls.OverviewSlide:GetOffsetX();
 		if(offsetx == 0) then
@@ -980,6 +960,7 @@ function OnShowOverviewPanel( isShowing: boolean )
 	end
 	-- Ensure button state in CityPanel is correct
 	LuaEvents.CityPanel_SetOverViewState(m_isShowingPanel);
+	LuaEvents.CityPanelOverview_Opened();
 end
 
 function ToggleOverviewTab(tabButton:table)

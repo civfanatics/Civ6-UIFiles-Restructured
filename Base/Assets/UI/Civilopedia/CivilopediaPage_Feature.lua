@@ -30,7 +30,18 @@ PageLayouts["Feature" ] = function(page)
 			table.insert(yield_changes, {change, row.IconString, Locale.Lookup(row.Name)}); 
 		end
 	end
-
+	
+	local placement_requirements = {};
+	for row in GameInfo.Resource_ValidFeatures() do
+		if(row.FeatureType == featureType) then
+			local resource = GameInfo.Resources[row.ResourceType];
+			if(resource ~= nil) then
+				table.insert(placement_requirements, {Locale.Lookup(resource.Name), resource.ResourceType});
+			end
+		end
+	end
+	table.sort(placement_requirements, function(a,b) return Locale.Compare(a[1],b[1]) == -1 end);
+	
 	local traits = {};
 
 	if(feature.Impassable) then
@@ -40,7 +51,11 @@ PageLayouts["Feature" ] = function(page)
 	if(tonumber(feature.MovementChange)> 0) then
 		table.insert(traits, Locale.Lookup("LOC_UI_PEDIA_MOVEMENT_CHANGE", tonumber(feature.MovementChange)));
 	end
-
+	
+	if(tonumber(feature.DefenseModifier)~= 0) then
+		table.insert(traits, Locale.Lookup("LOC_TOOLTIP_DEFENSE_MODIFIER", tonumber(feature.DefenseModifier)));
+	end
+	
 	table.sort(traits, function(a,b) return Locale.Compare(a,b) == -1; end);
 
 	-- Right column, first!
@@ -60,6 +75,24 @@ PageLayouts["Feature" ] = function(page)
 			for _, v in ipairs(yield_changes) do
 				s:AddLabel(Locale.Lookup("LOC_TYPE_TRAIT_YIELD", v[1], v[2], v[3]));
 			end
+			s:AddSeparator();
+		end
+		
+		if(#placement_requirements > 0) then
+			s:AddHeader("LOC_UI_PEDIA_VALID_RESOURCES");
+
+			for i, v in ipairs(placement_requirements) do
+				local t = type(v);
+				if(t == "table") then
+					local tName = v[1];
+					local tType = v[2];
+					s:AddIconLabel({"ICON_" .. tType, tName, tType}, tName);
+
+				elseif(t == "string") then
+					s:AddLabel("[ICON_Bullet] " .. v);
+				end
+			end
+
 			s:AddSeparator();
 		end
 	end);

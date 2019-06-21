@@ -530,8 +530,12 @@ function Resize()
 	local portraitOffsetY = math.min(0, screenY-1024);
 	Controls.PlayerPortrait:SetOffsetVal(-420, portraitOffsetY);
 
+	-- Show/Hide the ranking button only if there are historic rankings.
+	local historicRankingsCount = #GameInfo.HistoricRankings;
+	Controls.RankingButtonRoot:SetShow(historicRankingsCount > 0);
+
 	-- Show/Hide the chat panel button
-	Controls.ChatButton:SetShow(GameConfiguration.IsNetworkMultiplayer() and UI.HasFeature("Chat")); 
+	Controls.ChatButtonRoot:SetShow(GameConfiguration.IsNetworkMultiplayer() and UI.HasFeature("Chat")); 
 
 end
 
@@ -886,11 +890,6 @@ function OnPlayerDefeat( player, defeat, eventID)
 	end
 end
 
-local ruleset = GameConfiguration.GetValue("RULESET");
-if(ruleset ~= "RULESET_TUTORIAL") then
-	Events.PlayerDefeat.Add(OnPlayerDefeat);
-end
-
 ----------------------------------------------------------------
 -- Called when a player is victorious.
 -- The UI is only displayed if this player is you.
@@ -1121,14 +1120,15 @@ function Initialize()
 
 	Events.SystemUpdateUI.Add( OnUpdateUI );
 	Events.UserRequestClose.Add( OnRequestClose );
-	Events.PlayerInfoChanged.Add(OnPlayerInfoChanged);
+	Events.PlayerInfoChanged.Add( OnPlayerInfoChanged );
 	Events.MultiplayerPrePlayerDisconnected.Add( OnMultiplayerPrePlayerDisconnected );
 	Events.MultiplayerPlayerConnected.Add( OnMultplayerPlayerConnected );
 	Events.MultiplayerChat.Add( OnMultiplayerChat );
 
-	local ruleset = GameConfiguration.GetValue("RULESET");
-	if(ruleset ~= "RULESET_TUTORIAL") then
+	local ruleset :string = GameConfiguration.GetValue("RULESET");
+	if ruleset ~= "RULESET_TUTORIAL" then
 		Events.TeamVictory.Add(OnTeamVictory);
+		Events.PlayerDefeat.Add(OnPlayerDefeat);
 	end
 
 	Resize();

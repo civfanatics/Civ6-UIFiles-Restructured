@@ -842,7 +842,7 @@ end
 function OnCityWorkerChanged( owner:number, cityID:number, plotX:number, plotY:number )
 	if owner == Game.GetLocalPlayer() then
 		RefreshCitizenManagement();
-		LuaEvents.PlotInfo_UpdatePlotTooltip(true);
+		LuaEvents.PlotInfo_UpdatePlotTooltip();
 	end
 end
 

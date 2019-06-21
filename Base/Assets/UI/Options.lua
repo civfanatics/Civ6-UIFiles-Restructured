@@ -223,16 +223,18 @@ function OnConfirm()
         end
 
         -- Now we apply the userconfig options
-		UserConfiguration.SetValue("QuickCombat", Options.GetUserOption("Gameplay", "QuickCombat"));
-		UserConfiguration.SetValue("QuickMovement", Options.GetUserOption("Gameplay", "QuickMovement"));
-		UserConfiguration.SetValue("AutoEndTurn", Options.GetUserOption("Gameplay", "AutoEndTurn"));
-		UserConfiguration.SetValue("CityRangeAttackTurnBlocking", Options.GetUserOption("Gameplay", "CityRangeAttackTurnBlocking"));
-		UserConfiguration.SetValue("TutorialLevel", Options.GetUserOption("Gameplay", "TutorialLevel"));
-		UserConfiguration.SetValue("EdgePan", Options.GetUserOption("Gameplay", "EdgePan"));
-        
-		UserConfiguration.SetValue("AutoUnitCycle", Options.GetUserOption("Gameplay", "AutoUnitCycle"));
-		UserConfiguration.SetValue("PlotTooltipDelay", Options.GetUserOption("Interface", "PlotTooltipDelay"));
-		UserConfiguration.SetValue("ScrollSpeed", Options.GetUserOption("Interface", "ScrollSpeed"));
+		UserConfiguration.SetValue("QuickCombat",					Options.GetUserOption("Gameplay", "QuickCombat"));
+		UserConfiguration.SetValue("QuickMovement",					Options.GetUserOption("Gameplay", "QuickMovement"));
+		UserConfiguration.SetValue("AutoEndTurn",					Options.GetUserOption("Gameplay", "AutoEndTurn"));
+		UserConfiguration.SetValue("CityRangeAttackTurnBlocking",	Options.GetUserOption("Gameplay", "CityRangeAttackTurnBlocking"));
+		UserConfiguration.SetValue("TutorialLevel",					Options.GetUserOption("Gameplay", "TutorialLevel"));
+		UserConfiguration.SetValue("EdgePan",						Options.GetUserOption("Gameplay", "EdgePan"));
+        UserConfiguration.SetValue("AutoProdQueue", 				Options.GetUserOption("Gameplay", "AutoProdQueue"));
+
+		UserConfiguration.SetValue("AutoUnitCycle",		Options.GetUserOption("Gameplay", "AutoUnitCycle"));
+		UserConfiguration.SetValue("RibbonStats",		Options.GetUserOption("Interface", "RibbonStats"));
+		UserConfiguration.SetValue("PlotTooltipDelay",	Options.GetUserOption("Interface", "PlotTooltipDelay"));
+		UserConfiguration.SetValue("ScrollSpeed",		Options.GetUserOption("Interface", "ScrollSpeed"));
 
 
         -- Apply the graphics options (modifies in-memory values and modifies the engine, but does not save to disk)
@@ -1254,7 +1256,10 @@ function TemporaryHardCodedGoodness()
 		{"7", 7},
 		{"8", 8},
 		{"9", 9},
-		{"10", 10}
+		{"10", 10},
+		{"50", 50},
+		{"100", 100},
+		{"LOC_OPTIONS_ALL_AUTOSAVES", 999999},
 	};
 
 	-- Quick note about language names.
@@ -1300,6 +1305,12 @@ function TemporaryHardCodedGoodness()
 		{"LOC_OPTIONS_ALWAYS", 2},
 	};
 
+	local ribbon_options = {
+		{"LOC_OPTIONS_RIBBON_STATS_ALWAYS_HIDE", 0},
+		{"LOC_OPTIONS_RIBBON_STATS_MOUSE_OVER", 1},
+		{"LOC_OPTIONS_RIBBON_STATS_ALWAYS_SHOW", 2},
+	}
+
 	-- Pulldown options for PlayByCloudEndTurnBehavior.
 	local playByCloud_endturn_options = {
 		{"LOC_OPTIONS_PLAYBYCLOUD_END_TURN_BEHAVIOR_ASK_ME", PlayByCloudEndTurnBehaviorType.PBC_ENDTURN_ASK_ME},
@@ -1320,6 +1331,12 @@ function TemporaryHardCodedGoodness()
 		{"LOC_OPTIONS_CBADAPT_PROTANOPIA", 1},
 		{"LOC_OPTIONS_CBADAPT_DEUTERANOPIA", 2},
 		{"LOC_OPTIONS_CBADAPT_TRITANOPIA", 3},
+	};
+
+	-- Pulldown options for UseRGBLighting
+	local lightingRGB_options = {
+		{"LOC_OPTIONS_DISABLED", 0},
+		{"LOC_OPTIONS_ENABLED", 1},
 	};
 
 	-- Populate the pull-downs because we can't do this in XML.
@@ -1431,41 +1448,6 @@ function TemporaryHardCodedGoodness()
 	    end
     );	
 
-	-- Interface
-	PopulateComboBox(Controls.ClockFormat, clock_options, Options.GetUserOption("Interface", "ClockFormat"), function(option)
-		UserConfiguration.SetValue("ClockFormat", option);
-		Options.SetUserOption("Interface", "ClockFormat", option);
-		Controls.ConfirmButton:SetDisabled(false);
-	end,
-	UserConfiguration.IsValueLocked("ClockFormat"));	
-
-	PopulateComboBox(Controls.PlayByCloudEndTurnBehavior, playByCloud_endturn_options, Options.GetUserOption("Interface", "PlayByCloudEndTurnBehavior"), 
-		function(option)
-			Options.SetUserOption("Interface", "PlayByCloudEndTurnBehavior", option);
-			Controls.ConfirmButton:SetDisabled(false);
-		end
-	);
-
-		PopulateComboBox(Controls.PlayByCloudClientReadyBehavior, playByCloud_ready_options, Options.GetUserOption("Interface", "PlayByCloudClientReadyBehavior"), 
-		function(option)
-			Options.SetUserOption("Interface", "PlayByCloudClientReadyBehavior", option);
-			Controls.ConfirmButton:SetDisabled(false);
-		end
-	);
-
-	PopulateComboBox(Controls.ColorblindAdaptation, colorblindAdaptation_options, Options.GetAppOption("UI", "ColorblindAdaptation"), function(option)
-		Options.SetAppOption("UI", "ColorblindAdaptation", option);
-		Controls.ConfirmButton:SetDisabled(false);
-		_PromptRestartGame = true;
-    end);	
-
-    -- we can't allow this to be changed in-game, too many things cache the values
-    if IsInGame() then
-        Controls.ColorblindAdaptation:SetDisabled(true);
-    else
-        Controls.ColorblindAdaptation:SetDisabled(false);
-    end
-
 	-- Language
 	PopulateComboBox(Controls.DisplayLanguagePullDown, language_options, Options.GetAppOption("Language", "DisplayLanguage"), function(option)
 		Options.SetAppOption("Language", "DisplayLanguage", option);
@@ -1560,6 +1542,46 @@ function TemporaryHardCodedGoodness()
 --    );
 
     -- Interface
+		PopulateComboBox(Controls.ClockFormat, clock_options, Options.GetUserOption("Interface", "ClockFormat"), function(option)
+		UserConfiguration.SetValue("ClockFormat", option);
+		Options.SetUserOption("Interface", "ClockFormat", option);
+		Controls.ConfirmButton:SetDisabled(false);
+	end,
+	UserConfiguration.IsValueLocked("ClockFormat"));	
+
+	PopulateComboBox(Controls.PlayByCloudEndTurnBehavior, playByCloud_endturn_options, Options.GetUserOption("Interface", "PlayByCloudEndTurnBehavior"), 
+		function(option)
+			Options.SetUserOption("Interface", "PlayByCloudEndTurnBehavior", option);
+			Controls.ConfirmButton:SetDisabled(false);
+		end
+	);
+
+		PopulateComboBox(Controls.PlayByCloudClientReadyBehavior, playByCloud_ready_options, Options.GetUserOption("Interface", "PlayByCloudClientReadyBehavior"), 
+		function(option)
+			Options.SetUserOption("Interface", "PlayByCloudClientReadyBehavior", option);
+			Controls.ConfirmButton:SetDisabled(false);
+		end
+	);
+
+	PopulateComboBox(Controls.ColorblindAdaptation, colorblindAdaptation_options, Options.GetAppOption("UI", "ColorblindAdaptation"), function(option)
+		Options.SetAppOption("UI", "ColorblindAdaptation", option);
+		Controls.ConfirmButton:SetDisabled(false);
+		_PromptRestartGame = true;
+    end);	
+
+	PopulateComboBox(Controls.RGBControl, lightingRGB_options, Options.GetAppOption("UI", "UseRGBLighting"), function(option)
+		Options.SetAppOption("UI", "UseRGBLighting", option);
+		Controls.ConfirmButton:SetDisabled(false);
+		_PromptRestartApp = true;
+    end);	
+
+    -- we can't allow this to be changed in-game, too many things cache the values
+    if IsInGame() then
+        Controls.ColorblindAdaptation:SetDisabled(true);
+    else
+        Controls.ColorblindAdaptation:SetDisabled(false);
+    end
+
 	PopulateComboBox(Controls.StartInStrategicView, boolean_options, Options.GetUserOption("Gameplay", "StartInStrategicView"), function(option)
 		Options.SetUserOption("Gameplay", "StartInStrategicView", option);
 		Controls.ConfirmButton:SetDisabled(false);
@@ -1579,11 +1601,30 @@ function TemporaryHardCodedGoodness()
 	end, 
 	UserConfiguration.IsValueLocked("EdgePan"));
 
+	PopulateComboBox(Controls.AutoProdQueuePullDown, boolean_options, Options.GetUserOption("Gameplay", "AutoProdQueue"), function(option)
+		Options.SetUserOption("Gameplay", "AutoProdQueue", option);
+		Controls.ConfirmButton:SetDisabled(false);
+	end, 
+	UserConfiguration.IsValueLocked("AutoProdQueue"));
+
+	PopulateComboBox(Controls.ReplaceDragWithClickPullDown, boolean_options, Options.GetUserOption("Interface", "ReplaceDragWithClick"), function(option)
+		Options.SetUserOption("Interface", "ReplaceDragWithClick", option);
+		Controls.ConfirmButton:SetDisabled(false);
+		_PromptRestartApp = true;
+	end, 
+	UserConfiguration.IsValueLocked("ReplaceDragWithClick"));
+
 	PopulateComboBox(Controls.UnitCyclingPullDown, boolean_options, Options.GetUserOption("Gameplay", "AutoUnitCycle"), function(option)
 		Options.SetUserOption("Gameplay", "AutoUnitCycle", option);
 		Controls.ConfirmButton:SetDisabled(false);
 	end,
 	UserConfiguration.IsValueLocked("AutoUnitCycle"));
+
+	PopulateComboBox(Controls.RibbonStatsPullDown, ribbon_options, Options.GetUserOption("Interface", "RibbonStats"), function(option)
+		Options.SetUserOption("Interface", "RibbonStats", option);
+		Controls.ConfirmButton:SetDisabled(false);
+	end,
+	UserConfiguration.IsValueLocked("RibbonStats"));
 	
 	local minimapSize = Options.GetGraphicsOption("General", "MinimapSize") or 0.0;
 	Controls.MinimapSizeSlider:SetValue(minimapSize);
@@ -1708,12 +1749,14 @@ function InitializeKeyBinding()
 			local binding = entry.Binding;
 			entry.ActionName:SetText(action[ActionNameIndex]);
 			binding:SetText(action[Gesture1Index] or "");
+			binding:SetToolTipString(Locale.Lookup(Input.GetActionDescription(action[ActionIdIndex])) or "");
 			binding:RegisterCallback(Mouse.eLClick, function()
 				StartActiveKeyBinding(actionId, 0);
 			end);
 		
 			local altBinding = entry.AltBinding;
 			altBinding:SetText(action[Gesture2Index] or "");
+			altBinding:SetToolTipString(Locale.Lookup(Input.GetActionDescription(action[ActionIdIndex])) or "");
 			altBinding:RegisterCallback(Mouse.eLClick, function()
 				StartActiveKeyBinding(actionId, 1);
 			end);

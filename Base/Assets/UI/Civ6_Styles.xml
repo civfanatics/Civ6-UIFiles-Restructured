@@ -86,15 +86,10 @@
   <BodyText18 FontStyle="stroke" ColorSet="BodyTextCool" Style="FontNormal18"/>
   <BodyText16 FontStyle="stroke" ColorSet="BodyTextCool" Style="FontNormal16"/>
   <BodyText12 FontStyle="stroke" ColorSet="BodyTextCool" Style="FontNormal12"/>
-  <BodyTextDark20 FontStyle="glow" ColorSet="BodyTextBlue" Style="FontNormal20"/>
   <BodyTextDark18 FontStyle="glow" ColorSet="BodyTextBlue" Style="FontNormal18"/>
   <BodyTextDark16 FontStyle="glow" ColorSet="BodyTextBlue" Style="FontNormal16"/>
   <BodyTextDark16alt FontStyle="glow" ColorSet="BodyTextBlueAlt" Style="FontNormal16"/>
   <BodyTextDark14 FontStyle="glow" ColorSet="BodyTextBlue" Style="FontNormal14"/>
-  <BodyTextDarker16 FontStyle="glow" Color0="19,38,67,255" Color1="19,38,67,30" Style="FontNormal16"/>
-  <BodyTextParchment20 FontStyle="glow" ColorSet="ParchmentBrown" Style="FontNormal20"/>
-  <BodyTextParchment18 FontStyle="glow" ColorSet="ParchmentBrown" Style="FontNormal18"/>
-  <BodyTextParchment16 FontStyle="glow" ColorSet="ParchmentBrown" Style="FontNormal16"/>
   <HeaderTextParchment16 Style="FontFlair14" FontStyle="glow" ColorSet="ParchmentBrown" SmallCaps="18" SmallCapsLeading="0" SmallCapsType="EveryWord" KerningAdjustment="0"/>
 
 	<!-- Event Popup Fonts -->
@@ -790,7 +785,6 @@
 
   <TabButtonHighlight Texture="Controls_Tab"
           SliceStart="0,34"
-          StateOffsetIncrement="0,34"
           SliceCorner="21,16"
               />
 
@@ -806,18 +800,9 @@
         SliceCorner="21,13"
     />
 
-  <WCTabButton Style="TabFont">
-    <GridData Style="TabButtonGrid" />
-    <AlphaAnim ShowOnMouseOut="1" Anchor="L,T" Size="parent,parent" Pause="0" Cycle="Once" Speed="2" AlphaStart="1" AlphaEnd="0" >
-      <Grid Size="parent,parent" Offset="0,0" Padding="0,0" Style="TabButtonHighlight" />
-    </AlphaAnim>
-  </WCTabButton>
+	<TabButtonSelectedInnerGlow	Anchor="C,C" Size="parent,parent" Color="255,255,100,200" Texture="TabButton_SelectGlow" SliceCorner="21,17" />
 
-  <WCTabButtonSelected Style="TabSelectedFont">
-    <GridData Style="TabButtonSelectedGrid" />
-  </WCTabButtonSelected>
-
-  <YouIndicator Texture ="Controls_YouIndicatorLine"
+	<YouIndicator Texture ="Controls_YouIndicatorLine"
                 SliceCorner="28,42"
                 SliceTextureSize="60,60"/>
 
@@ -2438,6 +2423,28 @@
   <Civilopedia_ChapterHeaderCaption Anchor="C,C" Style="FontBoldFlair18" SmallCaps="16" SmallCapsLeading="0" SmallCapsType="EveryWord" Color="27,27,27,255" FontStyle="glow"/>
   <Civilopedia_ChapterParagraph Style="FontNormalMedium16" Size="16" Color="0,0,0,255" />
 
-  <!-- EXPERIMENTAL STYLE CLASS MODULES -->
+	<!-- World Builder -->
+	<WorldBuilderPropertyLabel Style="FontNormal14" Anchor="L,C" TruncatedTooltip="1" TruncateWidth="270" />
+
+	<WorldBuilderPullDownLabel Style="FontNormal12" ColorSet="ShellOptionText" FontStyle="stroke" TruncatedTooltip="1" TruncateWidth="120" />
+
+	<WorldBuilderPropertyPullDown  Size="200,24" ScrollThreshold="312" AutoSizePopup="1" AutoFlip="1" SpaceForScroll="0" EntryInstance="InstanceOne">
+		<ButtonData>
+			<GridButton  Size="194,28" Style="TabFont" TruncatedTooltip="1" TruncateWidth="194">
+				<GridData Texture="Controls_DropDownControl" StateOffsetIncrement="0,24"	SliceCorner="10,12"	SliceSize="1,1"		SliceTextureSize="45,24" />
+			</GridButton>
+		</ButtonData>
+		<GridData Offset="0,24" Texture="Controls_DropdownPanel" InnerPadding="3,6" SliceCorner="10,10" SliceTextureSize="22,22"/>
+		<ScrollPanelData Anchor="C,C" Vertical="1" Size="parent,parent" AutoScrollBar="1" >
+			<ScrollBar Style="Slider_Blue" Anchor="R,C" AnchorSide="O,I"   />
+		</ScrollPanelData>
+		<StackData StackGrowth="Bottom" Anchor="C,T"/>
+		<InstanceData Name="InstanceOne">
+			<GridButton ID="Button" Style="ButtonControl" Size="190,24" FontStyle="glow" ColorSet="BlueGlow" TruncatedTooltip="1" TruncateWidth="194" />
+		</InstanceData>
+	</WorldBuilderPropertyPullDown>
+
+
+	<!-- EXPERIMENTAL STYLE CLASS MODULES -->
 
 </StyleSheet>

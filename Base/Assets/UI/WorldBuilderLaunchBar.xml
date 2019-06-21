@@ -1,7 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Context FontStyle="Stroke">
-
-  <Container Offset="-65,-34">
+<Context>
+  <Container Offset="-65,-34" >
     <Grid AutoSizePadding="22,0" Size="auto,60" Texture="Controls_Glow2" SliceCorner="25,25" SliceTextureSize="50,50" Color="0,0,0,200">
       <Image ID="LaunchBackingTile" AutoSizePadding="-34,0" Size="auto,auto" Texture="LaunchBar_Backing_Tile" StretchMode="Tile" >
         <Grid ID="LaunchBacking" AutoSizePadding="30,0" Size="auto,77" Texture="LaunchBar_BackingLeft_Backing" SliceCorner="114,32" SliceSize="1,1" SliceTextureSize="226,77">
@@ -9,10 +8,10 @@
           <Stack ID="ButtonStack" Offset="63,32" Padding="-2" StackGrowth="Right" >
             <Image Anchor="L,C" Offset="0,-2" Size="7,7" Texture="LaunchBar_TrackPip" Color="255,255,255,200" />
             <Button ID="MapEditorButton" Anchor="L,C" Size="49,49" Texture="LaunchBar_Hook_GovernmentButton" Style="ButtonNormalText" TextureOffset="0,2" StateOffsetIncrement="0,49" ToolTip="LOC_WORLD_BUILDER_MAP_EDITOR_TT">
-              <Image Texture="LaunchBar_Hook_GreatPeople" Size="35,35" Anchor="C,T" Offset="0,3"/>
+              <Image Icon="ICON_WB_TOOL_MAP_DETAILS" Size="32,32" Anchor="C,T" Offset="0,6"/>
             </Button>
             <Button ID="PlayerEditorButton" Anchor="L,C" Size="49,49" Texture="LaunchBar_Hook_GovernmentButton" Style="ButtonNormalText" TextureOffset="0,2" StateOffsetIncrement="0,49" ToolTip="LOC_WORLD_BUILDER_PLAYER_EDITOR_TT">
-              <Image Texture="LaunchBar_Hook_Government" Size="35,35" Anchor="C,T" Offset="0,3"/>
+              <Image Icon="ICON_WB_TOOL_PLAYER_DETAILS" Size="32,32" Anchor="C,T" Offset="0,4"/>
             </Button>
             <Image Anchor="L,C" Offset="0,-2" Size="7,7" Texture="LaunchBar_TrackPip" Color="255,255,255,200" />
           </Stack>
@@ -21,31 +20,22 @@
     </Grid>
   </Container>
 
-  <Container Anchor="C,L" Size="600,28">
-	  <Box Size="parent,parent" Color="32,70,101,150">
-		  <Label ID="StatusLine" Style="FontFlair24" Anchor="C,L"/>
-	  </Box>
-  </Container>
-
-  <Container Anchor="R,T" Size="60,28" Offset="244,-76">
-	  <Stack ID="ButtonStack2" Offset="63,77" Padding="0" StackGrowth="Bottom" >
-		  <GridButton ID="LaunchMenu" String="LOC_OPTIONS_HOTKEY_GLOBAL_PAUSEMENU" Size="240,30" Style="ButtonControl" ToolTip="LOC_OPTIONS_HOTKEY_GLOBAL_PAUSEMENU_HELP"/>
-		  <GridButton ID="ToggleAdvanced" String="LOC_WORLDBUILDER_SWITCH_ADV" Size="240,30" Style="ButtonControl" ToolTip="LOC_WORLDBUILDER_SWITCH_ADV_POPUP_TEXT"/>
-	  </Stack>
-  </Container>
-
-  <Container ID="SwitchPopup" Anchor="C,C" Size="640,280">
-	  <Image ID="ModalBG" Size="640,280" Offset="0,0" Texture="WorldBuilder_BG" StretchMode="Tile" ConsumeMouse="1"/>
-	  <Grid																														  Size="parent,40"						Texture="Controls_SubHeader2" ConsumeMouse="1" SliceCorner="20,2" SliceTextureSize="40,40">
-		<Label ID="ModalScreenTitle" String="LOC_WORLDBUILDER_SWITCH_ADV_POPUP_TITLE" Anchor="C,C" Style="FontFlair24" FontStyle="glow" ColorSet="ShellHeader" SmallCaps="28" SmallCapsLeading="0" SmallCapsType="EveryWord"/>
+  <Box Anchor="R,T" Size="360,200"  Offset="4,0" Color="9,44,72,200" ConsumeMouse="1" >
+	<Box Color="32,70,101,150" Anchor="L,T" Size="2,parent"/>
+	<Box Color="32,70,101,150" Anchor="R,T" Size="2,parent"/>
+	<Box Color="32,70,101,150" Anchor="L,T" Size="parent,2"/>
+	<Box Color="32,70,101,150" Anchor="L,B" Size="parent,2"/>
+	<Grid Anchor="C,C" Size="parent-10, parent-10" Style="SubContainer4" Color="0,0,0,80" >
+	  <Grid ID="TabContainerGrid" Anchor="C,C" Size="parent-8,parent-8" Style="DecoGrid" Color="26,61,90,255">
+		  <Grid	Size="parent,32" Offset="0,8" Texture="Controls_SubHeader2" SliceCorner="20,2" SliceTextureSize="40,40" >
+			  <Label ID="Title" Style="FontNormal24" Anchor="C,T" String="LOC_WORLDBUILDER_TITLE"/>
+			  <GridButton ID="LaunchMenu"	Size="42,42" Offset="-4,-14" Anchor="R,T" Style="TabButton" ToolTip="LOC_OPTIONS_HOTKEY_GLOBAL_PAUSEMENU_HELP">
+				  <Image Anchor="C,C" Offset="0,1" Size="32,32" Icon="ICON_WB_TOOL_HAMBURGER_MENU"/>
+			  </GridButton>
+		  </Grid>
+		  <Label Style="FontNormal12" String="LOC_WORLD_BUILDER_PLACEMENT_HELP" Offset="4,42" Size="parent,35"/>
+		  <Label ID="StatusLine" Style="FontNormal16" Offset="0,98" Anchor="C,T" Size="parent,160"/>
 	  </Grid>
-	  <Grid	Offset="-8,-8"	Size="parent+16,parent+16"	Style="ScreenFrame"/>
-
-	  <Grid Size="603,170" Offset="20,50" Texture="Religion_OverviewFrame" SliceCorner="15,15" SliceTextureSize="34,33">
-			  <Label Offset="20,20" WrapWidth="560" Style="FontNormal20" FontStyle="shadow" ColorSet="ShellHeader" String="LOC_WORLDBUILDER_SWITCH_ADV_POPUP_TEXT" />
-	  </Grid>
-	  <GridButton ID="ConfirmButton" Size="200,48" Offset="17,8" String="LOC_CONTINUE" Style="ButtonConfirm" Anchor="R,B"/>
-	  <GridButton ID="CancelButton" Size="200,48" Offset="20,8" String="LOC_CANCEL" Style="ButtonRed" Anchor="L,B"/>
-  </Container>
-
+	</Grid>
+  </Box>
 </Context>

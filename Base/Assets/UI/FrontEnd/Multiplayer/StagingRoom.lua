@@ -154,19 +154,31 @@ local LOC_GAME_SETUP:string = Locale.Lookup("LOC_MULTIPLAYER_GAME_SETUP");
 local LOC_GAME_SUMMARY:string = Locale.Lookup("LOC_MULTIPLAYER_GAME_SUMMARY");
 local LOC_STAGING_ROOM:string = Locale.ToUpper(Locale.Lookup("LOC_MULTIPLAYER_STAGING_ROOM"));
 
-----------------------------------------------------------------        
--- Input Handler
-----------------------------------------------------------------        
-function OnInputHandler( uiMsg, wParam, lParam )
-	if uiMsg == KeyEvents.KeyUp then
-		if wParam == Keys.VK_ESCAPE then
-            m_kPopupDialog:Close();
-			LuaEvents.Multiplayer_ExitShell();
-			return true;
-		end
+
+-- ===========================================================================
+function Close()	
+    if m_kPopupDialog:IsOpen() then
+		m_kPopupDialog:Close();
 	end
+	LuaEvents.Multiplayer_ExitShell();
+end
+
+-- ===========================================================================
+--	Input Handler
+-- ===========================================================================
+function KeyUpHandler( key:number )
+	if key == Keys.VK_ESCAPE then
+		Close();
+		return true;
+	end
+    return false;
+end
+function OnInputHandler( pInputStruct:table )
+	local uiMsg :number = pInputStruct:GetMessageType();
+	if uiMsg == KeyEvents.KeyUp then return KeyUpHandler( pInputStruct:GetKey() ); end	
 	return false;
 end
+
 
 ----------------------------------------------------------------  
 -- Helper Functions
@@ -326,8 +338,7 @@ function PlayerInfoChanged_SpecificPlayer(playerID)
 	UpdatePlayerEntry(playerID);
 	
 	Controls.PlayerListStack:CalculateSize();
-	Controls.PlayerListStack:ReprocessAnchoring();
-	Controls.PlayersScrollPanel:CalculateInternalSize();
+	Controls.PlayersScrollPanel:CalculateSize();
 end
 
 function OnPlayerInfoChanged(playerID)
@@ -364,7 +375,7 @@ end
 function OnUploadCloudPlayerConfigComplete(success :boolean)
 	if(m_exitReadyWait == true) then
 		m_exitReadyWait = false;
-		FinishExitGame();
+		Close();
 	end
 end
 
@@ -419,9 +430,7 @@ end
 
 function OnCloudGameKilled( matchID, success )
 	if(success) then
-		-- On success, close popup and exit the screen
-		m_kPopupDialog:Close();
-		LuaEvents.Multiplayer_ExitShell();
+		Close();
 	else
 		--Show error prompt.
 		m_kPopupDialog:Close();
@@ -435,8 +444,7 @@ end
 function OnCloudGameQuit( matchID, success )
 	if(success) then
 		-- On success, close popup and exit the screen
-		m_kPopupDialog:Close();
-		LuaEvents.Multiplayer_ExitShell();
+		Close();
 	else
 		--Show error prompt.
 		m_kPopupDialog:Close();
@@ -688,7 +696,7 @@ function OnAbandoned(eReason)
 		else
 			LuaEvents.MultiplayerPopup( "LOC_GAME_ABANDONED_CONNECTION_LOST", "LOC_GAME_ABANDONED_CONNECTION_LOST_TITLE");
 		end
-		LuaEvents.Multiplayer_ExitShell();
+		Close();
 	end
 end
 
@@ -782,8 +790,7 @@ function OnSlotType( playerID, id )
 
 	if g_slotTypeData[id].slotStatus == SlotStatus.SS_CLOSED then
 		Controls.PlayerListStack:CalculateSize();
-		Controls.PlayerListStack:ReprocessAnchoring();
-		Controls.PlayersScrollPanel:CalculateInternalSize();
+		Controls.PlayersScrollPanel:CalculateSize();
 	end
 end
 
@@ -838,8 +845,7 @@ function OnAddPlayer(playerID)
 	CheckGameAutoStart();
 
 	Controls.PlayerListStack:CalculateSize();
-	Controls.PlayerListStack:ReprocessAnchoring();
-	Controls.PlayersScrollPanel:CalculateInternalSize();
+	Controls.PlayersScrollPanel:CalculateSize();
 end
 
 -------------------------------------------------
@@ -928,7 +934,8 @@ function SetLocalReady(newReady)
 		if(newReady 
 			and GameConfiguration.IsPlayByCloud()
 			and GameConfiguration.GetGameState() ~= GameStateTypes.GAMESTATE_LAUNCHED
-			and not m_shownPBCReadyPopup) then
+			and not m_shownPBCReadyPopup
+			and not m_exitReadyWait) then -- Do not show ready popup if we are exiting due to pressing the back button.
 			ShowPBCReadyPopup();
 		end
 
@@ -1014,12 +1021,13 @@ end
 -------------------------------------------------
 function CheckGameAutoStart()
 	-- PlayByCloud Only - Autostart if we are the active turn player.
-	if(IsCloudInProgress() and Network.IsCloudTurnPlayer() == true) then
-		-- Reset global blocking variables so the ready button i not possibly dirty from a previous session.
-		ResetAutoStartFlags();
-
-		SetLocalReady(true);
-		StartLaunchCountdown();
+	if IsCloudInProgress() and Network.IsCloudTurnPlayer() then
+		if(not IsLaunchCountdownActive()) then
+			-- Reset global blocking variables so the ready button i not possibly dirty from a previous session.
+			ResetAutoStartFlags();				
+			SetLocalReady(true);
+			StartLaunchCountdown();
+		end
 	-- Check to see if we should start/stop the multiplayer game.
 	elseif(not Network.IsPlayerHotJoining(Network.GetLocalPlayerID())
 		and not IsCloudInProgressAndNotTurn()
@@ -1162,10 +1170,14 @@ function CheckLeaveGame()
 	end
 end
 
-function HandleExitRequest()
+-- ===========================================================================
+--	LUA Event
+-- ===========================================================================
+function OnHandleExitRequest()
 	print("Staging Room -Handle Exit Request");
 
 	CheckLeaveGame();
+	Controls.CountdownTimerAnim:ClearAnimCallback();
 	
 	-- Force close all popups because they are modal and will remain visible even if the screen is hidden
 	for _, playerEntry:table in ipairs(g_PlayerEntries) do
@@ -1422,8 +1434,7 @@ function UpdateTeamList(updateOpenEmptyTeam)
 	end
 
 	Controls.PlayerListStack:CalculateSize();
-	Controls.PlayerListStack:ReprocessAnchoring();
-	Controls.PlayersScrollPanel:CalculateInternalSize();
+	Controls.PlayersScrollPanel:CalculateSize();
 	Controls.HotseatDeco:SetHide(not GameConfiguration.IsHotseat());
 end
 
@@ -2047,6 +2058,11 @@ function UpdateReadyButton()
 	end
 
 	local errorReason;
+	local game_err = GetGameParametersError();
+	if(game_err) then
+		errorReason = game_err.Reason or "LOC_SETUP_PARAMETER_ERROR";
+	end
+
 	local player_ids = GameConfiguration.GetMultiplayerPlayerIDs();
 	for i, iPlayer in ipairs(player_ids) do	
 		-- Check for selection error (ownership rules, duplicate leaders, etc)
@@ -2088,7 +2104,11 @@ function StartLaunchCountdown()
 	
 	g_fCountdownInitialTime = g_fCountdownTimer;
 	g_fCountdownReadyButtonTime = g_fCountdownTimer;
-	ContextPtr:SetUpdate( OnUpdateTimers );
+	
+	-- Using animation control rather than context to call the update timer because
+	-- animation controls continue to tick even when hidden (e.g., when a player
+	-- navigates away from this screen but the countdown has started.)
+	Controls.CountdownTimerAnim:RegisterAnimCallback( OnUpdateTimers );	
 
 	-- Update m_iFirstClosedSlot's player slot so it will hide the Add Player button.
 	if(m_iFirstClosedSlot ~= -1) then
@@ -2108,7 +2128,7 @@ function StartReadyCountdown()
 		g_fCountdownTickSoundTime = READY_COUNTDOWN_TICK_START; 
 		g_fCountdownInitialTime = g_fCountdownTimer;
 		g_fCountdownReadyButtonTime = g_fCountdownTimer;
-		ContextPtr:SetUpdate( OnUpdateTimers );
+		Controls.CountdownTimerAnim:RegisterAnimCallback( OnUpdateTimers );
 
 		ShowHideReadyButtons();
 	end
@@ -2131,7 +2151,7 @@ function StopCountdown()
 
 	ShowHideReadyButtons();
 
-	ContextPtr:ClearUpdate();
+	Controls.CountdownTimerAnim:ClearAnimCallback();	
 end
 
 -------------------------------------------------
@@ -2177,8 +2197,7 @@ end
 -- Adjust vertical grid lines
 function RealizeGridSize()
 	Controls.PlayerListStack:CalculateSize();
-	Controls.PlayerListStack:ReprocessAnchoring();
-	Controls.PlayersScrollPanel:CalculateInternalSize();
+	Controls.PlayersScrollPanel:CalculateSize();
 
 	local gridLineHeight:number = math.max(Controls.PlayerListStack:GetSizeY(), Controls.PlayersScrollPanel:GetSizeY());
 	for i = 1, NUM_COLUMNS do
@@ -2198,10 +2217,12 @@ function ResetChat()
 end
 
 -------------------------------------------------
--- OnUpdateTimers
--- OnUpdateTimers should only be ticking if there are timers active.
+--	Should only be ticking if there are timers active.
 -------------------------------------------------
-function OnUpdateTimers( fDTime )
+function OnUpdateTimers( uiControl:table, fProgress:number )
+
+	local fDTime:number = UIManager:GetLastTimeDelta();
+
 	-- Update launch countdown.
 	if(g_fCountdownInitialTime ~= NO_COUNTDOWN) then
 		g_fCountdownTimer = g_fCountdownTimer - fDTime;
@@ -2236,8 +2257,8 @@ function OnUpdateTimers( fDTime )
 	end
 
 	if(g_fCountdownTimer <= 0) then
-		-- Both timers have elapsed, we no longer have to tick OnUpdateTimers.
-		ContextPtr:ClearUpdate();
+		-- Both timers have elapsed, we no longer have to tick.
+		Controls.CountdownTimerAnim:ClearAnimCallback();			
 	end
 end
 
@@ -2248,6 +2269,24 @@ function OnShow()
 	g_currentMaxPlayers = math.min(MapConfiguration.GetMaxMajorPlayers(), 12);
 	m_shownPBCReadyPopup = false;
 	m_exitReadyWait = false;
+
+	local networkSessionID:number = Network.GetSessionID();
+	if m_sessionID ~= networkSessionID then
+		-- This is a fresh session.
+		m_sessionID = networkSessionID;
+
+		StopCountdown();
+
+		-- When using the ready countdown mode, start the ready countdown if the player is not already readied up.
+		-- If the player is already readied up, we just don't allow them to unready.
+		local localPlayerID :number = Network.GetLocalPlayerID();
+		local localPlayerConfig :table = PlayerConfigurations[localPlayerID];
+		if(IsUseReadyCountdown() 
+			and localPlayerConfig ~= nil
+			and localPlayerConfig:GetReady() == false) then
+			StartReadyCountdown();
+		end
+	end
 
 	InitializeReadyUI();
 	ShowHideInviteButton();	
@@ -2275,35 +2314,14 @@ function OnShow()
 			SetLocalReady(true);
 		end
 	end
-
-	if(m_sessionID ~= Network.GetSessionID()) then
-		-- This is a fresh session.
-		m_sessionID = Network.GetSessionID();
-
-		-- When using the ready countdown mode, start the ready countdown if the player is not already readied up.
-		-- If the player is already readied up, we just don't allow them to unready.
-		local localPlayerID :number = Network.GetLocalPlayerID();
-		local localPlayerConfig :table = PlayerConfigurations[localPlayerID];
-		if(IsUseReadyCountdown() 
-			and localPlayerConfig ~= nil
-			and localPlayerConfig:GetReady() == false) then
-			StartReadyCountdown();
-		end
-	end
 end
-ContextPtr:SetShowHandler(OnShow);
+
 
 function OnChatPulldownChanged(newTargetType :number, newTargetID :number)
 	local textControl:table = Controls.ChatPull:GetButton():GetTextControl();
 	local text:string = textControl:GetText();
 	Controls.ChatPull:SetToolTipString(text);
 end
-
--------------------------------------------------
--------------------------------------------------
-function OnHide()
-end
-ContextPtr:SetHideHandler(OnHide);
 
 -------------------------------------------------
 -------------------------------------------------
@@ -2347,8 +2365,7 @@ function ShowHideTopLeftButtons()
 	Controls.EndGameButton:SetHide( not showEndGame);
 	Controls.QuitGameButton:SetHide( not showQuitGame);
 
-	Controls.LeftTopButtonStack:CalculateSize();
-	Controls.LeftTopButtonStack:ReprocessAnchoring();
+	Controls.LeftTopButtonStack:CalculateSize();	
 end
 
 -------------------------------------------------
@@ -2610,7 +2627,6 @@ function RealizeShellTabs()
 	stagingRoom.TopControl:SetSizeX(stagingRoom.Button:GetSizeX());
 	
 	Controls.ShellTabs:CalculateSize();
-	Controls.ShellTabs:ReprocessAnchoring();
 end
 
 -- ===========================================================================
@@ -2709,9 +2725,7 @@ function BuildGameState()
 	end
 
 	Controls.AdditionalContentStack:CalculateSize();
-	Controls.AdditionalContentStack:ReprocessAnchoring();
-
-	Controls.ParametersScrollPanel:CalculateInternalSize();
+	Controls.ParametersScrollPanel:CalculateSize();
 end
 
 function BuildAdditionalContent()
@@ -2730,9 +2744,7 @@ function BuildAdditionalContent()
 	end
 
 	Controls.AdditionalContentStack:CalculateSize();
-	Controls.AdditionalContentStack:ReprocessAnchoring();
-
-	Controls.ParametersScrollPanel:CalculateInternalSize();
+	Controls.ParametersScrollPanel:CalculateSize();
 end
 
 -- ===========================================================================
@@ -2779,7 +2791,6 @@ function RealizeInfoTabs()
 	end
 
 	Controls.InfoTabs:CalculateSize();
-	Controls.InfoTabs:ReprocessAnchoring();
 end
 
 -------------------------------------------------
@@ -2825,9 +2836,7 @@ function UpdateFriendsList()
 	-- /DEBUG
 
 	Controls.FriendsStack:CalculateSize();
-	Controls.FriendsStack:ReprocessAnchoring();
 	Controls.FriendsScrollPanel:CalculateSize();
-	Controls.FriendsScrollPanel:ReprocessAnchoring();
 	Controls.FriendsScrollPanel:GetScrollBar():SetAndCall(0);
 
 	if Controls.FriendsScrollPanel:GetScrollBar():IsHidden() then
@@ -2843,7 +2852,6 @@ function UpdateFriendsList()
 		Controls.InviteButton:SetAnchor("C,B");
 		Controls.InviteButton:SetOffsetY(27);
 	end
-	Controls.InviteButton:ReprocessAnchoring();
 end
 
 function IsFriendInGame(friend:table)
@@ -2902,9 +2910,6 @@ function OnRaise(resetChat:boolean)
 	-- Make sure HostGame screen is on the stack
 	LuaEvents.StagingRoom_EnsureHostGame();
 
-	-- The screen is being started fresh from the joining room/host room screens.  We need to reset the countdown state.
-	StopCountdown();
-
 	UIManager:QueuePopup( ContextPtr, PopupPriority.Current );
 end
 
@@ -2915,8 +2920,6 @@ function Resize()
 		hideLogo = false;
 	end
 	Controls.LogoContainer:SetHide(hideLogo);
-	Controls.MainGrid:ReprocessAnchoring();
-	Controls.ReadyContainer:ReprocessAnchoring();
 end
 
 function OnUpdateUI( type:number, tag:string, iData1:number, iData2:number, strData1:string )   
@@ -2940,12 +2943,9 @@ function StartExitGame()
 		end
 	end
 
-	FinishExitGame();
+	Close();
 end
 
-function FinishExitGame()
-	LuaEvents.Multiplayer_ExitShell();
-end
 
 function OnEndGame_Start()
 	Network.CloudKillGame();
@@ -3015,7 +3015,8 @@ function Initialize()
 
 	ContextPtr:SetInitHandler(OnInit);
 	ContextPtr:SetShutdown(OnShutdown);
-	ContextPtr:SetInputHandler( OnInputHandler );
+	ContextPtr:SetInputHandler( OnInputHandler, true );
+	ContextPtr:SetShowHandler(OnShow);
 
 	Controls.BackButton:RegisterCallback( Mouse.eLClick, OnExitGameAskAreYouSure );
 	Controls.BackButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
@@ -3056,7 +3057,7 @@ function Initialize()
 	LuaEvents.HostGame_ShowStagingRoom.Add( OnRaise );
 	LuaEvents.JoiningRoom_ShowStagingRoom.Add( OnRaise );
 	LuaEvents.EditHotseatPlayer_UpdatePlayer.Add(UpdatePlayerEntry);
-	LuaEvents.Multiplayer_ExitShell.Add(HandleExitRequest);
+	LuaEvents.Multiplayer_ExitShell.Add( OnHandleExitRequest );
 
 	Controls.TitleLabel:SetText(Locale.ToUpper(Locale.Lookup("LOC_MULTIPLAYER_STAGING_ROOM")));
 	ResizeButtonToText(Controls.BackButton);

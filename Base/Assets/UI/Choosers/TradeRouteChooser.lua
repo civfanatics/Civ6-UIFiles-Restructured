@@ -5,6 +5,7 @@
 include("InstanceManager");
 include("SupportFunctions");
 include("Colors");
+include("TradeSupport");
 
 -- ===========================================================================
 --	CONSTANTS
@@ -144,50 +145,28 @@ function RefreshTopPanel()
 		Controls.DistenceToCity:SetColor( frontColor );
 		Controls.DistenceToCity:SetText(distanceToDestination);
 
-		-- Update Resource Lists
-		local originReceivedResources:boolean = false;
-		local originTooltipText:string = "";
-		local bHasAnyFromRouteBonus:boolean = false;
-
 		-- Origin ---------------------------------------------
 
 		Controls.OriginResourceList:DestroyAllChildren();
 
-		local originYields_Values, originYields_SourceText, originYields_FromRouteBonus = GetYieldsForCity(destinationCity, true);
+		local originReceivedResources:boolean = false;
+		local kOriginRouteInfo:table = GetYieldsForRoute(originCity, destinationCity);
 
-		local yieldIndex;
-		local yieldCount = #originYields_Values;
-
-		for yieldIndex=1, yieldCount, 1 do
-
-			local yieldValue = originYields_Values[yieldIndex];
+		for yieldIndex=1, #kOriginRouteInfo.kYieldValues, 1 do
+			local yieldValue = kOriginRouteInfo.kYieldValues[yieldIndex];
 			if (yieldValue ~= 0 ) then
 				local yieldInfo = GameInfo.Yields[yieldIndex - 1];
-
-				local sourceText = originYields_SourceText[yieldIndex];
-				if (originTooltipText ~= "") then
-					originTooltipText = originTooltipText .. "[NEWLINE]";
-				end
-				originTooltipText = originTooltipText .. sourceText;
-				AddYieldResourceEntry(yieldInfo, yieldValue, sourceText, Controls.OriginResourceList);
-				originReceivedResources = true;
-				bHasAnyFromRouteBonus = bHasAnyFromRouteBonus and true or originYields_FromRouteBonus[yieldIndex];
-			end
-		end
-
-		local destinationMajorityReligion = destinationCity:GetReligion():GetMajorityReligion();
-		if (destinationMajorityReligion > 0) then
-			local pressureValue, sourceText = GetReligiousPressureForCity(destinationMajorityReligion, destinationCity, true);
-			if (pressureValue ~= 0) then
-				if (originTooltipText ~= "") then
-					originTooltipText = originTooltipText .. "[NEWLINE]";
-				end
-				originTooltipText = originTooltipText .. sourceText;
-				AddReligiousPressureResourceEntry(GameInfo.Religions[destinationMajorityReligion], pressureValue, true, sourceText, Controls.OriginResourceList);
+				AddYieldResourceEntry(yieldInfo, yieldValue, Controls.OriginResourceList);
 				originReceivedResources = true;
 			end
 		end
-		Controls.OriginResources:SetToolTipString(originTooltipText);
+
+		if kOriginRouteInfo.MajorityReligion > 0 and kOriginRouteInfo.ReligionPressure > 0 then
+			AddReligiousPressureResourceEntry(GameInfo.Religions[kOriginRouteInfo.MajorityReligion], kOriginRouteInfo.ReligionPressure, true, Controls.OriginResourceList);
+			originReceivedResources = true;
+		end
+
+		Controls.OriginResources:SetToolTipString(kOriginRouteInfo.TooltipText);
 		Controls.OriginResourceHeader:SetText(Locale.Lookup("LOC_ROUTECHOOSER_RECEIVES_RESOURCE", Locale.Lookup(originCity:GetName())));
 		Controls.OriginResources:RegisterSizeChanged( function() ResizeResourceBackgroundColumns(Controls.OriginResources, Controls.OriginResourcesLeftColumn, Controls.OriginResourcesRightColumn); end );
 
@@ -198,44 +177,27 @@ function RefreshTopPanel()
 		end
 
 		-- Destination --------------------------------------------------------------------
-
-		local destinationReceivedResources:boolean = false;
-		local destinationTooltipText:string = "";
+		
 		Controls.DestinationResourceList:DestroyAllChildren();
 
-		local destinationYields_Values, destinationYields_SourceText, destinationYields_FromRouteBonus = GetYieldsForCity(destinationCity, false);
+		local destinationReceivedResources:boolean = false;
+		local kDestRouteInfo:table = GetYieldsForRoute(originCity, destinationCity, true);
 
-		yieldCount = #destinationYields_Values;
-
-		for yieldIndex=1, yieldCount, 1 do
-
-			local yieldValue = destinationYields_Values[yieldIndex];
+		for yieldIndex=1, #kDestRouteInfo.kYieldValues, 1 do
+			local yieldValue = kDestRouteInfo.kYieldValues[yieldIndex];
 			if (yieldValue ~= 0 ) then
 				local yieldInfo = GameInfo.Yields[yieldIndex - 1];
-
-				local sourceText = destinationYields_SourceText[yieldIndex];
-				if (destinationTooltipText ~= "") then
-					destinationTooltipText = destinationTooltipText .. "[NEWLINE]";
-				end
-				destinationTooltipText = destinationTooltipText .. sourceText;
-				AddYieldResourceEntry(yieldInfo, yieldValue, sourceText, Controls.DestinationResourceList);
+				AddYieldResourceEntry(yieldInfo, yieldValue, Controls.DestinationResourceList);
 				destinationReceivedResources = true;
 			end
 		end
 
-		local originMajorityReligion = originCity:GetReligion():GetMajorityReligion();
-		if (originMajorityReligion > 0) then
-			local pressureValue, sourceText = GetReligiousPressureForCity(originMajorityReligion, destinationCity, false);
-			if (pressureValue ~= 0) then
-				if (destinationTooltipText ~= "") then
-					destinationTooltipText = destinationTooltipText .. "[NEWLINE]";
-				end
-				destinationTooltipText = destinationTooltipText .. sourceText;
-				AddReligiousPressureResourceEntry(GameInfo.Religions[originMajorityReligion], pressureValue, false, sourceText, Controls.DestinationResourceList);
-				destinationReceivedResources = true;
-			end
+		if kDestRouteInfo.MajorityReligion > 0 and kDestRouteInfo.ReligionPressure > 0 then
+			AddReligiousPressureResourceEntry(GameInfo.Religions[kDestRouteInfo.MajorityReligion], kDestRouteInfo.ReligionPressure, false, Controls.DestinationResourceList);
+			destinationReceivedResources = true;
 		end
-		Controls.DestinationResources:SetToolTipString(destinationTooltipText);
+
+		Controls.DestinationResources:SetToolTipString(kDestRouteInfo.TooltipText);
 		Controls.DestinationResourceHeader:SetText(Locale.Lookup("LOC_ROUTECHOOSER_RECEIVES_RESOURCE", Locale.Lookup(destinationCity:GetName())));
 		Controls.DestinationResources:RegisterSizeChanged( function() ResizeResourceBackgroundColumns(Controls.DestinationResources, Controls.DestinationResourcesLeftColumn, Controls.DestinationResourcesRightColumn); end );
 
@@ -246,7 +208,7 @@ function RefreshTopPanel()
 		end
 
 		-- Resize CityName so it takes into account the bonus icons
-		Controls.RouteBonusIcon:SetHide(not bHasAnyFromRouteBonus);
+		Controls.RouteBonusIcon:SetHide(not kOriginRouteInfo.HasPathBonus);
 		OnBonusIconStackSizeChanged(Controls);
 
 		-- Show Begin Route or Repeat Route if we're rerun the last completed route
@@ -616,13 +578,14 @@ end
 
 -- ===========================================================================
 function AddCityToDestinationStack(city:table)
-	local cityEntry:table = m_RouteChoiceIM:GetInstance();
-
 	local destinationCity = GetDestinationCity();
 	local originCity = GetOriginCity();
-	if originCity == nil then
+
+	if originCity == nil and destinationCity == nil then
 		return;
 	end
+
+	local cityEntry:table = m_RouteChoiceIM:GetInstance();
 
 	-- Update Selector Brace
 	if destinationCity ~= nil and city:GetName() == destinationCity:GetName() then
@@ -671,45 +634,25 @@ function AddCityToDestinationStack(city:table)
 	cityEntry.DistenceToCity:SetText(distanceToDestination);
 
 	-- Setup resources
-	local tooltipText = "";
-	local bHasAnyFromRouteBonus:boolean = false;
 	cityEntry.ResourceList:DestroyAllChildren();
 
-	local yields_Values, yields_SourceText, yields_FromRouteBonus = GetYieldsForCity(city, true);
-
-	local yieldIndex;
-	local yieldCount = #yields_Values;
-
-	for yieldIndex=1, yieldCount, 1 do
-
-		local yieldValue = yields_Values[yieldIndex];
+	local kRouteInfo:table = GetYieldsForRoute(originCity, city);
+	for yieldIndex=1, #kRouteInfo.kYieldValues, 1 do
+		local yieldValue = kRouteInfo.kYieldValues[yieldIndex];
 		if (yieldValue ~= 0 ) then
 			local yieldInfo = GameInfo.Yields[yieldIndex - 1];
+			AddYieldResourceEntry(yieldInfo, yieldValue, cityEntry.ResourceList);
+		end
+	end
 
-			local sourceText = yields_SourceText[yieldIndex];
-			if (tooltipText ~= "") then
-				tooltipText = tooltipText .. "[NEWLINE]";
-			end
-			tooltipText = tooltipText .. sourceText;
-			AddYieldResourceEntry(yieldInfo, yieldValue, sourceText, cityEntry.ResourceList);
-			bHasAnyFromRouteBonus = bHasAnyFromRouteBonus and true or yields_FromRouteBonus[yieldIndex];
-		end
+	if kRouteInfo.MajorityReligion > 0 and kRouteInfo.ReligionPressure > 0 then
+		AddReligiousPressureResourceEntry(GameInfo.Religions[kRouteInfo.MajorityReligion], kRouteInfo.ReligionPressure, true, cityEntry.ResourceList);
 	end
-	local cityMajorityReligion = city:GetReligion():GetMajorityReligion();
-	if (cityMajorityReligion > 0) then
-		local pressureValue, sourceText = GetReligiousPressureForCity(cityMajorityReligion, city, true);
-		if (pressureValue ~= 0) then
-			if (tooltipText ~= "") then
-				tooltipText = tooltipText .. "[NEWLINE]";
-			end
-			tooltipText = tooltipText .. sourceText;
-			AddReligiousPressureResourceEntry(GameInfo.Religions[cityMajorityReligion], pressureValue, true, sourceText, cityEntry.ResourceList);
-		end
-	end
-	cityEntry.Button:SetToolTipString(tooltipText);
+
+	cityEntry.Button:SetToolTipString(kRouteInfo.TooltipText);
 
 	-- Resize CityName so it takes into account the bonus icons
-	cityEntry.RouteBonusIcon:SetHide(not bHasAnyFromRouteBonus);
+	cityEntry.RouteBonusIcon:SetHide(not kRouteInfo.HasPathBonus);
 	OnBonusIconStackSizeChanged(cityEntry);
 
 	-- Setup callback
@@ -735,7 +678,7 @@ function ResizeResourceBackgroundColumns(parent:table, leftColumn:table, rightCo
 end
 
 -- ===========================================================================
-function AddYieldResourceEntry(yieldInfo:table, yieldValue:number, sourceText:string, stackControl:table)
+function AddYieldResourceEntry(yieldInfo:table, yieldValue:number, stackControl:table)
 	local entryInstance:table = {};
 	ContextPtr:BuildInstanceForControl( "ResourceEntryInstance", entryInstance, stackControl );
 	
@@ -746,7 +689,7 @@ function AddYieldResourceEntry(yieldInfo:table, yieldValue:number, sourceText:st
 end
 
 -- ===========================================================================
-function AddReligiousPressureResourceEntry(religionInfo:table, pressureValue:number, forOriginCity:boolean, sourceText:string, stackControl:table)
+function AddReligiousPressureResourceEntry(religionInfo:table, pressureValue:number, forOriginCity:boolean, stackControl:table)
 	local entryInstance:table = {};
 	ContextPtr:BuildInstanceForControl( "ReligionPressureEntryInstance", entryInstance, stackControl );
 	
@@ -1006,126 +949,6 @@ function GetYieldForCity(yieldIndex:number, city:table, originCity:boolean)
 	totalValue = totalValue + partialValue;
 
 	return totalValue, bFromRouteBonus;
-end
-
--- ===========================================================================
--- Get all the yields for a city connection as well as the text and some meta data
--- Returns:
---		array of yield values
---		array of strings describing where each yield came from
---		array of booleans for whether or not part of the yield was from a path
-function GetYieldsForCity(city:table, originCity:boolean)
-	local tradeManager = Game.GetTradeManager();
-
-	if city == nil then
-		return 0, "";
-	end
-
-	local cityOwner:number = city:GetOwner();
-	local cityID:number = city:GetID();
-
-	-- From route
-	local routeYields = {};
-	if (originCity) then
-		routeYields = tradeManager:CalculateOriginYieldsFromPotentialRoute(m_originCityOwner, m_originCityID, cityOwner, cityID);
-	else
-		routeYields = tradeManager:CalculateDestinationYieldsFromPotentialRoute(m_originCityOwner, m_originCityID, cityOwner, cityID);
-	end
-
-	-- From path
-	local pathYields = {};
-	local bFromRouteBonus:boolean = false;
-	if (originCity) then
-		pathYields = tradeManager:CalculateOriginYieldsFromPath(m_originCityOwner, m_originCityID, cityOwner, cityID);
-	else
-		pathYields = tradeManager:CalculateDestinationYieldsFromPath(m_originCityOwner, m_originCityID, cityOwner, cityID);
-	end
-
-	-- From modifiers
-	local modifierYields = {};
-
-	if (originCity) then
-		modifierYields = tradeManager:CalculateOriginYieldsFromModifiers(m_originCityOwner, m_originCityID, cityOwner, cityID);
-	else
-		modifierYields = tradeManager:CalculateDestinationYieldsFromModifiers(m_originCityOwner, m_originCityID, cityOwner, cityID);
-	end
-
-	local yieldSourceText = {};
-	local yieldFromRouteBonus = {};
-
-	-- Add the yields together and return the result
-	local yieldIndex;
-	local yieldCount = #routeYields;
-
-	for yieldIndex=1, yieldCount, 1 do
-
-		local yieldInfo = GameInfo.Yields[yieldIndex - 1];
-
-		local sourceText = "";
-
-		local bFromRouteBonus = false;
-
-		if yieldInfo ~= nil then
-			local routeValue = routeYields[yieldIndex];
-			if (routeValue > 0) then
-				if (sourceText ~= "") then
-					sourceText = sourceText .. "[NEWLINE]";
-				end
-				sourceText = sourceText .. Locale.Lookup("LOC_ROUTECHOOSER_YIELD_SOURCE_DISTRICTS", routeValue, yieldInfo.IconString, yieldInfo.Name, city:GetName());
-			end
-
-			local pathValue = pathYields[yieldIndex];
-			if (pathValue > 0) then
-				bFromRouteBonus = true;
-				if (sourceText ~= "") then
-					sourceText = sourceText .. "[NEWLINE]";
-				end
-				sourceText = sourceText .. Locale.Lookup("LOC_ROUTECHOOSER_YIELD_SOURCE_TRADING_POSTS", pathValue, yieldInfo.IconString, yieldInfo.Name);
-			end
-
-			local modifierValue = modifierYields[yieldIndex];
-			if (modifierValue > 0) then
-				if (sourceText ~= "") then
-					sourceText = sourceText .. "[NEWLINE]";
-				end
-				sourceText = sourceText .. Locale.Lookup("LOC_ROUTECHOOSER_YIELD_SOURCE_BONUSES", modifierValue, yieldInfo.IconString, yieldInfo.Name);
-			end
-
-			-- Put the total into routeYields
-			routeYields[yieldIndex] = routeValue + pathValue + modifierValue;
-
-			-- Put the local results into the return tables
-			yieldSourceText[yieldIndex] =sourceText;
-			yieldFromRouteBonus[yieldIndex] = bFromRouteBonus;
-		end
-	end
-
-	return routeYields, yieldSourceText, yieldFromRouteBonus;
-end
-
--- ===========================================================================
-function GetReligiousPressureForCity(religionIndex:number, destinationCity:table, forOriginCity:boolean)
-	local pressureValue = 0;
-	local pressureIconString = "";
-	local cityName = "";
-	local tradeManager = Game.GetTradeManager();
-
-	local originCity = GetOriginCity();
-	if originCity == nil or destinationCity == nil then
-		return 0, "";
-	end
-
-	if (forOriginCity) then
-		pressureValue = tradeManager:CalculateOriginReligiousPressureFromPotentialRoute(originCity:GetOwner(), originCity:GetID(), destinationCity:GetOwner(), destinationCity:GetID(), religionIndex);
-		pressureIconString = "[ICON_PressureLeft]";
-		cityName = destinationCity:GetName();
-	else
-		pressureValue = tradeManager:CalculateDestinationReligiousPressureFromPotentialRoute(originCity:GetOwner(), originCity:GetID(), destinationCity:GetOwner(), destinationCity:GetID(), religionIndex);
-		pressureIconString = "[ICON_PressureRight]";
-		cityName = originCity:GetName();
-	end
-	local sourceText = Locale.Lookup("LOC_ROUTECHOOSER_RELIGIOUS_PRESSURE_SOURCE_MAJORITY_RELIGION", pressureValue, pressureIconString, Game.GetReligion():GetName(religionIndex), cityName);
-	return pressureValue, sourceText;
 end
 
 -- ===========================================================================

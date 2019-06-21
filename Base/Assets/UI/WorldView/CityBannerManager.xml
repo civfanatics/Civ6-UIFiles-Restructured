@@ -44,9 +44,10 @@
 
 					<Container				ID="CityNameContainer"					Anchor="L,C"	Size="50,34">
 						<Stack					ID="CityNameStack"							Anchor="C,C"	StackGrowth="Right" Padding="2" >
-							<Label				ID="TradingPostIcon"						Anchor="R,C"	Offset="0,2"	String="[ICON_TradingPost]" Hidden="1">
-								<Label			ID="TradingPostDisabledIcon"		Anchor="C,C"	String="[ICON_Exclamation]" Hidden="1"/>
-							</Label>
+              <Container Size="auto,auto" Anchor="L,C" Offset="0,2">
+                <Label			ID="TradingPostIcon"						Anchor="C,C"	String="[ICON_TradingPost]" Hidden="1"/>
+                <Label			ID="TradingPostDisabledIcon"		Anchor="C,C"	String="[ICON_Exclamation]" Hidden="1"/>
+              </Container>
               <Label				ID="CityUnderSiegeIcon"					Anchor="L,C"	Style="FontNormal20" String="[ICON_UnderSiege]" ConsumeMouse="1" ToolTip="LOC_HUD_REPORTS_STATUS_UNDER_SEIGE"/>
               <Label				ID="CityOccupiedIcon"	          Anchor="L,C"	Style="FontNormal20" String="[ICON_Occupied]" ConsumeMouse="1" ToolTip="LOC_HUD_CITY_GROWTH_OCCUPIED"/>
               <Label				ID="CityHousingInsufficientIcon"	  Anchor="L,C"	Style="FontNormal20" String="[ICON_HousingInsufficient]"/>
@@ -139,9 +140,10 @@
             
 					<Container				ID="CityNameContainer"	          Anchor ="L,C" Size="50,34">
 						<Stack					ID="CityNameStack"			          StackGrowth="Right" Padding="2" Anchor="C,C" >
-							<Label				ID="TradingPostIcon"							Anchor="R,C" Offset="0,2"	String="[ICON_TradingPost]" Hidden="1">
-								<Label			ID="TradingPostDisabledIcon"			Anchor="C,C"	String="[ICON_Exclamation]" Hidden="1"/>
-							</Label>
+              <Container Size="auto,auto" Anchor="L,C" Offset="0,2">
+                <Label			ID="TradingPostIcon"						Anchor="C,C"	String="[ICON_TradingPost]" Hidden="1"/>
+                <Label			ID="TradingPostDisabledIcon"		Anchor="C,C"	String="[ICON_Exclamation]" Hidden="1" debug="*"/>
+              </Container>
               <Label				ID="CityUnderSiegeIcon"	          Anchor="L,C"		Style="FontNormal20" String="[ICON_UnderSiege]" ConsumeMouse="1" ToolTip="LOC_HUD_REPORTS_STATUS_UNDER_SEIGE"/>
               <Label				ID="CityOccupiedIcon"	            Anchor="L,C"	Style="FontNormal20" String="[ICON_Occupied]" ConsumeMouse="1" ToolTip="LOC_HUD_CITY_GROWTH_OCCUPIED"/>
               <Label				ID="CityQuestIcon"								Anchor="L,C"		Style="FontNormal20"/>

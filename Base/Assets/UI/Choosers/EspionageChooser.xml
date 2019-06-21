@@ -48,7 +48,7 @@
     <Button					ID="CloseButton"				Anchor="L,T"	Offset="265,2" Style="CloseButtonSmall"/>
 
     <!-- Destination Panel -->
-    <ScrollPanel		ID="DestinationPanel"	Anchor="L,B" Offset="18,0" Size="parent-22,parent-135" Vertical="1" AutoScrollBar="0">
+    <ScrollPanel		ID="DestinationPanel"	Anchor="L,B" Offset="18,0" Size="parent-22,parent-135" Vertical="1" AutoScrollBar="0" FullClip="1">
       <ScrollBar    Anchor="L,C" Size="11,parent" AnchorSide="O,I" Offset="4,0"	Style="ScrollVerticalBar" />
       <Stack				ID="DestinationStack" StackGrowth="Bottom" StackPadding="2" />
     </ScrollPanel>
@@ -60,7 +60,7 @@
       </Grid>
 
       <!-- MissionStack -->
-      <ScrollPanel 		ID="MissionScrollPanel" Anchor="L,B"	Offset="18,0" Size="parent-22,parent-135" Vertical="1" AutoScrollBar="0" ConsumeMouse="1">
+      <ScrollPanel 		ID="MissionScrollPanel" Anchor="L,B"	Offset="18,0" Size="parent-22,parent-135" Vertical="1" AutoScrollBar="0" ConsumeMouse="1" FullClip="1">
         <ScrollBar    Anchor="L,C" Size="11,parent" AnchorSide="O,I" Offset="4,0"	Style="ScrollVerticalBar" />
         <Stack				ID="MissionStack" StackGrowth="Bottom" StackPadding="2" />
       </ScrollPanel>

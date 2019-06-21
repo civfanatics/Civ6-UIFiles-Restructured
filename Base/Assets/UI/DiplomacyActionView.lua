@@ -2630,7 +2630,10 @@ function OnTalkToLeader( playerID : number )
 end
 
 -- ===========================================================================
-function HandleESC()
+--	Will close whatever has focus; if this is a conversation or dialog they
+--	will receive the close action otherwise the screen itself closes.
+-- ===========================================================================
+function CloseFocusedState()
 	if m_PopupDialog:IsOpen() then
 		m_PopupDialog:Close();
 		return;
@@ -2655,9 +2658,10 @@ function HandleESC()
 	end
 end
 
+-- ===========================================================================
 function HandleRMB()
 	if (ms_currentViewMode == CINEMA_MODE and Controls.BlackFadeAnim:IsStopped()) then
-		HandleESC();
+		CloseFocusedState();
 	end
 end
 
@@ -2667,7 +2671,7 @@ end
 --	If this context is visible, it will get a crack at the input.
 -- ===========================================================================
 function KeyHandler( key:number )
-	if (key == Keys.VK_ESCAPE) then HandleESC(); return true; end
+	if (key == Keys.VK_ESCAPE) then CloseFocusedState(); return true; end
 	return false;
 end
 
@@ -2769,9 +2773,18 @@ function ResetPlayerPanel()
 end
 
 -- ===========================================================================
+--	Guarantee close!
+-- ===========================================================================
 function Close()
 
 	print("Closing Diplomacy Action View. m_eventID: "..tostring(m_eventID));
+
+	-- If a popup is showing, close it.
+	if m_PopupDialog:IsOpen() then
+		UI.DataError("Closing DiplomacyActionView but it's popup dialog was open.");
+		m_PopupDialog:Close();
+	end
+
 	UninitializeView();
 	LuaEvents.DiploScene_SceneClosed();
 	
@@ -2811,7 +2824,7 @@ end
 -- ===========================================================================
 function OnClose()
 	-- Act like they pressed ESC so we clean up correctly
-	HandleESC();
+	CloseFocusedState();
 end
 
 -- ===========================================================================
@@ -2879,7 +2892,7 @@ function OnForceClose()
 			-- Unless we were in the deal mode, then just close, the deal view will close too.
 			Close();
 		else
-			HandleESC();
+			CloseFocusedState();
 		end
 	end
 end
@@ -2904,17 +2917,16 @@ function OnPlayerDefeat( player, defeat, eventID)
 	if (localPlayer and localPlayer >= 0) then		-- Check to see if there is any local player
 		-- Was it the local player?
 		if (localPlayer == player) then
-			OnForceClose();
+			Close();
 		end
 	end
 end
 
 -- ===========================================================================
 function OnTeamVictory(team, victory, eventID)
-
 	local localPlayer = Game.GetLocalPlayer();
 	if (localPlayer and localPlayer >= 0) then		-- Check to see if there is any local player
-		OnForceClose();
+		Close();
 	end
 end
 

@@ -61,6 +61,15 @@ function OnActivateButtonClicked()
 	end
 
     UI.SetExitOnClose(false);
+
+	-- In PlayByCloud, we should trigger another cloud notification check now.  
+	-- This will ensure the player gets a notification for the next cloud match so they can daisy chain all their turns quickly.
+	if(GameConfiguration.IsPlayByCloud()) then
+		local kandoConnected = FiraxisLive.IsFiraxisLiveLoggedIn();
+		if(kandoConnected) then
+			FiraxisLive.CheckForCloudNotifications();
+		end
+	end
 end
 
 -- ===========================================================================

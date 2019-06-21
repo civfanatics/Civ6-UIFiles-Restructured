@@ -180,6 +180,54 @@ function GetColorPercentString( multiplier:number )
 end
 
 -- ===========================================================================
+--  Returns a Civ-specific format for date and time, given a total number
+-- of seconds (unmodulated), and whether or not the time is approximate
+-- ===========================================================================
+function FormatTimeRemaining( timeRemaining:number, bIsConcrete:boolean )
+	-- Format the time remaining string based on how much time we have left.
+	-- We manually floor our values using floor and % operations to prevent the localization system 
+	-- from rounding the values up.
+	local secs = timeRemaining % 60;
+	local mins = timeRemaining / 60;
+	local hours = timeRemaining / 3600;
+	local days = timeRemaining / 86400;
+	if(days >= 1) then
+		-- Days remaining
+		days = math.floor(days);
+		hours = hours % 24; -- cap hours
+		if(bIsConcrete) then
+			return Locale.Lookup("LOC_KEY_TIME_DAYS_HOURS", days, hours);
+		else
+			return Locale.Lookup("LOC_KEY_EST_TIME_DAYS_HOURS", days, hours);
+		end
+	elseif(hours >= 1) then
+		-- hours left
+		hours = math.floor(hours);
+		mins = mins % 60; -- cap mins
+		if(bIsConcrete) then
+			return Locale.Lookup("LOC_KEY_TIME_HOURS_MINUTES", hours, mins);
+		else
+			return Locale.Lookup("LOC_KEY_EST_TIME_HOURS_MINUTES", hours, mins);
+		end
+	elseif(mins >= 1) then
+		-- mins left
+		mins = math.floor(mins);
+		if(bIsConcrete) then
+			return Locale.Lookup("LOC_KEY_TIME_MINS_SECONDS", mins, secs);
+		else
+			return Locale.Lookup("LOC_KEY_EST_TIME_MINS_SECONDS", mins, secs);
+		end
+	else
+		-- secs left
+		if(bIsConcrete) then
+			return Locale.Lookup("LOC_KEY_TIME_SECONDS", secs);
+		else
+			return Locale.Lookup("LOC_KEY_EST_TIME_SECONDS", secs);
+		end
+	end
+end
+
+-- ===========================================================================
 --	Obtain the stats for a unit, given it's hash or type string
 --	RETURNS: nil if not found, or table o' stats
 -- ===========================================================================

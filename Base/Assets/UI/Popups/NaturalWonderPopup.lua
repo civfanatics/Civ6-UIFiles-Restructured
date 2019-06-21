@@ -247,7 +247,8 @@ function Initialize()
 
 	ContextPtr:SetInputHandler( OnInputHander, true );
 	Controls.Close:RegisterCallback(Mouse.eLClick, OnClose);
-	
+	Controls.ScreenConsumer:RegisterCallback(Mouse.eRClick, OnClose);
+
 	Events.NaturalWonderRevealed.Add( OnNaturalWonderRevealed );
 	Events.LocalPlayerTurnEnd.Add( OnLocalPlayerTurnEnd );	
 	Events.CameraAnimationStopped.Add( OnCameraAnimationStopped );

@@ -218,6 +218,12 @@ function GetPlayerParameterError(playerId)
 	end
 end
 
+function GetGameParametersError()
+	if(g_GameParameters) then
+		return g_GameParameters.Error or g_GameParameters.Stalled and "Stalled";
+	end
+end
+
 function CanShowLeaderAbility(playerInfo : table)
 	if (playerInfo.LeaderAbilityName and playerInfo.LeaderAbilityDescription and playerInfo.LeaderAbilityIcon) then
 		return playerInfo.LeaderAbilityName ~= "NONE" and playerInfo.LeaderAbilityDescription ~= "NONE" and playerInfo.LeaderAbilityIcon ~= "NONE";
@@ -875,38 +881,62 @@ end
 -- When this happens, simply mark that we need to do an additional refresh afterwards.
 g_Refreshing = false;
 g_NeedsAdditionalRefresh = false;
+g_RefreshCounter = 0;
+MAX_REFRESH_DEPTH = 10;
+
 function GameSetup_RefreshParameters()
 	if(g_Refreshing) then
 		SetupParameters_Log("An additional refresh was requested!");
 		g_NeedsAdditionalRefresh = true;
 	else
 		g_Refreshing = true;
+		g_RefreshCounter = g_RefreshCounter + 1;
 		g_NeedsAdditionalRefresh = false;
 
-		SetupParameters_Log("Refreshing Game parameters");
-		if(g_GameParameters == nil) then
-			BuildGameSetup();
-		else
-			g_GameParameters:Refresh();
-		end
-		
-		SetupParameters_Log("Refreshing Player parameters");
-		RefreshPlayerParameters();
-		
-		g_Refreshing = false;
-		SetupParameters_Log("Finished Refreshing");
+		-- Hang protection.
+		-- If we loop too many times, just mark any parameters that still need to be written 
+		-- as errors and bail.
+		if(g_RefreshCounter > MAX_REFRESH_DEPTH) then
+			SetupParameters_Log("Refreshed too many times! Setting error state and skipping to prevent hang.");
+			g_RefreshCounter = 0;
+			g_Refreshing = false;	
+			g_GameParameters.Stalled = true;
 
-		if(g_NeedsAdditionalRefresh) then
-			SetupParameters_Log("Refreshing again, to be sure.")
-			return GameSetup_RefreshParameters();
-		else
-			SetupParameters_Log("Visualizing parameters"); 
 			g_GameParameters:UpdateVisualization();
 			VisualizePlayerParameters();
-		end
 
-		if(UI_PostRefreshParameters) then
-			UI_PostRefreshParameters();
+			if(UI_PostRefreshParameters) then
+				UI_PostRefreshParameters();
+			end
+		else
+			SetupParameters_Log("Refreshing Game parameters");
+			if(g_GameParameters == nil) then
+				BuildGameSetup();
+			else
+				g_GameParameters:Refresh();
+			end
+		
+			SetupParameters_Log("Refreshing Player parameters");
+			RefreshPlayerParameters();
+		
+			g_GameParameters.Stalled = nil;
+			g_Refreshing = false;
+
+			if(g_NeedsAdditionalRefresh) then
+				SetupParameters_Log("Refreshing parameters again due to an intermediate request.")
+				return GameSetup_RefreshParameters();
+			else
+				SetupParameters_Log("Finished Refreshing");
+				SetupParameters_Log("Visualizing parameters"); 
+				g_RefreshCounter = 0;
+
+				g_GameParameters:UpdateVisualization();
+				VisualizePlayerParameters();
+
+				if(UI_PostRefreshParameters) then
+					UI_PostRefreshParameters();
+				end
+			end
 		end
 	end
 end

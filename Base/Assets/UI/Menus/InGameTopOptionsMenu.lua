@@ -313,6 +313,10 @@ function SetupButtons()
 					-- The restart mechanic uses the game configuration prior to the very beginning of the game.
 					-- This can be unexpected if the user changed the player types post launch. 
 					or (GameConfiguration.IsHotseat() and not GameConfiguration.IsSavedGame());
+					
+	-- Restarting in worldbuilder can cause a bunch of problems, disabling for now.
+	bCanRestart = bCanRestart and not bWorldBuilder;
+
 	local bIsLocalPlayersTurn = IsLocalPlayerTurnActive();
 
 	if(bWorldBuilder) then
@@ -327,10 +331,7 @@ function SetupButtons()
 	Controls.SaveGameButton:SetDisabled( not bCanSave );
 	Controls.LoadGameButton:SetDisabled( not bCanLoad );
 	Controls.RetireButton:SetDisabled( not bIsLocalPlayersTurn );
-
-	-- Hide the restart button until functionality is implemented and stable.
-	Controls.RestartGameButton:SetHide(true); -- m_isSimpleMenu or bIsAutomation or bIsMultiplayer);
-
+	
 	Controls.QuickSaveButton:SetHide(m_isSimpleMenu or bIsAutomation or bWorldBuilder);
 	Controls.SaveGameButton:SetHide(m_isSimpleMenu or bIsAutomation);			
 	Controls.LoadGameButton:SetHide(m_isSimpleMenu or bIsAutomation or bIsMultiplayer or bWorldBuilder);
@@ -658,7 +659,6 @@ function Initialize()
 	Controls.ReturnButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 	Controls.SaveGameButton:RegisterCallback( Mouse.eLClick, OnSaveGame );
 	Controls.SaveGameButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
-	Controls.RestartGameButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 	Controls.PauseWindowClose:RegisterEndCallback( ShutdownAfterClose );
 
 	LuaEvents.InGame_OpenInGameOptionsMenu.Add( OnOpenInGameOptionsMenu );

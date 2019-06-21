@@ -29,4 +29,21 @@
 			
 		</WorldAnchor>
 	</Instance>
+
+	<Instance			Name="RecommendationInstance">
+		<Container	ID="Top"					Anchor="L,T" Size="auto,auto" >
+			<Image		ID="Icon"					Anchor="L,C" Icon="ICON_THUMBS_UP" Size="22,22" />
+			<Label		ID="Title"				Anchor="L,C" Offset="22,0"	Style="FontNormal12" Color="0,0,0,200" WrapWidth="160" MinSize="160,13" />
+			<Label		ID="Explanation"	Anchor="L,C" Offset="170,0" Style="FontNormal12" Color="0,0,0,200" WrapWidth="300"/>
+		</Container>
+	</Instance>
+	
+	<ToolTipType	Name="SettlerRecommendationTooltip" >
+		<Grid				ID="BG" Size="auto,auto" SliceCorner="10,10" SliceTextureSize="33,32" Texture="Controls_Tooltip" InnerPadding="25,25" InnerOffset="10,10" >
+			<Image		ID="LeaderIcon"						Offset="0,0" Size="64,64" Texture="Advisors64"/>
+			<Label															Offset="60,24" Color="0,0,0,255" Style="FontNormal16" String="LOC_HUD_ADVISOR_SAYS" />
+			<Stack		ID="RecommendationStack"	Offset="0,60" StackGrowth="Bottom" StackPadding="-4" />
+		</Grid>
+	</ToolTipType>
+	
 </Context>

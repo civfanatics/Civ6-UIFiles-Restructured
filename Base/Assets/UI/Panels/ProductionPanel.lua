@@ -101,6 +101,9 @@ local m_hasProductionToShow:boolean = false;
 local m_PlayerScrollPositions:table = {};
 local m_CurrentListMode:number = -1;
 
+-- The city whose production we're currently modifying
+local m_pCity:table = nil;
+
 -- ===========================================================================
 function toint(n)
     local s = tostring(n)
@@ -574,7 +577,14 @@ end
 -- ===========================================================================
 --	Open the panel
 -- ===========================================================================
-function Open()	
+function Open()
+	-- Update the selected city before anything else happens so everything updates properly
+	m_pCity = UI.GetHeadSelectedCity();
+	if m_pCity == nil then
+		UI.DataError("Attempted to open the production panel without a city selected.");
+		return;
+	end
+
 	if ContextPtr:IsHidden() then					-- The ContextPtr is only hidden as a callback to the finished SlideIn animation, so this check should be sufficient to ensure that we are not animating.
 		-- Sets up proper selection AND the associated lens so it's not stuck "on".
 		UI.PlaySound("Production_Panel_Open");
@@ -582,7 +592,6 @@ function Open()
 		UI.SetInterfaceMode(InterfaceModeTypes.SELECTION);
 		Refresh();
 		ContextPtr:SetHide(false);
-		Controls.ProductionListScroll:SetScrollValue(GetScrollPosition(LISTMODE.PRODUCTION));
 
 		-- Size the panel to the maximum Y value of the expanded content	
 		Controls.AlphaIn:SetToBeginning();
@@ -2222,7 +2231,11 @@ end
 function OnNotificationPanelChooseProduction()
 	if ContextPtr:IsHidden() then
 		Open();
-		m_tabs.SelectTab(m_productionTab);
+		if GetQueueSize(m_pCity) > 1 or UserConfiguration.IsAutoProdQueueEnabled() then
+			m_tabs.SelectTab(m_queueTab);
+		else
+			m_tabs.SelectTab(m_productionTab);
+		end
 	end
 end
 
@@ -2275,7 +2288,11 @@ end
 function OnCityBannerManagerProductionToggle()
 	if(ContextPtr:IsHidden()) then
 		Open();
-		m_tabs.SelectTab(m_productionTab);
+		if GetQueueSize(m_pCity) > 1 or UserConfiguration.IsAutoProdQueueEnabled() then
+			m_tabs.SelectTab(m_queueTab);
+		else
+			m_tabs.SelectTab(m_productionTab);
+		end
 	else
 		Close();
 	end
@@ -2287,7 +2304,11 @@ end
 -- ===========================================================================
 function OnCityPanelProductionOpen()
 	Open();
-	m_tabs.SelectTab(m_productionTab);
+	if GetQueueSize(m_pCity) > 1 or UserConfiguration.IsAutoProdQueueEnabled() then
+		m_tabs.SelectTab(m_queueTab);
+	else
+		m_tabs.SelectTab(m_productionTab);
+	end
 end
 
 -- ===========================================================================
@@ -2411,6 +2432,21 @@ end
 --	UI Event
 -- ===========================================================================
 function OnShutdown()
+	LuaEvents.CityBannerManager_ProductionToggle.Remove( OnCityBannerManagerProductionToggle );
+	LuaEvents.CityPanel_ChooseProduction.Remove( OnCityPanelChooseProduction );
+	LuaEvents.CityPanel_ChoosePurchase.Remove( OnCityPanelChoosePurchase );
+	LuaEvents.CityPanel_ProductionClose.Remove( OnProductionClose );
+	LuaEvents.CityPanel_ProductionOpen.Remove( OnCityPanelProductionOpen );
+	LuaEvents.CityPanel_PurchaseGoldOpen.Remove( OnCityPanelPurchaseGoldOpen );
+	LuaEvents.CityPanel_PurchaseFaithOpen.Remove( OnCityPanelPurchaseFaithOpen );
+	LuaEvents.CityPanel_ProductionOpenForQueue.Remove( OnProductionOpenForQueue );	
+	LuaEvents.CityPanel_PurchasePlot.Remove( OnCityPanelPurchasePlot );
+	LuaEvents.GameDebug_Return.Remove( OnGameDebugReturn );
+	LuaEvents.NotificationPanel_ChooseProduction.Remove( OnNotificationPanelChooseProduction );
+	LuaEvents.StrageticView_MapPlacement_ProductionOpen.Remove( OnStrategicViewMapPlacementProductionOpen );
+	LuaEvents.Tutorial_ProductionOpen.Remove( OnTutorialProductionOpen );
+	LuaEvents.ProductionManager_SelectedIndexChanged.Remove( OnManagerSelectedIndexChanged );
+
 	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID,  "isHidden",		ContextPtr:IsHidden() );
 	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID,  "listMode",		m_CurrentListMode );	
 end

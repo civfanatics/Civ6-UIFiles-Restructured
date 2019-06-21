@@ -10,7 +10,6 @@ function GetMetPlayersAndUniqueLeaders()
 		if playerID ~= localPlayerID then
 			local playerMet:boolean = pDiplomacy:HasMet(playerID);
 			if playerMet then
-				local leaderName:string = PlayerConfigurations[playerID]:GetLeaderTypeName();
 				if (isUniqueLeader[playerID] == nil) then
 					isUniqueLeader[playerID] = true;
 				else

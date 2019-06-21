@@ -1,7 +1,4 @@
--- ===========================================================================
---	Notification Panel	
--- ===========================================================================
-
+-- Copyright 2017-2019, Firaxis Games
 include( "ToolTipHelper" );	
 include( "InstanceManager" );
 
@@ -118,6 +115,7 @@ function RegisterHandlers()
 	g_notificationHandlers[DEBUG_NOTIFICATION_TYPE]									= MakeDefaultHandlers();	--DEBUG
 	g_notificationHandlers[NotificationTypes.DEFAULT]								= MakeDefaultHandlers();	--DEFAULT
 	g_notificationHandlers[NotificationTypes.BARBARIANS_SIGHTED]                    = MakeDefaultHandlers();
+	g_notificationHandlers[NotificationTypes.NEW_BARBARIAN_CAMP]                    = MakeDefaultHandlers();
 	g_notificationHandlers[NotificationTypes.CAPITAL_LOST]							= MakeDefaultHandlers();
 	g_notificationHandlers[NotificationTypes.CHOOSE_ARTIFACT_PLAYER]				= MakeDefaultHandlers();
 	g_notificationHandlers[NotificationTypes.CHOOSE_BELIEF]							= MakeDefaultHandlers();
@@ -200,7 +198,7 @@ function RegisterHandlers()
 	g_notificationHandlers[NotificationTypes.CHOOSE_BELIEF].Activate				= OnChooseReligionActivate;
 	g_notificationHandlers[NotificationTypes.CHOOSE_CITY_PRODUCTION].Activate		= OnChooseCityProductionActivate;	
 	g_notificationHandlers[NotificationTypes.CHOOSE_CIVIC].Activate					= OnChooseCivicActivate;	
-	g_notificationHandlers[NotificationTypes.CHOOSE_PANTHEON].Activate				= OnChooseReligionActivate;	
+	g_notificationHandlers[NotificationTypes.CHOOSE_PANTHEON].Activate				= OnChoosePantheonActivate;	
 	g_notificationHandlers[NotificationTypes.CHOOSE_RELIGION].Activate				= OnChooseReligionActivate;	
 	g_notificationHandlers[NotificationTypes.CHOOSE_TECH].Activate					= OnChooseTechActivate;	
 	g_notificationHandlers[NotificationTypes.CITY_RANGE_ATTACK].Activate			= OnCityRangeAttack;
@@ -240,6 +238,7 @@ function RegisterHandlers()
 	g_notificationHandlers[NotificationTypes.TREASURY_BANKRUPT].AddSound   	        = "ALERT_NEGATIVE";	
 	g_notificationHandlers[NotificationTypes.HOUSING_PREVENTING_GROWTH].AddSound    = "ALERT_NEUTRAL";	
 	g_notificationHandlers[NotificationTypes.BARBARIANS_SIGHTED].AddSound           = "ALERT_NEGATIVE";
+	g_notificationHandlers[NotificationTypes.NEW_BARBARIAN_CAMP].AddSound           = "ALERT_NEGATIVE";
 	g_notificationHandlers[NotificationTypes.CAPITAL_LOST].AddSound					= "ALERT_NEUTRAL";
 	g_notificationHandlers[NotificationTypes.TRADE_ROUTE_PLUNDERED].AddSound        = "ALERT_NEGATIVE";
 	g_notificationHandlers[NotificationTypes.CITY_BESIEGED_BY_OTHER_PLAYER].AddSound= "ALERT_NEGATIVE";
@@ -1291,6 +1290,15 @@ function OnConsiderRazeCityActivate( notificationEntry : NotificationType )
 end
 
 -- =======================================================================================
+-- Choose Pantheon Handlers
+-- =======================================================================================
+function OnChoosePantheonActivate( notificationEntry : NotificationType )
+	if (notificationEntry ~= nil and notificationEntry.m_PlayerID == Game.GetLocalPlayer()) then
+        LuaEvents.NotificationPanel_OpenPantheonChooser();
+	end
+end
+
+-- =======================================================================================
 -- Choose Religion Handlers
 -- =======================================================================================
 function OnChooseReligionActivate( notificationEntry : NotificationType )
@@ -1745,6 +1753,19 @@ end
 --	UI Event
 -- ===========================================================================
 function OnShutdown()
+	Events.NotificationAdded.Remove(				OnNotificationAdded );
+	Events.NotificationDismissed.Remove(			OnNotificationDismissed );
+	Events.NotificationRefreshRequested.Remove(	OnNotificationRefreshRequested );
+	Events.NotificationActivated.Remove(			OnNotificationActivated );
+
+	Events.UnitKilledInCombat.Remove( OnUnitKilledInCombat );
+	Events.SystemUpdateUI.Remove( OnUpdateUI );
+	Events.PhaseBegin.Remove( OnPhaseBegin );
+	Events.LocalPlayerChanged.Remove( OnLocalPlayerChanged );
+	Events.InterfaceModeChanged.Remove(OnInterfaceModeChanged );	   
+	Events.LoadGameViewStateDone.Remove( OnLoadGameViewStateDone );
+
+	LuaEvents.ActionPanel_ActivateNotification.Remove( OnLuaActivateNotification );
 
 	ClearNotifications();
 	

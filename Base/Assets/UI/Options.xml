@@ -375,9 +375,21 @@
 								<PullDown ID="EdgeScrollPullDown" Style="PullDownBlue" Anchor="R,T" ScrollThreshold="400" Size="400,24" Offset="0,0" SpaceForScroll="0"/>
 								<Label Anchor="L,C" Style="ShellOptionText" WrapWidth="350" String="LOC_OPTIONS_INTERFACE_EDGE_SCROLL"/>
 							</Stack>
+              <Stack Anchor="R,T" StackGrowth="Left" Padding="5">
+                <PullDown ID="AutoProdQueuePullDown" Style="PullDownBlue" Anchor="R,T" ScrollThreshold="400" Size="400,24" Offset="0,0" SpaceForScroll="0"/>
+                <Label Anchor="L,C" Style="ShellOptionText" WrapWidth="350" String="LOC_OPTIONS_INTERFACE_OPEN_TO_PROD_QUEUE"/>
+              </Stack>
+              <Stack Anchor="R,T" StackGrowth="Left" Padding="5">
+                <PullDown ID="ReplaceDragWithClickPullDown" Style="PullDownBlue" Anchor="R,T" ScrollThreshold="400" Size="400,24" Offset="0,0" SpaceForScroll="0"/>
+                <Label Anchor="L,C" Style="ShellOptionText" WrapWidth="350" String="LOC_OPTIONS_INTERFACE_FORCE_CLICK_TO_DRAG" ToolTip="LOC_OPTIONS_INTERFACE_FORCE_CLICK_TO_DRAG_TT"/>
+              </Stack>
 							<Stack Anchor="R,T" StackGrowth="Left" Padding="5">
 								<PullDown ID="UnitCyclingPullDown" Style="PullDownBlue" Anchor="R,T" ScrollThreshold="400" Size="400,24" Offset="0,0" SpaceForScroll="0"/>
 								<Label Anchor="L,C" Style="ShellOptionText" WrapWidth="350" String="LOC_OPTIONS_AUTO_UNIT_CYCLING"/>
+							</Stack>
+							<Stack Anchor="R,T" StackGrowth="Left" Padding="5">
+								<PullDown ID="RibbonStatsPullDown" Style="PullDownBlue" Anchor="R,T" ScrollThreshold="400" Size="400,24" Offset="0,0" SpaceForScroll="0"/>
+								<Label Anchor="L,C" Style="ShellOptionText" WrapWidth="350" String="LOC_OPTIONS_RIBBON_STATS_LABEL"/>
 							</Stack>
 							<Stack Anchor="R,T" StackGrowth="Right" Padding="5">
 								<Label  Style="ShellOptionText" WrapWidth="350" Anchor="C,C" String="LOC_OPTIONS_INTERFACE_MINIMAP_SIZE"/>
@@ -416,6 +428,10 @@
 							<Stack Anchor="R,T" StackGrowth="Left" Padding="5">
 								<PullDown ID="ColorblindAdaptation" Style="PullDownBlue" ScrollThreshold="400" Size="400,24" Offset="0,0" SpaceForScroll="0"/>
 								<Label Anchor="L,C" Style="ShellOptionText" WrapWidth="350" String="LOC_OPTIONS_INTERFACE_COLOR_BLINDNESS_ADAPTATION"/>
+							</Stack>
+							<Stack Anchor="R,T" StackGrowth="Left" Padding="5">
+								<PullDown ID="RGBControl" Style="PullDownBlue" ScrollThreshold="400" Size="400,24" Offset="0,0" SpaceForScroll="0"/>
+								<Label Anchor="L,C" Style="ShellOptionText" WrapWidth="350" String="LOC_OPTIONS_INTERFACE_LIGHTING" ToolTip="LOC_OPTIONS_INTERFACE_LIGHTING_TOOLTIP"/>
 							</Stack>
 						</Stack>
 					</Container>

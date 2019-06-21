@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Context>
-	<Container ID="MapProxy" Size="parent,parent" />
+	<Container ID="MapProxy" Size="parent,parent" ConsumeMouse="1"/>
 	<Container ID="EdgeGradient" Size="parent,parent" >
 		<Image	Anchor="R,B" Size="500,500"   Texture="Controls_Vignette" Color="0,0,0,100" />
 		<Image	Anchor="R,T" Size="500,500"   Texture="Controls_Vignette" Color="0,0,0,100"  FlipY="1"/>

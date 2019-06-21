@@ -6,8 +6,9 @@
 
 include( "InstanceManager" );
 include( "SupportFunctions" );
-include("Civ6Common"); -- IsTutorialRunning()
-include("PopupDialog");
+include( "Civ6Common" ); -- IsTutorialRunning()
+include( "PopupDialog" );
+include( "GameCapabilities" );
 
 -- ===========================================================================
 --	CONSTANTS
@@ -340,6 +341,12 @@ end
 -- Set the era rotation and tooltip.
 -- ===========================================================================
 function RealizeEraIndicator()
+
+	if HasCapability("CAPABILITY_ERAS")==false then
+		Controls.EraIndicator:SetHide( true );
+		return;
+	end
+
 	local displayEra :number = 1;	
 	local pPlayer = Players[Game.GetLocalPlayer()];
 	if pPlayer ~= nil then
@@ -1246,48 +1253,7 @@ function OnTurnTimerUpdated(elapsedTime :number, maxTurnTime :number)
 					UI.PlaySound("Play_MP_Game_Launch_Timer_Beep");
 				end
 			end
-
-			-- Format the time remaining string based on how much time we have left.
-			-- We manually floor our values using floor and % operations to prevent the localization system 
-			-- from rounding the values up.
-			local secs = timeRemaining % 60;
-			local mins = timeRemaining / 60;
-			local hours = timeRemaining / 3600;
-			local days = timeRemaining / 86400;
-			if(days >= 1) then
-				-- Days remaining
-				days = math.floor(days);
-				hours = hours % 24; -- cap hours
-				if(pPlayer:IsTurnActive()) then
-					Controls.TurnTimerLabel:LocalizeAndSetText("LOC_KEY_TIME_DAYS_HOURS", days, hours);
-				else
-					Controls.TurnTimerLabel:LocalizeAndSetText("LOC_KEY_EST_TIME_DAYS_HOURS", days, hours);
-				end
-			elseif(hours >= 1) then
-				-- hours left
-				hours = math.floor(hours);
-				mins = mins % 60; -- cap mins
-				if(pPlayer:IsTurnActive()) then
-					Controls.TurnTimerLabel:LocalizeAndSetText("LOC_KEY_TIME_HOURS_MINUTES", hours, mins);
-				else
-					Controls.TurnTimerLabel:LocalizeAndSetText("LOC_KEY_EST_TIME_HOURS_MINUTES", hours, mins);
-				end
-			elseif(mins >= 1) then
-				-- mins left
-				mins = math.floor(mins);
-				if(pPlayer:IsTurnActive()) then
-					Controls.TurnTimerLabel:LocalizeAndSetText("LOC_KEY_TIME_MINS_SECONDS", mins, secs);
-				else
-					Controls.TurnTimerLabel:LocalizeAndSetText("LOC_KEY_EST_TIME_MINS_SECONDS", mins, secs);
-				end
-			else
-				-- secs left
-				if(pPlayer:IsTurnActive()) then
-					Controls.TurnTimerLabel:LocalizeAndSetText("LOC_KEY_TIME_SECONDS", secs);
-				else
-					Controls.TurnTimerLabel:LocalizeAndSetText("LOC_KEY_EST_TIME_SECONDS", secs);
-				end
-			end
+			Controls.TurnTimerLabel:SetText(FormatTimeRemaining(timeRemaining, pPlayer:IsTurnActive()));
 		else
 			Controls.TurnTimerLabel:LocalizeAndSetText("-");
 		end
@@ -1312,7 +1278,11 @@ end
 -- ===========================================================================
 function LateInitialize()
 	AllocateUI();
-	PopulateEraData();
+
+	-- Only init the rotating era pointer if this game mode supports eras.
+	if HasCapability("CAPABILITY_ERAS") then
+		PopulateEraData();
+	end
 
 	-- It is possible to start with automation already active, test for that
 	if Automation.IsActive() then

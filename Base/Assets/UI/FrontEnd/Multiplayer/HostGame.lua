@@ -25,6 +25,31 @@ local m_lobbyModeName:string = MPLobbyTypes.STANDARD_INTERNET;
 local m_shellTabIM:table = InstanceManager:new("ShellTab", "TopControl", Controls.ShellTabs);
 local m_kPopupDialog:table;
 
+
+
+-- ===========================================================================
+-- Perform validation on setup parameters.
+-- ===========================================================================
+function UI_PostRefreshParameters()
+	-- Most of the options self-heal due to the setup parameter logic.
+	-- However, player options are allowed to be in an 'invalid' state for UI
+	-- This way, instead of hiding/preventing the user from selecting an invalid player
+	-- we can allow it, but display an error message explaining why it's invalid.
+
+	-- This is primarily used to present ownership errors and custom constraint errors.
+	Controls.SaveConfigButton:SetDisabled(false);
+	Controls.ConfirmButton:SetDisabled(false);
+	Controls.ConfirmButton:SetToolTipString(nil);
+
+	local game_err = GetGameParametersError();
+	if(game_err) then
+		Controls.SaveConfigButton:SetDisabled(true);
+		Controls.ConfirmButton:SetDisabled(true);
+		Controls.ConfirmButton:LocalizeAndSetToolTip("LOC_SETUP_PARAMETER_ERROR");
+
+	end
+end
+
 -- ===========================================================================
 --	Input Handler
 -- ===========================================================================

@@ -168,7 +168,7 @@ function OnShow()
 	Controls.AutoCheck:SetSelected(false);
 	Controls.CloudCheck:SetSelected(false);
 
-	local cloudEnabled = UI.AreCloudSavesEnabled() and not GameConfiguration.IsAnyMultiplayer() and g_FileType ~= SaveFileTypes.GAME_CONFIGURATION;
+	local cloudEnabled = UI.AreCloudSavesEnabled() and not GameConfiguration.IsAnyMultiplayer() and g_FileType ~= SaveFileTypes.GAME_CONFIGURATION and g_GameType ~= SaveTypes.WORLDBUILDER_MAP and g_GameType ~= SaveTypes.TILED_MAP;
 	local cloudServicesEnabled,cloudServicesResult = UI.AreCloudSavesEnabled("LOAD");
 
 	-- we want to show this in all cases
@@ -209,6 +209,12 @@ function OnShow()
 				Controls.CloudCheck:LocalizeAndSetToolTip("LOC_CLOUD_SAVES_SERVICE_NOT_CONNECTED");
 			end
 			Controls.CloudCheck:SetDisabled(true);
+		end
+
+		if g_GameType == SaveTypes.WORLDBUILDER_MAP or g_GameType == SaveTypes.TILED_MAP then
+			Controls.CloudCheck:SetHide(true);
+		else
+			Controls.CloudCheck:SetHide(false);
 		end
 	end
 		
@@ -331,6 +337,7 @@ function OnCloudCheck( )
 		Controls.AutoCheck:SetSelected(g_ShowAutoSaves);
 	end
 
+	SetupDirectoryBrowsePulldown();
 	SetupFileList();
 end
 

@@ -128,7 +128,10 @@
         <Label ID="RouteLabel" Anchor="L,T" Offset="38,10" Style="FontFlair14" Color="190,190,190,255" SmallCaps="18" SmallCapsLeading="0" SmallCapsType="EveryWord" />
 
         <!-- Trading Post Indicator -->
-        <Label ID="TradingPostIndicator" Anchor="R,T" Offset="60,7" Style="FontNormal16" String="[Icon_TradingPost]"/>
+        <Stack Anchor="R,T" Offset="56,5" StackGrowth="Right" StackPadding="0">
+          <Image ID="RouteBonusIcon" Anchor="L,C" Size="22,22" Texture="TradeRouteBonus22" ToolTip="LOC_ROUTECHOOSER_BONUS_ICON_TOOLTIP"/>
+          <Label ID="TradingPostIndicator" Anchor="L,C" Style="FontNormal16" String="[Icon_TradingPost]"/>
+        </Stack>
 
         <!-- Route Distance -->
         <Stack ID="RouteDistanceStack" Anchor="R,T" Offset="12,4" StackGrowth="Right" StackPadding="2">
@@ -160,14 +163,17 @@
         <Image ID="DestinationCivArrow" Anchor="R,B" Size="20,19" Offset="46,18" Texture="TradeOverview_Benefactor"/>
           
         <!-- Resource Stack -->
-        <Stack ID="ResourceStack" Size="50,50" Offset="71,34" StackGrowth="Right" StackPadding="2"/>
+        <Stack Offset="71,34" StackGrowth="Right" StackPadding="1">
+          <Stack ID="ResourceStack" Size="50,50" StackGrowth="Right" StackPadding="1"/>
+          <!-- Religious Influence Indicator -->
+          <Container ID="ReligionPressureContainer" Size="48,46" Offset="0,0">
+            <Image ID="ReligionPressureIcon" Anchor="C,T" Size="22,22" Offset="0,0" Texture="Religions22" TextureOffset="22,0"/>
+            <Label ID="ReligionPressureValue" Anchor="C,B" Offset="0,8" Style="FontNormal16" GradientColor="White"/>
+          </Container>
+        </Stack>
+        
         <Label ID="NoBenefitsLabel" Anchor="C,C" Offset="0,15" Style="HalfScreenBody" Color="255,255,255,100" String="LOC_ROUTECHOOSER_NO_BENEFITS_FROM_ROUTE"/>
       
-        <!-- Religious Influence Indicator -->
-        <Container ID="ReligionPressureContainer" Anchor="R,T" Size="48,46" Offset="74,30">
-          <Image ID="ReligionPressureIcon" Anchor="L,C" Size="22,22" Offset="2,-1" Texture="Religions22" TextureOffset="22,0"/>
-          <Label Anchor="R,C" Size="30,30" Offset="2,0" String="[Icon_PressureUp]"/>
-        </Container>
       </GridButton>
     </Container>
   </Instance>

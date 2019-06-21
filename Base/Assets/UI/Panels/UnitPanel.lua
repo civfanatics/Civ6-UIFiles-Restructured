@@ -988,9 +988,23 @@ function View(data)
 		Controls.UnitHealthMeter:SetHide(false);
 		Controls.CityHealthMeters:SetHide(true);
 
-		-- Update health tooltip
+		-- Update health and unit abilities tooltip
 		local tooltip:string = Locale.Lookup(data.UnitTypeName);
 		tooltip = tooltip .. "[NEWLINE]" .. Locale.Lookup("LOC_HUD_UNIT_PANEL_HEALTH_TOOLTIP", data.MaxDamage - data.Damage, data.MaxDamage);
+		-- Update UnitAbilities text
+		local unitAbilitiesList = data.Ability;
+		if (unitAbilitiesList ~= nil and table.count(unitAbilitiesList) > 0) then
+			local abilityText:string = "[NEWLINE]" .. Locale.Lookup("LOC_UNIT_PANEL_ABILITIES_HEADER");
+			for i,ability in ipairs (unitAbilitiesList) do
+				local abilityDef = GameInfo.UnitAbilities[ability];
+				if (abilityDef ~= nil) then
+					if (abilityDef.Description ~= nil) then
+						abilityText = abilityText .. "[NEWLINE][ICON_Bullet] " .. Locale.Lookup(abilityDef.Description);
+					end
+				end
+			end
+			tooltip = tooltip .. abilityText;
+		end
 		Controls.UnitHealthMeter:SetToolTipString(tooltip);
 	end
 
@@ -2058,6 +2072,7 @@ function ReadUnitData( unit:table )
 
 	local pUnitDef:table = GameInfo.Units[unit:GetUnitType()];
 	local unitExperience = unit:GetExperience();
+	local unitAbility = unit:GetAbility();
 	local potentialDamage :number = 0;
 
 	local kSubjectData :table = InitSubjectData();
@@ -2097,6 +2112,7 @@ function ReadUnitData( unit:table )
 	kSubjectData.UnitLevel					= unitExperience:GetLevel();
 	kSubjectData.CurrentPromotions			= {};
 	kSubjectData.Actions					= GetUnitActionsTable( unit );
+	kSubjectData.Ability					= unitAbility:GetAbilities();
 	
 	-- Great person data
 	-- Must be done before filtering unit stats because they look for some of the promotion information.
@@ -2761,6 +2777,12 @@ end
 function OnUnitRemovedFromMap( playerID: number, unitID : number )	
 	if(playerID == m_selectedPlayerId and unitID == m_UnitId) then
 		Hide();
+
+		-- If the water availability layer is on when a unit is selected
+		-- it must be a settler so be sure to disable that layer
+		if UILens.IsLayerOn( m_HexColoringWaterAvail ) then
+			UILens.ToggleLayerOff(m_HexColoringWaterAvail);
+		end
 	end
 end
 

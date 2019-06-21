@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GameInfo>
+	<IconTextureAtlases>
+		<Row Name="ICON_WORLDBUILDER_TOOLS" IconSize="32" IconsPerRow="4" IconsPerColumn="8" Filename="WorldBuilderIcons"/>
+	</IconTextureAtlases>
+	<IconDefinitions>
+		<Row Name="ICON_WB_TOOL_TERRAIN"				Atlas="ICON_WORLDBUILDER_TOOLS" Index="0"/>
+		<Row Name="ICON_WB_TOOL_FEATURES"				Atlas="ICON_WORLDBUILDER_TOOLS" Index="1"/>
+		<Row Name="ICON_WB_TOOL_CONTINENT"			Atlas="ICON_WORLDBUILDER_TOOLS" Index="2"/>
+		<Row Name="ICON_WB_TOOL_RIVERS"					Atlas="ICON_WORLDBUILDER_TOOLS" Index="3"/>
+		<Row Name="ICON_WB_TOOL_CLIFFS"					Atlas="ICON_WORLDBUILDER_TOOLS" Index="4"/>
+		<Row Name="ICON_WB_TOOL_RESOURCES"			Atlas="ICON_WORLDBUILDER_TOOLS" Index="5"/>
+		<Row Name="ICON_WB_TOOL_GOODY_HUTS"			Atlas="ICON_WORLDBUILDER_TOOLS" Index="6"/>
+		<Row Name="ICON_WB_TOOL_DISTRICTS"			Atlas="ICON_WORLDBUILDER_TOOLS" Index="7"/>
+		<Row Name="ICON_WB_TOOL_BUILDINGS"			Atlas="ICON_WORLDBUILDER_TOOLS" Index="8"/>
+		<Row Name="ICON_WB_TOOL_UNITS"					Atlas="ICON_WORLDBUILDER_TOOLS" Index="9"/>
+		<Row Name="ICON_WB_TOOL_IMPROVEMENTS"		Atlas="ICON_WORLDBUILDER_TOOLS" Index="10"/>
+		<Row Name="ICON_WB_TOOL_ROUTES"					Atlas="ICON_WORLDBUILDER_TOOLS" Index="11"/>
+		<Row Name="ICON_WB_TOOL_START"					Atlas="ICON_WORLDBUILDER_TOOLS" Index="12"/>
+		<Row Name="ICON_WB_TOOL_OWNER"					Atlas="ICON_WORLDBUILDER_TOOLS" Index="13"/>
+		<Row Name="ICON_WB_TOOL_VISIBILITY"			Atlas="ICON_WORLDBUILDER_TOOLS" Index="14"/>
+		<Row Name="ICON_WB_TOOL_CITIES"				Atlas="ICON_WORLDBUILDER_TOOLS" Index="15"/>
+		<Row Name="ICON_WB_TOOL_MAP_DETAILS"  			Atlas="ICON_WORLDBUILDER_TOOLS" Index="16"/>
+		<Row Name="ICON_WB_TOOL_BRUSH_SMALL"  			Atlas="ICON_WORLDBUILDER_TOOLS" Index="17"/>
+		<Row Name="ICON_WB_TOOL_BRUSH_MEDIUM"  			Atlas="ICON_WORLDBUILDER_TOOLS" Index="18"/>
+		<Row Name="ICON_WB_TOOL_BRUSH_LARGE"  			Atlas="ICON_WORLDBUILDER_TOOLS" Index="19"/>
+		<Row Name="ICON_WB_TOOL_CLEAR_RESOURCES"  		Atlas="ICON_WORLDBUILDER_TOOLS" Index="20"/>
+		<Row Name="ICON_WB_TOOL_SCATTER_RESOURCES"  		Atlas="ICON_WORLDBUILDER_TOOLS" Index="21"/>
+		<Row Name="ICON_WB_TOOL_UNDO"  					Atlas="ICON_WORLDBUILDER_TOOLS" Index="22"/>
+		<Row Name="ICON_WB_TOOL_REDO"  					Atlas="ICON_WORLDBUILDER_TOOLS" Index="23"/>
+		<Row Name="ICON_WB_TOOL_PLAYER_DETAILS"  		Atlas="ICON_WORLDBUILDER_TOOLS" Index="24"/>
+		<Row Name="ICON_WB_TOOL_HAMBURGER_MENU"  		Atlas="ICON_WORLDBUILDER_TOOLS" Index="25"/>
+	</IconDefinitions>
+</GameInfo>

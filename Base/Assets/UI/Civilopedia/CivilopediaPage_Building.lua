@@ -259,6 +259,16 @@ local sectionId = page.SectionId;
 			end
 		end
 	end
+	
+	local citizen_yields = {};
+	for row in GameInfo.Building_CitizenYieldChanges() do
+		if(row.BuildingType == buildingType) then
+			local yield = GameInfo.Yields[row.YieldType];
+			if(yield) then
+				table.insert(citizen_yields, "[ICON_Bullet] " .. Locale.Lookup("LOC_TYPE_TRAIT_YIELD", row.YieldChange, yield.IconString, yield.Name));
+			end
+		end
+	end
 
 	local cost = tonumber(building.Cost);
 	local maintenance = tonumber(building.Maintenance);
@@ -342,6 +352,13 @@ local sectionId = page.SectionId;
 			s:AddSeparator();
 		end
 		
+		if(#citizen_yields > 0) then
+			s:AddHeader("LOC_UI_PEDIA_CITIZEN_YIELDS");
+			for i,v in ipairs(citizen_yields) do
+				s:AddLabel(v);
+			end
+			s:AddSeparator();
+		end
 	end);
 
 	AddRightColumnStatBox("LOC_UI_PEDIA_REQUIREMENTS", function(s)

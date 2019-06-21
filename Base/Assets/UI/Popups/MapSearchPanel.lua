@@ -10,7 +10,7 @@ g_bSuggestionsInitialized = false;
 
 local COLOR_WHITE = UI.GetColorValueFromHexLiteral(0xFFFFFFFF);
 local COLOR_GREEN = UI.GetColorValueFromHexLiteral(0x2800FF00);
-local PLOTS_CHECKED_PER_FRAME = 128;
+local PLOTS_CHECKED_PER_FRAME = 35;
 local MAXIMUM_SEARCH_HISTORY = 5;
 
 -- Enable suggestions that exactly match the current search term
@@ -1149,6 +1149,12 @@ end
 -- ===========================================================================
 -- ===========================================================================
 function OnEventPlaybackComplete()
+	
+	-- TODO
+	--Controls.ResultsLabel:SetText( Locale.Lookup("LOC_HUD_MAP_SEARCH_RESULTS_OUTDATED") );
+	
+	-- This was be problematic, especially in synchronous multiplayer
+	--[[
 	local eLocalPlayer = Game.GetLocalPlayer();
 	if eLocalPlayer < 0 then
 		-- Update search results for the observer
@@ -1162,6 +1168,7 @@ function OnEventPlaybackComplete()
 			Controls.ResultsLabel:SetText( Locale.Lookup("LOC_HUD_MAP_SEARCH_WAITING_FOR_TURN") );
 		end
 	end
+	]]--
 end
 
 -- ===========================================================================

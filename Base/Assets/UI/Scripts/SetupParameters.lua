@@ -208,12 +208,6 @@ end
 -------------------------------------------------------------------------------
 function SetupParameters:UpdateParameters(parameters)
 	BeginProfiling();	
-	
-	if(self.Refreshing == true) then
-	--	error("Refresh inception! This is bad");
-	end
-
-	self.Refreshing = true;
 
 	SetupParameters_Log("Updating Parameters - " .. tostring(self.PlayerId or "Game"));
 	local old_params = self.Parameters or {};
@@ -332,7 +326,9 @@ function SetupParameters:UpdateParameters(parameters)
 				local value = self:Config_Read(v.SourceGroup, v.SourceId);
 				if(value == v.SourceValue or value == DB.MakeHash(v.SourceValue) or (type(value) == "boolean" and value == false and v.SourceValue == 0) or (type(value) == "boolean" and value == true and v.SourceValue == 1)) then
 					local update_value = v.Hash and DB.MakeHash(v.TargetValue) or v.TargetValue;
-					if(self:Config_Read(v.TargetGroup, v.TargetId) ~= update_value) then
+					local current_value = self:Config_Read(v.TargetGroup, v.TargetId);
+
+					if(current_value ~= update_value) then
 						table.insert(updates, {
 							v.TargetGroup,
 							v.TargetId,
@@ -344,20 +340,17 @@ function SetupParameters:UpdateParameters(parameters)
 			end
 		end
 
-		if(#updates) then
+		if(#updates > 0) then
 			self:Config_BeginWrite();
 			for i,v in ipairs(updates) do
 				SetupParameters_Log("Writing additional config values - " .. tostring(v[2]) .. " = " .. tostring(v[3]));
 				self:Config_Write(v[1], v[2], v[4]);
 			end
-			self:Config_EndWrite(parameters_changed);
+			self:Config_EndWrite(true);
 		end
 	end
 
 	ProfileStep("Additional Configuration Updates.");
-
-	self.Refreshing = nil;
-
 	EndProfiling("UpdateParameters");
 end
 -------------------------------------------------------------------------------

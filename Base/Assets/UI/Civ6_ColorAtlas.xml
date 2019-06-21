@@ -203,6 +203,10 @@
 	<Color Name="RESOURCECLASS_BONUS"							Color="120,120,40,255" />	
 	<Color Name="RESOURCECLASS_OTHER"							Color="60,65,60,255"  />
 
+	<!-- Ribbon (HUD) -->
+	<Color Name="HUDRIBBON_STATS_SHOW"					Color="255,255,255,200" />
+	<Color Name="HUDRIBBON_STATS_HIDE"					Color="255,255,255,0" />
+	
   <!-- WorldCrisisPopup-->
   <Color Name="Emergency_Gold"							  Color="228,195,39,255"  />
   <Color Name="Emergency_Silver"							Color="199,207,210,255"  />

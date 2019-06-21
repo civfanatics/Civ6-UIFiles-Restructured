@@ -87,7 +87,6 @@ local PADDING_ADVISOR_TEXT_BG:number = 20;
 local PADDING_RELIGION_NAME_BG:number = 42;
 local PADDING_RELIGION_BG_HEIGHT:number = 26;
 local PADDING_VICTORY_GRADIENT:number = 45;
-local PADDING_NEXT_STEP_HIGHLIGHT:number = 4;
 local PADDING_VICTORY_LABEL_UNDERLINE:number = 90;
 local PADDING_SCORE_DETAILS_BUTTON_WIDTH:number = 40;
 local OFFSET_VIEW_CONTENTS:number = 130;
@@ -95,7 +94,6 @@ local OFFSET_ADVISOR_ICON_Y:number = 5;
 local OFFSET_ADVISOR_TEXT_Y:number = 70;
 local OFFSET_HIDDEN_SCROLLBAR:number = 7;
 local OFFSET_CONTRACT_BUTTON_Y:number = 63;
-local OFFSET_SCIENCE_REQUIREMENTS_Y:number = 80;
 local SIZE_OVERALL_TOP_PLAYER_ICON:number = 48;
 local SIZE_OVERALL_PLAYER_ICON:number = 36;
 local SIZE_OVERALL_BG_HEIGHT:number = 100;
@@ -537,7 +535,6 @@ function RealizeHeaderSize()
 		elseif textBubbleHeight < SIZE_HEADER_MIN_Y then
 			textBubbleHeight = SIZE_HEADER_MIN_Y;
 		end
-		m_ActiveHeader.AdvisorTextBG:SetSizeY(textBubbleHeight);
 		m_ActiveHeader.AdvisorIcon:SetOffsetY(OFFSET_ADVISOR_ICON_Y + textBubbleHeight);
 		m_ActiveHeader.HeaderFrame:SetSizeY(OFFSET_ADVISOR_TEXT_Y + textBubbleHeight);
 		m_ActiveHeader.ContractHeaderButton:SetOffsetY(OFFSET_CONTRACT_BUTTON_Y + textBubbleHeight);
@@ -1522,11 +1519,7 @@ function RealizeScienceStackSize()
 
 	if(m_ActiveHeader[DATA_FIELD_HEADER_EXPANDED]) then
 		local headerHeight:number = m_ActiveHeader[DATA_FIELD_HEADER_HEIGHT];
-		m_ActiveHeader.AdvisorTextCentered:SetOffsetY(OFFSET_SCIENCE_REQUIREMENTS_Y + m_ActiveHeader.AdvisorText:GetSizeY() + PADDING_HEADER);
-		m_ActiveHeader.AdvisorTextNextStep:SetOffsetY(m_ActiveHeader.AdvisorTextCentered:GetOffsetY() + m_ActiveHeader.AdvisorTextCentered:GetSizeY() + PADDING_HEADER);
-		m_ActiveHeader.NextStepHighlight:SetOffsetY(-m_ActiveHeader.AdvisorTextNextStep:GetSizeY() + PADDING_NEXT_STEP_HIGHLIGHT);
 		headerHeight = headerHeight + m_ActiveHeader.AdvisorTextCentered:GetSizeY() + m_ActiveHeader.AdvisorTextNextStep:GetSizeY() + (PADDING_HEADER * 2);
-		m_ActiveHeader.AdvisorTextBG:SetSizeY(headerHeight);
 		m_ActiveHeader.AdvisorIcon:SetOffsetY(OFFSET_ADVISOR_ICON_Y + headerHeight);
 		m_ActiveHeader.HeaderFrame:SetSizeY(OFFSET_ADVISOR_TEXT_Y + headerHeight);
 		m_ActiveHeader.ContractHeaderButton:SetOffsetY(OFFSET_CONTRACT_BUTTON_Y + headerHeight);
@@ -2131,9 +2124,13 @@ function ViewGeneric(victoryType:string)
 
 	for i, teamData in ipairs(genericData) do
 		if #teamData.PlayerData > 1 then
-			PopulateGenericTeamInstance(m_GenericTeamIM:GetInstance(), teamData, victoryType);
+			local uiGenericInstance:table = m_GenericTeamIM:GetInstance();
+			PopulateGenericTeamInstance(uiGenericInstance, teamData, victoryType);
+			uiGenericInstance.ButtonBG:SetToolTipString("");
 		else
-			PopulateGenericInstance(m_GenericIM:GetInstance(), teamData.PlayerData[1], victoryType, true);
+			local uiGenericInstance:table = m_GenericIM:GetInstance();
+			PopulateGenericInstance(uiGenericInstance, teamData.PlayerData[1], victoryType, true);
+			uiGenericInstance.ButtonBG:SetToolTipString("");
 		end
 	end
 

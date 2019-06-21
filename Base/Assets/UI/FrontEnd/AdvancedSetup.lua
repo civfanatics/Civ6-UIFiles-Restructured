@@ -593,6 +593,13 @@ function UI_PostRefreshParameters()
 	-- This is primarily used to present ownership errors and custom constraint errors.
 	Controls.StartButton:SetDisabled(false);
 	Controls.StartButton:SetToolTipString(nil);
+
+	local game_err = GetGameParametersError();
+	if(game_err) then
+		Controls.StartButton:SetDisabled(true);
+		Controls.StartButton:LocalizeAndSetToolTip("LOC_SETUP_PARAMETER_ERROR");
+	end
+	
 	local player_ids = GameConfiguration.GetParticipatingPlayerIDs();
 	for i, player_id in ipairs(player_ids) do	
 		local err = GetPlayerParameterError(player_id);
@@ -634,6 +641,8 @@ end
 
 -- ===========================================================================
 function OnShow()
+
+	 m_WorldBuilderImport = false;
 	local bWorldBuilder = GameConfiguration.IsWorldBuilderEditor();
 
 	if (bWorldBuilder) then
@@ -641,8 +650,6 @@ function OnShow()
 
         if (MapConfiguration.GetScript() == "WBImport.lua") then
             m_WorldBuilderImport = true;
-        else
-            m_WorldBuilderImport = false;
         end
 
 		-- KLUDGE: Ideally setup parameters in a group should have some sort of control mechanism for whether or not the group should show.
@@ -736,12 +743,19 @@ end
 -- ===========================================================================
 function OnDefaultButton()
 	print("Reseting Setup Parameters");
-	GameConfiguration.SetToDefaults();
 
-	-- Kludge:  SetToDefaults assigns the ruleset to be standard.
-	-- Clear this value so that the setup parameters code can guess the best 
-	-- default.
-	GameConfiguration.SetValue("RULESET", nil);
+	local bWorldBuilder = GameConfiguration.IsWorldBuilderEditor();
+	GameConfiguration.SetToDefaults();
+	GameConfiguration.SetWorldBuilderEditor(bWorldBuilder);
+	
+	-- In World Builder we want to default to Standard Rules.
+	if(not bWorldBuilder) then
+		-- Kludge:  SetToDefaults assigns the ruleset to be standard.
+		-- Clear this value so that the setup parameters code can guess the best 
+		-- default.
+		GameConfiguration.SetValue("RULESET", nil);
+	end
+
 	GameConfiguration.RegenerateSeeds();
 	return GameSetup_PlayerCountChanged();
 end

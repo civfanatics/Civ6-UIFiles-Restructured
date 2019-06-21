@@ -70,7 +70,9 @@ InterfaceModeMessageHandler =
 	[InterfaceModeTypes.SPY_TRAVEL_TO_CITY] = {},
 	[InterfaceModeTypes.NATURAL_WONDER]		= {},	-- DEPRECATED: Use CINEMATIC
 	[InterfaceModeTypes.CINEMATIC]			= {},	
-	[InterfaceModeTypes.VIEW_MODAL_LENS]	= {}
+	[InterfaceModeTypes.VIEW_MODAL_LENS]	= {},
+	[InterfaceModeTypes.FULLSCREEN_MAP]	= {},
+	[InterfaceModeTypes.CITY_SELECTION]	= {}
 }
 
 -- ===========================================================================
@@ -2684,6 +2686,16 @@ function OnInterfaceModeChange_SpyTravelToCity()
 
 end
 
+-- =============================================================================================
+function OnInterfaceModeChange_FullscreenMap()
+	UIManager:SetUICursor(CursorTypes.NORMAL);
+end
+
+-- =============================================================================================
+function OnInterfaceModeChange_CitySelection()
+	UIManager:SetUICursor(CursorTypes.NORMAL);
+end
+
 -- ===========================================================================
 function OnInterfaceModeChange_Cinematic()
 	UIManager:SetUICursor(CursorTypes.NORMAL);
@@ -2705,9 +2717,9 @@ function OnMouseEnd_WBSelectPlot( pInputStruct:table )
 		print("Stopping drag");
 		g_isMouseDragging = false;
 	else
-		print("World Builder Placement");
 		if (Map.IsPlot(UI.GetCursorPlotID())) then
-			LuaEvents.WorldInput_WBSelectPlot(UI.GetCursorPlotID(), UI.GetCursorNearestPlotEdge(), true);
+			LuaEvents.WorldInput_WBSelectPlot(UI.GetCursorPlotID(), UI.GetCursorNearestPlotEdge(), true, false);
+			LuaEvents.WorldInput_WBSelectPlot(UI.GetCursorPlotID(), UI.GetCursorNearestPlotEdge(), false, false);
 		end
 	end
 	EndDragMap(); -- Reset any dragging
@@ -2718,7 +2730,7 @@ end
 -- ===========================================================================
 function OnRButtonUp_WBSelectPlot( pInputStruct )
 	if (Map.IsPlot(UI.GetCursorPlotID())) then
-		LuaEvents.WorldInput_WBSelectPlot(UI.GetCursorPlotID(), UI.GetCursorNearestPlotEdge(), false);
+		LuaEvents.WorldInput_WBSelectPlot(UI.GetCursorPlotID(), UI.GetCursorNearestPlotEdge(), false, true);
 	end
 	return true;
 end
@@ -2726,7 +2738,7 @@ end
 -- ===========================================================================
 function OnRButtonDown_WBSelectPlot( pInputStruct )
 	if (Map.IsPlot(UI.GetCursorPlotID())) then
-		LuaEvents.WorldInput_WBSelectPlot(UI.GetCursorPlotID(), UI.GetCursorNearestPlotEdge(), true);
+		LuaEvents.WorldInput_WBSelectPlot(UI.GetCursorPlotID(), UI.GetCursorNearestPlotEdge(), true, true);
 	end
 	return true;
 end
@@ -2743,7 +2755,7 @@ function OnMouseMove_WBSelectPlot( pInputStruct )
 				LuaEvents.WorldInput_WBMouseOverPlot(mouseOverPlot);
 
 				if m_isMouseButtonRDown then
-					LuaEvents.WorldInput_WBSelectPlot(UI.GetCursorPlotID(), UI.GetCursorNearestPlotEdge(), true);
+					LuaEvents.WorldInput_WBSelectPlot(UI.GetCursorPlotID(), UI.GetCursorNearestPlotEdge(), true, true);
 				end
 			end
 		end
@@ -3376,6 +3388,9 @@ function LateInitialize()
 	InterfaceModeMessageHandler[InterfaceModeTypes.WB_SELECT_PLOT]		[INTERFACEMODE_ENTER]		= OnInterfaceModeChange_WBSelectPlot;
 	InterfaceModeMessageHandler[InterfaceModeTypes.SPY_CHOOSE_MISSION]	[INTERFACEMODE_ENTER]		= OnInterfaceModeChange_SpyChooseMission;
 	InterfaceModeMessageHandler[InterfaceModeTypes.SPY_TRAVEL_TO_CITY]	[INTERFACEMODE_ENTER]		= OnInterfaceModeChange_SpyTravelToCity;
+	InterfaceModeMessageHandler[InterfaceModeTypes.FULLSCREEN_MAP]		[INTERFACEMODE_ENTER]		= OnInterfaceModeChange_FullscreenMap;
+	InterfaceModeMessageHandler[InterfaceModeTypes.CITY_SELECTION]		[INTERFACEMODE_ENTER]		= OnInterfaceModeChange_CitySelection;
+
 	
 	
 	-- Interface Mode LEAVING (optional):

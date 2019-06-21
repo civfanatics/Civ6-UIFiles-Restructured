@@ -110,6 +110,7 @@ function OnCloudCheck( )
 	g_ShowCloudSaves = bWantShowCloudSaves;
 	Controls.CloudCheck:SetSelected(g_ShowCloudSaves);
     SetDontUpdateFileName(true);
+	SetupDirectoryBrowsePulldown();
 	SetupFileList();
 	UpdateActionButtonState();
     SetDontUpdateFileName(false);
@@ -144,7 +145,7 @@ function OnShow()
 	UpdateActionButtonState();
 
 	local cloudServicesEnabled,cloudServicesResult = UI.AreCloudSavesEnabled("SAVE");
-	local cloudEnabled = UI.AreCloudSavesEnabled() and not GameConfiguration.IsAnyMultiplayer() and g_FileType ~= SaveFileTypes.GAME_CONFIGURATION;
+	local cloudEnabled = UI.AreCloudSavesEnabled() and not GameConfiguration.IsAnyMultiplayer() and g_FileType ~= SaveFileTypes.GAME_CONFIGURATION and g_GameType ~= SaveTypes.WORLDBUILDER_MAP;
 	Controls.CloudCheck:SetHide(false);
 	Controls.CloudCheck:SetEnabled(cloudEnabled);
 
@@ -163,6 +164,12 @@ function OnShow()
         if (isNew == 0) then
             Controls.CheckNewIndicator:SetHide(false);
         end
+
+		if g_GameType == SaveTypes.WORLDBUILDER_MAP then
+			Controls.CloudCheck:SetHide(true);
+		else
+			Controls.CloudCheck:SetHide(false);
+		end
 	else
 		if UI.Is2KCloudAvailable() then
 			Controls.CloudCheck:SetToolTipString(Locale.Lookup("LOC_2K_CLOUD_SAVES_HELP"));

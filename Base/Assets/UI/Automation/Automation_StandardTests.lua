@@ -415,10 +415,19 @@ Tests["HostGame"].Run = function()
 	end
 	GameConfiguration.SetValue("GAME_NAME", gameName);
 	
-	
 	ReadUserConfigOptions();
 
-	Network.HostGame(ServerType.SERVER_TYPE_LAN);
+	local saveFileName = Automation.GetSetParameter("CurrentTest", "SaveFile");
+	if(saveFileName ~= nil) then
+		local saveFileTable = {};
+		saveFileTable.Name = saveFileName;
+		saveFileTable.Type = SaveTypes.NETWORK_MULTIPLAYER;
+		Automation.Log("Loading save file " .. saveFileName);
+		Network.LoadGame(saveFileTable, ServerType.SERVER_TYPE_LAN);
+	else
+		Automation.Log("Hosting new lan game.");
+		Network.HostGame(ServerType.SERVER_TYPE_LAN);
+	end
 end
 
 -----------------------------------------------------------------

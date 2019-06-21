@@ -218,70 +218,71 @@
     <Container ID="ViewReligion" Offset="20,90" Hidden="1" Size="980,677">
 
       <!-- Religion Panel -->
-      <Grid Size="980,416" Texture="Religion_Panel" SliceCorner="24,30" SliceSize="0,0" SliceTextureSize="53,97" Color="255,255,255,178">
-        <Image Anchor="L,B" Offset="-40,-10" Texture="Religion_IconGlow" Color="255,255,255,200"/>
+      <Grid Size="980,350" Texture="Religion_Panel" SliceCorner="24,30" SliceSize="0,0" SliceTextureSize="53,97" Color="255,255,255,178">
+        <Image Anchor="L,B" Offset="-40,2" Texture="Religion_IconGlow" Color="255,255,255,200"/>
         
         <Grid Size="14,parent-4" Offset="-10,2" Texture="Religion_BraceFlip" SliceCorner="0,24" SliceSize="14,120" SliceTextureSize="14,166"/>
         <Image Texture="Religion_BraceDeco" FlipX="1" Anchor="L,C" Offset="-17,0"/>
         <Grid Size="14,parent-4" Offset="975,2" Texture="Religion_Brace" SliceCorner="0,24" SliceSize="14,120" SliceTextureSize="14,166"/>
         <Image Texture="Religion_BraceDeco" Anchor="R,C" Offset="-16,0"/>
 
-        <Container Size="400,335" Anchor="L,T" Offset="20,0">
-          <Image ID="ViewReligionImage" Texture="Religion_Generic" Anchor="C,C" Offset="0,-40"/>
-          <Stack ID="ViewReligionStack"    Anchor="C,B" StackPadding="5" Offset="0,40">
-            <Label ID="ViewReligionTitle"     WrapWidth="400" Align="center" Anchor="C,T" Style="ReligionHeadingSmall"    String="ViewReligionTitle" />
-            <Label ID="ViewReligionFounder"   WrapWidth="400" Align="center" Anchor="C,T" Style="ReligionSubHeadingSmall" String="ViewReligionFounder" />
-            <Label ID="ViewReligionHolyCity"  WrapWidth="400" Align="center" Anchor="C,T" Style="ReligionSubHeadingSmall" String="ViewReligionHolyCity" />
-            <Label ID="ViewReligionDominance" WrapWidth="400" Align="center" Anchor="C,T" Style="ReligionSubHeadingSmall" String="ViewReligionDominance" />
-            <Stack    ID="IconStack" StackGrowth="Right" Anchor="C,T" Padding="2" Size="400,80"/>
+        <Container Size="460,335" Anchor="L,T" Offset="20,0">
+          <Stack StackGrowth="Right" Anchor="C,T" Offset="0,20">
+            <Image ID="ViewReligionImage" Texture="Religion_Generic" Anchor="L,C"/>
+            <Stack ID="ViewReligionStack"    Anchor="L,C" StackPadding="5">
+              <Label ID="ViewReligionTitle"     WrapWidth="400" Align="center" Anchor="C,T" Style="ReligionHeadingSmall"    String="ViewReligionTitle" />
+              <Label ID="ViewReligionFounder"   WrapWidth="400" Align="center" Anchor="C,T" Style="ReligionSubHeadingSmall" String="ViewReligionFounder" />
+              <Label ID="ViewReligionHolyCity"  WrapWidth="400" Align="center" Anchor="C,T" Style="ReligionSubHeadingSmall" String="ViewReligionHolyCity" />
+              <Label ID="ViewReligionDominance" WrapWidth="400" Align="center" Anchor="C,T" Style="ReligionSubHeadingSmall" String="ViewReligionDominance" />
+            </Stack>
           </Stack>
+          
+          <Stack ID="IconStack" StackGrowth="Right" Anchor="C,T" Offset="0,145" Padding="2" Size="400,80"/>
+
+          <Grid Style="DivHeader" Size="auto,auto" AutoSizePadding="0,5" Anchor="C,B" Offset="0,10">
+            <Stack Anchor="C,C" StackGrowth="Down" StackPadding="0">
+              <Label ID="ViewReligionPantheonTitle" Anchor="C,C" Style="ReligionSubHeading" String="ViewReligionPantheonTitle"  Align="Center" WrapWidth="350"/>
+              <Stack Anchor="C,C" StackGrowth="Right">
+                <Image ID="ViewReligionPantheonIcon" Size="64,64"  Anchor="L,C" Texture="BeliefsPantheon64"/>
+                <Label ID="ViewReligionPantheonDescription"        Anchor="L,C" Style="ReligionDescription" String="ViewReligionPantheonDescription" WrapWidth="350"/>
+              </Stack>
+            </Stack>
+          </Grid>
         </Container>
 
-        <Container Size="490,400" Anchor="R,C" Offset="20,0">
-          <Grid Style="DivHeader" Size="465,24" Anchor="C,T" Offset="0,9">
+        <Container Size="490,auto" Anchor="R,C" Offset="20,0">
+          <Grid Style="DivHeader" Size="465,24" Anchor="C,T" Offset="0,0">
             <Label ID="ViewReligionBeliefsHeader" WrapWidth="450" Anchor="C,C" Style="ReligionSubHeadingSmall" String="ViewReligionBeliefsHeader" />
           </Grid>
-          <ScrollPanel  ID="ViewReligionScroll" Size="450,295" Anchor="C,T" AutoScrollBar="1" Vertical="1" Offset="0,35">
+          <ScrollPanel  ID="ViewReligionScroll" Size="450,295" Anchor="C,T" AutoScrollBar="1" Vertical="1" Offset="0,26">
             <Stack ID="ViewReligionBeliefs" Size="350,360" StackPadding="-4" StackGrowth="Down"/>
             <ScrollBar Style="Slider_Religion" Anchor="R,C" AnchorSide="O,I"/>
           </ScrollPanel>
         </Container>
-        
-        <Grid Size="940,63" Anchor="R,B" Offset="20,15" Texture="Religion_PantheonSlot" SliceCorner="34,0" SliceSize="1,63" SliceTextureSize="73,63">
-          <Container Size="400,63" Anchor="L,C">
-            <Label ID="ViewReligionPantheonTitle" Anchor="C,C" Style="ReligionSubHeading" String="ViewReligionPantheonTitle"  Align="Center" WrapWidth="350"/>
-          </Container>
-          <Container Size="400,63" Anchor="R,C">
-            <Label ID="ViewReligionPantheonDescription"        Anchor="L,C" Style="ReligionDescription" String="ViewReligionPantheonDescription" WrapWidth="350"/>
-            <Image ID="ViewReligionPantheonIcon" Size="64,64"  Anchor="L,C" Texture="BeliefsPantheon64" AnchorSide="O,I"/>
-          </Container>
-        </Grid>
       </Grid>
 
       <!-- Cities Panel -->
-      <ScrollPanel Anchor="C,B" Size="980,262" FullClip="1">
-        <Grid Anchor="C,T" Size="980,290" Texture="Religion_OverviewFrame" SliceCorner="15,15" SliceTextureSize="34,33">
-          <Label ID="CitiesHeader" Anchor="C,C" Offset="-300,-120" Style="ReligionSubHeadingSmall" String="CitiesHeader" />
-          <Label ID="FollowersHeader" Anchor="C,C" Offset="0,-120" Style="ReligionSubHeadingSmall" String="FollowersHeader" />
-          <Label ID="PantheonBeliefHeader" Anchor="C,C" Offset="300,-120" Style="ReligionSubHeadingSmall" String="PantheonBeliefHeader" />
-          <PullDown ID="FilterType" Size="327" Offset="32,0" Style="SmallPullDown" />
-          <Container ID="ReligionIcons" Anchor="C,C" Size="280,22"	Offset="10,-98" />
-          <Grid Size="parent-30,10" Offset="15,48" Texture="Controls_DecoHFlip" SliceCorner="19,0" SliceTextureSize="40,18" Color="255,255,255,70"/>
-          <ScrollPanel ID="CitiesScrollbar" Offset="20,62" Size="940,200" Style="ScrollPanelWithRightBar">
+        <Grid Anchor="C,B" Size="980,330" Texture="Religion_OverviewFrame" SliceCorner="15,15" SliceTextureSize="34,33">
+          <Label ID="CitiesHeader" Anchor="C,T" Offset="-300,10" Style="ReligionSubHeadingSmall" String="CitiesHeader" />
+          <Label ID="FollowersHeader" Anchor="C,T" Offset="0,10" Style="ReligionSubHeadingSmall" String="FollowersHeader" />
+          <Label ID="PantheonBeliefHeader" Anchor="C,T" Offset="300,10" Style="ReligionSubHeadingSmall" String="PantheonBeliefHeader" />
+          <PullDown ID="FilterType" Size="327" Offset="32,-5" Style="SmallPullDown" />
+          <Container ID="ReligionIcons" Anchor="C,T" Size="280,22"	Offset="10,28" />
+          <Grid Size="parent-30,10" Offset="15,44" Texture="Controls_DecoHFlip" SliceCorner="19,0" SliceTextureSize="40,18" Color="255,255,255,70"/>
+          <ScrollPanel ID="CitiesScrollbar" Offset="20,58" Size="940,264" Style="ScrollPanelWithRightBar">
             <Stack ID="Cities" StackPadding="3" StackGrowth="Down" />
           </ScrollPanel>
         </Grid>
-      </ScrollPanel>
       
     </Container>
 
     <!-- ==================================================================	-->
     <!--	View all religions        																				-->
     <!-- ==================================================================	-->
-    <Container ID="ViewAllReligions" Offset="20,90" Hidden="1">
+    <Container ID="ViewAllReligions" Offset="10,80" Hidden="1">
 
-      <ScrollPanel ID="ReligionsScrollbar" Offset="20,0" Size="960,660" Style="ScrollPanelWithRightBar">
-        <Stack ID="Religions" StackPadding="3" StackGrowth="Down" />
+      <ScrollPanel ID="ReligionsScrollbar" Offset="0,0" Size="1000,685" Style="ScrollPanelWithRightBar">
+        <Stack ID="Religions" Anchor="C,T" StackPadding="3" StackGrowth="Right" WrapWidth="parent"/>
       </ScrollPanel>
 
     </Container>
@@ -356,32 +357,33 @@
   </Instance>
 
   <Instance Name="Religion">
-    <Grid ID="ReligionBG" Size="950,auto" Texture="Religion_Panel" SliceCorner="24,30" SliceTextureSize="53,97" MinSize="53,97" Color="255,255,255,204">
+    <Grid ID="ReligionBG" Size="490,340" Texture="Religion_Panel" SliceCorner="24,30" SliceTextureSize="53,97" MinSize="53,97" Color="255,255,255,204">
       <Image Offset="-30,3" Anchor="L,B" Texture="Religion_IconGlow" Color="255,255,255,200"/>
-      <Container Size="400,auto" Anchor="L,C" Offset="20,0">
-        <Image ID="ReligionImage" Texture="Religion_Generic" Anchor="C,C"/>
-        <Stack ID="ReligionStack"    Anchor="C,C" StackPadding="5">
-          <Label ID="ReligionName"     WrapWidth="400" Align="center" Anchor="C,T" Style="ReligionHeadingSmall"    String="ReligionName" />
-          <Label ID="ReligionFounder"   WrapWidth="400" Align="center" Anchor="C,T" Style="ReligionSubHeadingSmall" String="ReligionFounder" />
-          <Label ID="ReligionDominance"  WrapWidth="400" Align="center" Anchor="C,T" Style="ReligionSubHeadingSmall" String="ReligionDominance" />
-        </Stack>
-      </Container>
-      <Container Size="400,auto" Anchor="R,C" Offset="20,0">
-        <Stack ID="Beliefs" Anchor="R,C" Size="350" StackPadding="-2" StackGrowth="Down" />
-      </Container>
+
+      <Stack ID="Beliefs" Anchor="C,C" StackPadding="-2" StackGrowth="Down">
+        <Container Anchor="C,C" Size="parent,70">
+          <Image ID="ReligionImage" Texture="Religion_Generic" Anchor="L,C" Offset="50,0"/>
+          <Stack ID="ReligionStack" Anchor="C,C" Offset="40,0" StackPadding="2">
+            <Label ID="ReligionName"     WrapWidth="400" Align="center" Anchor="C,T" Style="ReligionHeadingSmall"    String="ReligionName" />
+            <Label ID="ReligionFounder"   WrapWidth="400" Align="center" Anchor="C,T" Style="ReligionSubHeadingSmall" String="ReligionFounder" />
+            <Label ID="ReligionDominance"  WrapWidth="400" Align="center" Anchor="C,T" Style="ReligionSubHeadingSmall" String="ReligionDominance" />
+          </Stack>
+        </Container>
+      </Stack>
     </Grid>
   </Instance>
 
   <Instance Name="ReligionBeliefSmall">
-    <Grid	ID="BeliefBG" Texture="Religion_BeliefSlotSmall" Offset="250,0" Size="400,auto" SliceCorner="76,19" SliceTextureSize="152,38" AutoSizePadding="5,10" MinSize="152,38">
+    <Grid	ID="BeliefBG" Texture="Religion_BeliefSlotSmall" Anchor="C,T" Offset="0,0" Size="450,auto" SliceCorner="76,19" SliceTextureSize="152,38" AutoSizePadding="5,10" MinSize="152,38">
       <Image ID="BeliefIcon" Size="32,32" Offset="6,0" Texture="BeliefsPantheon32" Anchor="L,C" />
-      <Label ID="BeliefLabel" Offset="40,-1" Size="350" Anchor="L,C" Style="ReligionDescription" String="BeliefLabel" />
+      <Label ID="BeliefLabel" Offset="40,-1" Size="400" Anchor="L,C" Style="ReligionDescription" String="BeliefLabel" />
     </Grid>
   </Instance>
 
   <Instance Name="UnitIconInstance">
     <Image ID="UnitIconBacking" Texture="Controls_SlotCircle">
       <Image ID="UnitIcon" Anchor="C,C" Size="70,70" Icon="ICON_UNIT_APOSTLE_PORTRAIT"/>
+      <Label ID="UnitCount" Anchor="C,B" Offset="0,-16" String="0" Style="FontNormal16"/>
     </Image>
   </Instance>
   

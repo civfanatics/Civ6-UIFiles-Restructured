@@ -91,7 +91,11 @@ function Close()
 	-- well.  To be safe only switch back the interface mode if it's in the
 	-- mode it was switched to at startup.
 	if UI.GetInterfaceMode() == InterfaceModeTypes.FULLSCREEN_MAP then
-		UI.SetInterfaceMode(InterfaceModeTypes.SELECTION);
+		if GameConfiguration.IsWorldBuilderEditor() then
+			LuaEvents.WorldBuilder_ExitFSMap();
+		else
+			UI.SetInterfaceMode(InterfaceModeTypes.SELECTION);
+		end
 	end
 end
 

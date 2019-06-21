@@ -93,6 +93,7 @@ local m_primaryColor				:number = UI.GetColorValueFromHexLiteral(0xcafef00d);
 local m_secondaryColor				:number = UI.GetColorValueFromHexLiteral(0xf00d1ace);
 local m_kTutorialDisabledControls	:table	= nil;
 local m_CurrentPanelLine				:number = 0;
+local m_PrevInterfaceMode			:number = InterfaceModeTypes.SELECTION;
 
 
 -- ===========================================================================
@@ -596,7 +597,7 @@ function OnCitySelectionChanged( ownerPlayerID:number, cityID:number, i:number, 
 	if ownerPlayerID == Game.GetLocalPlayer() then
 		if (isSelected) then	
 			-- Determine if we should switch to the SELECTION interface mode
-			local shouldSwitchToSelection:boolean = true;
+			local shouldSwitchToSelection:boolean = UI.GetInterfaceMode() ~= InterfaceModeTypes.CITY_SELECTION;
 			if UI.GetInterfaceMode() == InterfaceModeTypes.CITY_MANAGEMENT then
 				HideGrowthTile();
 				shouldSwitchToSelection = false;
@@ -881,13 +882,15 @@ end
 function OnTogglePurchaseTile()
 	if Controls.PurchaseTileCheck:IsChecked() then
 		if not Controls.ManageCitizensCheck:IsChecked() then
+			m_PrevInterfaceMode = UI.GetInterfaceMode();
 			UI.SetInterfaceMode(InterfaceModeTypes.CITY_MANAGEMENT);	-- Enter mode
 		end
 		RecenterCameraOnCity();
 		UILens.ToggleLayerOn( m_PurchasePlot );
 	else		
 		if not Controls.ManageCitizensCheck:IsChecked() and UI.GetInterfaceMode() == InterfaceModeTypes.CITY_MANAGEMENT then
-			UI.SetInterfaceMode(InterfaceModeTypes.SELECTION);			-- Exit mode		
+			UI.SetInterfaceMode(m_PrevInterfaceMode);			-- Exit mode		
+			m_PrevInterfaceMode = InterfaceModeTypes.SELECTION;
 		end
 		UILens.ToggleLayerOff( m_PurchasePlot );			
 	end
@@ -943,13 +946,15 @@ end
 function OnToggleManageCitizens()
 	if Controls.ManageCitizensCheck:IsChecked() then			
 		if not Controls.PurchaseTileCheck:IsChecked() then
+			m_PrevInterfaceMode = UI.GetInterfaceMode();
 			UI.SetInterfaceMode(InterfaceModeTypes.CITY_MANAGEMENT);	-- Enter mode
 		end
 		RecenterCameraOnCity();
 		UILens.ToggleLayerOn( m_CitizenManagement );
 	else		
 		if not Controls.PurchaseTileCheck:IsChecked() and UI.GetInterfaceMode() == InterfaceModeTypes.CITY_MANAGEMENT then
-			UI.SetInterfaceMode(InterfaceModeTypes.SELECTION);			-- Exit mode
+			UI.SetInterfaceMode(m_PrevInterfaceMode);			-- Exit mode
+			m_PrevInterfaceMode = InterfaceModeTypes.SELECTION;
 		end
 		UILens.ToggleLayerOff( m_CitizenManagement );
 	end

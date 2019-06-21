@@ -17,7 +17,7 @@ function( pInputStruct )
 	local uiKey = pInputStruct:GetKey();
 	if uiKey == Keys.VK_ESCAPE then
 		if( Controls.TopOptionsMenu:IsHidden() ) then
-			UIManager:QueuePopup( Controls.TopOptionsMenu, PopupPriority.Utmost );
+			OnOpenInGameMenu();
 			return true;
 		end
 	elseif uiKey == Keys.Z and pInputStruct:IsControlDown() then
@@ -69,13 +69,6 @@ function InputHandler( pInputStruct )
 end
 
 -- ===========================================================================    
-function OnShow()
-
-	Controls.WorldViewControls:SetHide( false );
-
-end
-
--- ===========================================================================    
 function OnOpenPlayerEditor()
 	LuaEvents.WorldBuilder_ShowPlayerEditor( Controls.WorldBuilderPlayerEditor:IsHidden() );
 end
@@ -87,23 +80,64 @@ end
 		   
 -- ===========================================================================    
 function OnOpenInGameMenu()
-UIManager:QueuePopup( Controls.TopOptionsMenu, PopupPriority.Utmost );
+	UIManager:QueuePopup( Controls.TopOptionsMenu, PopupPriority.Utmost );
 end
 
+
 -- ===========================================================================
---	Init
+--	Hide (or Show) all the contexts part of the BULK group.
+--	Simplified version compared to InGame (no reference counting)
+-- ===========================================================================
+function BulkHide( isHide:boolean, debugWho:string )
+
+	-- Do the bulk hiding/showing	
+	local kGroups:table = {"WorldViewControls", "HUD"};
+	for i,group in ipairs(kGroups) do
+		local pContext :table = ContextPtr:LookUpControl("/WorldBuilder/"..group);
+		if pContext == nil then
+			UI.DataError("WorldBuilder is unable to BulkHide("..isHide..") '/WorldBuilder/"..group.."' because the Context doesn't exist.");
+		else
+			pContext:SetHide(isHide);
+		end
+	end
+end
+function OnFullscreenMapShown()			BulkHide( true, "FullscreenMap" );	end	
+function OnFullscreenMapClosed()		BulkHide(false, "FullscreenMap" );	end	
+
+
+-- ===========================================================================    
+function OnShutdown()
+	Events.LoadGameViewStateDone.Remove( OnLoadGameViewStateDone );
+	
+	LuaEvents.FullscreenMap_Shown.Remove( OnFullscreenMapShown );
+	LuaEvents.FullscreenMap_Closed.Remove(	OnFullscreenMapClosed );
+	LuaEvents.WorldBuilderLaunchBar_OpenPlayerEditor.Remove( OnOpenPlayerEditor );
+	LuaEvents.WorldBuilderLaunchBar_OpenMapEditor.Remove( OnOpenMapEditor );
+	LuaEvents.WorldBuilderLaunchBar_OpenInGameMenu.Remove( OnOpenInGameMenu );
+end
+
 -- ===========================================================================
 function OnInit()
 	UserConfiguration.ShowMapResources(true);
 	UserConfiguration.ShowMapGrid(false);
 	UserConfiguration.ShowMapYield(false);
+end
+
+-- ===========================================================================
+function Initialize()
 
 	-- Register for events
-	ContextPtr:SetShowHandler( OnShow );
 	ContextPtr:SetInputHandler( InputHandler, true );
+	ContextPtr:SetShutdown( OnShutdown );
+	ContextPtr:SetInitHandler( OnInit );
+
 	Events.LoadGameViewStateDone.Add( OnLoadGameViewStateDone );
+
+	LuaEvents.FullscreenMap_Shown.Add( OnFullscreenMapShown );
+	LuaEvents.FullscreenMap_Closed.Add(	OnFullscreenMapClosed );
 	LuaEvents.WorldBuilderLaunchBar_OpenPlayerEditor.Add( OnOpenPlayerEditor );
 	LuaEvents.WorldBuilderLaunchBar_OpenMapEditor.Add( OnOpenMapEditor );
 	LuaEvents.WorldBuilderLaunchBar_OpenInGameMenu.Add( OnOpenInGameMenu );
+
 end
-ContextPtr:SetInitHandler( OnInit );
+Initialize();

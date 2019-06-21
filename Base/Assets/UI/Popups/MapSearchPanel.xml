@@ -19,10 +19,12 @@
 			<Grid Texture="Controls_Search2" SliceCorner="30,13" SliceTextureSize="41,26" Anchor="C,T" Offset="-5,0" Size="parent-50,26" ToolTip="LOC_HUD_MAP_SEARCH_TOOLTIP">
 				<EditBox ID="MapSearchBox" Style="EditTextArea" Size="parent-30,22" Anchor="L,C" Offset="24,0" EditMode="0" FocusStop="0" KeepFocus="1"/>
 			</Grid>
-			<Bar ID="ProgressBar" Anchor="C,T" Size="parent-60,1" Offset="-5,0" Direction="Right" FGColor="DarkBlue" Percent="1.0"/>
+			
 			<Grid Texture="Controls_Filter" SliceCorner="30,13" SliceTextureSize="41,26" Anchor="C,T" Offset="-5,0" Size="parent-50,26" ToolTip="LOC_HUD_MAP_SEARCH_FILTER_TOOLTIP">
 				<EditBox ID="MapSearchFilterBox" Style="EditTextArea" Size="parent-30,22" Anchor="L,C" Offset="24,0" EditMode="0" FocusStop="1" KeepFocus="1"/>
 			</Grid>
+
+			<Bar ID="ProgressBar" Anchor="C,T" Size="parent-60,1" Offset="-5,0" Direction="Right" FGColor="GoldMetal" Percent="1.0"/>
 			
 			<Container Anchor="C,T" Size="parent-50,auto" Offset="-5,10">
 				<Button ID="PrevResultButton" Anchor="L,C" Offset="10,0" Style="ArrowButtonLeft" Disabled="1"/>

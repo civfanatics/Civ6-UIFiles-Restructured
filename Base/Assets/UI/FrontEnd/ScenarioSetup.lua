@@ -617,6 +617,13 @@ function UI_PostRefreshParameters()
 	-- This is primarily used to present ownership errors and custom constraint errors.
 	Controls.StartButton:SetDisabled(false);
 	Controls.StartButton:SetToolTipString(nil);
+
+	local game_err = GetGameParametersError();
+	if(game_err) then
+		Controls.StartButton:SetDisabled(true);
+		Controls.StartButton:LocalizeAndSetToolTip("LOC_SETUP_PARAMETER_ERROR");
+	end
+
 	local player_ids = GameConfiguration.GetParticipatingPlayerIDs();
 	for i, player_id in ipairs(player_ids) do	
 		local err = GetPlayerParameterError(player_id);

@@ -210,6 +210,8 @@ function Initialize()
 
 	ContextPtr:SetInputHandler( OnInputHandler, true );
 	Controls.Close:RegisterCallback(Mouse.eLClick, OnClose);
+	Controls.ScreenConsumer:RegisterCallback(Mouse.eRClick, OnClose);
+
 	Events.CityProjectCompletedNarrative.Add( OnProjectComplete );	
 	Events.SystemUpdateUI.Add( OnUpdateUI );	
 

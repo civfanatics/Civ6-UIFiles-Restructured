@@ -91,6 +91,7 @@ function CreateQueueInstance( instanceManager:table, parentControl:table, player
 	queueItemInstance.ArmyMarker:SetHide(true);
 
 	if queueEntry then
+		local kPossibleIcons:table = {};
 		local iconTexture:string = "";
 		local iconTooltip:string = "";
 
@@ -99,7 +100,9 @@ function CreateQueueInstance( instanceManager:table, parentControl:table, player
 			-- entry.UnitType
 			-- entry.MilitaryFormationType
 			local pUnitDef:table = GameInfo.Units[queueEntry.UnitType];
-			iconTexture = "ICON_" .. pUnitDef.UnitType .. "_PORTRAIT";
+
+			local iconName, prefixOnlyIconName, eraOnlyIconName, fallbackIconName = GetUnitPortraitIconNamesFromDefinition( playerID, pUnitDef );
+			kPossibleIcons = {iconName, prefixOnlyIconName, eraOnlyIconName, fallbackIconName};
 
 			local unitName:string = Locale.Lookup(pUnitDef.Name);
 			if (queueEntry.MilitaryFormationType == MilitaryFormationTypes.CORPS_FORMATION) then
@@ -122,25 +125,30 @@ function CreateQueueInstance( instanceManager:table, parentControl:table, player
 			-- Constructing a building, valid table entries are
 			-- entry.BuildingType
 			local pBuildingDef:table = GameInfo.Buildings[queueEntry.BuildingType];
-			iconTexture = "ICON_" .. pBuildingDef.BuildingType;
+			kPossibleIcons = {"ICON_" .. pBuildingDef.BuildingType};
 			iconTooltip = Locale.Lookup(pBuildingDef.Name);
 		elseif queueEntry.Directive == CityProductionDirectives.ZONE then
 			-- Constructing a district, valid table entries are
 			-- entry.BuildingType
 			-- entry.Location - This will be invalid coordinates (-9999, -9999) for everything but the head node
 			local pDistrictDef:table = GameInfo.Districts[queueEntry.DistrictType];
-			iconTexture = "ICON_" .. pDistrictDef.DistrictType;
+			kPossibleIcons = {"ICON_" .. pDistrictDef.DistrictType};
 			iconTooltip = Locale.Lookup(pDistrictDef.Name);
 		elseif queueEntry.Directive == CityProductionDirectives.PROJECT then
 			-- Constructing a project, valid table entries are
 			-- entry.ProjectType
 			local pProjectDef:table = GameInfo.Projects[queueEntry.ProjectType];
-			iconTexture = "ICON_" .. pProjectDef.ProjectType;
+			kPossibleIcons = {"ICON_" .. pProjectDef.ProjectType};
 			iconTooltip = Locale.Lookup(pProjectDef.Name);
 		end
 
-		queueItemInstance[FIELD_ICON_TEXTURE] = iconTexture;
-		queueItemInstance.ProductionIcon:SetIcon(iconTexture);
+		for _,iconName in ipairs(kPossibleIcons) do
+		    if iconName ~= nil and queueItemInstance.ProductionIcon:TrySetIcon(iconName) then
+		        queueItemInstance[FIELD_ICON_TEXTURE] = iconName;
+		        break;
+            end
+	    end
+
 		queueItemInstance.ProductionIcon:SetToolTipString(iconTooltip);
 		queueItemInstance.ProductionIcon:SetAlpha(1.0);
 		queueItemInstance.ProductionIcon:SetHide(false);
@@ -241,4 +249,14 @@ end
 function DisableMouseIcon()
 	Controls.MovingIcon:SetHide(true);
 	ContextPtr:ClearUpdate();
+end
+
+-- ===========================================================================
+function GetQueueSize( pCity:table )
+	if pCity == nil then
+		UI.DataError("Attempted to get the build queue size of a NIL city");
+		return 0;
+	end
+
+	return pCity:GetBuildQueue():GetSize();
 end

@@ -284,6 +284,24 @@ ToolTipHelper.GetBuildingToolTip = function(buildingHash, playerId, city)
 			table.insert(toolTipLines, v);
 		end
 	end
+
+	local citizen_yields = {};
+	for row in GameInfo.Building_CitizenYieldChanges() do
+		if(row.BuildingType == buildingType) then
+			local yield = GameInfo.Yields[row.YieldType];
+			if(yield) then
+				table.insert(citizen_yields, "[ICON_Bullet] " .. Locale.Lookup("LOC_TYPE_TRAIT_YIELD", row.YieldChange, yield.IconString, yield.Name));
+			end
+		end
+	end
+	for i,v in ipairs(citizen_yields) do
+		if(i == 1) then
+			table.insert(toolTipLines, "[NEWLINE]" .. Locale.Lookup("LOC_TOOLTIP_BUILDING_CITIZEN_YIELDS_HEADER"));
+			table.insert(toolTipLines, v);
+		else
+			table.insert(toolTipLines, v);
+		end
+	end
 		
 	local reqLines = {};
 
@@ -671,8 +689,11 @@ ToolTipHelper.GetUnitToolTip = function(unitType, formationType, pBuildQueue)
 	if(baseBombard ~= nil and baseBombard > 0 and baseRange ~= nil and baseRange > 0) then
 		table.insert(statLines, Locale.Lookup("LOC_UNIT_BOMBARD_STRENGTH", baseBombard, baseRange));
 	end
-	if(baseMoves ~= nil and baseMoves > 0 and not unitReference.IgnoreMoves) then
-		table.insert(statLines, Locale.Lookup("LOC_UNIT_MOVEMENT", baseMoves));
+
+	if(baseMoves ~= nil and baseMoves > 0) then
+		if (not unitReference.IgnoreMoves or unitReference.Domain == "DOMAIN_AIR") then
+			table.insert(statLines, Locale.Lookup("LOC_UNIT_MOVEMENT", baseMoves));
+		end
 	end
 
 	local airSlots = unitReference.AirSlots or 0;

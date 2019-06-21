@@ -35,28 +35,28 @@
       <!-- Tab Buttons -->
       <Stack Anchor="L,T" Offset="150,2" Padding="20" StackGrowth="Right">
 
-        <Container Size="150,32">
+        <Container ID="InfoButtonRoot" Size="150,32">
           <GridButton ID="InfoButton" Style="ShellTab" Size="parent,parent" String="LOC_UI_ENDGAME_VICTORY_INFO" />
           <AlphaAnim ID="InfoButtonSelected" Speed="5" AlphaBegin="0" AlphaEnd="1" Cycle="Once" Function="Root" Hidden="1" >
             <GridButton ID="InfoButtonSelectedButton" Style="ShellTabSelected" Size="parent,parent" String="LOC_UI_ENDGAME_VICTORY_INFO"/>
           </AlphaAnim>
         </Container>
 
-        <Container Size="150,32">
+        <Container ID="RankingButtonRoot" Size="150,32">
           <GridButton ID="RankingButton" Style="ShellTab" Size="parent,parent" String="LOC_UI_ENDGAME_RANKING" />
           <AlphaAnim ID="RankingButtonSelected" Speed="5" AlphaBegin="0" AlphaEnd="1" Cycle="Once" Function="Root" Hidden="1" >
             <GridButton ID="RankingButtonSelectedButton" Style="ShellTabSelected" Size="parent,parent" String="LOC_UI_ENDGAME_RANKING"/>
           </AlphaAnim>
         </Container>
 
-        <Container Size="150,32">
+        <Container ID="ReplayButtonRoot" Size="150,32">
           <GridButton ID="ReplayButton" Style="ShellTab" Size="parent,parent" String="LOC_UI_ENDGAME_REPLAY" />
           <AlphaAnim ID="ReplayButtonSelected" Speed="5" AlphaBegin="0" AlphaEnd="1" Cycle="Once" Function="Root" Hidden="1" >
             <GridButton ID="ReplayButtonSelectedButton" Style="ShellTabSelected" Size="parent,parent" String="LOC_UI_ENDGAME_REPLAY"/>
           </AlphaAnim>
         </Container>
 
-        <Container Size="150,32">
+        <Container ID="ChatButtonRoot" Size="150,32">
           <GridButton ID="ChatButton" Style="ShellTab" Size="parent,parent" String="LOC_UI_ENDGAME_CHAT" />
           <AlphaAnim ID="ChatButtonSelected" Speed="5" AlphaBegin="0" AlphaEnd="1" Cycle="Once" Function="Root" Hidden="1" >
             <GridButton ID="ChatButtonSelectedButton" Style="ShellTabSelected" Size="parent,parent" String="LOC_UI_ENDGAME_CHAT"/>

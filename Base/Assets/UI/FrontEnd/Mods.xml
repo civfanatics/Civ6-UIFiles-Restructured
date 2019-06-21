@@ -101,6 +101,7 @@
 									<Container Size="parent,8"/>
 									<Label ID="ModCompatibilityWarning" Style="FontNormal14" String="LOC_MODS_DETAILS_NOT_COMPATIBLE_WARNING" Anchor="C,T" Offset="0,5"/>
 									<Label ID="ModIdVersion" Style="FontNormal14" Anchor="C,T" Offset="0,5"/>
+									<Label ID="ModFileName" Style="FontNormal14" Anchor="C,T" Offset="0,5"/>
 									<Container Size="parent,6"/>
 
 									<Stack ID="ModPropertiesStack" StackGrowth="Right" Anchor="C,T" Padding="5">

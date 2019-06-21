@@ -2,6 +2,13 @@
 --	World Builder Plot Editor
 -- ===========================================================================
 
+
+-- ===========================================================================
+--	CONSTANTS
+-- ===========================================================================
+local RELOAD_CACHE_ID= "WorldBuilderPlotEditor";
+
+
 -- ===========================================================================
 --	DATA MEMBERS
 -- ===========================================================================
@@ -18,6 +25,7 @@ local m_PlayerIndexToEntry     : table = {};
 local m_CityEntries            : table = {};
 local m_IDsToCityEntry         : table = {};
 local m_CoastalLowlandEntries  : table = {};
+local m_CoastIndex			   : number = 1;
 
 local m_StartPosTypeEntries : table =
 {
@@ -76,21 +84,28 @@ function UpdatePlotInfo()
 		Controls.TerrainPullDown:SetSelectedIndex(     terrainType+1,               false );
 		Controls.FeaturePullDown:SetSelectedIndex(     plotFeature:GetType()+2,     false );
 		Controls.FeatureDirectionPulldown:SetSelectedIndex( plotFeature:GetDirection()+2,     false );
-		Controls.ResourcePullDown:SetSelectedIndex(    plot:GetResourceType()+2,    false );
 		Controls.ImprovementPullDown:SetSelectedIndex( plot:GetImprovementType()+2, false );
 		Controls.RoutePullDown:SetSelectedIndex(       plot:GetRouteType()+2,       false );
+
+		local resToMatch : number = plot:GetResourceType() + 1;
+		for i, entry in ipairs(m_ResourceTypeEntries) do
+			if entry.Index == resToMatch then
+				Controls.ResourcePullDown:SetSelectedIndex(i, false );
+				if entry.Class == "RESOURCECLASS_STRATEGIC" then
+					Controls.ResourceAmount:SetHide(false);
+				else
+					Controls.ResourceAmount:SetHide(true);
+				end
+				break;
+			end
+		end
+
 
 		-- don't allow to pillage when there's no feature
 		if plotFeature:GetType() < 3 then
 			Controls.ImprovementPillagedButton:SetDisabled(true);
 		end
 
-		local resType = m_ResourceTypeEntries[plot:GetResourceType()+2];
-		if resType.Class == "RESOURCECLASS_STRATEGIC" then
-			Controls.ResourceAmount:SetHide(false);
-		else
-			Controls.ResourceAmount:SetHide(true);
-		end
 
         if IsExpansion2() then
             local eCoastalLowlandType:number = TerrainManager.GetCoastalLowlandType( m_SelectedPlot );
@@ -115,7 +130,7 @@ function UpdatePlotInfo()
 		for i, entry in ipairs(m_FeatureTypeEntries) do
 			if entry.Type ~= nil then
 				if plotDir == -1 then
-					entry.Button:SetDisabled(not WorldBuilder.MapManager():CanPlaceFeature(m_SelectedPlot, entry.Type.Index));
+					entry.Button:SetDisabled(not WorldBuilder.MapManager():CanPlaceFeature(m_SelectedPlot, entry.Type.Index, true));
 				else
 					entry.Button:SetDisabled(false);
 				end
@@ -124,13 +139,13 @@ function UpdatePlotInfo()
 
 		for i, entry in ipairs(m_ResourceTypeEntries) do
 			if entry.Type ~= nil then
-				entry.Button:SetDisabled(not WorldBuilder.MapManager():CanPlaceResource(m_SelectedPlot, entry.Type.Index));
+				entry.Button:SetDisabled(not WorldBuilder.MapManager():CanPlaceResource(m_SelectedPlot, entry.Type.Index, true));
 			end
 		end
 
 		for i, entry in ipairs(m_ImprovementTypeEntries) do
 			if entry.Type ~= nil then
-				entry.Button:SetDisabled(not (hasOwner or entry.Type.Goody or entry.Type.BarbarianCamp));
+				entry.Button:SetDisabled(not WorldBuilder.MapManager():CanPlaceImprovement(m_SelectedPlot, entry.Type.Index, Map.GetPlotByIndex(m_SelectedPlot):GetOwner(), true));
 			end
 		end
 
@@ -265,7 +280,7 @@ function UpdateCityEntries()
 	m_CityEntries = {};
 	m_IDsToCityEntry = {};
 
-	table.insert(m_CityEntries, { Text="No City", Player=-1, ID=-1, EntryIndex=1 });
+	table.insert(m_CityEntries, { Text="LOC_WORLDBUILDER_NO_CITY", Player=-1, ID=-1, EntryIndex=1 });
 
 	local cityCount = 0;
 	for iPlayer = 0, GameDefines.MAX_PLAYERS-1 do
@@ -292,7 +307,32 @@ end
 function OnTerrainTypeSelected(entry)
 	if entry ~= nil then
 		if m_SelectedPlot ~= nil then
+   			WorldBuilder.StartUndoBlock();
 			WorldBuilder.MapManager():SetTerrainType( m_SelectedPlot, entry.Type.Index );
+
+			local kPlot : table = Map.GetPlotByIndex(m_SelectedPlot);
+			local adjPlots : table = Map.GetAdjacentPlots(kPlot:GetX(), kPlot:GetY());
+			local coast : table = m_TerrainTypeEntries[m_CoastIndex];
+
+			for i = 1, 6, 1 do
+				if adjPlots[i] ~= nil then
+					local curPlotType : string = m_TerrainTypeEntries[adjPlots[i]:GetTerrainType() + 1].Type.Name;
+
+					-- if we're placing an ocean tile, add coast
+					if entry.Text == "LOC_TERRAIN_OCEAN_NAME" then
+						-- ocean: neighbor can be ocean or coast
+						if curPlotType ~= "LOC_TERRAIN_OCEAN_NAME" and curPlotType ~= "LOC_TERRAIN_COAST_NAME" then
+							WorldBuilder.MapManager():SetTerrainType( adjPlots[i]:GetIndex(), coast.Type.Index);
+						end
+					elseif entry.Text ~= "LOC_TERRAIN_COAST_NAME" then
+						-- not coast or ocean, so it's land and neighboring ocean tiles must turn to coast
+						if curPlotType == "LOC_TERRAIN_OCEAN_NAME" then
+							WorldBuilder.MapManager():SetTerrainType( adjPlots[i]:GetIndex(), coast.Type.Index);
+						end
+					end
+				end
+			end
+			WorldBuilder.EndUndoBlock();
 		end
 	end
 end
@@ -309,7 +349,7 @@ function OnFeatureTypeSelected(entry)
 
 		local plot = Map.GetPlotByIndex( m_SelectedPlot );
 		local terrainType = plot:GetTerrainType();
-        OnTerrainTypeSelected(m_TerrainTypeEntries[terrainType]);
+        OnTerrainTypeSelected(m_TerrainTypeEntries[terrainType+1]);
 	end
 end
 
@@ -518,6 +558,7 @@ function OnModeChanged()
 		Controls.RoutePullDown:SetHide(true);
 		Controls.RoutePillagedButton:SetHide(true);
 		Controls.StartPosPulldown:SetHide(true);
+		Controls.StartPosPlayerPulldown:SetHide(true);
 		Controls.StartPosTabControl:SetHide(true);
 		Controls.OwnerPulldown:SetHide(true);
 		Controls.ImprovementLabel:SetHide(true);
@@ -530,6 +571,7 @@ function OnModeChanged()
 		Controls.RoutePullDown:SetHide(false);
 		Controls.RoutePillagedButton:SetHide(false);
 		Controls.StartPosPulldown:SetHide(false);
+		Controls.StartPosPlayerPulldown:SetHide(false);
 		Controls.StartPosTabControl:SetHide(false);
 		Controls.OwnerPulldown:SetHide(false);
 		Controls.ImprovementLabel:SetHide(false);
@@ -543,12 +585,46 @@ function OnModeChanged()
 end
 
 -- ===========================================================================
---	Init
+function OnShutdown()
+
+	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "SelectedPlot", m_SelectedPlot);
+
+	Events.CityAddedToMap.Remove( UpdateCityEntries );
+	Events.CityRemovedFromMap.Remove( UpdateCityEntries );
+	Events.FeatureAddedToMap.Remove( UpdatePlotInfo );
+	Events.FeatureChanged.Remove( UpdatePlotInfo );
+	Events.FeatureRemovedFromMap.Remove( UpdatePlotInfo );
+	Events.ImprovementAddedToMap.Remove( UpdatePlotInfo );
+	Events.ImprovementChanged.Remove( UpdatePlotInfo );
+	Events.ImprovementRemovedFromMap.Remove( UpdatePlotInfo );
+	Events.LoadGameViewStateDone.Remove( OnLoadGameViewStateDone );
+	Events.ResourceAddedToMap.Remove( UpdatePlotInfo );
+	Events.ResourceChanged.Remove( UpdatePlotInfo );
+	Events.ResourceRemovedFromMap.Remove( UpdatePlotInfo );
+	Events.RouteAddedToMap.Remove( UpdatePlotInfo );
+	Events.RouteChanged.Remove( UpdatePlotInfo );
+	Events.RouteRemovedFromMap.Remove( UpdatePlotInfo );
+	Events.TerrainTypeChanged.Remove( UpdatePlotInfo );
+
+	LuaEvents.WorldInput_WBSelectPlot.Remove( OnPlotSelected );
+	LuaEvents.WorldBuilder_PlayerAdded.Remove( UpdatePlayerEntries );
+	LuaEvents.WorldBuilder_PlayerRemoved.Remove( UpdatePlayerEntries );
+	LuaEvents.WorldBuilder_PlayerEdited.Remove( UpdatePlayerEntries );
+	LuaEvents.WorldBuilder_StartPositionChanged.Remove( OnStartPositionChanged );
+	LuaEvents.WorldBuilder_ModeChanged.Remove( OnModeChanged );
+end
+
+
 -- ===========================================================================
 function OnInit()
 	-- TerrainPullDown
+	local idx:number = 1;
 	for type in GameInfo.Terrains() do
 		table.insert(m_TerrainTypeEntries, { Text=type.Name, Type=type });
+		if type.Name == "LOC_TERRAIN_COAST_NAME" then
+			m_CoastIndex = idx;
+		end
+		idx = idx + 1;
 	end
 	Controls.TerrainPullDown:SetEntries( m_TerrainTypeEntries, 1 );
 	Controls.TerrainPullDown:SetEntrySelectedCallback( OnTerrainTypeSelected );
@@ -567,8 +643,12 @@ function OnInit()
 
 	-- ResourcePullDown
 	table.insert(m_ResourceTypeEntries, { Text="LOC_WORLDBUILDER_NO_RESOURCE" });
+	local idx : number = 1;
 	for type in GameInfo.Resources() do
-		table.insert(m_ResourceTypeEntries, { Text=type.Name, Type=type, Class=type.ResourceClassType });
+		if WorldBuilder.MapManager():IsImprovementPlaceable(type.Index) then
+			table.insert(m_ResourceTypeEntries, { Text=type.Name, Type=type, Class=type.ResourceClassType, Index=idx });
+		end
+		idx = idx + 1;
 	end
 	Controls.ResourcePullDown:SetEntries( m_ResourceTypeEntries, 1 );
 	Controls.ResourcePullDown:SetEntrySelectedCallback( OnResourceTypeSelected );
@@ -606,7 +686,9 @@ function OnInit()
 
 	-- StartPosLeaderPulldown
 	for type in GameInfo.Leaders() do
-		table.insert(m_LeaderEntries, { Text=type.Name, Type=type });
+		if type.Name ~= "LOC_EMPTY" then
+			table.insert(m_LeaderEntries, { Text=type.Name, Type=type });
+		end
 	end
 	Controls.StartPosLeaderPulldown:SetEntries( m_LeaderEntries, 1 );
 	Controls.StartPosLeaderPulldown:SetEntrySelectedCallback( OnStartPosLeaderSelected );
@@ -659,38 +741,43 @@ function OnInit()
 		Controls.StartPosLabel:SetHide(false);
 		Controls.OwnerLabel:SetHide(false);
 	end
+end
+
+
+-- ===========================================================================
+function Initialize()
 
 	-- Register for events
+	ContextPtr:SetInitHandler( OnInit );
 	ContextPtr:SetShowHandler( OnShow );
 	ContextPtr:SetHideHandler( OnHide );
-	Events.LoadGameViewStateDone.Add( OnLoadGameViewStateDone );
-	LuaEvents.WorldInput_WBSelectPlot.Add( OnPlotSelected );
-
-	Events.TerrainTypeChanged.Add( UpdatePlotInfo );
-
-	Events.FeatureAddedToMap.Add( UpdatePlotInfo );
-	Events.FeatureChanged.Add( UpdatePlotInfo );
-	Events.FeatureRemovedFromMap.Add( UpdatePlotInfo );
-
-	Events.ResourceAddedToMap.Add( UpdatePlotInfo );
-	Events.ResourceChanged.Add( UpdatePlotInfo );
-	Events.ResourceRemovedFromMap.Add( UpdatePlotInfo );
+	ContextPtr:SetShutdown( OnShutdown );
 
 	Events.CityAddedToMap.Add( UpdateCityEntries );
 	Events.CityRemovedFromMap.Add( UpdateCityEntries );
-
+	Events.FeatureAddedToMap.Add( UpdatePlotInfo );
+	Events.FeatureChanged.Add( UpdatePlotInfo );
+	Events.FeatureRemovedFromMap.Add( UpdatePlotInfo );
 	Events.ImprovementAddedToMap.Add( UpdatePlotInfo );
 	Events.ImprovementChanged.Add( UpdatePlotInfo );
 	Events.ImprovementRemovedFromMap.Add( UpdatePlotInfo );
-
+	Events.LoadGameViewStateDone.Add( OnLoadGameViewStateDone );
+	Events.ResourceAddedToMap.Add( UpdatePlotInfo );
+	Events.ResourceChanged.Add( UpdatePlotInfo );
+	Events.ResourceRemovedFromMap.Add( UpdatePlotInfo );
 	Events.RouteAddedToMap.Add( UpdatePlotInfo );
 	Events.RouteChanged.Add( UpdatePlotInfo );
 	Events.RouteRemovedFromMap.Add( UpdatePlotInfo );
+	Events.TerrainTypeChanged.Add( UpdatePlotInfo );
 
+	LuaEvents.WorldInput_WBSelectPlot.Add( OnPlotSelected );
 	LuaEvents.WorldBuilder_PlayerAdded.Add( UpdatePlayerEntries );
 	LuaEvents.WorldBuilder_PlayerRemoved.Add( UpdatePlayerEntries );
 	LuaEvents.WorldBuilder_PlayerEdited.Add( UpdatePlayerEntries );
 	LuaEvents.WorldBuilder_StartPositionChanged.Add( OnStartPositionChanged );
 	LuaEvents.WorldBuilder_ModeChanged.Add( OnModeChanged );
+
+	UpdatePlayerEntries();
+	UpdateCityEntries();
 end
-ContextPtr:SetInitHandler( OnInit );
+Initialize();

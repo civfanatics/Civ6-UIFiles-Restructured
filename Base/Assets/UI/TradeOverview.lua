@@ -337,17 +337,16 @@ function AddRoute(originPlayer:table, originCity:table, destinationPlayer:table,
 	routeInstance.NoBenefitsLabel:SetHide(false);
 
 	-- XOR used to show right benefits when origin/destination switch between tabs
-	local yieldValues = {};
-
+	local kRouteInfo:table = {};
 	if m_showMyBenefits == not (m_currentTab == TRADE_TABS.ROUTES_TO_CITIES) then
-		yieldValues = GetYieldsFromCity(originCity, destinationCity);
+		kRouteInfo = GetYieldsForRoute(originCity, destinationCity);
 	else
-		yieldValues = GetYieldsForDestinationCity(originCity, destinationCity);
+		kRouteInfo = GetYieldsForRoute(originCity, destinationCity, true);
 	end
 
-	for yieldIndex=1, #yieldValues, 1 do
+	for yieldIndex=1, #kRouteInfo.kYieldValues, 1 do
 
-		local yieldValue = yieldValues[yieldIndex];
+		local yieldValue = kRouteInfo.kYieldValues[yieldIndex];
 
 		if (yieldValue ~= 0 ) then
 
@@ -382,6 +381,8 @@ function AddRoute(originPlayer:table, originCity:table, destinationPlayer:table,
 	end
 	routeInstance.ResourceStack:CalculateSize();
 
+	routeInstance.GridButton:SetToolTipString(kRouteInfo.TooltipText);
+
 	-- If showing benefits for my city then the destinations religions pressure will be shown
 	local influencingCity:table = nil;
 	local influencedCity:table = nil;
@@ -394,15 +395,12 @@ function AddRoute(originPlayer:table, originCity:table, destinationPlayer:table,
 		influencedCity = destinationCity;
 	end
 
-	routeInstance.ReligionPressureContainer:SetHide(true);
-	--[[
 	-- Show the religions pressure from the influencing city
-	local cityReligion = influencingCity:GetReligion();
-	local majorReligion = cityReligion:GetMajorityReligion();
-	if majorReligion > 0 then
-		local religionInfo:table = GameInfo.Religions[majorReligion];
+	if kRouteInfo.MajorityReligion > 0 and kRouteInfo.ReligionPressure > 0 then
+		local religionInfo:table = GameInfo.Religions[kRouteInfo.MajorityReligion];
 		local iconName:string = DATA_ICON_PREFIX .. religionInfo.ReligionType;
 		local majorityReligionColor:number = UI.GetColorValue(religionInfo.Color);
+		
 		if majorityReligionColor ~= nil then
 			routeInstance.ReligionPressureIcon:SetColor(majorityReligionColor);
 		end
@@ -410,12 +408,17 @@ function AddRoute(originPlayer:table, originCity:table, destinationPlayer:table,
 		if textureOffsetX ~= nil then
 			routeInstance.ReligionPressureIcon:SetTexture( textureOffsetX, textureOffsetY, textureSheet );
 		end
+
+		routeInstance.ReligionPressureValue:SetColor(UI.GetColorValue(religionInfo.Color));
+		routeInstance.ReligionPressureValue:SetText("+" .. Round(kRouteInfo.ReligionPressure,1));
+		
+		routeInstance.ReligionPressureContainer:SetToolTipString(Locale.Lookup(religionInfo.Name));
 		routeInstance.ReligionPressureContainer:SetHide(false);
-		routeInstance.ReligionPressureContainer:LocalizeAndSetToolTip("LOC_TRADE_OVERVIEW_TOOLTIP_RELIGIOUS_INFLUENCE", Locale.Lookup(influencingCity:GetName()), Locale.Lookup(religionInfo.Name), Locale.Lookup(influencedCity:GetName()));
+
+		routeInstance.NoBenefitsLabel:SetHide(true);
 	else
 		routeInstance.ReligionPressureContainer:SetHide(true);
 	end
-	--]]
 
 	-- Update Trading Post Icon
 	if destinationCity:GetTrade():HasActiveTradingPost(originPlayer) then
@@ -425,6 +428,9 @@ function AddRoute(originPlayer:table, originCity:table, destinationPlayer:table,
 		routeInstance.TradingPostIndicator:SetAlpha(0.2);
 		routeInstance.TradingPostIndicator:LocalizeAndSetToolTip("LOC_TRADE_OVERVIEW_TOOLTIP_NO_TRADE_POST");
 	end
+
+	-- Update Path Bonus Icon
+	routeInstance.RouteBonusIcon:SetHide(not kRouteInfo.HasPathBonus);
 
 	-- Update distance to city
 	local distanceToDestination:number = Map.GetPlotDistance(originCity:GetX(), originCity:GetY(), destinationCity:GetX(), destinationCity:GetY());
@@ -654,29 +660,6 @@ function CreateUnusedRoutesHeader()
 
 	headerInstance.VisibilityBonusGrid:SetHide(true);
 	headerInstance.TourismBonusGrid:SetHide(true);
-end
-
--- ===========================================================================
-function GetYieldsFromCity(originCity:table, destinationCity:table)
-	local tradeManager = Game.GetTradeManager();
-
-	-- From route
-	local routeYields = tradeManager:CalculateOriginYieldsFromPotentialRoute(originCity:GetOwner(), originCity:GetID(), destinationCity:GetOwner(), destinationCity:GetID());
-	-- From path
-	local pathYields = tradeManager:CalculateOriginYieldsFromPath(originCity:GetOwner(), originCity:GetID(), destinationCity:GetOwner(), destinationCity:GetID());
-	-- From modifiers
-	local modifierYields = tradeManager:CalculateOriginYieldsFromModifiers(originCity:GetOwner(), originCity:GetID(), destinationCity:GetOwner(), destinationCity:GetID());
-
-	-- Add the yields together and return the result
-	local i;
-	local yieldCount = #routeYields;
-
-	for i=1, yieldCount, 1 do
-		routeYields[i] = routeYields[i] + pathYields[i] + modifierYields[i];
-	end
-
-	return routeYields;
-
 end
 
 -- ===========================================================================

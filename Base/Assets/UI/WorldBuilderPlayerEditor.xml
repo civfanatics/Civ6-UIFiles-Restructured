@@ -49,11 +49,11 @@
 					<!-- ==================================================================	-->
 					<!--	Tab Header																												-->
 					<!-- ==================================================================	-->
-					<Container ID="TabArea" Anchor="C,T" Offset="0,0" Size="parent,42">
-						<Container ID="TabContainer" Offset="0,0" Size="parent,34" />
+					<Container ID="TabArea" Anchor="L,T" Offset="0,0" Size="parent,84">
+						<Container ID="TabContainer" Offset="0,0" Size="parent,74" />
 					</Container>
 
-					<ScrollPanel ID="Scroll" Offset="4,4" Size="parent-8,parent-70" Vertical="1" AutoScrollBar="1">
+					<ScrollPanel ID="Scroll" Offset="4,4" Size="parent-8,parent-140" Vertical="1" AutoScrollBar="1">
 						<Stack ID="Stack" Anchor="C,T" Offset="0,0" StackPadding="4"/>
 						<ScrollBar Anchor="R,C" Offset="2,0" Size="11,parent" AnchorSide="I,I" Style="ScrollVerticalBarAlt" />
 					</ScrollPanel>
@@ -68,7 +68,7 @@
 	<!--	Instances																													-->
 	<!-- ==================================================================	-->
 	<Instance				Name="TabInstance">
-		<GridButton			ID="Button"					Size="50,34" Style="ShellTab">
+		<GridButton			ID="Button"					Size="40,34"  Style="ShellTab">
       <AlphaAnim ID="Selection" Anchor="C,C" Speed="5" AlphaBegin="0" AlphaEnd="1" Cycle="Once" Function="Root" Hidden="1" >
         <GridButton Size="parent+2,parent-2" Style="ShellTabSelected" Anchor="C,C"/>
       </AlphaAnim>
@@ -160,7 +160,7 @@
 
 	<!-- Player Civics Tab -->
 	<Instance Name="PlayerCivicsInstance">
-    <Grid Size="265,parent" Style="DecoGrid" Color="26,61,90,255">
+    <Grid Size="325,parent" Style="DecoGrid" Color="26,61,90,255">
       <!-- Civics Header -->
       <Grid Size="parent,21" Offset="0,12" Texture="Shell_SectionHeader" SliceCorner="4,10" SliceSize="300,1" SliceTextureSize="308,21" Color="20,144,140,100" >
         <Image Texture="Controls_Gradient_HalfRadial" Color="20,144,140,100" FlipY="1" Anchor="C,T" Size="225,94"/>
@@ -339,7 +339,7 @@
       </Grid>
 
 				<!-- Buildings List-->
-				<ListBox ID="BuildingsList" Anchor="C,T" Offset="0,0" Size="240,300" ListContainer="BuildingsListContainer">
+				<ListBox ID="BuildingsList" Anchor="C,T" Offset="0,0" Size="300,300" ListContainer="BuildingsListContainer">
 					
           <Grid Size="parent,parent" Texture="Controls_Slot" SliceCorner="17,17" SliceTextureSize="34,34">
             <ScrollPanel Size="parent,parent-4" Anchor="C,T" Vertical="1" Offset="0,2" >

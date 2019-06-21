@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Context>
+	<Instance Name="ToolInstance">
+		<GridButton ID="Button"		Anchor="C,T" Size="46,48" Style="TabButton" ToolTip="LOC_WORLDBUILDER_CLEAR_RESOURCES">			
+			<Image		ID="Icon"			Anchor="C,C" Size="32,32" Icon="ICON_YIELD_FOOD_1"/>
+			<Grid			ID="Active"		Style="TabButtonSelectedInnerGlow" Hidden="1" />
+		</GridButton>
+	</Instance>
+
+	<Container			ID="ToolsContainer"										Size="96,auto" Offset="0,50" ConsumeMouseOver="1">
+		<Grid					ID="ToolsBacking"		Style="Subheader" Size="96,auto" Offset="0,0" Color="HUDRIBBON_STATS_SHOW">
+			<Stack StackGrowth="Bottom">
+				<Stack			ID="ToolsStack"			Anchor="C,T" Offset="1,0" StackGrowth="Right" WrapGrowth="Bottom" WrapWidth="110" StackPadding="0" WrapPadding="-4" EndPadding="0" />
+				<Container	ID="AdvancedTools"  Size="auto,auto" Offset="0,4">
+					<Label Style="FontNormal10"		Anchor="C,T" Color="White" String="LOC_WORLDBUILDER_ADVANCED_TOOLS" />
+					<Stack			ID="AdvancedStack"	Anchor="C,T" Offset="1,10" 	StackGrowth="Right" WrapGrowth="Bottom" WrapWidth="100" StackPadding="0" WrapPadding="-4" />
+				</Container>
+				<GridButton ID="ToggleAdvanced" Offset="0,2" String="LOC_WORLDBUILDER_SWITCH_ADV" Size="parent,30" Style="ButtonControl" ToolTip="LOC_WORLDBUILDER_SWITCH_ADV_POPUP_TEXT" TruncateWidth="92"/>
+			</Stack>
+		</Grid>
+	</Container>
+
+	<Container ID="SwitchPopup" Anchor="C,C" Size="680,280">
+		<Image ID="ModalBG" Size="680,280" Offset="0,0" Texture="WorldBuilder_BG" StretchMode="Tile" ConsumeMouse="1"/>
+		<Grid	Size="parent,40" Texture="Controls_SubHeader2" ConsumeMouse="1" SliceCorner="20,2" SliceTextureSize="40,40">
+		  <Label ID="ModalScreenTitle" String="LOC_WORLDBUILDER_SWITCH_ADV_POPUP_TITLE" Anchor="C,C" Style="FontFlair24" FontStyle="glow" ColorSet="ShellHeader" SmallCaps="28" SmallCapsLeading="0" SmallCapsType="EveryWord"/>
+		</Grid>
+		<Grid	Offset="-8,-8"	Size="parent+16,parent+16"	Style="ScreenFrame"/>
+
+		<Grid Size="648,170" Offset="20,50" Texture="Religion_OverviewFrame" SliceCorner="15,15" SliceTextureSize="34,33">
+				<Label Offset="20,20" WrapWidth="560" Style="FontNormal20" FontStyle="shadow" ColorSet="ShellHeader" String="LOC_WORLDBUILDER_SWITCH_ADV_POPUP_TEXT" />
+		</Grid>
+		<GridButton ID="ConfirmButton" Size="200,48" Offset="17,8" String="LOC_CONTINUE" Style="ButtonConfirm" Anchor="R,B"/>
+		<GridButton ID="CancelButton" Size="200,48" Offset="20,8" String="LOC_CANCEL" Style="ButtonRed" Anchor="L,B"/>
+	</Container>
+
+</Context>

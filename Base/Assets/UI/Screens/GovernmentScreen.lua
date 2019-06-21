@@ -96,7 +96,7 @@ local SIZE_POLICY_ROW_MIN					:number = 675;
 local SIZE_POLICY_ROW_MAX					:number = 1120; -- Evaluated size when in 1080p. Fits 6 cards nicely.
 local SIZE_POLICY_CATALOG_MIN				:number = 512+15; -- Half minspec screen + some extra
 local SIZE_POLICY_CATALOG_MAX				:number = 1400; -- Selected by me making up a number because unbounded looks goofy in 4k
-local SIZE_POLICY_CARD_X					:number = 130;
+local SIZE_POLICY_CARD_X					:number = 140;
 local SIZE_POLICY_CARD_Y					:number = 150;
 local SIZE_MIN_SPEC_X						:number = 1024;
 local TXT_GOV_ASSIGN_POLICIES				:string = Locale.Lookup("LOC_GOVT_ASSIGN_ALL_POLICIES");
@@ -108,7 +108,6 @@ local TXT_GOV_POPUP_PROMPT_POLICIES_CONFIRM	:string = Locale.Lookup("LOC_GOVT_PO
 local TXT_GOV_POPUP_YES						:string = Locale.Lookup("LOC_GOVT_PROMPT_YES");
 local MAX_HEIGHT_POLICIES_LIST				:number = 600;
 local MAX_HEIGHT_GOVT_DESC					:number = 25;
-local MAX_BEFORE_TRUNC_GOVT_BONUS			:number = 229;
 local MAX_BEFORE_TRUNC_BONUS_TEXT			:number = 219;
 local MAX_BEFORE_TRUNC_HERITAGE_BONUS		:number = 225;
 
@@ -356,7 +355,7 @@ function RealizeMyGovernmentPage()
 		local iBonusIncrement			:number = kPlayerCulture:GetIncrementingBonusIncrement(iBonusIndex);
 		local iTurnsRequiredForBonus	:number = kPlayerCulture:GetIncrementingBonusInterval(iBonusIndex);
 		local iTurnsTillNextBonus		:number = kPlayerCulture:GetIncrementingBonusTurnsUntilNext(iBonusIndex);
-		local accumulatedBonusText		:string = Locale.ToUpper(Locale.Lookup(g_kCurrentGovernment.BonusAccumulatedText));
+		local accumulatedBonusText		:string = Locale.ToUpper(g_kCurrentGovernment.BonusAccumulatedText);
 		local accumulatedBonusTooltip	:string = Locale.Lookup(g_kCurrentGovernment.BonusAccumulatedTooltip);
 				
 		Controls.BonusPercent:SetText( tostring(iFlatBonus) );
@@ -445,7 +444,7 @@ function RealizeMyGovernmentPage()
 				local heritageInstance:table = {};	
 				ContextPtr:BuildInstanceForControl( "HeritageBonusInstance", heritageInstance, Controls.HeritageBonusStack );
 				isHeritageBonusEmpty = false;
-				local accumulatedBonusText:string = Locale.ToUpper(Locale.Lookup(government.BonusAccumulatedText));
+				local accumulatedBonusText:string = Locale.ToUpper(government.BonusAccumulatedText);
 				if TruncateString(heritageInstance.Text, MAX_BEFORE_TRUNC_HERITAGE_BONUS, accumulatedBonusText) then
 					heritageInstance.Text:SetToolTipString(accumulatedBonusText);
 				end
@@ -672,7 +671,7 @@ function RealizeGovernmentInstance(governmentType:string, inst:table, isCivilope
 		inst.GovernmentImage:SetHide( false );
 	end
 	
-	inst.GovernmentName	:SetText( Locale.ToUpper( Locale.Lookup(government.Name) ));
+	inst.GovernmentName:SetText( Locale.ToUpper(government.Name));
 	inst.GovernmentImage:SetTexture(GameInfo.Governments[government.Index].GovernmentType);
 	local textColor:number = GetGovernmentTextColor(governmentType);
 	local bonusName:string = GameInfo.Governments[government.Index].BonusType or "NO_GOVERNMENTBONUS";
@@ -695,15 +694,9 @@ function RealizeGovernmentInstance(governmentType:string, inst:table, isCivilope
 	if m_kBonuses[governmentType] ~= nil then
 		inst.GovPercentBonusArea:SetHide( false );
 		inst.BonusPercent:SetText( m_kBonuses[governmentType].BonusPercent );
-		inst.BonusText:SetText(	Locale.ToUpper(Locale.Lookup(government.BonusAccumulatedText)) );
+		inst.BonusText:SetText(	Locale.ToUpper(government.BonusAccumulatedText) );
 
-		local governmentBonusText = Locale.Lookup(government.BonusInherentText);
-		inst.GovernmentBonus:SetText( Locale.ToUpper(governmentBonusText) );
-		if inst.GovernmentBonus:GetSizeY() > MAX_HEIGHT_GOVT_DESC then
-			if(TruncateString(inst.GovernmentBonus, MAX_BEFORE_TRUNC_GOVT_BONUS, Locale.ToUpper(governmentBonusText))) then
-				inst.GovernmentBonus:SetToolTipString(governmentBonusText);
-			end
-		end
+		inst.GovernmentBonus:SetText( Locale.ToUpper(government.BonusInherentText) );
 
 		inst.GovernmentStats:SetText( government.StatsText );
 		inst.GovernmentStats:SetToolTipString( government.StatsTooltip );
@@ -715,7 +708,7 @@ function RealizeGovernmentInstance(governmentType:string, inst:table, isCivilope
 	else
 		if government.BonusAccumulatedText ~= nil and government.BonusAccumulatedText ~= "" then
 			inst.GovPercentBonusArea:SetHide( false );
-			inst.GovernmentBonus:SetText(	Locale.ToUpper(Locale.Lookup(government.BonusAccumulatedText)) );
+			inst.GovernmentBonus:SetText(	Locale.ToUpper(government.BonusAccumulatedText) );
 			inst.GovernmentStats:SetText( government.StatsText );
 			inst.GovernmentStats:SetToolTipString( government.StatsTooltip );
 			inst.BonusPercent:SetText("0");
@@ -902,9 +895,9 @@ function RealizePoliciesList()
 	Controls.PoliciesListStack:DestroyAllChildren();
 
 	if m_isPoliciesChanged then
-		Controls.PoliciesListLabel:SetText( Locale.ToUpper(Locale.Lookup("LOC_GOVT_PENDING_POLICIES_LIST")) );
+		Controls.PoliciesListLabel:SetText( Locale.ToUpper("LOC_GOVT_PENDING_POLICIES_LIST") );
 	else
-		Controls.PoliciesListLabel:SetText( Locale.ToUpper(Locale.Lookup("LOC_GOVT_POLICIES_LIST")) );
+		Controls.PoliciesListLabel:SetText( Locale.ToUpper("LOC_GOVT_POLICIES_LIST") );
 	end
 
 	-- Build cards in the rows (one of the few places rows does not mean DB rows, but visual "rows" of beautiful felt.)
@@ -1028,6 +1021,7 @@ function RealizePolicyCatalog()
 
 				cardInstance[KEY_POLICY_TYPE] = policyType;
 				cardInstance[KEY_POLICY_SLOT] = -1;
+				cardInstance.Draggable:SetDisabled(false);
 				cardInstance.Draggable:RegisterCallback( Drag.eDown, function(dragStruct) OnStartDragFromCatalog(dragStruct, cardInstance); end );
 				cardInstance.Draggable:RegisterCallback( Drag.eDrop, function(dragStruct) OnDropFromCatalog(dragStruct, cardInstance); end );
 				cardInstance.Draggable:RegisterCallback( Drag.eDrag, function(dragStruct) OnDragFromCatalog(dragStruct, cardInstance); end );
@@ -1042,7 +1036,7 @@ function RealizePolicyCatalog()
 
 				-- Reset values that may have been changed by the 'padding' instances
 				cardInstance.Content:SetAlpha(1);
-				cardInstance.Content:SetSizeX(130);
+				cardInstance.Content:SetSizeX(SIZE_POLICY_CARD_X);
 
 				-- Give policy cards feedback when hovered, but only if editable
 				if isAbleToChangePolicies then
@@ -1056,6 +1050,7 @@ function RealizePolicyCatalog()
 	-- Add 4 blank cards to the end of the stack to add some spacing to the scroll area
 	for i=1, 4 do
 		local cardInstance:table = m_policyCardIM:GetInstance();
+		cardInstance.Draggable:SetDisabled(true);
 		cardInstance.Content:SetSizeX(PADDING_POLICY_SCROLL_AREA);
 		cardInstance.Content:SetAlpha(0);
 	end
@@ -1215,13 +1210,9 @@ function RealizeActivePoliciesRows()
 	-- Destroy any cards currently sitting in the rows
 	-- WARNING: Call this while a snap-back is occuring will lock.
 	Controls.StackMilitary:DestroyAllChildren();
-	Controls.TopStackMilitary:DestroyAllChildren();
 	Controls.StackEconomic:DestroyAllChildren();
-	Controls.TopStackEconomic:DestroyAllChildren();
 	Controls.StackDiplomatic:DestroyAllChildren();
-	Controls.TopStackDiplomatic:DestroyAllChildren();
 	Controls.StackWildcard:DestroyAllChildren();
-	Controls.TopStackWildcard:DestroyAllChildren();
 
 	local tStackControls :table = {}; -- Simple map to go from ROW_INDEX to the appropriate stack (Do not make global, Control.* makes no guarantees)
 	tStackControls[ROW_INDEX.MILITARY] = Controls.StackMilitary;
@@ -2541,6 +2532,17 @@ end
 --	UI EVENT
 -- ===========================================================================
 function OnShutdown()
+	-- Clear Lua Events
+	LuaEvents.LaunchBar_CloseGovernmentPanel.Remove( OnCloseFromLaunchBar );
+	LuaEvents.GameDebug_Return.Remove( OnGameDebugReturn );
+	LuaEvents.NotificationPanel_GovernmentOpenGovernments.Remove( OnOpenGovernmentScreenGovernments );
+	LuaEvents.NotificationPanel_GovernmentOpenPolicies.Remove( OnOpenGovernmentScreenPolicies );
+	LuaEvents.LaunchBar_GovernmentOpenMyGovernment.Remove( OnOpenGovernmentScreenMyGovernment );	
+	LuaEvents.LaunchBar_GovernmentOpenGovernments.Remove( OnOpenGovernmentScreenGovernments );	
+	LuaEvents.TechCivicCompletedPopup_GovernmentOpenGovernments.Remove( OnOpenGovernmentScreenGovernments );
+	LuaEvents.TechCivicCompletedPopup_GovernmentOpenPolicies.Remove( OnOpenGovernmentScreenPolicies );
+	LuaEvents.Advisor_GovernmentOpenPolicies.Remove( OnOpenGovernmentScreenPolicies );
+
 	-- Cache values for hotloading...
 	local eOpenTabAtInit = nil;
 	if ( ContextPtr:IsVisible() ) then
