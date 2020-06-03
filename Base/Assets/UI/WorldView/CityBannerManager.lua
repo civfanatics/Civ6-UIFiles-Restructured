@@ -1193,7 +1193,9 @@ function CityBanner.UpdateName( self : CityBanner )
 				if civType ~= nil then
 					self.m_Instance.CivIcon:SetIcon("ICON_" .. civType);
 				else
-					UI.DataError("Invalid type name returned by GetCivilizationTypeName");
+					if WorldBuilder.IsActive()==false then
+						UI.DataError("Invalid type name returned by GetCivilizationTypeName");
+					end
 				end
 			end
 
@@ -2928,6 +2930,7 @@ function Initialize()
 	Events.CityNameChanged.Add(					OnCityNameChange );
 	Events.CityProductionQueueChanged.Add(OnCityProductionChanged);
 	Events.CityProductionUpdated.Add(			OnCityProductionUpdate); 
+	Events.CityProductionChanged.Add(			OnCityProductionChanged); 
 	Events.CityProductionCompleted.Add(			OnCityProductionCompleted);
 	Events.CityReligionChanged.Add(				OnCityReligionChanged );
 	Events.CityReligionFollowersChanged.Add(	OnCityReligionChanged );

@@ -140,11 +140,11 @@
           <!-- Language Pulldown -->
           <Container Anchor="C,T" Size="parent,36">
             <Label Anchor="L,C" Offset="10,0" Style="ShellOptionText" String="LOC_OPTIONS_LANGUAGE"/>
-            <SimplePullDown ID="LanguagePullDown" Anchor="R,C" Offset="10,0" Style="PullDownBlue" ScrollThreshold="400" Size="200,24" SpaceForScroll="0" EntryInstance="InstanceOne"/>
+            <SimplePullDown ID="LanguagePullDown" Anchor="R,C" Offset="10,20" Style="PullDownBlue" ScrollThreshold="400" Size="285,24" SpaceForScroll="0" EntryInstance="InstanceOne"/>
           </Container>
 								   
           <!-- Key/String List-->
-          <ListBox ID="KeyStringList" Anchor="C,T" Size="parent-20,280" ListContainer="KeyStringListContainer">
+          <ListBox ID="KeyStringList" Anchor="C,T" Size="parent-20,280" Offset="0,20" ListContainer="KeyStringListContainer">
 
             <Grid Anchor="L,T" Size="parent,parent" Texture="Controls_Slot" SliceCorner="17,17" SliceTextureSize="34,34">
               <ScrollPanel Size="parent,parent" Anchor="C,T" Vertical="1">
@@ -157,7 +157,7 @@
             </Grid>
 
             <InstanceData Name="EntryInstance" >
-              <GridButton ID="Button" Size="parent,54" Style="ButtonControl" Anchor="C,T">
+              <GridButton ID="Button" Size="parent-20,54" Style="ButtonControl" Anchor="C,T">
                 <Stack StackGrowth="Bottom" Anchor="L,T" StackPadding="3">
   				  <Label ID="Annotation" Style="FontNormal12" Anchor="L,C" Size="320,30" Offset="10,6"/>
                   <EditBox ID="KeyEdit" Style="FontNormal14" Anchor="L,C" Size="parent,30" EditMode="1" Hidden="1"/>
@@ -168,7 +168,7 @@
 
           </ListBox>
 
-          <Stack Anchor="C,T" StackGrowth="Down" StackPadding="5">
+          <Stack Anchor="C,T" StackGrowth="Down" StackPadding="5" Offset="0,20">
             <GridButton ID="AddText" String="LOC_WORLDBUILDER_ADD_BUTTON" Size="200,26" Style="MainButtonSmall" />
             <GridButton ID="RemoveText" String="LOC_WORLDBUILDER_REMOVE_BUTTON" Size="200,26" Style="MainButtonSmall" />
           </Stack>

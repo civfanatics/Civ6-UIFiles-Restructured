@@ -1,7 +1,8 @@
 g_PanelHasFocus = false;
 g_SelectedPlayer = -1;
 g_SelectedUnitID = -1;
-
+g_ShowAllUnitAbilities = false;
+g_SelectedUnitAbility = -1;
 -------------------------------------------------------------------------------
 function GetSelectedUnit()
 	if (g_SelectedPlayer >= 0 and g_SelectedUnitID >= 0) then

@@ -150,7 +150,7 @@ function ShowEmergency( kData: table )
 					if bIsLocalPlayer then
 						Controls.VictorTitle:SetText(Locale.Lookup("LOC_SCORED_COMPETITION_YOU_WIN"));
 					else
-						local winnerName:string = GetPlayerName(playerTierID);
+						local winnerName:string = GetVisiblePlayerName(playerTierID);
 						Controls.VictorTitle:SetText(Locale.Lookup("LOC_SCORED_COMPETITION_LEADER_WINS", winnerName));
 					end
 				end
@@ -165,6 +165,15 @@ function ShowEmergency( kData: table )
 						bgColor = "Emergency_Bronze"
 					end
 				end
+			end
+		end
+	end
+
+	if GameInfo.Emergencies_XP2[emergencyType].Hostile then
+		--Give "first place" to all members who earned points in non-ranked emergency
+		for playerTierID:number,tierValue:number in pairs(kData.memberTiers) do
+			if(tierValue > 1) then 
+				kData.memberTiers[playerTierID] = 1;
 			end
 		end
 	end

@@ -10,27 +10,23 @@
   <Image Texture="Controls_Gradient" Size="150,parent"  Color="0,0,0,255" Anchor="R,T" Rotate="270"/>
   <Image Texture="Controls_Gradient" Size="parent,150"  Color="0,0,0,255" Anchor="L,T" FlipY="1"/>
   <Image Texture="Controls_Gradient" Size="parent,150"  Color="0,0,0,255" Anchor="L,B"/>
-  <Grid ID="PopupDrowShadowGrid" Anchor="C,C" Offset="0,0" Size="625,700" Style="DropShadow" >
-    <Grid ID="PopupFrameGrid" Anchor="C,C" Size="parent,parent+20" Offset="0,0" Style="EnhancedToolTip">
-      <!-- Corner Icons -->
-      <Button	ID="CloseButton"		Texture="Controls_CloseLarge" Size="44,44" Anchor="R,T"	Offset="10,0"	/>
-        
-      <Grid  Texture="Controls_HeaderMetal" Offset="0,-3" Size="parent-4,50" Anchor="C,T" SliceCorner="30,20" SliceSize="9,10" SliceTextureSize="69,42"/> 
-      <Container Size="353, 42" Anchor="C,T" Offset="0,0">
-        <Label ID="HeaderLabel" String="{LOC_HUD_UNIT_CHOOSE_PROMOTION_TEXT:upper}" Anchor="C,C" Align="C,C" Color0="214,214,214,255"	Color1="0,0,0,55" Offset="0,5" Style="FontFlair20" SmallCaps="26" SmallCapsType="EveryWord" WrapWidth="240" />
-      </Container>
 
-      <!---->
-      <!--UNIT PROMOTION CHOOSER-->
-      <!---->
-      <ScrollPanel	ID="PromotionScrollPanel" Anchor="C,T"	Offset="0,30" 		Size="parent-10,parent-50" Vertical="1">
-        <Label ID="StrMoveLabel" Anchor="L,T" Offset="12,20" Align="L,C" Color0="214,214,214,255"	Color1="0,0,0,55"  Style="FontFlair16"/>
-        <Label ID="ExperienceLabel" Anchor="R,T" Offset="24,20" Align="R,C" Color0="214,214,214,255"	Color1="0,0,0,55"  Style="FontFlair16"/>
-        <Line Color="48,73,95,255" Start="10,40" End="parent-10,40" Width="2" />
-        <ScrollBar														Anchor="R,T"	AnchorSide="I,I"	Style="Slider_Vert" Length="parent-50" />
-      </ScrollPanel>
-        
+  <Grid ID="PopupFrameGrid" Anchor="C,C" Size="1024,768" Offset="0,0" Style="EnhancedToolTip">
+    <!-- Corner Icons -->
+    <Button	ID="CloseButton"		Texture="Controls_CloseLarge" Size="44,44" Anchor="R,T"	Offset="10,0"	/>
+
+    <Grid  Texture="Controls_HeaderMetal" Offset="0,-3" Size="parent-4,50" Anchor="C,T" SliceCorner="30,20" SliceSize="9,10" SliceTextureSize="69,42">
+      <Label ID="HeaderLabel" String="{LOC_HUD_UNIT_CHOOSE_PROMOTION_TEXT:upper}" Anchor="C,C" Offset="0,5" Color0="214,214,214,255"	Color1="0,0,0,55" Style="FontFlair20" SmallCaps="26" SmallCapsType="EveryWord" WrapWidth="parent"/>
     </Grid>
+
+    <Label			ID="StrMoveLabel"					Anchor="L,T" Offset="12,50" Align="L,C" Color0="214,214,214,255"	Color1="0,0,0,55"  Style="FontFlair16"/>
+    <Label			ID="ExperienceLabel"			Anchor="R,T" Offset="24,50" Align="R,C" Color0="214,214,214,255"	Color1="0,0,0,55"  Style="FontFlair16"/>
+    <Line Color="48,73,95,255" Start="10,70" End="parent-10,70" Width="2" />
+
+    <ScrollPanel	ID="PromotionScrollPanel" Anchor="C,T" Offset="0,90" Size="parent-20,parent-110">
+      <Container ID="PromotionContainer" Offset="0,0" Anchor="C,T" Size="auto,auto"/>
+      <ScrollBar	Anchor="C,B"	AnchorSide="I,I" Style="ScrollHorizontalBarAlt"/>
+    </ScrollPanel>
   </Grid>
 
   <!-- Promotion Selection Instance -->

@@ -8,6 +8,7 @@
 -- ===========================================================================
 local RELOAD_CACHE_ID= "WorldBuilderPlotEditor";
 
+local DISTRICT_VALUE_PILLAGED = "Pillaged";
 
 -- ===========================================================================
 --	DATA MEMBERS
@@ -17,6 +18,7 @@ local m_TerrainTypeEntries     : table = {};
 local m_FeatureTypeEntries     : table = {};
 local m_ResourceTypeEntries    : table = {};
 local m_ImprovementTypeEntries : table = {};
+local m_DistrictTypeEntries	   : table = {};
 local m_RouteTypeEntries       : table = {};
 local m_LeaderEntries          : table = {};
 local m_CivEntries             : table = {};
@@ -70,49 +72,68 @@ function UpdateActiveStartPosControl(startPostType)
 	end
 end
 
+-- ===========================================================================
 function UpdatePlotInfo()
 
 	if m_SelectedPlot ~= nil then
-
+		
 		local plot = Map.GetPlotByIndex( m_SelectedPlot );
 		local isWater = plot:IsWater();
 		local hasOwner = plot:IsOwned();
 		local terrainType = plot:GetTerrainType();
+		local improvementType:number = plot:GetImprovementType();
         local owner = hasOwner and WorldBuilder.CityManager():GetPlotOwner( m_SelectedPlot ) or nil;
                 		
 		local plotFeature = plot:GetFeature();
 		Controls.TerrainPullDown:SetSelectedIndex(     terrainType+1,               false );
-		Controls.FeaturePullDown:SetSelectedIndex(     plotFeature:GetType()+2,     false );
 		Controls.FeatureDirectionPulldown:SetSelectedIndex( plotFeature:GetDirection()+2,     false );
-		Controls.ImprovementPullDown:SetSelectedIndex( plot:GetImprovementType()+2, false );
+		Controls.ImprovementPullDown:SetSelectedIndex( improvementType+2, false );
 		Controls.RoutePullDown:SetSelectedIndex(       plot:GetRouteType()+2,       false );
 
+		UpdateDistrictInfo();
+
 		local resToMatch : number = plot:GetResourceType() + 1;
-		for i, entry in ipairs(m_ResourceTypeEntries) do
-			if entry.Index == resToMatch then
-				Controls.ResourcePullDown:SetSelectedIndex(i, false );
-				if entry.Class == "RESOURCECLASS_STRATEGIC" then
-					Controls.ResourceAmount:SetHide(false);
-				else
-					Controls.ResourceAmount:SetHide(true);
+		if resToMatch == 0 then
+			Controls.ResourcePullDown:SetSelectedIndex(1, false );
+		else
+			for i, entry in ipairs(m_ResourceTypeEntries) do
+				if entry.Index == resToMatch then
+					Controls.ResourcePullDown:SetSelectedIndex(i, false );
+					if entry.Class == "RESOURCECLASS_STRATEGIC" then
+						Controls.ResourceAmount:SetHide(false);
+					else
+						Controls.ResourceAmount:SetHide(true);
+					end
+					break;
 				end
-				break;
 			end
 		end
 
-
-		-- don't allow to pillage when there's no feature
-		if plotFeature:GetType() < 3 then
-			Controls.ImprovementPillagedButton:SetDisabled(true);
+		local featToMatch : number = plot:GetFeatureType() + 1;
+		if featToMatch == 0 then
+			Controls.FeaturePullDown:SetSelectedIndex(1, false );
+		else
+			for i, entry in ipairs(m_FeatureTypeEntries) do
+				if entry.Index == featToMatch then
+					Controls.FeaturePullDown:SetSelectedIndex(i, false );
+					break;
+				end
+			end
 		end
-
 
         if IsExpansion2() then
             local eCoastalLowlandType:number = TerrainManager.GetCoastalLowlandType( m_SelectedPlot );
             Controls.LowlandTypePulldown:SetSelectedIndex( eCoastalLowlandType + 2, false );
         end
 
-		Controls.ImprovementPillagedButton:SetSelected( plot:IsImprovementPillaged() );
+		if improvementType > -1 then
+			Controls.ImprovementPillagedButton:SetSelected(plot:IsImprovementPillaged());
+			Controls.ImprovementPillagedButton:SetDisabled(false);
+		else
+			Controls.ImprovementPillagedButton:SetSelected(false);
+			Controls.ImprovementPillagedButton:SetDisabled(true);
+		end
+
 		Controls.RoutePillagedButton:SetSelected( plot:IsRoutePillaged() );
 
 		Controls.RoutePullDown:SetDisabled(isWater);
@@ -130,7 +151,7 @@ function UpdatePlotInfo()
 		for i, entry in ipairs(m_FeatureTypeEntries) do
 			if entry.Type ~= nil then
 				if plotDir == -1 then
-					entry.Button:SetDisabled(not WorldBuilder.MapManager():CanPlaceFeature(m_SelectedPlot, entry.Type.Index, true));
+					entry.Button:SetDisabled(not WorldBuilder.MapManager():CanPlaceFeature(m_SelectedPlot, entry.Type.Index));
 				else
 					entry.Button:SetDisabled(false);
 				end
@@ -175,6 +196,53 @@ function UpdatePlotInfo()
 end
 
 -- ===========================================================================
+function UpdateDistrictInfo()
+	if m_SelectedPlot ~= nil then
+		local pPlot:object = Map.GetPlotByIndex( m_SelectedPlot );
+
+		local pDistrict = CityManager.GetDistrictAt(pPlot);
+		if pDistrict ~= nil then
+			local districtType:number = pPlot:GetDistrictType();
+			Controls.DistrictPullDown:SetSelectedIndex( districtType+2, false );
+
+			local isDistrictPillaged:boolean = WorldBuilder.CityManager():GetDistrictValue(pDistrict, DISTRICT_VALUE_PILLAGED);
+			Controls.DistrictPillagedButton:SetSelected(isDistrictPillaged);
+			Controls.DistrictPillagedButton:SetDisabled(false);
+		else
+			Controls.DistrictPullDown:SetSelectedIndex( 1, false );
+
+			Controls.DistrictPillagedButton:SetSelected(false);
+			Controls.DistrictPillagedButton:SetDisabled(true);
+		end
+
+		-- Update possible district types
+		for i, entry in ipairs(m_DistrictTypeEntries) do
+			if entry.Type ~= nil then
+				local canBuild:boolean = false;
+
+				local kParameters:table = {};
+				kParameters[CityOperationTypes.PARAM_DISTRICT_TYPE] = entry.Type.Hash;
+				kParameters[CityOperationTypes.PARAM_X] = pPlot:GetX();
+				kParameters[CityOperationTypes.PARAM_Y] = pPlot:GetY();
+
+				local kOwner:table = WorldBuilder.CityManager():GetPlotOwner(pPlot);
+				if kOwner ~= nil then
+					local pCity:object = CityManager.GetCity(kOwner.PlayerID, kOwner.CityID);
+					if pCity ~= nil then
+						local bCanStart, kResults = CityManager.CanStartOperation( pCity, CityOperationTypes.BUILD, kParameters, true);
+						if bCanStart then
+							canBuild = true;
+						end
+					end
+				end
+
+				entry.Button:SetDisabled(not canBuild);
+			end
+		end
+	end
+end
+
+-- ===========================================================================
 function UpdateSelectedPlot(plotID)
 
 	if m_SelectedPlot ~= nil then
@@ -205,8 +273,10 @@ function UpdateSelectedPlot(plotID)
 		Controls.SelectedPlotLabel:SetText(string.format("(%i, %i)", plot:GetX(), plot:GetY()));
 		UpdatePlotInfo();
 		UI.HighlightPlots(PlotHighlightTypes.MOVEMENT, true, { plotID } );
+		LuaEvents.WorldBuilder_SetPlacementStatus(" ");
 	else
-		Controls.SelectedPlotLabel:SetText(Locale.Lookup("LOC_WORLD_BUILDER_NO_PLOT_SELECTED_HELP"));
+		LuaEvents.WorldBuilder_SetPlacementStatus(Locale.Lookup("LOC_WORLD_BUILDER_NO_PLOT_SELECTED_HELP"));
+		Controls.SelectedPlotLabel:SetText(Locale.Lookup("LOC_WORLDBUILDER_NONE"));
 	end
 
 	Controls.PlotEditorScrollPanel:CalculateSize();
@@ -229,6 +299,7 @@ function OnShow()
 		UI.SetInterfaceMode( InterfaceModeTypes.WB_SELECT_PLOT );
 	end
 
+	LuaEvents.WorldBuilder_SetPlacementStatus(Locale.Lookup("LOC_WORLD_BUILDER_NO_PLOT_SELECTED_HELP"));
 	LuaEvents.WorldBuilderMapTools_SetTabHeader(Locale.Lookup("LOC_WORLDBUILDER_SELECT_TOOL"));
 end
 
@@ -307,27 +378,73 @@ end
 function OnTerrainTypeSelected(entry)
 	if entry ~= nil then
 		if m_SelectedPlot ~= nil then
+			local featureType :number = nil;
+			local impType :number = nil;
+			local pkPlot : table = Map.GetPlotByIndex(m_SelectedPlot);
+
+			if (pkPlot:GetFeatureType() >= 0) then
+				featureType = pkPlot:GetFeatureType();
+			end
+			if (pkPlot:GetImprovementType() >= 0) then
+				impType = pkPlot:GetImprovementType();
+			end
+
    			WorldBuilder.StartUndoBlock();
 			WorldBuilder.MapManager():SetTerrainType( m_SelectedPlot, entry.Type.Index );
+
+			-- how about the existing feature?
+			if featureType ~= nil and not WorldBuilder.MapManager():CanPlaceFeature( m_SelectedPlot, featureType, true ) then
+				WorldBuilder.MapManager():SetFeatureType( m_SelectedPlot, -1 );
+			end
+
+			-- and the existing improvement?
+			if impType ~= nil and not WorldBuilder.MapManager():CanPlaceImprovement( m_SelectedPlot, impType, pkPlot:GetOwner(), true ) then
+				WorldBuilder.MapManager():SetImprovementType( m_SelectedPlot, -1 );
+			end
 
 			local kPlot : table = Map.GetPlotByIndex(m_SelectedPlot);
 			local adjPlots : table = Map.GetAdjacentPlots(kPlot:GetX(), kPlot:GetY());
 			local coast : table = m_TerrainTypeEntries[m_CoastIndex];
-
-			for i = 1, 6, 1 do
-				if adjPlots[i] ~= nil then
-					local curPlotType : string = m_TerrainTypeEntries[adjPlots[i]:GetTerrainType() + 1].Type.Name;
+			
+			for i, plot in ipairs(adjPlots) do
+				if plot ~= nil then
+					local curPlotType : string = m_TerrainTypeEntries[plot:GetTerrainType() + 1].Type.Name;
 
 					-- if we're placing an ocean tile, add coast
 					if entry.Text == "LOC_TERRAIN_OCEAN_NAME" then
 						-- ocean: neighbor can be ocean or coast
 						if curPlotType ~= "LOC_TERRAIN_OCEAN_NAME" and curPlotType ~= "LOC_TERRAIN_COAST_NAME" then
-							WorldBuilder.MapManager():SetTerrainType( adjPlots[i]:GetIndex(), coast.Type.Index);
+							if (plot:GetFeatureType() >= 0) then
+								featureType = pkPlot:GetFeatureType();
+							end
+							if (plot:GetImprovementType() >= 0) then
+								impType = pkPlot:GetImprovementType();
+							end
+							local foo = plot:GetIndex();
+							WorldBuilder.MapManager():SetTerrainType( plot:GetIndex(), coast.Type.Index);
+							if featureType ~= nil and not WorldBuilder.MapManager():CanPlaceFeature( plot:GetIndex(), featureType, true ) then
+								WorldBuilder.MapManager():SetFeatureType( plot:GetIndex(), -1 );
+							end
+							if impType ~= nil and not WorldBuilder.MapManager():CanPlaceImprovement( plot:GetIndex(), impType, plot:GetOwner(), true ) then
+								WorldBuilder.MapManager():SetImprovementType( plot:GetIndex(), -1 );
+							end
 						end
 					elseif entry.Text ~= "LOC_TERRAIN_COAST_NAME" then
 						-- not coast or ocean, so it's land and neighboring ocean tiles must turn to coast
 						if curPlotType == "LOC_TERRAIN_OCEAN_NAME" then
-							WorldBuilder.MapManager():SetTerrainType( adjPlots[i]:GetIndex(), coast.Type.Index);
+							if (plot:GetFeatureType() >= 0) then
+								featureType = pkPlot:GetFeatureType();
+							end
+							if (plot:GetImprovementType() >= 0) then
+								impType = pkPlot:GetImprovementType();
+							end
+							WorldBuilder.MapManager():SetTerrainType( plot:GetIndex(), coast.Type.Index);
+							if featureType ~= nil and not WorldBuilder.MapManager():CanPlaceFeature( plot:GetIndex(), featureType, true ) then
+								WorldBuilder.MapManager():SetFeatureType( plot:GetIndex(), -1 );
+							end
+							if impType ~= nil and not WorldBuilder.MapManager():CanPlaceImprovement( plot:GetIndex(), impType, adjPlots[i]:GetOwner(), true ) then
+								WorldBusilder.MapManager():SetImprovementType( plot:GetIndex(), -1 );
+							end
 						end
 					end
 				end
@@ -354,13 +471,15 @@ function OnFeatureTypeSelected(entry)
 end
 
 -- ===========================================================================
-function OnFeatureDirectionSelected(entry)
+function OnFeatureDirectionSelected(featureEntry)
 
 	if m_SelectedPlot ~= nil then
-		if entry.Type~= nil then
-			WorldBuilder.MapManager():SetPlotValue( m_SelectedPlot, "Feature", "Direction", entry.Type );
+		if featureEntry.Type~= nil then
+			WorldBuilder.MapManager():SetPlotValue( m_SelectedPlot, "Feature", "Direction", featureEntry.Type );
 			for i, entry in ipairs(m_FeatureTypeEntries) do
-				entry.Button:SetDisabled(false);
+				if entry.Type ~= nil then
+					entry.Button:SetDisabled(not WorldBuilder.MapManager():CanPlaceFeature(m_SelectedPlot, entry.Type.Index));
+				end
 			end
 		else
 			WorldBuilder.MapManager():SetPlotValue( m_SelectedPlot, "Feature", "Direction", DirectionTypes.NO_DIRECTION );
@@ -440,6 +559,46 @@ function OnImprovementPillagedButton()
 		local plot = Map.GetPlotByIndex( m_SelectedPlot );
 		if plot:GetImprovementType() ~= -1 then
 			WorldBuilder.MapManager():SetImprovementPillaged( plot, Controls.ImprovementPillagedButton:IsSelected());
+		end
+	end
+end
+
+-- ===========================================================================
+function OnDistrictTypeSelected(entry)
+	if m_SelectedPlot ~= nil then
+		local pPlot:object = Map.GetPlotByIndex(m_SelectedPlot);
+
+		-- Remove previous district if it exist
+		local pDistrict = CityManager.GetDistrictAt(pPlot);
+		if pDistrict ~= nil then
+			WorldBuilder.CityManager():RemoveDistrict(pDistrict);
+		end
+
+		-- Create new district if we have a type
+		if entry.Type ~= nil then
+			local hasOwner:boolean = pPlot:IsOwned();
+			local kOwner:table = hasOwner and WorldBuilder.CityManager():GetPlotOwner( pPlot ) or nil;
+			if kOwner ~= nil then
+				local pCity:object = CityManager.GetCity(kOwner.PlayerID, kOwner.CityID);
+				if kOwner ~= nil then
+					WorldBuilder.CityManager():CreateDistrict(pCity, entry.Type.DistrictType, 100, pPlot);
+				end
+			end
+		end
+	end
+end
+
+-- ===========================================================================
+function OnDistrictPillagedButton()
+	local shouldBePillaged:boolean = not Controls.DistrictPillagedButton:IsSelected();
+
+	Controls.DistrictPillagedButton:SetSelected(shouldBePillaged);
+
+	if m_SelectedPlot ~= nil then
+		local pPlot:object = Map.GetPlotByIndex( m_SelectedPlot );
+		local pDistrict:table = CityManager.GetDistrictAt(pPlot);
+		if pDistrict ~= nil then
+			WorldBuilder.CityManager():SetDistrictValue(pDistrict, DISTRICT_VALUE_PILLAGED, shouldBePillaged);
 		end
 	end
 end
@@ -555,6 +714,9 @@ function OnModeChanged()
 	if not WorldBuilder.GetWBAdvancedMode() then
 		Controls.ImprovementPullDown:SetHide(true);
 		Controls.ImprovementPillagedButton:SetHide(true);
+		Controls.DistrictLabel:SetHide(true);
+		Controls.DistrictPullDown:SetHide(true);
+		Controls.DistrictPillagedButton:SetHide(true);
 		Controls.RoutePullDown:SetHide(true);
 		Controls.RoutePillagedButton:SetHide(true);
 		Controls.StartPosPulldown:SetHide(true);
@@ -568,6 +730,9 @@ function OnModeChanged()
 	else	-- and show them in Advanced Mode
 		Controls.ImprovementPullDown:SetHide(false);
 		Controls.ImprovementPillagedButton:SetHide(false);
+		Controls.DistrictLabel:SetHide(false);
+		Controls.DistrictPullDown:SetHide(false);
+		Controls.DistrictPillagedButton:SetHide(false);
 		Controls.RoutePullDown:SetHide(false);
 		Controls.RoutePillagedButton:SetHide(false);
 		Controls.StartPosPulldown:SetHide(false);
@@ -612,6 +777,7 @@ function OnShutdown()
 	LuaEvents.WorldBuilder_PlayerEdited.Remove( UpdatePlayerEntries );
 	LuaEvents.WorldBuilder_StartPositionChanged.Remove( OnStartPositionChanged );
 	LuaEvents.WorldBuilder_ModeChanged.Remove( OnModeChanged );
+	LuaEvents.WorldBuilder_ExitFSMap.Add( OnExitFSMap );
 end
 
 
@@ -630,10 +796,18 @@ function OnInit()
 	Controls.TerrainPullDown:SetEntrySelectedCallback( OnTerrainTypeSelected );
 
 	-- FeaturePullDown
+	local idx : number = 1;
 	table.insert(m_FeatureTypeEntries, { Text="LOC_WORLDBUILDER_NO_FEATURE" });
 	for type in GameInfo.Features() do
-		table.insert(m_FeatureTypeEntries, { Text=type.Name, Type=type });
+		table.insert(m_FeatureTypeEntries, { Text=type.Name, Type=type, Index=idx });
+		idx = idx + 1;
 	end
+	table.sort(m_FeatureTypeEntries, function(a, b)
+		  if a.Text == "LOC_WORLDBUILDER_NO_FEATURE" then return true; end
+		  if b.Text == "LOC_WORLDBUILDER_NO_FEATURE" then return false; end
+
+		  return Locale.Lookup(a.Text) < Locale.Lookup(b.Text);
+	end );
 	Controls.FeaturePullDown:SetEntries( m_FeatureTypeEntries, 1 );
 	Controls.FeaturePullDown:SetEntrySelectedCallback( OnFeatureTypeSelected );
 
@@ -643,16 +817,24 @@ function OnInit()
 
 	-- ResourcePullDown
 	table.insert(m_ResourceTypeEntries, { Text="LOC_WORLDBUILDER_NO_RESOURCE" });
-	local idx : number = 1;
+	idx = 1;
 	for type in GameInfo.Resources() do
 		if WorldBuilder.MapManager():IsImprovementPlaceable(type.Index) then
 			table.insert(m_ResourceTypeEntries, { Text=type.Name, Type=type, Class=type.ResourceClassType, Index=idx });
 		end
 		idx = idx + 1;
 	end
+	table.sort(m_ResourceTypeEntries, function(a, b)
+		  if a.Text == "LOC_WORLDBUILDER_NO_RESOURCE" then return true; end
+		  if b.Text == "LOC_WORLDBUILDER_NO_RESOURCE" then return false; end
+
+		  return Locale.Lookup(a.Text) < Locale.Lookup(b.Text);
+	end );
+
 	Controls.ResourcePullDown:SetEntries( m_ResourceTypeEntries, 1 );
 	Controls.ResourcePullDown:SetEntrySelectedCallback( OnResourceTypeSelected );
 	Controls.ResourceAmount:RegisterStringChangedCallback( OnResourceAmountChanged );
+	Controls.ResourceAmount:SetMaxCharacters(2);
 
 	-- ImprovementPullDown
 	table.insert(m_ImprovementTypeEntries, { Text="LOC_WORLDBUILDER_NO_IMPROVEMENT" });
@@ -662,6 +844,15 @@ function OnInit()
 	Controls.ImprovementPullDown:SetEntries( m_ImprovementTypeEntries, 1 );
 	Controls.ImprovementPullDown:SetEntrySelectedCallback( OnImprovementTypeSelected );
 	Controls.ImprovementPillagedButton:RegisterCallback( Mouse.eLClick, OnImprovementPillagedButton );
+
+	-- DistrictPullDown
+	table.insert(m_DistrictTypeEntries, { Text="LOC_WORLDBUILDER_NO_DISTRICT" });
+	for type in GameInfo.Districts() do
+		table.insert(m_DistrictTypeEntries, { Text=type.Name, Type=type });
+	end
+	Controls.DistrictPullDown:SetEntries( m_DistrictTypeEntries, 1 );
+	Controls.DistrictPullDown:SetEntrySelectedCallback( OnDistrictTypeSelected );
+	Controls.DistrictPillagedButton:RegisterCallback( Mouse.eLClick, OnDistrictPillagedButton );
 
 	-- RoutePullDown
 	table.insert(m_RouteTypeEntries, { Text="LOC_WORLDBUILDER_NO_ROUTE" });
@@ -719,6 +910,9 @@ function OnInit()
 	if not WorldBuilder.GetWBAdvancedMode() then
 		Controls.ImprovementPullDown:SetHide(true);
 		Controls.ImprovementPillagedButton:SetHide(true);
+		Controls.DistrictLabel:SetHide(true);
+		Controls.DistrictPullDown:SetHide(true);
+		Controls.DistrictPillagedButton:SetHide(true);
 		Controls.RoutePullDown:SetHide(true);
 		Controls.RoutePillagedButton:SetHide(true);
 		Controls.StartPosPulldown:SetHide(true);
@@ -731,6 +925,9 @@ function OnInit()
 	else
 		Controls.ImprovementPullDown:SetHide(false);
 		Controls.ImprovementPillagedButton:SetHide(false);
+		Controls.DistrictLabel:SetHide(false);
+		Controls.DistrictPullDown:SetHide(false);
+		Controls.DistrictPillagedButton:SetHide(false);
 		Controls.RoutePullDown:SetHide(false);
 		Controls.RoutePillagedButton:SetHide(false);
 		Controls.StartPosPulldown:SetHide(false);
@@ -743,6 +940,17 @@ function OnInit()
 	end
 end
 
+function OnExitFSMap()
+	local pParent = ContextPtr:GetParentByType("TabControl");
+	if pParent ~= nil then
+		local selID : string = pParent:GetSelectedTabID();
+		if selID == "WorldBuilderPlotEditor" then
+			local selPlot : number = m_SelectedPlot;
+			OnShow();
+			UpdateSelectedPlot(selPlot);
+		end
+	end
+end
 
 -- ===========================================================================
 function Initialize()
@@ -755,6 +963,8 @@ function Initialize()
 
 	Events.CityAddedToMap.Add( UpdateCityEntries );
 	Events.CityRemovedFromMap.Add( UpdateCityEntries );
+	Events.DistrictAddedToMap.Add( UpdateDistrictInfo );
+	Events.DistrictRemovedFromMap.Add( UpdateDistrictInfo );
 	Events.FeatureAddedToMap.Add( UpdatePlotInfo );
 	Events.FeatureChanged.Add( UpdatePlotInfo );
 	Events.FeatureRemovedFromMap.Add( UpdatePlotInfo );
@@ -776,6 +986,7 @@ function Initialize()
 	LuaEvents.WorldBuilder_PlayerEdited.Add( UpdatePlayerEntries );
 	LuaEvents.WorldBuilder_StartPositionChanged.Add( OnStartPositionChanged );
 	LuaEvents.WorldBuilder_ModeChanged.Add( OnModeChanged );
+	LuaEvents.WorldBuilder_ExitFSMap.Add( OnExitFSMap );
 
 	UpdatePlayerEntries();
 	UpdateCityEntries();

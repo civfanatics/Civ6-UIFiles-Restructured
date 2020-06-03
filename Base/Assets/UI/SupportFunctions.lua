@@ -491,22 +491,60 @@ function DeepCopy( orig )
 end
 
 -- ===========================================================================
---	Sizes a control to fit a maximum height, while maintaining the aspect ratio
---	of the original control. If no Y is specified, we will use the height of the screen.
---	ARG 1: control (table) - expects a control to be resized
---	ARG 5: OPTIONAL maxY (number) - the minimum height of the control.  
+--	Recursively compare two tables (ignoring metatable)
+--  Original from: https://stackoverflow.com/questions/25922437/how-can-i-deep-compare-2-lua-tables-which-may-or-may-not-have-tables-as-keys
+--	ARGS:	table1		table one
+--			table2		table two
+--	RETURNS:	true if tables have the same content, false otherwise
 -- ===========================================================================
-function UniformToFillY( control:table, maxY:number )
-	local currentX = control:GetSizeX();
-	local currentY = control:GetSizeY();
-	local newX = 0;
-	local newY = 0;
-	if (maxY == nil) then
-		local _, screenY:number = UIManager:GetScreenSizeVal();
-		newY = screenY;
-	else
-		newY = maxY;
-	end
-	newX = (currentX * newY)/currentY;
-	control:SetSizeVal(newX,newY);
+function DeepCompare( table1, table2 )
+   local avoid_loops = {}
+
+   local function recurse(t1, t2)      
+	  -- Compare value types
+      if type(t1) ~= type(t2) then return false; end
+      
+	  -- Compare simple values
+      if type(t1) ~= "table" then return (t1 == t2); end
+      
+      -- First, let's avoid looping forever.
+      if avoid_loops[t1] then return avoid_loops[t1] == t2; end
+      avoid_loops[t1] = t2;
+
+      -- Copy keys from t2
+      local t2keys = {}
+      local t2tablekeys = {}
+      for k, _ in pairs(t2) do
+         if type(k) == "table" then table.insert(t2tablekeys, k); end
+         t2keys[k] = true;
+      end
+
+      -- Iterate keys from t1
+      for k1, v1 in pairs(t1) do
+         local v2 = t2[k1]
+         if type(k1) == "table" then
+            -- if key is a table, we need to find an equivalent one.
+            local ok = false
+            for i, tk in ipairs(t2tablekeys) do
+               if DeepCompare(k1, tk) and recurse(v1, t2[tk]) then
+                  table.remove(t2tablekeys, i)
+                  t2keys[tk] = nil
+                  ok = true
+                  break;
+               end
+            end
+            if not ok then return false; end
+         else
+            -- t1 has a key which t2 doesn't have, fail.
+            if v2 == nil then return false; end
+            t2keys[k1] = nil
+            if not recurse(v1, v2) then return false; end
+         end
+      end
+      -- if t2 has a key which t1 doesn't have, fail.
+      if next(t2keys) then return false; end
+      return true;
+   end
+
+   return recurse(table1, table2);
 end

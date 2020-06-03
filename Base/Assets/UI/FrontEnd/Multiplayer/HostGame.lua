@@ -15,6 +15,10 @@ include("Civ6Common");
 local LOC_GAME_SETUP		:string = Locale.Lookup("LOC_MULTIPLAYER_GAME_SETUP");
 local LOC_STAGING_ROOM		:string = Locale.ToUpper(Locale.Lookup("LOC_MULTIPLAYER_STAGING_ROOM"));
 local RELOAD_CACHE_ID		:string = "HostGame";
+
+local MIN_SCREEN_Y			:number = 768;
+local SCREEN_OFFSET_Y		:number = 20;
+local MIN_SCREEN_OFFSET_Y	:number = -93;
 --local SCROLL_SIZE_DEFAULT	:number = 620;
 --local SCROLL_SIZE_IN_SESSION:number = 662;
 
@@ -36,7 +40,7 @@ function UI_PostRefreshParameters()
 	-- This way, instead of hiding/preventing the user from selecting an invalid player
 	-- we can allow it, but display an error message explaining why it's invalid.
 
-	-- This is primarily used to present ownership errors and custom constraint errors.
+	-- This is ily used to present ownership errors and custom constraint errors.
 	Controls.SaveConfigButton:SetDisabled(false);
 	Controls.ConfirmButton:SetDisabled(false);
 	Controls.ConfirmButton:SetToolTipString(nil);
@@ -343,26 +347,32 @@ function LoadButtonClick()
 	UIManager:QueuePopup(Controls.LoadGameMenu, PopupPriority.Current);	
 end
 
+-- ===========================================================================
 function Resize()
 	local screenX, screenY:number = UIManager:GetScreenSizeVal();
-	local hideLogo = true;
-	if(screenY >= Controls.MainWindow:GetSizeY() + Controls.LogoContainer:GetSizeY()+ Controls.LogoContainer:GetOffsetY()) then
-		hideLogo = false;
+	if(screenY >= MIN_SCREEN_Y + (Controls.LogoContainer:GetSizeY()+ Controls.LogoContainer:GetOffsetY() * 2)) then
+		Controls.MainWindow:SetSizeY(screenY-(Controls.LogoContainer:GetSizeY() + Controls.LogoContainer:GetOffsetY() * 2));
+		Controls.DecoBorder:SetSizeY(SCREEN_OFFSET_Y + Controls.MainWindow:GetSizeY()-(Controls.BottomButtonStack:GetSizeY() + Controls.LogoContainer:GetSizeY()));
+	else
+		Controls.MainWindow:SetSizeY(screenY);
+		Controls.DecoBorder:SetSizeY(MIN_SCREEN_OFFSET_Y + Controls.MainWindow:GetSizeY()-(Controls.BottomButtonStack:GetSizeY()));
 	end
-	Controls.LogoContainer:SetHide(hideLogo);
 	Controls.MainGrid:ReprocessAnchoring();
 end
 
+-- ===========================================================================
 function OnUpdateUI( type:number, tag:string, iData1:number, iData2:number, strData1:string )   
   if type == SystemUpdateUI.ScreenResize then
 	Resize();
   end
 end
 
+-- ===========================================================================
 function OnExitGame()
 	LuaEvents.Multiplayer_ExitShell();
 end
 
+-- ===========================================================================
 function OnExitGameAskAreYouSure()
 	if Network.IsInSession() then
 		if (not m_kPopupDialog:IsOpen()) then

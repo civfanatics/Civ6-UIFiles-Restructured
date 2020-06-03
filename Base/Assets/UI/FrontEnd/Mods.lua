@@ -886,24 +886,13 @@ function OnOpenWorkshop()
 	end
 end
 
-----------------------------------------------------------------  
-function OnWorldBuilder()
-	local worldBuilderMenu = ContextPtr:LookUpControl("/FrontEnd/MainMenu/WorldBuilder");
-	if (worldBuilderMenu ~= nil) then
-		GameConfiguration.SetWorldBuilderEditor(true);
-		UIManager:QueuePopup(worldBuilderMenu, PopupPriority.Current);
-	end
-end
-
 ----------------------------------------------------------------    
 function OnShow()
 	OnInstalledModsTabClick(true);
 
-	if(GameConfiguration.IsAnyMultiplayer() or not UI.HasFeature("WorldBuilder")) then
-		Controls.WorldBuilder:SetHide(true);
+	if(GameConfiguration.IsAnyMultiplayer()) then
 		Controls.BrowseWorkshop:SetHide(true);
 	else
-		Controls.WorldBuilder:SetHide(false);
 		Controls.BrowseWorkshop:SetHide(false);
 	end
 end	
@@ -1046,7 +1035,7 @@ function Initialize()
 		Controls.NameModGroupPopup:SetHide(true);
 	end);
 
-	Controls.CreateModGroupButton:RegisterCallback(Mouse.eLCick, function()
+	Controls.CreateModGroupButton:RegisterCallback(Mouse.eLClick, function()
 		Controls.NameModGroupPopup:SetHide(true);
 		local groupName = Controls.ModGroupEditBox:GetText();
 		local currentGroup = Modding.GetCurrentModGroup();
@@ -1095,9 +1084,6 @@ function Initialize()
 	Controls.InstalledTab:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 	Controls.CloseButton:RegisterCallback( Mouse.eLClick, HandleExitRequest );
 	Controls.CloseButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
-
-	Controls.WorldBuilder:RegisterCallback(Mouse.eLClick, OnWorldBuilder);
-	Controls.WorldBuilder:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 
 	ContextPtr:SetShowHandler( OnShow );
 	ContextPtr:SetUpdate(OnUpdate);

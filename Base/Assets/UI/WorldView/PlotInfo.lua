@@ -60,6 +60,7 @@ function OnClickCitizen( plotId:number )
 	tParameters[CityCommandTypes.PARAM_MANAGE_CITIZEN] = UI.GetInterfaceModeParameter(CityCommandTypes.PARAM_MANAGE_CITIZEN);
 	tParameters[CityCommandTypes.PARAM_X] = kPlot:GetX();
 	tParameters[CityCommandTypes.PARAM_Y] = kPlot:GetY();
+	
 
 	local tResults :table = CityManager.RequestCommand( pSelectedCity, CityCommandTypes.MANAGE, tParameters );
 	return true;
@@ -652,7 +653,9 @@ end
 
 -- ===========================================================================
 function ShowYieldIcons()
-	UILens.ToggleLayerOn( m_YieldIcons );
+	if GameInfo.GameCapabilities["CAPABILITY_DISPLAY_PLOT_YIELDS"] then	
+		UILens.ToggleLayerOn( m_YieldIcons );
+	end
 end
 
 -- ===========================================================================
@@ -1099,8 +1102,8 @@ function Initialize()
 
 	LuaEvents.StrategicView_MapPlacement_AddDistrictPlacementShadowHexes.Add( OnAddDistrictPlacementShadowHexes );
 	LuaEvents.StrategicView_MapPlacement_ClearDistrictPlacementShadowHexes.Add( OnClearDistrictPlacementShadowHexes );
-	LuaEvents.MinimapPanel_ShowYieldIcons.Add( ShowYieldIcons );
-	LuaEvents.MinimapPanel_HideYieldIcons.Add( HideYieldIcons );
+	LuaEvents.PlotInfo_ShowYieldIcons.Add( ShowYieldIcons );
+	LuaEvents.PlotInfo_HideYieldIcons.Add( HideYieldIcons );
 	LuaEvents.Tutorial_ShowYieldIcons.Add( ShowYieldIcons );
 	LuaEvents.Tutorial_HideYieldIcons.Add( HideYieldIcons );
 	LuaEvents.ShowEnemyCityDetails.Add( OnShowEnemyCityDetails );

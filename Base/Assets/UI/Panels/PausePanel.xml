@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Context  ColorSet="Beige_Black" FontStyle="Shadow">
-	<AlphaAnim        ID="PopupAlphaIn"      Size="parent,parent"  AlphaBegin="0"  AlphaEnd="1"  Speed="3" Function="Root" Cycle="Once">
-		<SlideAnim      ID="PopupSlideIn"      Size="parent,parent"  Start="0,-20"   End="0,0"     Speed="3" Function="Root" Cycle="Once">
-			<Grid                           Size="auto,auto"              Anchor="C,C" Offset="0,0" Style="DropShadow2"     Color="255,255,255,200" AutoSizePadding="25,25" ConsumeMouse="1">
-				<Grid                         Size="500,auto"              Anchor="C,C" Offset="0,0" Style="WindowFrameTitle" AutoSizePadding="0,10">
-					<Container                  Size="parent,38"                         Offset="0,4">
-						<Label  ID="PauseTitle"   Style="WindowHeader"        Anchor="C,C" String="{LOC_GAME_PAUSED_TITLE}" />
+	<AlphaAnim						ID="PopupAlphaIn"      Size="parent,parent"  AlphaBegin="0"  AlphaEnd="1"  Speed="3" Function="Root" Cycle="Once">
+		<SlideAnim					ID="PopupSlideIn"      Size="parent,parent"  Start="0,-20"   End="0,0"     Speed="3" Function="Root" Cycle="Once">
+			<Grid																	   Size="auto,auto"			Anchor="C,T" Offset="0,100" Style="DropShadow2"     Color="255,255,255,200" AutoSizePadding="25,25" ConsumeMouse="1">
+				<Grid																	 Size="500,auto"			Anchor="C,C" Offset="0,0" Style="WindowFrameTitle" AutoSizePadding="0,10">
+					<Container													 Size="parent,38"                         Offset="0,4">
+						<Label			ID="PauseTitle"				Style="WindowHeader"	Anchor="C,C" String="{LOC_GAME_PAUSED_TITLE}" />
 					</Container>
-					<Stack		ID="PauseStack"  	Size="parent,100"				    Anchor="C,T" Offset="0,50" StackGrowth="Bottom" StackPadding="30">
-						<Label        ID="WaitingLabel"       Anchor="C,T" Style="BodyTextDark18" Align="Center" WrapWidth="430"/>
+					<Stack				ID="PauseStack"  			Size="parent,100"			Anchor="C,T" Offset="0,50" StackGrowth="Bottom" StackPadding="30">
+						<Label			ID="WaitingLabel"       Anchor="C,T" Style="BodyTextDark18" Align="Center" WrapWidth="430"/>
 					</Stack>
 				</Grid>
 			</Grid>

@@ -32,7 +32,10 @@ local TEXTURE_TRADE				:string = "UnitFlagTrade";
 local BUILDING_IM_PREFIX		:string = "buildingListingIM_";
 local BUILDING_DRAWER_PREFIX	:string = "buildingDrawer_";
 local ICON_PREFIX				:string = "ICON_";
-local LISTMODE					:table	= {PRODUCTION = 1, PURCHASE_GOLD = 2, PURCHASE_FAITH = 3, PROD_QUEUE = 4};
+
+-- Mirrored in CityPanel
+local LISTMODE:table = {PRODUCTION = 1, PURCHASE_GOLD = 2, PURCHASE_FAITH = 3, PROD_QUEUE = 4};
+
 local EXTENDED_BUTTON_HEIGHT = 60;
 local DEFAULT_BUTTON_HEIGHT = 48;
 
@@ -168,6 +171,8 @@ function OnTabChangeProduction()
 
 	ShowProperList(LISTMODE.PRODUCTION);
 
+	LuaEvents.ProductionPanel_ListModeChanged(LISTMODE.PRODUCTION);
+
 	Controls.CurrentProductionContainer:SetHide(not m_hasProductionToShow);
 	Controls.NoProductionContainer:SetHide(true);
 	Controls.CurrentProductionButton:SetSelected(false);
@@ -192,6 +197,8 @@ function OnTabChangePurchase()
 
 	ShowProperList(LISTMODE.PURCHASE_GOLD);
 
+	LuaEvents.ProductionPanel_ListModeChanged(LISTMODE.PURCHASE_GOLD);
+
 	Controls.CurrentProductionContainer:SetHide(true);
 	Controls.NoProductionContainer:SetHide(true);
 
@@ -210,6 +217,8 @@ function OnTabChangePurchaseFaith()
 
 	ShowProperList(LISTMODE.PURCHASE_FAITH);
 
+	LuaEvents.ProductionPanel_ListModeChanged(LISTMODE.PURCHASE_FAITH);
+
 	Controls.CurrentProductionContainer:SetHide(true);
 	Controls.NoProductionContainer:SetHide(true);
 
@@ -223,6 +232,8 @@ function OnTabChangeQueue()
 	LuaEvents.ProductionPanel_IsQueueOpen(true);
 
 	ShowProperList(LISTMODE.PROD_QUEUE);
+
+	LuaEvents.ProductionPanel_ListModeChanged(LISTMODE.PROD_QUEUE);
 
 	Controls.CurrentProductionContainer:SetHide(not m_hasProductionToShow);
 	Controls.NoProductionContainer:SetHide(m_hasProductionToShow);
@@ -239,6 +250,8 @@ function OnTabChangeManager()
 	LuaEvents.ProductionPanel_IsQueueOpen(true);
 
 	ShowProperList(LISTMODE.PROD_QUEUE);
+
+	LuaEvents.ProductionPanel_ListModeChanged(LISTMODE.PROD_QUEUE);
 
 	Controls.CurrentProductionContainer:SetHide(true);
 	Controls.NoProductionContainer:SetHide(true);

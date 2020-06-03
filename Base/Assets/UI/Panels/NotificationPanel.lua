@@ -330,8 +330,6 @@ function ProcessStackSizes()
 			Controls.RailOffsetAnim:Play();
 		end
 	end
-
-	Controls.ScrollStack:ReprocessAnchoring();
 end
 
 -- ===========================================================================
@@ -1010,7 +1008,6 @@ function RealizeStandardNotification( playerID:number, notificationID:number )
 		notificationEntry.m_Instance.Count:SetText( tostring(count) );
 		notificationEntry.m_Instance.DismissStackButton:RegisterCallback( Mouse.eRClick,		function() TryDismissNotificationStack(playerID, notificationID); end );
 		notificationEntry.m_Instance.TitleCount:SetText( tostring(count) );
-		notificationEntry.m_Instance.TitleStack:ReprocessAnchoring();
 
 		notificationEntry.m_Instance.LeftArrow:RegisterCallback( Mouse.eLClick,		function() notificationEntry.m_kHandlers.OnPreviousSelect(pNotification); end );
 		notificationEntry.m_Instance.RightArrow:RegisterCallback( Mouse.eLClick,	function() notificationEntry.m_kHandlers.OnNextSelect(pNotification); end );
@@ -1711,12 +1708,8 @@ end
 -- ===========================================================================
 function Resize()
 	m_screenX, m_screenY	= UIManager:GetScreenSizeVal();
-	Controls.RailOffsetAnim:ReprocessAnchoring();
-	Controls.RailAnim:ReprocessAnchoring();
-
-	-- force an update
-	m_lastStackSize = 0;
-
+	
+	m_lastStackSize = 0;	-- force an update
 	ProcessStackSizes();
 end
 

@@ -1206,6 +1206,8 @@ function OnInit( isHotload )
 				AddToListener("MultiMoveToCity",				item );
 				AddToListener("TechTreeOpened",					item );
 				AddToListener("TechTreeClosed",					item );
+				AddToListener("PantheonPanelOpened",			item );
+				AddToListener("PantheonPanelClosed",			item );				
 				AddToListener("ReligionPanelOpened",			item );
 				AddToListener("ReligionPanelClosed",			item );
 				AddToListener("GreatPeopleOpened",				item );
@@ -1346,6 +1348,8 @@ function OnInit( isHotload )
 					AddWithCheckToListener("MultiMoveToCity",				notificationName, item );
 					AddWithCheckToListener("TechTreeOpened",				notificationName, item );
 					AddWithCheckToListener("TechTreeClosed",				notificationName, item );
+					AddWithCheckToListener("PantheonPanelOpened",			notificationName, item );
+					AddWithCheckToListener("PantheonPanelClosed",			notificationName, item );
 					AddWithCheckToListener("ReligionPanelOpened",			notificationName, item );
 					AddWithCheckToListener("ReligionPanelClosed",			notificationName, item );
 					AddWithCheckToListener("GreatPeopleOpened",				notificationName, item );
@@ -2868,10 +2872,26 @@ end
 
 -- ===========================================================================
 --	LUA Event
---	LaunchBar_CloseReligionPanel
+--	Religion_CloseReligion
 -- ===========================================================================
 function OnReligionPanelClosed()
 	TutorialCheck("ReligionPanelClosed");
+end
+
+-- ===========================================================================
+--	LUA Event
+--	LaunchBar_OpenPantheonChooser
+-- ===========================================================================
+function OnPantheonPanelOpened()
+	TutorialCheck("PantheonPanelOpened");
+end
+
+-- ===========================================================================
+--	LUA Event
+--	PantheonChooser_CloseReligion
+-- ===========================================================================
+function OnPantheonPanelClosed()
+	TutorialCheck("PantheonPanelClosed");
 end
 
 -- ===========================================================================
@@ -3372,9 +3392,11 @@ function Initialize()
 	LuaEvents.LaunchBar_CloseCivicsTree.Add(			OnCivicsTreeClosed);
 	LuaEvents.LaunchBar_RaiseTechTree.Add(				OnTechTreeOpened);
 	LuaEvents.LaunchBar_OpenReligionPanel.Add(			OnReligionPanelOpened);
+	LuaEvents.LaunchBar_OpenPantheonChooser.Add(		OnPantheonPanelOpened);
 	LuaEvents.LaunchBar_OpenGreatPeoplePopup.Add(		OnGreatPeopleOpened);
 	LuaEvents.LaunchBar_CloseGreatPeoplePopup.Add(		OnGreatPeopleClosed);
 	LuaEvents.NaturalWonderPopup_Closed.Add(			OnNaturalWonderPopupClosed );
+	LuaEvents.PantheonChooser_CloseReligion.Add(		OnPantheonPanelClosed);
 	LuaEvents.PartialScreenHooks_OpenWorldRankings.Add( OnWorldRankingsOpened );
 	LuaEvents.PartialScreenHooks_CloseWorldRankings.Add(OnWorldRankingsClosed );
 	LuaEvents.ProductionPanel_Close.Add(				OnProductionPanelClose );

@@ -760,7 +760,7 @@ function TradeRouteSelected( cityOwner:number, cityID:number )
 	local player:table = Players[cityOwner];
 	if player then
 		local pCity:table = player:GetCities():FindID(cityID);
-		if pCity then
+		if pCity and FindDestinationEntry(cityOwner, cityID) then
 			m_destinationCityOwner = cityOwner;
 			m_destinationCityID = cityID;
 		else
@@ -1039,8 +1039,9 @@ function Open()
 	end
 
 	LuaEvents.TradeRouteChooser_Open();
-	
-	Refresh();
+	LuaEvents.LaunchBar_CheckPopupsOpen();
+
+	Refresh();	
 end
 
 -- ===========================================================================
@@ -1232,7 +1233,8 @@ function Initialize()
 	-- Lua Events
 	LuaEvents.GameDebug_Return.Add( OnGameDebugReturn );
 	LuaEvents.TradeOverview_SelectRouteFromOverview.Add( OnSelectRouteFromOverview );
-	LuaEvents.WorldInput_MakeTradeRouteDestination.Add( OnWorldInputMakeTradeRoute );
+	LuaEvents.TradeRouteChooser_CloseIfPopups.Add( OnClose );
+	LuaEvents.WorldInput_MakeTradeRouteDestination.Add( OnWorldInputMakeTradeRoute );	
 
 	-- Game Engine Events	
 	Events.InterfaceModeChanged.Add( OnInterfaceModeChanged );
@@ -1244,12 +1246,12 @@ function Initialize()
 	Events.GovernmentPolicyObsoleted.Add( OnPolicyChanged );
 
 	-- Control Events
-	Controls.BeginRouteButton:RegisterCallback( eLClick, RequestTradeRoute );
+	Controls.BeginRouteButton:RegisterCallback( Mouse.eLClick, RequestTradeRoute );
 	Controls.BeginRouteButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
-	Controls.CancelButton:RegisterCallback( eLClick, ClearSelection );
-	Controls.FilterButton:RegisterCallback( eLClick, UpdateFilterArrow );
+	Controls.CancelButton:RegisterCallback( Mouse.eLClick, ClearSelection );
+	Controls.FilterButton:RegisterCallback( Mouse.eLClick, UpdateFilterArrow );
 	Controls.DestinationFilterPulldown:RegisterSelectionCallback( OnFilterSelected );
-	Controls.Header_CloseButton:RegisterCallback( eLClick, OnClose );
+	Controls.Header_CloseButton:RegisterCallback( Mouse.eLClick, OnClose );
 	Controls.TopGrid:RegisterSizeChanged( OnTopGridSizeChanged );
 	Controls.BonusIconStack:RegisterSizeChanged( function() OnBonusIconStackSizeChanged(Controls); end );
 

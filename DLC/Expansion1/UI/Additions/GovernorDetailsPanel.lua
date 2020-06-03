@@ -385,9 +385,9 @@ function Initialize()
 	Events.LocalPlayerTurnEnd.Add( OnLocalPlayerTurnEnd );
 
 	-- Control Events
-	Controls.ConfirmButton:RegisterCallback( eLClick, OnConfirm );
-	Controls.BackButton:RegisterCallback( eLClick, OnBack );
-	Controls.CloseButton:RegisterCallback( eLClick, OnBack );
+	Controls.ConfirmButton:RegisterCallback( Mouse.eLClick, OnConfirm );
+	Controls.BackButton:RegisterCallback( Mouse.eLClick, OnBack );
+	Controls.CloseButton:RegisterCallback( Mouse.eLClick, OnBack );
 
 	m_TopPanelConsideredHeight = Controls.Vignette:GetSizeY() - TOP_PANEL_OFFSET;
 end

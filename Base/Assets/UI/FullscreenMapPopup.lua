@@ -43,46 +43,51 @@ function OnInputHandler( pInputStruct:table )
 
 	-- Update tooltip as the mouse is moved over the minimap
 	if (uiMsg == MouseEvents.MouseMove or uiMsg == MouseEvents.PointerUpdate) and UI.IsFullscreenMapEnabled() then
-		local ePlayer : number = Game.GetLocalPlayer(); 
-		local pPlayerVis:table = PlayersVisibility[ePlayer];
-
-		local minix, miniy = GetMinimapMouseCoords( pInputStruct:GetX(), pInputStruct:GetY() );
-		if (pPlayerVis ~= nil) then
-			local wx, wy = TranslateMinimapToWorld(minix, miniy);
-			local plotX, plotY = UI.GetPlotCoordFromWorld(wx, wy);
-			local pPlot = Map.GetPlot(plotX, plotY);
-			if (pPlot ~= nil) then
-				local plotID = Map.GetPlotIndex(plotX, plotY);
-				if pPlayerVis:IsRevealed(plotID) then
-					local eOwner = pPlot:GetOwner();
-					local pPlayerConfig = PlayerConfigurations[eOwner];
-					if (pPlayerConfig ~= nil) then
-						local szOwnerString = Locale.Lookup(pPlayerConfig:GetCivilizationShortDescription());
-
-						if (szOwnerString == nil or string.len(szOwnerString) == 0) then
-							szOwnerString = Locale.Lookup("LOC_TOOLTIP_PLAYER_ID", eOwner);
-						end
-
-						local pPlayer = Players[eOwner];
-						if(GameConfiguration:IsAnyMultiplayer() and pPlayer:IsHuman()) then
-							szOwnerString = szOwnerString .. " (" .. Locale.Lookup(pPlayerConfig:GetPlayerName()) .. ")";
-						end
-
-						local szOwner = Locale.Lookup("LOC_HUD_MINIMAP_OWNER_TOOLTIP", szOwnerString);
-						Controls.MapProxy:SetToolTipString(szOwner);
-					else
-						local pTooltipString = Locale.Lookup("LOC_MINIMAP_UNCLAIMED_TOOLTIP");
-						Controls.MapProxy:SetToolTipString(pTooltipString);
-					end
-				else
-					local pTooltipString = Locale.Lookup("LOC_MINIMAP_FOG_OF_WAR_TOOLTIP");
-					Controls.MapProxy:SetToolTipString(pTooltipString);
-				end
-			end
-		end
+		ShowMinimapTooltips(pInputStruct:GetX(), pInputStruct:GetY())
 	end
 
 	return false;	-- don't eat it here though, or it causes the input actions to break
+end
+
+-- ===========================================================================
+function ShowMinimapTooltips(inputX:number, inputY:number)
+	local ePlayer : number = Game.GetLocalPlayer(); 
+	local pPlayerVis:table = PlayersVisibility[ePlayer];
+
+	local minix, miniy = GetMinimapMouseCoords( inputX, inputY );
+	if (pPlayerVis ~= nil) then
+		local wx, wy = TranslateMinimapToWorld(minix, miniy);
+		local plotX, plotY = UI.GetPlotCoordFromWorld(wx, wy);
+		local pPlot = Map.GetPlot(plotX, plotY);
+		if (pPlot ~= nil) then
+			local plotID = Map.GetPlotIndex(plotX, plotY);
+			if pPlayerVis:IsRevealed(plotID) then
+				local eOwner = pPlot:GetOwner();
+				local pPlayerConfig = PlayerConfigurations[eOwner];
+				if (pPlayerConfig ~= nil) then
+					local szOwnerString = Locale.Lookup(pPlayerConfig:GetCivilizationShortDescription());
+
+					if (szOwnerString == nil or string.len(szOwnerString) == 0) then
+						szOwnerString = Locale.Lookup("LOC_TOOLTIP_PLAYER_ID", eOwner);
+					end
+
+					local pPlayer = Players[eOwner];
+					if(GameConfiguration:IsAnyMultiplayer() and pPlayer:IsHuman()) then
+						szOwnerString = szOwnerString .. " (" .. Locale.Lookup(pPlayerConfig:GetPlayerName()) .. ")";
+					end
+
+					local szOwner = Locale.Lookup("LOC_HUD_MINIMAP_OWNER_TOOLTIP", szOwnerString);
+					Controls.MapProxy:SetToolTipString(szOwner);
+				else
+					local pTooltipString = Locale.Lookup("LOC_MINIMAP_UNCLAIMED_TOOLTIP");
+					Controls.MapProxy:SetToolTipString(pTooltipString);
+				end
+			else
+				local pTooltipString = Locale.Lookup("LOC_MINIMAP_FOG_OF_WAR_TOOLTIP");
+				Controls.MapProxy:SetToolTipString(pTooltipString);
+			end
+		end
+	end	
 end
 
 -- ===========================================================================
@@ -159,7 +164,7 @@ function OnInterfaceModeChanged(eOldMode:number, eNewMode:number)
 	end
 	
 	if eNewMode == InterfaceModeTypes.FULLSCREEN_MAP then
-		UIManager:QueuePopup( ContextPtr, PopupPriority.MediumHigh );	
+		UIManager:QueuePopup( ContextPtr, PopupPriority.MediumHigh, { AlwaysVisibleInQueue = true, AlwaysInputInQueue = true } );		-- Parameters to allow interaction during MP pausing
 		UI.ShowFullscreenMap( true );
 		LuaEvents.FullscreenMap_Shown();
 	end

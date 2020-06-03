@@ -402,7 +402,7 @@ function Initialize()
 	ContextPtr:SetInputHandler( OnInputHandler, true );
 
 	-- Control Events
-	Controls.ContinueButton:RegisterCallback( eLClick, OnClose );
+	Controls.ContinueButton:RegisterCallback( Mouse.eLClick, OnClose );
 	Controls.ContinueButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 	Controls.ProgressBar:RegisterEndCallback( OnProgressMeterAnimEnd );
 

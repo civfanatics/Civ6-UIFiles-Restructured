@@ -7,10 +7,13 @@
 	<!-- Overall Screen Container -->
 	<Box ID="MainGrid" Style="ShellBGBox">
 
-		<Container ID="MainWindow" Style="ShellWindowContainer">
+		<Container ID="MainWindow" Size="1024,768" Anchor="C,B" >
+			<Grid ID="LogoContainer" Style="SubContainer4" Size="parent-10,116" Anchor="C,T" Color="7,28,50" AnchorSide="I,O" Offset="0,4">
+    		  <Image ID="Logo"				Anchor="C,C" Texture="MainLogo.dds" StretchMode="Auto"/>
+    		</Grid>
 			
 			<Container Style="ShellHeaderContainer">
-				<Grid Style="ShellHeaderButtonGrid">
+				<Grid					ID="TopNavigationPanel" Style="ShellHeaderButtonGrid" >
 					<GridButton ID="BackButton" Style="ShellButtonOrnateFlat" Anchor="R,C" Offset="1,0" String="LOC_MULTIPLAYER_BACK"/>
 					<GridButton ID="RefreshButton" Style="ShellButtonOrnateFlat" Anchor="L,C" Offset="1,0" String="LOC_MULTIPLAYER_REFRESH_GAME_LIST" ToolTip="LOC_MULTIPLAYER_REFRESH_GAME_LIST_TT" />
 				</Grid>
@@ -23,8 +26,8 @@
 
 			<Container ID="GameListRoot" Anchor="L,T" Offset="0,114" Size="1024,661">
 
-				<Grid ID="GameListGrid" Offset="2,0" Size="1020,714" Style="SubContainer2" Color="MultiplayerSubContainer">
-					<Line															Anchor="L,B" Offset="-6,43" Start="0,0" End="1016,0" Width="2" Color="35,66,92,150" />
+				<Grid ID="GameListGrid" Anchor="L,B" Offset="2,0" Size="1020,714" Style="SubContainer2" Color="MultiplayerSubContainer" >
+					<Line															Anchor="L,B" Offset="-6,8" Start="0,0" End="1016,0" Width="2" Color="35,66,92,150" />
 				</Grid>
 
 				<!-- Top Panel  -->
@@ -49,7 +52,7 @@
 						</GridButton>
 
 						<GridButton  Anchor="L,T" Size="100,28"  Style="ShellHeaderButton" ID="SortbyModsHosted" ToolTip="LOC_MULTIPLAYER_LOBBY_MODS">
-			  <Image Texture="AdditionalContent_Header.dds" Anchor="C,C" />
+			     <Image Texture="AdditionalContent_Header.dds" Anchor="C,C" />
 							<!--<Label Anchor="L,C" Offset="7,1" String="LOC_MULTIPLAYER_MODSHOSTED" Style="FontNormal14" FontStyle="Shadow" ColorSet="ServerColumnHeader" />-->
 						</GridButton>
 

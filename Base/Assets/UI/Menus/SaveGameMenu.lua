@@ -165,7 +165,7 @@ function OnShow()
             Controls.CheckNewIndicator:SetHide(false);
         end
 
-		if g_GameType == SaveTypes.WORLDBUILDER_MAP then
+		if g_GameType == SaveTypes.WORLDBUILDER_MAP or g_FileType == SaveFileTypes.GAME_CONFIGURATION then
 			Controls.CloudCheck:SetHide(true);
 		else
 			Controls.CloudCheck:SetHide(false);
@@ -216,6 +216,11 @@ function OnShow()
 	Controls.DecoContainer:SetSizeY(decoSize - (count * 23));	
 	Controls.FileName:TakeFocus();
 
+	if g_GameType == SaveTypes.WORLDBUILDER_MAP then
+		Controls.GameDetailIconsArea:SetHide(true);
+	else
+		Controls.GameDetailIconsArea:SetHide(false);
+	end
 end
 ----------------------------------------------------------------        
 function OnHide()

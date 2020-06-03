@@ -30,8 +30,6 @@
 				<GridButton ID="SubscriptionsTab" Style="ShellTab" Size="300,41"  String="LOC_MODS_SUBSCRIPTIONS"/>
 			</Stack>
 
-			<GridButton ID="WorldBuilder"  Anchor="R,T" Offset="30,65" Style="MainButton" Size="300,41" FontStyle="Stroke" ColorSet="ButtonCS" String="LOC_MODS_WORLD_BUILDER" />
-
 			<Container ID="InstalledTabPanel" Size="parent-30,parent-115"  Anchor="L,T" Offset="15,115">
 				<Stack Padding="5">
 					<Stack StackGrowth="Right">

@@ -5,7 +5,10 @@
 
 	<Box ID="MainGrid" Style="ShellBGBox">
 
-		<Container ID="MainWindow" Style="ShellWindowContainer">
+    <Container ID="MainWindow" Size="1024,768" Anchor="C,B" >
+      <Grid ID="LogoContainer" Style="SubContainer4" Size="parent-10,116" Anchor="C,T" Color="7,28,50" AnchorSide="I,O" Offset="0,4">
+        <Image ID="Logo"				Anchor="C,C" Texture="MainLogo.dds" StretchMode="Auto"/>
+      </Grid>
 
 			<Container ID="Header" Style="ShellHeaderContainer">
 				<Grid Style="ShellHeaderButtonGrid">

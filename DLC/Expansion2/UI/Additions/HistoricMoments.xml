@@ -15,8 +15,8 @@
 			<Image		Anchor="C,C"	Size="parent-108,32"	Texture="Controls_TimelineTile" StretchMode="Tile" />
 		</Container>
 
-    <Container	Anchor="L,T" Offset="0,40" Size="parent,692">
-			<BoxButton	ID="RightClickCloser" Size="parent,parent" Color="0,0,0,0"  />
+    <Container	Anchor="L,T" Offset="0,40" Size="parent,parent">
+			<BoxButton	ID="RightClickCloser" Size="parent,parent" Color="0,0,0,0" Offset =" 0, -40"/>
       <Image			ID="BG"								Size="parent,692" Texture="Historian_BGParchment" StretchMode="Tile"/>
       <Image			ID="Ink"							Size="parent,692" Texture="Historian_BGInk" StretchMode="Tile"/>
       <Image			ID="BGWheel" Anchor="L,C" Offset="100,0" Size="776,692" Texture="Historian_BGWheel"/>

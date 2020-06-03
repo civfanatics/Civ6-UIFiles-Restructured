@@ -2,14 +2,6 @@
 <Context xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="..\..\..\..\..\CivTech\Libs\ForgeUI\ForgeUI_Assets\Controls.xsd">
   <Include File="CivilizationIcon"/>
 
-	<ToolTipType Name="CivTooltip" >
-		<Grid ID="BG" Size="auto,auto" SliceCorner="10,10" SliceTextureSize="33,32" Texture="Controls_Tooltip" InnerPadding="25,25" InnerOffset="10,10" >
-			<Image ID="LeaderIcon" Offset="0,0" Size="55,55" Texture="Leaders55"/>
-			<Image ID="YouIndicator" Offset="0,0" Hidden="1" Size="55,55" Texture="Diplomacy_YouIndicatorSmall"/>
-			<Label ID="LeaderName" Anchor="L,C" Offset="65,0" Style="FontNormal16" Color="0,0,0,255"/>
-		</Grid>
-	</ToolTipType>
-	
   <Container Size="auto,auto">
     <ScrollPanel Size="auto,250" Vertical="1">
       <Stack ID="CrisisStack"/>

@@ -31,23 +31,27 @@ end
 --	This function gets called internally within this file to populate common data
 -- ===========================================================================
 function ProcessEmergency( kEmergency:table )
+	local crisisTargetTitle		:string = Locale.Lookup("LOC_EMERGENCY_TARGET", kEmergency.TargetID >= 0 and GetVisiblePlayerName(kEmergency.TargetID) or "");
+	local titleString			:string = kEmergency.TurnsLeft < 0 and kEmergency.CompletedText or Locale.Lookup("LOC_SCORED_COMPETITION_COMPETITION_ONGOING");
+	local crisisTrinketTitle	:string = kEmergency.TurnsLeft < 0 and "" or kEmergency.GoalDescription;
+	local targetCityName		:string = Locale.ToUpper(kEmergency.TargetCityName ~= "" and Locale.Lookup("LOC_EMERGENCY_TARGET_CITY", kEmergency.TargetCityName)) or "";
+
 	return {
 		targetPlayer		= kEmergency.TargetID,
 		emergencyType		= kEmergency.EmergencyType,
 		crisisSuccess		= kEmergency.bSuccess,
 		inputRequired		= not kEmergency.HasBegun,
 		participantScores	= kEmergency.ScoresTables,
-		titleString			= kEmergency.TurnsLeft < 0 and kEmergency.CompletedText or Locale.Lookup("LOC_SCORED_COMPETITION_COMPETITION_ONGOING"),
+		titleString			= titleString,
 		trinketString		= kEmergency.ShortDescriptionText,
-		crisisTargetTitle	= Locale.Lookup("LOC_EMERGENCY_TARGET", kEmergency.TargetID >= 0 and GetPlayerName(kEmergency.TargetID) or ""),
-		crisisTrinketTitle	= kEmergency.TurnsLeft < 0 and "" or kEmergency.GoalDescription,
+		crisisTargetTitle	= crisisTargetTitle,
+		crisisTrinketTitle	= crisisTrinketTitle,
 		timeRemaining		= kEmergency.TurnsLeft,
-		targetCityName		= Locale.ToUpper(kEmergency.TargetCityName ~= "" and Locale.Lookup("LOC_EMERGENCY_TARGET_CITY", kEmergency.TargetCityName)) or "",
+		targetCityName		= targetCityName,
 		nameText			= kEmergency.NameText,
-		memberTiers			= kEmergency.MemberTiers,
-		-- The following tables are populated by callers of ProcessEmergency
-		crisisDetails		= {},
-		rewardsDetails		= {}
+		memberTiers			= kEmergency.MemberTiers,		
+		crisisDetails		= {},		-- populated by callers of ProcessEmergency
+		rewardsDetails		= {}		-- populated by callers of ProcessEmergency
 	};
 end
 

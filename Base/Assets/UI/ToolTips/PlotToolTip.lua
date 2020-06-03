@@ -313,6 +313,14 @@ function GetDetails(data)
 
 				table.insert(details, resourceString);
 			end
+		elseif m_isWorldBuilder then
+			if (resourceTechType ~= nil and valid_feature == true and valid_terrain == true) then
+				local techType = GameInfo.Technologies[resourceTechType];
+				if (techType ~= nil) then
+					resourceString = resourceString .. "( " .. Locale.Lookup("LOC_TOOLTIP_REQUIRES") .. " " .. Locale.Lookup(techType.Name) .. ")[ENDCOLOR]";
+				end
+			end
+			table.insert(details, resourceString);
 		end
 	end
 	
@@ -571,7 +579,7 @@ function View( data:table )
 	local plotDetails_width :number, plotDetails_height :number = Controls.PlotDetails:GetSizeVal();
 	local max_width :number = math.max(plotName_width, plotDetails_width);
 
-	if m_isShowDebug then
+	if m_isShowDebug or m_isWorldBuilder then
 		Controls.DebugTxt:SetText(table.concat(debugInfo, "[NEWLINE]"));
 		local debugInfoWidth, debugInfoHeight :number			= Controls.DebugTxt:GetSizeVal();		
 		max_width = math.max(max_width, debugInfoWidth);

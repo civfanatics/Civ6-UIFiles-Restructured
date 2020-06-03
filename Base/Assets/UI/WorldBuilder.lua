@@ -6,14 +6,23 @@
 --	DATA MEMBERS
 -- ===========================================================================
 local DefaultMessageHandler = {};
+local m_PauseId		:number = Input.GetActionId("PauseMenu");
 
 -- ===========================================================================
 --	FUNCTIONS
 -- ===========================================================================
-  
+
 DefaultMessageHandler[KeyEvents.KeyUp] =
 function( pInputStruct )
 	
+	if UI.GetInterfaceMode() == InterfaceModeTypes.FULLSCREEN_MAP then
+		return false;
+	end
+
+	if not Controls.TopOptionsMenu:IsHidden() then
+		return false;
+	end
+
 	local uiKey = pInputStruct:GetKey();
 	if uiKey == Keys.VK_ESCAPE then
 		if( Controls.TopOptionsMenu:IsHidden() ) then
@@ -43,11 +52,19 @@ function( pInputStruct )
 		else
 			LuaEvents.WorldBuilder_SetPlacementStatus(Locale.Lookup("LOC_WORLDBUILDER_STATUS_CANT_REDO"));
 		end
-	elseif uiKey == Keys.VK_F5 then
-		-- TODO: Quick save maps in world builder?
 	end
 
 	return false;
+end
+
+-- ===========================================================================
+function OnInputActionTriggered( actionId )
+    if actionId == m_PauseId then
+        if( Controls.TopOptionsMenu:IsHidden() ) then
+            OnOpenInGameMenu();
+            return true;
+        end
+	end
 end
 
 -- ===========================================================================  
@@ -104,10 +121,19 @@ end
 function OnFullscreenMapShown()			BulkHide( true, "FullscreenMap" );	end	
 function OnFullscreenMapClosed()		BulkHide(false, "FullscreenMap" );	end	
 
+-- ===========================================================================
+function OnIsIngameMenuOpen()
+	if Controls.TopOptionsMenu:IsHidden() then
+		return false;
+	end
+
+	return true;
+end
 
 -- ===========================================================================    
 function OnShutdown()
 	Events.LoadGameViewStateDone.Remove( OnLoadGameViewStateDone );
+	Events.InputActionTriggered.Remove( OnInputActionTriggered );
 	
 	LuaEvents.FullscreenMap_Shown.Remove( OnFullscreenMapShown );
 	LuaEvents.FullscreenMap_Closed.Remove(	OnFullscreenMapClosed );
@@ -119,7 +145,6 @@ end
 -- ===========================================================================
 function OnInit()
 	UserConfiguration.ShowMapResources(true);
-	UserConfiguration.ShowMapGrid(false);
 	UserConfiguration.ShowMapYield(false);
 end
 
@@ -132,6 +157,7 @@ function Initialize()
 	ContextPtr:SetInitHandler( OnInit );
 
 	Events.LoadGameViewStateDone.Add( OnLoadGameViewStateDone );
+	Events.InputActionTriggered.Add( OnInputActionTriggered );
 
 	LuaEvents.FullscreenMap_Shown.Add( OnFullscreenMapShown );
 	LuaEvents.FullscreenMap_Closed.Add(	OnFullscreenMapClosed );

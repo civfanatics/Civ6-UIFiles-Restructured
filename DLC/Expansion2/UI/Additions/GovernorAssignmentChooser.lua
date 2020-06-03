@@ -551,10 +551,10 @@ function Initialize()
 	ContextPtr:SetInputHandler( OnInputHandler, true );
 
 	-- Control Callbacks
-	Controls.ConfirmButton:RegisterCallback( eLClick, OnConfirm );
+	Controls.ConfirmButton:RegisterCallback( Mouse.eLClick, OnConfirm );
 	Controls.ConfirmButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
-	Controls.CancelButton:RegisterCallback( eLClick, OnCancel );
-	Controls.Header_CloseButton:RegisterCallback( eLClick, OnClose );
+	Controls.CancelButton:RegisterCallback( Mouse.eLClick, OnCancel );
+	Controls.Header_CloseButton:RegisterCallback( Mouse.eLClick, OnClose );
 
 	-- Game Events
 	Events.CityAddedToMap.Add( OnCityAddedToMap );

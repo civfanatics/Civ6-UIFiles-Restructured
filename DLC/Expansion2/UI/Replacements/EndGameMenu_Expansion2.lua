@@ -1,4 +1,4 @@
-include("GameCapabilities");
+-- Copyright 2019, Firaxis Games
 
 -- Add the new victory type
 Styles["VICTORY_DIPLOMATIC"] = {

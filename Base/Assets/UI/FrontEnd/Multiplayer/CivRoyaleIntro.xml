@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Context xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="..\..\..\..\..\..\..\CivTech\Libs\ForgeUI\ForgeUI_Assets\Controls.xsd">
+
+	<Container Style="FullScreenVignetteConsumer" />
+
+	<Grid			ID="Background"		Anchor="C,C" Size="1056,800"	Texture="Intro_Window" ConsumeMouse="1">
+		<Image										Anchor="C,T" Offset="0,40"		Texture="CivRoyaleIntro_Logo"/>
+		<Image	ID="Illustration"	Anchor="L,T" Offset="30,160"	Texture="CivRoyaleIntro_Diagram_1"/>
+
+		<Grid ID="DescriptionColumn" Size="492,544" Anchor="R,T" Offset="38,170" SliceCorner="10,10" SliceSize="1,1" SliceTextureSize="40,40" Texture="Controls_SubContainer3" Color="0,0,0,60" >
+			<Stack ID="RightDescStack" Anchor="C,C" StackGrowth="Down" StackPadding="0" >
+				<Container ID="TopDescription" Anchor="C,T" Size="492,250">
+					<Label ID="Description"  Anchor="C,C" Offset="0,0" Style="BlueGlow" FontSize="16" Align="center" WrapWidth="472"/>
+				</Container>
+				<Grid ID="FrameDeco" Anchor="C,B" Size="462,250" Offset="0,10" SliceCorner="19,24" SliceSize="1,1" SliceTextureSize="39,49" Texture="Controls_Deco" Color="137,154,171,180">
+					<Box Size="parent-38,2" Anchor="C,T" Color="137,154,171,180" />
+					<ScrollPanel Anchor="C,C" Size="parent-20,parent-8" Vertical="1" AutoScrollBar="1">
+						<ScrollBar Anchor="R,C" Size="11,parent-32" AnchorSide="I,I" Offset="-4,0"  Style="ScrollVerticalBar" />
+						<Label ID="Description2" Anchor="C,C" Offset="0,0"  Style="FontNormal14"  Color="137,154,171,255" Align="Left" FontSize="14" WrapWidth="420"/>
+					</ScrollPanel>
+					<Box Size="parent-38,2" Anchor="C,B" Color="137,154,171,180" />
+				</Grid>
+			</Stack>
+		</Grid>
+
+		<Stack ID="ButtonStack" Anchor="C,B" Offset="0,33" StackGrowth="Right" Padding="160">
+			<Container Size="340,41">
+				<GridButton ID="Previous" Style="MainButton" Anchor="C,C" Size="340,41" String="LOC_CIVROYALE_INTRO_PREVIOUS"/>
+			</Container>
+			<Container Size="340,41">
+				<GridButton ID="Next" Style="MainButton" Anchor="C,C" Size="340,41" String="LOC_CIVROYALE_INTRO_NEXT"/>
+			</Container>
+		</Stack>
+	</Grid>
+	
+	<Button ID="Close" Anchor="R,T" Style="CloseButtonLarge" Offset="-8,-5" />
+
+</Context>

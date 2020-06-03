@@ -121,7 +121,8 @@ function CivilizationIcon:SetLeaderTooltip(playerID:number, details:string)
 		self.Controls.CivIcon:SetToolTipType();
 		self.Controls.CivIcon:ClearToolTipCallback();
 		if GameConfiguration.IsAnyMultiplayer() and pPlayer:IsHuman() then
-			self.Controls.CivIcon:SetToolTipString(Locale.Lookup("LOC_DIPLOPANEL_UNMET_PLAYER") .. " (" .. playerConfig:GetPlayerName() .. ")");
+			local name = Locale.Lookup(playerConfig:GetPlayerName());
+			self.Controls.CivIcon:SetToolTipString(Locale.Lookup("LOC_DIPLOPANEL_UNMET_PLAYER") .. " (" .. name .. ")");
 		else
 			self.Controls.CivIcon:SetToolTipString(Locale.Lookup("LOC_DIPLOPANEL_UNMET_PLAYER"));
 		end

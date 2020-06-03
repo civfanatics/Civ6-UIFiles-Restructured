@@ -5,8 +5,10 @@
 
 	<Box ID="MainGrid" Style="ShellBGBox">
 
-		<Container ID="MainWindow" Style="ShellWindowContainer">
-
+		<Container ID="MainWindow" Size="1024,768" Anchor="C,B" >
+			<Grid ID="LogoContainer" Style="SubContainer4" Size="parent-10,116" Anchor="C,T" Color="7,28,50" AnchorSide="I,O" Offset="0,4">
+      			<Image ID="Logo"				Anchor="C,C" Texture="MainLogo.dds" StretchMode="Auto"/>
+   			</Grid>
 			<Container Style="ShellHeaderContainer">
 				<Grid Style="ShellHeaderButtonGrid">
 					<GridButton ID="BackButton" Style="ShellButtonOrnateFlat" Anchor="R,C" Offset="1,0" String="LOC_MULTIPLAYER_BACK"/>
@@ -83,7 +85,7 @@
 
 	<!-- Instance for a boolean parameters -->
 	<Instance Name="BooleanParameterInstance">
-			<GridButton ID="CheckBox" Offset="-15,0" Anchor="C,T" Style="CheckBoxControl"  Size="360,24" States="8"/>
+		<GridButton ID="CheckBox" Offset="-15,0" Anchor="C,T" Style="CheckBoxControl"  Size="360,24" States="8"/>
 	</Instance>
 
 	<!-- Slider with number display -->
@@ -104,13 +106,11 @@
 
 	<!-- Instance for a string parameters -->
 	<Instance Name="StringParameterInstance">
-		<Container  Anchor="C,T" Size="330,32" ID="StringRoot">
-			<Stack StackGrowth="Right" Size="auto,55" Anchor="R,T">
-				<Label ID="StringName" Anchor="L,C" Offset="0,0" Style="FontNormal14" ColorSet="ShellOptionText" FontStyle="stroke" WrapWidth="180" String="UNKNOWN_EDIT_BOX"/>
-				<Grid Style="EditTextArea" Size="330,30">
-					<EditBox ID="StringEdit" Anchor="L,C" Offset="6,0" Size="parent,23" EditMode="1" Style="FontNormal14" ColorSet="BodyTextCool" FontStyle="stroke" MaxLength="22"/>
+		<Container			ID="StringRoot" Anchor="C,T"	Size="300,36">
+				<Grid				Style="EditTextArea"					Size="300,30">
+					<EditBox	ID="StringEdit" Anchor="L,C" Offset="6,0" Size="parent,23" EditMode="1" Style="FontNormal14" ColorSet="BodyTextCool" FontStyle="stroke" MaxLength="22"/>
+					<Label		ID="StringName" Anchor="L,C" AnchorSide="O,I" Style="FontNormal16" ColorSet="ShellOptionText" FontStyle="stroke" WrapWidth="180" String="UNKNOWN_EDIT_BOX"/>
 				</Grid>
-			</Stack>
 		</Container>
 	</Instance>
 
@@ -120,6 +120,15 @@
 			<PullDown Anchor="C,T" ID="PullDown" Style="PullDownBlue" Size="300,24" Offset="0,0">
 				<Label Style="ShellOptionText" ID="StringName" AnchorSide="O,I" Anchor="L,C" String=""/>
 			</PullDown>
+		</Container>
+	</Instance>
+
+	<!-- Instance for a parameter that has a button to launch a popup (e.g., map-select) -->
+	<Instance Name="ButtonParameterInstance">
+		<Container		ID="ButtonRoot" Anchor="L,T" Size="parent,32" Offset="0,0">
+			<GridButton ID="Button"			Anchor="R,T" Style="ButtonControl" Size="300,24" Offset="40,0">
+				<Label		ID="StringName"	Anchor="L,C" Style="ShellOptionText" AnchorSide="O,I" String="$Name$"/>
+			</GridButton>
 		</Container>
 	</Instance>
 

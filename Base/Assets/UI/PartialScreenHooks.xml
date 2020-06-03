@@ -1,9 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 
 <Context>
-  <Container               ID="RootContainer" Offset="65,-5" Size="parent,parent" >
+  <Container               ID="RootContainer"						Offset="-65,-5" Anchor="R,T" Size="auto,auto">
 		<Grid   Anchor="R,T"   ID="LaunchBackingDropShadow" Offset="40,25"    Texture="Controls_Glow2"                  Size="165,70"   SliceCorner="25,25" SliceTextureSize="50,50" Color="0,0,0,200">
-			<Container					 ID="MouseConsumer" Offset="-8,8" Size="parent,parent-28" ConsumeMouse="1" />
+			<Container					 ID="MouseConsumer"						Offset="-8,8" Size="parent,parent-28" ConsumeMouse="1" />
 		</Grid>
 		
     <Image  Anchor="R,T"   ID="LaunchBackingTile"       Offset ="65,34"   Texture="LaunchBar_Backing_Tile"          Size="140,41"   StretchMode="Tile" />

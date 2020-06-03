@@ -371,7 +371,6 @@ function SetupButtons()
 	RefreshIconData();
 
 	Controls.MainStack:CalculateSize();
-	Controls.PauseWindow:ReprocessAnchoring();
 end
 
 function RefreshIconData()
@@ -496,12 +495,9 @@ function RefreshModsInUse()
 	end
 	
 	Controls.ModListingsStack:CalculateSize();
-	Controls.ModListingsStack:ReprocessAnchoring();
 	Controls.ModListings:CalculateSize();
 	Controls.ModsInUse:SetHide( (#mods == 0) or m_isSimpleMenu );
 	Controls.MainStack:CalculateSize();
-	Controls.GameDetails:ReprocessAnchoring();
-	Controls.CompassDeco:ReprocessAnchoring();
 end
 
 -- ===========================================================================
@@ -551,6 +547,13 @@ function OnShow()
 
 	-- Do not deselect all as on-rails scenarios (e.g., tutorials) may get out of sync.	
 	Controls.PauseWindow:SetHide(false);
+
+	if WorldBuilder and WorldBuilder:IsActive() then
+		Controls.GameDetails:SetHide(true);
+	else
+		Controls.GameDetails:SetHide(false);
+	end
+
 end
 
 -- ===========================================================================
@@ -622,7 +625,14 @@ function OnRequestClose()
 end
 
 -- ===========================================================================
+--	Dervive off this in a MOD file for adding additional functionality
+-- ===========================================================================
+function LateInitialize()
+end
+
+-- ===========================================================================
 function OnInit( isReload:boolean )
+	LateInitialize();
 	if isReload then
 		if not ContextPtr:IsHidden() then
 			OnShow();

@@ -1,7 +1,5 @@
---[[
--- Created by Sam Batista, Sept 8, 2017
--- Copyright (c) Firaxis Games
---]]
+-- Copyright 2017-2019, Firaxis Games
+
 -- ===========================================================================
 -- Base File
 -- ===========================================================================
@@ -13,10 +11,12 @@ include("ModalLensPanel");
 BASE_OnLensLayerOn = OnLensLayerOn;
 BASE_ShowPoliticalLensKey = ShowPoliticalLensKey;
 
-local m_CulturalIdentityLens : number = UILens.CreateLensLayerHash("Cultural_Identity_Lens");
-
 -- ===========================================================================
 -- Members
+-- ===========================================================================
+
+local m_CulturalIdentityLens : number = UILens.CreateLensLayerHash("Cultural_Identity_Lens");
+
 -- ===========================================================================
 function OnLensLayerOn( layerNum:number )
 	if layerNum == m_CulturalIdentityLens then
@@ -27,6 +27,7 @@ function OnLensLayerOn( layerNum:number )
 	end
 end
 
+-- ===========================================================================
 function ShowPoliticalLensKey()
 	-- add everything normally
 	BASE_ShowPoliticalLensKey();
@@ -53,8 +54,3 @@ function ShowPoliticalLensKey()
 		end
 	end
 end
-
-function Initialize()
-	Events.LensLayerOn.Add( OnLensLayerOn );
-end
-Initialize();

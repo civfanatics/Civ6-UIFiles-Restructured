@@ -1403,14 +1403,23 @@ function SetupParameters:Parameter_GetEnabled(parameter)
 		return false;
 	end
 
-	-- Some parameters can only be changed before the network session is created.
-	if(parameter.ParameterId == "Ruleset"			-- Can't change because the ruleset cascades to pretty much everything.
-		or parameter.ParameterId == "NoTeams") then -- Can't change because the no teams setting cascades to the player configuration team setting.
-													-- This should be removed once the player configuration team pulldown is handled like a proper player parameter.
-		return not Network.IsInSession();
-	else
-		return (not Network.IsInSession() or Network.IsGameHost() or self.PlayerId == Network.GetLocalPlayerID());
-	end	
+	-- Rules for once the network session has been created.
+	if(Network.IsInSession()) then
+		-- Some parameters can only be changed before the network session is created.
+		if(parameter.ParameterId == "Ruleset"				-- Can't change because the ruleset cascades to pretty much everything.
+			or parameter.ParameterId == "NoTeams") then		-- Can't change because the no teams setting cascades to the player configuration team setting.
+															-- This should be removed once the player configuration team pulldown is handled like a proper player parameter.
+			return false;
+		end
+
+		-- Non-local player parameters can only be changed by the game host unless this is a matchmaking configuration.
+		if(self.PlayerId ~= Network.GetLocalPlayerID()
+			and (GameConfiguration.IsMatchMaking() or not Network.IsGameHost()) ) then
+			return false;
+		end
+	end
+
+	return true;
 end
 -------------------------------------------------------------------------------
 

@@ -276,7 +276,7 @@
             <Label ID="Title" Anchor="L,C" WrapWidth="300" Style="WCProposalTitle"/>
             <Label ID="Description" Anchor="C,T" Style="WCProposalBody" Align="C"/>
           </Stack>
-          <Button ID="MoreInfoButton" Size="28,28" Texture="Controls_PreviousSession" NoStateChange="1" Anchor="R,C" Offset="12,0"/>
+          <Button ID="MoreInfoButton" Size="22,22" Texture="Controls_PreviousSession" NoStateChange="1" Anchor="R,C" Offset="22,-6"/>
         </Container>
         <Label ID="Outcome" Offset="55,0" Style="WCProposalHeader" String="LOC_WORLD_CONGRESS_SELECT_AN_OUTCOME"/>
         <Container Size="1,2"/>
@@ -470,7 +470,7 @@
           <Label ID="TurnsLeft" Anchor="C,C" Offset="0,3" Style="WhiteSemiBold14"/>
         </Container>
         <Box ID="Line2" Size="1,76" Color="36,38,39"/>
-        <Button ID="EmergencyButton" Anchor="C,C" Size="28,28" Texture="WC_ViewButton" StateOffsetIncrement="0,28"/>
+        <Button ID="EmergencyButton" Anchor="C,C" Size="24,24" Texture="Controls_Info" StateOffsetIncrement="0,0"/>
         <Container Offset="0,3" Size="50,60" MinSize="50,60">
           <Container Anchor="C,C" Offset="0,-3" Size="auto,auto">
             <Stack ID="UpVoteStack" Size="auto,parent" StackGrowth="Right" Padding="5">

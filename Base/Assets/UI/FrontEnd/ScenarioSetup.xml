@@ -375,6 +375,15 @@
 		</Container>
 	</Instance>
 
+	<!-- Instance for a parameter that has a button to launch a popup (e.g., map-select) -->
+	<Instance Name="ButtonParameterInstance">
+		<Container		ID="ButtonRoot" Anchor="L,T" Size="parent,32" Offset="0,0">
+			<GridButton ID="Button"			Anchor="R,T" Style="ButtonControl" Size="300,24" Offset="40,0">
+				<Label		ID="StringName"	Anchor="L,C" Style="ShellOptionText" AnchorSide="O,I" String="$Name$"/>
+			</GridButton>
+		</Container>
+	</Instance>
+
 	<Instance			Name="IconInfoInstance">
 		<Container	ID="Top"				 Size="340,auto">
 			<Image    Texture="Controls_CircleCompass" Size="52,53" Offset="0,-2" Color="34,58,80,150">

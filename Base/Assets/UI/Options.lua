@@ -50,6 +50,9 @@ local WINDOWED_OPTION = 0;
 
 local MIN_SCROLL_SPEED = 0.5;
 local MAX_SCROLL_SPEED = 5.0;
+local MIN_SCREEN_Y = 768;
+local SCREEN_OFFSET_Y = 63;
+local MIN_SCREEN_OFFSET_Y = -53;
 
 _PromptRestartApp = false;
 _PromptRestartGame = false;
@@ -1896,16 +1899,13 @@ end
 -------------------------------------------------------------------------------
 function Resize()
 	local screenX, screenY:number = UIManager:GetScreenSizeVal();
-	
-	if (screenY < 768 ) then
-		Controls.Content:SetSizeY(screenY-98);
+	if(screenY >= MIN_SCREEN_Y + (Controls.LogoContainer:GetSizeY()+ Controls.LogoContainer:GetOffsetY() * 2)) then
+		Controls.MainWindow:SetSizeY(screenY-(Controls.LogoContainer:GetSizeY() + Controls.LogoContainer:GetOffsetY() * 2));
+		Controls.Content:SetSizeY(SCREEN_OFFSET_Y + Controls.MainWindow:GetSizeY()-(Controls.ConfirmButton:GetSizeY() + Controls.LogoContainer:GetSizeY()));
+	else
+		Controls.MainWindow:SetSizeY(screenY);
+		Controls.Content:SetSizeY(MIN_SCREEN_OFFSET_Y + Controls.MainWindow:GetSizeY()-(Controls.ConfirmButton:GetSizeY()));
 	end
-
-	local hideLogo = true;
-	if(screenY >= Controls.MainWindow:GetSizeY() + (Controls.LogoContainer:GetSizeY()+ Controls.LogoContainer:GetOffsetY())*2) then
-		hideLogo = false;
-	end
-	Controls.LogoContainer:SetHide(hideLogo);	
 end
 
 function OnUpdateUI( type:number, tag:string, iData1:number, iData2:number, strData1:string )   

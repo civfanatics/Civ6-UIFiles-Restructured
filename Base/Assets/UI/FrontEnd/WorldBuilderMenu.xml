@@ -1,14 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ContextDefaults ColorSet="Beige_Black" Style="FontNormal22" FontStyle="Stroke" Name="MainMenu" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="..\..\ForgeUI_Assets\Controls.xsd">
 
-	<Stack				Anchor="C,C" Offset="0,150" Padding="5" WrapWidth="200" WrapGrowth="Right" >
-		<GridButton ID="NewWorldBuilderMap" Style="MainButton" Size="300,41" FontStyle="Stroke" ColorSet="ButtonCS" String="LOC_WORLD_BUILDER_START_NEW" ToolTip="LOC_WORLD_BUILDER_START_NEW_TOOLTIP"/>
-		<GridButton ID="LoadWorldBuilderMap" Style="MainButton" Size="300,41" FontStyle="Stroke" ColorSet="ButtonCS" String="LOC_WORLD_BUILDER_LOAD" ToolTip="LOC_WORLD_BUILDER_LOAD_TOOLTIP"/>
-		<GridButton ID="ImportWorldBuilderMap" Style="MainButton" Size="300,41" FontStyle="Stroke" ColorSet="ButtonCS" String="LOC_WORLD_BUILDER_IMPORT" ToolTip="LOC_WORLD_BUILDER_IMPORT_TOOLTIP" />
-		<GridButton ID="BackButton"	Style="MainButton" Size="300,41" FontStyle="Stroke" ColorSet="ButtonCS" String="LOC_MENU_BACK"/>
-	</Stack>
-
-	<Container ID="SwitchPopup" Anchor="C,C" Size="680,380" Offset="0,100">
+	<Container ID="SwitchPopup" Anchor="C,C" Size="680,380" Offset="0,0">
 		<Image ID="ModalBG" Size="680,380" Offset="0,0" Texture="WorldBuilder_BG" StretchMode="Tile" ConsumeMouse="1"/>
 		<Grid	Offset="-8,-8"	Size="parent+16,parent+16"	Style="ScreenFrame"/>
 

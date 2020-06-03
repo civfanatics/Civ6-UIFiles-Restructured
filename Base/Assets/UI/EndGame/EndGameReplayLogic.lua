@@ -325,6 +325,13 @@ function SetCurrentGraphDataSet(dataSetType)
 	end	
 end
 
+-- ===========================================================================
+--	Allow MODs to override (Using LUA until native DB remove support is added.)
+-- ===========================================================================
+function IsValidGraphDataSetToShow( dataSetName:string )
+	return true;
+end
+
 ----------------------------------------------------------------
 -- Static Initialization
 ----------------------------------------------------------------
@@ -338,7 +345,9 @@ local function RefreshGraphDataSets()
 		if(GameSummary.GetDataSetVisible(i) and GameSummary.HasDataSetValues(i)) then
 			local name = GameSummary.GetDataSetName(i);
 			local displayName = GameSummary.GetDataSetDisplayName(i);
-			table.insert(dataSets, {i, name, Locale.Lookup(displayName)});
+			if IsValidGraphDataSetToShow(name) then
+				table.insert(dataSets, {i, name, Locale.Lookup(displayName)});
+			end
 		end
 	end
 	table.sort(dataSets, function(a,b) return Locale.Compare(a[3], b[3]) == -1; end);

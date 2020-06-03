@@ -2,7 +2,10 @@ include("PopupDialog");
 
 function Initialize()	
 	print("Test.LUA loaded!");
-	--Controls.foo:LocalizeAndSetText("LOC_GENERIC_TEST");
+
+
+	--Controls.foo:SetText(Locale.Lookup("LOC_SAVE_AT_MAXIMUM_CLOUD_SAVES_TOOLTIP"));
+	--Controls.foo:LocalizeAndSetText("LOC_SAVE_AT_MAXIMUM_CLOUD_SAVES_TOOLTIP");
 	
 	--[[ test countdown
 	local outdatedDriversPopupDialog:table = PopupDialog:new("OutdatedGraphicsDriver");

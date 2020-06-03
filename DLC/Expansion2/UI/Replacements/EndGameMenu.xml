@@ -10,27 +10,23 @@
 	</Instance>
 
 	<!-- Background -->
-	<Box ID="BackgroundFill" Size="parent,parent" Color="0,0,0,255" ConsumeMouse="1">
-		<Image ID="Background" Size="parent,parent" StretchMode="Fill" Anchor="C,C" Texture="EndGame_BG_Time" />
-	</Box>
+	<AlphaAnim		ID="BackgroundFade"		Size="parent,parent" AlphaBegin="0" AlphaEnd="1" Cycle="Once" Function="Root" FunctionPower="0.3" Speed="0.5" ConsumeMouse="1">
+		<BoxButton	ID="FadeButton"				Size="parent,parent" Color="0,0,0,0"  />
+		<Image			ID="Background"				Size="parent,parent" StretchMode="Fill" Anchor="C,C" Texture="EndGame_BG_Time" />
+	</AlphaAnim>
 
 	<!-- Ribbon -->
-  
-  
-	<Image ID="RibbonTile" Texture="EndGame_RibbonTile_Domination" Size="parent,132" Offset="392,20" StretchMode="Tile"/>
-	<Image ID="Ribbon" Texture="EndGame_Ribbon_Domination" Size="512,132" Offset="-120,20"/>
-	<!--<Image Texture="EndGame_RibbonGlow" Size="612,152" Anchor="L,T" Offset="500,17" />-->
+	<AlphaAnim		ID="RibbonArea"											Size="parent,132"			Cycle="Once" Speed="0.8" Stopped="1">
+		<Image			ID="RibbonTile"		Offset="392,20"		Size="parent,132"			Texture="EndGame_RibbonTile_Domination" StretchMode="Tile"/>
+		<Image			ID="Ribbon"				Offset="-120,20"	Size="512,132"				Texture="EndGame_Ribbon_Domination" />
+		<Container			Anchor="C,T"	Offset="0,30"			Size="1024,250" >
+			<Image		ID="RibbonIcon"		Offset="8,0"			Size="130,130"				Icon="ICON_VICTORY_DOMINATION"/>
+			<Label		ID="RibbonLabel"	Offset="155,42"		Style="VictoryHeader" String="Domination Victory" />
+		</Container>
+	</AlphaAnim>
 
-  <!-- Player Info -->
-	<Container Size="1024,250" Anchor="C,T" Offset="0,30">
-    <Container Size="parent,parent" Anchor="L,T">
-      <Image ID="RibbonIcon"  Offset="8,0" Size="130,130" Icon="ICON_VICTORY_DOMINATION"/>
-	    <Label ID="RibbonLabel" Offset="155,42" Style="VictoryHeader" String="Domination Victory" />
-    </Container>
-	</Container>
-
-  <Grid Texture="EndGame_Frame" SliceCorner="3,55" SliceSize="1,1" SliceTextureSize="6,190" Anchor="L,T" Offset="0,155" Size="parent,parent-180">
-    <Box ID="MainPanel" Size="1000,parent" Color="120,0,120,0" Anchor="C,T">
+	<Grid		ID="MainBacking" Texture="EndGame_Frame" SliceCorner="3,55" SliceSize="1,1" SliceTextureSize="6,190" Anchor="L,T" Offset="0,155" Size="parent,parent-180">
+		<Box	ID="MainPanel" Size="1000,parent" Color="120,0,120,0" Anchor="C,T">
 
       <!-- Tab Buttons -->
       <Stack Anchor="L,T" Offset="150,2" Padding="20" StackGrowth="Right">
@@ -66,8 +62,8 @@
     </Box>
 
     <!-- Content Area-->
-    <Container Offset="0,34" Size="parent,parent">
-      <Container ID="InfoPanel"  Anchor="C,T" Size="1024,parent">
+		<AlphaAnim ID="AllContentPanels" Offset="0,34" Size="parent,parent" Speed="2" Stopped="1" AlphaStart="0" AlphaEnd="1" Cycle="Once">
+			<Container ID="InfoPanel"  Anchor="C,T" Size="1024,parent">
         <Stack Anchor="L,C" Offset="16,-50" StackGrowth="Down" StackPadding="6">
           <!-- Victory Info -->
           <Grid ID="VictoryPanel" Texture="Controls_SubContainerFill" Size="999,auto" SliceCorner="11,11" SliceSize="0,0" Color="0,0,0,50">
@@ -176,23 +172,23 @@
           <PullDown		ID="ChatPull"		Anchor="L,C"	Offset="0,0"	Size="984,26"		Style="VictoryChatPullDown" AutoFlip="1"/>
         </Container>
       </Container>
-    </Container>
-  </Grid>
+		</AlphaAnim>
+	</Grid>
 
 
-  <Container Size="1024,parent-250" Anchor="C,B">
-		<Image ID="PlayerPortrait" StretchMode="Auto" Anchor="R,B" AnchorSide="O.I" Offset="-420,0" />
-	</Container>
+	<AlphaAnim	ID="PortraitFade" Size="1024,parent-250" Anchor="C,B" Speed="2" Cycle="Once" Stopped="1">
+		<Image		ID="PlayerPortrait" StretchMode="Auto" Anchor="R,B" AnchorSide="O,I" Offset="-420,0" />
+	</AlphaAnim>
 
 
 	<!-- Bottom Buttons -->
-	<Stack Anchor="C,B"  Offset="0,31" Padding="4" StackGrowth="Right" ID="ButtonStack">
-		<GridButton ID="ReplayMovieButton" Style="MainButton" String="LOC_UI_ENDGAME_REPLAY_MOVIE" SizeToText="40,28"/>
-		<GridButton ID="HistoricMoments" Style="MainButton" String="LOC_END_GAME_MENU_HISTORIAN_BUTTON" SizeToText="40,28"/>
-		<GridButton ID="ExportHistoricMoments" Style="MainButton" String="LOC_END_GAME_MENU_EXPORT_HISTORIAN_BUTTON" SizeToText="40,28"/>
-		<GridButton ID="MainMenuButton" Style="MainButton" String="LOC_UI_ENDGAME_MAIN_MENU" SizeToText="40,28"/>
-		<GridButton ID="NextPlayerButton" Style="MainButton" String="LOC_UI_ENDGAME_MP_PLAYER_CHANGE_CONTINUE" SizeToText="40,28"/>
-		<GridButton ID="BackButton" Style="MainButton" String="LOC_UI_ENDGAME_EXTENDED_GAME" SizeToText="40,28"/>
+	<Stack				ID="ButtonStack"						Anchor="C,B"  Offset="0,32" Padding="4" StackGrowth="Right" >
+		<GridButton ID="ReplayMovieButton"			Style="MainButton" String="LOC_UI_ENDGAME_REPLAY_MOVIE" SizeToText="40,28"/>
+		<GridButton ID="HistoricMoments"				Style="MainButton" String="LOC_END_GAME_MENU_HISTORIAN_BUTTON" SizeToText="40,28"/>
+		<GridButton ID="ExportHistoricMoments"	Style="MainButton" String="LOC_END_GAME_MENU_EXPORT_HISTORIAN_BUTTON" SizeToText="40,28"/>
+		<GridButton ID="MainMenuButton"					Style="MainButton" String="LOC_UI_ENDGAME_MAIN_MENU" SizeToText="40,28"/>
+		<GridButton ID="NextPlayerButton"				Style="MainButton" String="LOC_UI_ENDGAME_MP_PLAYER_CHANGE_CONTINUE" SizeToText="40,28"/>
+		<GridButton ID="BackButton"							Style="MainButton" String="LOC_UI_ENDGAME_EXTENDED_GAME" SizeToText="40,28"/>
 	</Stack>
 
 	<!-- Top/Bottom cutoffs -->

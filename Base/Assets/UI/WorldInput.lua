@@ -16,6 +16,95 @@ include("PopupDialog.lua");
 -- More interface-specific includes before the initialization
 
 -- ===========================================================================
+-- Horizontal shake tracker
+-- This works by creating two 'cells' with user-specified size around the center
+-- location for the detection.  As the user moves the mouse around, it keeps track
+-- of the unique cells the mouse has entered along with the time it entered. If 
+-- the mouse moves so far it is outside the cell regions, we re-locate the cell 
+-- regions to just keep the mouse contained.  If we detect a series of four cell 
+-- changes within the specified amount of time, we detect a shake gesture.
+-- ===========================================================================
+local m_ShakeTracker =
+{
+	m_nHistorySize = 4;
+	m_aHistory = {};
+	m_aTime = {};
+	m_i = 1;
+	
+	m_OffsetX = 0;
+	m_SizeX = 0;
+	m_ShakeTime = 0.5; --Only register shake if it happens within this number of seconds
+};
+
+function Shake_Setup( this : table, CenterX : number, SizeX : number )
+	this.m_SizeX = SizeX;
+	this.m_OffsetX = CenterX - (SizeX / 2);
+	Shake_Clear(this);
+end
+
+function Shake_Clear( this : table )
+	for i,v in ipairs(this.m_aHistory) do this.m_aHistory[i] = nil end
+	for i,v in ipairs(this.m_aTime) do this.m_aTime[i] = nil end
+	this.m_i = 0;
+end
+
+function Shake_ProcessMouse( this : table, MouseX : number )
+	MouseLocalX = math.floor( 2 * (MouseX - this.m_OffsetX) / this.m_SizeX );
+
+	if MouseLocalX < 0 then
+		this.m_OffsetX = MouseX;
+	end
+
+	if MouseLocalX >= 2 then
+		this.m_OffsetX = MouseX - this.m_SizeX;
+	end
+
+	if( MouseLocalX >= 0 and MouseLocalX < 2 ) then
+		CurrentCell = MouseLocalX;
+
+		if not(this.m_aHistory[this.m_i] == CurrentCell) then
+			this.m_i = this.m_i + 1;	
+			if this.m_i > this.m_nHistorySize then
+				this.m_i = 0;
+			end
+			this.m_aHistory[this.m_i] = CurrentCell;
+			this.m_aTime[this.m_i] = os.clock();
+		end
+	end
+end
+
+function Shake_Test( this:table, Shake:table )
+	nSize = 0;
+	for i,v in ipairs(Shake) do nSize = nSize +1 end;
+
+	iTest = this.m_i - nSize + 1;
+	if iTest < 0 then
+		iTest = iTest + this.m_nHistorySize;
+	end
+
+	local StartTime:number = os.clock() - this.m_ShakeTime;
+
+	if (this.m_aTime[iTest] == nil) or (this.m_aTime[iTest] < StartTime) then
+		return false;
+	end
+
+	for i,v in ipairs(Shake) do
+		if not (this.m_aHistory[iTest] == v) then
+			return false;
+		end
+		iTest = iTest + 1;
+	end
+	return true;
+end
+
+function Shake_IsShake( this:table )
+	ShakeLeft =  {1,0,1,0};
+	ShakeRight = {0,1,0,1};
+
+	return Shake_Test(this, ShakeLeft) or Shake_Test(this, ShakeRight);
+end
+
+-- ===========================================================================
 --	Debug
 -- ===========================================================================
 
@@ -25,14 +114,13 @@ local m_isDebuging				:boolean = false;	-- Turn on local debug systems
 --	CONSTANTS
 -- ===========================================================================
 
-
 local NORMALIZED_DRAG_THRESHOLD	:number = 0.035;			-- How much movement to kick off a drag
 local NORMALIZED_DRAG_THRESHOLD_SQR :number = NORMALIZED_DRAG_THRESHOLD*NORMALIZED_DRAG_THRESHOLD;
 local MOUSE_SCALAR				:number = 6.0;
 local PAN_SPEED					:number = 1;
 local ZOOM_SPEED				:number = 0.1;
 local DOUBLETAP_THRESHHOLD		:number = 2;
-
+local SHAKE_PIXEL_THRESHOLD     :number = 128; --theshold for shake gesture detection
 
 -- ===========================================================================
 --	Table of tables of functions for each interface mode & event the mode handles
@@ -119,6 +207,7 @@ local m_dragStartFocusWorldX	:number = 0;
 local m_dragStartFocusWorldY	:number = 0;
 local m_dragStartX				:number	= 0;		-- Mouse or virtual mouse (of average touch points) X
 local m_dragStartY				:number	= 0;		-- Mouse or virtual mouse (of average touch points) Y
+local m_dragSpinAmountX			:number = 0;
 local m_dragX					:number	= 0;	
 local m_dragY					:number	= 0;
 local m_edgePanX				:number = 0;
@@ -183,18 +272,25 @@ end
 --	Pan camera
 -- ===========================================================================
 function ProcessPan( panX :number, panY :number )
+	
+	if UI.GetInterfaceMode() ~= InterfaceModeTypes.CINEMATIC then
 
-	if( panY == 0.0 ) then
-		if( m_isUPpressed ) then panY = panY + PAN_SPEED; end 
-		if( m_isDOWNpressed) then panY = panY - PAN_SPEED; end
+		if m_dragSpinAmountX ~= 0 then 
+			ResetSpin();
+		end
+
+		if( panY == 0.0 ) then
+			if( m_isUPpressed ) then panY = panY + PAN_SPEED; end 
+			if( m_isDOWNpressed) then panY = panY - PAN_SPEED; end
+		end
+
+		if( panX == 0.0 ) then 
+			if( m_isRIGHTpressed ) then panX = panX + PAN_SPEED; end
+			if( m_isLEFTpressed ) then panX = panX - PAN_SPEED; end
+		end
+
+		UI.PanMap( panX, panY );
 	end
-
-	if( panX == 0.0 ) then 
-		if( m_isRIGHTpressed ) then panX = panX + PAN_SPEED; end
-		if( m_isLEFTpressed ) then panX = panX - PAN_SPEED; end
-	end
-
-	UI.PanMap( panX, panY );
 end
 
 
@@ -203,6 +299,9 @@ end
 --	plotId, the plot # to look at
 -- ===========================================================================
 function SnapToPlot( plotId:number )
+	if m_dragSpinAmountX ~= 0 then 
+		ResetSpin();
+	end
 	if (Map.IsPlot(plotId)) then
 		local plot = Map.GetPlotByIndex(plotId);
 		UI.LookAtPlot( plot );
@@ -218,6 +317,9 @@ end
 --	Perform a camera zoom based on the native 2-finger gesture
 -- ===========================================================================
 function RealizeTouchGestureZoom()
+	if m_dragSpinAmountX ~= 0 then 
+		ResetSpin();
+	end
 	if TouchManager:IsInGesture(Gestures.Stretching) then
 		local fDistance:number = TouchManager:GetGestureDistance(Gestures.Stretching);
 		local normalizedX		:number, normalizedY:number = UIManager:GetNormalizedMousePos();
@@ -407,9 +509,11 @@ function ReadyForDragMap()
 	LuaEvents.WorldInput_DragMapBegin();
 end
 function StartDragMap()
-
-	--Don't override m_dragStartX/Y because it is used in rotation, and we ony 
 	local dragStartX:number, dragStartY:number = UIManager:GetNormalizedMousePos();
+
+	local ScreenWidth:number = UIManager:GetScreenSizeVal();
+	Shake_Setup( m_ShakeTracker, dragStartX, 2 * SHAKE_PIXEL_THRESHOLD / ScreenWidth );
+
 	m_dragStartFocusWorldX, m_dragStartFocusWorldY	= UI.GetMapLookAtWorldTarget();
 	m_dragStartWorldX, m_dragStartWorldY			= UI.GetWorldFromNormalizedScreenPos_NoWrap( dragStartX, dragStartY );
 	m_dragX = dragStartX;
@@ -428,6 +532,16 @@ function UpdateDragMap()
 	local dx:number			= m_dragX - x;
 	local dy:number			= m_dragY - y;
 
+	Shake_ProcessMouse( m_ShakeTracker, x );
+
+	--We need to set the screen shake value every frame, even when the screen is not shaking.
+	local ScreenShake:number = 0;
+	if Shake_IsShake( m_ShakeTracker ) then
+		ScreenShake = 1;
+		Shake_Clear( m_ShakeTracker );
+	end
+	WorldView.SetVFXImport("ScreenShake", ScreenShake);
+
 	-- Early out if no change:
 	-- Need m_drag... checks or snap to 0,0 can occur.
 	if (dx==0 and dy==0) or (m_dragStartWorldX==0 and m_dragStartFocusWorldX==0) then
@@ -438,8 +552,12 @@ function UpdateDragMap()
 	end
 
 	if m_isALTDown then
-		UI.SpinMap( m_dragStartX - x, m_dragStartY - y  );
+		m_dragSpinAmountX = m_dragSpinAmountX + dx;
+		UI.SpinMap( m_dragSpinAmountX, 0 );
 	else
+		if m_dragSpinAmountX ~= 0 then 
+			ResetSpin();
+		end
 		UI.DragMap( x, y, m_dragStartWorldX, m_dragStartWorldY, m_dragStartFocusWorldX, m_dragStartFocusWorldY );
 	end
 
@@ -450,9 +568,15 @@ end
 -- ===========================================================================
 --	Reset drag variables for next go around.
 -- ===========================================================================
-function EndDragMap()
+function ResetSpin()
+	m_dragSpinAmountX = 0;
 	UI.SpinMap( 0.0, 0.0 );
+end
 
+function EndDragMap(resetSpin:boolean)
+	if resetSpin then
+		ResetSpin();
+	end
 	LuaEvents.WorldInput_DragMapEnd();
 	m_dragX				= 0;
 	m_dragY				= 0;
@@ -463,7 +587,6 @@ function EndDragMap()
 	m_dragStartWorldX	= 0;
 	m_dragStartWorldY	= 0;	
 end
-
 
 -- ===========================================================================
 --	True if a given unit type is allowed to move to a plot.
@@ -1015,7 +1138,7 @@ end
 --	Game Engine Event
 -- ===========================================================================
 function OnUnitSelectionChanged( playerID:number, unitID:number, hexI:number, hexJ:number, hexK:number, isSelected:boolean, isEditable:boolean )
-	if playerID ~= Game.GetLocalPlayer() then
+	if playerID ~= Game.GetLocalPlayer() then 
 		return;
 	end
 
@@ -1038,7 +1161,7 @@ function DefaultKeyDownHandler( uiKey:number )
 	if uiKey == Keys.VK_ALT then
 		if m_isALTDown == false then
 			m_isALTDown = true;
-			EndDragMap();
+			EndDragMap(true);
 			ReadyForDragMap();
 		end
 	end
@@ -1072,7 +1195,7 @@ function DefaultKeyUpHandler( uiKey:number )
 	if uiKey == Keys.VK_ALT then
 		if m_isALTDown == true then
 			m_isALTDown = false;
-			EndDragMap();
+			EndDragMap(true);
 			ReadyForDragMap();
 		end
 	end
@@ -1130,14 +1253,12 @@ end
 
 -- ===========================================================================
 function OnDefaultKeyDown( pInputStruct:table )
-	if m_isInputBlocked then return; end
 	local uiKey			:number = pInputStruct:GetKey();
 	return DefaultKeyDownHandler( uiKey );	
 end
 
 -- ===========================================================================
 function OnDefaultKeyUp( pInputStruct:table )
-	if m_isInputBlocked then return; end
 	local uiKey			:number = pInputStruct:GetKey();
 	return DefaultKeyUpHandler( uiKey );	
 end
@@ -1146,7 +1267,6 @@ end
 --	Placing a building, wonder, or district; ESC to leave 
 -- ===========================================================================
 function OnPlacementKeyUp( pInputStruct:table )
-	if m_isInputBlocked then return; end
 	local uiKey			:number = pInputStruct:GetKey();
 	if uiKey == Keys.VK_ESCAPE then
 		UI.SetInterfaceMode(InterfaceModeTypes.SELECTION);
@@ -1186,7 +1306,7 @@ function OnMouseDebugEnd( pInputStruct:table )
 			DebugPlacement( plotID, edge );
 		end
 	end
-	EndDragMap();					-- Reset any dragging
+	EndDragMap(true);					-- Reset any dragging
 	g_isMouseDownInWorld = false;
 	return true;
 
@@ -1239,7 +1359,7 @@ function OnMouseSelectionEnd( pInputStruct:table )
 			SelectInPlot( plotX, plotY );
 		end
 	end
-	EndDragMap();					-- Reset any dragging
+	EndDragMap(false);					-- Reset any dragging
 	g_isMouseDownInWorld = false;
 	return true;
 end
@@ -1353,7 +1473,7 @@ function OnMouseEnd( pInputStruct:table )
 	if g_isMouseDragging then
 		g_isMouseDragging = false;
 	end
-	EndDragMap();					-- Reset any dragging
+	EndDragMap(true);					-- Reset any dragging
 	g_isMouseDownInWorld = false;
 	return true;
 end
@@ -1410,7 +1530,7 @@ function OnMouseMakeTradeRouteEnd( pInputStruct:table )
 			LuaEvents.WorldInput_MakeTradeRouteDestination( plotId );
 		end
 	end
-	EndDragMap();
+	EndDragMap(true);
 	g_isMouseDownInWorld = true;
 	return true;
 end
@@ -1429,7 +1549,7 @@ function OnMouseTeleportToCityEnd( pInputStruct:table )
 	else
 		TeleportToCity();
 	end
-	EndDragMap();
+	EndDragMap(true);
 	g_isMouseDownInWorld = true;
 	return true;
 end
@@ -1450,7 +1570,7 @@ function OnMouseBuildingPlacementEnd( pInputStruct:table )
 			ConfirmPlaceWonder(pInputStruct);	-- StrategicView_MapPlacement.lua
 		end
 	end
-	EndDragMap();
+	EndDragMap(true);
 	g_isMouseDownInWorld = false;
 	return true;
 end
@@ -1478,7 +1598,7 @@ function OnMouseDistrictPlacementEnd( pInputStruct:table )
 			ConfirmPlaceDistrict(pInputStruct);
 		end
 	end
-	EndDragMap();
+	EndDragMap(true);
 	g_isMouseDownInWorld = false;
 	return true;
 end
@@ -1562,7 +1682,7 @@ function OnMouseMoveToEnd( pInputStruct:table )
 		end
 		UI.SetInterfaceMode( InterfaceModeTypes.SELECTION );
 	end
-	EndDragMap();
+	EndDragMap(true);
 	g_isMouseDownInWorld = false;
 	return true;
 end
@@ -1627,7 +1747,7 @@ function OnTouchDebugEnd( pInputStruct:table )
 		end
 	end
 
-	EndDragMap(); -- Reset any dragging
+	EndDragMap(true); -- Reset any dragging
 	m_touchTotalNum	= 0;
 	m_isTouchZooming	= false;
 	m_touchStartPlotX	= -1;
@@ -1733,7 +1853,7 @@ function OnTouchSelectionEnd( pInputStruct:table )
 		end
 	end
 
-	EndDragMap();
+	EndDragMap(false);
 	m_touchTotalNum		= 0;
 	m_isTouchZooming	= false;	
 	m_touchStartPlotX	= -1;
@@ -1804,7 +1924,7 @@ function OnTouchTradeRouteEnd( pInputStruct:table )
 		end
 	end
 
-	EndDragMap();
+	EndDragMap(true);
 	m_touchTotalNum		= 0;
 	m_isTouchZooming	= false;	
 	m_touchStartPlotX	= -1;
@@ -1827,7 +1947,7 @@ function OnTouchTeleportToCityEnd( pInputStruct:table )
 		TeleportToCity();
 	end
 
-	EndDragMap();
+	EndDragMap(true);
 	m_touchTotalNum		= 0;
 	m_isTouchZooming	= false;	
 	m_touchStartPlotX	= -1;
@@ -2299,7 +2419,7 @@ function OnMouseDeployEnd( pInputStruct )
 			AirUnitDeploy(pInputStruct);
 		end
 	end
-	EndDragMap();
+	EndDragMap(true);
 	g_isMouseDownInWorld = false;
 	return true;
 end
@@ -2367,7 +2487,7 @@ function OnMouseRebaseEnd( pInputStruct )
 			AirUnitReBase(pInputStruct);
 		end
 	end
-	EndDragMap();
+	EndDragMap(true);
 	g_isMouseDownInWorld = false;
 	return true;
 end
@@ -2722,7 +2842,7 @@ function OnMouseEnd_WBSelectPlot( pInputStruct:table )
 			LuaEvents.WorldInput_WBSelectPlot(UI.GetCursorPlotID(), UI.GetCursorNearestPlotEdge(), false, false);
 		end
 	end
-	EndDragMap(); -- Reset any dragging
+	EndDragMap(true); -- Reset any dragging
 	g_isMouseDownInWorld = false;
 	return true;
 end
@@ -2878,7 +2998,7 @@ function OnMouseAirliftEnd( pInputStruct )
 			UnitAirlift(pInputStruct);
 		end
 	end
-	EndDragMap();
+	EndDragMap(true);
 	g_isMouseDownInWorld = false;
 	return true;
 end
@@ -2973,6 +3093,8 @@ end
 --	eNewMode, new mode the engine has just changed to
 -- ===========================================================================
 function OnInterfaceModeChanged( eOldMode:number, eNewMode:number )
+
+	ResetSpin();
 
 	-- Optional: function run before a mode is exited.
 	local pOldModeHandler :table = InterfaceModeMessageHandler[eOldMode];
@@ -3157,10 +3279,15 @@ function OnInputHandler( pInputStruct:table )
 
 	local uiMsg :number = pInputStruct:GetMessageType();
 	local mode  :number = UI.GetInterfaceMode();
+	
+	if m_isInputBlocked == true then
+		return;
+	end
 
 	if uiMsg == MouseEvents.PointerLeave then
 		ClearAllCachedInputState();
 		ProcessPan(0,0);
+		ResetSpin();
 		return;
 	end
 
@@ -3257,7 +3384,6 @@ function OnInputHandler( pInputStruct:table )
 		g_isMouseDragging = false;	-- No mouse down, no dragging is occuring!
 	end
 
-
 	return isHandled;
 end
 
@@ -3304,6 +3430,7 @@ function ClearAllCachedInputState()
 	m_dragStartY		= 0;
 	m_dragX				= 0;
 	m_dragY				= 0;
+	m_dragSpinAmountX   = 0;
 	m_edgePanX			= 0.0;
 	m_edgePanY			= 0.0;
 	m_touchTotalNum		= 0;
@@ -3338,6 +3465,7 @@ end
 function OnAppLostFocusHandler()
 	ClearAllCachedInputState();
 	ProcessPan(0,0);
+	ResetSpin();
 end
 
 -- ===========================================================================
@@ -3554,7 +3682,9 @@ function LateInitialize()
 
 	LuaEvents.DiploScene_SceneClosed.Add(OnUnblockInput);
 	LuaEvents.DiploScene_SceneOpened.Add(OnBlockInput);
-
+	
+	LuaEvents.FullscreenMap_Shown.Add(OnBlockInput);
+	LuaEvents.FullscreenMap_Closed.Add(OnUnblockInput);
 end
 
 -- ===========================================================================
@@ -3582,7 +3712,7 @@ end
 -- ===========================================================================
 --	Hotkey Event
 -- ===========================================================================
-function OnInputActionTriggered( actionId )
+function OnInputActionTriggered( actionId:number )
 	if actionId == m_actionHotkeyToggleGrid then
 		LuaEvents.MinimapPanel_ToggleGrid();
 		LuaEvents.MinimapPanel_RefreshMinimapOptions();
@@ -3599,10 +3729,10 @@ function OnInputActionTriggered( actionId )
 
 	elseif actionId == m_actionHotkeyToggleYield then
 		if UserConfiguration.ShowMapYield() then    -- yield already visible, hide
-			LuaEvents.MinimapPanel_HideYieldIcons();
+			LuaEvents.PlotInfo_HideYieldIcons();
 			UserConfiguration.ShowMapYield( false );
 		else
-			LuaEvents.MinimapPanel_ShowYieldIcons();
+			LuaEvents.PlotInfo_ShowYieldIcons();
 			UserConfiguration.ShowMapYield( true );
 		end
 
@@ -3646,7 +3776,7 @@ function OnInputActionTriggered( actionId )
 			UI.PlaySound("Play_UI_Click");
 		end
 	elseif actionId == m_actionHotkeyOnlinePause then
-		if GameConfiguration.IsNetworkMultiplayer() then
+		if (GameConfiguration.IsNetworkMultiplayer() and Network.IsMatchMaking()==false) then
 			TogglePause();
 		end
 	end
@@ -3675,6 +3805,8 @@ include ("StrategicView_DebugSupport");	-- the Debug interface mode
 --	Assign callbacks
 -- ===========================================================================
 function Initialize()
+
+	Shake_Clear( m_ShakeTracker );
 
 	-- UI Events
 	ContextPtr:SetInitHandler( OnInit );

@@ -15,6 +15,12 @@ LeaderIcon.DATA_FIELD_CLASS = "LEADER_ICON_CLASS";
 LeaderIcon.TEAM_RIBBON_PREFIX = "ICON_TEAM_RIBBON_";
 LeaderIcon.TEAM_RIBBON_SIZE = 53;
 
+-- ===========================================================================
+--	MEMBERS
+-- ===========================================================================
+LeaderIcon.playerID = -1;
+
+
 ------------------------------------------------------------------
 -- Static-Style allocation functions
 ------------------------------------------------------------------
@@ -48,6 +54,8 @@ end
 -- ===========================================================================
 function LeaderIcon:UpdateIcon(iconName: string, playerID: number, isUniqueLeader: boolean, ttDetails: string)
 	
+	LeaderIcon.playerID = playerID;
+
 	local pPlayer:table = Players[playerID];
 	local pPlayerConfig:table = PlayerConfigurations[playerID];
 	local localPlayerID:number = Game.GetLocalPlayer();
@@ -81,6 +89,8 @@ end
 
 -- ===========================================================================
 function LeaderIcon:UpdateIconSimple(iconName: string, playerID: number, isUniqueLeader: boolean, ttDetails: string)
+
+	LeaderIcon.playerID = playerID;
 
 	local localPlayerID:number = Game.GetLocalPlayer();
 
@@ -216,4 +226,11 @@ function LeaderIcon:GetToolTipString(playerID:number)
 	end
 
 	return result;
+end
+
+-- ===========================================================================
+function LeaderIcon:AppendTooltip( extraText:string )
+	if extraText == nil or extraText == "" then return; end		--Ignore blank
+	local tooltip:string = self:GetToolTipString(self.playerID) .. "[NEWLINE]" .. extraText;
+	self.Controls.Portrait:SetToolTipString(tooltip);
 end

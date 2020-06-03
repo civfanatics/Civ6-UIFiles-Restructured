@@ -26,7 +26,7 @@
             <Box ID="CrisisDetailTitleBar" Color="232,68,9,0" Size="557,35">
               <Container ID="CivilizationIconContainer" Size="auto,auto" Offset="20,0" Anchor="L,C">
                 <MakeInstance Name="CivilizationIcon36" ID="CivilizationTargetIcon" Anchor="C,C"/>
-                <Image ID="TargetIcon" Texture="Emergency_Target44" Color="255,0,0,255" Size="44,44" Anchor="C,C"/>
+                <Image ID="TargetIcon" Texture="Emergency_Target56" Color="255,0,0,255" Size="44,44" Anchor="C,C"/>
               </Container>
               <Stack Anchor="C,T" StackGrowth="Right" Padding="5">
                 <Label ID="CrisisTargetTitle" Anchor="C,T" Style="EventPopupTitle" FontStyle="glow" Offset="0,10"  SmallCapsType="EveryWord" FontSize="22" Color0="225,225,225,250" Color1="255,255,255,45"/>

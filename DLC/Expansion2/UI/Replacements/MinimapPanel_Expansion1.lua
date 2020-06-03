@@ -1,4 +1,4 @@
--- Copyright 2017-2018, Firaxis Games
+-- Copyright 2017-2019, Firaxis Games
 
 -- ===========================================================================
 -- Base File
@@ -20,7 +20,7 @@ BASE_SetGovernmentHexes		= SetGovernmentHexes;
 -- ===========================================================================
 -- Members
 -- ===========================================================================
-local m_ToggleLoyaltyLensId		 : number = Input.GetActionId("LensLoyalty");
+local m_ToggleLoyaltyLensId		 : number = -1;
 local m_CulturalIdentityLens     : number = UILens.CreateLensLayerHash("Cultural_Identity_Lens");
 local m_UnknownCivilizationColor : number = UI.GetColorValue("COLOR_LOYALTY_UNKNOWN_CIVILIZATION");
 
@@ -241,14 +241,17 @@ end
 function LateInitialize()
 
 	BASE_LateInitialize();
-	
-    Controls.LoyaltyLensButton:RegisterCallback(Mouse.eLClick, ToggleLoyaltyLens);
-	LuaEvents.OnViewLoyaltyLens.Add(function()
-		if ToggleLensList(Controls.LoyaltyLensButton:IsChecked()) then
-			Controls.LoyaltyLensButton:SetCheck(not Controls.LoyaltyLensButton:IsChecked());
-			ToggleLoyaltyLens();
-		end
-	end);
+
+	if GameCapabilities.HasCapability("CAPABILITY_LENS_TOGGLING_UI") then
+		m_ToggleLoyaltyLensId = Input.GetActionId("LensLoyalty");	
+		Controls.LoyaltyLensButton:RegisterCallback(Mouse.eLClick, ToggleLoyaltyLens);
+		LuaEvents.OnViewLoyaltyLens.Add(function()
+			if ToggleLensList(Controls.LoyaltyLensButton:IsChecked()) then
+				Controls.LoyaltyLensButton:SetCheck(not Controls.LoyaltyLensButton:IsChecked());
+				ToggleLoyaltyLens();
+			end
+		end);
+	end
 
 	LuaEvents.OnViewReligionLens.Add(function()
 		if ToggleLensList(Controls.ReligionLensButton:IsChecked()) then

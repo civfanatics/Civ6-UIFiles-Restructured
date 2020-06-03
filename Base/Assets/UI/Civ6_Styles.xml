@@ -1057,7 +1057,7 @@
           <GridData Texture="Controls_DropDownControlLarge" StateOffsetIncrement="0,45"	SliceCorner="10,15" SliceTextureSize="45,45" />
           <Container Size="62,62" Offset="-3,0" Anchor="L,C">
             <Image Texture="Controls_CircleBacking45" Size="51,51" Anchor="C,C" Offset="0,1"/>
-            <Image ID="LeaderIcon" Texture="Leaders44" Size="44,44" Anchor="C,C"/>
+            <Image ID="LeaderIcon" Texture="Leaders45" Size="45,45" Anchor="C,C"/>
           </Container>
         </GridButton>
       </ButtonData>
@@ -1069,7 +1069,7 @@
     <InstanceData Name="InstanceOne">
       <GridButton ID="Button" Style="ButtonControl" Anchor="L,T"	Size="325,50" TextAnchor="L,C" TextOffset="60" WrapWidth="200">
         <Container Size="62,62" Offset="-3,0" Anchor="L,C">
-          <Image ID="LeaderIcon" Texture="Leaders44" Size="44,44" Anchor="C,C"/>
+          <Image ID="LeaderIcon" Texture="Leaders45" Size="45,45" Anchor="C,C"/>
         </Container>
       </GridButton>
     </InstanceData>
@@ -1678,7 +1678,8 @@
   <UnitPanelStatLabel		Style="FontNormal10"	Color0="149,153,148,255"	Color1="0,0,0,150"		FontStyle="Shadow" />
   <UnitPanelSupportName		    Style="FontNormal14"	Color0="214,214,214,255"	Color1="0,0,0,55"	FontStyle="Stroke"/>
   <UnitPanelSupportStrength		Style="FontNormal26"	Color0="214,214,214,255"	Color1="0,0,0,55"	FontStyle="Stroke"/>
-  
+
+  <CityPanelName				Style="FontFlair14"			FontStyle="glow"		Color0="208,212,217,255"	Color1="0,0,0,200" SmallCaps="18" SmallCapsLeading="0" SmallCapsType="EveryWord" KerningAdjustment="0"/>
   <CityPanelNumLarge				Style="FontFlair22"		FontStyle="Stroke"	Color="255,255,255,255" EffectColor="0,0,0,150" />
   <CityPanelNumSmall				Style="FontFlair14"		FontStyle="Stroke"	Color="255,255,255,255" EffectColor="0,0,0,150" />
   <CityPanelText						Style="FontNormal15"	FontStyle="Stroke"	Color="255,255,255,200" EffectColor="0,0,0,100" />
@@ -2426,11 +2427,11 @@
 	<!-- World Builder -->
 	<WorldBuilderPropertyLabel Style="FontNormal14" Anchor="L,C" TruncatedTooltip="1" TruncateWidth="270" />
 
-	<WorldBuilderPullDownLabel Style="FontNormal12" ColorSet="ShellOptionText" FontStyle="stroke" TruncatedTooltip="1" TruncateWidth="120" />
+	<WorldBuilderPullDownLabel Style="FontNormal12" ColorSet="ShellOptionText" FontStyle="stroke" TruncatedTooltip="1" TruncateWidth="110" />
 
 	<WorldBuilderPropertyPullDown  Size="200,24" ScrollThreshold="312" AutoSizePopup="1" AutoFlip="1" SpaceForScroll="0" EntryInstance="InstanceOne">
 		<ButtonData>
-			<GridButton  Size="194,28" Style="TabFont" TruncatedTooltip="1" TruncateWidth="194">
+			<GridButton  Size="194,28" Style="TabFont" TruncatedTooltip="1" TruncateWidth="154">
 				<GridData Texture="Controls_DropDownControl" StateOffsetIncrement="0,24"	SliceCorner="10,12"	SliceSize="1,1"		SliceTextureSize="45,24" />
 			</GridButton>
 		</ButtonData>
@@ -2440,11 +2441,11 @@
 		</ScrollPanelData>
 		<StackData StackGrowth="Bottom" Anchor="C,T"/>
 		<InstanceData Name="InstanceOne">
-			<GridButton ID="Button" Style="ButtonControl" Size="190,24" FontStyle="glow" ColorSet="BlueGlow" TruncatedTooltip="1" TruncateWidth="194" />
+			<GridButton ID="Button" Style="ButtonControl" Size="190,24" FontStyle="glow" ColorSet="BlueGlow" TruncatedTooltip="1" TruncateWidth="154"/>
 		</InstanceData>
 	</WorldBuilderPropertyPullDown>
 
 
 	<!-- EXPERIMENTAL STYLE CLASS MODULES -->
 
-</StyleSheet>
+</StyleSheet> 

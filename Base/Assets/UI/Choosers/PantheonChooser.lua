@@ -141,7 +141,12 @@ end
 -- ===========================================================================
 function Close()
 	if not ContextPtr:IsHidden() then
-		ContextPtr:SetHide(true);
+		Controls.PantheonChooserSlideAnim:SetToEnd();
+        Controls.PantheonChooserSlideAnim:Reverse();
+
+		UI.PlaySound("Tech_Tray_Slide_Closed");
+
+        LuaEvents.PantheonChooser_CloseReligion();
 	end
 end
 
@@ -149,7 +154,16 @@ end
 function Open()
 	if ContextPtr:IsHidden() then
 		ContextPtr:SetHide(false);
-		m_uiSelectedBeliefInstance = nil;
+        m_uiSelectedBeliefInstance = nil;
+
+        LuaEvents.PantheonChooser_OpenReligion();
+
+		-- Play Open Animation
+		Controls.PantheonChooserSlideAnim:SetToBeginning();
+		Controls.PantheonChooserSlideAnim:Play();
+
+		UI.PlaySound("Tech_Tray_Slide_Open");
+
 		Realize();
 	end
 end
@@ -182,19 +196,32 @@ end
 function OnShutdown()
 	LuaEvents.NotificationPanel_OpenPantheonChooser.Remove( Open );
 	LuaEvents.LaunchBar_OpenPantheonChooser.Remove( Open );
+	LuaEvents.LaunchBar_ClosePantheonChooser.Remove( Close );
+end
+
+-- ===========================================================================
+function OnAnimEnd()
+	if Controls.PantheonChooserSlideAnim:IsReversing() then
+		-- If we're reversing due to closing the panel then hide the context after that anim ends
+		ContextPtr:SetHide(true);
+	end
 end
 
 -- ===========================================================================
 function LateInitialize()
 	LuaEvents.NotificationPanel_OpenPantheonChooser.Add( Open );
 	LuaEvents.LaunchBar_OpenPantheonChooser.Add( Open );
+	LuaEvents.LaunchBar_ClosePantheonChooser.Add( Close );
 
 	Controls.Header_CloseButton:RegisterCallback( Mouse.eLClick, Close );
 
+	Controls.SelectedBeliefGrid:RegisterCallback( Mouse.eLClick, ClearBeliefSelection );
 	Controls.ConfirmPantheonButton:RegisterCallback( Mouse.eLClick, ConfirmPantheon );
 	Controls.ConfirmPantheonButton:RegisterCallback(Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end); 
 	Controls.CancelButton:RegisterCallback( Mouse.eLClick, ClearBeliefSelection );
 	Controls.CancelButton:RegisterCallback(Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end); 
+
+	Controls.PantheonChooserSlideAnim:RegisterEndCallback( OnAnimEnd );
 end
 
 -- ===========================================================================

@@ -84,15 +84,22 @@ end
 function RefreshAnnotations()
 	for i, entry in ipairs(m_TextEntries) do
 		local controlEntry = m_ViewingTab.TextInstance.KeyStringList:GetIndexedEntry( i );
+		local toolTip : string;
 		if controlEntry ~= nil then
 			if controlEntry.Root.Button ~= nil then
 				if i < 5 then
 					TruncateString(controlEntry.Root.Annotation, controlEntry.Root.Button:GetSizeX()-20, Locale.Lookup(m_ItemAnnotations[i][1]), "");
+					toolTip = Locale.Lookup(m_ItemAnnotations[i][1]);
 				else
 					TruncateString(controlEntry.Root.Annotation, controlEntry.Root.Button:GetSizeX()-20, Locale.Lookup("LOC_WORLDBUILDER_MAPEDIT_ADDLDATA"), "");
+					toolTip = Locale.Lookup("LOC_WORLDBUILDER_MAPEDIT_ADDLDATA");
 				end
+
 				-- Set button text as 
-				TruncateString(controlEntry.Root.Button, controlEntry.Root.Button:GetSizeX()-20, entry.Text, "");
+				TruncateString(controlEntry.Root.Button, controlEntry.Root.Button:GetSizeX()-30, entry.Text, "");
+				toolTip = toolTip.."[NEWLINE]"..entry.Text;
+
+				controlEntry.Root.Button:SetToolTipString(toolTip);
 			end
 		end
 	end
@@ -257,6 +264,7 @@ function OnKeyStringListSelection(entry)
 				-- must set void1 before SetText, because SetText triggers the Commit callback, which expects void1 to be valid!
 				m_ViewingTab.TextInstance.TextTagEditBox:SetVoid1(entry.Index);
 				m_ViewingTab.TextInstance.TextTagEditBox:SetText(entry.Key);
+				m_ViewingTab.TextInstance.TextTagEditBox:SetMaxCharacters(64);
 
 				-- Allow custom text tags to be edited outside of advance mode
 				if WorldBuilder.GetWBAdvancedMode() or entry.Index >= FIRST_CUSTOM_TEXT_FIELD_INDEX then
@@ -279,6 +287,7 @@ function OnKeyStringListSelection(entry)
 				m_ViewingTab.TextInstance.TextStringEditBox:SetText(entry.Text);
 				m_ViewingTab.TextInstance.TextStringEditBox:RegisterCommitCallback(OnCommitTextString);						
 				m_ViewingTab.TextInstance.TextStringEditBox:RegisterStringChangedCallback(OnChangedTextString);
+				m_ViewingTab.TextInstance.TextStringEditBox:SetMaxCharacters(64);
 			end
 		end
 	end
@@ -470,6 +479,7 @@ end
 function KeyHandler( key:number )
 	if key == Keys.VK_ESCAPE and not ContextPtr:IsHidden() then
 		ContextPtr:SetHide(true);
+		LuaEvents.WorldBuilder_ShowMapEditor(false);
 		return true;
 	end
 
@@ -505,6 +515,7 @@ end
 -- ===========================================================================
 function OnClose()
 	ContextPtr:SetHide(true);
+	LuaEvents.WorldBuilder_ShowMapEditor(false);
 end
 
 -- ===========================================================================

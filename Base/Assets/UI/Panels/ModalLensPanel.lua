@@ -3,11 +3,6 @@
 include( "InstanceManager" );
 
 -- ===========================================================================
--- Globals
--- ===========================================================================
-g_KeyStackIM = InstanceManager:new( "KeyEntry", "KeyColorImage", Controls.KeyStack );
-
--- ===========================================================================
 -- Members
 -- =======================================================e====================
 local m_ContinentColorList:table = {};
@@ -21,6 +16,8 @@ local m_HexColoringWaterAvail : number = UILens.CreateLensLayerHash("Hex_Colorin
 local m_TouristTokens : number = UILens.CreateLensLayerHash("Tourist_Tokens");
 local m_EmpireDetails : number = UILens.CreateLensLayerHash("Empire_Details");
 
+local m_KeyStackIM:table = InstanceManager:new( "KeyEntry", "KeyColorImage", Controls.KeyStack );
+
 --============================================================================
 function Close()
 	--ContextPtr:SetHide(true);
@@ -29,7 +26,7 @@ end
 
 --============================================================================
 function ShowAppealLensKey()
-	g_KeyStackIM: ResetInstances();
+	ResetKeyStackIM();
 
 	-- Breathtaking
 	AddKeyEntry("LOC_TOOLTIP_APPEAL_BREATHTAKING", UI.GetColorValue("COLOR_BREATHTAKING_APPEAL"));
@@ -52,7 +49,7 @@ end
 
 --============================================================================
 function ShowSettlerLensKey()
-	g_KeyStackIM: ResetInstances();
+	ResetKeyStackIM();
 
 	-- Fresh Water
 	local FreshWaterBonus:number = GlobalParameters.CITY_POPULATION_RIVER_LAKE - GlobalParameters.CITY_POPULATION_NO_WATER;
@@ -74,7 +71,7 @@ end
 
 --============================================================================
 function ShowReligionLensKey()
-	g_KeyStackIM:ResetInstances();
+	ResetKeyStackIM();
 
 	-- Track which types we've added so we don't add duplicates
 	local visibleTypes:table = {};
@@ -104,7 +101,7 @@ end
 
 --============================================================================
 function ShowGovernmentLensKey()
-	g_KeyStackIM:ResetInstances();
+	ResetKeyStackIM();
 
 	-- Track which types we've added so we don't add duplicates
 	local visibleTypes:table = {};
@@ -145,7 +142,7 @@ end
 
 --============================================================================
 function ShowPoliticalLensKey()
-	g_KeyStackIM:ResetInstances();
+	ResetKeyStackIM();
 
 	local hasAddedCityStateEntry = false;
 	local localPlayer = Players[Game.GetLocalPlayer()];
@@ -184,7 +181,7 @@ end
 
 --============================================================================
 function ShowContinentLensKey()
-	g_KeyStackIM: ResetInstances();
+	ResetKeyStackIM();
 
 	for ContinentID,ColorValue in pairs(m_ContinentColorList) do
 		local visibleContinentPlots:table = Map.GetVisibleContinentPlots(ContinentID); 
@@ -199,11 +196,23 @@ function ShowContinentLensKey()
 end
 
 -- ===========================================================================
-function AddKeyEntry(textString:string, colorValue:number, bonusIcon:string, bonusValue:string)
-	local keyEntryInstance:table = g_KeyStackIM:GetInstance();
+function ResetKeyStackIM()
+	m_KeyStackIM:ResetInstances();
+end
+
+-- ===========================================================================
+function AddKeyEntry(textString:string, colorValue:number, bonusIcon:string, bonusValue:string, bUseEmptyTexture:boolean)
+	local keyEntryInstance:table = m_KeyStackIM:GetInstance();
 
 	-- Update key text
 	keyEntryInstance.KeyLabel:SetText(Locale.Lookup(textString));
+
+	-- Set the texture if we want to use the hollow, border only hex texture
+	if bUseEmptyTexture == true then
+		keyEntryInstance.KeyColorImage:SetTexture("Controls_KeySwatchHexEmpty");
+	else
+		keyEntryInstance.KeyColorImage:SetTexture("Controls_KeySwatchHex");
+	end
 
 	-- Update key color
 	keyEntryInstance.KeyColorImage:SetColor(colorValue);
@@ -234,13 +243,8 @@ function AddKeyEntry(textString:string, colorValue:number, bonusIcon:string, bon
 	end
 
 	keyEntryInstance.KeyInfoStack:CalculateSize();
-	keyEntryInstance.KeyInfoStack:ReprocessAnchoring();
 end
 
--- ===========================================================================
-function OnCloseModal( layerNum:number )
-	
-end
 -- ===========================================================================
 function OnLensLayerOn( layerNum:number )
 	if layerNum == m_HexColoringReligion then
@@ -286,10 +290,12 @@ function OnInterfaceModeChanged(eOldMode:number, eNewMode:number)
 end
 
 -- ===========================================================================
---	INIT (ModalLensPanel)
--- ===========================================================================
-function InitializeModalLensPanel()
+function OnInit(isReload:boolean)
+	LateInitialize();
+end
 
+-- ===========================================================================
+function LateInitialize()
 	if (Game.GetLocalPlayer() == -1) then
 		return;
 	end
@@ -301,4 +307,11 @@ function InitializeModalLensPanel()
 
 	LuaEvents.MinimapPanel_AddContinentColorPair.Add(OnAddContinentColorPair);
 end
-InitializeModalLensPanel();
+
+-- ===========================================================================
+--	INIT (ModalLensPanel)
+-- ===========================================================================
+function Initialize()
+	ContextPtr:SetInitHandler(OnInit);
+end
+Initialize();

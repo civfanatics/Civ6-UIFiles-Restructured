@@ -831,6 +831,7 @@ end
 function OnAddPlayer(playerID)
 	-- Add Player was clicked for the given player slot.
 	-- Set this slot to open	
+	
 	local pPlayerConfig = PlayerConfigurations[playerID];
 	local playerName = pPlayerConfig:GetPlayerName();
 	m_iFirstClosedSlot = -1;
@@ -846,6 +847,7 @@ function OnAddPlayer(playerID)
 
 	Controls.PlayerListStack:CalculateSize();
 	Controls.PlayersScrollPanel:CalculateSize();
+	Resize();	
 end
 
 -------------------------------------------------
@@ -1020,6 +1022,7 @@ end
 -- CHECK FOR GAME AUTO START
 -------------------------------------------------
 function CheckGameAutoStart()
+	
 	-- PlayByCloud Only - Autostart if we are the active turn player.
 	if IsCloudInProgress() and Network.IsCloudTurnPlayer() then
 		if(not IsLaunchCountdownActive()) then
@@ -1027,13 +1030,16 @@ function CheckGameAutoStart()
 			ResetAutoStartFlags();				
 			SetLocalReady(true);
 			StartLaunchCountdown();
+			
 		end
 	-- Check to see if we should start/stop the multiplayer game.
+	
 	elseif(not Network.IsPlayerHotJoining(Network.GetLocalPlayerID())
+		
 		and not IsCloudInProgressAndNotTurn()
 		and not Network.IsCloudLaunching()) then -- We should not autostart if we are already launching into a PlayByCloud match.
 		local startCountdown = true;
-
+				
 		-- Reset global blocking variables because we're going to recalculate them.
 		ResetAutoStartFlags();
 
@@ -1041,11 +1047,13 @@ function CheckGameAutoStart()
 		local totalPlayers = 0;
 		local totalHumans = 0;
 		local noDupLeaders = GameConfiguration.GetValue("NO_DUPLICATE_LEADERS");
-		local player_ids = GameConfiguration.GetMultiplayerPlayerIDs();
+		local player_ids = GameConfiguration.GetMultiplayerPlayerIDs();		
+		
 		for i, iPlayer in ipairs(player_ids) do	
 			local curPlayerConfig = PlayerConfigurations[iPlayer];
 			local curSlotStatus = curPlayerConfig:GetSlotStatus();
 			local curIsFullCiv = curPlayerConfig:GetCivilizationLevelTypeID() == CivilizationLevelTypes.CIVILIZATION_LEVEL_FULL_CIV;
+			
 			if((curSlotStatus == SlotStatus.SS_TAKEN -- Human civ
 				or Network.IsPlayerConnected(iPlayer))	-- network connection on this slot, could be an multiplayer autoplay.
 				and curPlayerConfig:IsAlive()) then -- Dead players do not block launch countdown.
@@ -1060,6 +1068,7 @@ function CheckGameAutoStart()
 					startCountdown = false;
 					g_everyoneModReady = false;
 				end
+			
 			elseif(curPlayerConfig:IsHumanRequired() == true 
 				and GameConfiguration.GetGameState() == GameStateTypes.GAMESTATE_PREGAME) then
 				-- If this is a new game, all human required slots need to be filled by a human.  
@@ -1067,6 +1076,7 @@ function CheckGameAutoStart()
 				startCountdown = false;
 				g_humanRequiredFilled = false;
 			end
+			
 			if( (curSlotStatus == SlotStatus.SS_COMPUTER or curSlotStatus == SlotStatus.SS_TAKEN) and curIsFullCiv ) then
 				totalPlayers = totalPlayers + 1;
 				
@@ -1092,7 +1102,7 @@ function CheckGameAutoStart()
 				end
 			end
 		end
-
+		
 		-- Check player count
 		if(totalPlayers < g_currentMinPlayers) then
 			print("CheckGameAutoStart: Can't start game because there are not enough players. " .. totalPlayers .. "/" .. g_currentMinPlayers);
@@ -1427,12 +1437,8 @@ function UpdateTeamList(updateOpenEmptyTeam)
 	CheckTeamsValid(); -- Check to see if the teams are valid for game start.
 	CheckGameAutoStart();
 
-	if GameConfiguration.IsHotseat() then
-		Controls.PrimaryStackGrid:SetSizeY(PLAYER_LIST_SIZE_HOTSEAT);
-	else
-		Controls.PrimaryStackGrid:SetSizeY(PLAYER_LIST_SIZE_DEFAULT);
-	end
-
+	
+	
 	Controls.PlayerListStack:CalculateSize();
 	Controls.PlayersScrollPanel:CalculateSize();
 	Controls.HotseatDeco:SetHide(not GameConfiguration.IsHotseat());
@@ -2158,6 +2164,7 @@ end
 -- BuildPlayerList
 -------------------------------------------------
 function BuildPlayerList()
+	ReleasePlayerParameters(); -- Release all the player parameters so they do not have zombie references to the entries we are now wiping.
 	g_isBuildingPlayerList = true;
 	-- Clear previous data.
 	g_PlayerEntries = {};
@@ -2194,7 +2201,9 @@ function BuildPlayerList()
 	g_isBuildingPlayerList = false;
 end
 
+-- ===========================================================================
 -- Adjust vertical grid lines
+-- ===========================================================================
 function RealizeGridSize()
 	Controls.PlayerListStack:CalculateSize();
 	Controls.PlayersScrollPanel:CalculateSize();
@@ -2913,21 +2922,26 @@ function OnRaise(resetChat:boolean)
 	UIManager:QueuePopup( ContextPtr, PopupPriority.Current );
 end
 
+-- ===========================================================================
 function Resize()
 	local screenX, screenY:number = UIManager:GetScreenSizeVal();
-	local hideLogo = true;
-	if(screenY >= Controls.MainWindow:GetSizeY() + Controls.LogoContainer:GetSizeY()+ Controls.LogoContainer:GetOffsetY()) then
-		hideLogo = false;
-	end
-	Controls.LogoContainer:SetHide(hideLogo);
+	Controls.MainWindow:SetSizeY(screenY-( Controls.LogoContainer:GetSizeY()-Controls.LogoContainer:GetOffsetY() ));
+	local window = Controls.MainWindow:GetSizeY() - Controls.TopPanel:GetSizeY();
+	Controls.ChatContainer:SetSizeY(window/2 -80)
+	Controls.PrimaryStackGrid:SetSizeY(window-Controls.ChatContainer:GetSizeY() -75 )
+	Controls.InfoContainer:SetSizeY(window/2 -80)
+	Controls.PrimaryPanelStack:CalculateSize()
+	RealizeGridSize();
 end
 
+-- ===========================================================================
 function OnUpdateUI( type:number, tag:string, iData1:number, iData2:number, strData1:string )   
   if type == SystemUpdateUI.ScreenResize then
 	Resize();
   end
 end
 
+-- ===========================================================================
 function StartExitGame()
 	if(IsUseReadyCountdown()) then
 		-- If we are using the ready countdown, the local player needs to be set to ready before they can leave.
@@ -2946,7 +2960,7 @@ function StartExitGame()
 	Close();
 end
 
-
+-- ===========================================================================
 function OnEndGame_Start()
 	Network.CloudKillGame();
 
@@ -3004,20 +3018,21 @@ function OnQuitGameAskAreYouSure()
 	m_kPopupDialog:Open();
 end
 
+
 -- ===========================================================================
 --	Initialize screen
 -- ===========================================================================
 function Initialize()
+
+	m_kPopupDialog = PopupDialog:new( "StagingRoom" );
+	
 	SetCurrentMaxPlayers(MapConfiguration.GetMaxMajorPlayers());
 	SetCurrentMinPlayers(MapConfiguration.GetMinMajorPlayers());
-
 	Events.SystemUpdateUI.Add(OnUpdateUI);
-
 	ContextPtr:SetInitHandler(OnInit);
 	ContextPtr:SetShutdown(OnShutdown);
 	ContextPtr:SetInputHandler( OnInputHandler, true );
 	ContextPtr:SetShowHandler(OnShow);
-
 	Controls.BackButton:RegisterCallback( Mouse.eLClick, OnExitGameAskAreYouSure );
 	Controls.BackButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 	Controls.ChatEntry:RegisterCommitCallback( SendChat );
@@ -3066,8 +3081,8 @@ function Initialize()
 	RealizeShellTabs();
 	RealizeInfoTabs();
 	SetupGridLines(0);
-
-	-- Custom popup setup	
-	m_kPopupDialog = PopupDialog:new( "InGameTopOptionsMenu" );
+	Resize();
+	
 end
+
 Initialize();

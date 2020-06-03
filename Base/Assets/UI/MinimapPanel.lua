@@ -33,28 +33,29 @@ local m_ContinentsCreated		:boolean=false;
 local m_MiniMap_xmloffsety		:number	= 0;
 local m_kFlyoutControlIds		:table = { "MapOptions", "Lens", "MapPinList", "MapSearch" };	-- Name of controls that are the backing for "flyout" menus.
 
-local m_ToggleReligionLensId	= Input.GetActionId("LensReligion");
-local m_ToggleContinentLensId	= Input.GetActionId("LensContinent");
-local m_ToggleAppealLensId		= Input.GetActionId("LensAppeal");
-local m_ToggleSettlerLensId		= Input.GetActionId("LensSettler");
-local m_ToggleGovernmentLensId	= Input.GetActionId("LensGovernment");
-local m_TogglePoliticalLensId	= Input.GetActionId("LensPolitical");
-local m_ToggleTourismLensId	    = Input.GetActionId("LensTourism");
-local m_ToggleEmpireLensId	    = Input.GetActionId("LensEmpire");
+local m_ToggleReligionLensId	= -1;
+local m_ToggleContinentLensId	= -1;
+local m_ToggleAppealLensId		= -1;
+local m_ToggleSettlerLensId		= -1;
+local m_ToggleGovernmentLensId	= -1;
+local m_TogglePoliticalLensId	= -1;
+local m_ToggleTourismLensId	    = -1;
+local m_ToggleEmpireLensId	    = -1;
 local m_Toggle2DViewId	        = Input.GetActionId("Toggle2DView");
-local m_OpenMapSearchId         = Input.GetActionId("OpenMapSearch");
+local m_OpenMapSearchId         = -1;
 
 local m_isMouseDragEnabled		:boolean = true; -- Can the camera be moved by dragging on the minimap?
 local m_isMouseDragging			:boolean = false; -- Was LMB clicked inside the minimap, and has not been released yet?
 local m_hasMouseDragged			:boolean = false; -- Has there been any movements since m_isMouseDragging became true?
 local m_wasMouseInMinimap		:boolean = false; -- Was the mouse over the minimap the last time we checked?
 
-local m_HexColoringReligion : number = UILens.CreateLensLayerHash("Hex_Coloring_Religion");
-local m_HexColoringAppeal : number = UILens.CreateLensLayerHash("Hex_Coloring_Appeal_Level");
-local m_HexColoringGovernment : number = UILens.CreateLensLayerHash("Hex_Coloring_Government");
-local m_HexColoringOwningCiv : number = UILens.CreateLensLayerHash("Hex_Coloring_Owning_Civ");
-local m_HexColoringWaterAvail : number = UILens.CreateLensLayerHash("Hex_Coloring_Water_Availablity");
-local m_TouristTokens : number = UILens.CreateLensLayerHash("Tourist_Tokens");
+local m_HexColoringReligion		: number = UILens.CreateLensLayerHash("Hex_Coloring_Religion");
+local m_HexColoringAppeal		: number = UILens.CreateLensLayerHash("Hex_Coloring_Appeal_Level");
+local m_HexColoringGovernment	: number = UILens.CreateLensLayerHash("Hex_Coloring_Government");
+local m_HexColoringOwningCiv	: number = UILens.CreateLensLayerHash("Hex_Coloring_Owning_Civ");
+local m_HexColoringWaterAvail	: number = UILens.CreateLensLayerHash("Hex_Coloring_Water_Availablity");
+local m_TouristTokens			: number = UILens.CreateLensLayerHash("Tourist_Tokens");
+
 
 -- ===========================================================================
 --	FUNCTIONS
@@ -186,16 +187,6 @@ function OnToggleLensList()
 	Controls.LensButton:SetSelected( not Controls.LensPanel:IsHidden() );
 	if Controls.LensPanel:IsHidden() then
 		CloseLensList();
-	else
-		Controls.ReligionLensButton:SetHide(not GameCapabilities.HasCapability("CAPABILITY_LENS_RELIGION"));
-		Controls.AppealLensButton:SetHide(not GameCapabilities.HasCapability("CAPABILITY_LENS_APPEAL"));
-		Controls.GovernmentLensButton:SetHide(not GameCapabilities.HasCapability("CAPABILITY_LENS_GOVERNMENT"));
-		Controls.WaterLensButton:SetHide(not GameCapabilities.HasCapability("CAPABILITY_LENS_SETTLER"));
-		Controls.TourismLensButton:SetHide(not GameCapabilities.HasCapability("CAPABILITY_LENS_TOURISM"));
-		Controls.ContinentLensButton:SetHide(not GameCapabilities.HasCapability("CAPABILITY_LENS_CONTINENT"));
-		Controls.EmpireLensButton:SetHide(not GameCapabilities.HasCapability("CAPABILITY_LENS_EMPIRE"));
-		Controls.LensToggleStack:CalculateSize();
-		Controls.LensPanel:SetSizeY(Controls.LensToggleStack:GetSizeY() + LENS_PANEL_OFFSET);
 	end
 end
 
@@ -242,16 +233,14 @@ end
 function ToggleResourceIcons()
 	local bOldValue :boolean = UserConfiguration.ShowMapResources();
 	UserConfiguration.ShowMapResources( not bOldValue );
-
-	local bOther = UserConfiguration.ShowMapGrid();
 end
 
 -- ===========================================================================
 function RestoreYieldIcons()
 	if UserConfiguration.ShowMapYield() then
-		LuaEvents.MinimapPanel_ShowYieldIcons();
+		LuaEvents.PlotInfo_ShowYieldIcons();
 	else
-		LuaEvents.MinimapPanel_HideYieldIcons();
+		LuaEvents.PlotInfo_HideYieldIcons();
 	end
 end
 
@@ -369,10 +358,9 @@ end
 
 -- ===========================================================================
 function ToggleGrid()
-	local bOldState :boolean = UserConfiguration.ShowMapGrid();
-	UserConfiguration.ShowMapGrid( not bOldState  );
-	local bNewState :boolean = UserConfiguration.ShowMapGrid();
-	UI.ToggleGrid( not bOldState );
+	local bShouldShowGrid = not UserConfiguration.ShowMapGrid();
+	UserConfiguration.ShowMapGrid( bShouldShowGrid );
+	UI.ToggleGrid( bShouldShowGrid );
 end
 
 -- ===========================================================================
@@ -694,6 +682,10 @@ function OnInputActionTriggered( actionId )
 		return;
 	end
 
+	if GameConfiguration.IsWorldBuilderEditor() then
+		return;
+	end
+
 	if m_ToggleReligionLensId ~= nil and (actionId == m_ToggleReligionLensId) and GameCapabilities.HasCapability("CAPABILITY_LENS_RELIGION") then
         LensPanelHotkeyControl( Controls.ReligionLensButton );
         ToggleReligionLens();
@@ -851,43 +843,7 @@ function OnInputHandler( pInputStruct:table )
 
 		-- Update tooltip as the mouse is moved over the minimap
 		elseif (msg == MouseEvents.MouseMove or msg == MouseEvents.PointerUpdate) and not UI.IsFullscreenMapEnabled() then
-			local ePlayer : number = Game.GetLocalPlayer(); 
-			local pPlayerVis:table = PlayersVisibility[ePlayer];
-
-			local minix, miniy = GetMinimapMouseCoords( pInputStruct:GetX(), pInputStruct:GetY() );
-			if (pPlayerVis ~= nil and IsMouseInMinimap(minix, miniy)) then
-				local wx, wy = TranslateMinimapToWorld(minix, miniy);
-				local plotX, plotY = UI.GetPlotCoordFromWorld(wx, wy);
-				local pPlot = Map.GetPlot(plotX, plotY);
-				if (pPlot ~= nil) then
-					local plotID = Map.GetPlotIndex(plotX, plotY);
-					if pPlayerVis:IsRevealed(plotID) then
-						local eOwner = pPlot:GetOwner();
-						local pPlayerConfig = PlayerConfigurations[eOwner];
-						if (pPlayerConfig ~= nil) then
-							local szOwnerString = Locale.Lookup(pPlayerConfig:GetCivilizationShortDescription());
-
-							if (szOwnerString == nil or string.len(szOwnerString) == 0) then
-								szOwnerString = Locale.Lookup("LOC_TOOLTIP_PLAYER_ID", eOwner);
-							end
-
-							local pPlayer = Players[eOwner];
-							if(GameConfiguration:IsAnyMultiplayer() and pPlayer:IsHuman()) then
-								szOwnerString = szOwnerString .. " (" .. Locale.Lookup(pPlayerConfig:GetPlayerName()) .. ")";
-							end
-
-							local szOwner = Locale.Lookup("LOC_HUD_MINIMAP_OWNER_TOOLTIP", szOwnerString);
-							Controls.MinimapImage:SetToolTipString(szOwner);
-						else
-							local pTooltipString = Locale.Lookup("LOC_MINIMAP_UNCLAIMED_TOOLTIP");
-							Controls.MinimapImage:SetToolTipString(pTooltipString);
-						end
-					else
-						local pTooltipString = Locale.Lookup("LOC_MINIMAP_FOG_OF_WAR_TOOLTIP");
-						Controls.MinimapImage:SetToolTipString(pTooltipString);
-					end
-				end
-			end
+			ShowMinimapTooltips(pInputStruct:GetX(), pInputStruct:GetY())
 		end
 
 		-- TODO the letterbox background should block mouse input
@@ -900,6 +856,46 @@ function OnInputHandler( pInputStruct:table )
 	end
 
 	return false;
+end
+
+function ShowMinimapTooltips(inputX:number, inputY:number)
+	local ePlayer : number = Game.GetLocalPlayer(); 
+	local pPlayerVis:table = PlayersVisibility[ePlayer];
+
+	local minix, miniy = GetMinimapMouseCoords( inputX, inputY );
+	if (pPlayerVis ~= nil and IsMouseInMinimap(minix, miniy)) then
+		local wx, wy = TranslateMinimapToWorld(minix, miniy);
+		local plotX, plotY = UI.GetPlotCoordFromWorld(wx, wy);
+		local pPlot = Map.GetPlot(plotX, plotY);
+		if (pPlot ~= nil) then
+			local plotID = Map.GetPlotIndex(plotX, plotY);
+			if pPlayerVis:IsRevealed(plotID) then
+				local eOwner = pPlot:GetOwner();
+				local pPlayerConfig = PlayerConfigurations[eOwner];
+				if (pPlayerConfig ~= nil) then
+					local szOwnerString = Locale.Lookup(pPlayerConfig:GetCivilizationShortDescription());
+
+					if (szOwnerString == nil or string.len(szOwnerString) == 0) then
+						szOwnerString = Locale.Lookup("LOC_TOOLTIP_PLAYER_ID", eOwner);
+					end
+
+					local pPlayer = Players[eOwner];
+					if(GameConfiguration:IsAnyMultiplayer() and pPlayer:IsHuman()) then
+						szOwnerString = szOwnerString .. " (" .. Locale.Lookup(pPlayerConfig:GetPlayerName()) .. ")";
+					end
+
+					local szOwner = Locale.Lookup("LOC_HUD_MINIMAP_OWNER_TOOLTIP", szOwnerString);
+					Controls.MinimapImage:SetToolTipString(szOwner);
+				else
+					local pTooltipString = Locale.Lookup("LOC_MINIMAP_UNCLAIMED_TOOLTIP");
+					Controls.MinimapImage:SetToolTipString(pTooltipString);
+				end
+			else
+				local pTooltipString = Locale.Lookup("LOC_MINIMAP_FOG_OF_WAR_TOOLTIP");
+				Controls.MinimapImage:SetToolTipString(pTooltipString);
+			end
+		end
+	end
 end
 
 
@@ -939,13 +935,30 @@ function LateInitialize()
 	m_MiniMap_xmloffsety = Controls.MiniMap:GetOffsetY();
 	g_ContinentsCache = Map.GetContinentsInUse();
 
-    m_HexColoringReligion = UILens.CreateLensLayerHash("Hex_Coloring_Religion");
-    m_HexColoringAppeal = UILens.CreateLensLayerHash("Hex_Coloring_Appeal_Level");
-    m_HexColoringGovernment = UILens.CreateLensLayerHash("Hex_Coloring_Government");
-    m_HexColoringOwningCiv = UILens.CreateLensLayerHash("Hex_Coloring_Owning_Civ");
-    g_HexColoringContinent = UILens.CreateLensLayerHash("Hex_Coloring_Continent");
-    m_HexColoringWaterAvail = UILens.CreateLensLayerHash("Hex_Coloring_Water_Availablity");
-    m_TouristTokens = UILens.CreateLensLayerHash("Tourist_Tokens");
+	if GameCapabilities.HasCapability("CAPABILITY_LENS_TOGGLING_UI") then
+		m_ToggleReligionLensId	= Input.GetActionId("LensReligion");
+		m_ToggleContinentLensId	= Input.GetActionId("LensContinent");
+		m_ToggleAppealLensId	= Input.GetActionId("LensAppeal");
+		m_ToggleSettlerLensId	= Input.GetActionId("LensSettler");
+		m_ToggleGovernmentLensId= Input.GetActionId("LensGovernment");
+		m_TogglePoliticalLensId	= Input.GetActionId("LensPolitical");
+		m_ToggleTourismLensId	= Input.GetActionId("LensTourism");
+		m_ToggleEmpireLensId	= Input.GetActionId("LensEmpire");
+	end
+
+	Controls.ReligionLensButton:SetHide(not GameCapabilities.HasCapability("CAPABILITY_LENS_RELIGION"));
+	Controls.AppealLensButton:SetHide(not GameCapabilities.HasCapability("CAPABILITY_LENS_APPEAL"));
+	Controls.GovernmentLensButton:SetHide(not GameCapabilities.HasCapability("CAPABILITY_LENS_GOVERNMENT"));
+	Controls.WaterLensButton:SetHide(not GameCapabilities.HasCapability("CAPABILITY_LENS_SETTLER"));
+	Controls.TourismLensButton:SetHide(not GameCapabilities.HasCapability("CAPABILITY_LENS_TOURISM"));
+	Controls.ContinentLensButton:SetHide(not GameCapabilities.HasCapability("CAPABILITY_LENS_CONTINENT"));
+	Controls.EmpireLensButton:SetHide(not GameCapabilities.HasCapability("CAPABILITY_LENS_EMPIRE"));
+	Controls.LensToggleStack:CalculateSize();
+	Controls.LensPanel:SetSizeY(Controls.LensToggleStack:GetSizeY() + LENS_PANEL_OFFSET);
+
+	if GameCapabilities.HasCapability("CAPABILITY_SEARCH_GAME_MAP") then
+		m_OpenMapSearchId = Input.GetActionId("OpenMapSearch");
+	end
 
 	Controls.MinimapImage:RegisterSizeChanged( OnMinimapImageSizeChanged );
 	UI.SetMinimapImageControl( Controls.MinimapImage );
@@ -979,22 +992,31 @@ function LateInitialize()
 		Controls.MapPinListButton:SetHide(false);
 		Controls.FullscreenMapButton:SetDisabled(false);
 		Controls.FullscreenMapButton:SetHide(false);
-		Controls.MapSearchButton:SetDisabled(false);
-		Controls.MapSearchButton:SetHide(false);
 		Controls.MapPinListButton:RegisterCallback( Mouse.eLClick, ToggleMapPinMode );
 		Controls.MapPinListButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 		Controls.FullscreenMapButton:RegisterCallback( Mouse.eLClick, ShowFullscreenMap );
 		Controls.FullscreenMapButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
-		Controls.MapSearchButton:RegisterCallback( Mouse.eLClick, ToggleMapSearchPanel );
-		Controls.MapSearchButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 		Controls.ToggleResourcesButton:SetHide(false);
 		Controls.ToggleYieldsButton:SetHide(false);
+
+		local hideSearch:boolean = not GameCapabilities.HasCapability("CAPABILITY_SEARCH_GAME_MAP");
+		Controls.MapSearchButton:SetDisabled(hideSearch);
+		Controls.MapSearchButton:SetHide(hideSearch);
+		Controls.MapSearchButton:RegisterCallback( Mouse.eLClick, ToggleMapSearchPanel );
+		Controls.MapSearchButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 	end
 	Controls.MapOptionsButton:RegisterCallback( Mouse.eLClick, ToggleMapOptionsList );
 	Controls.MapOptionsButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 	Controls.MapOptionsButton:SetHide(false);
+	
+	local hideLensStack:boolean = not GameCapabilities.HasCapability("CAPABILITY_LENS_TOGGLING_UI");
+	if GameConfiguration.IsWorldBuilderEditor() then
+		hideLensStack = true;
+	end
+	Controls.LensButton:SetHide( hideLensStack );
 	Controls.LensButton:RegisterCallback( Mouse.eLClick, OnToggleLensList );
 	Controls.LensButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
+
 	Controls.OwnerLensButton:RegisterCallback( Mouse.eLClick, ToggleOwnerLens );
 	Controls.TourismLensButton:RegisterCallback( Mouse.eLClick, ToggleTourismLens );
 	Controls.EmpireLensButton:RegisterCallback( Mouse.eLClick, ToggleEmpireLens );

@@ -253,9 +253,12 @@ function OnShow()
 	g_waitingForJoinGameComplete = true;
 	g_waitingForContentConfigure = true;
 	
-
-	Controls.JoiningLabel:SetText(Locale.ToUpper(Locale.Lookup("LOC_MULTIPLAYER_JOINING_ROOM")));
-
+	if(Network.IsMatchMaking()) then
+		Controls.JoiningLabel:SetText(Locale.ToUpper(Locale.Lookup("LOC_MULTIPLAYER_MATCHMAKING")));
+	else
+		Controls.JoiningLabel:SetText(Locale.ToUpper(Locale.Lookup("LOC_MULTIPLAYER_JOINING_ROOM")));
+	end
+	
 	LuaEvents.JoiningRoom_Showing();
 end
 

@@ -5,6 +5,10 @@
 <Context Name="Test">
 
 	<!--
+		<GridButton ID="foo" Size="200,41"   Style="MainButton" String="asldfj asdfkljas dfljsaj lakdsj flsadk foo bar baz qux sadl" TruncateWidth="190" TruncatedTooltip="1" />	
+	-->
+	
+	<!--
 	<Box Color="0,0,0,255" Size="500,500" Anchor="C,C">
 		<Stack ID="s" StackGrowth="Down" StackPadding="10">
 			<Box ID="a" Color="255,0,0,100" Size="20,20" />

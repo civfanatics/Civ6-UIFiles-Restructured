@@ -2,14 +2,18 @@
 <ContextDefaults ColorSet="BodyTextCool" Style="FontNormal22" FontStyle="Glow" Name="StagingRoom" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="..\..\ForgeUI_Assets\Controls.xsd">
 
 	<Include File="PopupDialog" />
-	
+
 	<AlphaAnim ID="CountdownTimerAnim" Size="1,1" AlphaStart="0" AlphaEnd="0" />	<!-- Animations always tick, even when hidden; use to update countdown timer -->
 	
 	<Box ID="MainGrid" Style="ShellBGBox">
+		
+		<Container ID="MainWindow" Size="1024,768" Anchor="C,B"  >
+			<Grid ID="LogoContainer" Style="SubContainer4" Size="parent-10,116" Anchor="C,T" Color="7,28,50" AnchorSide="I,O" Offset="0,4" >
+      			<Image ID="Logo"				Anchor="C,C" Texture="MainLogo.dds" StretchMode="Auto"/>
+    		</Grid>
 
-		<Container ID="MainWindow" Style="ShellWindowContainer">
 
-			<Container Style="ShellHeaderContainer">
+			<Container ID="TopPanel" Style="ShellHeaderContainer"  >
 				<Grid Style="ShellHeaderButtonGrid">
 					<GridButton ID="BackButton" Style="ShellButtonOrnateFlat" Anchor="R,C" Offset="1,0" String="LOC_MULTIPLAYER_BACK"/>
 					<Stack ID="LeftTopButtonStack" Anchor="L,C" Offset="1,0" StackGrowth="Right" Padding="10">
@@ -24,16 +28,16 @@
 
 			<!-- Players Stack -->
 			<Stack ID="PrimaryPanelStack" StackGrowth="Bottom" Anchor="L,T" Offset="3,114">
-				<Grid ID="PrimaryStackGrid" Style="SubContainer" Size="1020,310" Anchor="C,T" Offset="0,-15">
+				<Grid ID="PrimaryStackGrid" Style="SubContainer" Size="1020,310" Anchor="C,T"  Offset="0,-15">
 					<Box Color="0,0,0,50 " Size="parent,parent-15" Anchor="C,T" />
 					<ScrollPanel ID="PlayersScrollPanel" Anchor="L,T"  Vertical="1" Size="parent,parent-35" Offset="0,20">
 						<Container ID="GridContainer" Size="parent-10,parent" Anchor="C,T">
 							<!-- Vertical Grid Lines, Horizontal lines are generated in Lua -->
-							<Line ID="GridLine_1" Start="218,0" End="218,parent" Width="2" Color="20,55,70,255" />
-							<Line ID="GridLine_2" Start="287,0" End="287,parent" Width="2" Color="20,55,70,255" />
-							<Line ID="GridLine_3" Start="616,0" End="616,parent" Width="2" Color="20,55,70,255" />
-							<Line ID="GridLine_4" Start="760,0" End="760,parent" Width="2" Color="20,55,70,255" />
-							<Line ID="GridLine_5" Start="928,0" End="928,parent" Width="2" Color="20,55,70,255" />
+							<Line ID="GridLine_1" Start="218,0" End="218,parent+200" Width="2" Color="20,55,70,255" />
+							<Line ID="GridLine_2" Start="287,0" End="287,parent+200" Width="2" Color="20,55,70,255" />
+							<Line ID="GridLine_3" Start="616,0" End="616,parent+200" Width="2" Color="20,55,70,255" />
+							<Line ID="GridLine_4" Start="760,0" End="760,parent+200" Width="2" Color="20,55,70,255" />
+							<Line ID="GridLine_5" Start="928,0" End="928,parent+200" Width="2" Color="20,55,70,255" />
 						</Container>
 						<!-- Scroll Controls -->
 						<ScrollBar Style="Slider_Blue" Length="parent" Offset="-3,0" Anchor="R,T" AnchorSide="O,I" />
@@ -73,7 +77,7 @@
 			<Grid  ID="LargeCompassDeco" Texture="Controls_CompassDecoLarge" Anchor="C,B" Alpha="0.1" Size="529,322" Offset="0,0" SliceTextureSize="529,322" SliceStart="0,0" SliceSize="529,322"/>
 
 			<!-- Chat Panel -->
-			<Container ID="ChatContainer" Anchor="R,B" Offset="10,10" Size="452,310">
+			<Container ID="ChatContainer" Anchor="R,B" Offset="10,10" Size="452,310" MinSize="452,310">
 				<Container ID="ChatBackground" Anchor="R,B" Offset="0,20" Size="parent,parent">
 					<Grid Style="SubContainer" Anchor="R,B" Offset="-2,0" Size="parent+4,parent"/>
 				</Container>
@@ -124,7 +128,7 @@
 			</Container>
 
 			<!-- Friends Panel -->
-			<Container ID="InfoContainer" Anchor="L,B" Offset="10,10" Size="452,310">
+			<Container ID="InfoContainer" Anchor="L,B" Offset="10,10" Size="452,310" MinSize="452,310">
 				<Container ID="InfoBackground" Anchor="L,B" Offset="0,20" Size="parent,parent">
 					<Grid Style="SubContainer" Anchor="L,B" Offset="-2,0" Size="parent+4,parent"/>
 				</Container>
@@ -196,7 +200,7 @@
 			</Container>
 
 			<!-- Ready Button  -->
-			<AlphaAnim			ID="FadeAnim"						Anchor="C,C"								Size="parent,parent"	AlphaBegin="0" AlphaEnd="1" Cycle="Once" Speed=".5" Stopped="0" Pause="1" Function="Root">
+			<AlphaAnim		ID="FadeAnim"						Anchor="C,C"								Size="parent,parent"	AlphaBegin="0" AlphaEnd="1" Cycle="Once" Speed=".5" Stopped="0" Pause="1" Function="Root">
 				<Container ID="ReadyContainer"						Anchor="C,B" Offset="0,-5"	Size="300,130" Hidden="0">
 					<Image															Anchor="C,B" Offset="0,35"	Size="130,23"	Texture="Diplomacy_PortraitBacking" />
 					<Image															Anchor="C,B" Offset="0,0" Size="305,58" Texture="Controls_BannerBlueSmall">
@@ -204,21 +208,21 @@
 					</Image>
 
 					<Container  ID="ReadyButtonContainer" Size="300,130" Hidden="1">
-						<Image	 ID="TurnTimerHotseatBG"		Anchor="C,C" Offset="0,-17"		Size="91,92"	Texture="Shell_BeginButtonBacking"/>
-						<Image	 ID="TurnTimerBG"						Anchor="C,C" Offset="0,-17"		Size="109,110"	Texture="Shell_CountdownTimerBacking"/>
+						<Image ID="TurnTimerHotseatBG"		Anchor="C,C" Offset="0,-17"		Size="91,92"	Texture="Shell_BeginButtonBacking"/>
+						<Image ID="TurnTimerBG"						Anchor="C,C" Offset="0,-17"		Size="109,110"	Texture="Shell_CountdownTimerBacking"/>
 						<Meter ID="TurnTimerMeter" Anchor="C,C" Offset="0,-19"	Size="93,94" Texture="Shell_CountdownTimerFill" Speed="0"/>
 						<!-- Making this into a grid button so that I can set the size of the font - can't do that with a normal button right now-->
-						<GridButton		ID="ReadyButton"				SliceCorner="40,40" SliceTextureSize="80,80" Anchor="C,C" Offset="0,-16"	Size="80,80"	Texture="Shell_BeginButton" StateOffsetIncrement="0,80" FontSize="40"/>
+						<GridButton	ID="ReadyButton"				SliceCorner="40,40" SliceTextureSize="80,80" Anchor="C,C" Offset="0,-16"	Size="80,80"	Texture="Shell_BeginButton" StateOffsetIncrement="0,80" FontSize="40"/>
 					</Container>
 
 					<Container  ID="ReadyCheckContainer" Size="300,130" Hidden="0">
-						<Button		ID="ReadyCheck"		Anchor="C,C" Offset="-1,-13"	Size="80,80"	Texture="Shell_ReadyCheckboxLarge" StateOffsetIncrement="0,80"/>
+						<Button	ID="ReadyCheck"		Anchor="C,C" Offset="-1,-13"	Size="80,80"	Texture="Shell_ReadyCheckboxLarge" StateOffsetIncrement="0,80"/>
 					</Container>
 
 				</Container>
 			</AlphaAnim>
 
-			<Container ID="TooltipContainer" Size="440,720" Anchor="R,C" Offset="55,20"/>
+			<Container ID="TooltipContainer" Size="420,720" Anchor="R,C" Offset="-10,10"/>
 		</Container>
 	</Box>
 
@@ -288,6 +292,15 @@
 		</Container>
 	</Instance>
 
+	<!-- Instance for a parameter that has a button to launch a popup (e.g., map-select) -->
+	<Instance Name="ButtonParameterInstance">
+		<Container		ID="ButtonRoot" Anchor="L,T" Size="parent,32" Offset="0,0">
+			<GridButton ID="Button"			Anchor="R,T" Style="ButtonControl" Size="300,24" Offset="40,0">
+				<Label		ID="StringName"	Anchor="L,C" Style="ShellOptionText" AnchorSide="O,I" String="$Name$"/>
+			</GridButton>
+		</Container>
+	</Instance>
+
 	<Instance Name="TeamListEntry">
 		<Stack ID="Root" StackGrowth="Bottom">
 			<Stack StackGrowth="Right" ID="TeamHeaderStack">
@@ -326,7 +339,7 @@
 			</Box>
 
 			<!-- Team -->
-			<PullDown ID="TeamPullDown" Offset="210,0" Anchor="L,T" ScrollThreshold="210" Size="65,46" AutoSizePopUp="1" SpaceForScroll="1" AutoFlip="1">
+			<PullDown ID="TeamPullDown" Offset="210,1" Anchor="L,T" ScrollThreshold="210" Size="65,46" AutoSizePopUp="1" SpaceForScroll="1" AutoFlip="1">
 				<ButtonData>
 					<GridButton  Size="194,28" Style="TabFont">
 						<GridData Texture="Controls_DropDownControlLarge" StateOffsetIncrement="0,45"	SliceCorner="10,15" SliceTextureSize="45,45" />
@@ -347,10 +360,10 @@
 			</PullDown>
 
 			<!-- Color Scheme -->
-			<PullDown ID="ColorPullDown" Offset="269,0" Anchor="L,C" Style="ColorSchemePullDown" ScrollThreshold="350" Size="85,46" AutoSizePopUp="1" SpaceForScroll="1" />
+			<PullDown ID="ColorPullDown" Offset="277,1" Anchor="L,T" Style="ColorSchemePullDown" ScrollThreshold="350" Size="75,46" AutoSizePopUp="1" SpaceForScroll="1" />
 
 			<!-- Civilization -->
-			<PullDown ID="PlayerPullDown" Offset="349,0" Anchor="L,C" Style="PlayerSelectPullDownMP" ScrollThreshold="350" Size="255,46" AutoSizePopUp="1" SpaceForScroll="1">
+			<PullDown ID="PlayerPullDown" Offset="349,1" Anchor="L,T" Style="PlayerSelectPullDownMP" ScrollThreshold="350" Size="255,46" AutoSizePopUp="1" SpaceForScroll="1">
 				<!-- This is just a cut/paste of the PlayerSelectPullDown except for the addition of DisabledMouseMoveCallbacks="1".  
 					We need the DisabledMouseMoveCallbacks so we can display the leader tooltip for remote clients (who have disabled pulldowns)-->
 				<ButtonData>
@@ -358,7 +371,7 @@
 						<GridData Texture="Controls_DropDownControlLarge" StateOffsetIncrement="0,45"	SliceCorner="10,15" SliceTextureSize="45,45" />
 						<Container Size="62,62" Offset="-3,0" Anchor="L,C">
 							<Image Texture="Controls_CircleBacking45" Size="51,51" Anchor="C,C" Offset="0,1"/>
-							<Image ID="LeaderIcon" Texture="Leaders44" Size="44,44" Anchor="C,C"/>
+							<Image ID="LeaderIcon" Texture="Leaders45" Size="45,45" Anchor="C,C"/>
 						</Container>
 					</GridButton>
 				</ButtonData>
@@ -396,8 +409,8 @@
 			</Stack>
 			-->
 
-			<GridButton ID="AddPlayerButton" Style="ShellButtonControlLarge" Anchor="L,T" Offset="-12,0" Size="parent-14,parent" ToolTip="LOC_SETUP_ADD_PLAYER_TT" String="{LOC_SETUP_ADD_PLAYER:upper}">
-				<Image Anchor="R,C" Offset="25,0" Texture="Shell_Add" Size="37,37" ConsumeMouse="0"/>
+			<GridButton ID="AddPlayerButton" Style="ShellButtonControlLarge" Anchor="L,B" Offset="-12,0" Size="parent-14,parent" ToolTip="LOC_SETUP_ADD_PLAYER_TT" String="{LOC_SETUP_ADD_PLAYER:upper}">
+				<Image Anchor="R,C" Offset="18,-2" Texture="Shell_Add" Size="37,37" ConsumeMouse="0"/>
 			</GridButton>
 
 			<Grid ID="YouIndicatorLine" Size="parent-3,parent+4" Offset="-20,-3" Hidden="1" SliceTextureSize="60,60" SliceCorner="20,20" SliceSize="20,20" Texture="Controls_YouIndicatorLine"/>
@@ -486,7 +499,7 @@
 			<Image		ID="IconBG"					Size="44,44" Texture="CircleBacking44">
 				<Image	ID="IconShadows"		Size="44,44" Texture="Circle44_Darker"  Color="0,0,0,50" />
 				<Image	ID="IconHighlights"	Size="44,44" Texture="Circle44_Lighter" Color="255,255,255,100" />
-				<Image	ID="Icon"						Size="44,44" />
+				<Image	ID="Icon"						Size="44,44" Anchor="C,C" />
 			</Image>
 			<Stack		ID="TextStack"		StackGrowth="Bottom" StackPadding="4" Offset="55,0">
 				<Label	ID="Header"				WrapWidth="340" SmallCapsType="EveryWord" SmallCaps="20" Style="FontFlair14"		String="$Header$" ColorSet="ShellHeader"/>

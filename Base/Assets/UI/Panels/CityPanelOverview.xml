@@ -361,7 +361,7 @@
 
       <Grid Size="parent-20,parent-27" Anchor="L,B" Offset="0,2"	Style="Subheader" >
         <GridButton	ID="RenameCityButton" Size="parent,26" Offset="0,0" Anchor="C,C" Texture="Controls_TextEntry" SliceCorner="30,0" SliceTextureSize="44,26" StateOffsetIncrement="0,26">
-          <EditBox ID="EditCityName" Offset="25,0" Size="parent-25,parent" Anchor="L,C" EditMode="1" Style="HeaderSmallCaps" String="ChooseReligionName" MaxLength="32" Hidden="1" />
+          <EditBox ID="EditCityName" Offset="25,0" Size="parent-25,parent" Anchor="L,C" EditMode="1" Style="CityPanelName" String="ChooseReligionName" MaxLength="32" Hidden="1" />
           <Label ID="OverviewSubheader" Anchor="C,C" String="{LOC_HUD_CITY_DETAILS:upper}" Style="HeaderSmallCaps" TruncateWidth="300"/>
 
         </GridButton>

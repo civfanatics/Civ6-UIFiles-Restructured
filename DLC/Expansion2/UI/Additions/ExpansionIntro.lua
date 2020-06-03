@@ -165,6 +165,13 @@ function Initialize()
 	Controls.Next:RegisterCallback(Mouse.eLClick, OnNext);
 	Controls.Previous:RegisterCallback(Mouse.eLClick, OnPrevious);
 
+	Controls.Close:RegisterCallback(Mouse.eMouseEnter, function()
+		UI.PlaySound("Main_Menu_Mouse_Over"); end);
+	Controls.Next:RegisterCallback(Mouse.eMouseEnter, function()
+		UI.PlaySound("Main_Menu_Mouse_Over"); end);
+	Controls.Previous:RegisterCallback(Mouse.eMouseEnter, function()
+		UI.PlaySound("Main_Menu_Mouse_Over"); end);
+
 	local hideScreen =  Options.GetUserOption("Tutorial", OPTIONS_HIDE_KEY) == 1
 	Controls.DontShowAgain:SetCheck(hideScreen);
 	Controls.DontShowAgain:RegisterCheckHandler(function(bCheck)

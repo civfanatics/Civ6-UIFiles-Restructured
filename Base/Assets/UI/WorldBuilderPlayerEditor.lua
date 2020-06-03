@@ -398,7 +398,21 @@ function UpdatePlayerEntry(playerEntry)
 	if playerEntry.Civ ~= "UNDEFINED" and playerEntry.Civ ~= "RANDOM" then
 		playerEntry.playerInstance.CivIcon:SetIcon("ICON_" .. playerConfig.Civ);
 
-		local backColor, frontColor = UI.GetPlayerColors(playerEntry.Index);
+		local colorLeader : string = nil;
+		for i, leader in ipairs(m_LeaderEntries) do
+			if playerEntry.Civ == leader.CivType then
+				colorLeader = leader.Type;
+				break;
+			end
+		end
+
+		local backColor : number;
+		local frontColor : number;
+		if colorLeader ~= nil then
+			backColor, frontColor = UI.GetPlayerColorValues(colorLeader, 0);
+		else
+			backColor, frontColor = UI.GetPlayerColorValues(playerEntry.Leader, 0);
+		end
 		playerEntry.playerInstance.CivIcon:SetColor(frontColor);
 		playerEntry.playerInstance.CivIconBacking:SetColor(backColor);
 	else
@@ -704,10 +718,10 @@ function UpdateSelectedDistrictInfo()
 					local pDistrict = pCityDistricts:GetDistrict(ms_SelectDistrictTypeHash);
 					if pDistrict ~= nil then
 						m_ViewingTab.SubTab.CityDistrictsInstance.PillagedCheckbox:SetSelected(pDistrict:IsPillaged());
-						m_ViewingTab.SubTab.CityDistrictsInstance.GarrisonDamageEdit:SetText( tostring( pDistrict:GetDamage(DefenseTypes.DISTRICT_GARRISON) ) );
-						m_ViewingTab.SubTab.CityDistrictsInstance.GarrisonDamageEdit:SetNumberInput(true);
-						m_ViewingTab.SubTab.CityDistrictsInstance.OuterDamageEdit:SetText( tostring( pDistrict:GetDamage(DefenseTypes.DISTRICT_OUTER) ) );
-						m_ViewingTab.SubTab.CityDistrictsInstance.OuterDamageEdit:SetNumberInput(true);
+--						m_ViewingTab.SubTab.CityDistrictsInstance.GarrisonDamageEdit:SetText( tostring( pDistrict:GetDamage(DefenseTypes.DISTRICT_GARRISON) ) );
+--						m_ViewingTab.SubTab.CityDistrictsInstance.GarrisonDamageEdit:SetNumberInput(true);
+--						m_ViewingTab.SubTab.CityDistrictsInstance.OuterDamageEdit:SetText( tostring( pDistrict:GetDamage(DefenseTypes.DISTRICT_OUTER) ) );
+--						m_ViewingTab.SubTab.CityDistrictsInstance.OuterDamageEdit:SetNumberInput(true);
 						m_ViewingTab.SubTab.CityDistrictsInstance.SelectedDistrictName:SetText(Locale.Lookup(GameInfo.Districts[ms_SelectDistrictType].Name));
 						bEnable = true;
 					else
@@ -720,8 +734,8 @@ function UpdateSelectedDistrictInfo()
 	end
 
 	m_ViewingTab.SubTab.CityDistrictsInstance.PillagedCheckbox:SetEnabled(bEnable);
-	m_ViewingTab.SubTab.CityDistrictsInstance.GarrisonDamageEdit:SetEnabled(bEnable);
-	m_ViewingTab.SubTab.CityDistrictsInstance.OuterDamageEdit:SetEnabled(bEnable);
+--	m_ViewingTab.SubTab.CityDistrictsInstance.GarrisonDamageEdit:SetEnabled(bEnable);
+--	m_ViewingTab.SubTab.CityDistrictsInstance.OuterDamageEdit:SetEnabled(bEnable);
 end
 -- ===========================================================================
 function OnDistrictSelected(entry)
@@ -1110,6 +1124,7 @@ end
 function KeyHandler( key:number )
 	if key == Keys.VK_ESCAPE and not ContextPtr:IsHidden() then
 		ContextPtr:SetHide(true);
+		LuaEvents.WorldBuilder_ShowPlayerEditor(false);
 		return true;
 	end
 
@@ -1128,8 +1143,8 @@ end
 
 -- ===========================================================================
 function OnClose()
-
 	ContextPtr:SetHide(true);
+	LuaEvents.WorldBuilder_ShowPlayerEditor(false);
 end
 
 -- ===========================================================================
@@ -1151,14 +1166,18 @@ function OnPlayerEdited(index)
 		for plotIndex = 0, Map.GetPlotCount()-1, 1 do
 			local plot = Map.GetPlotByIndex(plotIndex);
 			local owner = plot:GetOwner();
+
+			WorldBuilder.UnitManager():RemoveAt(plot);
+
 			if owner ~= nil and owner == playerEntry.Index then
-				WorldBuilder.UnitManager():RemoveAt(plot);
 				WorldBuilder.MapManager():SetImprovementType( plot, -1 );
 				WorldBuilder.CityManager():RemoveAt(plot);
 			end
 		end
 
 		UpdatePlayerEntry(playerEntry);
+		UI.RefreshColorSet();
+		UI.RebuildColorDB();
 	end
 end
 
@@ -1385,7 +1404,7 @@ function OnInit()
 	end
 
 	-- CivPullDown
-
+	
 	-- Intialize the m_CivEntries table.  This must use a simple index for the key, the pull down control will access it directly.
 	-- The first two entries are special
 	table.insert(m_CivEntries, { Text="LOC_WORLDBUILDER_RANDOM", Type="RANDOM", DefaultLeader="RANDOM" });
@@ -1409,7 +1428,11 @@ function OnInit()
 	table.insert(m_LeaderEntries, { Text="LOC_WORLDBUILDER_ANY", Type="UNDEFINED" });
 	for type in GameInfo.Leaders() do
 		if type.Name ~= "LOC_EMPTY" then
-			table.insert(m_LeaderEntries, { Text=type.Name, Type=type.LeaderType });
+			if type.CivilizationCollection[1] ~= nil then
+				table.insert(m_LeaderEntries, { Text=type.Name, Type=type.LeaderType, CivType=type.CivilizationCollection[1].CivilizationType });
+			else
+				table.insert(m_LeaderEntries, { Text=type.Name, Type=type.LeaderType, CivType=nil });
+			end
 		end
 	end
 
@@ -1425,7 +1448,9 @@ function OnInit()
 
 	-- District list
 	for type in GameInfo.Districts() do
-		table.insert(m_DistrictEntries, { Text=type.Name, Type=type });
+		if type.DistrictType ~= "DISTRICT_WONDER" then
+			table.insert(m_DistrictEntries, { Text=type.Name, Type=type });
+		end
 	end
 	table.sort(m_DistrictEntries, function(a, b)
 		return Locale.Lookup(a.Type.Name) < Locale.Lookup(b.Type.Name);
@@ -1433,8 +1458,10 @@ function OnInit()
 
 	-- Building list
 	for type in GameInfo.Buildings() do
-		if type.InternalOnly == nil or type.InternalOnly == false then 
-			table.insert(m_BuildingEntries, { Text=type.Name, Type=type });
+		if type.RequiresPlacement ~= true then
+			if type.InternalOnly == nil or type.InternalOnly == false then
+				table.insert(m_BuildingEntries, { Text=type.Name, Type=type });
+			end
 		end
 	end
 	table.sort(m_BuildingEntries, function(a, b)

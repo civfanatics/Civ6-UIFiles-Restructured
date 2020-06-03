@@ -85,6 +85,13 @@ function CloseAllPopups()
 end
 
 -- ===========================================================================
+function OnGetPopupsOpen()
+	if isGovernmentOpen or isTechTreeOpen or isCivicsTreeOpen or isGreatPeopleOpen or isGreatWorksOpen or isReligionOpen then
+		LuaEvents.TradeRouteChooser_CloseIfPopups();
+	end
+end
+
+-- ===========================================================================
 function OnOpenGreatPeople()
 	if isGreatPeopleOpen then
 		LuaEvents.LaunchBar_CloseGreatPeoplePopup();
@@ -108,6 +115,7 @@ end
 function OnOpenReligion()
 	if isReligionOpen then
 		LuaEvents.LaunchBar_CloseReligionPanel();
+		LuaEvents.LaunchBar_ClosePantheonChooser();
 	else
 		-- If we're able to but have yet to found a pantheon then open the pantheon chooser instead
 		local pLocalPlayerReligion:table = Players[Game.GetLocalPlayer()]:GetReligion();
@@ -693,8 +701,11 @@ function Unsubscribe()
 	LuaEvents.GreatPeople_OpenGreatPeople.Remove( SetGreatPeopleOpen );
 	LuaEvents.GreatWorks_CloseGreatWorks.Remove( SetGreatWorksClosed );
 	LuaEvents.GreatWorks_OpenGreatWorks.Remove( SetGreatWorksOpen );
+	LuaEvents.LaunchBar_CheckPopupsOpen.Remove( OnGetPopupsOpen );
 	LuaEvents.Religion_CloseReligion.Remove( SetReligionClosed );
 	LuaEvents.Religion_OpenReligion.Remove( SetReligionOpen );	
+	LuaEvents.PantheonChooser_CloseReligion.Remove( SetReligionClosed );
+	LuaEvents.PantheonChooser_OpenReligion.Remove( SetReligionOpen );	
 	LuaEvents.TechTree_CloseTechTree.Remove(SetTechTreeClosed);
 	LuaEvents.TechTree_OpenTechTree.Remove( SetTechTreeOpen );
 	LuaEvents.Tutorial_CloseAllLaunchBarScreens.Remove( OnTutorialCloseAll );
@@ -736,8 +747,11 @@ function Subscribe()
 	LuaEvents.GreatPeople_OpenGreatPeople.Add( SetGreatPeopleOpen );
 	LuaEvents.GreatWorks_CloseGreatWorks.Add( SetGreatWorksClosed );
 	LuaEvents.GreatWorks_OpenGreatWorks.Add( SetGreatWorksOpen );
+	LuaEvents.LaunchBar_CheckPopupsOpen.Add( OnGetPopupsOpen );
 	LuaEvents.Religion_CloseReligion.Add( SetReligionClosed );
 	LuaEvents.Religion_OpenReligion.Add( SetReligionOpen );	
+	LuaEvents.PantheonChooser_CloseReligion.Add( SetReligionClosed );
+	LuaEvents.PantheonChooser_OpenReligion.Add( SetReligionOpen );	
 	LuaEvents.TechTree_CloseTechTree.Add(SetTechTreeClosed);
 	LuaEvents.TechTree_OpenTechTree.Add( SetTechTreeOpen );
 	LuaEvents.Tutorial_CloseAllLaunchBarScreens.Add( OnTutorialCloseAll );

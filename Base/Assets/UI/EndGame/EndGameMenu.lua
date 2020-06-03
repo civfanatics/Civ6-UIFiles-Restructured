@@ -1,4 +1,4 @@
--- Copyright 2016-2018, Firaxis Games
+-- Copyright 2016-2019, Firaxis Games
 -- See global EndGameMenu_ include at bottom of file!
 
 include("InstanceManager")
@@ -7,14 +7,17 @@ include("ChatLogic");
 include("TeamSupport");
 include("PopupDialog");
 
----------------------------------------------------------------
--- CONSTANTS
-----------------------------------------------------------------
-MAX_BUTTON_SIZE = 160;
 
----------------------------------------------------------------
+-- ===========================================================================
+-- CONSTANTS
+-- ===========================================================================
+local RELOAD_CACHE_ID :string = "EndGameMenu";
+MAX_BUTTON_SIZE = 160;	-- also global
+
+
+-- ===========================================================================
 -- Globals
-----------------------------------------------------------------
+-- ===========================================================================
 g_GraphVerticalMarkers = {
 	Controls.VerticalLabel1,
 	Controls.VerticalLabel2,
@@ -31,36 +34,13 @@ g_GraphHorizontalMarkers = {
 	Controls.HorizontalLabel5
 };
 
+
+
 -- Custom popup setup
-m_kPopupDialog = PopupDialog:new( "EndGameMenu" );
+g_kPopupDialog = PopupDialog:new( "EndGameMenu" );
 
-local g_HasPlayerPortrait;	-- Whether or not a player portrait has been set.
-local g_Movie;				-- The movie which has been set.
-local g_SoundtrackStart;    -- Wwise start event for the movie's audio
-local g_SoundtrackStop;     -- Wwise stop event for the movie's audio
-local g_SavedMusicVol;      -- Saved music volume around movie play
-
--- Chat Panel Data
-local m_playerTarget = { targetType = ChatTargetTypes.CHATTARGET_ALL, targetID = GetNoPlayerTargetID() };
-local m_playerTargetEntries = {};
-local m_ChatInstances		= {};
-
-local PlayerConnectedChatStr = Locale.Lookup( "LOC_MP_PLAYER_CONNECTED_CHAT" );
-local PlayerDisconnectedChatStr = Locale.Lookup( "LOC_MP_PLAYER_DISCONNECTED_CHAT" );
-local PlayerHostMigratedChatStr = Locale.Lookup( "LOC_MP_PLAYER_HOST_MIGRATED_CHAT" );
-local PlayerKickedChatStr = Locale.Lookup( "LOC_MP_PLAYER_KICKED_CHAT" );
-
-local g_HideLeaderPortrait = false;
-
-local m_bAllowBack = true;
-
-local m_MovieWasPlayed	= false;
-local m_teamVictory		= false;
-local m_viewerPlayer :number = PlayerTypes.NO_PLAYER;	-- The screen is being generated from the perspective of this player.  This might not be the same as the local player in hotseat.
-
-local g_RankIM = InstanceManager:new( "RankEntry", "Root", Controls.RankingStack );
-local g_GraphLegendInstanceManager = InstanceManager:new("GraphLegendInstance", "GraphLegend", Controls.GraphLegendStack);
-local g_LineSegmentInstanceManager = InstanceManager:new("GraphLineInstance","LineSegment", Controls.GraphCanvas);
+g_HasPlayerPortrait = false;			-- Whether or not a player portrait has been set.
+g_HideLeaderPortrait = false;	-- Whether or not there is enough space to show the portrait
 
 Styles = {
 	["GENERIC_DEFEAT"] ={
@@ -152,6 +132,39 @@ Styles = {
 	},
 };
 
+
+
+-- ===========================================================================
+--	MEMBERS
+-- ===========================================================================
+
+local m_rankIM = InstanceManager:new( "RankEntry", "Root", Controls.RankingStack );
+
+local m_movie;				-- The movie which has been set.
+local m_soundtrackStart;    -- Wwise start event for the movie's audio
+local m_soundtrackStop;     -- Wwise stop event for the movie's audio
+local m_savedMusicVol;      -- Saved music volume around movie play
+
+-- Chat Panel Data
+local m_playerTarget		:table = { targetType = ChatTargetTypes.CHATTARGET_ALL, targetID = GetNoPlayerTargetID() };
+local m_playerTargetEntries :table = {};
+local m_ChatInstances		:table = {};
+
+local PlayerConnectedChatStr	:string = Locale.Lookup( "LOC_MP_PLAYER_CONNECTED_CHAT" );
+local PlayerDisconnectedChatStr :string = Locale.Lookup( "LOC_MP_PLAYER_DISCONNECTED_CHAT" );
+local PlayerHostMigratedChatStr :string = Locale.Lookup( "LOC_MP_PLAYER_HOST_MIGRATED_CHAT" );
+local PlayerKickedChatStr		:string = Locale.Lookup( "LOC_MP_PLAYER_KICKED_CHAT" );
+
+local m_isFadeOutGame	:boolean = false;
+local m_MovieWasPlayed	:boolean = false;
+local m_teamVictory		:boolean = false;
+local m_waitingForShow	:boolean = false;					-- Has the screen queued itself to be displayed? Returns to false in OnShow. 
+															-- Used to determine if the screen is waiting to be displayed when multiple victory/defeat events come while the screen is still waiting to be displayed.
+local m_viewerPlayer	:number = PlayerTypes.NO_PLAYER;	-- The screen is being generated from the perspective of this player.  This might not be the same as the local player in hotseat.
+local m_savedData		:table = nil;						-- Used for hotreloading
+
+
+
 ----------------------------------------------------------------
 -- Utility function that lets me pass an icon string or
 -- an array of icons to attempt to use.
@@ -183,7 +196,7 @@ end
 ----------------------------------------------------------------  
 ----------------------------------------------------------------  
 function PopulateRankingResults()
-	g_RankIM:ResetInstances();
+	m_rankIM:ResetInstances();
 
 	local player = Players[Game.GetLocalPlayer()];
 	local score = player:GetScore();
@@ -191,7 +204,7 @@ function PopulateRankingResults()
 	local playerAdded = false;
 	local count = 1;
 	for row in GameInfo.HistoricRankings() do
-		local instance = g_RankIM:GetInstance();
+		local instance = m_rankIM:GetInstance();
 	
 		instance.Number:LocalizeAndSetText("LOC_UI_ENDGAME_NUMBERING_FORMAT", count);
 		instance.LeaderName:LocalizeAndSetText(row.HistoricLeader);
@@ -221,10 +234,12 @@ function UpdateButtonStates(data:table)
 	-- Display a continue button if there are other players left in the game
 	local player = Players[Game.GetLocalPlayer()];
 
-	-- If there are living human players in a hot-seat game, do not display the main menu button.
-	-- Instead go to the next player's turn.
+	-- In hotseat there is a Next Player button that allows the game to continue in the case of an individual player's defeat.
 	local nextPlayer = false;
-	if(not data.NoMorePlayers and GameConfiguration.IsHotseat()) then
+	if(GameConfiguration.IsHotseat()
+		and not data.NoMorePlayers					-- We are not in a state where there will be no more players to continue to.
+		and data.WinningTeamID == nil ) then		-- There is no victory.  In the case of a victory we only show the end game screen however is the active player at the time.
+													-- The game might be One More Turned but that is handled by canExtendGame.
 		local humans = GameConfiguration.GetHumanPlayerIDs();
 		for i,v in ipairs(humans) do
 			local human = Players[v];
@@ -264,7 +279,6 @@ function UpdateButtonStates(data:table)
 	Controls.NextPlayerButton:SetHide(not nextPlayer);
 	
 	Controls.ButtonStack:CalculateSize();
-	Controls.ButtonStack:ReprocessAnchoring();
 end
 
 ----------------------------------------------------------------
@@ -282,15 +296,12 @@ function OnNextPlayer()
 
 	Close();
 end
-TruncateStringWithTooltip(Controls.NextPlayerButton, MAX_BUTTON_SIZE, Locale.Lookup("LOC_UI_ENDGAME_MP_PLAYER_CHANGE_CONTINUE"));
-Controls.NextPlayerButton:RegisterCallback( Mouse.eLClick, OnNextPlayer );
-Controls.NextPlayerButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 
 -- ===========================================================================
 function Close()
 
 	ReplayShutdown();
-	g_RankIM:ResetInstances();	-- Unload instances.	
+	m_rankIM:ResetInstances();	-- Unload instances.	
 	Controls.Movie:Close();		-- Unload movie
 	
 	-- Unload large textures.
@@ -305,8 +316,7 @@ function Close()
 	HandlePauseGame( isHiding );	
 end
 
-----------------------------------------------------------------
-----------------------------------------------------------------
+-- ===========================================================================
 function OnMainMenu()    
 	Controls.Movie:Close();		-- Unload movie
 	UI.UnloadSoundBankGroup(5);	
@@ -314,23 +324,18 @@ function OnMainMenu()
 
 	Events.ExitToMainMenu();	
 end
-TruncateStringWithTooltip(Controls.MainMenuButton, MAX_BUTTON_SIZE, Locale.Lookup("LOC_UI_ENDGAME_MAIN_MENU"));
-Controls.MainMenuButton:RegisterCallback( Mouse.eLClick, OnMainMenu );
-Controls.MainMenuButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 
-----------------------------------------------------------------
-----------------------------------------------------------------
+-- ===========================================================================
 function OnBack()    
 	Close();	
 	LuaEvents.EndGameMenu_OneMoreTurn();	
 end
-TruncateStringWithTooltip(Controls.BackButton, MAX_BUTTON_SIZE, Locale.Lookup("LOC_UI_ENDGAME_EXTENDED_GAME"));
-Controls.BackButton:RegisterCallback( Mouse.eLClick, OnBack );
-Controls.BackButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 
-----------------------------------------------------------------
-----------------------------------------------------------------
-function OnInfo()
+-- ===========================================================================
+--	UI Callback
+--	Tab button pressed to look at the information panel.
+-- ===========================================================================
+function OnInfoTab()
     Controls.InfoPanel:SetHide(false);
 	Controls.RankingPanel:SetHide(true);
     Controls.GraphPanel:SetHide(true);
@@ -341,14 +346,13 @@ function OnInfo()
 	Controls.RankingButtonSelected:SetHide(true);
 	Controls.ReplayButtonSelected:SetHide(true);
 	Controls.ChatButtonSelected:SetHide(true);
-
 end
-Controls.InfoButton:RegisterCallback( Mouse.eLClick, OnInfo );
-Controls.InfoButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 
-----------------------------------------------------------------
-----------------------------------------------------------------
-function OnRanking()
+-- ===========================================================================
+--	UI Callback
+--	Tab button pressed to look at the rankings.
+-- ===========================================================================
+function OnRankingTab()
     Controls.InfoPanel:SetHide(true);
 	Controls.RankingPanel:SetHide(false);
     Controls.GraphPanel:SetHide(true);
@@ -362,12 +366,12 @@ function OnRanking()
 
 	PopulateRankingResults();
 end
-Controls.RankingButton:RegisterCallback( Mouse.eLClick, OnRanking );
-Controls.RankingButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 
-----------------------------------------------------------------
-----------------------------------------------------------------
-function OnReplay()
+-- ===========================================================================
+--	UI Callback
+--	Tab button pressed to look at the game reply.
+-- ===========================================================================
+function OnReplayTab()
     Controls.InfoPanel:SetHide(true);
 	Controls.RankingPanel:SetHide(true);
     Controls.GraphPanel:SetHide(false);
@@ -380,14 +384,13 @@ function OnReplay()
 	Controls.ChatButtonSelected:SetHide(true);
 
 	ReplayInitialize();
-
 end
-Controls.ReplayButton:RegisterCallback( Mouse.eLClick, OnReplay );
-Controls.ReplayButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 
-----------------------------------------------------------------
-----------------------------------------------------------------
-function OnChat()
+-- ===========================================================================
+--	UI Callback
+--	Tab button pressed to bring up the chat screen.
+-- ===========================================================================
+function OnChatTab()
     Controls.InfoPanel:SetHide(true);
 	Controls.RankingPanel:SetHide(true);
     Controls.GraphPanel:SetHide(true);
@@ -399,19 +402,16 @@ function OnChat()
 	Controls.ReplayButtonSelected:SetHide(true);
 	Controls.ChatButtonSelected:SetHide(false);
 end
-Controls.ChatButton:RegisterCallback( Mouse.eLClick, OnChat );
-Controls.ChatButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 
-----------------------------------------------------------------        
-----------------------------------------------------------------   
+-- ===========================================================================
 function OnReplayMovie()
-	if(g_Movie) then
-		if Controls.Movie:SetMovie(g_Movie) then
+	if(m_movie) then
+		if Controls.Movie:SetMovie(m_movie) then
     		Controls.MovieFill:SetHide(false);
     		Controls.Movie:Play();
             UI.StopInGameMusic();
-            UI.PlaySound(g_SoundtrackStart);
-            g_SavedMusicVol = Options.GetAudioOption("Sound", "Music Volume"); 
+            UI.PlaySound(m_soundtrackStart);
+            m_savedMusicVol = Options.GetAudioOption("Sound", "Music Volume"); 
             Options.SetAudioOption("Sound", "Music Volume", 0, 0);
             m_MovieWasPlayed = true;
         end
@@ -422,19 +422,14 @@ function OnReplayMovie()
 		UI.ReleasePauseEvent();
 	end
 end
-TruncateStringWithTooltip(Controls.ReplayMovieButton, MAX_BUTTON_SIZE, Locale.Lookup("LOC_UI_ENDGAME_REPLAY_MOVIE"));
-Controls.ReplayMovieButton:RegisterCallback(Mouse.eLClick, OnReplayMovie);
-Controls.ReplayMovieButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 
-----------------------------------------------------------------        
-----------------------------------------------------------------   
+-- ===========================================================================
 function OnMovieExitOrFinished()
-	--Controls.Movie:Stop();
 	Controls.Movie:Close();
 	Controls.MovieFill:SetHide(true);
     if (m_MovieWasPlayed) then
-        UI.PlaySound(g_SoundtrackStop);
-        Options.SetAudioOption("Sound", "Music Volume", g_SavedMusicVol, 0);
+        UI.PlaySound(m_soundtrackStop);
+        Options.SetAudioOption("Sound", "Music Volume", m_savedMusicVol, 0);
         UI.SkipSong();
         m_MovieWasPlayed = false;
     end
@@ -444,34 +439,73 @@ function OnMovieExitOrFinished()
 		UI.ReleasePauseEvent();
 	end
 end
-Controls.Movie:SetMovieFinishedCallback(OnMovieExitOrFinished);
-Controls.MovieFill:RegisterCallback(Mouse.eLClick, OnMovieExitOrFinished);
 
 -- ===========================================================================
-function OnInputHandler( input )
-	local msg = input:GetMessageType();
-	if (msg == KeyEvents.KeyUp) then
-		local key = input:GetKey();
-		if (key == Keys.VK_ESCAPE) then
-			if(not Controls.MovieFill:IsHidden()) then
-				OnMovieExitOrFinished();
-			end
-
-			-- Always trap the escape key here.
-			return true;
-		end
+--	UI Callback
+-- ===========================================================================
+function OnFadeAbort()
+	local isCallDelegate:boolean = true;
+	if(Controls.BackgroundFade:GetProgress() < 1)then
+		Controls.BackgroundFade:SetToEnd( isCallDelegate );
 	end
+	
+end
+
+-- ===========================================================================
+function OnInputHandler( kInput:table )
+	local msg :number = kInput:GetMessageType();
+	if msg == KeyEvents.KeyUp then
+		local key :number = kInput:GetKey();
+		
+		-- If ESC, have it act based on what is happening with the screen.
+		if (key == Keys.VK_ESCAPE) then
+			if m_isFadeOutGame then
+				OnFadeAbort();
+			elseif Controls.MovieFill:IsVisible() then
+				OnMovieExitOrFinished();
+			end			
+			return true;	-- Always trap the escape key here.
+		end
+		
+		return true;	-- Swallow ALL the keys so panning with arrows cannot occur nor action keys!
+	end
+
+	if (msg == KeyEvents.KeyDown) then
+		return true;	-- Swallow ALL the keys so panning with arrows cannot occur nor action keys!
+	end
+
 	return false;
 end
+
+-- ===========================================================================
+--	UI Callback
+--	After fading in from a game ending.
+-- ===========================================================================
+function ShowComplete()
+	m_isFadeOutGame = false;
+	Controls.MainBacking:SetHide( false );	
+	Controls.AllContentPanels:SetHide( false );
+	Controls.AllContentPanels:SetToBeginning();
+	Controls.AllContentPanels:Play();	
+	if g_HideLeaderPortrait == false then
+		Controls.PortraitFade:SetToBeginning();
+		Controls.PortraitFade:Play();
+	end
+
+	Controls.ButtonStack:SetHide( false );	
+	OnInfoTab();					-- Always start with the info panel.	
+	OnReplayMovie();				-- Noop if no movie is set.
+end
+
 
 -- ===========================================================================
 function OnShow()
 	print("Showing EndGame Menu");
 
+	m_waitingForShow = false;
+
 	LuaEvents.EndGameMenu_Shown();	-- Add ingame bulk hide counter
 	Resize();						-- Verify we're scaled properly.
-	OnInfo();						-- Always start with the info panel.	
-	OnReplayMovie();				-- Noop if no movie is set.
 
 	-- Setup Chat Player Target Pulldown.
 	PopulateTargetPull(Controls.ChatPull, Controls.ChatEntry, Controls.ChatIcon, m_playerTargetEntries, m_playerTarget, false, OnChatPulldownChanged);
@@ -479,6 +513,23 @@ function OnShow()
 	-- TODO: Better place for this to happen so it doesn't get called on every show (every queue popup)
 	local isHiding:boolean = false;
 	HandlePauseGame( isHiding );
+
+	if m_isFadeOutGame then
+		-- Hide anything that shouldn't be shown overtop of the win/lose screen
+		Controls.MainBacking:SetHide( true );
+		Controls.AllContentPanels:SetHide( true );
+		Controls.ButtonStack:SetHide( true);
+		Controls.MovieFill:SetHide( true );
+		Controls.PlayerPortrait:SetHide( true );
+
+		-- Start fading
+		Controls.BackgroundFade:RegisterEndCallback( ShowComplete );
+		Controls.BackgroundFade:SetToBeginning();
+		Controls.BackgroundFade:Play();
+	else
+		OnInfoTab();					-- Always start with the info panel.	
+		OnReplayMovie();				-- Noop if no movie is set.
+	end
 end
 
 -- ===========================================================================
@@ -516,7 +567,7 @@ function HandlePauseGame( bIsHide : boolean )
 	end
 end
      
-	 -- ===========================================================================
+ -- ===========================================================================
 function Resize()
 	local screenX, screenY = UIManager:GetScreenSizeVal();
 
@@ -605,6 +656,8 @@ end
 ----------------------------------------------------------------
 function View(data:table)
 	
+	m_savedData = data;		-- Only used for hotreload testing
+
 	ViewWinnerPanel(data);
 	ViewDefeatedPanel(data);
 
@@ -616,6 +669,8 @@ function View(data:table)
 	Controls.RibbonLabel:SetText(Locale.ToUpper(Locale.Lookup(data.RibbonText)));
 	Controls.Ribbon:SetTexture(data.RibbonStyle.Ribbon);
 	Controls.RibbonTile:SetTexture(data.RibbonStyle.RibbonTile);
+	Controls.RibbonArea:SetToBeginning();
+	Controls.RibbonArea:Play();
 
 	-- Update player portrait
 	if(data.PlayerPortrait) then
@@ -637,21 +692,27 @@ function View(data:table)
 
 	m_viewerPlayer = data.viewerPlayer;
 
-	---- Movie begins play-back when UI is shown.
-	g_Movie = data.RibbonStyle.Movie;
-    g_SoundtrackStart = data.RibbonStyle.SndStart;
-    g_SoundtrackStop = data.RibbonStyle.SndStop;
+	-- If a fadeout time is specified for this victory type, use that.
+	if data.RibbonStyle.FadeOutTime then
+		Controls.BackgroundFade:SetSpeed( 1/data.RibbonStyle.FadeOutTime );
+	end
 
-    if g_Movie ~= nil then
+	---- Movie begins play-back when UI is shown.
+	m_movie = data.RibbonStyle.Movie;
+    m_soundtrackStart = data.RibbonStyle.SndStart;
+    m_soundtrackStop = data.RibbonStyle.SndStop;
+
+    if m_movie ~= nil then
         UI.LoadSoundBankGroup(5);   -- BANKS_FMV, must teach Lua these constants
     end
 
-	Controls.ReplayMovieButton:SetHide(g_Movie == nil);
+	Controls.ReplayMovieButton:SetHide(m_movie == nil);
 	Controls.MovieFill:SetHide(true);
 	Controls.Movie:Close();
 
-	if(ContextPtr:IsHidden()) then
+	if(ContextPtr:IsHidden()) then		
 		UIManager:QueuePopup( ContextPtr, PopupPriority.EndGameMenu );
+		m_waitingForShow = true;
 	end	
 
 	UpdateButtonStates(data);
@@ -664,9 +725,16 @@ function DefaultData()
 	data.PlayerPortrait = "";
 	data.viewerPlayer = PlayerTypes.NO_PLAYERS;
 
-	data.RibbonText = "";
-	data.RibbonIcon = "";
-	data.RibbonStyle = nil;
+	data.RibbonText = "WinOrLose";
+	data.RibbonIcon = "ICON_VICTORY_GENERIC";
+	data.RibbonStyle = {
+		Background = "",
+		Ribbon = "",
+		RibbonTile = "",
+		Movie = "",
+		SndStart = "",
+		SndStop = ""
+	};
 
 	data.IsWinnerLocalPlayer = false;
 	data.WinnerName = "";
@@ -759,6 +827,9 @@ function TeamVictoryData(winningTeamID:number, victoryType:string)
 	
 	-- Determine if the local player is a winner
 	data.IsWinnerLocalPlayer = winningTeamID == localPlayerTeamID;
+
+	-- Remember the winning team so UpdateButtonStates() can use it. 
+	data.WinningTeamID = winningTeamID;
 
 	local victoryStyle = Styles[victoryType];
 	if not victoryStyle then
@@ -873,12 +944,21 @@ end
 ----------------------------------------------------------------
 -- Called when a player has been defeated.
 ----------------------------------------------------------------
-function OnPlayerDefeat( player, defeat, eventID)
-	local localPlayer = Game.GetLocalPlayer();
+function OnPlayerDefeat( player, defeat, eventID)	
+	local localPlayer :number= Game.GetLocalPlayer();
 	local defeatPlayer = Players[player];
 	if ((localPlayer and localPlayer >= 0 and localPlayer == player) -- local player was defeated, show screen
 		or (GameConfiguration.IsHotseat() and defeatPlayer ~= nil and defeatPlayer:IsHuman())) then -- Hotseat Only - Another human player was defeated 
+		-- [TTP 44380] Only display PlayerDefeat if we are not already displaying the end game.
+		-- Mechanically, this means that all other victory/defeat types stomp on PlayerDefeated but PlayerDefeated will not stomp any other end game.
+		-- We do this because the PlayerDefeat signal can be in a race condition with other victory/defeats typed to this player being defeated.
+		-- We want to prioritize the other victory/defeat for display.
+		if(ContextPtr:IsHidden() == false or m_waitingForShow == true) then
+			return;
+		end
+
 		-- Show the defeat screen.
+		m_isFadeOutGame = true;
 		UI.SetPauseEventID( eventID );
 		local defeatInfo = GameInfo.Defeats[defeat];
 		defeat = defeatInfo and defeatInfo.DefeatType or "DEFEAT_DEFAULT";
@@ -896,9 +976,9 @@ end
 ----------------------------------------------------------------
 function OnTeamVictory(team, victory, eventID)
 	m_teamVictory = true;
-	local localPlayer = Game.GetLocalPlayer();
+	local localPlayer :number = Game.GetLocalPlayer();
 	if (localPlayer and localPlayer >= 0) then		-- Check to see if there is any local player
-		local p = Players[localPlayer]; 
+		m_isFadeOutGame = true;
 		
 		-- [TTP 34847] Handle the specific case where the local player was defeated and it resulted in game victory.  
 		-- It is possible that PlayerDefeat was processed first.  In that case the player defeated screen is visible but the game is not paused.
@@ -906,14 +986,10 @@ function OnTeamVictory(team, victory, eventID)
 			HandlePauseGame(false);
 		end
 
-		-- Only show the defeat screen to other living players.  If a player
-		-- was defeated, they would receive another notification.
-		if(p:IsAlive()) then
-			UI.SetPauseEventID( eventID );	-- Set the pause event, the closing of the end game screen will release it.
-			local victoryInfo = GameInfo.Victories[victory];
-			victory = victoryInfo and victoryInfo.VictoryType or "VICTORY_DEFAULT";
-			View(TeamVictoryData(team, victory));
-		end
+		UI.SetPauseEventID( eventID );	-- Set the pause event, the closing of the end game screen will release it.
+		local victoryInfo = GameInfo.Victories[victory];
+		victory = victoryInfo and victoryInfo.VictoryType or "VICTORY_DEFAULT";
+		View(TeamVictoryData(team, victory));
 	end
 end
 
@@ -944,43 +1020,41 @@ end
 -- ===========================================================================
 --	Chat Panel Functionality
 -- ===========================================================================
-function OnMultiplayerChat( fromPlayer, toPlayer, text, eTargetType )
-	OnChat(fromPlayer, toPlayer, text, eTargetType);
-end
-
-function OnChat( fromPlayer, toPlayer, text, eTargetType )
-	-- EndGameMenu doesn't play sounds for chat events because the ingame chat panel already does so. 
-	if(ContextPtr:IsHidden() == false) then
-		local pPlayerConfig = PlayerConfigurations[fromPlayer];
-		local playerName = Locale.Lookup(pPlayerConfig:GetPlayerName());
-
-		-- Selecting chat text color based on eTargetType	
-		local chatColor :string = "[color:ChatMessage_Global]";
-		if(eTargetType == ChatTargetTypes.CHATTARGET_TEAM) then
-			chatColor = "[color:ChatMessage_Team]";
-		elseif(eTargetType == ChatTargetTypes.CHATTARGET_PLAYER) then
-			chatColor = "[color:ChatMessage_Whisper]";  
-		end
-		
-		local chatString	= "[color:ChatPlayerName]" .. playerName;
-
-		-- When whispering, include the whisperee's name as well.
-		if(eTargetType == ChatTargetTypes.CHATTARGET_PLAYER) then
-			local pTargetConfig :table	= PlayerConfigurations[toPlayer];
-			if(pTargetConfig ~= nil) then
-				local targetName = Locale.Lookup(pTargetConfig:GetPlayerName());
-				chatString = chatString .. " [" .. targetName .. "]";
-			end
-		end
-
-		-- Ensure text parsed properly
-		text = ParseChatText(text);
-
-		chatString			= chatString .. ": [ENDCOLOR]" .. chatColor;
-		chatString			= chatString .. text .. "[ENDCOLOR]";
-
-		AddChatEntry( chatString, Controls.ChatStack, m_ChatInstances, Controls.ChatScroll);
+function OnChat( fromPlayer:number, toPlayer:number, text:string, eTargetType:number )
+	-- EndGameMenu doesn't play sounds for chat events because the ingame chat panel (which is hidden) already does so. 
+	if (ContextPtr:IsHidden() == false and fromPlayer ~= Network.GetLocalPlayerID()) then
+		UI.PlaySound("Play_MP_Chat_Message_Received");
 	end
+
+	local pPlayerConfig :object = PlayerConfigurations[fromPlayer];
+	local playerName	:string = Locale.Lookup(pPlayerConfig:GetPlayerName());
+
+	-- Selecting chat text color based on eTargetType	
+	local chatColor :string = "[color:ChatMessage_Global]";
+	if(eTargetType == ChatTargetTypes.CHATTARGET_TEAM) then
+		chatColor = "[color:ChatMessage_Team]";
+	elseif(eTargetType == ChatTargetTypes.CHATTARGET_PLAYER) then
+		chatColor = "[color:ChatMessage_Whisper]";  
+	end
+		
+	local chatString	= "[color:ChatPlayerName]" .. playerName;
+
+	-- When whispering, include the whisperee's name as well.
+	if(eTargetType == ChatTargetTypes.CHATTARGET_PLAYER) then
+		local pTargetConfig :table	= PlayerConfigurations[toPlayer];
+		if(pTargetConfig ~= nil) then
+			local targetName = Locale.Lookup(pTargetConfig:GetPlayerName());
+			chatString = chatString .. " [" .. targetName .. "]";
+		end
+	end
+
+	-- Ensure text parsed properly
+	text = ParseChatText(text);
+
+	chatString			= chatString .. ": [ENDCOLOR]" .. chatColor;
+	chatString			= chatString .. text .. "[ENDCOLOR]";
+
+	AddChatEntry( chatString, Controls.ChatStack, m_ChatInstances, Controls.ChatScroll);
 end
 
 -------------------------------------------------
@@ -1087,11 +1161,11 @@ end
 
 -- ===========================================================================
 function OnRequestClose()
-	if (not m_kPopupDialog:IsOpen()) then
-		m_kPopupDialog:AddText(	  Locale.Lookup("LOC_GAME_MENU_QUIT_WARNING"));
-		m_kPopupDialog:AddButton( Locale.Lookup("LOC_COMMON_DIALOG_NO_BUTTON_CAPTION"), nil );
-		m_kPopupDialog:AddButton( Locale.Lookup("LOC_COMMON_DIALOG_YES_BUTTON_CAPTION"), OnExitGame, nil, nil, "PopupButtonInstanceRed" );
-		m_kPopupDialog:Open();
+	if (not g_kPopupDialog:IsOpen()) then
+		g_kPopupDialog:AddText(	  Locale.Lookup("LOC_GAME_MENU_QUIT_WARNING"));
+		g_kPopupDialog:AddButton( Locale.Lookup("LOC_COMMON_DIALOG_NO_BUTTON_CAPTION"), nil );
+		g_kPopupDialog:AddButton( Locale.Lookup("LOC_COMMON_DIALOG_YES_BUTTON_CAPTION"), OnExitGame, nil, nil, "PopupButtonInstanceRed" );
+		g_kPopupDialog:Open();
 	end
 end
 
@@ -1105,36 +1179,104 @@ function OnExitGame()
 	Events.UserConfirmedClose();
 end
 
+
+-- ===========================================================================
+function LateInitialize()
+	Resize();
+end
+
+-- ===========================================================================
+function OnInit( isReload:boolean )
+	LateInitialize();
+	if isReload then
+		LuaEvents.GameDebug_GetValues( RELOAD_CACHE_ID );
+	end
+end
+
+-- ===========================================================================
+function OnShutdown()
+	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "IsHidden", ContextPtr:IsHidden() );
+	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "m_savedData", m_savedData );
+end
+
+-- ===========================================================================
+function OnGameDebugReturn(context:string, contextTable:table)
+	if context == RELOAD_CACHE_ID then
+		local isHidden:boolean = contextTable["IsHidden"];
+		if not isHidden then
+			m_savedData = contextTable["m_savedData"];
+			if m_savedData then
+				m_isFadeOutGame = true;
+				View( m_savedData );
+				OnShow();	-- Need to force since already on the stack
+			end
+		end
+	end
+end
+
 -- ===========================================================================
 --	Initialize screen
 -- ===========================================================================
 function Initialize()
 
+	-- UI Callbacks
+
+	ContextPtr:SetInitHandler( OnInit );
 	ContextPtr:SetInputHandler( OnInputHandler, true );
 	ContextPtr:SetShowHandler( OnShow );
 	ContextPtr:SetHideHandler( OnHide );
+	ContextPtr:SetShutdown( OnShutdown );
 
 	Controls.ChatEntry:RegisterCommitCallback( SendChat );
 
-	LuaEvents.ShowEndGame.Add(OnShowEndGame);
+	TruncateStringWithTooltip(Controls.NextPlayerButton, MAX_BUTTON_SIZE, Locale.Lookup("LOC_UI_ENDGAME_MP_PLAYER_CHANGE_CONTINUE"));
+	Controls.NextPlayerButton:RegisterCallback( Mouse.eLClick, OnNextPlayer );
+	Controls.NextPlayerButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 
+	TruncateStringWithTooltip(Controls.MainMenuButton, MAX_BUTTON_SIZE, Locale.Lookup("LOC_UI_ENDGAME_MAIN_MENU"));
+	Controls.MainMenuButton:RegisterCallback( Mouse.eLClick, OnMainMenu );
+	Controls.MainMenuButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
+
+	TruncateStringWithTooltip(Controls.BackButton, MAX_BUTTON_SIZE, Locale.Lookup("LOC_UI_ENDGAME_EXTENDED_GAME"));
+	Controls.BackButton:RegisterCallback( Mouse.eLClick, OnBack );
+	Controls.BackButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
+
+	Controls.FadeButton:RegisterCallback( Mouse.eRClick, OnFadeAbort );
+
+	Controls.InfoButton:RegisterCallback( Mouse.eLClick, OnInfoTab );
+	Controls.InfoButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
+	Controls.RankingButton:RegisterCallback( Mouse.eLClick, OnRankingTab );
+	Controls.RankingButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
+	Controls.ReplayButton:RegisterCallback( Mouse.eLClick, OnReplayTab );
+	Controls.ReplayButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
+	Controls.ChatButton:RegisterCallback( Mouse.eLClick, OnChatTab );
+	Controls.ChatButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
+
+	TruncateStringWithTooltip(Controls.ReplayMovieButton, MAX_BUTTON_SIZE, Locale.Lookup("LOC_UI_ENDGAME_REPLAY_MOVIE"));
+	Controls.ReplayMovieButton:RegisterCallback(Mouse.eLClick, OnReplayMovie);
+	Controls.ReplayMovieButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
+
+	Controls.Movie:SetMovieFinishedCallback( OnMovieExitOrFinished );
+	Controls.MovieFill:RegisterCallback(Mouse.eLClick, OnMovieExitOrFinished);
+
+	-- Events
+
+	LuaEvents.GameDebug_Return.Add(OnGameDebugReturn);	
+	LuaEvents.ShowEndGame.Add(OnShowEndGame);
+	
 	Events.SystemUpdateUI.Add( OnUpdateUI );
 	Events.UserRequestClose.Add( OnRequestClose );
 	Events.PlayerInfoChanged.Add( OnPlayerInfoChanged );
 	Events.MultiplayerPrePlayerDisconnected.Add( OnMultiplayerPrePlayerDisconnected );
 	Events.MultiplayerPlayerConnected.Add( OnMultplayerPlayerConnected );
-	Events.MultiplayerChat.Add( OnMultiplayerChat );
+	Events.MultiplayerChat.Add( OnChat );
 
 	local ruleset :string = GameConfiguration.GetValue("RULESET");
 	if ruleset ~= "RULESET_TUTORIAL" then
 		Events.TeamVictory.Add(OnTeamVictory);
 		Events.PlayerDefeat.Add(OnPlayerDefeat);
 	end
-
-	Resize();
 end
-
 include("EndGameMenu_", true);
-
 Initialize();
  

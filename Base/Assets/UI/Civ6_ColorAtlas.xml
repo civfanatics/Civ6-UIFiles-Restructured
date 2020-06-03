@@ -127,6 +127,7 @@
 
 	<ColorSet Name="ButtonCS"         						Color0="177,203,240,255"	Color1="0,0,0,100"				Color2="255,214,255,255" />
   <ColorSet Name="ButtonDisabledCS"  						Color0="127,157,190,150"	Color1="0,0,0,100"				Color2="205,176,205,150" />
+	<ColorSet Name="RoyaleButtonCS"         			Color0="200,0,0,255"			Color1="0,0,0,200"				Color2="255,100,100,255" />
 	<ColorSet Name="CityStateCS"									Color0="160,160,160,240"  Color1="0,0,0,100" />
 	<ColorSet Name="CityStateDisabledCS"					Color0="80,80,80,240"			Color1="0,0,0,100" />
 	<ColorSet Name="GrowthCS"											Color0="120,140,70,255"		Color1="0,0,0,150" />

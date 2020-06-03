@@ -577,7 +577,6 @@ function SelectGame( serverID )
 	end
 	
 	Controls.BottomButtons:CalculateSize();
-	Controls.BottomButtons:ReprocessAnchoring();
 
 	g_SelectedServerID = serverID;
 end
@@ -829,9 +828,7 @@ function UpdateFriendsList()
 	-- /DEBUG
 
 	Controls.FriendsStack:CalculateSize();
-	Controls.FriendsStack:ReprocessAnchoring();
 	Controls.FriendsScrollPanel:CalculateSize();
-	Controls.FriendsScrollPanel:ReprocessAnchoring();
 	Controls.FriendsScrollPanel:GetScrollBar():SetAndCall(0);
 
 	if Controls.FriendsScrollPanel:GetScrollBar():IsHidden() then
@@ -1040,7 +1037,6 @@ function SortAndDisplayListings(resetSelection:boolean)
 
 	-- Adjust vertical grid lines
 	Controls.ListingStack:CalculateSize();
-	Controls.ListingStack:ReprocessAnchoring();
 	local gridLineHeight:number = math.max(Controls.ListingStack:GetSizeY(), Controls.ListingScrollPanel:GetSizeY());
 	for i = 1, NUM_COLUMNS do
 		Controls["GridLine_" .. i]:SetEndY(gridLineHeight);
@@ -1082,42 +1078,46 @@ function Close()
 	end
 end
 
-
--------------------------------------------------
--------------------------------------------------
+-- ===========================================================================
 function AdjustScreenSize()
 	local screenX, screenY:number = UIManager:GetScreenSizeVal();
-	local hideLogo = true;
-
-	if(screenY >= Controls.MainWindow:GetSizeY() + Controls.LogoContainer:GetSizeY() + Controls.LogoContainer:GetOffsetY()) then
-		hideLogo = false;
+	if (IsUsingPlayByCloudGameList()) then 
+		Controls.GameListRoot:SetSizeY( Controls.MainWindow:GetSizeY() - (Controls.BottomButtons:GetSizeY() + Controls.TopNavigationPanel:GetSizeY() +15 ));
+		Controls.GameListGrid:SetSizeY( Controls.GameListRoot:GetSizeY());
+		Controls.ListingScrollPanel:SetSizeY(Controls.GameListRoot:GetSizeY() -100);
+		Controls.ListingScrollPanelBar:SetSizeY(Controls.GameListRoot:GetSizeY()-130);
+		Controls.GameListRoot:SetOffsetY(GAME_LIST_TABS_OFFSET_Y);
+	else
+		Controls.ListingScrollPanel:CalculateInternalSize();
+		Controls.FriendsButton:SetSizeX(Controls.FriendsCheck:GetSizeX() + 20);
+		Controls.MainWindow:SetSizeY(screenY- (Controls.LogoContainer:GetSizeY() + Controls.LogoContainer:GetOffsetY()));
+		Controls.GameListRoot:SetSizeY( Controls.MainWindow:GetSizeY() - (Controls.BottomButtons:GetSizeY() + Controls.TopNavigationPanel:GetSizeY()+15 ));
+		Controls.GameListGrid:SetSizeY( Controls.GameListRoot:GetSizeY());
+		Controls.LogoContainer:SetHide(hideLogo);
+		Controls.ListingScrollPanel:SetSizeY(Controls.GameListRoot:GetSizeY() -50);
+		Controls.ListingScrollPanelBar:SetSizeY(Controls.GameListRoot:GetSizeY()-85);
+		Controls.GameListRoot:SetOffsetY(GAME_LIST_OFFSET_Y);
 	end
-	Controls.LogoContainer:SetHide(hideLogo);
-	Controls.MainGrid:ReprocessAnchoring();
-
-	Controls.ListingScrollPanel:CalculateInternalSize();
-	Controls.FriendsButton:SetSizeX(Controls.FriendsCheck:GetSizeX() + 20);
 end
 
--------------------------------------------------
--------------------------------------------------
+-- ===========================================================================
 function OnUpdateUI( type )
 	if( type == SystemUpdateUI.ScreenResize ) then
 		AdjustScreenSize();
 	end
 end
 
--------------------------------------------------
+-- ===========================================================================
 -- Event Handler: MultiplayerGameLaunched
--------------------------------------------------
+-- ===========================================================================
 function OnGameLaunched()
 	--UIManager:DequeuePopup( ContextPtr );
 end
 
 
--------------------------------------------------
+-- ===========================================================================
 -- Event Handler: Load Game Button Handler
--------------------------------------------------
+-- ===========================================================================
 function OnLoadButtonClick()
 	local serverType = ServerTypeForMPLobbyType(m_lobbyModeName);
 	local gameMode = GameModeTypeForMPLobbyType(m_lobbyModeName);
@@ -1128,10 +1128,12 @@ function OnLoadButtonClick()
 	--LuaEvents.Lobby_ShowLoadScreen();
 end
 
+-- ===========================================================================
 function OnJoinCodeStringChange(editBox :table)
 	m_joinCodeText = editBox:GetText();
 end
 
+-- ===========================================================================
 function OnJoinCodeCommit(joinCodeString)
 	m_kPopupDialog:Close(); -- Close popup dialog.
 	if(joinCodeString ~= nil and joinCodeString ~= "") then
@@ -1142,10 +1144,12 @@ function OnJoinCodeCommit(joinCodeString)
 	end
 end
 
+-- ===========================================================================
 function OnJoinCodeOK()
 	OnJoinCodeCommit(m_joinCodeText);
 end
 
+-- ===========================================================================
 function OnListingScrollUpEnd()
 	if(ContextPtr:IsVisible()) then
 		if(IsOffsetScrolling() and not Matchmaking.IsRefreshingGameList()) then
@@ -1159,6 +1163,7 @@ function OnListingScrollUpEnd()
 	end
 end
 
+-- ===========================================================================
 function OnListingScrollDownEnd()
 	if(ContextPtr:IsVisible()) then
 		if(IsOffsetScrolling() and not Matchmaking.IsGameListAtEnd() and not Matchmaking.IsRefreshingGameList()) then
@@ -1176,7 +1181,6 @@ end
 function AlphabeticalSortFunction(field, direction, secondarySort)
 	if(direction == "asc") then
 		return function(a,b)
-			print("Sorting " .. field);
 			local va = (a ~= nil and a[field] ~= nil) and a[field] or "";
 			local vb = (b ~= nil and b[field] ~= nil) and b[field] or "";
 			
@@ -1188,7 +1192,6 @@ function AlphabeticalSortFunction(field, direction, secondarySort)
 		end
 	elseif(direction == "desc") then
 		return function(a,b)
-			print("Sorting " .. field);
 			local va = (a ~= nil and a[field] ~= nil) and a[field] or "";
 			local vb = (b ~= nil and b[field] ~= nil) and b[field] or "";
 			
@@ -1205,7 +1208,6 @@ end
 function NumericSortFunction(field, direction, secondarySort)
 	if(direction == "asc") then
 		return function(a,b)
-			print("Sorting " .. field);
 			local va = (a ~= nil and a[field] ~= nil) and a[field] or -1;
 			local vb = (b ~= nil and b[field] ~= nil) and b[field] or -1;
 			
@@ -1217,7 +1219,6 @@ function NumericSortFunction(field, direction, secondarySort)
 		end
 	elseif(direction == "desc") then
 		return function(a,b)
-			print("Sorting " .. field);
 			local va = (a ~= nil and a[field] ~= nil) and a[field] or -1;
 			local vb = (b ~= nil and b[field] ~= nil) and b[field] or -1;
 
@@ -1255,6 +1256,7 @@ function GetSortFunction(sortOptions)
 	return nil;
 end
 
+-- ===========================================================================
 -- Updates the sort option structure
 function UpdateSortOptionState(sortOptions, selectedOption)
 	-- Current behavior is to only have 1 sort option enabled at a time 
@@ -1421,12 +1423,14 @@ function OnGameDebugReturn( context:string, contextTable:table )
 	end	
 end
 
+-- ===========================================================================
 function OnFriendsListToggled()
 	m_shouldShowFriends = Controls.FriendsCheck:IsChecked();
 	Controls.Friends:SetHide(not m_shouldShowFriends);
 	UpdateFriendsList();
 end
 
+-- ===========================================================================
 function OnBrowserModeClicked(browserMode :number)
 	SetBrowserMode(browserMode); 
 
@@ -1436,6 +1440,7 @@ function OnBrowserModeClicked(browserMode :number)
 	RebuildGameList();
 end
 
+-- ===========================================================================
 function FilterTabsSetSelected(shellTabControl :table)
 	for i,v in ipairs( g_TabInstances ) do
 		local isSelected = shellTabControl == v;
@@ -1443,6 +1448,7 @@ function FilterTabsSetSelected(shellTabControl :table)
 	end
 end
 
+-- ===========================================================================
 function AddShellTab(browserModeType :number, buttonText :string, buttonTooltip :string)
 	local newTab:table = m_shellTabIM:GetInstance();
 	newTab.Button:SetText(buttonText);
@@ -1458,18 +1464,12 @@ function AddShellTab(browserModeType :number, buttonText :string, buttonTooltip 
 	g_TabInstances[browserModeType] = newTab;
 end
 
+-- ===========================================================================
 function RealizeShellTabs()
 	m_shellTabIM:ResetInstances();
 	g_TabInstances = {};
 
 	if(IsUsingPlayByCloudGameList()) then
-		Controls.JoinCodeButton:SetHide(false);
-		
-		Controls.GameListRoot:SetOffsetY(GAME_LIST_TABS_OFFSET_Y);
-		Controls.GameListRoot:SetSizeY(GAME_LIST_TABS_SIZE_Y);
-		Controls.ListingScrollPanel:SetSizeY(LIST_PANEL_TABS_SIZE_Y);
-		Controls.ListingScrollPanelBar:SetSizeY(LIST_TABS_BAR_SIZE_Y);
-		Controls.GameListGrid:SetSizeY(GAME_GRID_TABS_SIZE_Y);
 
 		AddShellTab(LIST_PERSONAL_GAMES, LOC_LOBBY_MY_GAMES, LOC_LOBBY_MY_GAMES_TT);
 		AddShellTab(LIST_PUBLIC_GAMES, LOC_LOBBY_OPEN_GAMES, LOC_LOBBY_OPEN_GAMES_TT);
@@ -1482,20 +1482,14 @@ function RealizeShellTabs()
 
 		-- Set the current browser mode tab as selected.
 		FilterTabsSetSelected(g_TabInstances[m_browserMode]); 
+		Controls.JoinCodeButton:SetHide(false);
 	else
-		Controls.JoinCodeButton:SetHide(true);
-
-		Controls.GameListRoot:SetOffsetY(GAME_LIST_OFFSET_Y);
-		Controls.GameListRoot:SetSizeY(GAME_LIST_SIZE_Y);
-		Controls.ListingScrollPanel:SetSizeY(LIST_PANEL_SIZE_Y);
-		Controls.ListingScrollPanelBar:SetSizeY(LIST_BAR_SIZE_Y);
-		Controls.GameListGrid:SetSizeY(GAME_GRID_TABS_SIZE_Y);
+		Controls.JoinCodeButton:SetHide(true);		
 	end
-
+	
+	AdjustScreenSize();
 	AutoSizeGridButton(Controls.JoinCodeButton,200,32,10,"H");
-
 	Controls.ShellTabs:CalculateSize();
-	Controls.ShellTabs:ReprocessAnchoring();
 end
 
 -- ===========================================================================

@@ -482,6 +482,14 @@ function OnResearchCompleted( ePlayer:number, eTech:number )
 end
 
 -- ===========================================================================
+function OnUpdateDueToCity(ePlayer:number, cityID:number, plotX:number, plotY:number)
+	if (ePlayer == Game.GetLocalPlayer()) then
+		UpdateResearchPanel();
+		UpdateCivicsPanel();
+	end
+end
+
+-- ===========================================================================
 function OnResearchYieldChanged( ePlayer:number )
 	local localPlayer = Game.GetLocalPlayer();
 	if localPlayer ~= -1 and localPlayer == ePlayer then
@@ -635,6 +643,9 @@ function Subscribe()
 	Events.ResearchCompleted.Add(OnResearchCompleted);
 	Events.ResearchYieldChanged.Add(OnResearchYieldChanged);
 	Events.GameCoreEventPublishComplete.Add( OnDirtyCheck ); --This event is raised directly after a series of gamecore events.
+	Events.CityWorkerChanged.Add( OnUpdateDueToCity );
+	Events.CityFocusChanged.Add( OnUpdateDueToCity );
+
 	LuaEvents.LaunchBar_Resize.Add(OnLaunchBarResized);
 	
 	LuaEvents.CivicChooser_ForceHideWorldTracker.Add(	OnForceHide );
@@ -664,6 +675,9 @@ function Unsubscribe()
 	Events.ResearchCompleted.Remove(OnResearchCompleted);
 	Events.ResearchYieldChanged.Remove(OnResearchYieldChanged);
 	Events.GameCoreEventPublishComplete.Remove( OnDirtyCheck ); --This event is raised directly after a series of gamecore events.
+	Events.CityWorkerChanged.Remove( OnUpdateDueToCity );
+	Events.CityFocusChanged.Remove( OnUpdateDueToCity );
+
 	LuaEvents.LaunchBar_Resize.Remove(OnLaunchBarResized);
 	
 	LuaEvents.CivicChooser_ForceHideWorldTracker.Remove(	OnForceHide );

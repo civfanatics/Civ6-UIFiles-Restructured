@@ -1,16 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <Context Name="WorldBuilderPlotEditor">
-  <ScrollPanel ID="PlotEditorScrollPanel" Size="320,480" Vertical="1" AutoScrollBar="1" >
+  <ScrollPanel ID="PlotEditorScrollPanel" Size="320,455" Vertical="1" AutoScrollBar="1" >
     
     <Stack ID="PlotEditorStack" Anchor="R,T" StackGrowth="Bottom" Padding="10">
 
-      <Stack Anchor="R,T" StackGrowth="Left" Padding="5">
-				<Container Size="200,24" >
-					<Label ID="SelectedPlotLabel" Anchor="C,C" Style="FontNormal16" String="LOC_WORLD_BUILDER_NO_PLOT_SELECTED_HELP"/>
-				</Container>
-				<Label Anchor="R,C" Offset="30,0" Style="WorldBuilderPullDownLabel" String="LOC_WORLDBUILDER_SELECTED_PLOT" />
-			</Stack>
+        <Stack Anchor="R,T" StackGrowth="Left" Padding="5">
+		    <Container Size="200,24" >
+		        <Label ID="SelectedPlotLabel" Anchor="C,C" Style="FontNormal16" String=""/>
+		    </Container>
+
+		    <Label Anchor="R,C" Offset="30,0" Style="WorldBuilderPullDownLabel" String="LOC_WORLDBUILDER_SELECTED_PLOT" />
+	   </Stack>
 			
 			<Stack Anchor="R,T" StackGrowth="Left" Padding="5">
 				<SimplePullDown ID="TerrainPullDown" Style="WorldBuilderPropertyPullDown" />
@@ -41,6 +42,13 @@
 
       <GridButton Anchor="R,T" ID="ImprovementPillagedButton" Offset="0,0" Size="200,24" Style="CheckBoxControl" String="LOC_WORLDBUILDER_ATTRIBUTE_IMPROVEMENT_PILLAGED" />
 
+      <Stack Anchor="R,T" StackGrowth="Left" Padding="5">
+        <SimplePullDown ID="DistrictPullDown" Style="WorldBuilderPropertyPullDown" />
+        <Label ID="DistrictLabel" Anchor="L,C" Size="125,29" Style="WorldBuilderPullDownLabel" String="LOC_WORLDBUILDER_ATTRIBUTE_DISTRICT"/>
+      </Stack>
+
+      <GridButton Anchor="R,T" ID="DistrictPillagedButton" Offset="0,0" Size="200,24" Style="CheckBoxControl" String="LOC_WORLDBUILDER_ATTRIBUTE_DISTRICT_PILLAGED" />
+      
       <Stack Anchor="R,T" StackGrowth="Left" Padding="5">
 				<SimplePullDown ID="RoutePullDown" Style="WorldBuilderPropertyPullDown" />
 				<Label ID="RouteLabel" Anchor="L,C" Size="125,29" Style="WorldBuilderPullDownLabel" String="LOC_WORLDBUILDER_ATTRIBUTE_ROUTE"/>        

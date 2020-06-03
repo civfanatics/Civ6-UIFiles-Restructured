@@ -39,7 +39,7 @@
   </Instance>
 
   <Instance							Name="ItemInstance">
-    <Container					ID="Top"								Anchor="R,C"	Offset="0,0"		Size="62,72">
+    <Container					ID="Top"								Anchor="R,C"	Offset="0,0"		Size="62,72" ConsumeMouse="1">
       <ScrollPanel			ID="Clip"								Anchor="L,C"	Offset="-43,0"	Size="2048,66" AnchorSide="O,O" Vertical="0">
         <SlideAnim			ID="NotificationSlide"	Anchor="R,C"	Start="-250,0"	EndOffset="0,0"		Size="255,60" Speed="3" Cycle="Once" FunctionPower="3" Function="Root" Stopped="1">
           <Grid					ID="ExpandedArea"				Anchor="L,C"	Size="250,70"		InnerPadding="20,0"										Texture="ActionPanel_Flyout" SliceTextureSize="64,64" SliceCorner="32,32" ConsumeMouse="1">
@@ -76,7 +76,7 @@
 
   <Instance							Name="ButtonInstance" >
     <Button							ID="Button"							Size="50,50"	Texture="ActionPanel_Notification2" NoStateChange="1">
-      <Image            ID="Icon"               Size="40,40"  Texture="Notifications40" Anchor="C,C"/>
+      <Image            ID="Icon"               Size="40,40"  Texture="Notifications40" Anchor="C,C" />
     </Button>
   </Instance>
 

@@ -78,6 +78,11 @@ function Refresh(selectedPlayerID:number)
 	-- Inform the player they need to be in an alliance to gain alliance points
 	local cityDetailsTooltip:string = localPlayerDiplomacy:GetAlliancePointsTooltip(selectedPlayerID);
 	if allianceType == -1 then
+		if(allianceLevel >= MAX_ALLIANCE_LEVEL) then
+			Controls.CurrentPoints:SetText(Locale.Lookup("LOC_DIPLOMACY_MAX_ALLIANCE_POINTS"));
+			Controls.PointsPerTurn:SetText("");
+			Controls.PointsNeeded:SetText("");
+		end
 		Controls.AlliancePointsContainer:SetToolTipString(Locale.Lookup("LOC_DIPLOMACY_NEED_ALLIANCE_TO_GAIN_POINTS_TT", cityDetailsTooltip));
 	else
 		Controls.AlliancePointsContainer:SetToolTipString(cityDetailsTooltip);

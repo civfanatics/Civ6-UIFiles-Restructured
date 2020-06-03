@@ -521,9 +521,30 @@ function SetSelected( index )
 
 		Controls.Delete:SetHide( true );
     end
+
+	if g_GameType == SaveTypes.WORLDBUILDER_MAP or g_GameType == SaveTypes.TILED_MAP then
+		Controls.GameDetailIconsArea:SetHide(true);
+	else
+		Controls.GameDetailIconsArea:SetHide(false);
+	end
 end
 
------------------------------------------------------------------------------------------------------------------------
+-- ===========================================================================
+--	Create the default filename.
+-- ===========================================================================
+function CreateDefaultFileName( playerID:number, turnNumber:number )
+	local displayTurnNumber :number = turnNumber;
+	if GameCapabilities.HasCapability("CAPABILITY_DISPLAY_NORMALIZED_TURN") then
+		displayTurnNumber = (displayTurnNumber - GameConfiguration.GetStartTurn()) + 1; -- Keep turns starting at 1.
+	end
+	local player		:object = Players[playerID];
+	local playerConfig	:object = PlayerConfigurations[player:GetID()];
+	local strDate		:string = Calendar.MakeYearStr(turnNumber);
+
+	return Locale.ToUpper( Locale.Lookup(playerConfig:GetLeaderName())).." "..displayTurnNumber.. " ".. strDate;
+end
+
+-- ===========================================================================
 function PopulateInspectorData(fileInfo, fileName, mod_errors)
 
 	function LookupBundleOrText(value)
@@ -549,17 +570,12 @@ function PopulateInspectorData(fileInfo, fileName, mod_errors)
 			defaultFileName = UI.GetLastSaveName();
 		else
 			if g_FileType == SaveFileTypes.GAME_STATE then
-				local turnNumber = Game.GetCurrentGameTurn();
-				if GameCapabilities.HasCapability("CAPABILITY_DISPLAY_NORMALIZED_TURN") then
-					turnNumber = (turnNumber - GameConfiguration.GetStartTurn()) + 1; -- Keep turns starting at 1.
+				local turnNumber	:number = Game.GetCurrentGameTurn();
+				local localPlayer	:number = Game.GetLocalPlayer();
+				if localPlayer ~= PlayerTypes.NONE and localPlayer ~= PlayerTypes.OBSERVER then
+					defaultFileName = CreateDefaultFileName( localPlayer, turnNumber );
 				end
-				local localPlayer = Game.GetLocalPlayer();
-				if (localPlayer ~= -1) then
-					local player = Players[localPlayer];
-					local playerConfig = PlayerConfigurations[player:GetID()];
-					local strDate = Calendar.MakeYearStr(turnNumber);
-					defaultFileName = Locale.ToUpper( Locale.Lookup(playerConfig:GetLeaderName())).." "..turnNumber.. " ".. strDate;
-				end
+				
 			end
 		end
 		if not g_DontUpdateFileName then
@@ -568,7 +584,7 @@ function PopulateInspectorData(fileInfo, fileName, mod_errors)
 	end
 		
 	-- Preview image
-	local bHasPreview = UI.ApplyFileQueryPreviewImage( g_LastFileQueryRequestID, fileInfo.Id, Controls.SavedMinimap);
+	local bHasPreview = g_FileType == SaveFileTypes.GAME_STATE and UI.ApplyFileQueryPreviewImage( g_LastFileQueryRequestID, fileInfo.Id, Controls.SavedMinimap);
 	Controls.SavedMinimapContainer:SetShow(bHasPreview);
 	Controls.SavedMinimap:SetShow(bHasPreview);
 	Controls.NoMapDataLabel:SetHide(bHasPreview);

@@ -163,8 +163,18 @@ function Realize()
 	m_kPartialScreens = {};				-- Fresh table
 
 	AddScreenHooks();
-
-	table.insert(m_kPartialScreens, "WorldRankings");	-- Staticly definted in XML
+	
+	-- If no hooks were added, just hide the art.
+	local hooks:number = Controls.ButtonStack:GetNumChildren();	
+	if hooks==0 then
+		if Controls.RootContainer:IsVisible() then
+			Controls.RootContainer:SetHide( true );
+		end
+		return;
+	end	
+	if Controls.RootContainer:IsHidden() then
+		Controls.RootContainer:SetHide( false );
+	end
 
 	-- The Launch Bar width should accomodate how many hooks are currently in the stack.  
 	Controls.ButtonStack:CalculateSize();
@@ -188,10 +198,26 @@ end
 --	tutorial tags within them.
 -- ===========================================================================
 function AddScreenHooks()
+	AddWorldRankingsHook();
 	AddCityStateHook();
 	AddTradeHook();
 	AddEspionageHook();
 	AddReportsHook();
+end
+
+-- ===========================================================================
+--	Special case since world rankings has a tutorial hook.
+--	If it's a MOD that doesn't support it, destroy the control tree that
+--	was defined in the XML.  (Only do this once!)
+-- ===========================================================================
+function AddWorldRankingsHook()
+	if HasCapability("CAPABILITY_DISPLAY_HUD_WORLD_RANKINGS") then
+		table.insert(m_kPartialScreens, "WorldRankings");	-- Staticly defined in XML
+	else
+		if Controls.WorldRankingsStack then
+			Controls.ButtonStack:DestroyChild( Controls.WorldRankingsStack );
+		end
+	end
 end
 
 -- ===========================================================================
@@ -370,7 +396,7 @@ end
 -- ===========================================================================
 function OnInputActionTriggered( actionId:number )
 
-	if actionId == m_ToggleRankingsId and HasCapability("CAPABILITY_WORLD_RANKINGS") then
+	if actionId == m_ToggleRankingsId and HasCapability("CAPABILITY_WORLD_RANKINGS_VIEW") then
         OnToggleWorldRankings();
         UI.PlaySound("Play_UI_Click");
 	end

@@ -11,6 +11,10 @@ include("SupportFunctions");
 
 local PULLDOWN_TRUNCATE_OFFSET:number = 40;
 
+local MIN_SCREEN_Y			:number = 768;
+local SCREEN_OFFSET_Y		:number = 61;
+local MIN_SCREEN_OFFSET_Y	:number = -53;
+
 -- ===========================================================================
 -- ===========================================================================
 
@@ -19,6 +23,8 @@ g_SimpleBooleanParameterManager = InstanceManager:new("SimpleBooleanParameterIns
 g_SimplePullDownParameterManager = InstanceManager:new("SimplePullDownParameterInstance", "Root", Controls.PullDownParent);
 g_SimpleSliderParameterManager = InstanceManager:new("SimpleSliderParameterInstance", "Root", Controls.SliderParent);
 g_SimpleStringParameterManager = InstanceManager:new("SimpleStringParameterInstance", "Root", Controls.EditBoxParent);
+
+g_kMapData = {};	-- Global set of map data; enough for map selection context to do it's thing. (Parameter list still truly owns the data.)
 
 local m_NonLocalPlayerSlotManager	:table = InstanceManager:new("NonLocalPlayerSlotInstance", "Root", Controls.NonLocalPlayersSlotStack);
 local m_singlePlayerID				:number = 0;			-- The player ID of the human player in singleplayer.
@@ -96,6 +102,120 @@ function GetRulesetData(rulesetType)
 	end
 	return m_RulesetData[rulesetType];
 end
+
+-- Cache frequently accessed data.
+local _cachedMapDomain = nil;
+local _cachedMapData = nil;
+function GetMapData( domain:string, file:string )
+	-- Refresh the cache if needed.
+	if(_cachedMapData == nil or _cachedMapDomain ~= domain) then
+		_cachedMapDomain = domain;
+		_cachedMapData = {};
+		local query = "SELECT File, Image, StaticMap from Maps where Domain = ?";
+		local results = DB.ConfigurationQuery(query, domain);
+		if(results) then		
+			for i,v in ipairs(results) do
+				_cachedMapData[v.File] = v;
+			end
+		end
+	end 
+
+	local mapInfo = _cachedMapData[file];
+	if(mapInfo) then
+		local isOfficial = mapInfo.IsOfficial;
+		if(isOfficial == nil) then
+			local modId,path = Modding.ParseModUri(mapInfo.File);
+			isOfficial = (modId == nil) or Modding.IsModOfficial(modId);
+			mapInfo.IsOfficial = isOfficial;
+		end
+		
+		return mapInfo;
+	else
+		-- return nothing.
+		return nil;
+	end
+end
+
+-- ===========================================================================
+--	Build a sub-set of SetupParameters that can be used to populate a
+--	map selection screen.
+--
+--	To send maps:		LuaEvents.MapSelect_PopulatedMaps( g_kMapData );
+--	To receive choice:	LuaEvents.AdvancedSetup_SetMapByHash( Hash );
+-- ===========================================================================
+function BuildMapSelectData( kMapParameters:table )
+	-- Sanity checks
+	if kMapParameters == nil then 
+		UI.DataError("Unable to build data for map selection; NIL kMapParameter passed in.);");
+		return;
+	end
+
+	g_kMapData = {};	-- Clear out existing data.
+
+	-- Loop through maps, create subset of data that is enough to show
+	-- content in a map select context as well as match up with the
+	-- selection.
+	-- Note that "Value" in the table below may be one of the following:
+	--	somename.lua									- A map script that is generated
+	--	{GUID}somefile.Civ6Map							- World builder map prefixed with a GUID
+	--	../..Assets/Maps/SomeFolder/myMap.Civ6Map		- World builder map in another folder
+	--	{GUID}../..Assets/Maps/SomeFolder/myMap.Civ6Map	- World builder map in another folder
+	local kMapCollection:table = kMapParameters.Values;
+	for i,kMapData in ipairs( kMapCollection ) do
+		local kExtraInfo :table = GetMapData(kMapData.Domain, kMapData.Value);
+
+		local mapData = {
+			RawName			= kMapData.RawName,
+			RawDescription	= kMapData.RawDescription,
+			SortIndex		= kMapData.SortIndex,
+			QueryIndex		= kMapData.QueryIndex,
+			Hash			= kMapData.Hash,
+			Value			= kMapData.Value,
+			Name			= kMapData.Name,
+			Texture			= nil,
+			IsWorldBuilder	= false,
+			IsOfficial		= false,
+		};
+
+		if(kExtraInfo) then
+			mapData.IsOfficial		= kExtraInfo.IsOfficial;
+			mapData.Texture			= kExtraInfo.Image;
+			mapData.IsWorldBuilder	= kExtraInfo.StaticMap;
+		end
+		table.insert(g_kMapData, mapData);
+	end
+
+	table.sort(g_kMapData, SortMapsByName);
+end
+
+-- ===========================================================================
+function SortMapsByName(a, b)
+	return Locale.Compare(a.Name, b.Name) == -1;
+end
+
+-- ===========================================================================
+--	LuaEvent
+--	Called from the MapSelect popup for what map hash was selected.
+--	hash	the map hash to set for the game.
+-- ===========================================================================
+function OnSetMapByHash( hash:number )
+	local kParameters	:table = g_GameParameters["Parameters"];
+	local kMapParameters:table = kParameters["Map"];
+	local kMapCollection:table = kMapParameters.Values;
+	local isFound		:boolean = false;
+	for i,kMapData in ipairs( kMapCollection ) do
+		if kMapData.Hash == hash then
+			g_GameParameters:SetParameterValue(kMapParameters, kMapData);
+			Network.BroadcastGameConfig();			
+			isFound = true;
+			break;	
+		end
+	end
+	if (not isFound) then
+		UI.DataError("Unable to set the game's map to a map with the hash '"..tostring(hash).."'");
+	end
+end
+
 -- ===========================================================================
 function CreatePulldownDriver(o, parameter, c, container)
 
@@ -144,7 +264,11 @@ function CreatePulldownDriver(o, parameter, c, container)
 						local entry = {};
 						c:BuildEntry( "InstanceOne", entry );
 						entry.Button:SetText(v.Name);
-						entry.Button:SetToolTipString(v.Description);
+						if v.RawDescription then
+							entry.Button:SetToolTipString(Locale.Lookup(v.RawDescription));
+						else
+							entry.Button:SetToolTipString(v.Description);
+						end
 
 						entry.Button:RegisterCallback(Mouse.eLClick, function()
 							o:SetParameterValue(parameter, v);
@@ -166,6 +290,93 @@ function CreatePulldownDriver(o, parameter, c, container)
 	};
 	
 	return driver;	
+end
+
+-- ===========================================================================
+--	Driver for the simple menu's "Map Select"
+-- ===========================================================================
+function CreateSimpleMapPopupDriver(o, parameter )
+	local uiMapPopupButton:object = Controls.MapSelectButton;
+	local kDriver :table = {
+		UpdateValues = function(o, parameter) 
+			BuildMapSelectData(parameter);
+		end,
+		UpdateValue = function( kValue:table )
+			local valueText			:string = kValue and kValue.Name or nil;
+			local valueDescription	:string = kValue and kValue.Description or nil
+			uiMapPopupButton:SetText( valueText );
+			uiMapPopupButton:SetToolTipString( valueDescription );
+		end
+	}
+	return kDriver;
+end
+
+-- ===========================================================================
+--	Used to launch popups
+--	o				main object of all the parameters
+--	parameter		the parameter being changed
+--	activateFunc	The function to be called when the button is pressed
+--	parent			(optional) The parent control to connect to
+--
+--	RETURNS:		A 'driver' that represents a UI control and various common
+--					functions that manipulate the control in a setup screen.
+-- ===========================================================================
+function CreateButtonPopupDriver(o, parameter, activateFunc, parent )
+
+	-- Sanity check
+	if(activateFunc == nil) then
+		UI.DataError("Ignoring creating popup button because no callback function was passed in. Parameters: name="..parameter.Name..", groupID="..tostring(parameter.GroupId));
+		return {}
+	end
+
+	-- Apply defaults
+	if(parent == nil) then
+		parent = GetControlStack(parameter.GroupId);
+	end
+			
+	-- Get the UI instance
+	local c :object = g_ButtonParameterManager:GetInstance();	
+
+	-- Store the root control, NOT the instance table.
+	g_SortingMap[tostring(c.ButtonRoot)] = parameter;
+
+	c.ButtonRoot:ChangeParent(parent);
+	if c.StringName ~= nil then
+		c.StringName:SetText(parameter.Name);
+	end
+
+	local cache = {};
+
+	local kDriver :table = {
+		Control = c,
+		Cache = cache,
+		UpdateValue = function(value)
+			local valueText = value and value.Name or nil;
+			local valueDescription = value and value.Description or nil
+			if(cache.ValueText ~= valueText or cache.ValueDescription ~= valueDescription) then
+				local button = c.Button;
+				button:RegisterCallback( Mouse.eLClick, activateFunc );					
+				button:SetText(valueText);
+				button:SetToolTipString(valueDescription);
+				cache.ValueText = valueText;
+				cache.ValueDescription = valueDescription;
+			end
+		end,
+		UpdateValues = function(values, p) 
+			BuildMapSelectData(p);
+		end,
+		SetEnabled = function(enabled, parameter)
+			c.Button:SetDisabled(not enabled or #parameter.Values <= 1);
+		end,
+		SetVisible = function(visible)
+			c.ButtonRoot:SetHide(not visible);
+		end,
+		Destroy = function()
+			g_ButtonParameterManager:ReleaseInstance(c);
+		end,
+	};	
+
+	return kDriver;
 end
 
 -- ===========================================================================
@@ -222,12 +433,10 @@ g_ParameterFactories["Map"] = function(o, parameter)
     end
 
 	-- Basic setup version.
-	-- Use an explicit table.
-	table.insert(drivers, CreatePulldownDriver(o, parameter, Controls.CreateGame_MapType, Controls.CreateGame_MapTypeContainer));
-
-	-- Advanced setup version.
-	-- Create the parameter dynamically like we normally would...
-	table.insert(drivers, GameParameters_UI_DefaultCreateParameterDriver(o, parameter));
+	table.insert(drivers, CreateSimpleMapPopupDriver(o, parameter) );
+	
+	-- Advanced setup version.	
+	table.insert( drivers, CreateButtonPopupDriver(o, parameter, OnMapSelect) );
 
 	return drivers;
 end
@@ -555,7 +764,7 @@ function RefreshPlayerSlots()
 	for i, player_id in ipairs(player_ids) do	
 		if(m_singlePlayerID == player_id) then
 			SetupLeaderPulldown(player_id, Controls, "Basic_LocalPlayerPulldown", "Basic_LocalPlayerCivIcon",  "Basic_LocalPlayerCivIconBG", "Basic_LocalPlayerLeaderIcon", m_BasicTooltipData);
-			SetupLeaderPulldown(player_id, Controls, "Advanced_LocalPlayerPulldown", "Advanced_LocalPlayerCivIcon", "Advanced_LocalPlayerCivIconBG", "Advanced_LocalPlayerLeaderIcon", advancedTooltipData);
+			SetupLeaderPulldown(player_id, Controls, "Advanced_LocalPlayerPulldown", "Advanced_LocalPlayerCivIcon", "Advanced_LocalPlayerCivIconBG", "Advanced_LocalPlayerLeaderIcon", advancedTooltipData, "Advanced_LocalColorPullDown");
 		else
 			local ui_instance = m_NonLocalPlayerSlotManager:GetInstance();
 			
@@ -677,7 +886,7 @@ function OnShow()
         Controls.StartButton:LocalizeAndSetText("LOC_LOAD_TILED");
 		MapConfiguration.SetScript("WBImport.lua");
     elseif(bWorldBuilder) then
-		 Controls.CreateGame_MapType:SetDisabled(false);
+		Controls.CreateGame_MapType:SetDisabled(false);
         Controls.CreateGame_MapSize:SetDisabled(false);
         Controls.StartButton:LocalizeAndSetText("LOC_SETUP_WORLDBUILDER_START");
 	else
@@ -741,6 +950,12 @@ function OnAdvancedSetup()
 end
 
 -- ===========================================================================
+function OnMapSelect()
+	LuaEvents.MapSelect_PopulatedMaps( g_kMapData );
+	Controls.MapSelectWindow:SetHide(false);
+end
+
+-- ===========================================================================
 function OnDefaultButton()
 	print("Reseting Setup Parameters");
 
@@ -792,6 +1007,8 @@ function OnBackButton()
 		UpdateCivLeaderToolTip();					-- Need to make sure we update our placard/flyout card if we make a change in advanced setup and then come back
 		m_AdvancedMode = false;		
 	else
+		LuaEvents.MapSelect_ClearMapData();
+		UIManager:DequeuePopup( MapSelectWindow );
 		UIManager:DequeuePopup( ContextPtr );
 	end
 end
@@ -825,12 +1042,16 @@ end
 
 function Resize()
 	local screenX, screenY:number = UIManager:GetScreenSizeVal();
-	local hideLogo = true;
-	if(screenY >= Controls.MainWindow:GetSizeY() + (Controls.LogoContainer:GetSizeY()+ Controls.LogoContainer:GetOffsetY())*2) then
-		hideLogo = false;
+	if(screenY >= MIN_SCREEN_Y + (Controls.LogoContainer:GetSizeY() + Controls.LogoContainer:GetOffsetY() * 2)) then
+		Controls.MainWindow:SetSizeY(screenY - (Controls.LogoContainer:GetSizeY() + Controls.LogoContainer:GetOffsetY() * 2));
+		Controls.CreateGameWindow:SetSizeY(SCREEN_OFFSET_Y + Controls.MainWindow:GetSizeY() - (Controls.ButtonStack:GetSizeY() + Controls.LogoContainer:GetSizeY()));
+		Controls.AdvancedOptionsWindow:SetSizeY(SCREEN_OFFSET_Y + Controls.MainWindow:GetSizeY() - (Controls.ButtonStack:GetSizeY() + Controls.LogoContainer:GetSizeY()));
+	else
+		Controls.MainWindow:SetSizeY(screenY);
+		Controls.CreateGameWindow:SetSizeY(MIN_SCREEN_OFFSET_Y + Controls.MainWindow:GetSizeY() - (Controls.ButtonStack:GetSizeY()));
+		Controls.AdvancedOptionsWindow:SetSizeY(MIN_SCREEN_OFFSET_Y + Controls.MainWindow:GetSizeY() - (Controls.ButtonStack:GetSizeY()));
 	end
-	Controls.LogoContainer:SetHide(hideLogo);
-	Controls.MainGrid:ReprocessAnchoring();
+	
 end
 
 -- ===========================================================================
@@ -847,10 +1068,20 @@ function OnBeforeMultiplayerInviteProcessing()
 end
 
 -- ===========================================================================
+function OnShutdown()
+	Events.FinishedGameplayContentConfigure.Remove(OnFinishedGameplayContentConfigure);
+	Events.SystemUpdateUI.Remove( OnUpdateUI );
+	Events.BeforeMultiplayerInviteProcessing.Remove( OnBeforeMultiplayerInviteProcessing );
+
+	LuaEvents.AdvancedSetup_SetMapByHash.Remove( OnSetMapByHash );
+end
+
+-- ===========================================================================
 --
 -- ===========================================================================
 function Initialize()
 
+	ContextPtr:SetShutdown( OnShutdown );
 	ContextPtr:SetInputHandler( OnInputHandler, true );
 	ContextPtr:SetShowHandler( OnShow );
 	ContextPtr:SetHideHandler( OnHide );
@@ -869,10 +1100,15 @@ function Initialize()
 	Controls.LoadConfig:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 	Controls.SaveConfig:RegisterCallback( Mouse.eLClick, OnSaveConfig );
 	Controls.SaveConfig:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
+	Controls.MapSelectButton:RegisterCallback( Mouse.eLClick, OnMapSelect );
+	Controls.MapSelectButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 	
 	Events.FinishedGameplayContentConfigure.Add(OnFinishedGameplayContentConfigure);
 	Events.SystemUpdateUI.Add( OnUpdateUI );
 	Events.BeforeMultiplayerInviteProcessing.Add( OnBeforeMultiplayerInviteProcessing );
+
+	LuaEvents.AdvancedSetup_SetMapByHash.Add( OnSetMapByHash );
+
 	Resize();
 end
 Initialize();

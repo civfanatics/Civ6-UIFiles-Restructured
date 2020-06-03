@@ -89,15 +89,12 @@
 			<Image Texture="Tutorial_ArrowV" Offset="-24,-20" Size="44,58" FlipY="true"/>
 		</SlideAnim>
 	</Tutorial>
-	
-	<ToolTipType Name="TooltipTypeTopPanel" >
-		<Grid Size="530,90" Offset="8.0" Padding="8,8" Style="TTGrid"  ID="TopPanelMouseover" NoClip="1" >
-			<Label Offset="12,12" Style="FontNormal16" ID="TooltipLabel" String="LOC_TOP_PANEL_TOOLTIP_DESCRIPTION" LeadingOffset="-5" WrapWidth="512" />
-		</Grid>
-	</ToolTipType>
 
-	<Instance Name="ResourceInstance">
-		<Label	ID="ResourceText" Style="FontNormal14" ColorSet="TopBarValueCS"/>
+	<Instance			Name="ResourceInstance">
+    <Container	ID="Top"								Anchor="L,C" Offset="0,2" Size="auto,auto">
+      <Label		ID="ResourceText" Style="FontNormal14" ColorSet="TopBarValueCS"/>
+      <Image		ID="ResourceVelocity"		Anchor="L,B" Offset="10,-1" Size="12,12" Hidden="1"/>
+    </Container>		
 	</Instance>
 	
 	<Instance Name="TopBarButtonInstance">

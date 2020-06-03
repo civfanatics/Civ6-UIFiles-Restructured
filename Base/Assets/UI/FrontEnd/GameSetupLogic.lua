@@ -4,11 +4,12 @@
 include( "InstanceManager" );
 include ("SetupParameters");
 
--- Instance managers for dynamic game options.
-g_BooleanParameterManager = InstanceManager:new("BooleanParameterInstance", "CheckBox", Controls.CheckBoxParent);
-g_PullDownParameterManager = InstanceManager:new("PullDownParameterInstance", "Root", Controls.PullDownParent);
-g_SliderParameterManager = InstanceManager:new("SliderParameterInstance", "Root", Controls.SliderParent);
-g_StringParameterManager = InstanceManager:new("StringParameterInstance", "StringRoot", Controls.EditBoxParent);
+-- Instance managers for dynamic game options (parent is set dynamically).
+g_BooleanParameterManager	= InstanceManager:new("BooleanParameterInstance",	"CheckBox");
+g_PullDownParameterManager	= InstanceManager:new("PullDownParameterInstance",	"Root");
+g_SliderParameterManager	= InstanceManager:new("SliderParameterInstance",	"Root");
+g_StringParameterManager	= InstanceManager:new("StringParameterInstance",	"StringRoot");
+g_ButtonParameterManager	= InstanceManager:new("ButtonParameterInstance",	"ButtonRoot");
 
 g_ParameterFactories = {};
 
@@ -272,6 +273,11 @@ function GameParameters_UI_DefaultCreateParameterDriver(o, parameter, parent)
 			end,
 			SetEnabled = function(enabled, parameter)
 				c.OptionSlider:SetHide(not enabled or parameter.Values == nil or parameter.Values.MinimumValue == parameter.Values.MaximumValue);
+				if(not enabled) then
+					c.Root:SetOffsetX(-140);
+				else
+					c.Root:SetOffsetX(0);
+				end
 			end,
 			SetVisible = function(visible, parameter)
 				c.Root:SetHide(not visible or parameter.Value == nil );
@@ -598,6 +604,7 @@ function BuildHeadlessGameSetup()
 	g_GameParameters:Initialize();
 end
 
+-- ===========================================================================
 -- Hide game setup parameters.
 function HideGameSetup(hideParameterFunc)
 	print("Hiding Game Setup");
@@ -614,12 +621,13 @@ function HideGameSetup(hideParameterFunc)
 		g_PullDownParameterManager:ResetInstances();
 		g_SliderParameterManager:ResetInstances();
 		g_StringParameterManager:ResetInstances();
+		g_ButtonParameterManager:ResetInstances();
 	else
 		hideParameterFunc();
 	end
 end
 
-
+-- ===========================================================================
 function MapSize_ValueNeedsChanging(p)
 	local results = CachedQuery("SELECT * from MapSizes where Domain = ? and MapSizeType = ? LIMIT 1", p.Value.Domain, p.Value.Value);
 

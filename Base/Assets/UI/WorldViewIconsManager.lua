@@ -297,7 +297,7 @@ function GetNonEmptyAt(plotIndex, state)
 
 		if (pPlot) then
 			-- Starting plot?
-			if pPlot:IsStartingPlot() and WorldBuilder.IsActive() then
+			if pPlot:IsStartingPlot() and WorldBuilder.IsActive() and WorldBuilder.GetWBAdvancedMode() then
 				pInstance = GetInstanceAt(plotIndex);
 				pInstance.RecommendationIconTexture:TrySetIcon("ICON_UNITOPERATION_FOUND_CITY", 256);
 				pInstance.RecommendationIconText:SetHide( false );
@@ -774,6 +774,8 @@ function OnShutdown()
 	Events.UserOptionChanged.Remove(OnUserOptionChanged);
 	Events.UserOptionsActivated.Remove( OnUserOptionsActivated );
 	Events.UnitSelectionChanged.Remove( OnUnitSelectionChanged );
+	LuaEvents.WorldBuilder_ModeChanged.Remove( Rebuild );
+	LuaEvents.WorldBuilder_PaintOpCompleted.Remove( Rebuild );
 
 	g_MapIcons = {};
 	g_InstanceManager:DestroyInstances();
@@ -814,6 +816,9 @@ function Initialize()
 	Events.UserOptionChanged.Add(OnUserOptionChanged);
 	Events.UserOptionsActivated.Add( OnUserOptionsActivated );
 	Events.UnitSelectionChanged.Add( OnUnitSelectionChanged );
+	LuaEvents.WorldBuilder_ModeChanged.Add( Rebuild );
+	LuaEvents.WorldBuilder_PaintOpCompleted.Add( Rebuild );
+
 
 	for row in GameInfo.Resources() do
 		if row.PrereqTech ~= nil then

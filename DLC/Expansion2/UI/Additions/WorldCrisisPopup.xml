@@ -30,7 +30,7 @@
                   <Container Size="45,45">
                     <MakeInstance Name="LeaderIcon45" ID="LeaderTargetIcon"/>
                   </Container>
-                  <Image ID="TargetIcon" Texture="Emergency_Target44" Color="255,0,0,255" Size="55,55" Anchor="C,C"/>
+                  <Image ID="TargetIcon" Texture="Emergency_Target56" Color="255,0,0,255" Size="55,55" Offset="0,-2" Anchor="C,C"/>
                 </Container>
                 <Image ID="NoTargetIcon" Size="56,56" Offset="12,0" Anchor="L,C" Hidden="1"/>
                 <Container Anchor="C,T" Offset="0,10" Size="auto,44" Padding="6">

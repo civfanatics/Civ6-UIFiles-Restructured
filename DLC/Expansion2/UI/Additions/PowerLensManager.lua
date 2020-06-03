@@ -5,7 +5,7 @@ include("SupportFunctions");
 -- ===========================================================================
 -- Constants
 -- ===========================================================================
-local COLOR_WHITE:number = UI.GetColorValueFromHexLiteral(0xFFFFFFFF);
+local COLOR_YELLOW:number = UI.GetColorValue("COLOR_YELLOW");
 local COLOR_GREEN:number = UI.GetColorValueFromHexLiteral(0xFF00FF00);
 
 local COLOR_GREEN_HIGHLIGHT:number = UI.GetColorValueFromHexLiteral(0x6400FF00);
@@ -78,7 +78,7 @@ function RealizePowerOverlay()
 	m_PowerRangeOverlay:ShowHighlights(false);
 	m_PowerRangeOverlay:ShowBorders(true);
 
-	m_PowerRangeOverlay:SetBorderColors(0, COLOR_WHITE, COLOR_WHITE);
+	m_PowerRangeOverlay:SetBorderColors(0, COLOR_YELLOW, COLOR_YELLOW);
     m_PowerRangeOverlay:SetPlotChannel(kPowerRangePlots, 0);
 
 	-- Update city plot power highlighting

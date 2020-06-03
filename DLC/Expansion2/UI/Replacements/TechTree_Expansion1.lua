@@ -5,8 +5,6 @@
 include("TechTree");
 include("AllianceResearchSupport");
 
--- Copied from TechTree.lua to avoid modifying original file more than needed
-local ITEM_STATUS = { BLOCKED = 1, READY = 2, CURRENT = 3, RESEARCHED = 4 };
 
 -- ===========================================================================
 --	CACHE BASE FUNCTIONS

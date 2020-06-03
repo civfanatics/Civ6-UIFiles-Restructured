@@ -20,7 +20,7 @@
     <Image Texture="Controls_ButtonExtendSmall" TextureOffset="0,60" Size="20,20" Anchor="L,B" Offset="22,10"/>
   </Grid>
 
-  <Grid						ID="MapOptionsPanel"	Anchor="L,T" AnchorSide="I,O"     Size="220,119" 	Offset="-10,-5" Texture="Tracker_OptionsBacking.dds" SliceCorner="55,61" SliceSize="1,1" SliceTextureSize="121,119" ConsumeAllMouse="1" Hidden="1">
+  <Grid						ID="MapOptionsPanel"	Anchor="L,T" AnchorSide="I,O" Size="220,119" MinSize="121,119" 	Offset="-10,-5" Texture="Tracker_OptionsBacking.dds" SliceCorner="55,61" SliceSize="1,1" SliceTextureSize="121,119" ConsumeAllMouse="1" Hidden="1">
     <Label        ID="MapOptionsLabel" Anchor="C,T" String="{LOC_HUD_MAP_OPTIONS:upper}" Offset="-6,10" Style="FontFlair16" Color0="106,93,69,255" Color1="0,0,0,150" Color2="146,133,109,255" FontStyle="Glow" SmallCaps="20" SmallCapsLeading="0" SmallCapsType="EveryWord" KerningAdjustment="0"/>
     <ScrollPanel	ID="MapOptionsList"		Anchor="C,B" Offset="10,30" Size="parent,parent-60" AutoScrollBar="1" Vertical="1">
       <Stack			ID="MapOptionsStack"	Anchor="R,C" StackGrowth="Bottom" Offset="25,0" StackPadding="1" >

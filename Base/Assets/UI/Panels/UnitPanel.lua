@@ -64,6 +64,7 @@ local m_kTutorialDisabled		:table = {};	-- key = Unit Type, value = lockedHashes
 local m_kTutorialAllDisabled	:table = {};	-- hashes of actions disabled for all units
 
 local m_DeleteInProgress        :boolean = false;
+local m_showPromotionBanner		:boolean = false;
 
 local m_attackerUnit = nil;
 local m_locX = nil;
@@ -588,10 +589,10 @@ function GetUnitActionsTable( pUnit )
 					AddActionToTable( actionsTable, operationRow, isDisabled, toolTipString, actionHash, OnUnitActionClicked, UnitOperationTypes.TYPE, actionHash, "ICON_UNITOPERATION_SPY_COUNTERSPY_ACTION");
 				end
 			elseif (actionHash == UnitOperationTypes.FOUND_CITY) then
-				local bCanStart		:boolean= UnitManager.CanStartOperation( pUnit,  UnitOperationTypes.FOUND_CITY, nil, false, false);	-- No exclusion test, no results
+				local bCanStart, tResults = UnitManager.CanStartOperation( pUnit,  UnitOperationTypes.FOUND_CITY, nil, false, OperationResultsTypes.ALL);	-- No exclusion test
 				if (bCanStart) then
 					local toolTipString	:string	= Locale.Lookup(operationRow.Description);
-					AddActionToTable( actionsTable, operationRow, isDisabled, toolTipString, actionHash, OnUnitActionClicked_FoundCity );
+					AddActionToTable( actionsTable, operationRow, isDisabled, toolTipString, actionHash, function() OnUnitActionClicked_FoundCity(tResults); end);
 				end
 			elseif (actionHash == UnitOperationTypes.WMD_STRIKE) then
 				-- if unit can deploy a WMD, create a unit action for each type
@@ -1030,9 +1031,9 @@ function View(data)
 				promotionInst.Top:SetToolTipString(descriptionStr);
 			end
 		end
-		Controls.PromotionBanner:SetHide(false);
+		m_showPromotionBanner = false;
 	else
-		Controls.PromotionBanner:SetHide(true);
+		m_showPromotionBanner = true;
 	end
 
 	-- Great Person Passive Ability Info
@@ -1215,6 +1216,9 @@ function ShowSubjectUnitStats(showCombat:boolean)
 
 		AddCustomUnitStat("ICON_STATS_SEA_TRADE", tostring(m_subjectData.TradeSeaRange), "LOC_HUD_UNIT_PANEL_SEA_ROUTE_RANGE", xOffset);
 
+		-- Fix case where right after selecting to bombard with a city, a trade unit is selected.
+		Controls.SubjectStatContainer:SetOffsetVal(86,56);
+		Controls.SubjectStatContainer:SetParentRelativeSizeX(-105);
 		return;
 	end
 
@@ -1667,11 +1671,12 @@ function OnShowCombat( showCombat )
 	Controls.CombatPreviewBanners:SetHide(not showCombat);
 	Controls.EnemyUnitPanel:SetHide(not showCombat);
 	
-	if (bAttackerIsUnit) then
+	if (bAttackerIsUnit and m_showPromotionBanner) then
 		if (pAttacker:GetExperience():GetLevel() > 1) then
-			Controls.PromotionBanner:SetHide(showCombat);
+			m_showPromotionBanner = true;
 		end
 	end
+	Controls.PromotionBanner:SetHide(m_showPromotionBanner);
 end
 
 -- Show/Hide Espionage Unit Elements
@@ -2456,11 +2461,28 @@ end
 -- ===========================================================================
 --	UnitAction<FoundCity> was clicked.
 -- ===========================================================================
-function OnUnitActionClicked_FoundCity()
+function OnUnitActionClicked_FoundCity(kResults:table)
 	if (g_isOkayToProcess) then
 		local pSelectedUnit = UI.GetHeadSelectedUnit();
 		if ( pSelectedUnit ~= nil ) then
-			UnitManager.RequestOperation( pSelectedUnit, UnitOperationTypes.FOUND_CITY );
+			if kResults ~= nil and table.count(kResults) ~= 0 then
+				local popupString:string = Locale.Lookup("LOC_FOUND_CITY_CONFIRM_POPUP");
+				if (kResults[UnitOperationResults.FEATURE_TYPE] ~= nil) then
+					local featureName = GameInfo.Features[kResults[UnitOperationResults.FEATURE_TYPE]].Name;
+					popupString = popupString .. "[NEWLINE]" .. Locale.Lookup("LOC_FOUND_CITY_WILL_REMOVE_FEATURE", featureName);
+				end
+				
+				--Request confirmation
+				local pPopupDialog :table = PopupDialogInGame:new("FoundCityAt"); -- unique identifier
+				pPopupDialog:AddText(popupString);
+				pPopupDialog:AddConfirmButton(Locale.Lookup("LOC_YES"), function()
+					UnitManager.RequestOperation( pSelectedUnit, UnitOperationTypes.FOUND_CITY );
+				end);
+				pPopupDialog:AddCancelButton(Locale.Lookup("LOC_NO"), nil);
+				pPopupDialog:Open();
+			else
+				UnitManager.RequestOperation( pSelectedUnit, UnitOperationTypes.FOUND_CITY );
+			end
 		end
 	end
 	if UILens.IsLayerOn( m_HexColoringWaterAvail ) then
@@ -3958,8 +3980,14 @@ function OnPortraitClick()
 end
 
 -- ===========================================================================
-function OnPortraitRightClick()
-	if m_selectedPlayerId ~= -1 then
+function OnPortraitRightClick()	
+	if m_selectedPlayerId == -1 then
+		UI.DataError("The unit panel received a right click ont he portrait but no player is selected.");
+		return;
+	end
+
+	-- Only show the Civilopedia if this game played has it enabled.
+	if GameCapabilities.HasCapability("CAPABILITY_DISPLAY_TOP_PANEL_CIVPEDIA") then
 		local pUnits	:table = Players[m_selectedPlayerId]:GetUnits( );
 		local pUnit		:table = pUnits:FindID( m_UnitId );
 		if (pUnit ~= nil) then
@@ -3967,7 +3995,7 @@ function OnPortraitRightClick()
 			if(unitType) then
 				LuaEvents.OpenCivilopedia(unitType.UnitType);
 			end
-		end
+		end	
 	end
 end
 

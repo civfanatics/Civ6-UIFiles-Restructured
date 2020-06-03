@@ -17,8 +17,8 @@
                 <Label ID="ChoiceHeader"  Anchor="L,T" WrapWidth="425" Style="BodyTextDark14"/>
               </Stack>
               <Stack		ID="ButtonStack"  	Size="450,100"	Anchor="C,T" StackGrowth="Right" StackPadding="30">
-                <GridButton   ID="Button1"     Size="200,41"   Style="MainButton"/>
-                <GridButton   ID="Button2"     Size="200,41"   Style="MainButton"/>
+                <GridButton   ID="Button1"     Size="200,41"   Style="MainButton" TruncateWidth="190" TruncatedTooltip="1"/>
+                <GridButton   ID="Button2"     Size="200,41"   Style="MainButton" TruncateWidth="190" TruncatedTooltip="1"/>
               </Stack>
             </Stack>
           </Grid>

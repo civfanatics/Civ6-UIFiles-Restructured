@@ -453,7 +453,7 @@ function DisplayCivLeaderToolTip(info:table, tooltipControls:table, alwaysHide:b
 
 	local showLeaderPortrait = false;
 	local showToolTip = false;
-	if(info.CivilizationName ~= "LOC_RANDOM_CIVILIZATION" and not alwaysHide) then --If we are showing leader data flyouts, then make sure we are playing forwards, and play until shown
+	if(not alwaysHide and info.CivilizationName ~= "LOC_RANDOM_CIVILIZATION") then --If we are showing leader data flyouts, then make sure we are playing forwards, and play until shown
 		showLeaderPortrait, showToolTip = SetUniqueCivLeaderData(info, tooltipControls);
 	end
 
@@ -544,7 +544,7 @@ function SetUniqueCivLeaderData(info:table, tooltipControls:table)
 
 		civAbility.Icon:SetIcon(info.CivilizationIcon);
 
-		local backColor, frontColor = UI.GetPlayerColorValues(info.PlayerColor, 0);
+		local backColor, frontColor = UI.GetPlayerColorValues(info.PlayerColor, info.PlayerColorIndex or 0);
 		if(backColor and frontColor and backColor ~= 0 and frontColor ~= 0) then
 			civAbility.Icon:SetColor(frontColor);
 			civAbility.IconBG:SetColor(backColor);
@@ -625,7 +625,17 @@ end
 -- It then appends a driver to the setup parameter to control a visual 
 -- representation of the parameter
 -------------------------------------------------------------------------------
-function SetupLeaderPulldown(playerId:number, instance:table, pulldownControlName:string, civIconControlName, civIconBGControlName, leaderIconControlName, tooltipControls:table)
+function SetupLeaderPulldown(
+	playerId:number, 
+	instance:table, 
+	pulldownControlName:string, 
+	civIconControlName, 
+	civIconBGControlName, 
+	leaderIconControlName, 
+	tooltipControls:table,
+	colorPullDownName,
+	colorWarnName	
+)
 	local parameters = GetPlayerParameters(playerId);
 	if(parameters == nil) then
 		parameters = CreatePlayerParameters(playerId);
@@ -655,6 +665,39 @@ function SetupLeaderPulldown(playerId:number, instance:table, pulldownControlNam
 	local civIconBG = instance[civIconBGControlName];
 	local leaderIcon = instance[leaderIconControlName];
 	local instanceManager = control["InstanceManager"];
+	
+	-- Jersey support
+	colorPullDownName = colorPullDownName or "ColorPullDown";
+	colorWarnName = colorWarnName or "WarnIcon";
+	
+	local colorControls;
+	local colorControl = instance[colorPullDownName];
+	local colorWarnIcon = instance[colorWarnName];
+	local colorInstanceManager;
+	if(colorControl) then
+		colorInstanceManager = colorControl["InstanceManager"]	
+		if (colorInstanceManager == nil) then
+			colorInstanceManager = PullDownInstanceManager:new( "InstanceOne", "Button", colorControl );
+			colorControl["InstanceManager"] = colorInstanceManager;
+		end
+
+		if(colorInstanceManager) then
+			colorControls = parameters.Controls["PlayerColorAlternate"];
+			if(colorControls == nil) then
+				colorControls = {};
+				parameters.Controls["PlayerColorAlternate"] = colorControls;
+			end
+		end
+	end
+
+	if(colorControl) then
+		colorControl:SetDisabled(true);
+	end
+
+	if(colorWarnIcon) then
+		colorWarnIcon:SetHide(true);
+	end
+	
 	if not instanceManager then
 		instanceManager = PullDownInstanceManager:new( "InstanceOne", "Button", control );
 		control["InstanceManager"] = instanceManager;
@@ -672,18 +715,139 @@ function SetupLeaderPulldown(playerId:number, instance:table, pulldownControlNam
 		CivilizationName = "LOC_RANDOM_CIVILIZATION",
 		LeaderName = "LOC_RANDOM_LEADER"
 	};
+	
+	local useJerseySelection = (colorControls ~= nil);
 
+
+	-- Utility function to test setup parameter values for equality.
+	function ValuesMatch(a,b)
+		local at = type(a);
+		local bt = type(b);
+
+		if(at ~= bt) then
+			return false;
+		elseif(at == "number") then
+			return a == b;
+		elseif(at == "table") then
+			return a.QueryId == b.QueryId and a.QueryIndex == b.QueryIndex and a.Invalid == b.Invalid and a.InvalidReason == b.InvalidReason
+		else
+			return a == b;
+		end
+	end
+		
 	local cache = {};
+	if(useJerseySelection) then
+		table.insert(colorControls, {
+			UpdateValue = function(v)
+				local refresh = true;
+
+				local leaderParameter = parameters.Parameters["PlayerLeader"];
+				local colorIndex = v or 0;
+				if(	leaderParameter and ValuesMatch(leaderParameter.Value, cache.PlayerValue) and
+					ValuesMatch(colorIndex, cache.PlayerColorValue)) then
+					refresh = false;
+				end
+
+				if(refresh) then
+					local button = control:GetButton();
+									
+					local icons;
+					if(leaderParameter.Value) then
+						icons = GetPlayerIcons(leaderParameter.Value.Domain, leaderParameter.Value.Value);
+					end
+
+					local backColor, frontColor = UI.GetPlayerColorValues(icons.PlayerColor, colorIndex);		
+					if(backColor and frontColor and backColor ~= 0 and frontColor ~= 0) then
+						civIcon:SetSizeVal(36,36);
+						civIcon:SetIcon(icons.CivIcon);
+        				civIcon:SetColor(frontColor);
+						civIconBG:SetColor(backColor);
+						civIconBG:SetHide(false);
+					else
+						civIcon:SetSizeVal(45,45);
+						civIcon:SetIcon(icons.CivIcon, 45);
+        				civIcon:SetColor(UI.GetColorValue(1,1,1,1));
+						civIconBG:SetHide(true);
+					end
+
+					cache.PlayerColorValue = pcv;
+				end				
+			end,
+			UpdateValues = function(values, parameter)
+
+				local leaderParameter = parameters.Parameters["PlayerLeader"];
+				if(	leaderParameter and ValuesMatch(leaderParameter.Value, cache.PlayerValue)) then
+					refresh = false;
+				end
+				
+				local icons;
+				if(leaderParameter.Value) then
+					icons = GetPlayerIcons(leaderParameter.Value.Domain, leaderParameter.Value.Value);
+				end
+				
+				local itemCount = 0;
+				colorInstanceManager:ResetInstances();
+
+				if(icons) then
+					for j = 0, 3, 1 do					
+						local backColor, frontColor = UI.GetPlayerColorValues(icons.PlayerColor, j);
+						if(backColor and frontColor and backColor ~= 0 and frontColor ~= 0) then
+							local colorEntry = colorInstanceManager:GetInstance();
+							itemCount = itemCount + 1;
+	
+							colorEntry.CivIcon:SetIcon(icons.CivIcon);
+							colorEntry.CivIcon:SetColor(frontColor);
+							colorEntry.CivIconBG:SetColor(backColor);
+							colorEntry.Button:SetToolTipString(nil);
+							colorEntry.Button:RegisterCallback(Mouse.eLClick, function()
+								if(playerId == 0 and m_currentInfo) then
+									m_currentInfo.PlayerColorIndex = j;
+								end
+
+								parameters:SetParameterValue(parameter, j);
+							end);
+						end           
+					end
+				end
+
+				colorControl:CalculateInternals();
+
+				local notExternalEnabled = not CheckExternalEnabled(playerId, true, true);
+				local singleOrEmpty = itemCount == 0 or itemCount == 1;
+
+				colorControl:SetDisabled(notExternalEnabled or singleOrEmpty);
+			end,
+			SetEnabled = function(enabled, parameter)
+				local notExternalEnabled = not CheckExternalEnabled(playerId, enabled, true);
+				--local singleOrEmpty = #parameter.Values <= 1;
+				--colorControl:SetDisabled(notExternalEnabled or singleOrEmpty);
+			end
+		});
+	end
 
 	table.insert(controls, {
 		UpdateValue = function(v)
 			local refresh = true;
-			local cv = cache.Value;
-			if(v and cv and cv.QueryId == v.QueryId and cv.QueryIndex == v.QueryIndex and cv.Invalid == v.Invalid and cv.InvalidReason == v.InvalidReason) then
+
+			local leaderParameter = parameters.Parameters["PlayerLeader"];
+			local colorParameter = parameters.Parameters["PlayerColorAlternate"];
+			local colorIndex = colorParameter and colorParameter.Value or 0;
+
+			-- Compare PlayerValue (value) and PlayerColorValues (int) w/ cache.
+			if(	ValuesMatch(leaderParameter.Value, cache.PlayerValue) and
+				ValuesMatch(colorIndex, cache.PlayerColorValue)) then
 				refresh = false;
 			end
-
+						
 			if(refresh) then
+				-- If this is player 0, update the placard.
+				if(playerId == 0) then
+					local info = GetPlayerInfo(v.Domain, v.Value); 
+					info.PlayerColorIndex = colorIndex;
+					
+					m_currentInfo = info;
+				end
+
 				local button = control:GetButton();
 
 				if(v == nil) then
@@ -701,8 +865,7 @@ function SetupLeaderPulldown(playerId:number, instance:table, pulldownControlNam
 			
 					local icons = GetPlayerIcons(v.Domain, v.Value);
 
-					local backColor, frontColor = UI.GetPlayerColorValues(icons.PlayerColor, 0);
-					
+					local backColor, frontColor = UI.GetPlayerColorValues(icons.PlayerColor, colorIndex);
 					if(backColor and frontColor and backColor ~= 0 and frontColor ~= 0) then
 						civIcon:SetSizeVal(36,36);
 						civIcon:SetIcon(icons.CivIcon);
@@ -721,34 +884,32 @@ function SetupLeaderPulldown(playerId:number, instance:table, pulldownControlNam
 					end
 
 					if(not tooltipControls.HasLeaderPlacard) then
-						local info; -- Upvalue
+						local info; -- Up-value
 						local domain = v.Domain;
 						local value = v.Value;
 						button:RegisterCallback( Mouse.eMouseEnter, function() 
 							if(info == nil) then info = GetPlayerInfo(domain, value); end
+							info.PlayerColorIndex = colorIndex;
 							DisplayCivLeaderToolTip(info, tooltipControls, false); 
 						end);
 						button:RegisterCallback( Mouse.eMouseExit, function() 
-							if(info == nil) then info = GetPlayerInfo(domain, value); end
-							DisplayCivLeaderToolTip(info, tooltipControls, true); 
+							DisplayCivLeaderToolTip(nil, tooltipControls, true); 
 						end);
 					end
 
-					cache.Value = v;
+					cache.PlayerValue = v;
+					cache.PlayerColorValue = colorIndex;
 				end		
 			end
 		end,
 		UpdateValues = function(values)
 
 			local refresh = false;
-			local cValues = cache.Values;
+			local cValues = cache.PlayerValues;
 			if(cValues and #cValues == #values) then
 				for i,v in ipairs(values) do
 					local cv = cValues[i];
-					if(cv == nil) then
-						refresh = true;
-						break;
-					elseif(cv.QueryId ~= v.QueryId or cv.QueryIndex ~= v.QueryIndex or cv.Invalid ~= v.Invalid or cv.InvalidReason ~= v.InvalidReason) then
+					if(not ValuesMatch(cv,v)) then
 						refresh = true;
 						break;
 					end
@@ -779,7 +940,6 @@ function SetupLeaderPulldown(playerId:number, instance:table, pulldownControlNam
 					end
 
 					local backColor, frontColor = UI.GetPlayerColorValues(icons.PlayerColor, 0);
-					
 					if(backColor and frontColor and backColor ~= 0 and frontColor ~= 0) then
 						entry.CivIcon:SetSizeVal(36,36);
 						entry.CivIcon:SetIcon(icons.CivIcon);
@@ -807,17 +967,22 @@ function SetupLeaderPulldown(playerId:number, instance:table, pulldownControlNam
 
 					entry.Button:RegisterCallback( Mouse.eMouseExit, OnMouseExit);
 					entry.Button:SetToolTipString(nil);			
+
 					entry.Button:RegisterCallback(Mouse.eLClick, function()
 						local parameter = parameters.Parameters["PlayerLeader"];
 						parameters:SetParameterValue(parameter, v);
-						if(playerId == 0) then
-							if(info == nil) then info = GetPlayerInfo(domain, value); end
-							m_currentInfo = info;
+
+						-- Reset Jersey Color
+						-- TODO: Ideally, this should try to select a jersey that doesn't conflict.
+						local colorParameter = parameters.Parameters["PlayerColorAlternate"];
+						if(colorParameter) then
+							parameters:SetParameterValue(colorParameter, 0);
 						end
+
 					end);
 				end
 				control:CalculateInternals();
-				cache.Values = values;
+				cache.PlayerValues = values;
 			end
 		end,
 		SetEnabled = function(enabled, parameter)

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Context xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="..\..\..\..\..\CivTech\Libs\ForgeUI\ForgeUI_Assets\Controls.xsd">
+<Context xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="..\..\..\..\..\..\CivTech\Libs\ForgeUI\ForgeUI_Assets\Controls.xsd">
   <Include File="LeaderIcon"/>
-  <Container ID="" Style="FullScreenVignetteConsumer" Size="parent,parent-29"/>
+  <Container Style="FullScreenVignetteConsumer" Size="parent,parent-29"/>
 
 	<Box						ID="Main"						Anchor="C,C"									Size="1024,789"						Color="11,27,40,255">
 		<Grid															Anchor="C,C"									Size="parent+9,parent+9"	Style="WindowFrameTopOnly" />
@@ -642,18 +642,18 @@
       <Stack	StackGrowth="Right" >
         <Box																													Size="2,parent"	Color="46,70,95,128" />
         <Container																			Offset="1,0"	Size="79,parent">
-          <Label													Style="ReportHeaderSmallText"		String="LOC_HUD_REPORTS_DATE" />
+          <Label													Style="ReportHeaderSmallText"		String="LOC_HUD_REPORTS_TURN" />
         </Container>
         <Box																													Size="2,parent"	Color="46,70,95,255" />
-        <Container																										Size="55,parent">
+        <Container																										Size="70,parent">
           <Label													Style="ReportHeaderSmallText"		String="LOC_HUD_REPORTS_GOSSIP_TYPE" />
         </Container>
         <Box																													Size="2,parent"	Color="46,70,95,255" />
-        <Container																										Size="55,parent">
+        <Container																										Size="79,parent">
           <Label													Style="ReportHeaderSmallText"		String="LOC_HUD_REPORTS_LEADER" />
         </Container>
         <Box																													Size="2,parent"	Color="46,70,95,255" />
-        <Container																										Size="parent-210,parent">
+        <Container																										Size="parent-249,parent">
           <Label													Style="ReportHeaderSmallText"		String="LOC_REPORTS_NOTIFICATION_DESCRIPTION" />
         </Container>
         <Box																													Offset="11,0" Size="2,parent"	Color="46,70,95,255" />
@@ -670,15 +670,15 @@
           <Label				ID="Date"																	Style="ReportValueText"	String="$Name$" />
         </Container>
         <Box																													Size="2,parent"	Color="46,70,95,255" />
-        <Container																										Size="55,55">
+        <Container																										Size="70,55">
           <Image				ID="Icon"																	    Size="48,48" Offset="0,6" Anchor="C,C" />
         </Container>
         <Box																													Size="2,parent"	Color="46,70,95,255" />
-        <Container																										Size="55,55">
+        <Container																										Size="79,55">
           <MakeInstance Name="LeaderIcon45"                           ID="Leader" Offset="0,6" Anchor="C,C" />	
         </Container>
         <Box																													Size="2,parent"	Color="46,70,95,255" />
-        <Container																								    Size="parent-210,parent">
+        <Container																								    Size="parent-249,parent">
           <Label				ID="Description"															Style="ReportValueText"	String="$Description$" WrapWidth="400"/>
         </Container>
         <Box																													Offset="11,0" Size="2,parent"	Color="46,70,95,255" />
@@ -694,7 +694,7 @@
         <Container																			Offset="1,5"	Size="268,parent">
           <PullDown ID="PlayerFilter" Offset="0,0" Size="268,62" AutoFlip="1" AutoSizePopup="1" ScrollThreshold="375" SpaceForScroll="0">
             <ButtonData>
-              <GridButton  Size="325,62" Style="TabFont" TextAnchor="L,C" TextOffset="110,0" WrapWidth="200">
+              <GridButton  Size="325,62" Style="TabFont" TextAnchor="C,C" TextOffset="15,0" WrapWidth="150">
                 <Container Size="auto,auto" Anchor="L,C" Offset="10,-1">
                   <MakeInstance Anchor="L,C" ID="LeaderIcon" Name="LeaderIcon45"/>
                 </Container>
@@ -707,7 +707,7 @@
             </ScrollPanelData>
             <StackData StackGrowth="Bottom" Anchor="L,T"/>
             <InstanceData Name="InstanceOne">
-              <GridButton ID="Button" Size="536,62" Texture="Reports_ButtonControl" SliceCorner="12,6" SliceTextureSize="45,24"  StateOffsetIncrement="0,24" Style="TabFont" Anchor="L,T" FontStyle="glow">
+              <GridButton ID="Button" Size="536,62" Texture="Reports_ButtonControl" SliceCorner="12,6" WrapWidth="150" TextOffset="15,0" TextAnchor="C,C" SliceTextureSize="45,24"  StateOffsetIncrement="0,24" Style="TabFont" Anchor="L,T" FontStyle="glow">
                 <Container Size="auto,auto" Anchor="L,C" Offset="10,-1">
                   <MakeInstance Anchor="L,C" ID="LeaderIcon" Name="LeaderIcon45"/>
                 </Container>
@@ -734,6 +734,31 @@
         </Container>
       </Stack>
       <Box																													Offset="-1,0" Anchor="R,C" Size="2,parent"	Color="46,70,95,255"/>
+    </Container>
+  </Instance>
+
+  <Instance					Name="GossipPageInstance">
+    <Container			ID="Top"														Offset="8,0" Size="994,42">
+      <Image																						Offset="4,0"	Size="parent-6,parent" Texture="Controls_GradientSmall" FlipY="1" Color="39,89,137,125" />
+      <Stack ID="ButtonStack" Anchor="C,C" StackGrowth="Right" Padding="2">
+        <GridButton ID="LeftArrow"  Size="32,32" Style="ButtonControl" String="&lt;"/>
+        <Stack ID="LeftJumpStack" StackGrowth="Right" Padding="2">
+          <GridButton ID="FirstButton"  Size="32,32" Style="ButtonControl" String="1"/>
+          <Label String="..." Anchor="C,C" Style="ReportHeaderSmallText"/>
+        </Stack>
+        <Stack ID="MainButtons" StackGrowth="Right" Padding="2">
+          <GridButton ID="Button1" Size="32,32" Style="ButtonControl"/>
+          <GridButton ID="Button2" Size="32,32" Style="ButtonControl"/>
+          <GridButton ID="Button3" Size="32,32" Style="ButtonControl"/>
+          <GridButton ID="Button4" Size="32,32" Style="ButtonControl"/>
+          <GridButton ID="Button5" Size="32,32" Style="ButtonControl"/>
+        </Stack>
+        <Stack ID="RightJumpStack" StackGrowth="Right" Padding="2">
+          <Label String="..." Anchor="C,C" Style="ReportHeaderSmallText"/>
+          <GridButton ID="LastButton"  Size="32,32" Style="ButtonControl"/>
+        </Stack>
+        <GridButton ID="RightArrow" Size="32,32" Style="ButtonControl" String="&gt;"/>
+      </Stack>
     </Container>
   </Instance>
 

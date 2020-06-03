@@ -30,5 +30,6 @@
 		<Row Name="ICON_WB_TOOL_REDO"  					Atlas="ICON_WORLDBUILDER_TOOLS" Index="23"/>
 		<Row Name="ICON_WB_TOOL_PLAYER_DETAILS"  		Atlas="ICON_WORLDBUILDER_TOOLS" Index="24"/>
 		<Row Name="ICON_WB_TOOL_HAMBURGER_MENU"  		Atlas="ICON_WORLDBUILDER_TOOLS" Index="25"/>
+		<Row Name="ICON_WB_TOOL_WONDERS"  				Atlas="ICON_WORLDBUILDER_TOOLS" Index="26"/>
 	</IconDefinitions>
 </GameInfo>

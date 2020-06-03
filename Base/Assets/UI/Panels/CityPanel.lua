@@ -77,6 +77,8 @@ local PANEL_BUTTON_LOCATIONS:table = {};
 		PANEL_BUTTON_LOCATIONS[3] = {x=79, y=90};
 local HOUSING_LABEL_OFFSET:number = 66;
 
+-- Mirrored in ProductionPanel
+local LISTMODE:table = {PRODUCTION = 1, PURCHASE_GOLD = 2, PURCHASE_FAITH = 3, PROD_QUEUE = 4};
 
 m_PurchasePlot						 = UILens.CreateLensLayerHash("Purchase_Plot");
 local m_CitizenManagement	: number = UILens.CreateLensLayerHash("Citizen_Management");
@@ -552,9 +554,6 @@ end
 --	GAME Event
 -- ===========================================================================
 function OnCityProductionChanged(ownerPlayerID:number, cityID:number)
-	if Controls.ChangeProductionCheck:IsChecked() then
-		Controls.ChangeProductionCheck:SetCheck(false);
-	end
 	RefreshIfMatch(ownerPlayerID, cityID);
 end
 
@@ -737,6 +736,34 @@ end
 function OnShutdown()
 	-- Cache values for hotloading...
 	LuaEvents.GameDebug_AddValue("CityPanel", "isHidden",				ContextPtr:IsHidden() );
+
+	-- Game Core Events
+	Events.CityAddedToMap.Remove(			OnCityAddedToMap );
+	Events.CityNameChanged.Remove(			OnCityNameChanged );
+	Events.CitySelectionChanged.Remove(		OnCitySelectionChanged );
+	Events.CityFocusChanged.Remove(			OnCityFocusChange );
+	Events.CityProductionCompleted.Remove(	OnCityProductionCompleted );
+	Events.CityProductionUpdated.Remove(	OnCityProductionUpdated );	
+	Events.CityProductionChanged.Remove(	OnCityProductionChanged );
+	Events.CityWorkerChanged.Remove(		OnCityWorkerChanged );
+	Events.DistrictDamageChanged.Remove(	OnCityProductionChanged );
+	Events.LocalPlayerTurnBegin.Remove(		OnLocalPlayerTurnBegin );
+	Events.ImprovementChanged.Remove(		OnCityProductionChanged );
+	Events.InterfaceModeChanged.Remove(		OnInterfaceModeChanged );
+	Events.LocalPlayerChanged.Remove(		OnLocalPlayerChanged );
+	Events.PlayerResourceChanged.Remove(	OnPlayerResourceChanged );
+	Events.UnitSelectionChanged.Remove(		OnUnitSelectionChanged );
+
+	-- LUA Events
+	LuaEvents.CityPanelOverview_CloseButton.Remove(		OnCloseOverviewPanel );
+	LuaEvents.CityPanel_SetOverViewState.Remove(		OnCityPanelSetOverViewState );
+	LuaEvents.CityPanel_ToggleManageCitizens.Remove(	OnCityPanelToggleManageCitizens );
+	LuaEvents.GameDebug_Return.Remove(					OnGameDebugReturn );	
+	LuaEvents.ProductionPanel_Close.Remove(				OnProductionPanelClose );
+	LuaEvents.ProductionPanel_ListModeChanged.Remove(	OnProductionPanelListModeChanged );
+	LuaEvents.ProductionPanel_Open.Remove(				OnProductionPanelOpen );
+	LuaEvents.Tutorial_CityPanelOpen.Remove(			OnTutorialOpen );
+	LuaEvents.Tutorial_ContextDisableItems.Remove(		OnTutorial_ContextDisableItems );
 end
 
 -- ===========================================================================
@@ -901,9 +928,6 @@ function OnToggleProduction()
 	if Controls.ChangeProductionCheck:IsChecked() then
 		RecenterCameraOnCity();
 		LuaEvents.CityPanel_ProductionOpen();
-		Controls.ProduceWithFaithCheck:SetCheck( false );
-		Controls.ProduceWithGoldCheck:SetCheck( false );
-		--AnimateToWithProductionQueue();
 	else
 		LuaEvents.CityPanel_ProductionClose();
 	end
@@ -914,9 +938,6 @@ function OnTogglePurchaseWithGold()
 	if Controls.ProduceWithGoldCheck:IsChecked() then
 		RecenterCameraOnCity();
 		LuaEvents.CityPanel_PurchaseGoldOpen();
-		Controls.ChangeProductionCheck:SetCheck( false );
-		Controls.ProduceWithFaithCheck:SetCheck( false );
-		--AnimateToWithProductionQueue();
 	else
 		LuaEvents.CityPanel_ProductionClose();
 	end
@@ -927,17 +948,16 @@ function OnTogglePurchaseWithFaith()
 	if Controls.ProduceWithFaithCheck:IsChecked() then
 		RecenterCameraOnCity();
 		LuaEvents.CityPanel_PurchaseFaithOpen();
-		Controls.ChangeProductionCheck:SetCheck( false );
-		Controls.ProduceWithGoldCheck:SetCheck( false );
-		--AnimateToWithProductionQueue();
 	else
 		LuaEvents.CityPanel_ProductionClose();
 	end
 end
 
+-- ===========================================================================
 function OnCloseOverviewPanel()
 	Controls.ToggleOverviewPanel:SetCheck(false);
 end
+
 -- ===========================================================================
 --	Turn on/off layers and switch the interface mode based on what is checked.
 --	Interface mode is changed first as the Lens system may inquire as to the
@@ -1053,6 +1073,23 @@ function OnCityMadePurchase(owner:number, cityID:number, plotX:number, plotY:num
 end
 
 -- ===========================================================================
+function OnProductionPanelListModeChanged( listMode:number )
+	Controls.ChangeProductionCheck:SetCheck(listMode == LISTMODE.PRODUCTION or listMode == LISTMODE.PROD_QUEUE);
+	Controls.ProduceWithGoldCheck:SetCheck(listMode == LISTMODE.PURCHASE_GOLD);
+	Controls.ProduceWithFaithCheck:SetCheck(listMode == LISTMODE.PURCHASE_FAITH);
+end
+
+-- ===========================================================================
+function OnCityPanelSetOverViewState( isOpened:boolean )
+	Controls.ToggleOverviewPanel:SetCheck(isOpened);
+end
+
+-- ===========================================================================
+function OnCityPanelToggleManageCitizens()
+	Controls.ManageCitizensCheck:SetAndCall(not Controls.ManageCitizensCheck:IsChecked());
+end
+
+-- ===========================================================================
 --	GAME Event
 --	eOldMode, mode the engine was formally in
 --	eNewMode, new mode the engine has just changed to
@@ -1101,7 +1138,7 @@ function OnInterfaceModeChanged( eOldMode:number, eNewMode:number )
 			local districtHash:number	= UI.GetInterfaceModeParameter(CityOperationTypes.PARAM_DISTRICT_TYPE);
 			local district:table		= GameInfo.Districts[districtHash];
 			local kPlot		:table			= Map.GetPlotByIndex(newGrowthPlot);
-			if kPlot:CanHaveDistrict(district.Index, m_pPlayer, g_pCity:GetID()) then
+			if kPlot:CanHaveDistrict(district.Index, g_pCity:GetOwner(), g_pCity:GetID()) then
 				DisplayGrowthTile();
 			end
 		end
@@ -1112,7 +1149,7 @@ function OnInterfaceModeChanged( eOldMode:number, eNewMode:number )
 			local buildingHash :number = UI.GetInterfaceModeParameter(CityOperationTypes.PARAM_BUILDING_TYPE);
 			local building = GameInfo.Buildings[buildingHash];
 			local kPlot		:table			= Map.GetPlotByIndex(newGrowthPlot);
-			if kPlot:CanHaveWonder(building.Index, m_pPlayer, g_pCity:GetID()) then
+			if kPlot:CanHaveWonder(building.Index, g_pCity:GetOwner(), g_pCity:GetID()) then
 				DisplayGrowthTile();
 			end
 		end
@@ -1265,22 +1302,19 @@ function Initialize()
 	Events.ImprovementChanged.Add(		OnCityProductionChanged );
 	Events.InterfaceModeChanged.Add(	OnInterfaceModeChanged );
 	Events.LocalPlayerChanged.Add(		OnLocalPlayerChanged );
-	Events.UnitSelectionChanged.Add(	OnUnitSelectionChanged );
 	Events.PlayerResourceChanged.Add(	OnPlayerResourceChanged );
+	Events.UnitSelectionChanged.Add(	OnUnitSelectionChanged );
 
 	-- LUA Events
-	LuaEvents.CityPanelOverview_CloseButton.Add( OnCloseOverviewPanel );
-	LuaEvents.GameDebug_Return.Add( OnGameDebugReturn );			-- hotloading help	
-	LuaEvents.ProductionPanel_Close.Add( OnProductionPanelClose );
-	LuaEvents.ProductionPanel_Open.Add( OnProductionPanelOpen );
-	LuaEvents.Tutorial_CityPanelOpen.Add( OnTutorialOpen );
-	LuaEvents.Tutorial_ContextDisableItems.Add( OnTutorial_ContextDisableItems );
-	LuaEvents.CityPanel_SetOverViewState.Add(function(isOpened)
-		Controls.ToggleOverviewPanel:SetCheck(isOpened);
-	end);
-	LuaEvents.CityPanel_ToggleManageCitizens.Add(function()
-		Controls.ManageCitizensCheck:SetAndCall(not Controls.ManageCitizensCheck:IsChecked());
-	end);
+	LuaEvents.CityPanelOverview_CloseButton.Add(	OnCloseOverviewPanel );
+	LuaEvents.CityPanel_SetOverViewState.Add(		OnCityPanelSetOverViewState );
+	LuaEvents.CityPanel_ToggleManageCitizens.Add(	OnCityPanelToggleManageCitizens );
+	LuaEvents.GameDebug_Return.Add(					OnGameDebugReturn );	
+	LuaEvents.ProductionPanel_Close.Add(			OnProductionPanelClose );
+	LuaEvents.ProductionPanel_ListModeChanged.Add(	OnProductionPanelListModeChanged );
+	LuaEvents.ProductionPanel_Open.Add(				OnProductionPanelOpen );
+	LuaEvents.Tutorial_CityPanelOpen.Add(			OnTutorialOpen );
+	LuaEvents.Tutorial_ContextDisableItems.Add(		OnTutorial_ContextDisableItems );
 
 	-- Truncate possible static text overflows
 	TruncateStringWithTooltip(Controls.BreakdownLabel,	MAX_BEFORE_TRUNC_STATIC_LABELS,	Controls.BreakdownLabel:GetText());

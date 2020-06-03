@@ -2124,13 +2124,10 @@ function ViewGeneric(victoryType:string)
 
 	for i, teamData in ipairs(genericData) do
 		if #teamData.PlayerData > 1 then
-			local uiGenericInstance:table = m_GenericTeamIM:GetInstance();
-			PopulateGenericTeamInstance(uiGenericInstance, teamData, victoryType);
-			uiGenericInstance.ButtonBG:SetToolTipString("");
+			PopulateGenericTeamInstance(m_GenericTeamIM:GetInstance(), theData.teamData, victoryType);
 		else
 			local uiGenericInstance:table = m_GenericIM:GetInstance();
 			PopulateGenericInstance(uiGenericInstance, teamData.PlayerData[1], victoryType, true);
-			uiGenericInstance.ButtonBG:SetToolTipString("");
 		end
 	end
 

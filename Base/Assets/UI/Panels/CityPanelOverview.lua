@@ -989,6 +989,15 @@ function OnToggleReligionTab()
 end
 
 -- ===========================================================================
+function OnLensChanged( newLensName:string, oldLensName:string )
+	-- When a new city is selected we're always sent back to Default lens which overrides Overview lenses
+	-- This switches back to the proper Overview lens we were forced to switch away from
+	if m_isShowingPanel and newLensName == "Default" then
+		UILens.SetActive(oldLensName);
+	end
+end
+
+-- ===========================================================================
 --	UI Callback
 -- ===========================================================================
 function OnInit( isReload:boolean )
@@ -1007,7 +1016,6 @@ function LateInitialize()
 	LuaEvents.Tutorial_ResearchOpen.Add(OnClose);
 	LuaEvents.ActionPanel_OpenChooseResearch.Add(OnClose);
 	LuaEvents.ActionPanel_OpenChooseCivic.Add(OnClose);
-	Events.SystemUpdateUI.Add( OnUpdateUI );
 	LuaEvents.CityPanel_ShowOverviewPanel.Add( OnShowOverviewPanel );	
 	LuaEvents.CityPanel_ToggleOverviewCitizens.Add( OnToggleCitizensTab );
 	LuaEvents.CityPanel_ToggleOverviewBuildings.Add( OnToggleBuildingsTab );
@@ -1023,6 +1031,7 @@ function LateInitialize()
 	Events.ResearchCompleted.Add( OnResearchCompleted );
 	Events.GovernmentPolicyChanged.Add( OnPolicyChanged );
 	Events.GovernmentPolicyObsoleted.Add( OnPolicyChanged );
+	Events.LensChanged.Add( OnLensChanged );
 
 	-- Populate tabs	
 	AddTab( Controls.HealthButton,		OnSelectHealthTab );
@@ -1045,6 +1054,26 @@ end
 -- ===========================================================================
 function OnShutdown()
 	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "m_isShowingPanel", m_isShowingPanel);
+
+	LuaEvents.Tutorial_ResearchOpen.Remove(OnClose);
+	LuaEvents.ActionPanel_OpenChooseResearch.Remove(OnClose);
+	LuaEvents.ActionPanel_OpenChooseCivic.Remove(OnClose);
+	LuaEvents.CityPanel_ShowOverviewPanel.Remove( OnShowOverviewPanel );	
+	LuaEvents.CityPanel_ToggleOverviewCitizens.Remove( OnToggleCitizensTab );
+	LuaEvents.CityPanel_ToggleOverviewBuildings.Remove( OnToggleBuildingsTab );
+	LuaEvents.CityPanel_ToggleOverviewReligion.Remove( OnToggleReligionTab );
+	LuaEvents.CityPanel_LiveCityDataChanged.Remove( OnLiveCityDataChanged );
+	LuaEvents.CityBannerManager_ShowEnemyCityOverview.Remove( OnShowEnemyCityOverview );
+	LuaEvents.CityBannerManager_CityPanelOverview.Remove( OnToggleCitizensTab );
+	LuaEvents.DiploScene_SceneOpened.Remove(OnClose); --We don't want this UI open when we return from Diplomacy
+
+	Events.SystemUpdateUI.Remove( OnUpdateUI );
+	Events.CityNameChanged.Remove(OnCityNameChanged);
+	Events.LocalPlayerTurnEnd.Remove( OnLocalPlayerTurnEnd );
+	Events.ResearchCompleted.Remove( OnResearchCompleted );
+	Events.GovernmentPolicyChanged.Remove( OnPolicyChanged );
+	Events.GovernmentPolicyObsoleted.Remove( OnPolicyChanged );
+	Events.LensChanged.Remove( OnLensChanged );
 end
 
 -- ===========================================================================

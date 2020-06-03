@@ -1,32 +1,37 @@
--- ===========================================================================
---	Popups when a Tech or Civic are completed
--- ===========================================================================
+-- Copyright 2017-2019, Firaxis Games
+
 include("Civ6Common");
 include("InstanceManager");
 	
 -- ===========================================================================
---	CONSTANTS / MEMBERS
+--	CONSTANTS
 -- ===========================================================================
-local m_PromotionListInstanceMgr:table	= InstanceManager:new( "PromotionSelectionInstance",	"PromotionSelection",	Controls.PromotionScrollPanel );
-local m_CompletedPromotionListInstanceMgr:table	= InstanceManager:new( "CompletedPromotionSelectionInstance",	"PromotionSelection",	Controls.PromotionScrollPanel );
-local m_kLineIM					:table	= InstanceManager:new( "LineImageInstance", 			"LineImage",			Controls.PromotionScrollPanel );
-
-local m_uiNodes				:table = {};
-local SIZE_NODE_X				:number = 150;			-- Item node dimensions
+local SIZE_NODE_X				:number = 150;				-- Item node dimensions
 local SIZE_NODE_Y				:number = 146;
-local SIZE_NODE_X_HALF			:number = 75;			-- Item node dimensions
-local SIZE_NODE_Y_HALF			:number = 75;
+local SIZE_NODE_X_HALF			:number = SIZE_NODE_X/2;	-- Item node dimensions
+local SIZE_NODE_Y_HALF			:number = SIZE_NODE_Y/2;
 local SIZE_PATH					:number = 40;
 local SIZE_PATH_HALF			:number = 20;
 local SIZE_ROW_Y				:number = 106;
 local SIZE_COLUMN_X				:number = 212;
 local LINE_BEFORE_CURVE			:number = 20;		-- MIN-MAX 40-(SIZE_NODE_Y/3)
-local SIZE_BORDER_X				:number = 50;
-local SIZE_BORDER_Y				:number = 60;
+
+local MAX_WIDTH					:number = 1024;
+local MAX_HEIGHT				:number = 768;
+
+local WIDTH_PADDING				:number = 50;
+local HEIGHT_PADDING			:number = 120;
+
+-- ===========================================================================
+--	MEMBERS
+-- ===========================================================================
+local m_PromotionListInstanceMgr			:table	= InstanceManager:new( "PromotionSelectionInstance",			"PromotionSelection",	Controls.PromotionContainer );
+local m_CompletedPromotionListInstanceMgr	:table	= InstanceManager:new( "CompletedPromotionSelectionInstance",	"PromotionSelection",	Controls.PromotionContainer );
+local m_kLineIM		:table	= InstanceManager:new( "LineImageInstance", 					"LineImage",			Controls.PromotionContainer );
+local m_uiNodes		:table	= {};
+
 -- ===========================================================================
 --	FUNCTIONS
--- ===========================================================================
-
 -- ===========================================================================
 
 -- ===========================================================================
@@ -150,10 +155,10 @@ function OnPromoteUnitPopup()
 					inst = m_kLineIM:GetInstance();
 					local line5:table = inst.LineImage;
 
-					local PrereqX = currentColumn*SIZE_NODE_X + SIZE_BORDER_X - SIZE_NODE_X_HALF;
-					local MyX = previousColumn*SIZE_NODE_X + SIZE_BORDER_X - SIZE_NODE_X_HALF;
-					local PrereqY = (math.min(previousRow,currentRow)-1)*SIZE_NODE_Y + SIZE_BORDER_Y + SIZE_ROW_Y;
-					local MyY = (math.max(previousRow,currentRow)-1)*SIZE_NODE_Y + SIZE_BORDER_Y;
+					local PrereqX = currentColumn*SIZE_NODE_X - SIZE_NODE_X_HALF;
+					local MyX = previousColumn*SIZE_NODE_X - SIZE_NODE_X_HALF;
+					local PrereqY = (math.min(previousRow,currentRow)-1)*SIZE_NODE_Y + SIZE_ROW_Y;
+					local MyY = (math.max(previousRow,currentRow)-1)*SIZE_NODE_Y;
 					local CurveY = PrereqY + LINE_BEFORE_CURVE;
 
 					line1:SetOffsetVal(MyX, PrereqY);
@@ -212,8 +217,8 @@ function OnPromoteUnitPopup()
 					local inst:table = m_kLineIM:GetInstance();
 					local line:table = inst.LineImage;
 					if(currentColumn > previousColumn or currentColumn < previousColumn) then
-						local startX:number= (math.min(previousColumn,currentColumn))*SIZE_NODE_X + SIZE_BORDER_X;
-						local endX :number = (math.max(previousColumn,currentColumn)-1)*SIZE_NODE_X + SIZE_BORDER_X;
+						local startX:number= (math.min(previousColumn,currentColumn))*SIZE_NODE_X;
+						local endX :number = (math.max(previousColumn,currentColumn)-1)*SIZE_NODE_X;
 						local yVal:number = (currentRow-1)*SIZE_NODE_Y + SIZE_NODE_Y_HALF;
 						
 						line:SetOffsetVal(startX, yVal);				
@@ -226,9 +231,9 @@ function OnPromoteUnitPopup()
 							--line:SetColor(63,83,100,255);
 						end
 					else
-						local startY:number= (math.min(previousRow,currentRow)-1)*SIZE_NODE_Y + SIZE_BORDER_Y + SIZE_ROW_Y;
-						local endY :number = (math.max(previousRow,currentRow)-1)*SIZE_NODE_Y + SIZE_BORDER_Y;
-						local XVal:number = currentColumn*SIZE_NODE_X + SIZE_BORDER_X - SIZE_NODE_X_HALF;
+						local startY:number= (math.min(previousRow,currentRow)-1)*SIZE_NODE_Y + SIZE_ROW_Y;
+						local endY :number = (math.max(previousRow,currentRow)-1)*SIZE_NODE_Y;
+						local XVal:number = currentColumn*SIZE_NODE_X - SIZE_NODE_X_HALF;
 						
 						line:SetOffsetVal(XVal, startY);				
 						line:SetSizeVal(SIZE_PATH,  endY - startY);
@@ -264,7 +269,7 @@ function OnPromoteUnitPopup()
 				promotionInstance = m_PromotionListInstanceMgr:GetInstance();
 			end
 
-			promotionInstance.PromotionSelection:SetOffsetVal((row.Column-1)*SIZE_NODE_X + SIZE_BORDER_X, (row.Level-1)*SIZE_NODE_Y + SIZE_BORDER_Y);
+			promotionInstance.PromotionSelection:SetOffsetVal((row.Column-1)*SIZE_NODE_X, (row.Level-1)*SIZE_NODE_Y);
 			if (promotionDefinition ~= nil) then
 				promotionInstance.PromotionName:SetText(Locale.ToUpper(promotionDefinition.Name));
 				promotionInstance.PromotionDescription:SetText(Locale.Lookup(promotionDefinition.Description));
@@ -295,10 +300,26 @@ function OnPromoteUnitPopup()
 		end
 	end
 
-	Controls.PromotionScrollPanel:CalculateInternalSize();
+	Controls.PromotionScrollPanel:CalculateSize();
 	UIManager:QueuePopup(ContextPtr, PopupPriority.Low)
 end
 
+-- ===========================================================================
+function OnPromotionContainerSizeChanged()
+	local desiredWidth:number = Controls.PromotionContainer:GetSizeX() + WIDTH_PADDING;
+	if desiredWidth > MAX_WIDTH then
+		desiredWidth = MAX_WIDTH;
+	end
+
+	local desiredHeight:number = Controls.PromotionContainer:GetSizeY() + HEIGHT_PADDING;
+	if desiredHeight > MAX_HEIGHT then
+		desiredHeight = MAX_HEIGHT;
+		UI.DataError("Unit promotion tree height exceeds maximum panel height.");
+	end
+
+	Controls.PopupFrameGrid:SetSizeX(desiredWidth);
+	Controls.PopupFrameGrid:SetSizeY(desiredHeight);
+end
 
 -- ===========================================================================
 function OnInputHandler( pInputStruct:table )
@@ -318,14 +339,40 @@ function OnCitySelectionChanged( ownerPlayerID:number, cityID:number, i:number, 
 end
 
 -- ===========================================================================
-function Initialize()
-	ContextPtr:SetInputHandler( OnInputHandler, true );
-	-- Controls Events
-	Controls.CloseButton:RegisterCallback( eLClick, OnClose );
+function OnShutdown()
+	Events.CitySelectionChanged.Remove( OnCitySelectionChanged );
+
+	LuaEvents.UnitPanel_PromoteUnit.Remove(OnPromoteUnitPopup);
+	LuaEvents.UnitPanel_HideUnitPromotion.Remove(OnClose);
+end
+
+-- ===========================================================================
+function OnInit( isReload:boolean )
+	LateInitialize();
+
+	if isReload then
+		local pSelectedUnit:table = UI.GetHeadSelectedUnit();
+		if pSelectedUnit then
+			OnPromoteUnitPopup();
+		end
+	end
+end
+
+-- ===========================================================================
+function LateInitialize()
+	Controls.CloseButton:RegisterCallback( Mouse.eLClick, OnClose );
+	Controls.PromotionContainer:RegisterSizeChanged( OnPromotionContainerSizeChanged );
 
 	Events.CitySelectionChanged.Add( OnCitySelectionChanged );
 
 	LuaEvents.UnitPanel_PromoteUnit.Add(OnPromoteUnitPopup);
 	LuaEvents.UnitPanel_HideUnitPromotion.Add(OnClose);
+end
+
+-- ===========================================================================
+function Initialize()
+	ContextPtr:SetInitHandler( OnInit );
+	ContextPtr:SetShutdown( OnShutdown );
+	ContextPtr:SetInputHandler( OnInputHandler, true );
 end
 Initialize();

@@ -211,7 +211,7 @@ function OnShow()
 			Controls.CloudCheck:SetDisabled(true);
 		end
 
-		if g_GameType == SaveTypes.WORLDBUILDER_MAP or g_GameType == SaveTypes.TILED_MAP then
+		if g_GameType == SaveTypes.WORLDBUILDER_MAP or g_GameType == SaveTypes.TILED_MAP or g_FileType == SaveFileTypes.GAME_CONFIGURATION then
 			Controls.CloudCheck:SetHide(true);
 		else
 			Controls.CloudCheck:SetHide(false);
