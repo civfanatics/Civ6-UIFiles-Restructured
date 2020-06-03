@@ -1,0 +1,145 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Context>
+  <Include File="CivilizationIcon" />
+    <Stack ID="TabStack" StackPadding="8">
+      <!-- Culture Header -->
+      <Grid	ID="HeaderGrid"																		Anchor="L,T"									Size="parent,24"		Style="DivHeader">
+        <Container Size="parent,24">
+          <Image Texture="Controls_Gradient_HalfRadial" Size="parent, 120" FlipY="1" Anchor="C,T" Color="72,103,130,255"/>
+        </Container>
+        <Label																	Anchor="C,C" Offset="5,0"													Style="CityPanelSubPanelTitle" String="LOC_CULTURAL_IDENTITY_LOYALTY_SUBSECTION" />
+      </Grid>
+
+      <!--Cultural Influence Meter-->
+      <Stack Anchor="C,C" StackGrowth="Right" StackPadding="4,0">
+        <MakeInstance Name="CivilizationIcon30" ID="CivilizationOwner" Anchor="C,C"/>
+        <Stack Anchor="C,C" StackGrowth="Right" StackPadding="-4,0">
+          <Label ID="LoyaltyPressureIcon" Style="FontNormal16"/>
+          <Container Anchor="C,C" Size="112,10">
+            <Image Anchor="C,C" Size="parent,parent" Color="255,0,0,255" Texture="Identity_LoyaltyMeterFill"/>
+            <TextureBar ID="LoyaltyFill" Anchor="C,C" Size="parent,parent" Color="0,255,0,255" Texture="Identity_LoyaltyMeterFill"/>
+          </Container>
+        </Stack>
+        <MakeInstance Name="CivilizationIcon30" ID="CivilizationRival" Anchor="C,C"/>
+      </Stack>
+
+
+      <!-- Native Population Status -->
+      <Stack Offset="20,0" StackGrowth="Right">
+        <Stack Anchor="C,T" StackGrowth="Right" StackPadding="10">
+          <Grid Size="125,55" Style="CityPanelSubPanelContainer">
+            <Stack Anchor="C,C" StackGrowth="Right" StackPadding="6">
+              <Stack StackPadding="2">
+                <Label ID="CurrentLoyalty" Anchor="C,T" Style="CityPanelText"/>
+                <Label Anchor="C,T" Style="CityPanelText" String="LOC_CULTURAL_IDENTITY_OF"/>
+                <Label ID="MaxLoyalty" Anchor="C,T" Style="CityPanelText" String=""/>
+              </Stack>
+            </Stack>
+          </Grid>
+          <Grid Size="125,55" Style="CityPanelSubPanelContainer">
+            <Image Anchor="L,C" AnchorSide="O,I" Texture="Controls_ThereforeArrow" Offset="-10,0"/>
+            <Stack Anchor="C,C" StackGrowth="Right" StackPadding="6">
+              <Stack StackPadding="2">
+                <Label Anchor="C,T" Style="FontNormal16" String="LOC_CULTURAL_IDENTITY_STATUS"/>
+                <Label ID="LoyaltyStatus" Anchor="C,T" Style="CityPanelText" WrapWidth="120"/>
+              </Stack>
+            </Stack>
+          </Grid>
+        </Stack>
+      </Stack>
+
+      <!-- Cultural Identity Effects -->
+      <Grid	ID="CulturalIdentityEffectBox" Texture="CityPanel_StatPanelSubContainer" SliceCorner="7,7" SliceSize="1,1" SliceTextureSize="16,16" InnerPadding="4,2" Anchor="C,T" Size="260,55">
+        <Label ID="CulturalIdentityEffectLabel" Offset="16,0" Anchor="C,C" Style="CityPanelTextSmall" WrapWidth="200"/>
+      </Grid>
+
+      <!-- Identity Breakdown -->
+      <Grid ID="BreakdownBox" Anchor="C,T" Size="260,230" Style="CityPanelSubPanelContainer">
+        <Stack ID="IdentityBreakdownStack" Offset="5,10" Anchor="L,T" Padding="5"/>
+      </Grid>
+      
+      <Container ID="CulturalIdentityAdvisor" Offset="15,0" Size="parent-29,auto" >
+        <Image Anchor="R,T" Size="64,64" Texture="Advisors64"/>
+        <Grid Offset="3,0" Size="parent-64,auto" Style="AdvisorWordBubble" Color="255,255,255,50" InnerPadding="5,15">
+          <Label ID="CulturalIdentityAdvice" Anchor="C,C" Offset="-20,0" WrapWidth="parent-40" Style="CityPanelTextSmall"  String="LOC_HUD_CITY_ADVISOR_TRY_IMPROVING" />
+        </Grid>
+      </Container>
+      
+      <!-- Diplo Influence Header -->
+      <Grid ID="DiplomaticInfluenceHeader" Anchor="L,T" Size="parent,24" Style="DivHeader">
+        <Container Size="parent,24">
+          <Image Texture="Controls_Gradient_HalfRadial" Size="parent, 120" FlipY="1" Anchor="C,T" Color="72,103,130,255"/>
+        </Container>
+        <Label Anchor="C,C" Offset="5,0" Style="CityPanelSubPanelTitle" String="LOC_CULTURAL_IDENTITY_ACCUMULATED_IDENTITY_SUBSECTION" />
+      </Grid>
+      
+      <Grid ID="InfluenceBox" Anchor="C,T" Size="260,230" Style="CityPanelSubPanelContainer">
+        <Stack ID="InfluenceStack" Offset="5,10" Anchor="L,T" Padding="5"/>
+      </Grid>
+
+      <!-- Governor Header -->
+      <Grid Anchor="L,T" Size="parent,24" Style="DivHeader">
+        <Container Size="parent,24">
+          <Image Texture="Controls_Gradient_HalfRadial" Size="parent, 120" FlipY="1" Anchor="C,T" Color="72,103,130,255"/>
+        </Container>
+        <Label Anchor="C,C" Offset="5,0" Style="CityPanelSubPanelTitle" String="LOC_HUD_CITY_GOVERNOR" />
+      </Grid>
+
+      <!-- Governor Name Plate -->
+      <Box Anchor="C,T" Size="260,70" Color="0,0,0,100">
+        <Stack Anchor="L,C" Offset="16,0" StackGrowth="Right" StackPadding="14">
+          <Image ID="GovernorIcon" Size="64,64" IconSize="64" Icon="ICON_GOVERNOR_THE_DEFENDER"/>
+          <Stack Anchor="L,C" StackPadding="6">
+            <Label ID="GovernorName" Style="CityPanelText" String="John Q Governor"/>
+            <Label ID="GovernorTitle" Anchor="L,C" Style="CityPanelText" String="Job Creator"/>
+          </Stack>
+        </Stack>
+      </Box>
+
+      <!-- Governor Effects -->
+      <Label ID="GovernorEffects" Offset="20,0" Style="CityPanelTextSmall" WrapWidth="260" String="Production yields increased, +n GPT from wage taxes. Production yields increased, +n GPT from wage taxes. Production yields increased, +n GPT from wage taxes."/>
+
+      <!-- Governor Establishing Info -->
+      <Stack Anchor="C,T" StackPadding="4">
+        <Label ID="GovernorEstablishmentText" Anchor="C,T" Style="FontNormal16" String="Established in:"/>
+        <Label ID="TurnsOnSite" Anchor="C,C" Style="FontNormal16" String="5 Turns"/>
+      </Stack>
+
+      <!-- Spacer -->
+      <Container Size="5,2"/>
+    </Stack>
+
+  <!-- Population Line Item Instance -->
+  <Instance Name="CulturalIdentityLineInstance">
+    <Grid ID="Top" Size="250,auto"		Texture="CityPanel_StatPanelLineItem" SliceCorner="7,7" SliceSize="1,1" SliceTextureSize="16,16" MinSize="16,16">
+      <Label ID="LineTitle" Anchor="L,T" Offset="0,2" Style="CityPanelTextSmall" WrapWidth="parent-20"/>
+      <Label ID="LineValue" Anchor="R,T" Offset="0,2" Style="CityPanelTextSmall"/>
+    </Grid>
+  </Instance>
+
+  <Instance Name="InfluenceLineInstance">
+    <Box ID="Top" Anchor="C,C" Color="0,0,0,100" Size="250,auto">
+      <Stack StackGrowth="Right" Padding="5">
+        <MakeInstance Name="CivilizationIcon30" ID="CivilizationIcon"/>
+        <Label ID="LineTitle" Anchor="C,C" Style="CityPanelTextSmall"/>
+      </Stack>
+      <Label ID="LineValue" Anchor="R,C" Style="CityPanelTextSmall" Offset="4,0"/>
+    </Box>
+  </Instance>
+  
+  <!-- Population Graph Instance -->
+  <Instance Name="PopulationGraphInstance">
+    <Box ID="Top"	Size="18,26"/>
+  </Instance>
+
+  <!-- ==================================================================	-->
+  <!--	Custom Tooltips																										-->
+  <!-- ==================================================================	-->
+  <ToolTipType Name="CivTooltip" >
+    <Grid ID="BG" Size="auto,auto" SliceCorner="10,10" SliceTextureSize="33,32" Texture="Controls_Tooltip" InnerPadding="25,25" InnerOffset="10,10" >
+      <Image ID="LeaderIcon" Offset="0,0" Size="55,55" Texture="Leaders55"/>
+      <Image ID="YouIndicator" Offset="0,0" Hidden="1" Size="55,55" Texture="Diplomacy_YouIndicatorSmall"/>
+      <Label ID="LeaderName" Anchor="L,C" Offset="65,0" Style="FontNormal16" Color="0,0,0,255"/>
+    </Grid>
+  </ToolTipType>
+</Context>

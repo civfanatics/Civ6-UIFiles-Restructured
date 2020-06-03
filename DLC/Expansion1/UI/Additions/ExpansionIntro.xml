@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Context xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="..\..\..\..\..\CivTech\Libs\ForgeUI\ForgeUI_Assets\Controls.xsd">
+
+	<Include File="CivilizationIcon" />
+
+	<Container Style="FullScreenVignetteConsumer" />
+
+	<Grid ID="Background" Anchor="C,C" Size="1056,800" SliceCorner="33,163" SliceSize="6,7" SliceTextureSize="72,204" Texture="XP1Intro_Window" ConsumeMouse="1">
+
+		<Image Anchor="C,T" Offset="0,40" Texture="XP1Intro_Logo"/>
+
+		<Image ID="Illustration" Anchor="L,T" Offset="30,160" Texture="XP1Intro_Diagram_1"/>
+
+		<Grid ID="DescriptionColumn" Size="492,544" Anchor="R,T" Offset="38,170" SliceCorner="10,10" SliceSize="1,1" SliceTextureSize="40,40" Texture="Controls_SubContainer3" Color="0,0,0,60" >
+			<Stack ID="RightDescStack" Anchor="C,C" StackGrowth="Down" StackPadding="0" >
+				<Container ID="TopDescription" Anchor="C,T" Size="492,250">
+					<Label ID="Description"  Anchor="C,C" Offset="0,0" Style="BlueGlow" FontSize="16" Align="center" WrapWidth="472"/>
+				</Container>
+				<Grid ID="FrameDeco" Anchor="C,B" Size="462,250" Offset="0,10" SliceCorner="19,24" SliceSize="1,1" SliceTextureSize="39,49" Texture="Controls_Deco" Color="137,154,171,180">
+					<Box Size="parent-38,2" Anchor="C,T" Color="137,154,171,180" />
+					<ScrollPanel Anchor="C,C" Size="parent-20,parent-8" Vertical="1" AutoScrollBar="1">
+						<ScrollBar Anchor="R,C" Size="11,parent-32" AnchorSide="I,I" Offset="-4,0"  Style="ScrollVerticalBar" />
+						<Label ID="Description2" Anchor="C,C" Offset="0,0"  Style="FontNormal14"  Color="137,154,171,255" Align="Left" FontSize="14" WrapWidth="420"/>
+					</ScrollPanel>
+					<Box Size="parent-38,2" Anchor="C,B" Color="137,154,171,180" />
+				</Grid>
+			</Stack>
+		</Grid>
+		<CheckBox ID="DontShowAgain" Anchor="L,B" Offset="30,33" ConsumeMouseOver="1"	ButtonSize="35,35" ButtonTexture="Controls_CheckboxCircle" CheckTexture="Controls_CheckboxCircle"	CheckSize="35,35" CheckTextureOffset="0,35"  Style="FontNormal16" NoStateChange="1">
+			<Label Anchor="L,C" Offset="35,0" Style="BlueGlow" FontSize="14" String="LOC_XP_INTRO_HIDETHIS"/>
+		</CheckBox>
+
+		<Stack ID="ButtonStack" Anchor="C,B" Offset="0,33" StackGrowth="Right" Padding="10">
+			<GridButton ID="Previous" Style="MainButton" Anchor="C,B" Size="200,41" String="LOC_XP1_INTRO_PREVIOUS"/>
+			<GridButton ID="Next" Style="MainButton" Anchor="C,B" Size="200,41" String="LOC_XP1_INTRO_NEXT"/>0
+		</Stack>
+	</Grid>
+
+	<Button ID="Close" Anchor="R,T" Style="CloseButtonLarge" Offset="-8,-5" />
+
+</Context>

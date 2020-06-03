@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Context xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="..\..\..\..\..\CivTech\Libs\ForgeUI\ForgeUI_Assets\Controls.xsd">
+
+	<Container ID="Vignette" Style="FullScreenVignetteConsumer" Size="parent,697"/>
+
+	<Image ID="MainContainer" Anchor="C,C" Offset="0,37" Size="900,700" Texture="Governors_BackgroundTile_ColumnOff" StretchMode="Tile">
+    <!-- Decorative Column Borders -->
+    <Grid Anchor="C,C" Size="parent,parent" Texture="Governors_Column_Off" SliceTextureSize="234,parent" SliceCorner="99,75" SliceSize="1,1"/>
+
+    <!-- Governor Details -->
+    <Box ID="GovernorDetailsContainer" Offset="30,16" Size="336,620" Color="0,0,0,0">
+      <Grid Anchor="C,T" Size="parent,parent" Texture="Governors_ProfileFrame" SliceTextureSize="336,366" SliceCorner="16,320" SliceSize="304,25">
+        <Stack StackPadding="6">
+          <!-- Governor Portrait and Name -->
+          <Image ID="GovernorPortrait" Anchor="C,T" Size="326,339">
+            <Grid Anchor="C,B" Offset="0,10" Size="220,58" Texture="Governors_NamePlaque" SliceCorner="20,25" SliceSize="17,7">
+              <Label ID="GovernorNameLabel" Anchor="C,T" Offset="0,14" Align="Center" Style="FontFlair20" SmallCaps="24" SmallCapsType="EveryWord" FontStyle="Shadow"	Color0="235,235,235,255" Color1="0,0,0,50"/>
+              <Label ID="GovernorTitleLabel" Anchor="C,B" Offset="0,7" Align="Center" Style="FontNormal14" FontStyle="Shadow"	Color0="240,240,240,255" Color1="0,0,0,50" />
+            </Grid>
+          </Image>
+
+          <!-- Bio -->
+          <ScrollPanel Anchor="C,T" Vertical="1" Size="parent-40,80" AutoScrollBar="1">
+            <ScrollBar Anchor="R,C" AnchorSide="O,I" Offset="0,0" Style="ScrollVerticalBar" />
+            <Label ID="GovernorBioLabel" Offset="4,4" Anchor="L,T" WrapWidth="parent" Align="Left" Style="FontNormal14" Color="200,200,200,255"/>
+          </ScrollPanel>
+
+          <!--Transition Strength and Identity Pressure-->
+          <Container Anchor="C,T" Size="parent-40,70">
+            <Box Anchor="C,T" Size="parent,2" Color="150,150,150,150"/>
+              
+            <Container Anchor="L,C" Size="auto,auto" Offset="15,0" ToolTip="LOC_GOVERNOR_TRANSITION_STRENGTH_TOOLTIP">
+              <Label Style="FontNormal14" String="LOC_GOVERNOR_DETAILS_TURNS_TO_ESTABLISH" TruncateWidth="135"/>
+              <Image Size="28,30" Offset="0,18" Texture="SelectionPanel_Stat" Color="70,70,70,200">
+                <Label Anchor="C,C" String="[Icon_Turn]"/>
+              </Image>
+              <Label ID="TransitionStrengthLabel" Offset="34,24" Style="FontFlair16"/>
+            </Container>
+            <Container Anchor="R,C" Size="auto,auto" Offset="15,0" ToolTip="LOC_GOVERNOR_IDENTITY_PRESSURE_TOOLTIP">
+              <Label Style="FontNormal14" String="LOC_GOVERNOR_IDENTITY_PRESSURE"  TruncateWidth="130"/>
+              <Image Size="28,30" Offset="0,18" Texture="SelectionPanel_Stat" Color="70,70,70,200">
+                <Image Anchor="C,C" Size="22,22" Icon="ICON_STAT_CULTURAL_FLAG" IconSize="22"/>
+              </Image>
+              <Label ID="IdentityPressureLabel" Offset="34,24" Style="FontFlair16"/>
+            </Container>
+
+            <Box Anchor="C,B" Size="parent,2" Color="150,150,150,150"/>
+          </Container>
+
+          <!-- Status -->
+          <Container Anchor="C,T" Size="parent,50">
+            <Stack Anchor="C,C" StackGrowth="Down" StackPadding="2">
+              <Label ID="GovernorStatus" Anchor="C,T" Align="Center" Style="FontNormal14" WrapWidth="198"/>
+              <Label ID="GovernorStatusDetails" Anchor="C,T" Align="Center" Style="FontNormal14" WrapWidth="198" Color="200,200,200,255"/>
+            </Stack>
+          </Container>
+
+          <!-- Assignment Button -->
+          <GridButton ID="AssignButton" Anchor="C,T" Style="Grid9MainButton" Size="180,41">
+            <Label ID="AssignButtonLabel" Anchor="C,C" Style="FontNormal14" String="LOC_GOVERNORS_SCREEN_BUTTON_ASSIGN_GOVERNOR"/>
+          </GridButton>
+        </Stack>
+      </Grid>
+    </Box>
+
+    <!-- Promotions -->
+    <Grid Anchor="R,T" Offset="30,16" Size="480,620" Texture="Governors_PromotionBox" SliceCorner="70,70" SliceSize="10,10">
+      <Stack Anchor="C,T" Offset="0,32" StackGrowth="Down" StackPadding="8">
+        <Label Anchor="C,T" Offset="0,0"Style="FontFlair20" SmallCaps="26" SmallCapsType="EveryWord" String="LOC_GOVERNORS_SCREEN_GOVERNOR_ABILITIES" Color="230,230,230,255"/>
+        <Label Anchor="C,T" Style="FontNormal14" Color="200,200,200,255" String="LOC_GOVERNORS_SCREEN_GOVERNOR_ABILITIES_SUBTEXT"/>
+        <Box Anchor="C,T" Size="330,2" Color="150,150,150,70"/>
+      </Stack>
+      
+      <!-- Base Ability -->
+      <Grid Anchor="C,T" Offset="0,100" Size="428,57" Texture="Governors_BaseAbilityBox" SliceTextureSize="57,57" SliceCorner="28,28" SliceSize="1,1">
+        <Image ID="BaseAbilityIcon" Anchor="L,C" Offset="14,0" Size="24,24" Icon="ICON_GOVERNOR_GENERIC_PROMOTION" IconSize="24"/>
+        <Label ID="BaseAbilityLabel" Anchor="L,C" Offset="44,0" Style="FontNormal12" FontStyle="shadow"	Color0="240,240,240,255"	Color1="0,0,0,150" WrapWidth="310"/>
+      </Grid>
+
+      <!-- Promotion Requirement Indicator Lines -->
+      <Container ID="PromotionLinesContainer" Anchor="C,T" Offset="0,180" Size="auto,parent"/>
+
+      <!-- Promotion Tree -->
+      <Container ID="PromotionContainer" Anchor="C,T" Offset="0,174" Size="auto,parent"/>
+    </Grid>
+
+    <!-- Back Button -->
+    <Image Anchor="C,B" Size="parent,52" Texture="Governors_DetailsFooterTile" StretchMode="TileX">
+      <Stack Anchor="C,C" StackGrowth="Right" StackPadding="8">
+        <Image Texture="Governors_PromotionScreen_DecoLeft" Size="184,42" Color="0,0,0,50"/>
+        <GridButton ID="BackButton" Anchor="C,C" Style="Grid9MainButton" Size="200,30">
+          <Label Anchor="C,C" Style="FontNormal14" String="LOC_BACK"/>
+        </GridButton>
+        <GridButton ID="ConfirmButton" Anchor="C,C" Style="Grid9ConfirmButton" Size="200,30">
+          <Label Anchor="C,C" Style="FontNormal14" String="LOC_CONFIRM"/>
+        </GridButton>
+        <Image Texture="Governors_PromotionScreen_DecoRight" Size="184,42" Color="0,0,0,50"/>
+      </Stack>
+    </Image>
+
+    <Button	ID="CloseButton" Anchor="R,T" Style="CloseButtonLarge" Offset="-8,-5"/>
+  </Image>
+
+  <Instance Name="PromotionInstance">
+    <GridButton ID="PromotionButton" Size="204,121" Texture="Governors_Promotion_Button" Padding="0,0" StateOffsetIncrement="0,121" SliceCorner="90,42" SliceTextureSize="174,121">
+      <Label ID="PromotionName" Offset="10,10" Style="FontFlair14" SmallCaps="16" SmallCapsType="FirstWord" FontStyle="Shadow"	Color0="245,245,245,255" Color1="0,0,0,70"/>
+			<ScrollPanel Size="181,80" Offset="10,32" Vertical="1" AutoScrollBar="1">
+				<ScrollBar Anchor="R,C" AnchorSide="O,I" Offset="1,0" Style="ScrollVerticalBarHighContrast" Size="8,parent"/>
+				<Label ID="PromotionDesc" Offset="0,3" WrapWidth="parent" Style="FontNormal12"	FontStyle="shadow"	Color0="240,240,240,255"	Color1="0,0,0,150"/>
+			</ScrollPanel>
+    </GridButton>
+  
+</Instance>
+
+  <Instance Name="ReqLinesRight">
+    <Container ID="Top" Size="174,100">
+      <Image Anchor="C,C" Offset="0,0" Size="40,40" Texture="Controls_TreePathDashSE" Color="108,105,86,255"/>
+      <Image Anchor="C,C" Offset="40,0" Size="40,40" Texture="Controls_TreePathDashEW" Color="108,105,86,255"/>
+      <Image Anchor="C,C" Offset="80,0" Size="40,40" Texture="Controls_TreePathDashES" Color="108,105,86,255"/>
+    </Container>
+  </Instance>
+
+  <Instance Name="ReqLinesLeft">
+    <Container ID="Top" Size="174,100">
+      <Image Anchor="C,C" Offset="-80,0" Size="40,40" Texture="Controls_TreePathDashNE" Color="108,105,86,255"/>
+      <Image Anchor="C,C" Offset="-40,0" Size="40,40" Texture="Controls_TreePathDashEW" Color="108,105,86,255"/>
+      <Image Anchor="C,C" Offset="0,0" Size="40,40" Texture="Controls_TreePathDashEN" Color="108,105,86,255"/>
+    </Container>
+  </Instance>
+
+  <Instance Name="ReqLinesDown">
+    <Container ID="Top" Size="174,100">
+      <Image Anchor="C,C" Size="40,40" Texture="Controls_TreePathDashNS" Color="108,105,86,255"/>
+    </Container>
+  </Instance>
+</Context>

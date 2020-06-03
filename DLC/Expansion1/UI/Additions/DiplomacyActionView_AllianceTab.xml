@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Context>
+
+  <Instance Name="AllianceDetailsInstance">
+    <Stack ID="TopStack" StackGrowth="Down" StackPadding="4">
+      <Box Anchor="C,T" Size="parent-20,2" Color="65,65,65,255"/>
+      <Container Size="parent-20,16" Offset="0,4">
+        <Image Offset="20,0" Size="16,16" IconSize="16" Icon="ICON_STAT_ALLIANCES"/>
+        <Label ID="AllianceType" Offset="40,0" Style="FontNormal16"/>
+        <Label ID="AllianceLevel" Anchor="R,T" Offset="0,0" Style="FontNormal16"/>
+      </Container>
+      <Stack ID="AllianceBonusDescStack" StackGrowth="Down" StackPadding="5" Offset="0,4"/>
+    </Stack>
+  </Instance>
+
+  <Instance Name="AllianceBonusDescInstance">
+    <Container ID="Top" Size="parent,auto">
+      <Image Offset="20,0" Size="16,16" IconSize="16" Icon="ICON_STATS_GENERIC_MODIFIER" Color="164,164,164,255"/>
+      <Label ID="BonusDescription" Offset="40,0" WrapWidth="400" Style="FontNormal14" Color0="164,164,164,255"/>
+    </Container>
+  </Instance>
+
+  <Stack ID="AllianceTabStack" StackGrowth="Bottom" InnerPadding="8,8">
+    <!--Alliance Level-->
+    <Grid Anchor="C,T" Style="SubContainer3" Size="460,80" Color="DiplomacyPanelFrameColor">
+      <Label Offset="3,3" Style="HeaderSmallCaps" String="{LOC_DIPLOMACY_ALLIANCE_LEVEL_COLON:upper}"/>
+      <Label ID="AllianceLevelText" Anchor="R,T" Offset="3,1" Style="FontFlair20"/>
+
+      <Grid Anchor="C,C" Offset="0,0" Size="parent-10,8" Texture="Controls_RoundedRectH" SliceTextureSize="12,8" SliceCorner="6,4" Color="DiplomacyPanelFrameColor">
+        <Bar ID="AllianceLevelBar" Anchor="L,C" Offset="3,0" Size="parent-6,2" Direction="Right" Percent="0.2" FGColor="255,255,255,255"/>
+      </Grid>
+
+      <Label Offset="3,3" Anchor="L,B" Style="FontNormal14" String="LOC_DIPLOMACY_ALLIANCE_POINTS_COLON"/>
+			<Container ID="AlliancePointsContainer" Size="auto,auto" Offset="3,1" Anchor="R,B">
+				<Stack StackGrowth="Right" StackPadding="2">
+					<Label ID="CurrentPoints" Style="FontNormal16"/>
+					<Label ID="PointsPerTurn" Offset="0,-4" Style="FontNormal12"/>
+					<Label ID="PointsNeeded" Style="FontNormal16" Color0="164,164,164,255"/>
+				</Stack>
+			</Container>
+    </Grid>
+
+    <Stack ID="AllianceDetailsStack" Size="parent-8,80" StackGrowth="Down" StackPadding="5">
+      <!--Current Alliance-->
+      <Label ID="CurrentAllianceHeader" Anchor="C,T" Offset="0,2" Style="HeaderSmallCaps" Color="150,150,150,255" String="{LOC_DIPLOACTION_CURRENT_ALLIANCE:upper}"/>
+      <Container ID="CurrentAllianceDetailsAnchor" Size="auto,auto"/>
+      <Label ID="AllianceExpiresLabel" Anchor="C,T" Style="FontNormal16"/>
+
+      <!--Benefits of the next level of all alliances-->
+      <Box Anchor="C,T" Size="parent-20,2" Offset="0,2" Color="65,65,65,255"/>
+      <Label ID="PossibleAllianceHeader" Anchor="C,T" Style="HeaderSmallCaps" Color="150,150,150,255"/>
+      <Stack ID="PossibleAllianceStack" StackGrowth="Down" StackPadding="12"/>
+			
+			<!--Little buffer to ensure text doesn't overrun-->
+			<Container Size="parent,1"/>
+    </Stack>
+  </Stack>
+</Context>

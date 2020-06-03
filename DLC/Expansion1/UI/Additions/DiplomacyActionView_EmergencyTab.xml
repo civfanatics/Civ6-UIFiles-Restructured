@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Context>
+
+  <Instance Name="EmergencyTabEntryInstance">
+    <GridButton ID="EmergencyTabEntryTop" Anchor="C,T" Size="parent-30,auto" MinSize="0,54" Style="ButtonLightWeightGrid" Disabled="1">
+      <Image Anchor="L,C" Offset="4,0" Size="32,32" IconSize="32" Icon="ICON_EMERGENCY"/>
+			<Stack StackGrowth="Down" StackPadding="4">
+				<Label ID="EmergencyNameLabel" Style="FontNormal16" Offset="44,4"/>
+				<Label ID="EmergencyGoalsLabel" Style="FontNormal14" Offset="44,0" Color0="164,164,164,255" WrapWidth="355"/>
+			</Stack>
+      <Stack Anchor="R,t" Offset="6,4" StackGrowth="Right">
+        <Label ID="EmergencyTurnsIcon" Style="FontNormal16" String="[ICON_TURN]"/>
+        <Label ID="EmergencyTurnsLabel" Style="FontNormal16"/>
+      </Stack>
+    </GridButton>
+  </Instance>
+
+	<Container Size="parent,auto">
+		<Stack ID="EmergencyTabStack" Anchor="C,T" StackGrowth="Bottom" StackPadding="10">
+			<!--Emergencies Targeting you-->
+			<Stack ID="EmergencyTargetingYouStack" Anchor="C,T" StackGrowth="Down" StackPadding="6">
+				<Label Anchor="C,T" Style="HeaderSmallCaps" Color="150,150,150,255" String="{LOC_DIPLOMACY_EMERGENCIES_TARGET_YOU:upper}"/>
+				<Box Anchor="C,T" Size="parent-20,2" Color="65,65,65,255"/>
+			</Stack>
+    
+			<!--Emergencies participating with you-->
+			<Stack ID="EmergencyParticipatingYouStack" Anchor="C,T" StackGrowth="Down" StackPadding="6">
+				<Label Anchor="C,T" Style="HeaderSmallCaps" Color="150,150,150,255" String="{LOC_DIPLOMACY_EMERGENCIES_PARTICIPATING_YOU:upper}"/>
+				<Box Anchor="C,T" Size="parent-20,2" Color="65,65,65,255"/>
+			</Stack>
+		</Stack>
+	</Container>
+  
+</Context>

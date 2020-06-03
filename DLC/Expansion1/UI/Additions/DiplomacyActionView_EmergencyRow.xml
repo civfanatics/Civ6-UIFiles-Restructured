@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Context>
+
+  <Container ID="Top" Size="auto,auto" AutoSizePadding="0,3">
+    <Image Offset="20,10" Size="22,22" IconSize="22" Icon="ICON_EMERGENCY"/>
+    <Label Offset="60,10" Style="FontNormal16" String="LOC_DIPLOACTION_EMERGENCY_TAB_TOOLTIP"/>
+    <Stack ID="EmergencyStack" Offset="212,8" StackGrowth="Down" StackPadding="4"/>
+  </Container>
+
+  <Instance Name="EmergencyRowEntryInstance">
+    <Container ID="EmergencyRowEntryTop" Size="parent,16">
+      <Image ID="EmergencyIcon" Offset="8,0" Size="16,16" IconSize="16" Icon="ICON_STATS_GENERIC_MODIFIER"/>
+      <Label ID="EmergencyName" Offset="38,0" Style="FontNormal16"/>
+    </Container>
+  </Instance>
+  
+</Context>
