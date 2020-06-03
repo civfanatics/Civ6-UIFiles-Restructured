@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Context xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="..\..\..\..\..\CivTech\Libs\ForgeUI\ForgeUI_Assets\Controls.xsd">
+
+  <Container Style="FullScreenVignetteConsumer" />
+
+  <Container Anchor="C,C" Size="702,748">
+    <Image ID="PopupBackground" Anchor="C,C" Size="parent-10,parent-10" Texture="Ages_ParchmentNormal" StretchMode="Tile"/>
+    <Grid ID="PopupFrame" Anchor="C,C" Size="parent,parent" Texture="Ages_FrameNormal" SliceTextureSize="134,134" SliceCorner="60,74" SliceSize="14,2">
+      <Image ID="HeroicFrameGlow" Anchor="C,T" Offset="0,-19" Size="305,48" Texture="Ages_FrameGlow"/>
+      
+      <!--Title-->
+      <Label ID="Title" Anchor="C,T" Offset="0,34" Style="FontFlair18" FontStyle="glow" ColorSet="White_Black" SmallCaps="24" SmallCapsLeading="0" SmallCapsType="EveryWord"/>
+
+      <!--Sub Header-->
+      <Grid Anchor="C,T" Size="parent-30,46" Offset="0,81" Texture="Controls_SubContainer2" SliceCorner="18,18" SliceSize="1,1" Color="79,62,42,255">
+        <Image ID="HelpDecoLeft" Anchor="L,C" Size="27,18" Offset="4,0" Texture="Controls_Deco3" Color="79,62,42,128" />
+        <Image ID="HelpDecoRight" Anchor="R,C" Size="27,18" Offset="4,0" Texture="Controls_Deco3" Color="79,62,42,128" />
+        <Label ID="AgeAchieved" Style="FontFlair14" Color="66,49,31,255" Offset="0,1" Anchor="C,C" WrapWidth="parent" SmallCaps="18" SmallCapsType="EveryWord"/>
+      </Grid>
+      
+      <!--Commemoration Choices-->
+      <ScrollPanel	ID="CommemorationsScroller" Anchor="C,T" Offset="0,128" Size="auto,parent-190" Vertical="1" AutoScrollBar="1">
+        <Stack			ID="CommemorationsStack" Anchor="C,C" StackGrowth="Down" StackPadding="0" />
+        <ScrollBar	ID="CommemorationsScrollBar" Anchor="R,C"	Offset="-13,0" Size="11,parent" Style="ScrollVerticalBacking">
+          <Thumb Style="ScrollThumbAlt" />
+        </ScrollBar>
+      </ScrollPanel>
+
+      <!--Close-->
+      <Button	ID="CloseButton" Anchor="R,T" Style="CloseButtonLarge" Offset="-4,-1"/>
+      
+      <!--Confirm-->
+      <GridButton ID="Confirm" Style="MainButton" Size="200,41" Anchor="C,B" Offset="0,10" String="LOC_CONFIRM" Disabled="1"/>
+    </Grid>
+  </Container>
+
+  <Instance Name="Commemoration">
+    <GridButton ID="SelectCheck" Anchor="C,C" Size="parent-44,auto" MinSize="0,136" AutoSizePadding="0,20" Texture="Ages_ButtonComNormal" SliceTextureSize="136 " SliceCorner="67,67" SliceSize="2,2" States="7" StateOffsetIncrement="0,136">
+      <!-- Commemoration Icon -->
+      <Image Texture="Ages_ComIconFrame" Anchor="L,C" Offset="26,0" Size="84,84">
+        <Image ID="CommemorationIcon" Anchor="C,C" Size="86,86" Icon="ICON_COMMEMORATION_INFRASTRUCTURE" IconSize="86"/>
+      </Image>
+        
+      <!-- Commemoration Details -->
+      <Stack Anchor="L,C" Offset="120,0" StackGrowth="Down" StackPadding="4">
+        <Label ID="MomentCategory" Style="WindowHeader" ColorSet="White_Black" WrapWidth="490" FontStyle="Shadow"/>
+        <Label ID="MomentBonuses" Style="FontNormal14" ColorSet="White_Black" WrapWidth="490" FontStyle="Shadow"/>
+      </Stack>
+    </GridButton>
+  </Instance>
+
+</Context>

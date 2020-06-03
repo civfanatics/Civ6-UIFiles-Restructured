@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Context xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="..\..\..\..\CivTech\Libs\ForgeUI\ForgeUI_Assets\Controls.xsd" Style="FontNormal16" FontStyle="Shadow">
+
+  <Container ID="Top" Size="auto,auto" AutoSizePadding="0,2">
+    <Image Offset="20,10" Size="22,22" IconSize="22" Icon="ICON_RELATIONSHIP"/>
+    <Label Offset="60,10" Style="FontNormal16" String="LOC_DIPLOMACY_OVERVIEW_OUR_RELATIONSHIP"/>
+    <Stack ID="AllianceStack" Offset="214,6" StackGrowth="Down" StackPadding="0">
+      <!-- Relationship Status -->
+      <Container Size="200,26">
+        <Button ID="RelationshipIcon" Offset="0,0" Style="DiplomacyRelationshipPips" Disabled="1"/>
+        <Label ID="RelationshipText" Offset="36,5" Style="FontNormal16" WrapWidth="140" String="RelationshipText"/>
+      </Container>
+      <!-- Alliance Type -->
+      <Container ID="AllianceTypeContainer" Size="200,26">
+        <Image Offset="4,4" Size="16,16" IconSize="16" Icon="ICON_STATS_GENERIC_MODIFIER"/>
+        <Label ID="AllianceTypeText" Offset="36,5" Style="FontNormal16" String="Alliance"/>
+      </Container>
+      <!-- Alliance Level -->
+      <Container ID="AllianceLevelContainer" Size="200,26">
+        <Image Offset="4,4" Size="16,16" IconSize="16" Icon="ICON_STATS_GENERIC_MODIFIER"/>
+        <Label ID="AllianceLevelText" Offset="36,5" Style="FontNormal16" String="Alliance"/>
+      </Container>
+    </Stack>
+  </Container>
+
+</Context>

@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Context xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="..\..\..\..\..\CivTech\Libs\ForgeUI\ForgeUI_Assets\Controls.xsd" Style="FontNormal20">
+
+	<!-- Instances -->
+	<Instance				Name="AssignmentChoiceInstance">
+		<Container ID="Top"	Size="284,78" Offset="10,2">
+			<GridButton ID="Button" Size="parent,parent" Anchor="C,T">
+				<GridData Texture="DestinationChooser_Button" StateOffsetIncrement="0,76" SliceCorner="14,14" SliceSize="19,44" SliceTextureSize="48,76"/>
+
+				<!-- Selector Brace -->
+				<Grid ID="SelectorBrace" Size="parent,parent" Anchor="C,C" Texture="Controls_SelectorBrace" SliceCorner="29,29" SliceSize="2,2" SliceTextureSize="64,64" Hidden="1"/>
+
+				<!-- City Banner -->
+				<Grid								ID="BannerBase"								Anchor="C,T" Offset="-1,4"		Size="280,33"								Texture="CityPanel_BannerBase"				SliceCorner="20,10" SliceSize="160,1" SliceTextureSize="199,33" Color="150,170,100,255">
+					<Grid							ID="BannerDarker"													Anchor="L,T" Offset="4,2"			Size="parent-8,parent-10"		Texture="CityPanel_BannerDarker"			SliceCorner="95,10" SliceSize="1,1" SliceTextureSize="191,23" Color="0,0,0,100" />
+					<Grid							ID="BannerLighter"													Anchor="L,T" Offset="4,2"			Size="parent-8,parent-10"		Texture="CityPanel_BannerLighter"			SliceCorner="95,10" SliceSize="1,1" SliceTextureSize="191,23" Color="255,255,255,255" />
+					<Grid																				Anchor="L,T" Offset="6,2"			Size="parent-10,parent-8"		Texture="CityPanel_BannerNone"				SliceCorner="70,10" SliceSize="1,1" SliceTextureSize="179,20" Color="255,0,0,255" />
+					<Stack Anchor="L,C" Offset="38,-3" StackGrowth="Right">
+						<Label						ID="CapitalIcon"					Anchor="L,C" Offset="0,-1" Style="FontNormal16" String="[ICON_Capital]"/>
+						<Label						ID="CityName"							Anchor="L,C" Style="FontFlair16"					FontStyle="Stroke" EffectColor="0,0,0,25" SmallCaps="18" SmallCapsType="EveryWord" TruncateWidth="210"/>
+					</Stack>
+
+					<Image Anchor="L,C" Offset="4,-4" Size="28,28" Texture="Banner_MeterSlot">
+						<Image ID="GovernorIcon" Anchor="C,C" Size="32,32" IconSize="32" Icon="ICON_GOVERNOR_THE_AMBASSADOR"/>
+					</Image>
+
+					<Stack Anchor="R,C" Offset="10,0" StackGrowth="Right" StackPadding="2">
+            <Label String="[Icon_Turn]" Offset="0,-4" ToolTip="LOC_GOVERNOR_TURNS_TO_ESTABLISH"/>
+						<Label ID="EstablishTurns" Style="FontFlair16" FontStyle="Stroke" EffectColor="0,0,0,25" ToolTip="LOC_GOVERNOR_TURNS_TO_ESTABLISH"/>
+           
+					</Stack>
+				</Grid>
+
+				<!-- Resource Info -->
+				<Grid	Size="274,35" Anchor="C,B" Offset="-1,6" Texture="Controls_ItemContainer" SliceCorner="8,8" SliceTextureSize="16,16" >
+					<!-- Cultural Identity Pressure Change -->
+					<Stack ID="IdentityPressureStack" Anchor="C,C" StackGrowth="Right" StackPadding="25">
+						<Container Size="auto,auto" Anchor="L,C" ToolTip="LOC_GOVERNOR_ASSIGNMENT_CURRENT_IDENTITY_PRESSURE_TOOLTIP">
+							<Stack StackGrowth="Right">
+								<Image Size="22,22" IconSize="22" Icon="ICON_STAT_CULTURAL_PRESSSURE"/>
+								<Label ID="IdentityPressureBefore" Anchor="L,C" Style="FontNormal16" String="+10"/>
+							</Stack>
+						</Container>
+						<Image Size="24,24" Texture="Governors_ThereforeArrow"/>
+						<Container Size="auto,auto" Anchor="L,C" ToolTip="LOC_GOVERNOR_ASSIGNMENT_FUTURE_IDENTITY_PRESSURE_TOOLTIP">
+							<Stack StackGrowth="Right">
+								<Image Size="22,22" IconSize="22" Icon="ICON_STAT_CULTURAL_PRESSSURE"/>
+								<Label ID="IdentityPressureAfter" Anchor="L,C" Style="FontNormal16" String="+15"/>
+							</Stack>
+						</Container>
+					</Stack>
+				</Grid>
+			</GridButton>
+		</Container>
+	</Instance>
+
+	<Instance Name="PromotionInstance">
+		<Container ID="Top" Size="24,24">
+			<Image ID="PromotionIcon" Size="24,24" IconSize="24" Icon="ICON_GOVERNOR_GENERIC_PROMOTION"/>
+		</Container>
+	</Instance>
+
+	<Instance Name="GovernorInstance">
+		<Grid ID="Top" Anchor="L,T" Texture="Governors_AssignmentPanel" Size="269,60" Offset="2,0" SliceCorner="168,19" SliceSize="1,1" SliceTextureSize="185,60">
+      <!-- Governor Name -->
+			<Label ID="GovernorName" Anchor="L,C" Offset="36,11" Style="FontNormal12" WrapWidth="140"/>
+
+			<!-- Governor Icon -->
+			<Image Offset="2,4" Size="28,28" Texture="Banner_MeterSlot">
+				<Image ID="GovernorIcon" Anchor="C,C" Size="32,32" IconSize="32"/>
+			</Image>
+
+			<!-- Identity Pressure -->
+			<Container ID="IdentityPressureContainer" Anchor="R,B" Size="auto,16" Offset="14,11" ToolTip="LOC_GOVERNOR_IDENTITY_PRESSURE_TOOLTIP">
+				<Image Anchor="L,C" Offset="0,0" Size="22,22" IconSize="22" Icon="ICON_STAT_CULTURAL_PRESSSURE"/>
+				<Label ID="GovernorIdentityPressure" Anchor="L,C" Offset="22,0" Style="FontNormal16"/>
+			</Container>
+
+			<!-- Promotions -->
+			<Stack ID="GovernorPromotionStack" Offset="36,4" StackGrowth="Right"/>
+
+			<!-- Turns to Establish -->
+			<Stack ID="TurnsToEstablishIcon" Texture="Governors_Assignmentarrow" Anchor="R,T" Offset="14,6" StackGrowth="Right" StackPadding="0">
+        <Label String="[Icon_Turn]" Offset="0,-1" ToolTip="LOC_GOVERNOR_TURNS_TO_ESTABLISH"/>
+				<Label ID="TurnsToEstablish" Anchor="R,B" Offset="2,3" Style="FontFlair16" Color="White" ToolTip="LOC_GOVERNOR_TURNS_TO_ESTABLISH"/>
+			</Stack>
+		</Grid>
+	</Instance>
+	
+	<!-- Left Panel -->
+  <SlideAnim ID="AssignmentChooserSlideAnim" Anchor="L,T" Begin="-350,0" End="0,0" Cycle="Once" Speed="1" Function="OutQuint">
+    <Container ID="AssignmentChooser" Offset="-3,54">
+      <!-- Body container-->
+      <Container ID="BodyContainer" Size="310,parent-54" ConsumeAllMouse="1">
+        
+        <!-- Bottom Panel -->
+        <Grid ID="BottomGrid" Size="parent-2,parent-268" Offset="0,220" Texture="Controls_ContainerBlue" SliceStart="0,0" SliceCorner="3,3" SliceSize="9,9" SliceTextureSize="16,16" >
+
+          <!-- Destination List -->
+          <ScrollPanel ID="AssignmentChoiceScrollPanel" Anchor="C,T" Offset="2,7" Size="parent,parent-10" Vertical="1" AutoScrollBar="1">
+            <ScrollBar Style="ScrollVerticalBacking" Anchor="R,T" AnchorSide="O,I" Color="28,60,90,255" Offset="-15,1">
+              <Thumb Style="ScrollThumbAlt" Color="28,60,90,255" />
+            </ScrollBar>
+
+            <!-- Destination Stack -->
+            <Stack ID="AssignmentChoiceStack" Offset="0,0" StackGrowth="Down"/>
+          </ScrollPanel>
+
+          <!-- Bottom Divider -->
+          <Grid Size="parent+5,10" Anchor="C,B" Offset="0,-8" Style="Divider3Grid" />
+        </Grid>
+
+        <!-- Top Panel -->
+        <Image ID="TopPanel" Size="parent-2,218" Texture="Governors_Column_BackgroundTile" StretchMode="Tile">
+          <!-- Decorative Column Borders -->
+          <Grid ID="TopGrid" Size="parent+12,parent+10" Offset="-2,0" Texture="Governors_Column_AssignmentScreen_Group 3" SliceCorner="53,74" SliceSize="142,96"/>
+
+          <Container ID="CitySelectedContainer" Size="parent,parent">
+            <!-- CityName Name -->
+            <Grid ID="CityNameGrid" Anchor="C,T" Offset="0,0" Size="235,48" Texture="Governors_NamePlaque" SliceCorner="20,25" SliceSize="17,7">
+							<Stack Anchor="C,C" Offset="0,2" StackGrowth="Right">
+								<Label ID="CapitalIcon"	Anchor="L,C" Offset="0,-1" Style="FontNormal16" String="[ICON_Capital]"/>
+								<Label ID="CityName" Anchor="L,C" Style="FontFlair16"	FontStyle="Stroke" EffectColor="0,0,0,25" SmallCaps="18" SmallCapsType="EveryWord"/>
+							</Stack>
+            </Grid>
+
+						<Stack ID="GovernorStack" Anchor="C,C" Offset="0,18" StackGrowth="Down" StackPadding="4">
+							<MakeInstance ID="NewGovernorInst" Name="GovernorInstance"/>
+							<Label Anchor="C,T" Offset="0,1" Style="ParchmentHeader"  String="{LOC_GOVERNOR_ASSIGNMENT_REPLACES:upper}"/>
+							<MakeInstance ID="OldGovernorInst" Name="GovernorInstance"/>
+						</Stack>       
+					</Container>
+
+          <!-- Label show when use needs to select a city -->
+          <Label ID="NeedToSelectACityLabel" Anchor="C,C" Style="FontFlair14" Color="25,25,25,255" SmallCaps="18" SmallCapsLeading="0" SmallCapsType="FirstWord" String="{LOC_GOVERNOR_SELECT_A_CITY:upper}"/>
+        </Image>
+
+				<!-- Confirmation Panel -->
+				<Grid ID="ConfirmGrid" Size="parent,90" Anchor="C,B" Texture="Controls_DrawerUp" SliceCorner="5,4" SliceSize="3,2" SliceTextureSize="14,8">
+					<Stack Anchor="C,C">
+						<!-- Confirm Button -->
+						<GridButton ID="ConfirmButton" Size="285,41" Offset="0,4" Anchor="C,B">
+							<GridData Texture="Controls_Confirm" StateOffsetIncrement="0,41" Color="225,225,225,255" SliceCorner="40,21" SliceSize="1,1" SliceTextureSize="80,41"/>
+
+							<AlphaAnim ID="ConfirmAnim" Anchor="C,C" AlphaBegin="1" AlphaEnd="0" Speed="1" Pause="2" Cycle="Bounce">
+								<Label ID="ConfirmLabel" Anchor="C,C" Offset="0,2" String="{LOC_GOVERNORS_SCREEN_BUTTON_ASSIGN_GOVERNOR:upper}" Color="225,225,225,255" Style="FontFlair14" FontStyle="Shadows" TextOffset="0,2" SmallCaps="18" SmallCapsType="EveryWord"/>
+							</AlphaAnim>
+						</GridButton>
+
+						<!-- Cancel Button -->
+						<GridButton ID="CancelButton" Style="ButtonLightWeightGrid" Size="285,24" Offset="0,4" Anchor="C,B" String="{LOC_CANCEL:upper}" Style="FontFlair14" FontStyle="Shadows" TextOffset="0,2" EffectColor="0,0,0,255" SmallCaps="18" SmallCapsType="EveryWord"/>
+					</Stack>
+				</Grid>
+      </Container>
+
+      <!-- Header container-->
+      <Grid Size="322,60" Offset="3,-25" Style="HeaderBannerLeft" >
+        <Label ID="Header_OriginText" Size="260, 50" Offset="-8,9" Anchor="C,T" Style="FontFlair14" Color0="0,59,77,255" SmallCaps="18" SmallCapsType="FirstOnly" String="{LOC_GOVERNOR_ASSIGN_GOVERNOR_TO:upper}" TruncateWidth="240" TruncatedTooltip="1"/>
+        <Button ID="Header_CloseButton" Size="32,32" Offset="10,-2" Anchor="R,T" Texture="Controls_CloseButtonAlt"/>
+      </Grid>
+      
+    </Container>
+  </SlideAnim>
+</Context>
