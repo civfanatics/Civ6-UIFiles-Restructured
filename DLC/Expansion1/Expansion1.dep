@@ -1,0 +1,582 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<AssetObjects..GameDependencyData>
+	<ID>
+		<name text="Expansion1"/>
+		<id text="7446c8fe-29eb-44f8-801f-098f681cc5c5"/>
+	</ID>
+	<RequiredGameArtIDs/>
+	<SystemDependencies>
+		<Element>
+			<ConsumerName text="Audio"/>
+			<ArtDefDependencyPaths>
+				<Element text="Civilizations.artdef"/>
+				<Element text="Districts.artdef"/>
+				<Element text="Units.artdef"/>
+				<Element text="Leaders.artdef"/>
+				<Element text="Landmarks.artdef"/>
+				<Element text="StrategicView.artdef"/>
+				<Element text="Cultures.artdef"/>
+				<Element text="VFX.artdef"/>
+				<Element text="Unit_Bins.artdef"/>
+				<Element text="CityGenerators.artdef"/>
+				<Element text="Buildings.artdef"/>
+			</ArtDefDependencyPaths>
+			<LibraryDependencies/>
+			<LoadsLibraries>true</LoadsLibraries>
+		</Element>
+		<Element>
+			<ConsumerName text="VFX"/>
+			<ArtDefDependencyPaths>
+				<Element text="VFX.artdef"/>
+			</ArtDefDependencyPaths>
+			<LibraryDependencies>
+				<Element text="VFX"/>
+				<Element text="Light"/>
+			</LibraryDependencies>
+			<LoadsLibraries>true</LoadsLibraries>
+		</Element>
+		<Element>
+			<ConsumerName text="Units"/>
+			<ArtDefDependencyPaths>
+				<Element text="Units.artdef"/>
+				<Element text="Unit_Bins.artdef"/>
+				<Element text="Cultures.artdef"/>
+				<Element text="VFX.artdef"/>
+			</ArtDefDependencyPaths>
+			<LibraryDependencies>
+				<Element text="Unit"/>
+				<Element text="VFX"/>
+				<Element text="Light"/>
+			</LibraryDependencies>
+			<LoadsLibraries>true</LoadsLibraries>
+		</Element>
+		<Element>
+			<ConsumerName text="Landmarks"/>
+			<ArtDefDependencyPaths>
+				<Element text="Landmarks.artdef"/>
+				<Element text="Improvements.artdef"/>
+				<Element text="CityGenerators.artdef"/>
+				<Element text="Resources.artdef"/>
+				<Element text="Cultures.artdef"/>
+				<Element text="Buildings.artdef"/>
+				<Element text="Civilizations.artdef"/>
+				<Element text="StrategicView.artdef"/>
+				<Element text="Clutter.artdef"/>
+				<Element text="Features.artdef"/>
+				<Element text="Districts.artdef"/>
+			</ArtDefDependencyPaths>
+			<LibraryDependencies>
+				<Element text="TileBase"/>
+				<Element text="CityBuildings"/>
+				<Element text="Light"/>
+			</LibraryDependencies>
+			<LoadsLibraries>true</LoadsLibraries>
+		</Element>
+		<Element>
+			<ConsumerName text="Terrain"/>
+			<ArtDefDependencyPaths>
+				<Element text="TerrainStyle.artdef"/>
+			</ArtDefDependencyPaths>
+			<LibraryDependencies>
+				<Element text="TerrainAsset"/>
+				<Element text="TerrainElement"/>
+				<Element text="TerrainMaterial"/>
+			</LibraryDependencies>
+			<LoadsLibraries>true</LoadsLibraries>
+		</Element>
+		<Element>
+			<ConsumerName text="Clutter"/>
+			<ArtDefDependencyPaths>
+				<Element text="Clutter.artdef"/>
+			</ArtDefDependencyPaths>
+			<LibraryDependencies>
+				<Element text="Landmark"/>
+			</LibraryDependencies>
+			<LoadsLibraries>true</LoadsLibraries>
+		</Element>
+		<Element>
+			<ConsumerName text="LeaderLighting"/>
+			<ArtDefDependencyPaths/>
+			<LibraryDependencies>
+				<Element text="LeaderLighting"/>
+			</LibraryDependencies>
+			<LoadsLibraries>true</LoadsLibraries>
+		</Element>
+		<Element>
+			<ConsumerName text="Features"/>
+			<ArtDefDependencyPaths>
+				<Element text="Features.artdef"/>
+				<Element text="StrategicView.artdef"/>
+				<Element text="Clutter.artdef"/>
+				<Element text="Landmarks.artdef"/>
+				<Element text="Buildings.artdef"/>
+				<Element text="CityGenerators.artdef"/>
+				<Element text="Cultures.artdef"/>
+				<Element text="Civilizations.artdef"/>
+				<Element text="Districts.artdef"/>
+			</ArtDefDependencyPaths>
+			<LibraryDependencies/>
+			<LoadsLibraries>true</LoadsLibraries>
+		</Element>
+		<Element>
+			<ConsumerName text="Water"/>
+			<ArtDefDependencyPaths>
+				<Element text="Water.artdef"/>
+			</ArtDefDependencyPaths>
+			<LibraryDependencies>
+				<Element text="Water"/>
+			</LibraryDependencies>
+			<LoadsLibraries>true</LoadsLibraries>
+		</Element>
+		<Element>
+			<ConsumerName text="Leaders"/>
+			<ArtDefDependencyPaths>
+				<Element text="Leaders.artdef"/>
+			</ArtDefDependencyPaths>
+			<LibraryDependencies>
+				<Element text="Leader"/>
+			</LibraryDependencies>
+			<LoadsLibraries>true</LoadsLibraries>
+		</Element>
+		<Element>
+			<ConsumerName text="LeaderFallback"/>
+			<ArtDefDependencyPaths>
+				<Element text="FallbackLeaders.artdef"/>
+			</ArtDefDependencyPaths>
+			<LibraryDependencies>
+				<Element text="LeaderFallback"/>
+			</LibraryDependencies>
+			<LoadsLibraries>true</LoadsLibraries>
+		</Element>
+		<Element>
+			<ConsumerName text="StrategicView_Sprite"/>
+			<ArtDefDependencyPaths>
+				<Element text="StrategicView.artdef"/>
+				<Element text="Buildings.artdef"/>
+				<Element text="Districts.artdef"/>
+				<Element text="Landmarks.artdef"/>
+				<Element text="CityGenerators.artdef"/>
+				<Element text="Cultures.artdef"/>
+				<Element text="Civilizations.artdef"/>
+			</ArtDefDependencyPaths>
+			<LibraryDependencies>
+				<Element text="StrategicView_Sprite"/>
+				<Element text="StrategicView_DirectedAsset"/>
+			</LibraryDependencies>
+			<LoadsLibraries>true</LoadsLibraries>
+		</Element>
+		<Element>
+			<ConsumerName text="WorldView_Translate"/>
+			<ArtDefDependencyPaths>
+				<Element text="Districts.artdef"/>
+				<Element text="Buildings.artdef"/>
+				<Element text="Features.artdef"/>
+				<Element text="Improvements.artdef"/>
+				<Element text="Civilizations.artdef"/>
+				<Element text="Resources.artdef"/>
+				<Element text="Landmarks.artdef"/>
+				<Element text="StrategicView.artdef"/>
+				<Element text="Clutter.artdef"/>
+				<Element text="CityGenerators.artdef"/>
+				<Element text="Cultures.artdef"/>
+			</ArtDefDependencyPaths>
+			<LibraryDependencies/>
+			<LoadsLibraries>false</LoadsLibraries>
+		</Element>
+		<Element>
+			<ConsumerName text="Resources"/>
+			<ArtDefDependencyPaths>
+				<Element text="Resources.artdef"/>
+				<Element text="Clutter.artdef"/>
+				<Element text="Features.artdef"/>
+				<Element text="StrategicView.artdef"/>
+				<Element text="Landmarks.artdef"/>
+				<Element text="Buildings.artdef"/>
+				<Element text="CityGenerators.artdef"/>
+				<Element text="Cultures.artdef"/>
+				<Element text="Civilizations.artdef"/>
+				<Element text="Districts.artdef"/>
+			</ArtDefDependencyPaths>
+			<LibraryDependencies/>
+			<LoadsLibraries>true</LoadsLibraries>
+		</Element>
+		<Element>
+			<ConsumerName text="DynamicGeometry"/>
+			<ArtDefDependencyPaths>
+				<Element text="Walls.artdef"/>
+			</ArtDefDependencyPaths>
+			<LibraryDependencies/>
+			<LoadsLibraries>true</LoadsLibraries>
+		</Element>
+		<Element>
+			<ConsumerName text="Lenses"/>
+			<ArtDefDependencyPaths>
+				<Element text="Lenses.artdef"/>
+			</ArtDefDependencyPaths>
+			<LibraryDependencies/>
+			<LoadsLibraries>true</LoadsLibraries>
+		</Element>
+		<Element>
+			<ConsumerName text="UILensAsset"/>
+			<ArtDefDependencyPaths>
+				<Element text="Overlay.artdef"/>
+			</ArtDefDependencyPaths>
+			<LibraryDependencies>
+				<Element text="UILensAsset"/>
+			</LibraryDependencies>
+			<LoadsLibraries>true</LoadsLibraries>
+		</Element>
+		<Element>
+			<ConsumerName text="UI"/>
+			<ArtDefDependencyPaths/>
+			<LibraryDependencies>
+				<Element text="UITexture"/>
+			</LibraryDependencies>
+			<LoadsLibraries>true</LoadsLibraries>
+		</Element>
+		<Element>
+			<ConsumerName text="Overlay"/>
+			<ArtDefDependencyPaths>
+				<Element text="Overlay.artdef"/>
+			</ArtDefDependencyPaths>
+			<LibraryDependencies>
+				<Element text="OverlayTexture"/>
+				<Element text="UILensAsset"/>
+			</LibraryDependencies>
+			<LoadsLibraries>true</LoadsLibraries>
+		</Element>
+		<Element>
+			<ConsumerName text="ColorKeys"/>
+			<ArtDefDependencyPaths/>
+			<LibraryDependencies>
+				<Element text="ColorKey"/>
+			</LibraryDependencies>
+			<LoadsLibraries>true</LoadsLibraries>
+		</Element>
+		<Element>
+			<ConsumerName text="GameLighting"/>
+			<ArtDefDependencyPaths/>
+			<LibraryDependencies>
+				<Element text="ColorKey"/>
+			</LibraryDependencies>
+			<LoadsLibraries>true</LoadsLibraries>
+		</Element>
+		<Element>
+			<ConsumerName text="WonderMovie"/>
+			<ArtDefDependencyPaths>
+				<Element text="WonderMovie.artdef"/>
+			</ArtDefDependencyPaths>
+			<LibraryDependencies>
+				<Element text="WonderMovie"/>
+				<Element text="ColorKey"/>
+				<Element text="TileBase"/>
+			</LibraryDependencies>
+			<LoadsLibraries>true</LoadsLibraries>
+		</Element>
+	</SystemDependencies>
+	<ArtDefDependencies>
+		<Element>
+			<ArtDefPath text="Civilizations.artdef"/>
+			<ArtDefDependencyPaths/>
+		</Element>
+		<Element>
+			<ArtDefPath text="Districts.artdef"/>
+			<ArtDefDependencyPaths>
+				<Element text="Landmarks.artdef"/>
+				<Element text="StrategicView.artdef"/>
+				<Element text="Districts.artdef"/>
+			</ArtDefDependencyPaths>
+		</Element>
+		<Element>
+			<ArtDefPath text="Units.artdef"/>
+			<ArtDefDependencyPaths>
+				<Element text="Units.artdef"/>
+				<Element text="Cultures.artdef"/>
+				<Element text="VFX.artdef"/>
+				<Element text="Unit_Bins.artdef"/>
+			</ArtDefDependencyPaths>
+		</Element>
+		<Element>
+			<ArtDefPath text="Leaders.artdef"/>
+			<ArtDefDependencyPaths/>
+		</Element>
+		<Element>
+			<ArtDefPath text="Terrains.artdef"/>
+			<ArtDefDependencyPaths>
+				<Element text="StrategicView.artdef"/>
+				<Element text="Clutter.artdef"/>
+			</ArtDefDependencyPaths>
+		</Element>
+		<Element>
+			<ArtDefPath text="VFX.artdef"/>
+			<ArtDefDependencyPaths/>
+		</Element>
+		<Element>
+			<ArtDefPath text="Unit_Bins.artdef"/>
+			<ArtDefDependencyPaths>
+				<Element text="Units.artdef"/>
+			</ArtDefDependencyPaths>
+		</Element>
+		<Element>
+			<ArtDefPath text="Landmarks.artdef"/>
+			<ArtDefDependencyPaths>
+				<Element text="CityGenerators.artdef"/>
+				<Element text="Landmarks.artdef"/>
+				<Element text="Cultures.artdef"/>
+				<Element text="Buildings.artdef"/>
+				<Element text="Civilizations.artdef"/>
+			</ArtDefDependencyPaths>
+		</Element>
+		<Element>
+			<ArtDefPath text="Improvements.artdef"/>
+			<ArtDefDependencyPaths>
+				<Element text="StrategicView.artdef"/>
+				<Element text="Improvements.artdef"/>
+				<Element text="Landmarks.artdef"/>
+			</ArtDefDependencyPaths>
+		</Element>
+		<Element>
+			<ArtDefPath text="CityGenerators.artdef"/>
+			<ArtDefDependencyPaths>
+				<Element text="Civilizations.artdef"/>
+			</ArtDefDependencyPaths>
+		</Element>
+		<Element>
+			<ArtDefPath text="Resources.artdef"/>
+			<ArtDefDependencyPaths>
+				<Element text="Clutter.artdef"/>
+				<Element text="Features.artdef"/>
+			</ArtDefDependencyPaths>
+		</Element>
+		<Element>
+			<ArtDefPath text="TerrainStyle.artdef"/>
+			<ArtDefDependencyPaths/>
+		</Element>
+		<Element>
+			<ArtDefPath text="Clutter.artdef"/>
+			<ArtDefDependencyPaths>
+				<Element text="Clutter.artdef"/>
+			</ArtDefDependencyPaths>
+		</Element>
+		<Element>
+			<ArtDefPath text="Features.artdef"/>
+			<ArtDefDependencyPaths>
+				<Element text="StrategicView.artdef"/>
+				<Element text="Clutter.artdef"/>
+				<Element text="Landmarks.artdef"/>
+			</ArtDefDependencyPaths>
+		</Element>
+		<Element>
+			<ArtDefPath text="Water.artdef"/>
+			<ArtDefDependencyPaths/>
+		</Element>
+		<Element>
+			<ArtDefPath text="FallbackLeaders.artdef"/>
+			<ArtDefDependencyPaths/>
+		</Element>
+		<Element>
+			<ArtDefPath text="StrategicView.artdef"/>
+			<ArtDefDependencyPaths>
+				<Element text="StrategicView.artdef"/>
+				<Element text="Buildings.artdef"/>
+			</ArtDefDependencyPaths>
+		</Element>
+		<Element>
+			<ArtDefPath text="Buildings.artdef"/>
+			<ArtDefDependencyPaths>
+				<Element text="StrategicView.artdef"/>
+				<Element text="Buildings.artdef"/>
+				<Element text="Districts.artdef"/>
+			</ArtDefDependencyPaths>
+		</Element>
+		<Element>
+			<ArtDefPath text="Walls.artdef"/>
+			<ArtDefDependencyPaths>
+				<Element text="Walls.artdef"/>
+			</ArtDefDependencyPaths>
+		</Element>
+		<Element>
+			<ArtDefPath text="Lenses.artdef"/>
+			<ArtDefDependencyPaths>
+				<Element text="Lenses.artdef"/>
+			</ArtDefDependencyPaths>
+		</Element>
+		<Element>
+			<ArtDefPath text="Overlay.artdef"/>
+			<ArtDefDependencyPaths/>
+		</Element>
+		<Element>
+			<ArtDefPath text="WonderMovie.artdef"/>
+			<ArtDefDependencyPaths>
+				<Element text="WonderMovie.artdef"/>
+			</ArtDefDependencyPaths>
+		</Element>
+		<Element>
+			<ArtDefPath text="Cultures.artdef"/>
+			<ArtDefDependencyPaths/>
+		</Element>
+	</ArtDefDependencies>
+	<LibraryDependencies>
+		<Element>
+			<LibraryName text="VFX"/>
+			<PackageDependencies>
+				<Element text="VFX.blp"/>
+				<Element text="VFX_FireFX.blp"/>
+			</PackageDependencies>
+		</Element>
+		<Element>
+			<LibraryName text="WonderMovie"/>
+			<PackageDependencies>
+				<Element text="WonderMovie.blp"/>
+			</PackageDependencies>
+		</Element>
+		<Element>
+			<LibraryName text="Unit"/>
+			<PackageDependencies>
+				<Element text="units/units.blp"/>
+			</PackageDependencies>
+		</Element>
+		<Element>
+			<LibraryName text="TileBase"/>
+			<PackageDependencies>
+				<Element text="landmarks/tilebases.blp"/>
+				<Element text="NaturalWonderAttachments.blp"/>
+				<Element text="DIS_ENC_Ikanda.blp"/>
+				<Element text="DIS_Seowon.blp"/>
+				<Element text="DIS_Government.blp"/>
+				<Element text="DIS_Water_ENT.blp"/>
+				<Element text="IMP_Polder.blp"/>
+				<Element text="IMP_Golf_Course.blp"/>
+				<Element text="IMP_Cree_Mekewap.blp"/>
+				<Element text="IMP_Fishery.blp"/>
+				<Element text="IMP_City_Park.blp"/>
+			</PackageDependencies>
+		</Element>
+		<Element>
+			<LibraryName text="DynamicGeometry"/>
+			<PackageDependencies>
+				<Element text="Walls_Tsikhe.blp"/>
+			</PackageDependencies>
+		</Element>
+		<Element>
+			<LibraryName text="TerrainAsset"/>
+			<PackageDependencies>
+				<Element text="terrain/TerrainAssetSet_Base.blp"/>
+			</PackageDependencies>
+		</Element>
+		<Element>
+			<LibraryName text="TerrainElement"/>
+			<PackageDependencies>
+				<Element text="terrain/TerrainElementSet_Base.blp"/>
+			</PackageDependencies>
+		</Element>
+		<Element>
+			<LibraryName text="TerrainMaterial"/>
+			<PackageDependencies>
+				<Element text="terrain/TerrainMaterialSet_Base.blp"/>
+			</PackageDependencies>
+		</Element>
+		<Element>
+			<LibraryName text="Leader"/>
+			<PackageDependencies>
+				<Element text="leaders/leader_chandragupta.blp"/>
+				<Element text="leaders/leader_genghis_khan.blp"/>
+				<Element text="leaders/leader_robert_the_bruce.blp"/>
+				<Element text="leaders/leader_seondeok.blp"/>
+				<Element text="leaders/leader_shaka.blp"/>
+				<Element text="leaders/leader_whilhelmina.blp"/>
+				<Element text="leaders/leader_lautaro.blp"/>
+				<Element text="leaders/leader_tamar.blp"/>
+				<Element text="leaders/leader_poundmaker.blp"/>
+			</PackageDependencies>
+		</Element>
+		<Element>
+			<LibraryName text="CityBuildings"/>
+			<PackageDependencies>
+				<Element text="landmarks/city_buildings.blp"/>
+			</PackageDependencies>
+		</Element>
+		<Element>
+			<LibraryName text="Landmark"/>
+			<PackageDependencies>
+				<Element text="environment/clutter.blp"/>
+			</PackageDependencies>
+		</Element>
+		<Element>
+			<LibraryName text="LeaderLighting"/>
+			<PackageDependencies>
+				<Element text="leaders/light_rigs.blp"/>
+			</PackageDependencies>
+		</Element>
+		<Element>
+			<LibraryName text="Water"/>
+			<PackageDependencies>
+				<Element text="Water.blp"/>
+			</PackageDependencies>
+		</Element>
+		<Element>
+			<LibraryName text="LeaderFallback"/>
+			<PackageDependencies>
+				<Element text="LeaderFallbackImages.blp"/>
+			</PackageDependencies>
+		</Element>
+		<Element>
+			<LibraryName text="StrategicView_Sprite"/>
+			<PackageDependencies>
+				<Element text="strategicview/strategicview_buildings.blp"/>
+				<Element text="strategicview/strategicview_districts.blp"/>
+				<Element text="strategicview/strategicview_features.blp"/>
+				<Element text="strategicview/strategicview_improvements.blp"/>
+				<Element text="strategicview/strategicview_uilenses.blp"/>
+			</PackageDependencies>
+		</Element>
+		<Element>
+			<LibraryName text="UITexture"/>
+			<PackageDependencies>
+				<Element text="UI/PrideMoments.blp"/>
+				<Element text="UI/Icons.blp"/>
+				<Element text="UI/Governors.blp"/>
+				<Element text="UI/UI_HUD.blp"/>
+				<Element text="UI/UI_Leaders.blp"/>
+				<Element text="UI/Historian.blp"/>
+				<Element text="UI/UI_Eras.blp"/>
+				<Element text="UI/UI_Identity.blp"/>
+				<Element text="UI/UI_Emergencies.blp"/>
+				<Element text="UI_LeaderScenes.blp"/>
+				<Element text="UI/UI_Controls.blp"/>
+				<Element text="UI/UI_Shell.blp"/>
+				<Element text="UI/UI_Civilopedia.blp"/>
+				<Element text="UI/UI_Government.blp"/>
+				<Element text="UI/Shell_Loading.blp"/>
+				<Element text="UI/InWorld.blp"/>
+				<Element text="UI/UI_Tree.blp"/>
+				<Element text="UI/UI_Ages.blp"/>
+			</PackageDependencies>
+		</Element>
+		<Element>
+			<LibraryName text="Light"/>
+			<PackageDependencies>
+				<Element text="Light.blp"/>
+			</PackageDependencies>
+		</Element>
+		<Element>
+			<LibraryName text="UILensAsset"/>
+			<PackageDependencies>
+				<Element text="UILensAssets.blp"/>
+			</PackageDependencies>
+		</Element>
+		<Element>
+			<LibraryName text="OverlayTexture"/>
+			<PackageDependencies>
+				<Element text="Overlay.blp"/>
+			</PackageDependencies>
+		</Element>
+		<Element>
+			<LibraryName text="ColorKey"/>
+			<PackageDependencies>
+				<Element text="ColorKeys.blp"/>
+			</PackageDependencies>
+		</Element>
+	</LibraryDependencies>
+</AssetObjects..GameDependencyData>
+

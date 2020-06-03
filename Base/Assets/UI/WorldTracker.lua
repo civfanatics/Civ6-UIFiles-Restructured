@@ -20,7 +20,7 @@ include("CivicsTreeIconLoader_", true);
 --	CONSTANTS
 -- ===========================================================================
 local RELOAD_CACHE_ID					:string = "WorldTracker"; -- Must be unique (usually the same as the file name)
-local CHAT_COLLAPSED_SIZE				:number = 99;
+local CHAT_COLLAPSED_SIZE				:number = 118;
 local MAX_BEFORE_TRUNC_TRACKER			:number = 180;
 local MAX_BEFORE_TRUNC_CHECK			:number = 160;
 local MAX_BEFORE_TRUNC_TITLE			:number = 225;
@@ -53,9 +53,12 @@ local m_currentResearchID		:number = -1;
 local m_lastResearchCompletedID	:number = -1;
 local m_currentCivicID			:number = -1;
 local m_lastCivicCompletedID	:number = -1;
+local m_minimapSize				:number = 199;
+local m_numEmergencies			:number = 0;
 local m_isTrackerAlwaysCollapsed:boolean = false;	-- Once the launch bar extends past the width of the world tracker, we always show the collapsed version of the backing for the tracker element
 local m_isDirty					:boolean = false;	-- Note: renamed from "refresh" which is a built in Forge mechanism; this is based on a gamecore event to check not frame update
-
+local m_isMinimapCollapsed		:boolean = false;
+local m_isChatExpanded			:boolean = false;
 
 -- ===========================================================================
 --	FUNCTIONS
@@ -147,6 +150,9 @@ function ToggleAll(hideAll:boolean)
 
 	LuaEvents.WorldTracker_ToggleCivicPanel(m_hideCivics or m_hideAll);
 	LuaEvents.WorldTracker_ToggleResearchPanel(m_hideResearch or m_hideAll);
+	if m_isChatExpanded then
+		ResizeExpandedChatPanel();
+	end
 end
 
 -- ===========================================================================
@@ -188,6 +194,9 @@ function UpdateResearchPanel( isHideResearch:boolean )
 		isHideResearch = true;
 		Controls.ResearchCheck:SetHide(true);
 	end
+	if isHideResearch ~= nil and isHideResearch ~= m_hideResearch then
+		LuaEvents.ChatPanel_OnResetDraggedChatPanel(); --Reset the chat panel so the mouse offset is correct for dragging
+	end
 	if isHideResearch ~= nil then
 		m_hideResearch = isHideResearch;		
 	end
@@ -198,12 +207,17 @@ function UpdateResearchPanel( isHideResearch:boolean )
 	RealizeEmptyMessage();
 	RealizeStack();
 
+	-- If not an actual player (observer, tuner, etc...) then we're done here...
+	local ePlayer		:number = Game.GetLocalPlayer();
+	if (ePlayer == PlayerTypes.NONE or ePlayer == PlayerTypes.OBSERVER) then
+		return;
+	end
+
 	-- Set the technology to show (or -1 if none)...
 	local iTech			:number = m_currentResearchID;
 	if m_currentResearchID == -1 then 
 		iTech = m_lastResearchCompletedID; 
 	end
-	local ePlayer		:number = Game.GetLocalPlayer();
 	local pPlayer		:table  = Players[ePlayer];
 	local pPlayerTechs	:table	= pPlayer:GetTechs();
 	local kTech			:table	= (iTech ~= -1) and GameInfo.Technologies[ iTech ] or nil;
@@ -223,20 +237,21 @@ function UpdateResearchPanel( isHideResearch:boolean )
 		m_researchInstance.TitleButton:SetHide( false );
 		TruncateStringWithTooltip(m_researchInstance.TitleButton, MAX_BEFORE_TRUNC_TITLE, Locale.ToUpper(Locale.Lookup("LOC_WORLD_TRACKER_CHOOSE_RESEARCH")) );
 	end
+	if m_isChatExpanded then
+		ResizeExpandedChatPanel();
+	end
 end
 
 -- ===========================================================================
 function UpdateCivicsPanel(hideCivics:boolean)
 
-	local ePlayer:number = Game.GetLocalPlayer();
-	if ePlayer == -1 then return; end	-- Autoplayer
-
-
 	if not HasCapability("CAPABILITY_CIVICS_CHOOSER") then
 		hideCivics = true;
 		Controls.CivicsCheck:SetHide(true);
 	end
-
+	if hideCivics ~= nil and hideCivics ~= m_hideCivics then
+		LuaEvents.ChatPanel_OnResetDraggedChatPanel(); --Reset the chat panel so the mouse offset is correct for dragging
+	end
 	if hideCivics ~= nil then
 		m_hideCivics = hideCivics;		
 	end
@@ -246,6 +261,12 @@ function UpdateCivicsPanel(hideCivics:boolean)
 	LuaEvents.WorldTracker_ToggleCivicPanel(m_hideCivics or m_hideAll);
 	RealizeEmptyMessage();
 	RealizeStack();
+
+	-- If not an actual player (observer, tuner, etc...) then we're done here...
+	local ePlayer		:number = Game.GetLocalPlayer();
+	if (ePlayer == PlayerTypes.NONE or ePlayer == PlayerTypes.OBSERVER) then
+		return;
+	end
 
 	-- Set the civic to show (or -1 if none)...
 	local iCivic :number = m_currentCivicID;
@@ -275,6 +296,9 @@ function UpdateCivicsPanel(hideCivics:boolean)
 		TruncateStringWithTooltip(m_civicsInstance.TitleButton, MAX_BEFORE_TRUNC_TITLE, Locale.ToUpper(Locale.Lookup("LOC_WORLD_TRACKER_CHOOSE_CIVIC")) );
 	else
 		TruncateStringWithTooltip(m_civicsInstance.TitleButton, MAX_BEFORE_TRUNC_TITLE, m_civicsInstance.TitleButton:GetText() );
+	end
+	if m_isChatExpanded then
+		ResizeExpandedChatPanel();
 	end
 end
 
@@ -578,23 +602,71 @@ end
 -- ===========================================================================
 -- Handling chat panel expansion
 -- ===========================================================================
-function OnChatPanel_OpenExpandedPanels()
-	--[[ TODO: Embiggen the chat panel to fill size!  (Requires chat panel changes as well) ??TRON
-	Controls.ChatPanel:SetHide(true);							-- Hide so it's not part of stack computation.
-	RealizeStack();	
-	width, height				= UIManager:GetScreenSizeVal();
-	local stackSize		:number	= Controls.PanelStack:GetSizeY();	-- Size of other stuff in the stack.
-	local minimapSize	:number = 100;
-	local chatSize		:number = math.max(199, height-(stackSize + minimapSize) );
-	Controls.ChatPanel:SetHide(false);
-	]]	
-	Controls.ChatPanel:SetSizeY(199);
+function OnChatPanel_OpenExpandedPanels()	
+	m_isChatExpanded = true;
+	ResizeExpandedChatPanel();	
+end
+
+-- ===========================================================================
+function OnChatPanel_CloseExpandedPanels()
+	m_isChatExpanded = false;
+	Controls.ChatPanel:SetSizeY( CHAT_COLLAPSED_SIZE );	
 	RealizeStack();	
 end
 
-function OnChatPanel_CloseExpandedPanels()
-	Controls.ChatPanel:SetSizeY( CHAT_COLLAPSED_SIZE );	
-	RealizeStack();	
+-- ===========================================================================
+function ResizeExpandedChatPanel()
+	Controls.ChatPanel:SetHide(true);							-- Hide so it's not part of stack computation.
+	RealizeStack();
+
+	local uiMinimap			:table  = ContextPtr:LookUpControl("/InGame/MinimapPanel/MinimapContainer");	
+	local minimapPadding	:number	= 120;
+	local defaultMinimapSize:number = 376;						-- Size of the minimap when the height > width (ex. Nubia/BlackDeath scenarios).
+	local stackSize			:number	= 30;						-- Not using Controls.PanelStack:GetSizeY() b/c it returns different values for the same stack based on scenario.
+	local stackSection		:number = 96;
+	local crisisSize		:number = 50;
+	local chatSize			:number = 199;	
+	width, height					= UIManager:GetScreenSizeVal();
+	
+	if uiMinimap then
+		m_minimapSize = uiMinimap:GetSizeY() + minimapPadding;
+	else
+		m_minimapSize = defaultMinimapSize;
+	end
+	if not m_hideCivics then
+		stackSize = stackSize + stackSection;
+	end
+	if not m_hideResearch then
+		stackSize = stackSize + stackSection;
+	end
+
+	crisisSize = crisisSize * m_numEmergencies;
+
+	if m_isMinimapCollapsed then
+		m_minimapSize = 100;
+	end
+	
+	chatSize = math.max(199, height-(stackSize + m_minimapSize + crisisSize));
+	
+	if (stackSize + m_minimapSize + chatSize + crisisSize) >= height then
+		chatSize = height - m_minimapSize - stackSize - crisisSize - 25;
+	end
+	Controls.ChatPanel:SetHide(m_hideChat);
+	LuaEvents.ChatPanel_SetChatPanelSize(chatSize);			--Sets chat panel pulldown size
+	Controls.ChatPanel:SetSizeY(chatSize);					--Sets chat stack for placement of emergencies if present
+end
+
+-- ===========================================================================
+function OnSetMinimapCollapsed(isMinimapCollapsed:boolean)
+	m_isMinimapCollapsed = isMinimapCollapsed;
+	if m_isChatExpanded then
+		ResizeExpandedChatPanel();
+	end
+end
+
+-- ===========================================================================
+function OnSetNumberOfEmergencies(numEmergencies:number)
+	m_numEmergencies = numEmergencies;
 end
 
 -- ===========================================================================
@@ -659,6 +731,9 @@ function Subscribe()
 	LuaEvents.TutorialGoals_Hiding.Add(					OnTutorialGoalsHiding );
 	LuaEvents.ChatPanel_OpenExpandedPanels.Add(			OnChatPanel_OpenExpandedPanels);
 	LuaEvents.ChatPanel_CloseExpandedPanels.Add(		OnChatPanel_CloseExpandedPanels);
+	LuaEvents.WorldTracker_SetEmergencies.Add(			OnSetNumberOfEmergencies);
+	LuaEvents.WorldTracker_OnScreenResize.Add(			ResizeExpandedChatPanel );
+	LuaEvents.WorldTracker_OnSetMinimapCollapsed.Add(	OnSetMinimapCollapsed );
 end
 
 -- ===========================================================================
@@ -691,6 +766,9 @@ function Unsubscribe()
 	LuaEvents.TutorialGoals_Hiding.Remove(					OnTutorialGoalsHiding );
 	LuaEvents.ChatPanel_OpenExpandedPanels.Remove(			OnChatPanel_OpenExpandedPanels);
 	LuaEvents.ChatPanel_CloseExpandedPanels.Remove(			OnChatPanel_CloseExpandedPanels);
+	LuaEvents.WorldTracker_SetEmergencies.Remove(			OnSetNumberOfEmergencies);
+	LuaEvents.WorldTracker_OnScreenResize.Remove(			ResizeExpandedChatPanel );
+	LuaEvents.WorldTracker_OnSetMinimapCollapsed.Remove(	OnSetMinimapCollapsed );
 end
 
 -- ===========================================================================

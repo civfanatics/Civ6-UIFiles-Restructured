@@ -312,20 +312,20 @@ end
 
 -- ===========================================================================
 function AddPlayerEraIcon(playerID:number, eraIcon:string)
-	local civIcon, instance = CivilizationIcon:GetInstance(m_CivilizationIconIM);
-	civIcon:UpdateIconFromPlayerID(playerID);
-	civIcon:SetLeaderTooltip(playerID);
-	civIcon:UpdateLeaderTooltip(playerID);
-	instance.EraLabel:SetText(eraIcon);
+	local oCivIcon:object = CivilizationIcon:GetInstance(m_CivilizationIconIM);
+	oCivIcon:UpdateIconFromPlayerID(playerID);
+	oCivIcon:SetLeaderTooltip(playerID);
+	oCivIcon:UpdateLeaderTooltip(playerID);
+	oCivIcon.EraLabel:SetText(eraIcon);
 
 	local iTeamID:number = Players[playerID]:GetTeam();
 	if #Teams[iTeamID] > 1 then
 		local teamRibbonName:string = TEAM_RIBBON_PREFIX .. tostring(iTeamID);
-		instance.TeamRibbon:SetIcon(teamRibbonName);
-		instance.TeamRibbon:SetHide(false);
-		instance.TeamRibbon:SetColor(GetTeamColor(iTeamID));
+		oCivIcon.TeamRibbon:SetIcon(teamRibbonName);
+		oCivIcon.TeamRibbon:SetHide(false);
+		oCivIcon.TeamRibbon:SetColor(GetTeamColor(iTeamID));
 	else
-		instance.TeamRibbon:SetHide(true);
+		oCivIcon.TeamRibbon:SetHide(true);
 	end
 end
 

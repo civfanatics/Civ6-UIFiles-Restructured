@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ContextDefaults ColorSet="Beige_Black" Style="FontNormal22" FontStyle="Stroke" Name="MainMenu" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="..\..\ForgeUI_Assets\Controls.xsd">
 
-	<Container ID="SwitchPopup" Anchor="C,C" Size="680,380" Offset="0,0">
-		<Image ID="ModalBG" Size="680,380" Offset="0,0" Texture="WorldBuilder_BG" StretchMode="Tile" ConsumeMouse="1"/>
+	<Container ID="SwitchPopup" Anchor="C,C" Size="680,400" Offset="0,0">
+		<Image ID="ModalBG" Size="680,400" Offset="0,0" Texture="WorldBuilder_BG" StretchMode="Tile" ConsumeMouse="1"/>
+		<Grid	Size="parent,40" Texture="Controls_SubHeader2" ConsumeMouse="1" SliceCorner="20,2" SliceTextureSize="40,40">
+		  <Label ID="ModalScreenTitle" String="LOC_CONFIRM_CHOICE" Anchor="C,C" Style="FontFlair26" FontStyle="glow" ColorSet="ShellHeader" />
+		</Grid>
 		<Grid	Offset="-8,-8"	Size="parent+16,parent+16"	Style="ScreenFrame"/>
 
-		<Grid Size="648,280" Offset="20,20" Texture="Religion_OverviewFrame" SliceCorner="15,15" SliceTextureSize="34,33">
+		<Grid Size="648,280" Offset="20,50" Texture="Religion_OverviewFrame" SliceCorner="15,15" SliceTextureSize="34,33">
 				<Label Offset="20,20" WrapWidth="560" Style="FontNormal20" FontStyle="shadow" ColorSet="ShellHeader" String="LOC_WORLDBUILDER_IMPORT_UNSUPPORTED_TEXT" />
 		</Grid>
 		<GridButton ID="WBAConfirmButton" Size="200,48" Offset="17,8" String="LOC_CONTINUE" Style="ButtonConfirm" Anchor="R,B"/>

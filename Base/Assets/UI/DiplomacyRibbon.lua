@@ -5,7 +5,6 @@ include("InstanceManager");
 include("LeaderIcon");
 include("PlayerSupport");
 include("SupportFunctions");
-include("GameCapabilities");
 
 
 -- ===========================================================================
@@ -90,6 +89,28 @@ function OnLeaderSizeChanged( uiLeader:table )
 end
 
 -- ===========================================================================
+-- The four following getter functions are exposed for scenario/mod usage
+-- ===========================================================================
+function GetLeaderIcon()
+	return LeaderIcon:GetInstance(m_kLeaderIM);
+end
+
+-- ===========================================================================
+function GetUILeadersByID()
+	return m_uiLeadersByID;
+end
+
+-- ===========================================================================
+function GetUILeadersByPortrait()
+	return m_uiLeadersByPortrait;
+end
+
+-- ===========================================================================
+function GetLeadersMet()
+	return m_leadersMet;
+end
+
+-- ===========================================================================
 --	Add a leader (from right to left)
 --	iconName,	What icon to draw for the leader portrait
 --	playerID,	gamecore's player ID
@@ -106,24 +127,24 @@ function AddLeader(iconName : string, playerID : number, kProps: table)
 	m_leadersMet = m_leadersMet + 1;
 
 	-- Create a new leader instance
-	local leaderIcon, uiLeader = LeaderIcon:GetInstance(m_kLeaderIM);
-	local uiPortraitButton :table = leaderIcon.Controls.SelectButton;
-	m_uiLeadersByID[playerID] = uiLeader;
-	m_uiLeadersByPortrait[uiPortraitButton] = uiLeader;
+	local oLeaderIcon :object = GetLeaderIcon();
+	local uiPortraitButton :table = oLeaderIcon.Controls.SelectButton;
+	m_uiLeadersByID[playerID] = oLeaderIcon;
+	m_uiLeadersByPortrait[uiPortraitButton] = oLeaderIcon;
 
-	leaderIcon:UpdateIcon(iconName, playerID, isUnqiue);
-	leaderIcon:RegisterCallback(Mouse.eLClick, function() OnLeaderClicked(playerID); end);
+	oLeaderIcon:UpdateIcon(iconName, playerID, isUnqiue);
+	oLeaderIcon:RegisterCallback(Mouse.eLClick, function() OnLeaderClicked(playerID); end);
 
 	-- If using focus, setup mouse in/out callbacks... otherwise clear them.
 	if 	m_ribbonStats == RibbonHUDStats.FOCUS then
 		uiPortraitButton:RegisterMouseEnterCallback( 
 			function( uiControl:table )
-				ShowStats( uiLeader );
+				ShowStats( oLeaderIcon );
 			end
 		);
 		uiPortraitButton:RegisterMouseExitCallback( 
 			function( uiControl:table )
-				HideStats( uiLeader );
+				HideStats( oLeaderIcon );
 			end	
 		);
 	else
@@ -131,16 +152,16 @@ function AddLeader(iconName : string, playerID : number, kProps: table)
 		uiPortraitButton:ClearMouseExitCallback();
 	end
 
-	uiLeader.LeaderContainer:RegisterSizeChanged( 
+	oLeaderIcon.LeaderContainer:RegisterSizeChanged( 
 		function( uiControl ) 
-			OnLeaderSizeChanged( uiLeader );
+			OnLeaderSizeChanged( oLeaderIcon );
 		end
 	);
 
-	FinishAddingLeader( playerID, uiLeader, kProps );
+	FinishAddingLeader( playerID, oLeaderIcon, kProps );
 
-	-- Returning these so mods can override them and modify the icons
-	return leaderIcon, uiLeader;
+	-- Returning so mods can override them and modify the icons
+	return oLeaderIcon;
 end
 
 
@@ -154,12 +175,12 @@ function FinishAddingLeader( playerID:number, uiLeader:table, kProps:table)
 	if kProps.isMasked then	isMasked = kProps.isMasked; end
 
 	-- Show fields for enabled victory types.	
-	local isHideScore	:boolean = isMasked or (not (Game.IsVictoryEnabled("VICTORY_SCORE") or (not HasCapability("VICTORY_SCORE"))));
-	local isHideMilitary:boolean = isMasked or (not Game.IsVictoryEnabled("VICTORY_CONQUEST") or not GameCapabilities.HasCapability("CAPABILITY_DISPLAY_TOP_PANEL_YIELDS"));
-	local isHideScience	:boolean = isMasked or (not HasCapability("CAPABILITY_SCIENCE") or not GameCapabilities.HasCapability("CAPABILITY_DISPLAY_TOP_PANEL_YIELDS"));
-	local isHideCulture :boolean = isMasked or (not HasCapability("CAPABILITY_CULTURE") or not GameCapabilities.HasCapability("CAPABILITY_DISPLAY_TOP_PANEL_YIELDS"));
-	local isHideGold	:boolean = isMasked or (not HasCapability("CAPABILITY_GOLD") or not GameCapabilities.HasCapability("CAPABILITY_DISPLAY_TOP_PANEL_YIELDS"));
-	local isHideFaith	:boolean = isMasked or (not HasCapability("CAPABILITY_RELIGION") or not GameCapabilities.HasCapability("CAPABILITY_DISPLAY_TOP_PANEL_YIELDS"));
+	local isHideScore	:boolean = isMasked or (not Game.IsVictoryEnabled("VICTORY_SCORE")					or not GameCapabilities.HasCapability("CAPABILITY_DISPLAY_SCORE"));
+	local isHideMilitary:boolean = isMasked or (not Game.IsVictoryEnabled("VICTORY_CONQUEST")				or not GameCapabilities.HasCapability("CAPABILITY_DISPLAY_TOP_PANEL_YIELDS"));
+	local isHideScience	:boolean = isMasked or (not GameCapabilities.HasCapability("CAPABILITY_SCIENCE")	or not GameCapabilities.HasCapability("CAPABILITY_DISPLAY_TOP_PANEL_YIELDS"));
+	local isHideCulture :boolean = isMasked or (not GameCapabilities.HasCapability("CAPABILITY_CULTURE")	or not GameCapabilities.HasCapability("CAPABILITY_DISPLAY_TOP_PANEL_YIELDS"));
+	local isHideGold	:boolean = isMasked or (not GameCapabilities.HasCapability("CAPABILITY_GOLD")		or not GameCapabilities.HasCapability("CAPABILITY_DISPLAY_TOP_PANEL_YIELDS"));
+	local isHideFaith	:boolean = isMasked or (not GameCapabilities.HasCapability("CAPABILITY_RELIGION")	or not GameCapabilities.HasCapability("CAPABILITY_DISPLAY_TOP_PANEL_YIELDS"));
 
 	uiLeader.Score:SetHide( isHideScore );
 	uiLeader.Military:SetHide( isHideMilitary );
@@ -428,7 +449,7 @@ function OnDiplomacyMeet(player1ID:number, player2ID:number)
 	
 	local localPlayerID:number = Game.GetLocalPlayer();
 	-- Have a local player?
-	if(localPlayerID ~= -1) then
+	if(localPlayerID ~= PlayerTypes.NONE) then
 		-- Was the local player involved?
 		if (player1ID == localPlayerID or player2ID == localPlayerID) then
 			UpdateLeaders();
@@ -444,7 +465,7 @@ function OnDiplomacyWarStateChange(player1ID:number, player2ID:number)
 	
 	local localPlayerID:number = Game.GetLocalPlayer();
 	-- Have a local player?
-	if(localPlayerID ~= -1) then
+	if(localPlayerID ~= PlayerTypes.NONE) then
 		-- Was the local player involved?
 		if (player1ID == localPlayerID or player2ID == localPlayerID) then
 			UpdateLeaders();
@@ -460,7 +481,7 @@ function OnDiplomacySessionClosed(sessionID:number)
 
 	local localPlayerID:number = Game.GetLocalPlayer();
 	-- Have a local player?
-	if(localPlayerID ~= -1) then
+	if(localPlayerID ~= PlayerTypes.NONE) then
 		-- Was the local player involved?
 		local diplomacyInfo:table = DiplomacyManager.GetSessionInfo(sessionID);
 		if(diplomacyInfo ~= nil and (diplomacyInfo.FromPlayer == localPlayerID or diplomacyInfo.ToPlayer == localPlayerID)) then
@@ -513,7 +534,7 @@ function UpdateStatValues( playerID:number, uiLeader:table )
 	end
 	
 	if uiLeader.Faith:IsVisible() then
-		local faith :number = Round( Players[playerID]:GetReligion():GetFaithBalance() );
+		local faith	:number = Round( Players[playerID]:GetReligion():GetFaithBalance() );
 		uiLeader.Faith:SetText( "[ICON_Faith]"..tostring(faith));
 	end
 
@@ -558,8 +579,9 @@ function OnTurnBegin( playerID:number )
 		end
 	end
 
-	-- Kluge: autoplay layout will frequently size ribbon before other panels and place it behind them in t he HUD.
-	local isAutoPlay:boolean = (Game.GetLocalPlayer() == -1);
+	-- Kluge: autoplay layout will frequently size ribbon before other panels and place it behind them in the HUD.
+	local localPlayer:number = Game.GetLocalPlayer();
+	local isAutoPlay:boolean = (localPlayer == PlayerTypes.NONE or localPlayer == PlayerTypes.OBSERVER);
 	if isAutoPlay then
 		RealizeSize();
 	end
@@ -598,7 +620,7 @@ end
 -- ===========================================================================
 function OnLocalTurnBegin()
 	local playerID	:number = Game.GetLocalPlayer();
-	if playerID == -1 then return; end;
+	if playerID == PlayerTypes.NONE then return; end;
 	OnTurnBegin( playerID );
 end
 
@@ -607,7 +629,7 @@ end
 -- ===========================================================================
 function OnLocalTurnEnd()
 	local playerID	:number = Game.GetLocalPlayer();
-	if playerID == -1 then return; end;
+	if playerID == PlayerTypes.NONE then return; end;
 	OnTurnEnd( playerID );
 end
 
@@ -689,7 +711,7 @@ function OnRefresh()
 
 	if table.count(g_kRefreshRequesters) > 0 then
 		local localPlayerID:number = Game.GetLocalPlayer();
-		if localPlayerID ~= -1 and Players[localPlayerID]:IsTurnActive() then 
+		if localPlayerID ~= PlayerTypes.NONE and localPlayerID ~= PlayerTypes.OBSERVER and Players[localPlayerID]:IsTurnActive() then 
 			local uiLeader :table = m_uiLeadersByID[localPlayerID];
 			if uiLeader ~= nil then
 				UpdateStatValues( localPlayerID, uiLeader );
@@ -725,6 +747,13 @@ end
 function OnLocalStatUpdateRequest( eventName:string )
 	table.insert( g_kRefreshRequesters, eventName );
 	ContextPtr:RequestRefresh();
+end
+
+-- ===========================================================================
+--	For use in scenarios to force show ribbon yields (i.e. PirateScenario)
+-- ===========================================================================
+function SetRibbonOption( option : number )
+	m_ribbonStats = option;
 end
 
 -- ===========================================================================
@@ -903,7 +932,7 @@ function OnInit( isReload:boolean )
 	m_isIniting = false;
 
 	local localPlayerID:number = Game.GetLocalPlayer();
-	if localPlayerID ~= -1 and Players[localPlayerID]:IsTurnActive() then 
+	if localPlayerID ~= PlayerTypes.NONE and localPlayerID ~= PlayerTypes.OBSERVER and Players[localPlayerID]:IsTurnActive() then 
 		OnLocalTurnBegin();
 	end
 end

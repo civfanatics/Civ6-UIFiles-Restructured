@@ -7,12 +7,12 @@
   <AlphaAnim ID="SearchResultsTimer" Begin="0" End="1" Speed="2" Cycle="Once" Stopped="1"/>
 
   <Container Anchor="C,C" Size="full,768">
-    <Box Color="7,30,50,255" Anchor="L,B" Size="parent,5"/>
-    <Grid Anchor="C,B" Offset="0,-8" Size="parent,52" Texture="Controls_Timeline" SliceCorner="54,27" SliceSize="6,1" SliceTextureSize="114,52"/>
-		<Image ID="Background" Size="parent,parent" Texture="Parchment_Pattern" StretchMode="Tile" ConsumeMouse="1" />
+    <Box Color="7,30,50,255" Anchor="L,B" Size="parent,5"/>		
 		<Image ID="ScrollbarBackgroundArt" Anchor="C,B" Offset="0,2" Size="parent-108,32" Texture="Controls_TimelineTile" StretchMode="Tile"/>
-    <ScrollPanel ID="EraArtScroller" Offset="0,-2" Size="parent,parent" Vertical="0" ScrollBar="0">
-			<Container ID="ForceArtSizeX" Size="1,1"/>
+		<Grid Anchor="C,B" Offset="0,-8" Size="parent,52" Texture="Controls_Timeline" SliceCorner="54,27" SliceSize="6,1" SliceTextureSize="114,52"/>
+		<Image			ID="Background" Size="parent,parent" Texture="Parchment_Pattern" StretchMode="Tile" ConsumeMouse="1" />
+		<ScrollPanel	ID="EraArtScroller" Offset="0,-2" Size="parent,parent" Vertical="0" ScrollBar="0">			
+			<Container	ID="ForceArtSizeX" Size="1,1"/>
     </ScrollPanel>
     <Image Anchor="L,B" Offset="0,33" Size="parent,22" Texture="Controls_GradientSmall" Color="0,0,0,150" FlipY="1"/>
     <ScrollPanel ID="ArtScroller" Offset="0,-2" Size="parent,parent" Vertical="0" ScrollBar="0">
@@ -40,13 +40,13 @@
       <UpButton Anchor="L,B" AnchorSide="O,I" Style="ScrollUpButton"/>
       <DownButton Anchor="R,B" AnchorSide="O,I" Style="ScrollDownButton"/>
 
-      <Tutorial ID="NodePointer" Style="TutorialContainer" Anchor="L,C" Offset="180, -50" TriggerBy="TutorialChangeCivic">
-        <Grid Style="TutorialCalloutGrid">
+      <Tutorial ID="NodePointer" Style="TutorialContainer" Anchor="L,C" Offset="0, -50" TriggerBy="TutorialChangeCivic">
+        <Grid Style="TutorialCalloutGrid"  Anchor="L,C" Offset="670,0">
           <Label Style="TutorialHeaderText" String="LOC_META_100b_HEAD"/>
           <Label Style="TutorialBodyText" String="LOC_META_100b_BODY"/>
         </Grid>
-        <SlideAnim Anchor="C,T" Start="0,-30" EndOffset="0,10" Cycle="Bounce" Function="OutQuad">
-          <Image Texture="Tutorial_ArrowV" Offset="-22,-20" Size="44,58" FlipY="true"/>
+        <SlideAnim Start="0,-30" EndOffset="0,10" Cycle="Bounce" Function="OutQuad">
+          <Image Texture="Tutorial_ArrowV" Offset="810,-20" Size="44,58" FlipY="true"/>
         </SlideAnim>
       </Tutorial>
 
@@ -126,11 +126,11 @@
       <GridData Texture="Controls_CheckButton2" StateOffsetIncrement="0,26" SliceCorner="30,14" SliceSize="1,1" SliceTextureSize="41,26"/>
     </GridButton>
 
-    <Grid ID="KeyPanel" ConsumeAllMouse="1" Anchor="L,B" AnchorSide="I,O" Offset="0,2" Size="195,600" Texture="Controls_PanelBlue" SliceCorner="25,28" SliceSize="33,18" SliceTextureSize="83,75">
+    <Grid ID="KeyPanel" ConsumeAllMouse="1" Anchor="L,B" AnchorSide="I,O" Offset="0,2" Size="240,600" Texture="Controls_PanelBlue" SliceCorner="25,28" SliceSize="33,18" SliceTextureSize="83,75">
       <ScrollPanel ID="KeyScroll" Offset="0,10" Size="parent-20,parent" Style="ScrollPanelWithRightBar" Vertical="1">
-        <Line Start="20,6" End="174,6" Color="55,95,126,255" Width="2"/>
+        <Line Start="20,6" End="208,6" Color="55,95,126,255" Width="2"/>
         <Label Anchor="C,T" Offset="10,11" Style="FontFlair16" SmallCaps="20" String="LOC_TREE_KEY" Color0="78,119,151,255" Color1="0,0,0,0" Color2="25,65,96,255"/>
-        <Line Start="20,30" End="174,30" Color="55,95,126,255" Width="2"/>
+        <Line Start="20,30" End="208,30" Color="55,95,126,255" Width="2"/>
         <Stack ID="KeyStack" Offset="10,40" StackGrowth="Bottom" StackPadding="3">
           <Image ID="AvailableKey" Texture="CivicsTree_KeyNormal" Size="156,30" StretchMode="Fill">
             <Label ID="AvailableLabelKey" Offset="40,10" Style="TreeNodeText" String="LOC_CIVICS_KEY_AVAILABLE"/>
@@ -206,7 +206,7 @@
   <Instance Name="NodeInstance">
     <Container ID="Top" Size="420,1">
       <GridButton ID="NodeButton" Offset="0,-72" Size="420,84" Texture="CivicsTree_GearButton" SliceCorner="79,1" SliceSize="1,1" SliceTextureSize="133,84" StateOffsetIncrement="0,84">
-        <GridButton ID="OtherStates" Offset="0,0" Size="parent,parent" Texture="CivicsTree_GearButton" SliceCorner="79,1" SliceSize="1,1" SliceTextureSize="133,84" NoStateChange="1"/>
+				<GridButton ID="OtherStates" Offset="0,0" Size="parent,parent" Texture="CivicsTree_GearButton" SliceCorner="79,1" SliceSize="1,1" SliceTextureSize="133,84" NoStateChange="1" />
         <Image ID="FillTexture" Offset="76,1" Size="311,78" Texture="CivicsTree_GearButtonTile_Disabled" StretchMode="Tile"/>
         <Stack ID="UnlockStack" Offset="72,22" StackGrowth="Right" WrapWidth="320" WrapGrowth="Down"/>
         <Grid ID="BoostedBack" Offset="7,6" Anchor="L,B" Size="406,39" Texture="Controls_BoostSlotCivic" SliceCorner="28,26" SliceSize="1,1" SliceTextureSize="39,39"/>

@@ -157,17 +157,20 @@
 						<Label ID="GameStateText" Anchor="C,C" Style="ShellHeader" WrapWidth="320"/>
 
 						<!-- Join Code, an edit box that the user can copy/paste from.-->
-						<Container ID="JoinCodeRoot"  Size="auto,auto" Hidden="1">
+						<Stack ID="JoinCodeRoot" StackGrowth="Bottom" EndPadding="10">
 							<Container Size="auto,auto">
-								<Box Size="186,50" Color="0,0,0,0"/>
-								<Label ID="JoinCodeLabel" Anchor="R,C" Style="ShellHeader" String="LOC_STAGING_ROOM_JOIN_CODE"/>
+								<Container Size="auto,auto">
+									<Box Size="186,50" Color="0,0,0,0"/>
+									<Label ID="JoinCodeLabel" Anchor="R,C" Style="ShellHeader" String="LOC_STAGING_ROOM_JOIN_CODE"/>
+								</Container>
+								<Container Size="auto,auto" Offset="185,0">
+									<Grid Style="EditTextArea" Size="208,54">
+										<TextButton ID="JoinCodeText"		Anchor="L,C" Offset="6,0"		Size="248,46" Style="FontFlair30" ColorSet="ShellHeader"/>
+										<Label ID="JoinCodeClickToCopy" Anchor="C,B" Offset="0,-18" Size="300,30" Style="FontNormal14" Color="ShellControl" String="LOC_STAGING_ROOM_COPY_JOIN_CODE" />
+									</Grid>
+								</Container>
 							</Container>
-							<Container Size="auto,auto" Offset="185,0">
-								<Grid Style="EditTextArea" Size="208,54">
-									<EditBox ID="JoinCodeText" Anchor="L,C" Offset="6,0" Size="248,46" Style="FontFlair40" ColorSet="ShellHeader" EditMode="1" TextLocked="1" HighlightOnFocus="1" MaxLength="10"/>
-								</Grid>
-							</Container>
-						</Container>
+						</Stack>
 
 						<!-- Game Parameter Header -->
 						<Grid Size="parent,21" Texture="Shell_SectionHeader" SliceCorner="154,10" SliceTextureSize="308,21" Color="20,144,140,100" Offset="0,8">
@@ -420,7 +423,7 @@
 
 	<Instance		Name="ChatEntry" >
 		<Box		ID="ChatRoot"			Anchor="L,T" Size="430,22" Color="0,0,0,0"  >
-			<Label	ID="String"			Anchor="L,C" Offset="0,0" WrapWidth="430" Color1="0,0,0,150" Style="FontNormal12" />
+			<Label	ID="String"			Anchor="L,C" Offset="0,0" WrapWidth="412" Color1="0,0,0,150" Style="FontNormal12" />
 		</Box>
 	</Instance>
 

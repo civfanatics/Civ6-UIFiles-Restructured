@@ -20,6 +20,10 @@ g_CurrentListingsSort = nil;	-- The current method of sorting the mod listings.
 g_ModSubscriptions = nil;
 g_SubscriptionsSortingMap = {};
 
+local MIN_SCREEN_Y				:number = 768;
+
+---------------------------------------------------------------------------
+---------------------------------------------------------------------------
 function RefreshModGroups()
 	local groups = Modding.GetModGroups();
 	for i, v in ipairs(groups) do
@@ -889,7 +893,6 @@ end
 ----------------------------------------------------------------    
 function OnShow()
 	OnInstalledModsTabClick(true);
-
 	if(GameConfiguration.IsAnyMultiplayer()) then
 		Controls.BrowseWorkshop:SetHide(true);
 	else
@@ -919,17 +922,27 @@ end
 function Resize()
 	local screenX, screenY:number = UIManager:GetScreenSizeVal();
 	local hideLogo = true;
-	if(screenY >= Controls.MainWindow:GetSizeY() + (Controls.LogoContainer:GetSizeY()+ Controls.LogoContainer:GetOffsetY())*2) then
+	if(screenY >= MIN_SCREEN_Y + (Controls.LogoContainer:GetSizeY()+ Controls.LogoContainer:GetOffsetY() * 2)) then
 		hideLogo = false;
+		Controls.MainWindow:SetSizeY(screenY- (Controls.LogoContainer:GetSizeY() + Controls.LogoContainer:GetOffsetY()));
+	else
+		Controls.MainWindow:SetSizeY(screenY);
 	end
 	Controls.LogoContainer:SetHide(hideLogo);
-	Controls.MainGrid:ReprocessAnchoring();
 end
 
 function OnSearchBarGainFocus()
 	Controls.SearchEditBox:ClearString();
 end
 
+----------------------------------------------------------------
+function OnUpdateUI( type:number, tag:string, iData1:number, iData2:number, strData1:string )   
+  if type == SystemUpdateUI.ScreenResize then
+    Resize();
+  end
+end
+
+----------------------------------------------------------------
 function OnSearchCharCallback()
 	local str = Controls.SearchEditBox:GetText();
 	if (str ~= nil and #str > 0 and str ~= LOC_MODS_SEARCH_NAME) then
@@ -1084,6 +1097,8 @@ function Initialize()
 	Controls.InstalledTab:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 	Controls.CloseButton:RegisterCallback( Mouse.eLClick, HandleExitRequest );
 	Controls.CloseButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
+
+	Events.SystemUpdateUI.Add( OnUpdateUI );
 
 	ContextPtr:SetShowHandler( OnShow );
 	ContextPtr:SetUpdate(OnUpdate);

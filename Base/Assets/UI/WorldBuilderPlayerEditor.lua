@@ -415,6 +415,11 @@ function UpdatePlayerEntry(playerEntry)
 		end
 		playerEntry.playerInstance.CivIcon:SetColor(frontColor);
 		playerEntry.playerInstance.CivIconBacking:SetColor(backColor);
+
+		local borderOverlay:object = UILens.GetOverlay("CultureBorders");
+		if borderOverlay ~= nil then
+			borderOverlay:SetBorderColors(playerEntry.Index, backColor, frontColor);
+		end
 	else
 		playerEntry.playerInstance.CivIcon:SetColorByName("White");
 		playerEntry.playerInstance.CivIconBacking:SetColorByName("White");
@@ -535,7 +540,14 @@ function InitGeneralTab()
 
 		m_ViewingTab.GeneralInstance.LeaderPullDown:SetEntries( m_LeaderEntries, 1 );
 		m_ViewingTab.GeneralInstance.LeaderPullDown:SetEntrySelectedCallback( OnLeaderSelected );
-		m_LeaderEntries[1].Button:SetDisabled(true); -- We never want the user to manually select the random leader entry
+
+		-- We never want the user to manually select the random leader entry
+		for i, leaderEntry in ipairs(m_LeaderEntries) do
+			if leaderEntry.Type == "RANDOM" then
+				m_LeaderEntries[i].Button:SetDisabled(true);
+				break;
+			end
+		end
 
 		m_ViewingTab.GeneralInstance.CivLevelPullDown:SetEntries( m_CivLevelEntries, 1 );
 		m_ViewingTab.GeneralInstance.CivLevelPullDown:SetEntrySelectedCallback( OnCivLevelSelected );
@@ -1407,12 +1419,15 @@ function OnInit()
 	
 	-- Intialize the m_CivEntries table.  This must use a simple index for the key, the pull down control will access it directly.
 	-- The first two entries are special
-	table.insert(m_CivEntries, { Text="LOC_WORLDBUILDER_RANDOM", Type="RANDOM", DefaultLeader="RANDOM" });
-	table.insert(m_CivEntries, { Text="LOC_WORLDBUILDER_ANY", Type="UNDEFINED", DefaultLeader="UNDEFINED" });
 	-- Fill in the civs
 	for type in GameInfo.Civilizations() do
 		table.insert(m_CivEntries, { Text=type.Name, Type=type.CivilizationType, DefaultLeader=-1 });
 	end
+	table.sort(m_CivEntries, function(a, b)
+		return Locale.Lookup(a.Text) < Locale.Lookup(b.Text);
+	end );
+	table.insert(m_CivEntries, 1, { Text="LOC_WORLDBUILDER_RANDOM", Type="RANDOM", DefaultLeader="RANDOM" });
+	table.insert(m_CivEntries, 2, { Text="LOC_WORLDBUILDER_ANY", Type="UNDEFINED", DefaultLeader="UNDEFINED" });
 
 
 	-- Set default leaders
@@ -1424,8 +1439,6 @@ function OnInit()
 	end
 
 	-- LeaderPullDown
-	table.insert(m_LeaderEntries, { Text="LOC_WORLDBUILDER_RANDOM", Type="RANDOM" });
-	table.insert(m_LeaderEntries, { Text="LOC_WORLDBUILDER_ANY", Type="UNDEFINED" });
 	for type in GameInfo.Leaders() do
 		if type.Name ~= "LOC_EMPTY" then
 			if type.CivilizationCollection[1] ~= nil then
@@ -1435,16 +1448,27 @@ function OnInit()
 			end
 		end
 	end
+	table.sort(m_LeaderEntries, function(a, b)
+		return Locale.Lookup(a.Text) < Locale.Lookup(b.Text);
+	end );
+	table.insert(m_LeaderEntries, 1, { Text="LOC_WORLDBUILDER_RANDOM", Type="RANDOM" });
+	table.insert(m_LeaderEntries, 2, { Text="LOC_WORLDBUILDER_ANY", Type="UNDEFINED" });
 
 	-- TechList
 	for type in GameInfo.Technologies() do
 		table.insert(m_TechEntries, { Text=type.Name, Type=type });
 	end
+	table.sort(m_TechEntries, function(a, b)
+		  return Locale.Lookup(a.Text) < Locale.Lookup(b.Text);
+	end );
 
 	-- CivicsList
 	for type in GameInfo.Civics() do
 		table.insert(m_CivicEntries, { Text=type.Name, Type=type });
 	end
+	table.sort(m_CivicEntries, function(a, b)
+		  return Locale.Lookup(a.Text) < Locale.Lookup(b.Text);
+	end );
 
 	-- District list
 	for type in GameInfo.Districts() do

@@ -8,175 +8,187 @@
 		</GridButton>
 	</Instance>
 	
-	<Container Anchor="R,T" Size="330,600" Offset="-10,0" >
+	<Container Anchor="R,T" Size="parent,parent" Offset="0, 0" InnerPadding="10, 0">
 
-	<Stack ID="Root" Anchor="R,T" Offset="16,-30" StackGrowth="Bottom" Padding="12">
+		<Stack ID="Root" Anchor="L,T" Offset="0, 0" StackGrowth="Bottom" Padding="12">
 
-	<Container Size="auto,auto" Offset="0,70">
-		<Label Style="WorldBuilderPropertyLabel" Offset="60,-62" String="LOC_WORLDBUILDER_CLEAR_RESOURCES"/>
-		<GridButton ID="RegenResourcesButton"	Size="46,48" Offset="0,-40" Style="TabButton" ToolTip="LOC_WORLDBUILDER_CLEAR_RESOURCES_HELP">
-			<Image Anchor="C,C" Size="32,32" Icon="ICON_WB_TOOL_CLEAR_RESOURCES"/>
-		</GridButton>
-	</Container>
+			<!-- Resources -->
+			<Stack Anchor="L,T" StackGrowth="Bottom">
+				<Container Size="auto,auto">
+					<Label Style="WorldBuilderPropertyLabel" Offset="60,0" String="LOC_WORLDBUILDER_CLEAR_RESOURCES"/>
+					<GridButton ID="RegenResourcesButton"	Size="46,48" Offset="0, 0" Style="TabButton" ToolTip="LOC_WORLDBUILDER_CLEAR_RESOURCES_HELP">
+						<Image Anchor="C,C" Size="32,32" Icon="ICON_WB_TOOL_CLEAR_RESOURCES"/>
+					</GridButton>
+				</Container>
 
-	<Container Size="auto,auto" Offset="0,-56">
-		<Label Style="WorldBuilderPropertyLabel" Offset="60,-62" String="LOC_WORLDBUILDER_SCATTER_RESOURCES"/>
-		<GridButton ID="GenResourcesButton"	Size="46,48" Offset="0,-40" Style="TabButton" ToolTip="LOC_WORLDBUILDER_SCATTER_RESOURCES_HELP">
-			<Image Anchor="C,C" Size="32,32" Icon="ICON_WB_TOOL_SCATTER_RESOURCES"/>
-			<Grid	 ID="GenResourcesActive"		Style="TabButtonSelectedInnerGlow" Hidden="1" />
-		</GridButton>
-	</Container>
+				<Container Size="auto,auto">
+					<Label Style="WorldBuilderPropertyLabel" Offset="60, 0" String="LOC_WORLDBUILDER_SCATTER_RESOURCES"/>
+					<GridButton ID="GenResourcesButton"	Size="46,48" Offset="0, 0" Style="TabButton" ToolTip="LOC_WORLDBUILDER_SCATTER_RESOURCES_HELP">
+						<Image Anchor="C,C" Size="32,32" Icon="ICON_WB_TOOL_SCATTER_RESOURCES"/>
+						<Grid	 ID="GenResourcesActive"		Style="TabButtonSelectedInnerGlow" Hidden="1" />
+					</GridButton>
+				</Container>
+			</Stack>
 
-	<Container Size="auto,auto" Offset="0,-36">
-		<Label Style="WorldBuilderPropertyLabel" Offset="60,-26" String="LOC_WORLDBUILDER_BRUSH_SMALL"/>
-		<GridButton ID="SmallBrushButton"	Size="46,48" Offset="0,-20" Style="TabButton" ToolTip="LOC_WORLDBUILDER_BRUSH_SMALL_HELP">
-			<Image Anchor="C,C" Size="32,32" Icon="ICON_WB_TOOL_BRUSH_SMALL"/>
-			<Grid ID="SmallBrushActive" Style="TabButtonSelectedInnerGlow" Hidden="1" />
-		</GridButton>
-	</Container>
+			<!-- Brushes and Undo -->
+			<Stack Anchor="L,T" StackGrowth="Bottom">
+				<Container Size="auto,auto">
+					<Container Size="auto,auto">
+						<Label Style="WorldBuilderPropertyLabel" Offset="60, 0" String="LOC_WORLDBUILDER_BRUSH_SMALL"/>
+						<GridButton ID="SmallBrushButton"	Size="46,48" Offset="0, 0" Style="TabButton" ToolTip="LOC_WORLDBUILDER_BRUSH_SMALL_HELP">
+							<Image Anchor="C,C" Size="32,32" Icon="ICON_WB_TOOL_BRUSH_SMALL"/>
+							<Grid ID="SmallBrushActive" Style="TabButtonSelectedInnerGlow" Hidden="1" />
+						</GridButton>
+					</Container>
 
-	<Container Size="auto,auto" Offset="200,-88">
-		<Label Style="WorldBuilderPropertyLabel" Offset="60,-26" String="LOC_WORLDBUILDER_UNDO" TruncateWidth="60" TruncateTooltip="1"/>
-		<GridButton ID="UndoButton"	Size="46,48" Offset="0,-20" Style="TabButton" ToolTip="LOC_WORLDBUILDER_UNDO_TOOLTIP">
-			<Image Anchor="C,C" Size="32,32" Icon="ICON_WB_TOOL_UNDO"/>
-			<Grid ID="UndoActive" Style="TabButtonSelectedInnerGlow" Hidden="1" />
-		</GridButton>
-	</Container>
+					<Container Size="auto,auto" Offset="200, 0">
+						<Label Style="WorldBuilderPropertyLabel" Offset="60, 0" String="LOC_WORLDBUILDER_UNDO" TruncateWidth="60" TruncateTooltip="1"/>
+						<GridButton ID="UndoButton"	Size="46,48" Offset="0, 0" Style="TabButton" ToolTip="LOC_WORLDBUILDER_UNDO_TOOLTIP">
+							<Image Anchor="C,C" Size="32,32" Icon="ICON_WB_TOOL_UNDO"/>
+							<Grid ID="UndoActive" Style="TabButtonSelectedInnerGlow" Hidden="1" />
+						</GridButton>
+					</Container>
+				</Container>
 
-	<Container Size="auto,auto" Offset="0,-42">
-		<Label Style="WorldBuilderPropertyLabel" Offset="60,-26" String="LOC_WORLDBUILDER_BRUSH_MEDIUM"/>
-		<GridButton ID="MediumBrushButton"	Size="46,48" Offset="0,-20" Style="TabButton" ToolTip="LOC_WORLDBUILDER_BRUSH_MEDIUM_HELP">
-			<Image Anchor="C,C" Size="32,32" Icon="ICON_WB_TOOL_BRUSH_MEDIUM"/>
-			<Grid ID="MediumBrushActive" Style="TabButtonSelectedInnerGlow" Hidden="1" />
-		</GridButton>
-	</Container>
+				<Container Size="auto,auto">
+					<Container Size="auto,auto" Offset="0, 0">
+						<Label Style="WorldBuilderPropertyLabel" Offset="60, 0" String="LOC_WORLDBUILDER_BRUSH_MEDIUM"/>
+						<GridButton ID="MediumBrushButton"	Size="46,48" Offset="0, 0" Style="TabButton" ToolTip="LOC_WORLDBUILDER_BRUSH_MEDIUM_HELP">
+							<Image Anchor="C,C" Size="32,32" Icon="ICON_WB_TOOL_BRUSH_MEDIUM"/>
+							<Grid ID="MediumBrushActive" Style="TabButtonSelectedInnerGlow" Hidden="1" />
+						</GridButton>
+					</Container>
 
-	<Container Size="auto,auto" Offset="200,-86">
-		<Label Style="WorldBuilderPropertyLabel" Offset="60,-26" String="LOC_WORLDBUILDER_REDO" TruncateWidth="60" TruncateTooltip="1"/>
-		<GridButton ID="RedoButton"	Size="46,48" Offset="0,-20" Style="TabButton" ToolTip="LOC_WORLDBUILDER_REDO_TOOLTIP">
-			<Image Anchor="C,C" Size="32,32" Icon="ICON_WB_TOOL_REDO"/>
-			<Grid ID="RedoActive" Style="TabButtonSelectedInnerGlow" Hidden="1" />
-		</GridButton>
-	</Container>
+					<Container Size="auto,auto" Offset="200, 0">
+						<Label Style="WorldBuilderPropertyLabel" Offset="60, 0" String="LOC_WORLDBUILDER_REDO" TruncateWidth="60" TruncateTooltip="1"/>
+						<GridButton ID="RedoButton"	Size="46,48" Offset="0, 0" Style="TabButton" ToolTip="LOC_WORLDBUILDER_REDO_TOOLTIP">
+							<Image Anchor="C,C" Size="32,32" Icon="ICON_WB_TOOL_REDO"/>
+							<Grid ID="RedoActive" Style="TabButtonSelectedInnerGlow" Hidden="1" />
+						</GridButton>
+					</Container>
+				</Container>
 
-	<Container Size="auto,auto" Offset="0,-40">
-		<Label Style="WorldBuilderPropertyLabel" Offset="60,-26" String="LOC_WORLDBUILDER_BRUSH_LARGE"/>
-		<GridButton ID="LargeBrushButton"	Size="46,48" Offset="0,-20" Style="TabButton" ToolTip="LOC_WORLDBUILDER_BRUSH_LARGE_HELP">
-			<Image Anchor="C,C" Size="32,32" Icon="ICON_WB_TOOL_BRUSH_LARGE"/>
-			<Grid ID="LargeBrushActive" Style="TabButtonSelectedInnerGlow" Hidden="1" />
-		</GridButton>
-	</Container>
+				<Container Size="auto,auto">
+					<Label Style="WorldBuilderPropertyLabel" Offset="60, 0" String="LOC_WORLDBUILDER_BRUSH_LARGE"/>
+					<GridButton ID="LargeBrushButton"	Size="46,48" Offset="0, 0" Style="TabButton" ToolTip="LOC_WORLDBUILDER_BRUSH_LARGE_HELP">
+						<Image Anchor="C,C" Size="32,32" Icon="ICON_WB_TOOL_BRUSH_LARGE"/>
+						<Grid ID="LargeBrushActive" Style="TabButtonSelectedInnerGlow" Hidden="1" />
+					</GridButton>
+				</Container>
+			</Stack>
+				
+			<SimplePullDown ID="PlacementPullDown" Style="WorldBuilderPropertyPullDown" Align="center"/>
 
-	<SimplePullDown ID="PlacementPullDown" Style="WorldBuilderPropertyPullDown" Align="center" />
+			<Tab ID="TabControl" Anchor="L,T"  Size="parent, 184">
+				<!--Tab Container-->
+				<Container ID="TabContainer" Size="parent,parent">
 
-	<Tab ID="TabControl" Anchor="R,T"  Size="320,200">
+					<Container ID="PlaceTerrain" Size="parent,parent">
+					</Container>
 
-	<!--Tab Container-->
-	<Container ID="TabContainer" Size="parent,parent">
+					<Container ID="PlaceFeatures" Size="parent,parent">
+					</Container>
 
-	  <Container ID="PlaceTerrain" Size="parent,parent">
-		<SimplePullDown ID="TerrainPullDown" Style="WorldBuilderPropertyPullDown" />
-	  </Container>
+					<Container ID="PlaceWonders" Size="parent,parent">
+						<Stack ID="PlaceWondersStack" Anchor="R,T" StackGrowth="Bottom" Padding="10">
+							<Container Size="auto,auto">
+								<Label ID="RotateStateText" Style="WorldBuilderPropertyLabel" Offset="110, 0"/>
+								<GridButton ID="RotateLeftButton"	Size="46,48" Offset="0, 0" Style="TabButton" ToolTip="LOC_WORLDBUILDER_ROTATE_PLACEMENT_LEFT_TOOLTIP">
+									<Image Anchor="C,C" Size="32,32" Icon="ICON_WB_TOOL_UNDO"/>
+								</GridButton>
+								<GridButton ID="RotateRightButton"	Size="46,48" Offset="54, 0" Style="TabButton" ToolTip="LOC_WORLDBUILDER_ROTATE_PLACEMENT_RIGHT_TOOLTIP">
+									<Image Anchor="C,C" Size="32,32" Icon="ICON_WB_TOOL_REDO"/>
+								</GridButton>
+							</Container>
+						</Stack>
+					</Container>
 
-	  <Container ID="PlaceFeatures" Size="parent,parent">
-		<SimplePullDown ID="FeaturePullDown" Style="WorldBuilderPropertyPullDown" />
-	  </Container>
+					<Container ID="PlaceContinent" Size="parent,parent">
+						<SimplePullDown ID="ContinentPullDown" Style="WorldBuilderPropertyPullDown" Size="300,30"/>
+					</Container>
 
-	  <Container ID="PlaceWonders" Size="parent,parent">
-		<SimplePullDown ID="WonderPullDown" Style="WorldBuilderPropertyPullDown" />
-	  </Container>
+					<Container ID="PlaceRivers" Size="parent,parent">
+					</Container>
 
-	  <Container ID="PlaceContinent" Size="parent,parent">
-		<SimplePullDown ID="ContinentPullDown" Style="WorldBuilderPropertyPullDown" />
-	  </Container>
+					<Container ID="PlaceCliffs" Size="parent,parent">
+					</Container>
+					
+					<Container ID="PlaceResources" Size="parent,parent">
+						<Stack ID="PlaceResourcesStack" Anchor="R,T" StackGrowth="Bottom" Padding="10">
+							<Stack ID="ResourceAmountStack" StackGrowth="Right" Padding="5">
+								<Label Anchor="L,C" Style="ShellOptionText" Size="125,29" String="LOC_WORLDBUILDER_ATTRIBUTE_RESOURCE_AMOUNT"/>
+								<Grid Style="EditTextArea" Size="80,24" InnerPadding="6,6">
+									<EditBox ID="ResourceAmount" Anchor="L,C" Offset="4,0" Size="parent-4,23" EditMode="1" String="1" NumberInput="1"/>
+								</Grid>
+							</Stack>
+						</Stack>
+					</Container>
 
-	  <Container ID="PlaceRivers" Size="parent,parent">
-	  </Container>
+					<Container ID="PlaceCity" Size="parent,parent">
+					<SimplePullDown ID="CityOwnerPullDown" Style="WorldBuilderPropertyPullDown" Size="300,30" />
+					</Container>
 
-	  <Container ID="PlaceCliffs" Size="parent,parent">
-	  </Container>
+					<Container ID="PlaceDistrict" Size="parent,parent">
+						<Stack ID="PlaceDistrictStack" Size="parent,auto" Anchor="R,T" StackGrowth="Bottom" Padding="10">
+							<CheckBox ID="DistrictPillagedCheck" Style="MainMenuCheck" Anchor="R,T" Offset="15,0" TextOffset="-5,0" IsChecked="0" String="LOC_WORLDBUILDER_ATTRIBUTE_PILLAGED"/>
+						</Stack>
+					</Container>
 
-	  <Container ID="PlaceResources" Size="parent,parent">
-		<Stack Anchor="R,T" StackGrowth="Bottom" Padding="10">
-		  <SimplePullDown ID="ResourcePullDown" Style="WorldBuilderPropertyPullDown" />
-		  <Stack ID="ResourceAmountStack" StackGrowth="Right" Padding="5">
-			  <Label Anchor="L,C" Style="ShellOptionText" Size="125,29" String="LOC_WORLDBUILDER_ATTRIBUTE_RESOURCE_AMOUNT"/>
-			  <Grid Style="EditTextArea" Size="80,24" InnerPadding="6,6">
-			    <EditBox ID="ResourceAmount" Anchor="L,C" Offset="4,0" Size="parent-4,23" EditMode="1" String="1" NumberInput="1"/>
-			  </Grid>
-		  </Stack>
+					<Container ID="PlaceBuilding" Size="parent,parent">
+					</Container>
+
+					<Container ID="PlaceUnit" Size="parent,parent">
+						<Stack ID="PlaceUnitStack" StackGrowth="Bottom" Padding="10">
+							<SimplePullDown ID="UnitOwnerPullDown" Style="WorldBuilderPropertyPullDown" Size="300,30"/>
+						</Stack>
+					</Container>
+
+					<Container ID="PlaceImprovements" Size="parent,parent">
+						<Stack ID="PlaceImprovementsStack" Anchor="R,T" StackGrowth="Bottom" Padding="10">
+							<CheckBox ID="ImprovementPillagedCheck" Style="MainMenuCheck" Anchor="R,T" Offset="15,0" TextOffset="-5,0" IsChecked="0" String="LOC_WORLDBUILDER_ATTRIBUTE_PILLAGED"/>
+						</Stack>
+					</Container>
+
+					<Container ID="PlaceRoutes" Size="parent,parent">
+						<Stack StackGrowth="Bottom" Padding="10">
+							<SimplePullDown ID="RoutePullDown" Style="WorldBuilderPropertyPullDown" Size="300,30" />
+							<CheckBox ID="RoutePillagedCheck" Style="MainMenuCheck" Anchor="R,T" Offset="15,0" TextOffset="-5,0" IsChecked="0" String="LOC_WORLDBUILDER_ATTRIBUTE_PILLAGED"/>
+						</Stack>
+					</Container>
+
+					<Container ID="PlaceStartPos" Size="parent,parent">
+						<SimplePullDown ID="StartPosPlayerPulldown" Style="WorldBuilderPropertyPullDown" Size="300,30" />
+					</Container>
+
+					<Container ID="PlaceOwnership" Size="parent,parent">
+						<SimplePullDown ID="OwnerPullDown" Style="WorldBuilderPropertyPullDown" Size="300,30"/>
+					</Container>
+
+					<Container ID="PlaceVisibility" Size="parent,parent">
+						<SimplePullDown ID="VisibilityPullDown" Style="WorldBuilderPropertyPullDown" Size="300,30"/>
+						<GridButton  Size="300,30" Offset="0,60" Style="ButtonControl" ID="VisibilityRevealAllButton" String="LOC_WORLDBUILDER_REVEAL_ALL"/>
+					</Container>
+
+					<Container ID="PlaceGoodyHuts" Size="parent,parent">
+					</Container>
+					
+				</Container>
+			</Tab>
+
+			<!-- The shared Grid of button items.  This is re-parented to the active Tab -->
+			<Container ID="ItemsContainer"	Size="parent,parent">
+				<Grid	ID="ItemsBacking"  	Style="Subheader" Size="parent,parent" Color="HUDRIBBON_STATS_SHOW" InnerPadding="0, 10" InnerOffset="0, 5">
+					<ScrollPanel Size="parent,parent" Vertical="1" AutoScrollBar="1">
+						<Stack StackGrowth="Bottom">
+							<Stack ID="ItemsStack" Anchor="C,T" Offset="1,0" StackGrowth="Right" WrapGrowth="Bottom" WrapWidth="parent" StackPadding="1" WrapPadding="0" EndPadding="0" />
+						</Stack>
+						<ScrollBar ID="ItemsSBar" Anchor="R,C" Size="12,parent" AnchorSide="O,I" Style="ScrollVerticalBar">
+							<Thumb Color="255,255,255,255"/>
+						</ScrollBar>
+					</ScrollPanel>
+				</Grid>
+			</Container>
+		
 		</Stack>
-	  </Container>
-
-	  <Container ID="PlaceCity" Size="parent,parent">
-		<SimplePullDown ID="CityOwnerPullDown" Style="WorldBuilderPropertyPullDown" />
-	  </Container>
-
-	  <Container ID="PlaceDistrict" Size="parent,parent">
-		<Stack Anchor="R,T" StackGrowth="Bottom" Padding="10">
-		  <SimplePullDown ID="DistrictPullDown" Style="WorldBuilderPropertyPullDown" />
-      <CheckBox ID="DistrictPillagedCheck" Style="MainMenuCheck" Anchor="R,T" Offset="15,0" TextOffset="-5,0" IsChecked="0" String="LOC_WORLDBUILDER_ATTRIBUTE_PILLAGED"/>
-		</Stack>
-	  </Container>
-
-	  <Container ID="PlaceBuilding" Size="parent,parent">
-		<Stack Size="parent,auto" StackGrowth="Bottom" Padding="10">
-		  <SimplePullDown ID="BuildingPullDown" Style="WorldBuilderPropertyPullDown" />
-		</Stack>
-	  </Container>
-
-	  <Container ID="PlaceUnit" Size="parent,parent">
-		<Stack StackGrowth="Bottom" Padding="10">
-		  <SimplePullDown ID="UnitOwnerPullDown" Style="WorldBuilderPropertyPullDown" />
-		  <SimplePullDown ID="UnitPullDown" Style="WorldBuilderPropertyPullDown" />
-		</Stack>
-	  </Container>
-
-	  <Container ID="PlaceImprovements" Size="parent,parent">
-		<Stack Anchor="R,T" StackGrowth="Bottom" Padding="10">
-		  <SimplePullDown ID="ImprovementPullDown" Style="WorldBuilderPropertyPullDown" />
-		  <CheckBox ID="ImprovementPillagedCheck" Style="MainMenuCheck" Anchor="R,T" Offset="15,0" TextOffset="-5,0" IsChecked="0" String="LOC_WORLDBUILDER_ATTRIBUTE_PILLAGED"/>
-		</Stack>
-	  </Container>
-
-	  <Container ID="PlaceRoutes" Size="parent,parent">
-		<Stack StackGrowth="Bottom" Padding="10">
-		  <SimplePullDown ID="RoutePullDown" Style="WorldBuilderPropertyPullDown" />
-		  <CheckBox ID="RoutePillagedCheck" Style="MainMenuCheck" Anchor="R,T" Offset="15,0" TextOffset="-5,0" IsChecked="0" String="LOC_WORLDBUILDER_ATTRIBUTE_PILLAGED"/>
-		</Stack>
-	  </Container>
-
-	  <Container ID="PlaceStartPos" Size="parent,parent">
-		<SimplePullDown ID="StartPosPlayerPulldown" Anchor="R,T" Style="WorldBuilderPropertyPullDown" />
-	  </Container>
-
-	  <Container ID="PlaceOwnership" Size="parent,parent">
-		<SimplePullDown ID="OwnerPullDown" Anchor="R,T" Style="WorldBuilderPropertyPullDown" />
-	  </Container>
-
-	  <Container ID="PlaceVisibility" Size="parent,parent">
-		<SimplePullDown ID="VisibilityPullDown" Anchor="R,T" Style="WorldBuilderPropertyPullDown" />
-		<GridButton  Size="200,24" Style="ButtonControl" Anchor="C,C" ID="VisibilityRevealAllButton" String="LOC_WORLDBUILDER_REVEAL_ALL"/>
-	  </Container>
-
-	  <Container ID="PlaceGoodyHuts" Size="parent,parent">
-	  </Container>
-	</Container>
-	</Tab>
-
-	<Container ID="ItemsContainer"	Size="parent,auto">
-	  <Grid	ID="ItemsBacking"  	Style="Subheader" Size="parent+14,auto" Offset="-10,-190" Color="HUDRIBBON_STATS_SHOW" Padding="0,2">
-		  <ScrollPanel Size="parent-14,140" Offset="2,4" Vertical="1" AutoScrollBar="1">
-			  <Stack StackGrowth="Bottom">
-				  <Stack ID="ItemsStack" Anchor="C,T" Offset="1,0" StackGrowth="Right" WrapGrowth="Bottom" WrapWidth="350" StackPadding="1" WrapPadding="-4" EndPadding="0" />
-			  </Stack>
-			  <ScrollBar ID="ItemsSBar" Anchor="R,C" Size="12,parent" AnchorSide="O,I" Style="ScrollVerticalBar">
-				  <Thumb Color="255,255,255,255"/>
-			  </ScrollBar>
-		  </ScrollPanel>
-	  </Grid>
-	</Container>
-
-    </Stack>
   </Container>
 </Context>

@@ -1,0 +1,57 @@
+{
+    "type": "context",
+    "id": "TestRoot", // this control's variables will be exposed as 'TestRoot.W' etc
+    "children": [ /* render order/reversed input order */
+        {
+            "type": "widget",
+            "id": "Header",
+            "components": [ { "type": "image", "image": "grid_unitbk", "slice": "8,8" }, { "type": "text", "string": "This is the widget: Header" }, { "type": "input" } ],
+            "constraints":[ "L = 10", "T = 10", "R = Parent.W - 10", "H = 50" ]
+        },
+        {
+            "type": "widget",
+            "id": "Index",
+            "components": [ { "type": "image", "image": "grid_unitbk", "slice": "8,8" }, { "type": "input" } ],
+            "constraints":[ "L = 10", "W = 50" ]
+        },
+        {
+            "type": "ScrollPanel",
+            "id": "Body1",
+            "components": [ { "type": "image", "image": "grid_unitbk", "slice": "8,8" }, { "type": "input" } ],
+            "constraints":[ "R = Parent.W - 10" ],
+            "layout": "stack"
+        },
+        {
+            "type": "container",
+            "id": "Body2",
+            "components": [ { "type": "image", "image": "grid_unitbk", "slice": "8,8" }, { "type": "input" } ],
+            "constraints":[ "B = Parent.H - 10" ],
+            "layout": "stack"
+        },
+    ],
+
+    "constraints": [
+      "Index.T = Header.B + 10",
+      "Body1.T = Index.T",
+      "Index.B = Body2.B",
+      "Body1.L = Index.R + 10",
+
+      // Body2 has the same dimensions on the X-axis
+      "Body2.L = Body1.L",
+      "Body2.W = Body1.W",
+
+      "Body2.T = Body1.B + 10",
+      "Body1.H = 1.5 * Body2.H"
+    ],
+
+    // Testing out blueprint concept
+    "blueprints": {
+      "TestBlueprint": {
+        "type": "widget",
+        "id": "root",
+        "attributes": { "GrowX": false, "GrowY": true },
+        "constraints": [ "L = 10", "W = 300", "H = 50" ],
+        "components": [ { "type": "image" }, { "type": "text", "string": "Blueprint Instance" }, { "type": "input" } ]
+      }
+    }
+}

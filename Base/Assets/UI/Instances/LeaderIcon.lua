@@ -1,54 +1,36 @@
 -- Copyright 2017-2019, Firaxis Games
-include("LuaClass");
 include("TeamSupport");
 include("DiplomacyRibbonSupport");
 
-------------------------------------------------------------------
--- Class Table
-------------------------------------------------------------------
-LeaderIcon = LuaClass:Extend();
+-- ===========================================================================
+--	Class Table
+-- ===========================================================================
+LeaderIcon = {
+	playerID = -1,
+	TEAM_RIBBON_PREFIX	= "ICON_TEAM_RIBBON_"
+}
 
-------------------------------------------------------------------
--- Class Constants
-------------------------------------------------------------------
-LeaderIcon.DATA_FIELD_CLASS = "LEADER_ICON_CLASS";
-LeaderIcon.TEAM_RIBBON_PREFIX = "ICON_TEAM_RIBBON_";
-LeaderIcon.TEAM_RIBBON_SIZE = 53;
 
 -- ===========================================================================
---	MEMBERS
--- ===========================================================================
-LeaderIcon.playerID = -1;
-
-
-------------------------------------------------------------------
--- Static-Style allocation functions
-------------------------------------------------------------------
-function LeaderIcon:GetInstance(instanceManager:table, newParent:table)
-	-- Create leader icon class if it has not yet been created for this instance
-	local instance:table = instanceManager:GetInstance(newParent);
+function LeaderIcon:GetInstance(instanceManager:table, uiNewParent:table)
+	local instance:table = instanceManager:GetInstance(uiNewParent);
 	return LeaderIcon:AttachInstance(instance);
 end
 
-function LeaderIcon:AttachInstance(instance:table)
-	self = instance[LeaderIcon.DATA_FIELD_CLASS];
-	if not self then
-		self = LeaderIcon:new(instance);
-		instance[LeaderIcon.DATA_FIELD_CLASS] = self;
+-- ===========================================================================
+--	Essentially the "new"
+-- ===========================================================================
+function LeaderIcon:AttachInstance( instance:table )
+	if instance == nil then
+		UI.DataError("NIL instance passed into LeaderIcon:AttachInstance.  Setting the value to the ContextPtr's 'Controls'.");
+		instance = Controls;
+
 	end
+	setmetatable(instance, {__index = self });
+	self.Controls = instance;
 	self:Reset();
-	return self, instance;
+	return instance;
 end
-
-------------------------------------------------------------------
--- Constructor
-------------------------------------------------------------------
-function LeaderIcon:new(instanceOrControls: table)
-	self = LuaClass.new(LeaderIcon)
-	self.Controls = instanceOrControls or Controls;
-	return self;
-end
-
 
 
 -- ===========================================================================
@@ -133,7 +115,7 @@ end
 function LeaderIcon:UpdateTeamAndRelationship( playerID: number)
 
 	local localPlayerID	:number = Game.GetLocalPlayer();
-	if localPlayerID == -1 or playerID == 1000 then return; end		--  Local player is auto-play.
+	if localPlayerID == PlayerTypes.NONE or playerID == PlayerTypes.OBSERVER then return; end		--  Local player is auto-play.
 
 	-- Don't even attempt it, just hide the icon if this game mode doesn't have the capabilitiy.
 	if GameCapabilities.HasCapability("CAPABILITY_DISPLAY_HUD_RIBBON_RELATIONSHIPS") == false then
@@ -181,9 +163,13 @@ function LeaderIcon:UpdateTeamAndRelationship( playerID: number)
 end
 
 -- ===========================================================================
---	Resets instances we retrieve
+--	Resets the view of attached controls
 -- ===========================================================================
 function LeaderIcon:Reset()
+	if self.Controls == nil then
+		UI.DataError("Attempting to call Reset() on a nil LeaderIcon.");
+		return;
+	end
 	self.Controls.TeamRibbon:SetHide(true);
  	self.Controls.Relationship:SetHide(true);
  	self.Controls.YouIndicator:SetHide(true);
@@ -206,8 +192,8 @@ function LeaderIcon:GetToolTipString(playerID:number)
 		local civDesc		:string = pPlayerConfig:GetCivilizationDescription();
 		local localPlayerID	:number = Game.GetLocalPlayer();
 		
-		if localPlayerID==-1 or localPlayerID==1000  then
-			return;
+		if localPlayerID==PlayerTypes.NONE or localPlayerID==PlayerTypes.OBSERVER  then
+			return "";
 		end		
 
 		if GameConfiguration.IsAnyMultiplayer() and isHuman then

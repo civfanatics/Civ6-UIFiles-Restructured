@@ -950,7 +950,7 @@ function PopulateDistrictsWithNestedBuildings(data:table, listMode:number, listI
 		local turnsStrTT:string = "";
 		local turnsStr:string = "";
 
-		if(item.HasBeenBuilt and GameInfo.Districts[item.Type].OnePerCity == true and not item.Repair and not item.Contaminated and item.Progress == 0) then
+		if(item.HasBeenBuilt and GameInfo.Districts[item.Type].OnePerCity == true and not item.Repair and not item.Contaminated and item.Progress == 0 and item.IsComplete == true) then
 			turnsStrTT = TXT_HUD_CITY_DISTRICT_BUILT_TT;
 			turnsStr = "[ICON_Checkmark]";
 		elseif item.ContaminatedTurns > 0 then
@@ -1616,10 +1616,11 @@ function ComposeProductionCostString( iProductionProgress:number, iProductionCos
 		if iProductionProgress > 0 then -- Only show fraction if build progress has been made.
 			costString = tostring(iProductionProgress) .. "/" .. costString;
 		end
-		return "[NEWLINE][NEWLINE]" .. TXT_COST .. ": " .. costString .. " [ICON_Production] " .. TXT_PRODUCTION;
+		return TXT_COST .. ": " .. costString .. " [ICON_Production] " .. TXT_PRODUCTION;
 	end
 	return "";
 end
+
 
 -- Returns ( tooltip:string, subtitle:string )
 function ComposeUnitCorpsStrings( unit:table, iProdProgress:number, pBuildQueue )
@@ -1632,7 +1633,7 @@ function ComposeUnitCorpsStrings( unit:table, iProdProgress:number, pBuildQueue 
 	else
 		subtitle = "(" .. TXT_HUD_UNIT_PANEL_CORPS_SUFFIX .. ")";
 	end
-	tooltip = tooltip .. ComposeProductionCostString( iProdProgress, pBuildQueue:GetUnitCorpsCost( unit.Index ) );
+
 	return tooltip, subtitle;
 end
 function ComposeUnitArmyStrings( unit:table, iProdProgress:number, pBuildQueue )
@@ -1645,7 +1646,7 @@ function ComposeUnitArmyStrings( unit:table, iProdProgress:number, pBuildQueue )
 	else
 		subtitle = "(" .. TXT_HUD_UNIT_PANEL_ARMY_SUFFIX .. ")";
 	end
-	tooltip = tooltip .. ComposeProductionCostString( iProdProgress, pBuildQueue:GetUnitArmyCost( unit.Index ) );
+
 	return tooltip, subtitle;
 end
 
@@ -1680,7 +1681,6 @@ function ComposeUnitForPurchase( row:table, pCity:table, sYield:string, pYieldSo
 		local pBuildQueue			:table  = pCity:GetBuildQueue();
 		local nProductionCost		:number = pBuildQueue:GetUnitCost( row.Index );
 		local nProductionProgress	:number = pBuildQueue:GetUnitProgress( row.Index );
-		sToolTip = sToolTip .. "[NEWLINE]---" .. ComposeProductionCostString( nProductionProgress, nProductionCost );
 		
 		local kUnit	 :table = {
 			Type				= row.UnitType;
@@ -1752,9 +1752,27 @@ function ComposeBldgForPurchase( pRow:table, pCity:table, sYield:string, pYieldS
 	if CityManager.CanStartCommand( pCity, CityCommandTypes.PURCHASE, true, tParameters, false ) then
 		local isCanStart, pResults		 = CityManager.CanStartCommand( pCity, CityCommandTypes.PURCHASE, false, tParameters, true );
 		local isDisabled		:boolean = not isCanStart;
-		local sAllReasons		 :string = ComposeFailureReasonStrings( isDisabled, pResults );
-		local sToolTip 			 :string = ToolTipHelper.GetBuildingToolTip( pRow.Hash, playerID, pCity ) .. sAllReasons;
 		local isCantAfford		:boolean = false;
+
+		local sToolTip 				:string = ToolTipHelper.GetBuildingToolTip( pRow.Hash, playerID, pCity );
+		local pBuildQueue			:table  = pCity:GetBuildQueue();
+		local iProductionCost		:number = pBuildQueue:GetBuildingCost( pRow.Index );
+		local iProductionProgress	:number = pBuildQueue:GetBuildingProgress( pRow.Index );
+		sToolTip = sToolTip .. "[NEWLINE][NEWLINE]";
+		sToolTip = sToolTip .. ComposeProductionCostString( iProductionProgress, iProductionCost );
+
+		local iMaintenanceCost		:number = pRow.Maintenance or 0;
+		if (iMaintenanceCost ~= nil and iMaintenanceCost > 0) then
+			local yield = GameInfo.Yields["YIELD_GOLD"];
+			if(yield) then
+				sToolTip = sToolTip .. "[NEWLINE]" .. Locale.Lookup("LOC_TOOLTIP_MAINTENANCE", iMaintenanceCost, yield.IconString, yield.Name);
+			end
+		end
+
+		sToolTip = sToolTip .. "[NEWLINE]" .. AddBuildingExtraCostTooltip(pRow.Hash);
+
+		local sAllReasons		 :string = ComposeFailureReasonStrings( isDisabled, pResults );
+		sToolTip = sToolTip .. sAllReasons;
 		
 		-- Affordability check
 		if not pYieldSource:CanAfford( pCity:GetID(), pRow.Hash ) then
@@ -1762,11 +1780,6 @@ function ComposeBldgForPurchase( pRow:table, pCity:table, sYield:string, pYieldS
 			isDisabled = true;
 			isCantAfford = true;
 		end
-		
-		local pBuildQueue			:table  = pCity:GetBuildQueue();
-		local iProductionCost		:number = pBuildQueue:GetBuildingCost( pRow.Index );
-		local iProductionProgress	:number = pBuildQueue:GetBuildingProgress( pRow.Index );
-		sToolTip = sToolTip .. ComposeProductionCostString( iProductionProgress, iProductionCost );
 		
 		local kBuilding :table = {
 			Type			= pRow.BuildingType,
@@ -1807,7 +1820,16 @@ function ComposeDistrictForPurchase( pRow:table, pCity:table, sYield:string, pYi
 		local pBuildQueue			:table  = pCity:GetBuildQueue();
 		local iProductionCost		:number = pBuildQueue:GetDistrictCost( pRow.Index );
 		local iProductionProgress	:number = pBuildQueue:GetDistrictProgress( pRow.Index );
+		sToolTip = sToolTip .. "[NEWLINE][NEWLINE]";
 		sToolTip = sToolTip .. ComposeProductionCostString( iProductionProgress, iProductionCost );
+
+		local iMaintenanceCost		:number = pRow.Maintenance or 0;
+		if (iMaintenanceCost ~= nil and iMaintenanceCost > 0) then
+			local yield = GameInfo.Yields["YIELD_GOLD"];
+			if(yield) then
+				sToolTip = sToolTip .. "[NEWLINE]" .. Locale.Lookup("LOC_TOOLTIP_MAINTENANCE", iMaintenanceCost, yield.IconString, yield.Name);
+			end
+		end
 		
 		local kDistrict :table = {
 			Type			= pRow.DistrictType,
@@ -1960,7 +1982,17 @@ function GetData()
 				
 			local iProductionCost		:number = buildQueue:GetDistrictCost( row.Index );
 			local iProductionProgress	:number = buildQueue:GetDistrictProgress( row.Index );
-			sToolTip = sToolTip .. ComposeProductionCostString( iProductionProgress, iProductionCost );
+
+			sToolTip = sToolTip .. "[NEWLINE][NEWLINE]";
+			sToolTip = sToolTip .. ComposeProductionCostString( iProductionProgress, iProductionCost);
+
+			local iMaintenanceCost		:number = row.Maintenance or 0;
+			if (iMaintenanceCost ~= nil and iMaintenanceCost > 0) then
+				local yield = GameInfo.Yields["YIELD_GOLD"];
+				if(yield) then
+					sToolTip = sToolTip .. "[NEWLINE]" .. Locale.Lookup("LOC_TOOLTIP_MAINTENANCE", iMaintenanceCost, yield.IconString, yield.Name);
+				end
+			end
 
 			local bIsContaminated:boolean = cityDistricts:IsContaminated( row.Index );
 			local iContaminatedTurns:number = 0;
@@ -1988,7 +2020,8 @@ function GetData()
 				ContaminatedTurns	= iContaminatedTurns,
 				Cost				= iProductionCost, 
 				Progress			= iProductionProgress,
-				HasBeenBuilt		= bHasProducedDistrict
+				HasBeenBuilt		= bHasProducedDistrict,
+				IsComplete			= cityDistricts:IsComplete( row.Index )
 			});
 		end
 
@@ -2040,7 +2073,18 @@ function GetData()
 
 			local iProductionCost		:number = buildQueue:GetBuildingCost( row.Index );
 			local iProductionProgress	:number = buildQueue:GetBuildingProgress( row.Index );
-			sToolTip = sToolTip .. ComposeProductionCostString( iProductionProgress, iProductionCost );
+			sToolTip = sToolTip .. "[NEWLINE][NEWLINE]";
+			sToolTip = sToolTip .. ComposeProductionCostString( iProductionProgress, iProductionCost);
+
+			local iMaintenanceCost		:number = row.Maintenance or 0;
+			if (iMaintenanceCost ~= nil and iMaintenanceCost > 0) then
+				local yield = GameInfo.Yields["YIELD_GOLD"];
+				if(yield) then
+					sToolTip = sToolTip .. "[NEWLINE]" .. Locale.Lookup("LOC_TOOLTIP_MAINTENANCE", iMaintenanceCost, yield.IconString, yield.Name);
+				end
+			end
+
+			sToolTip = sToolTip .. "[NEWLINE]" .. AddBuildingExtraCostTooltip(row.Hash);
 				
 			table.insert( new_data.BuildingItems, {
 				Type			= row.BuildingType, 
@@ -2101,13 +2145,11 @@ function GetData()
 		-- Can it be built normally?
 		if not row.MustPurchase and buildQueue:CanProduce( kBuildParameters, true ) then
 			local isCanProduceExclusion, results	 = buildQueue:CanProduce( kBuildParameters, false, true );
+			local nProductionCost		:number = buildQueue:GetUnitCost( row.Index );
+			local nProductionProgress	:number = buildQueue:GetUnitProgress( row.Index );
 			local isDisabled				:boolean = not isCanProduceExclusion;
 			local sAllReasons				 :string = ComposeFailureReasonStrings( isDisabled, results );
 			local sToolTip					 :string = ToolTipHelper.GetUnitToolTip( row.Hash, MilitaryFormationTypes.STANDARD_MILITARY_FORMATION, buildQueue ) .. sAllReasons;
-
-			local nProductionCost		:number = buildQueue:GetUnitCost( row.Index );
-			local nProductionProgress	:number = buildQueue:GetUnitProgress( row.Index );
-			sToolTip = sToolTip .. ComposeProductionCostString( nProductionProgress, nProductionCost );
 				
 			local kUnit :table = {
 				Type				= row.UnitType, 
@@ -2146,6 +2188,7 @@ function GetData()
 					kUnit.CorpsTooltip, kUnit.CorpsName = ComposeUnitCorpsStrings( row, nProductionProgress, buildQueue );
 					local sFailureReasons:string = ComposeFailureReasonStrings( kUnit.CorpsDisabled, kResults );
 					kUnit.CorpsTooltip = kUnit.CorpsTooltip .. sFailureReasons;
+					kUnit.Cost= kUnit.CorpsCost;
 				end
 				if results[CityOperationResults.CAN_TRAIN_ARMY] then
 					kBuildParameters.MilitaryFormationType = MilitaryFormationTypes.ARMY_MILITARY_FORMATION;
@@ -2157,6 +2200,7 @@ function GetData()
 					kUnit.ArmyTooltip, kUnit.ArmyName = ComposeUnitArmyStrings( row, nProductionProgress, buildQueue );		
 					local sFailureReasons:string = ComposeFailureReasonStrings( kUnit.ArmyDisabled, kResults );
 					kUnit.ArmyTooltip = kUnit.ArmyTooltip .. sFailureReasons;
+					kUnit.Cost = kUnit.CorpsCost;
 				end
 			end
 				
@@ -2198,7 +2242,7 @@ function GetData()
 				
 			local iProductionCost		:number = buildQueue:GetProjectCost( row.Index );
 			local iProductionProgress	:number = buildQueue:GetProjectProgress( row.Index );
-			sToolTip = sToolTip .. ComposeProductionCostString( iProductionProgress, iProductionCost );
+			sToolTip = sToolTip .. "[NEWLINE]" .. ComposeProductionCostString( iProductionProgress, iProductionCost );
 				
 			table.insert(new_data.ProjectItems, {
 				Type				= row.ProjectType,
@@ -2500,6 +2544,7 @@ function CreateCorrectTabs()
 	if GameCapabilities.HasCapability("CAPABILITY_FAITH") then 
 		labelWidth = labelWidth + purchaseFaithLabelX;
 	end
+	local isQueueTabSet:boolean = false;
 	if(labelWidth > MAX_TAB_LABEL_WIDTH) then
 		tabSizeX = 44;
 		tabSizeY = 44;
@@ -2514,6 +2559,7 @@ function CreateCorrectTabs()
 		tabAnimControl	= Controls.MiniTabAnim;
 		tabArrowControl = Controls.MiniTabArrow;
 	else
+		isQueueTabSet = true;
 		tabSizeX = 42;
 		tabSizeY = 34;
 		Controls.ProductionTab:SetHide(false);
@@ -2548,7 +2594,7 @@ function CreateCorrectTabs()
 		Controls.MiniPurchaseFaithTab:SetHide(true);
 		Controls.PurchaseFaithTab:SetHide(true);
 	end
-	if not m_isTutorialRunning and not m_tutorialTestMode then
+	if isQueueTabSet and (not m_isTutorialRunning) and (not m_tutorialTestMode) then
 		m_tabs.AddTab( m_queueTab,		OnTabChangeQueue );
 		m_tabs.AddTab( m_managerTab,	OnTabChangeManager );
 	end
@@ -2668,7 +2714,8 @@ function RefreshQueue(playerID, cityID)
 		local entry:table = pBuildQueue:GetAt(i);
 		local queueInstance:table = CreateQueueInstance( m_QueueInstanceIM, Controls.QueueStack, playerID, cityID, i, entry );
 		queueInstance.Top:RegisterCallback( Mouse.eLClick, function() OnItemClicked( queueInstance, queueInstance.Top ); end );
-		queueInstance.Top:RegisterCallback( Mouse.eRClick, function() RemoveQueueItem(i); end );
+		queueInstance.Top:RegisterCallback( Mouse.eRClick, function() UI.PlaySound("Play_UI_Click"); RemoveQueueItem(i); end );
+		queueInstance.Top:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end );
 		queueInstance.Num:SetText( tostring(i+1) );		-- Start at 2
 	end
 

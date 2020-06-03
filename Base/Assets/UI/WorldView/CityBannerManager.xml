@@ -61,7 +61,7 @@
 					</Container>
 
 					<Container				ID="ProductionOrSpace"					Anchor="L,C" Offset="0,1" Size="40,34" >
-						<AlphaAnim			ID="ProductionIndicator"				Anchor="C,T" AlphaStart="0" AlphaEnd="1" Speed="1" Cycle="Once" Size="parent,parent" Hidden="1" >
+						<AlphaAnim							                        Anchor="C,T" AlphaStart="0" AlphaEnd="1" Speed="1" Cycle="Once" Size="parent,parent">
 							<SlideAnim																		Anchor="C,T" Function="Root" Start="-8,0" End="0,0" Speed="2.5" Cycle="Once" Size="parent,parent" >
 								<Image																			Anchor="R,C" Texture="Banner_ProductionCircle" Size="26,26" Offset="6,-2" Color="255,255,255,200">
 									<Button		ID="CityProduction"							Anchor="C,C" Texture="Production30" Size="30,30" Color="255,255,255,0">
@@ -142,7 +142,7 @@
 						<Stack					ID="CityNameStack"			          StackGrowth="Right" Padding="2" Anchor="C,C" >
               <Container Size="auto,auto" Anchor="L,C" Offset="0,2">
                 <Label			ID="TradingPostIcon"						Anchor="C,C"	String="[ICON_TradingPost]" Hidden="1"/>
-                <Label			ID="TradingPostDisabledIcon"		Anchor="C,C"	String="[ICON_Exclamation]" Hidden="1" debug="*"/>
+                <Label			ID="TradingPostDisabledIcon"		Anchor="C,C"	String="[ICON_Exclamation]" Hidden="1"/>
               </Container>
               <Label				ID="CityUnderSiegeIcon"	          Anchor="L,C"		Style="FontNormal20" String="[ICON_UnderSiege]" ConsumeMouse="1" ToolTip="LOC_HUD_REPORTS_STATUS_UNDER_SEIGE"/>
               <Label				ID="CityOccupiedIcon"	            Anchor="L,C"	Style="FontNormal20" String="[ICON_Occupied]" ConsumeMouse="1" ToolTip="LOC_HUD_CITY_GROWTH_OCCUPIED"/>

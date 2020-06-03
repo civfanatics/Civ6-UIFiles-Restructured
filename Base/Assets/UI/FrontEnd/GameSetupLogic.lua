@@ -22,12 +22,19 @@ g_SortingMap = {};
 -- Determine which UI stack the parameters should be placed in.
 -------------------------------------------------------------------------------
 function GetControlStack(group)
+	
+	local gameModeParametersStack = Controls.GameModeParameterStack;
+	if(gameModeParametersStack == nil) then
+		gameModeParametersStack = Controls.PrimaryParametersStack;
+	end
+
 	local triage = {
 
 		["BasicGameOptions"] = Controls.PrimaryParametersStack,
 		["GameOptions"] = Controls.PrimaryParametersStack,
 		["BasicMapOptions"] = Controls.PrimaryParametersStack,
 		["MapOptions"] = Controls.PrimaryParametersStack,
+		["GameModes"] = gameModeParametersStack;
 		["Victories"] = Controls.VictoryParameterStack,
 		["AdvancedOptions"] = Controls.SecondaryParametersStack,
 	};
@@ -138,7 +145,14 @@ function GameParameters_UI_DefaultCreateParameterDriver(o, parameter, parent)
 			
 		--c.CheckBox:GetTextButton():SetText(parameter.Name);
 		c.CheckBox:SetText(parameter.Name);
-		c.CheckBox:SetToolTipString(parameter.Description);
+
+		
+		local tooltip = parameter.Description;
+		if(parameter.Invalid) then
+			tooltip = string.format("[COLOR_RED]%s[ENDCOLOR][NEWLINE]%s", Locale.Lookup(parameter.InvalidReason), tooltip);
+		end
+
+		c.CheckBox:SetToolTipString(tooltip);
 		c.CheckBox:RegisterCallback(Mouse.eLClick, function()
 			o:SetParameterValue(parameter, not c.CheckBox:IsSelected());
 			BroadcastGameConfigChanges();
@@ -151,7 +165,13 @@ function GameParameters_UI_DefaultCreateParameterDriver(o, parameter, parent)
 				
 				-- Sometimes the parameter name is changed, be sure to update it.
 				c.CheckBox:SetText(parameter.Name);
-				c.CheckBox:SetToolTipString(parameter.Description);
+
+				local tooltip = parameter.Description;
+				if(parameter.Invalid) then
+					tooltip = string.format("[COLOR_RED]%s[ENDCOLOR][NEWLINE]%s", Locale.Lookup(parameter.InvalidReason), tooltip);
+				end
+
+				c.CheckBox:SetToolTipString(tooltip);
 				
 				-- We have to invalidate the selection state in order
 				-- to trick the button to use the right vis state..
@@ -496,20 +516,50 @@ function GameParameters_UI_AfterRefresh(o)
 		end
 	end
 
+	local stacks = {	
+		{Controls.PrimaryParametersStack},
+		{Controls.SecondaryParametersStack,Controls.SecondaryParametersHeader},
+		{Controls.GameModeParameterStack,Controls.GameModeParametersHeader},
+		{Controls.VictoryParameterStack,Controls.VictoryParametersHeader}
+	};
 
-	Controls.PrimaryParametersStack:SortChildren(sort);
-	Controls.SecondaryParametersStack:SortChildren(sort);
-	Controls.VictoryParameterStack:SortChildren(sort);
+	for i,v in ipairs(stacks) do
+		local s = v[1];
+		local h = v[2];
+		if(s) then
+			local children = s:GetChildren();
+		
+			local hide = true;
+			for _,c in ipairs(children) do
+				if(c:IsVisible()) then
+					hide = false;			
+					break;
+				end
+			end
 
-	Controls.PrimaryParametersStack:CalculateSize();
-	Controls.PrimaryParametersStack:ReprocessAnchoring();
+			if(h) then
+				h:SetHide(hide);
+			end
 
-	Controls.SecondaryParametersStack:CalculateSize();
-	Controls.SecondaryParametersStack:ReprocessAnchoring();
+			s:SetHide(hide);
+		end
+	end
 
-	Controls.VictoryParameterStack:CalculateSize();
-	Controls.VictoryParameterStack:ReprocessAnchoring();
+	for i,v in ipairs(stacks) do
+		local s = v[1];
+		if(s and s:IsVisible()) then
+			s:SortChildren(sort);
+		end
+	end
 
+	for i,v in ipairs(stacks) do
+		local s = v[1];
+		if(s) then
+			s:CalculateSize();
+			s:ReprocessAnchoring();
+		end
+	end
+	   
 	Controls.ParametersStack:CalculateSize();
 	Controls.ParametersStack:ReprocessAnchoring();
 
@@ -716,4 +766,11 @@ function MapSize_ValueChanged(p)
 	if(GameSetup_PlayerCountChanged) then
 		GameSetup_PlayerCountChanged();
 	end
+end
+
+function GetGameModeInfo(gameModeType)
+	local item_query : string = "SELECT * FROM GameModeItems where GameModeType = ? ORDER BY SortIndex";
+	local item_results : table = CachedQuery(item_query, gameModeType);
+
+	return item_results[1];
 end

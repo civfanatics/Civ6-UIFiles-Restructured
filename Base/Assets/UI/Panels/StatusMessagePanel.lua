@@ -127,7 +127,6 @@ function RemoveGossip( kEntry:table, uiInstance:table )
 	uiInstance.Anim:ClearEndCallback();	
 	uiInstance.Anim:ClearAnimCallback();	
 	m_gossipIM:ReleaseInstance( uiInstance );	
-	UI.PlaySound("Play_UI_Click");
 	-- Remove data
 	for i,kTableEntry in ipairs(m_kGossip) do
 		if kTableEntry == kEntry then
@@ -171,6 +170,7 @@ end
 --	Clicked to dismiss message
 -- ===========================================================================
 function OnGossipClicked( kEntry:table, uiInstance:table )
+	UI.PlaySound("Play_UI_Click");
 	RemoveGossip(kEntry, uiInstance );
 end
 

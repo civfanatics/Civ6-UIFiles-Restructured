@@ -562,6 +562,7 @@ function TutorialLoader:CreateTutorialItems(AddToListener:ifunction)
 	item:SetIsQueueable(true);
 	item:SetShowPortrait(true);
 	item:SetAdvisorMessage("LOC_TUTORIAL_SCORED_COMPETITION_BEGUN");
+	item:SetAdvisorAudio("Play_ADVISOR_LINE_FTUE_GENERAL_1");
 	item:AddAdvisorButton("LOC_ADVISOR_BUTTON_CONTINUE",
 		function( advisorInfo )
 			UI.PlaySound("Stop_LOC_TUTORIAL_EMERGENCY_4")

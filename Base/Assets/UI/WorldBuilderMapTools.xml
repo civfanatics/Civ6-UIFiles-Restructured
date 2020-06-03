@@ -4,21 +4,21 @@
 
     <Tab ID="TabControl" Anchor="R,T" Offset="4,198" Size="360,570">
         <!--Tab Container-->
-        <Box ID="MainGrid" Anchor="R,B" Size="360,parent-20" Offset="0,18" Color="9,44,72,200" ConsumeMouse="1" >
+        <Box ID="MainGrid" Anchor="R,B" Size="360,parent" Color="9,44,72,200" ConsumeMouse="1">
           <Box Color="32,70,101,150" Anchor="L,T" Size="2,parent"/>
           <Box Color="32,70,101,150" Anchor="R,T" Size="2,parent"/>
           <Box Color="32,70,101,150" Anchor="L,T" Size="parent,2"/>
           <Box Color="32,70,101,150" Anchor="L,B" Size="parent,2"/>
           
-          <Grid Anchor="C,C" Offset="0,-22" Size="parent-10, parent-44" Style="SubContainer4" Color="0,0,0,80">
-            <Grid ID="TabContainerGrid" Anchor="C,C" Size="parent-8,parent-8" Style="DecoGrid" Color="26,61,90,255" >
+          <Grid Anchor="C,C" Offset="0,-22" Size="parent-10, parent-44" Style="SubContainer4" Color="0,0,0,80" InnerPadding="8,8">
+            <Grid ID="TabContainerGrid" Anchor="C,C" Size="parent,parent" Style="DecoGrid" Color="26,61,90,255">
               <!-- Header -->
               <Grid Anchor="C,T" Size="parent,21" Offset="0,16" Texture="Shell_SectionHeader" SliceCorner="4,10" SliceSize="300,1" SliceTextureSize="308,21" Color="20,144,140,100">
                 <Image Texture="Controls_Gradient_HalfRadial" Color="20,144,140,100" FlipY="1" Anchor="C,T" Size="225,94"/>
                 <Label ID="TabHeader" Anchor="C,C" Style="ShellOptionText" WrapWidth="320" String=""/>
               </Grid>
               
-              <Container ID="TabContainer" Offset="4,40">
+              <Container ID="TabContainer" Size="parent,parent-40" Offset="0,40">
 								<LuaContext	ID="WorldBuilderPlacement"	FileName="WorldBuilderPlacement"/>
                 <LuaContext	ID="WorldBuilderPlotEditor" FileName="WorldBuilderPlotEditor"/>
               </Container>
@@ -27,7 +27,7 @@
         </Box>
         
         <!--Tab Buttons-->
-        <Stack ID="TabButtons" Anchor="R,B" Offset="0,4" StackGrowth="Right">
+        <Stack ID="TabButtons" Anchor="R,B" Offset="0,0" StackGrowth="Right">
 			<GridButton ID="SelectTab_WorldBuilderPlacement"  Style="TabButton" Size="100,35" String="LOC_WORLDBUILDER_PLACE" ToolTip="LOC_WORLD_BUILDER_PLACEMENT_TT" />
 			<GridButton ID="SelectTab_WorldBuilderPlotEditor" Style="TabButton" Size="100,35" String="LOC_WORLDBUILDER_PLOT" ToolTip="LOC_WORLD_BUILDER_PLOT_TT" />
         </Stack>

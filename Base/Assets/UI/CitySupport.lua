@@ -228,9 +228,9 @@ function GetProductionInfoOfCity( pCity:table, productionHash:number )
 		local eMilitaryFormationType :number = pBuildQueue:GetCurrentProductionTypeModifier();
 		productionName	= Locale.Lookup(unitDef.Name);
 		description		= unitDef.Description;
-		tooltip			= ToolTipHelper.GetUnitToolTip(hash);
+		tooltip			= ToolTipHelper.GetUnitToolTip(hash, eMilitaryFormationType, pBuildQueue);
 		progress		= pBuildQueue:GetUnitProgress(unitDef.Index);
-		prodTurnsLeft	= pBuildQueue:GetTurnsLeft(unitDef.UnitType, eMilitaryFormationType);		
+		prodTurnsLeft	= pBuildQueue:GetTurnsLeft(unitDef.UnitType);		
 		kIcons			= { iconName, prefixOnlyIconName, eraOnlyIconName, fallbackIconName, "ICON_"..unitDef.UnitType.."_PORTRAIT"}
 		statString		= GetFilteredUnitStatString(FilterUnitStats(hash));
 		type			= ProductionType.UNIT;

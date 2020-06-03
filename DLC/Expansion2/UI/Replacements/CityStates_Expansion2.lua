@@ -24,7 +24,7 @@ function GetSuzerainBonusText(playerID:number)
 	-- Unique Bonus
 	for leaderTraitPairInfo in GameInfo.LeaderTraits() do
 		if (leader ~= nil and leader == leaderTraitPairInfo.LeaderType) then
-			local traitInfo = GameInfo.Traits[leaderTraitPairInfo.TraitType];
+			local traitInfo : table = GameInfo.Traits[leaderTraitPairInfo.TraitType];
 			if (traitInfo ~= nil) then
 				local name = PlayerConfigurations[playerID]:GetCivilizationShortDescription();
 				text = text .. "[COLOR:SuzerainDark]" .. Locale.Lookup("LOC_CITY_STATES_SUZERAIN_UNIQUE_BONUS", name) .. "[ENDCOLOR] ";
@@ -33,7 +33,9 @@ function GetSuzerainBonusText(playerID:number)
 						text = text .. " [COLOR:Civ6Red]" .. Locale.Lookup("LOC_CITY_STATE_PANEL_UNIQUE_SUZERAIN_BONUS_DISABLED") .. "[ENDCOLOR] ";
 					end
 				end
-				text = text .. Locale.Lookup(traitInfo.Description);
+				if traitInfo.Description ~= nil then
+					text = text .. Locale.Lookup(traitInfo.Description);
+				end
 			end
 		end
 	end	

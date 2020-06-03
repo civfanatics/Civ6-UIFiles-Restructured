@@ -155,7 +155,6 @@ function RealizeTabs( selectedTabName:string )
 	Controls.SelectedOverview:SetHide( selectedTabName ~= "Overview" );
 	Controls.ButtonOverview:SetSelected( selectedTabName == "Overview" );
 	Controls.OverviewPane:SetHide( selectedTabName ~= "Overview" );
-	Controls.OverviewBG:SetHide( selectedTabName ~= "Overview" );
 
 	Controls.SelectedCO2Levels:SetHide( selectedTabName ~= "CO2Levels"  );
 	Controls.ButtonCO2Levels:SetSelected( selectedTabName == "CO2Levels"   );
@@ -278,7 +277,9 @@ function RefreshCurrentEvent()
 
 			local direction:string = Locale.Lookup(GetDirectionText(kCurrentEvent.CurrentDirection));
 			
-			if not bIsEventVisible then
+			if kCurrentEventDef.Global then
+				Controls.WeatherLocation:SetText(Locale.Lookup("LOC_CLIMATE_SCREEN_LOCATION", Locale.Lookup("LOC_CLIMATE_SCREEN_GLOBAL")));
+			elseif not bIsEventVisible then
 				Controls.WeatherLocation:SetText(Locale.Lookup("LOC_CLIMATE_SCREEN_LOCATION", Locale.Lookup("LOC_CIVICS_TREE_UNREVEALED_CIVIC")));
 			elseif location ~= "" and direction ~= "" then
 				Controls.WeatherLocation:SetText(Locale.Lookup("LOC_CLIMATE_SCREEN_LOCATION_DIRECTION", location, direction));
@@ -622,7 +623,7 @@ function TabSelectEventHistory()
 
 	local iCurrentTurn = Game.GetCurrentGameTurn();
 	for i=iCurrentTurn, 0, -1 do
-		local kEvent:table = GameRandomEvents.GetEventForTurn(i);
+		local kEvent:table = GameRandomEvents.GetEventsForTurn(i);
 		if kEvent ~= nil then
 			local kEventDef:table = GameInfo.RandomEvents[kEvent.RandomEvent];
 			if kEventDef ~= nil then
@@ -630,7 +631,9 @@ function TabSelectEventHistory()
 					CreateClimateChangeInstance(kEvent, kEventDef, i);
 				elseif kEventDef.EffectOperatorType ~= NUCLEAR_ACCIDENT_EVENT_TYPE then
 					local pEventPlot:table = Map.GetPlotByIndex(kEvent.CurrentLocation);
-					if pEventPlot ~= nil then
+					if kEventDef.Global then
+						CreateEventInstance(kEvent, kEventDef, i);
+					elseif pEventPlot ~= nil then
 						local pLocalPlayerVis:table = PlayersVisibility[Game.GetLocalPlayer()];
 						if pLocalPlayerVis ~= nil and pLocalPlayerVis:IsRevealed(pEventPlot:GetX(), pEventPlot:GetY()) then
 							CreateEventInstance(kEvent, kEventDef, i);
@@ -770,7 +773,7 @@ function RealizePlayerCO2()
 				local co2Amount			:number = amount;
 				local color				:number = kColors[colorIndex];
 				local amountLastTurn	:number = GameClimate.GetPlayerResourceCO2Footprint( m_playerID, kResourceInfo.Index, true );
-				local resourceLastTurn	:number = GameClimate.GetPlayerResourceConsumption( m_playerID, kResourceInfo.Index, true );
+				local resourceLastTurn	:number = GameClimate.GetPlayerRawResourceConsumption( m_playerID, kResourceInfo.Index, true );
 
 				uiResource.Amount:SetText( co2Amount );
 				uiResource.Icon:SetIcon("ICON_" .. kResourceInfo.ResourceType);
@@ -823,31 +826,34 @@ function TabCO2ByCiviliation()
 			total = total + CO2FootprintNum;
 		end
 		
-		-- Only chart a slice if player has been met.
-		if pPlayerDiplomacy:HasMet(playerID) or m_playerID == playerID then			
+		local pPlayerConfig		:table = PlayerConfigurations[playerID];
+		local civType			:string = pPlayerConfig:GetCivilizationTypeName();
+		local civName			:string = Locale.Lookup( pPlayerConfig:GetCivilizationDescription() );
+		local backColor, frontColor = UI.GetPlayerColors(playerID);
 
-			local pPlayerConfig		:table = PlayerConfigurations[playerID];			
-			local civType			:string = pPlayerConfig:GetCivilizationTypeName();			
-			local civName			:string = Locale.Lookup( pPlayerConfig:GetCivilizationDescription() );
-			local backColor, frontColor = UI.GetPlayerColors(playerID);
+		-- unmet players get a dark blue pie wedge and no clues about who the civ is
+		if not pPlayerDiplomacy:HasMet(playerID) then
+			civType = "";
+			civName = Locale.Lookup("LOC_WORLD_RANKING_UNMET_PLAYER");
+			backColor = UI.GetColorValue("COLOR_STANDARD_BLUE_DK");
+		end
 
-			if (m_playerID == playerID) then
-				civName = Locale.Lookup( "LOC_CLIMATE_YOU", civName );	-- Add "(You)" for your civ.
-			end
+		if (m_playerID == playerID) then
+			civName = Locale.Lookup( "LOC_CLIMATE_YOU", civName );	-- Add "(You)" for your civ.
+		end
 
-			uiCiv = m_kCivCO2IM:GetInstance();
-			
-			local civIconController = CivilizationIcon:AttachInstance( uiCiv.CivIcon );
-			civIconController:UpdateIconFromPlayerID( playerID );
-			civIconController:SetLeaderTooltip( playerID );
+		uiCiv = m_kCivCO2IM:GetInstance();
 
-			uiCiv.Amount:SetText( CO2FootprintNum );		
+		local civIconController = CivilizationIcon:AttachInstance( uiCiv.CivIcon );
+		civIconController:UpdateIconFromPlayerID( playerID );
+		civIconController:SetLeaderTooltip( playerID );
 
-			if CO2FootprintNum > 0 then
-				table.insert( kFootprints, CO2FootprintNum);				-- Add value			
-				table.insert( kColors, backColor );		-- Add color based on player's color
-			end
-		end		
+		uiCiv.Amount:SetText( CO2FootprintNum );
+
+		if CO2FootprintNum > 0 then
+			table.insert( kFootprints, CO2FootprintNum);				-- Add value
+			table.insert( kColors, backColor );		-- Add color based on player's color
+		end
 	end
 
 	-- Now total is known, create an array based on percentages (0.0 - 1.0) for each player and chart it.

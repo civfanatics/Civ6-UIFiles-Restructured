@@ -18,6 +18,7 @@ local m_checkedCloudNotify:boolean = false;	-- Have we checked for cloud notific
 local m_currentOptions:table = {};		--Track which main menu options are being displayed and selected. Indices follow the format of {optionControl:table, isSelected:boolean}
 local m_initialPause = 1.5;				--How long to wait before building the main menu options when the game first loads
 local m_internetButton:table = nil;		--Cache internet button so it can be updated when online status events fire
+local m_crossPlayButton:table = nil;	--Cache crossplay button so it can be updated when online status events fire
 local m_multiplayerButton:table = nil;	--Cache multiplayer button so it can be updated if a new cloud turn comes in.
 local m_cloudGamesButton:table = nil;	--Cache cloud games button so it can be updated if a new cloud turn comes in.
 local m_resumeButton:table = nil;		--Cache resume button so it can be updated when FileListQueryResults event fires
@@ -32,9 +33,10 @@ g_LogoMovie = nil;		-- Custom Logo movie override.
 -- ===========================================================================
 --	Constants
 -- ===========================================================================
-local PAUSE_INCREMENT = .18;			--How long to wait (in seconds) between main menu flyouts - length of the menu cascade
-local TRACK_PADDING = 40;				--The amount of Y pixels to add to the track on top of the list height
-local OPTION_SEEN_CIVROYALE_INTRO :string = "HasSeenCivRoyaleIntro";	-- Option key for having seen the CivRoyale How to Play screen.
+local PAUSE_INCREMENT				:number = .18;			--How long to wait (in seconds) between main menu flyouts - length of the menu cascade
+local TRACK_PADDING					:number = 40;			--The amount of Y pixels to add to the track on top of the list height
+local OPTION_SEEN_CIVROYALE_INTRO	:string = "HasSeenCivRoyaleIntro";	-- Option key for having seen the CivRoyale How to Play screen.
+local MOD_CIVROYALE_GUID			:string = "F264EE10-F21B-4A9A-BBCD-D534E9843E90";
 
 -- ===========================================================================
 --	Globals
@@ -278,23 +280,42 @@ function OnCloudUnseenCompleteCheckComplete(haveCompletedGame :boolean, gameName
 end
 
 -- ===========================================================================
+function GetCivRoyaleOfflineTT()
+
+	if( Network.GetNetworkPlatform() == NetworkPlatform.NETWORK_PLATFORM_EOS ) then
+		return Locale.Lookup("LOC_EPIC_MULTIPLAYER_MATCHMAKE_CIVROYALE_OFFLINE_TT");
+	end
+
+	return Locale.Lookup("LOC_MULTIPLAYER_MATCHMAKE_CIVROYALE_OFFLINE_TT");
+end
+
+-- ===========================================================================
+function GetInternetGameOfflineTT()
+	if( Network.GetNetworkPlatform() == NetworkPlatform.NETWORK_PLATFORM_EOS ) then
+		return Locale.Lookup("LOC_EPIC_MULTIPLAYER_INTERNET_GAME_OFFLINE_TT");
+	end
+
+	return Locale.Lookup("LOC_MULTIPLAYER_INTERNET_GAME_OFFLINE_TT");
+end
+
+-- ===========================================================================
 -- Multiplayer Select Screen
 -- ===========================================================================
 local InternetButtonOnlineStr : string = Locale.Lookup("LOC_MULTIPLAYER_INTERNET_GAME_TT");
-local InternetButtonOfflineStr : string = Locale.Lookup("LOC_MULTIPLAYER_INTERNET_GAME_OFFLINE_TT");
+local InternetButtonOfflineStr : string = GetInternetGameOfflineTT();
 local CloudButtonTTStr : string = Locale.Lookup("LOC_MULTIPLAYER_CLOUD_GAME_TT");
 local CloudNotLoggedInTTStr : string = Locale.Lookup("LOC_MULTIPLAYER_CLOUD_GAME_NO_LOGIN_TT");
 local CloudButtonUnseenCompleteGameTTStr : string = Locale.Lookup("LOC_MULTIPLAYER_CLOUD_UNSEEN_COMPLETE_GAME_TT");
 local CloudButtonHaveTurnTTStr : string = Locale.Lookup("LOC_MULTIPLAYER_CLOUD_GAME_HAVE_TURN_TT");
 local CloudButtonGameReadyTTStr: string = Locale.Lookup("LOC_MULTIPLAYER_CLOUD_GAME_GAME_READY_TT");
-local CloudButtonNewMPModeTTStr : string = Locale.Lookup("LOC_MULTIPLAYER_CLOUD_GAME_NEW_MODE_TT");
+local CrossplayButtonNewMPModeTTStr : string = Locale.Lookup("LOC_MULTIPLAYER_CROSSPLAY_GAME_NEW_MODE_TT");
 local MultiplayerButtonTTStr : string = Locale.Lookup("LOC_MAINMENU_MULTIPLAYER_BASE_TT");
 local MultiplayerButtonHaveTurnTTStr : string = Locale.Lookup("LOC_MAINMENU_MULTIPLAYER_HAVE_CLOUD_TURN_TT");
 local MultiplayerButtonGameReadyTTStr : string = Locale.Lookup("LOC_MAINMENU_MULTIPLAYER_GAME_READY_TT");
 local MultiplayerButtonUnseenCompleteTTStr : string = Locale.Lookup("LOC_MAINMENU_MULTIPLAYER_UNSEEN_COMPLETE_GAME_TT");
 local MultiplayerButtonNewMPModeTTStr : string = Locale.Lookup("LOC_MAINMENU_MULTIPLAYER_NEW_MP_MODE_TT");
 local CivRoyaleButtonOnlineStr : string = Locale.Lookup("LOC_MULTIPLAYER_MATCHMAKE_CIVROYALE_TT");
-local CivRoyaleButtonOfflineStr : string = Locale.Lookup("LOC_MULTIPLAYER_MATCHMAKE_CIVROYALE_OFFLINE_TT");
+local CivRoyaleButtonOfflineStr : string = GetCivRoyaleOfflineTT();
 
 
 -- ===========================================================================
@@ -303,6 +324,27 @@ function OnInternet()
 	UIManager:QueuePopup( Controls.Lobby, PopupPriority.Current );
 	Close();	
 end
+
+-- ===========================================================================
+function OnCrossPlay()
+	LuaEvents.StartCrossPlay();
+end
+
+-- ===========================================================================
+function OnEnterCrossPlayLobby()
+	GameConfiguration.SetToDefaults(GameModeTypes.CROSSPLAY);
+	LuaEvents.ChangeMPLobbyMode(MPLobbyTypes.CROSSPLAY_INTERNET);
+	UIManager:QueuePopup( Controls.Lobby, PopupPriority.Current );
+	Close();
+
+	-- Toggle SeenCrossPlayMultiplayer user option flag
+	local oldSeenXPM = Options.GetUserOption("Interface", "SeenCrossPlayMultiplayer");
+	if (oldSeenXPM == nil or oldSeenXPM == 0) then
+		Options.SetUserOption("Interface", "SeenCrossPlayMultiplayer", 1);
+		Options.SaveOptions(OptionFileTypes.User);
+	end
+end
+LuaEvents.EnterCrossPlayLobby.Add(OnEnterCrossPlayLobby);
 
 -- ===========================================================================
 function OnCivRoyaleMatchMake()
@@ -314,14 +356,16 @@ function OnCivRoyaleMatchMake()
 	end
 end
 
+-- ===========================================================================
 function OnCivRoyaleHowToPlay()
 	LuaEvents.MainMenu_ShowCivRoyaleIntro();
 end
 
+-- ===========================================================================
 function StartMatchMaking()
 	GameConfiguration.SetToDefaults(GameModeTypes.INTERNET);	
 	GameConfiguration.ClearEnabledMods();
-	GameConfiguration.AddEnabledMods("F264EE10-F21B-4A9A-BBCD-D534E9843E90");
+	GameConfiguration.AddEnabledMods( MOD_CIVROYALE_GUID );
 	GameConfiguration.SetRuleSet("RULESET_SCENARIO_CIV_ROYALE");
 
 	-- Many game setup values are driven by Lua-implemented parameter logic.
@@ -448,6 +492,7 @@ end
 
 function UpdateInternetControls()
 	UpdateInternetButton();
+	UpdateCrossPlayButton();
 	UpdateCivRoyaleMatchMakeButton();
 end
 
@@ -471,6 +516,42 @@ function UpdateInternetButton(buttonControl: table)
 	end
 end
 
+function UpdateCrossPlayButton(buttonControl: table)
+	if (buttonControl ~=nil) then
+		m_crossPlayButton = buttonControl;
+	end
+	-- Internet available?
+	if(m_crossPlayButton ~= nil) then
+		local seenXPM = Options.GetUserOption("Interface", "SeenCrossPlayMultiplayer");
+		local isAllowCrossplayButton :boolean = true;
+		if (Network.HasSeparateCrossPlayLobbyService() and isAllowCrossplayButton) then
+			if (Network.IsCrossPlayLobbyServiceAvailable() and Network.IsInternetLobbyServiceAvailable()) then
+				m_crossPlayButton.OptionButton:SetDisabled(false);
+				if (seenXPM == nil or seenXPM == 0) then
+					m_crossPlayButton.Top:SetToolTipString(Locale.Lookup("LOC_MULTIPLAYER_CROSSPLAY_NEW_GAME_TT"));
+					m_crossPlayButton.ButtonLabel:SetText(Locale.Lookup("LOC_MULTIPLAYER_CROSSPLAY_NEW_GAME"));
+				else
+					m_crossPlayButton.Top:SetToolTipString(Locale.Lookup("LOC_MULTIPLAYER_CROSSPLAY_GAME_TT"));
+					m_crossPlayButton.ButtonLabel:SetText(Locale.Lookup("LOC_MULTIPLAYER_CROSSPLAY_GAME"));
+				end
+				m_crossPlayButton.ButtonLabel:SetColorByName( "ButtonCS" );
+			else
+				m_crossPlayButton.OptionButton:SetDisabled(true);
+				if (seenXPM == nil or seenXPM == 0) then
+					m_crossPlayButton.Top:SetToolTipString(Locale.Lookup("LOC_MULTIPLAYER_CROSSPLAY_NEW_GAME_OFFLINE_TT"));
+					m_crossPlayButton.ButtonLabel:SetText(Locale.Lookup("LOC_MULTIPLAYER_CROSSPLAY_NEW_GAME_OFFLINE"));
+				else
+					m_crossPlayButton.Top:SetToolTipString(Locale.Lookup("LOC_MULTIPLAYER_CROSSPLAY_GAME_OFFLINE_TT"));
+					m_crossPlayButton.ButtonLabel:SetText(Locale.Lookup("LOC_MULTIPLAYER_CROSSPLAY_GAME_OFFLINE"));
+				end
+				m_crossPlayButton.ButtonLabel:SetColorByName( "ButtonDisabledCS" );
+			end
+		else
+			m_crossPlayButton.Top:SetHide(true);
+		end
+	end
+end
+
 function UpdateCivRoyaleHowToButton(buttonControl: table)
 	if (buttonControl ~=nil) then
 		m_howToRoyaleControl = buttonControl;
@@ -478,9 +559,7 @@ function UpdateCivRoyaleHowToButton(buttonControl: table)
 	
 	if(m_howToRoyaleControl ~= nil) then
 		-- Is CivRoyale enabled?
-		local id = "F264EE10-F21B-4A9A-BBCD-D534E9843E90";
-
-		local enabled = Modding.IsModEnabled(id);
+		local enabled = Modding.IsModEnabled( MOD_CIVROYALE_GUID );
 		m_howToRoyaleControl.Top:SetHide(not enabled);
 	end
 end
@@ -491,10 +570,7 @@ function UpdateCivRoyaleMatchMakeButton(buttonControl: table)
 	end
 	
 	if(m_matchMakeButton ~= nil) then
-		-- Is CivRoyale enabled?
-		local id = "F264EE10-F21B-4A9A-BBCD-D534E9843E90";
-
-		if(Modding.IsModEnabled(id)) then
+		if(Modding.IsModEnabled( MOD_CIVROYALE_GUID )) then
 			m_matchMakeButton.Top:SetHide(false);
 
 			-- Internet available?
@@ -523,17 +599,10 @@ function UpdateCloudGamesButton(buttonControl: table)
 	-- Your turn in a cloud game?
 	if(m_cloudGamesButton ~= nil) then
 		local isFullyLoggedIn = FiraxisLive.IsFullyLoggedIn() and FiraxisLive.IsPlatformOrFullAccount();
-		local seenPBC = Options.GetUserOption("Interface", "SeenPlayByCloudLobby");
 		if(not isFullyLoggedIn) then
 			m_cloudGamesButton.OptionButton:SetDisabled(true);
 			m_cloudGamesButton.Top:SetToolTipString(CloudNotLoggedInTTStr);
 			m_cloudGamesButton.ButtonLabel:SetColorByName( "ButtonDisabledCS" );
-		elseif (seenPBC == nil or seenPBC == 0) then
-			-- Player has never looked at the PBC lobby, show explanation point to indicate this is a new multiplayer mode.
-			m_cloudGamesButton.OptionButton:SetDisabled(false);
-			m_cloudGamesButton.Top:SetToolTipString(CloudButtonNewMPModeTTStr);
-			m_cloudGamesButton.ButtonLabel:SetText(Locale.Lookup("LOC_MULTIPLAYER_CLOUD_NEW_MODE"));
-			m_cloudGamesButton.ButtonLabel:SetColorByName( "ButtonCS" );
 		elseif (m_cloudNotify ~= CloudNotifyTypes.CLOUDNOTIFY_NONE and m_cloudNotify ~= CloudNotifyTypes.CLOUDNOTIFY_ERROR) then
 			m_cloudGamesButton.OptionButton:SetDisabled(false);
 			local CloudTTStr = GetCloudButtonTTForNotify(m_cloudNotify);
@@ -574,11 +643,11 @@ function UpdateMultiplayerButton(buttonControl: table)
 		m_multiplayerButton = buttonControl;
 	end
 
-	local seenPBC = Options.GetUserOption("Interface", "SeenPlayByCloudLobby");
-	
+	local seenXPM = Options.GetUserOption("Interface", "SeenCrossPlayMultiplayer");
+
 	-- Your turn in a cloud game?
 	if(m_multiplayerButton ~= nil) then
-		if (seenPBC == nil or seenPBC == 0) then
+		if (seenXPM == nil or seenXPM == 0) then
 			m_multiplayerButton.Top:SetToolTipString(MultiplayerButtonNewMPModeTTStr .. "[NEWLINE][NEWLINE]" .. MultiplayerButtonTTStr);
 			m_multiplayerButton.ButtonLabel:SetText(Locale.Lookup("LOC_PLAY_MULTIPLAYER_NEW_MP_MODE"));
 		elseif (m_cloudNotify ~= CloudNotifyTypes.CLOUDNOTIFY_NONE and m_cloudNotify ~= CloudNotifyTypes.CLOUDNOTIFY_ERROR) then
@@ -649,21 +718,24 @@ function Close()
 	m_initialPause = 0;
 end
 
+-- ===========================================================================
+function RealizeTooltipBehavior()
+	local toolTipBehavior:number = Options.GetAppOption("UI", "TooltipBehavior");
+	if toolTipBehavior == TooltipBehavior.AlwaysShowing then		
+		TTManager:SetToolTipDelay( 0.0 );
+	elseif toolTipBehavior == TooltipBehavior.ShowAfterDelay then	
+		TTManager:SetToolTipDelay( 2.0 );	-- seconds to delay before showing
+	elseif toolTipBehavior == TooltipBehavior.ShowOnButton then
+		TTManager:SetToolTipDelay( 0.0 );	-- no delay (but require button.)
+	end
+end
 
---[[
---UINETTODO - Do we need this so that multiplayer game invites skip straight into the invited game?
--------------------------------------------------
--------------------------------------------------
--- The UI has requested that we go to the multiplayer select.  Show ourself
+-- ===========================================================================
 function OnUpdateUI( type, tag, iData1, iData2, strData1 )
-    if (type == SystemUpdateUI.RestoreUI and tag == "MultiplayerSelect") then
-		if (ContextPtr:IsHidden()) then
-			UIManager:QueuePopup(ContextPtr, PopupPriority.Current );    
-		end
+    if (type == SystemUpdateUI.TouchTipBehaviorChanged) then
+		RealizeTooltipBehavior();
     end
 end
-Events.SystemUpdateUI.Add( OnUpdateUI );
---]]
 
 -- ===========================================================================
 --	ToggleOption - called from button handlers
@@ -816,6 +888,7 @@ local m_SinglePlayerSubMenu :table = {
 local m_MultiPlayerSubMenu :table = {
 								{label = "LOC_MULTIPLAYER_CLOUD_GAME",			callback = OnPlayByCloud,			tooltip = "LOC_MULTIPLAYER_CLOUD_GAME_TT", buttonState = UpdateCloudGamesButton},
 								{label = "LOC_MULTIPLAYER_INTERNET_GAME",		callback = OnInternet,				tooltip = "LOC_MULTIPLAYER_INTERNET_GAME_TT", buttonState = UpdateInternetButton},
+								{label = "LOC_MULTIPLAYER_CROSSPLAY_GAME",		callback = OnCrossPlay,				tooltip = "LOC_MULTIPLAYER_CROSSPLAY_GAME_TT", buttonState = UpdateCrossPlayButton},
 								{label = "LOC_MULTIPLAYER_LAN_GAME",			callback = OnLANGame,				tooltip = "LOC_MULTIPLAYER_LAN_GAME_TT"},
 								{label = "LOC_MULTIPLAYER_HOTSEAT_GAME",		callback = OnHotSeat,				tooltip = "LOC_MULTIPLAYER_HOTSEAT_GAME_TT"},
 								{space = true},
@@ -1182,6 +1255,7 @@ function OnShow()
 
 	m_checkedCloudNotify = false;
 	UpdateCheckCloudNotify();
+	RealizeTooltipBehavior();
 end
 
 function OnHide()
@@ -1311,6 +1385,8 @@ function Initialize()
 	-- Game Events
 	Events.SteamServersConnected.Add( UpdateInternetControls );
 	Events.SteamServersDisconnected.Add( UpdateInternetControls );
+	Events.CrossPlayServersDisconnected.Add( UpdateInternetControls );
+	Events.CrossPlayServersConnected.Add( UpdateInternetControls );
 	Events.MultiplayerGameLaunched.Add( OnGameLaunched );
     Events.UserRequestClose.Add( OnUserRequestClose );
 	Events.UserConfirmedClose.Add( OnUserConfirmedClose );
@@ -1319,8 +1395,8 @@ function Initialize()
 	Events.FiraxisLiveActivate.Add( OnFiraxisLiveActivate );
 	Events.My2KLinkAccountResult.Add( OnMy2KLinkAccountResult );
 	Events.MarketingPushDataUpdated.Add( OnMarketingPushDataUpdated );
-
 	Events.FinishedGameplayContentConfigure.Add( OnGameplayContentChanged );
+	Events.SystemUpdateUI.Add( OnUpdateUI );
 
 	-- LUA Events
 	LuaEvents.FileListQueryResults.Add( OnFileListQueryResults );

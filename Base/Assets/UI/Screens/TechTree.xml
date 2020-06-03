@@ -6,11 +6,11 @@
 	
   <Container Anchor="C,C" Size="full,768">
     <Box Color="7,30,50,255" Anchor="L,B" Size="parent,5"/>
-    <Grid Anchor="C,B" Offset="0,-8" Size="parent,52" Texture="Controls_Timeline" SliceCorner="54,27" SliceSize="6,1" SliceTextureSize="114,52"/>
-    <Image ID="Background" Size="parent,parent" Texture="Parchment_Pattern" StretchMode="Tile" ConsumeMouse="1"/>
     <Image ID="ScrollbarBackgroundArt" Anchor="C,B" Offset="0,2" Size="parent-108,32" Texture="Controls_TimelineTile" StretchMode="Tile"/>
-    <ScrollPanel ID="EraArtScroller" Offset="0,-2" Size="parent,parent" Vertical="0" ScrollBar="0">
-      <Container ID="ForceArtSizeX" Size="1,1"/>
+		<Grid Anchor="C,B" Offset="0,-8" Size="parent,52" Texture="Controls_Timeline" SliceCorner="54,27" SliceSize="6,1" SliceTextureSize="114,52"/>
+		<Image			ID="Background" Size="parent,parent" Texture="Parchment_Pattern" StretchMode="Tile" ConsumeMouse="1"/>
+		<ScrollPanel	ID="EraArtScroller" Offset="0,-2" Size="parent,parent" Vertical="0" ScrollBar="0">			
+			<Container	ID="ForceArtSizeX" Size="1,1"/>
     </ScrollPanel>
     <Image Anchor="L,B" Offset="0,33" Size="parent,22" Texture="Controls_GradientSmall" Color="0,0,0,150" FlipY="1"/>
 		<ScrollPanel ID="ArtScroller" Offset="0,-2" Size="parent,parent" Vertical="0" ScrollBar="0">
@@ -68,7 +68,7 @@
 
       <Tutorial ID="ActiveTechNodePointer" Style="TutorialContainer" Anchor="L,C" Offset="1650, 30" TriggerBy="TutorialActiveTechNodePointer">
         <SlideAnim Start="0,-30" EndOffset="0,10" Cycle="Bounce" Function="OutQuad">
-          <Image Texture="Tutorial_ArrowV" Offset="-22,-20" Size="44,58" FlipY="true"/>
+          <Image Texture="Tutorial_ArrowV" Offset="-12,-6" Size="44,58" FlipY="true"/>
         </SlideAnim>
       </Tutorial>
 

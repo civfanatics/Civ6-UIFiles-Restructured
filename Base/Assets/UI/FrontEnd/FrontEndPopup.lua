@@ -22,8 +22,8 @@ function OnUserRequestClose()
 	m_kPopupDialog:Close();
 	m_kPopupDialog:AddText(Locale.Lookup("LOC_CONFIRM_EXIT_TXT"));
 	m_kPopupDialog:AddTitle(Locale.ToUpper(Locale.Lookup("LOC_MAIN_MENU_EXIT_TO_DESKTOP")));
-	m_kPopupDialog:AddButton(Locale.Lookup("LOC_CANCEL_BUTTON"), OnPopupClose);
 	m_kPopupDialog:AddButton(Locale.Lookup("LOC_OK_BUTTON"), ExitOK, nil, nil, "PopupButtonInstanceRed"); 
+	m_kPopupDialog:AddButton(Locale.Lookup("LOC_CANCEL_BUTTON"), OnPopupClose);
 	m_kPopupDialog:Open();
 end
 
@@ -34,8 +34,8 @@ function OnLaunchError(error:string)
 	m_kPopupDialog:Close();
 	m_kPopupDialog:AddText(error);
 	m_kPopupDialog:AddTitle(Locale.ToUpper(Locale.Lookup("LOC_GAME_START_ERROR_TITLE")));
-	m_kPopupDialog:AddButton(Locale.Lookup("LOC_CLOSE"), OnPopupClose);
 	m_kPopupDialog:AddButton(Locale.Lookup("LOC_GAME_START_VIEW_MODS"), OnDisableMods, nil, nil, "PopupButtonInstanceGreen" );
+	m_kPopupDialog:AddButton(Locale.Lookup("LOC_CLOSE"), OnPopupClose);
 	m_kPopupDialog:Open();
 end
 

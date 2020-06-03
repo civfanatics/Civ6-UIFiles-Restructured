@@ -140,7 +140,7 @@ end
 
 -- ===========================================================================
 function Close()
-	if not ContextPtr:IsHidden() then
+	if not ContextPtr:IsHidden() and not Controls.PantheonChooserSlideAnim:IsReversing() then
 		Controls.PantheonChooserSlideAnim:SetToEnd();
         Controls.PantheonChooserSlideAnim:Reverse();
 

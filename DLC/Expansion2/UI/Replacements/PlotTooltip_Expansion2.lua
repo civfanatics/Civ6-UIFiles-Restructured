@@ -187,6 +187,14 @@ function GetDetails(data)
 
 	if (data.IsRiver and data.RiverNames) then
 		table.insert(details, Locale.Lookup("LOC_RIVER_TOOLTIP_STRING", data.RiverNames));
+	else
+		if (data.IsRiver) then
+			table.insert(details, Locale.Lookup("LOC_TOOLTIP_RIVER"));
+		end
+	end
+
+	if (data.IsNWOfCliff or data.IsWOfCliff or data.IsNEOfCliff) then
+		table.insert(details, Locale.Lookup("LOC_TOOLTIP_CLIFF"));
 	end
 
 	if (data.TerritoryName ~= nil) then
@@ -433,24 +441,27 @@ function GetDetails(data)
 		if(data.ResourceType ~= nil and data.ImprovementType ~= nil) then
 			local localPlayer = Players[Game.GetLocalPlayer()];
 			if (localPlayer ~= nil) then
+				local kPlot	:table = Map.GetPlotByIndex(data.Index);
 				local playerResources = localPlayer:GetResources();
 				if(playerResources:IsResourceVisible(resourceHash)) then
-					local resourceTechType = GameInfo.Resources[data.ResourceType].PrereqTech;
-					if (resourceTechType ~= nil) then
-						local playerTechs	= localPlayer:GetTechs();
-						local techType = GameInfo.Technologies[resourceTechType];
-						if (techType ~= nil and playerTechs:HasTech(techType.Index)) then
-							local kConsumption:table = GameInfo.Resource_Consumption[data.ResourceType];	
-							if (kConsumption ~= nil) then
-								if (kConsumption.Accumulate) then
-									local iExtraction = kConsumption.ImprovedExtractionRate;
-									if (iExtraction > 0) then
-										local resourceName:string = GameInfo.Resources[data.ResourceType].Name;
-										local resourceIcon:string = "[ICON_" .. data.ResourceType .. "]";
-										table.insert(details, Locale.Lookup("LOC_RESOURCE_ACCUMULATION_EXISTING_IMPROVEMENT", iExtraction, resourceIcon, resourceName));
+					if (playerResources:IsResourceExtractableAt(kPlot)) then
+						local resourceTechType = GameInfo.Resources[data.ResourceType].PrereqTech;
+						if (resourceTechType ~= nil) then
+							local playerTechs	= localPlayer:GetTechs();
+							local techType = GameInfo.Technologies[resourceTechType];
+							if (techType ~= nil and playerTechs:HasTech(techType.Index)) then
+								local kConsumption:table = GameInfo.Resource_Consumption[data.ResourceType];	
+								if (kConsumption ~= nil) then
+									if (kConsumption.Accumulate) then
+										local iExtraction = kConsumption.ImprovedExtractionRate;
+										if (iExtraction > 0) then
+											local resourceName:string = GameInfo.Resources[data.ResourceType].Name;
+											local resourceIcon:string = "[ICON_" .. data.ResourceType .. "]";
+											table.insert(details, Locale.Lookup("LOC_RESOURCE_ACCUMULATION_EXISTING_IMPROVEMENT", iExtraction, resourceIcon, resourceName));
+										end
 									end
-								end
-							end				
+								end				
+							end
 						end
 					end
 				end

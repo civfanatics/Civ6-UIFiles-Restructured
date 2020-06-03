@@ -232,6 +232,7 @@ function OnShutdown()
 	Events.CityMadePurchase.Remove( OnCityMadePurchase );
 	Events.LensLayerOn.Remove( OnLensLayerOn );
 	Events.LensLayerOff.Remove( OnLensLayerOff );
+	Events.InterfaceModeChanged.Remove( OnInterfaceModeChanged );
 end
 
 -- ===========================================================================

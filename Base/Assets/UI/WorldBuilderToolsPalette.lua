@@ -33,6 +33,7 @@ local m_kToolData : table =
 local m_toolIM	:table = InstanceManager:new( "ToolInstance", "Button", Controls.ToolsStack );
 local m_uiTools	:table = {};
 local m_kHotkeys:table = {};
+local m_currentTool:table = {};
 
 local m_bIsTopOptionsOpen:boolean = false;
 
@@ -64,6 +65,7 @@ function OnChangeToolFunc( toolID:number, toolName:string )
 		uiTool.Active:SetHide( id ~= toolID );
 		if (id == toolID) then
 			local name:string = uiTool["tooltip"];
+			m_currentTool = uiTool;
 			if name then
 				LuaEvents.WorldBuilderToolsPalette_SetTabHeader( Locale.Lookup(name) );
 			end
@@ -91,7 +93,8 @@ function MakeTool( toolID:number, icon:string, tooltip:string, hotkey:string, is
 	end);
 
 	uiTool["isAdvanced"] = isAdvanced;	--Dynamically add to instance
-	uiTool["tooltip"] = tooltip;		--Dynamically add to instance
+	uiTool["tooltip"] = tooltip;
+	uiTool["ID"] = toolID;
 
 	return uiTool;
 end
@@ -118,6 +121,31 @@ function SetAdvancedMode( isOn:boolean )
 		m_uiTools[WorldBuilderModes.PLACE_IMPROVEMENTS].Icon:SetIcon("ICON_WB_TOOL_GOODY_HUTS");
 		local ttStr : string = Locale.Lookup("LOC_WORLDBUILDER_PLACEMENT_MODE_GOODY_HUTS").."[NEWLINE]"..Locale.Lookup("LOC_WORLDBUILDER_TOOL_ITEM_TIP", "8");
 		m_uiTools[WorldBuilderModes.PLACE_IMPROVEMENTS].Button:SetToolTipString(ttStr);
+
+		-- if an advanced tool is selected when reverting to basic mode,
+		-- switch to the terrain tool.
+		if m_currentTool.ID ~= WorldBuilderModes.PLACE_IMPROVEMENTS then
+			if m_currentTool.isAdvanced then
+				local toolID:number = m_kHotkeys[ Locale.ToUpper(Keys["1"]) ]
+				if toolID ~= nil then
+					if CanUseTool(toolID) then
+						OnChangeToolFunc( toolID );
+						return true;
+					end
+				end
+			end
+		end
+	end
+
+	-- handle the case of improvements vs. goody huts, which share an icon slot
+	if m_currentTool.ID == WorldBuilderModes.PLACE_IMPROVEMENTS then
+		local toolID:number = m_kHotkeys[ Locale.ToUpper(Keys["8"]) ]
+		if toolID ~= nil then
+			if CanUseTool(toolID) then
+				OnChangeToolFunc( toolID );
+				return true;
+			end
+		end
 	end
 end
 
@@ -227,6 +255,15 @@ function Initialize()
 	LuaEvents.WorldBuilder_ShowMapEditor.Add( OnShowMapEditor );
 	LuaEvents.InGameTopOptionsMenu_Show.Add( OnShowTopOptionsMenu );
 	LuaEvents.InGameTopOptionsMenu_Close.Add( OnHideTopOptionsMenu );
+
+	-- go ahead and set a default tool
+	local toolID:number = m_kHotkeys[ Locale.ToUpper(Keys["1"]) ]
+	if toolID ~= nil then
+		if CanUseTool(toolID) then
+			OnChangeToolFunc( toolID );
+			return true;
+		end
+	end
 end
 Initialize()
 

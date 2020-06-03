@@ -33,8 +33,8 @@
         </Container>
       </Container>
 
-		  <ScrollPanel ID="MainScroll" Anchor="C,T" Size="parent-33,parent-207" Vertical="1" AutoScrollBar="1" d="0">
-			  <Stack ID="MainStack" Anchor="C,T" Offset="0,0" Size="parent,500" StackPadding="0" d="0">
+		  <ScrollPanel ID="MainScroll" Anchor="C,T" Size="parent-33,parent-207" Vertical="1" AutoScrollBar="1">
+			  <Stack ID="MainStack" Anchor="C,T" Offset="0,0" Size="parent,500" StackPadding="0">
 				  <Container Size="parent,8"/>
 				  <Line Color="0,0,0,60" Anchor="C,B" Offset="0,0" Start="0,0" End="475,0" Width="2"/>
 				  <Container Size="parent,8"/>
@@ -42,7 +42,7 @@
 				  <Container Size="parent,8"/>
 				  <Line Color="0,0,0,60" Anchor="C,B" Offset="0,0" Start="0,0" End="475,0" Width="2"/>
 				  <Container Size="parent,8"/>
-				  <Stack ID="CivIconStack" Anchor="C,T" Offset="0,0" Size="parent,auto" StackGrowth="Right" StackPadding="6" WrapWidth="470" d="0"/>
+				  <Stack ID="CivIconStack" Anchor="C,T" Offset="0,0" Size="parent,auto" StackGrowth="Right" StackPadding="6" WrapWidth="470"/>
 				  <Container Size="parent,10"/>
 				
 				  <Line Color="0,0,0,60" Anchor="C,B" Offset="0,0" Start="0,0" End="475,0" Width="2"/>

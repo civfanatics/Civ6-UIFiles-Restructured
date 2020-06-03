@@ -1,7 +1,6 @@
 -- Copyright 2018-2019, Firaxis Games.
 
 include("DiplomacyRibbon_Expansion1.lua");
-include("GameCapabilities");
 include("CongressButton");
 
 
@@ -18,9 +17,9 @@ BASE_UpdateStatValues = UpdateStatValues;
 -- ===========================================================================
 --	MEMBERS
 -- ===========================================================================
-local m_kCongressButtonIM		:table = nil;
-local m_uiCongressButtonInstance:table = nil;
-local m_congressButtonWidth		:number = 0;
+local m_kCongressButtonIM	:table = nil;
+local m_oCongressButton		:object = nil;
+local m_congressButtonWidth	:number = 0;
 
 
 -- ===========================================================================
@@ -33,9 +32,8 @@ function UpdateLeaders()
 	if m_kCongressButtonIM then
 		if Game.GetEras():GetCurrentEra() >= GlobalParameters.WORLD_CONGRESS_INITIAL_ERA then		
 			m_kCongressButtonIM:ResetInstances();
-			local congressProgButtonClass:table = {};
-			kCongressButton, m_uiCongressButtonInstance = CongressButton:GetInstance( m_kCongressButtonIM );
-			m_congressButtonWidth = m_uiCongressButtonInstance.Top:GetSizeX();
+			m_oCongressButton = CongressButton:GetInstance( m_kCongressButtonIM );
+			m_congressButtonWidth = m_oCongressButton.Top:GetSizeX();
 		end
 	end
 
@@ -99,7 +97,7 @@ function LateInitialize()
 
 	BASE_LateInitialize();
 
-	if HasCapability("CAPABILITY_WORLD_CONGRESS") then
+	if GameCapabilities.HasCapability("CAPABILITY_WORLD_CONGRESS") then
 		m_kCongressButtonIM = InstanceManager:new("CongressButton", "Top", Controls.LeaderStack);
 	end
 

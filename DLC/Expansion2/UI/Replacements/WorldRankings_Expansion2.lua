@@ -220,16 +220,16 @@ function ViewScience()
 	local finishedProjects:table = { {}, {}, {}, {} };
 	
 	local bHasSpaceport:boolean = false;
-	if (m_LocalPlayer ~= nil) then
-		for _,district in m_LocalPlayer:GetDistricts():Members() do
+	if (g_LocalPlayer ~= nil) then
+		for _,district in g_LocalPlayer:GetDistricts():Members() do
 			if (district ~= nil and district:IsComplete() and district:GetType() == SPACE_PORT_DISTRICT_INFO.Index) then
 				bHasSpaceport = true;
 				break;
 			end
 		end
 
-		local pPlayerStats:table = m_LocalPlayer:GetStats();
-		local pPlayerCities:table = m_LocalPlayer:GetCities();
+		local pPlayerStats:table = g_LocalPlayer:GetStats();
+		local pPlayerCities:table = g_LocalPlayer:GetCities();
 		for _, city in pPlayerCities:Members() do
 			local pBuildQueue:table = city:GetBuildQueue();
 			-- 1st milestone - satellite launch
@@ -299,7 +299,7 @@ function ViewScience()
 		if(result < 1) then
 			progressText = progressText .. "[ICON_Bolt]";
 			if(nextStep == "") then
-				nextStep = GetNextStepForScienceProject(m_LocalPlayer, SCIENCE_PROJECTS_EXP2[i], bHasSpaceport, finishedProjects[i]);
+				nextStep = GetNextStepForScienceProject(g_LocalPlayer, SCIENCE_PROJECTS_EXP2[i], bHasSpaceport, finishedProjects[i]);
 			end
 		else
 			progressText = progressText .. "[ICON_CheckmarkBlue] ";
@@ -308,8 +308,8 @@ function ViewScience()
 	end
 
 	-- Final milestone - Earning Victory Points (Light Years)
-	local totalLightYears:number = m_LocalPlayer:GetStats():GetScienceVictoryPointsTotalNeeded();
-	local lightYears = m_LocalPlayer:GetStats():GetScienceVictoryPoints();
+	local totalLightYears:number = g_LocalPlayer:GetStats():GetScienceVictoryPointsTotalNeeded();
+	local lightYears = g_LocalPlayer:GetStats():GetScienceVictoryPoints();
 	if (lightYears < totalLightYears) then
 		progressText = progressText .. "[ICON_Bolt]";
 	else
@@ -317,16 +317,16 @@ function ViewScience()
 	end
 	progressText = progressText .. Locale.Lookup("LOC_WORLD_RANKINGS_SCIENCE_REQUIREMENT_FINAL", totalLightYears);
 
-	m_ActiveHeader.AdvisorTextCentered:SetText(progressText);
+	g_activeheader.AdvisorTextCentered:SetText(progressText);
     if (nextStep ~= "") then
-        m_ActiveHeader.AdvisorTextNextStep:SetText(Locale.Lookup("LOC_WORLD_RANKINGS_SCIENCE_NEXT_STEP", nextStep));
+        g_activeheader.AdvisorTextNextStep:SetText(Locale.Lookup("LOC_WORLD_RANKINGS_SCIENCE_NEXT_STEP", nextStep));
 	else
 		-- If the user One More Turns, this keeps rolling in the DLL and makes us look goofy.
 		if lightYears > totalLightYears then
 			lightYears = totalLightYears;
 		end
 
-        m_ActiveHeader.AdvisorTextNextStep:SetText(Locale.Lookup("LOC_WORLD_RANKINGS_SCIENCE_HAS_MOVED", lightYears, totalLightYears));
+        g_activeheader.AdvisorTextNextStep:SetText(Locale.Lookup("LOC_WORLD_RANKINGS_SCIENCE_HAS_MOVED", lightYears, totalLightYears));
     end
 
 	m_ScienceIM:ResetInstances();
@@ -524,7 +524,7 @@ function PopulateScienceProgressMeters(instance:table, progressData:table)
     if ((progressData.projectProgresses[4] >= progressData.projectTotals[4]) and (progressData.projectTotals[4] ~= 0)) then
 		local lightYears = pPlayer:GetStats():GetScienceVictoryPoints();
 		local lightYearsPerTurn = pPlayer:GetStats():GetScienceVictoryPointsPerTurn();
-		local totalLightYears = m_LocalPlayer:GetStats():GetScienceVictoryPointsTotalNeeded();
+		local totalLightYears = g_LocalPlayer:GetStats():GetScienceVictoryPointsTotalNeeded();
 
 		instance["ObjFill_5"]:SetHide(false);
         instance["ObjToggle_ON_5"]:SetHide(lightYears == 0 or lightYears < lightYearsPerTurn);
@@ -556,8 +556,8 @@ function PopulateTabs()
 	m_ExtraTabs = {};
 	m_TotalTabSize = 0;
 	m_MaxExtraTabSize = 0;
-	m_ExtraTabsIM:ResetInstances();
-	m_TabSupportIM:ResetInstances();
+	g_ExtraTabsIM:ResetInstances();
+	g_TabSupportIM:ResetInstances();
 	
 	-- Deselect previously selected tab
 	if g_TabSupport then
@@ -579,7 +579,7 @@ function PopulateTabs()
 		AddTab(TAB_SCIENCE, ViewScience);
 	end
 	if(Game.IsVictoryEnabled("VICTORY_CULTURE")) then
-		AddTab(TAB_CULTURE, ViewCulture);
+		g_CultureInst = AddTab(TAB_CULTURE, ViewCulture);
 	end
 	if(Game.IsVictoryEnabled("VICTORY_CONQUEST")) then
 		AddTab(TAB_DOMINATION, ViewDomination);
@@ -617,7 +617,7 @@ end
 
 function AddTab(label:string, onClickCallback:ifunction)
 
-	local tabInst:table = m_TabSupportIM:GetInstance();
+	local tabInst:table = g_TabSupportIM:GetInstance();
 	tabInst.Button[DATA_FIELD_SELECTION] = tabInst.Selection;
 
 	tabInst.Button:SetText(label);
@@ -631,7 +631,7 @@ function AddTab(label:string, onClickCallback:ifunction)
 
 	m_TotalTabSize = m_TotalTabSize + tabInst.Button:GetSizeX();
 	if m_TotalTabSize > (Controls.TabContainer:GetSizeX() * 2) then
-		m_TabSupportIM:ReleaseInstance(tabInst);
+		g_TabSupportIM:ReleaseInstance(tabInst);
 		AddExtraTab(label, onClickCallback);
 	else
 		g_TabSupport.AddTab(tabInst.Button, OnTabClicked(tabInst, onClickCallback));
@@ -641,7 +641,7 @@ function AddTab(label:string, onClickCallback:ifunction)
 end
 
 function AddExtraTab(label:string, onClickCallback:ifunction)
-	local extraTabInst:table = m_ExtraTabsIM:GetInstance();
+	local extraTabInst:table = g_ExtraTabsIM:GetInstance();
 	
 	extraTabInst.Button:SetText(label);
 	extraTabInst.Button:RegisterCallback(Mouse.eLClick, OnExtraTabClicked(extraTabInst, onClickCallback));
@@ -674,8 +674,8 @@ function ViewDiplomatic(victoryType:string)
 
 	local genericData:table = GatherGenericData();
 
-	m_GenericIM:ResetInstances();
-	m_GenericTeamIM:ResetInstances();
+	g_GenericIM:ResetInstances();
+	g_GenericTeamIM:ResetInstances();
 
 	local ourData:table = {};
 
@@ -698,9 +698,9 @@ function ViewDiplomatic(victoryType:string)
 
 	for i, theData in ipairs(ourData) do
 		if #theData.teamData.PlayerData > 1 then
-			PopulateGenericTeamInstance(m_GenericTeamIM:GetInstance(), theData.teamData, victoryType);
+			PopulateGenericTeamInstance(g_GenericTeamIM:GetInstance(), theData.teamData, victoryType);
 		else
-			local uiGenericInstance:table = m_GenericIM:GetInstance();
+			local uiGenericInstance:table = g_GenericIM:GetInstance();
 			local pPlayer:table = Players[theData.teamData.PlayerData[1].PlayerID];
 			if pPlayer ~= nil then
 				local pStats:table = pPlayer:GetStats();

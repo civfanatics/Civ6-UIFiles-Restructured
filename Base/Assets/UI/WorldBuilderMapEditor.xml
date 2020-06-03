@@ -76,17 +76,13 @@
 							<!-- Width -->
 							<Stack Anchor="R,T" StackGrowth="Right" Padding="5">
 								<Label Style="ShellOptionText" Anchor="L,C" Size="125,29" String="LOC_WORLDBUILDER_ATTRIBUTE_WIDTH"/>
-								<Grid Anchor="R,C" Offset="4,0" Style="EditTextArea" Size="80,24" InnerPadding="10,6">
-									<EditBox ID="WidthEdit" Style="FontNormal14" Anchor="L,C" Offset="0,0" Size="parent,parent" EditMode="0" NumberInput="1"/>
-								</Grid>
+								<Label ID="WidthLabel" Style="FontNormal14" Anchor="L,C"/>
 							</Stack>
 
 							<!-- Height -->
 							<Stack Anchor="R,T" StackGrowth="Right" Padding="5">
 								<Label Style="ShellOptionText" Anchor="L,C" Size="125,29" String="LOC_WORLDBUILDER_ATTRIBUTE_HEIGHT"/>
-								<Grid Anchor="R,C" Offset="4,0" Style="EditTextArea" Size="80,24" InnerPadding="10,6">
-									<EditBox ID="HeightEdit" Style="FontNormal14" Anchor="L,C" Offset="0,0" Size="parent,parent" EditMode="0" NumberInput="1"/>
-								</Grid>
+								<Label ID="HeightLabel" Style="FontNormal14" Anchor="L,C"/>
 							</Stack>
 							
 						</Stack>				
@@ -94,7 +90,7 @@
 
           <!-- Ruleset -->
           <Stack Anchor="R,T" StackGrowth="Right" Padding="5">
-            <Label Style="ShellOptionText" Anchor="L,C" Size="125,29" String="LOC_WORLDBUILDER_ATTRIBUTE_RULESET"/>
+            <Label Style="ShellOptionText" Anchor="L,C" Size="125,29" String="LOC_WORLDBUILDER_ATTRIBUTE_RULESET" ToolTip="LOC_WORLDBUILDER_RULESET_TT"/>
             <Grid Anchor="R,C" Offset="4,0" Style="EditTextArea" Size="400,24" InnerPadding="10,6">
               <EditBox ID="RulesetEdit" Style="FontNormal14" Anchor="L,C" Offset="0,0" Size="parent,parent" EditMode="1"/>
             </Grid>
@@ -102,9 +98,25 @@
 
           <!-- MapScript -->
           <Stack Anchor="R,T" StackGrowth="Right" Padding="5">
-            <Label Style="ShellOptionText" Anchor="L,C" Size="125,29" String="LOC_WORLDBUILDER_ATTRIBUTE_MAP_SCRIPT"/>
+            <Label Style="ShellOptionText" Anchor="L,C" Size="125,29" String="LOC_WORLDBUILDER_ATTRIBUTE_MAP_SCRIPT" ToolTip="LOC_WORLDBUILDER_SCRIPT_TT"/>
             <Grid Anchor="R,C" Offset="4,0" Style="EditTextArea" Size="400,24" InnerPadding="10,6">
               <EditBox ID="MapScriptEdit" Style="FontNormal14" Anchor="L,C" Offset="0,0" Size="parent,parent" EditMode="1"/>
+            </Grid>
+          </Stack>
+
+          <!-- Reference Map -->
+          <Stack Anchor="R,T" StackGrowth="Right" Padding="5">
+            <Label Style="ShellOptionText" Anchor="L,C" Size="125,29" String="LOC_WORLDBUILDER_ATTRIBUTE_REFERENCE_MAP" ToolTip="LOC_WORLDBUILDER_REFERENCE_MAP_TT"/>
+            <Grid Anchor="R,C" Offset="4,0" Style="EditTextArea" Size="400,24" InnerPadding="10,6">
+              <EditBox ID="MapReferenceEdit" Style="FontNormal14" Anchor="L,C" Offset="0,0" Size="parent,parent" EditMode="1"/>
+            </Grid>
+          </Stack>
+
+          <!-- Reference alpha -->
+          <Stack Anchor="R,T" StackGrowth="Right" Padding="5">
+            <Label Style="ShellOptionText" Anchor="L,C" Size="125,29" String="LOC_WORLDBUILDER_ATTRIBUTE_REFERENCE_ALPHA" ToolTip="LOC_WORLDBUILDER_REFERENCE_ALPHA_TT"/>
+            <Grid Anchor="R,C" Offset="4,0" Style="EditTextArea" Size="140,24" InnerPadding="10,6">
+              <EditBox ID="MapReferenceAlphaEdit" Style="FontNormal14" Anchor="L,C" Offset="0,0" Size="parent,parent" EditMode="1"/>
             </Grid>
           </Stack>
 

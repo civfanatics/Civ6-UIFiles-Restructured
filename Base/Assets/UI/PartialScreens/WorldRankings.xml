@@ -556,14 +556,12 @@
 	</Instance>
 
 	<Instance Name="GenericInstance">
+
+    <GridButton	ID="ButtonBG" Size="470,180" Texture="Controls_ListButton" SliceCorner="209,29" SliceTextureSize="417,51">
+      <MakeInstance Name="CivilizationIconInstance" ID="CivilizationIcon"/>
+      <Label ID="Details" Offset="15,15" Align="right" Anchor="R,T" String="Details" Style="FontNormalMedium14" Color="206,218,225,255"/>
+    </GridButton>
     
-    <Stack StackGrowth="Down" StackPadding="4">
-		  <Grid	ID="ButtonBG" Size="470,100" Texture="Controls_ListButton" SliceCorner="209,29" SliceTextureSize="417,51">
-			  <MakeInstance Name="CivilizationIconInstance" ID="CivilizationIcon"/>
-			  <Label ID="Details" Offset="5,45" Align="right" Anchor="R,T" String="Details" Style="FontNormalMedium14" Color="206,218,225,255"/>
-        <Stack ID="ButtonBG" Anchor="R,T" Offset="0,0" StackGrowth="Down" StackPadding="3"/>
-      </Grid>
-    </Stack>
 	</Instance>
 
 	<Instance Name="ConvertedReligionInstance">

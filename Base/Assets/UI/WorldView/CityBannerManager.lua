@@ -1710,7 +1710,6 @@ function CityBanner.UpdateProduction( self : CityBanner)
 				end
 				productionTip = productionTip .. "[NEWLINE]" .. productionTurnsLeftString;
 				self.m_Instance.CityProduction:SetToolTipString(productionTip);
-				self.m_Instance.ProductionIndicator:SetHide(false);
 				self.m_Instance.CityProductionProgress:SetHide(false);
 				self.m_Instance.CityProduction:SetColor(UI.GetColorValue("COLOR_CLEAR"));
 						
@@ -2893,6 +2892,7 @@ function OnInterfaceModeChanged( oldMode:number, newMode:number )
 						banner.m_Instance.TradingPostDisabledIcon:SetHide(false);
 					else
 						banner.m_Instance.TradingPostIcon:SetHide(true);
+						banner.m_Instance.TradingPostDisabledIcon:SetHide(true);
 					end
 
 					banner.m_Instance.CityNameStack:CalculateSize();

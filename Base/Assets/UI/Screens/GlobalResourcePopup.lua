@@ -267,9 +267,9 @@ function RealizeRow( kResourceData:table, backgroundTexture:string )
 			local uiLeaderInstance	:table = m_kLeaderInstanceIM:GetInstance(uiResourceRow.LeaderStack);
 			local leaderName		:string = PlayerConfigurations[kPlayerEntry.playerID]:GetLeaderTypeName();
 			local iconName			:string = "ICON_" .. leaderName;	
-			local kLeaderIconManager, uiLeaderIcon = LeaderIcon:AttachInstance(uiLeaderInstance.Icon);
-			kLeaderIconManager:UpdateIcon(iconName, kPlayerEntry.playerID, USE_UNIQUE_LEADER_ICON_STYLE );
-			uiLeaderIcon.SelectButton:RegisterCallback(Mouse.eLClick, function() OnLeaderClicked(kPlayerEntry.playerID); end);
+			local oLeaderIcon		:object	= LeaderIcon:AttachInstance(uiLeaderInstance.Icon);
+			oLeaderIcon:UpdateIcon(iconName, kPlayerEntry.playerID, USE_UNIQUE_LEADER_ICON_STYLE );
+			oLeaderIcon.SelectButton:RegisterCallback(Mouse.eLClick, function() OnLeaderClicked(kPlayerEntry.playerID); end);
 			uiLeaderInstance.AmountLabel:SetText(kPlayerEntry.amount);			
 		end
 	end
@@ -410,16 +410,6 @@ function Close()
 		UI.PlaySound("UI_Screen_Close");
 	end		
 	UIManager:DequeuePopup(ContextPtr);
-end
-
--- ===========================================================================
---	LUA Event, Callback
---	Close this screen
--- ===========================================================================
-function OnClose()
-	if not ContextPtr:IsHidden() then
-		Close();
-	end
 end
 
 -- ===========================================================================

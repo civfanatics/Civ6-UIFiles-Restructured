@@ -10,7 +10,7 @@
 		<Box Color="32,70,101,150" Anchor="L,T" Size="2,parent"/>
 		<Box Color="32,70,101,150" Anchor="R,T" Size="2,parent"/>
 
-		<Container ID="MainWindow" Size="1024,768" Anchor="C,C">
+		<Container ID="MainWindow" Size="1024,768" Anchor="C,B">
 			<!-- Logo -->
 			<Grid ID="LogoContainer" Style="SubContainer4" Size="parent-10,116" Anchor="C,T" Color="7,28,50" AnchorSide="I,O" Offset="0,4">
 				<Image ID="Logo" Anchor="C,C" Texture="MainLogo.dds" StretchMode="Auto"/>
@@ -40,7 +40,7 @@
 			</Stack>
 
 			<!-- Tab Panels -->
-			<Container Hidden="1" ID="OverviewTabPanel" Size="parent-30,parent-115"  Anchor="L,T" Offset="15,115">
+			<Container Hidden="1" ID="OverviewTabPanel" Size="parent-30,parent-115"  Anchor="L,T" Offset="15,105">
 				<Grid Style="SubContainer" Size="parent,parent"  Anchor="R,T" Offset="0,0"  >
 					<Grid Style="DecoGrid" Anchor="C,C" Size="parent-10,parent-10" Color="26,61,90,255">
 						<Image Anchor="C,C" Size="457,469" Texture="AdditionalContent_Watermark"/>

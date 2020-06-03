@@ -1,5 +1,15 @@
+include("SupportFunctions");
 
--- [[ VARIABLES (can be watched in Tuner) ]]
+-- ===========================================================================
+--	CONSTANTS
+-- ===========================================================================
+
+local TREE_VIEW_UNNAMED_PREFIX:string = "<unnamed";
+
+-- ===========================================================================
+--	VARIABLES
+-- ===========================================================================
+
 TunerUtilities = {
 	navIndex = nil,
 	navOptions = nil,
@@ -9,7 +19,10 @@ TunerUtilities = {
 	mousePick = false,
 }
 
--- [[ HELPER FUNCTIONS ]]
+-- ===========================================================================
+--	FUNCTIONS
+-- ===========================================================================
+
 function TunerUtilities:Stringify(tableOrControl, key)
 	if tableOrControl then
 		if getmetatable(tableOrControl) then
@@ -35,6 +48,113 @@ function TunerUtilities:FromCSV(csv)
 		end
 		return results;
 	end
+end
+
+-- ===========================================================================
+function TunerUtilities:GetContextTree( sViewRoot )
+	local kContextTree:table = {};
+
+	local kRootContexts:table = {};
+	local kViewRoot = self:FindControlFromPath(sViewRoot);
+	if kViewRoot ~= nil then
+		table.insert(kRootContexts, kViewRoot);
+	else
+		kRootContexts = UIManager:GetRootContexts();
+	end
+
+	for i,kContext in ipairs(kRootContexts) do
+		local controlName:string = self:GetControlString(kContext, i);
+		if controlName ~= "" then
+			kContextTree[controlName] = {};
+			self:GetControlChildren(kContext, kContextTree[controlName]);
+		end
+	end
+
+	return kContextTree;
+end
+
+-- ===========================================================================
+function TunerUtilities:GetControlChildren(kControl:table, kContextTree:table)
+	if kControl and getmetatable(kControl) then
+		local kChildren = kControl:GetChildren();
+		if table.count(kChildren) <= 0 then
+			return;
+		end
+
+		for i,kChild in ipairs(kChildren) do
+			local controlName:string = self:GetControlString(kChild, i);
+			if controlName ~= "" then
+				kContextTree[controlName] = {};
+				self:GetControlChildren(kChild, kContextTree[controlName]);
+			end
+		end
+	end
+end
+
+-- ===========================================================================
+function TunerUtilities:GetControlString(kControl:table, childIndex:number)
+	if kControl and getmetatable(kControl) then
+		local controlID:string = kControl:GetID();
+		local controlType:string = kControl:GetType();
+		if controlID ~= nil and controlID ~= "" then
+			return controlID .. ":ChildIndex=" .. childIndex .. ":Type=".. controlType;
+		else
+			return TREE_VIEW_UNNAMED_PREFIX .. string.format("%03d", childIndex) .. ">:ChildIndex=" .. childIndex .. ":Type=".. controlType;
+		end
+	else
+		return "";
+	end
+end
+
+-- ===========================================================================
+function TunerUtilities:OnContextTreeSelection(sControlPath:string)
+	local kControlToSelect = self:FindControlFromPath(sControlPath);
+	if kControlToSelect ~= nil then
+		self:SetSelectedControl(kControlToSelect);
+	end
+end
+
+-- ===========================================================================
+function TunerUtilities:FindControlFromPath(sControlPath:string)
+	if sControlPath == nil or sControlPath == "" then
+		return nil;
+	end
+
+	local kCurrentRoot = UIManager:GetRootContexts();
+	local kControl = nil;
+
+	local kControlPath = Split(sControlPath, "\\");
+	for _, controlID in pairs(kControlPath) do
+		if controlID ~= "" then
+			local wasFound:boolean = false;
+
+			for i,kContext in ipairs(kCurrentRoot) do
+				if getmetatable(kContext) and kContext:GetID() == controlID then
+					kControl = kContext;
+					kCurrentRoot = kContext:GetChildren();
+					wasFound = true;
+					break;
+				end
+			end
+
+			-- If we didn't find an exact match to the control ID
+			-- see if it's an unnamed control and search by child index
+			local prefixLength:number = string.len(TREE_VIEW_UNNAMED_PREFIX);
+			if wasFound == false and string.sub(controlID, 1, prefixLength) == TREE_VIEW_UNNAMED_PREFIX then
+				local childIndex:number = tonumber(string.sub(controlID, prefixLength+1, prefixLength+3));
+				if childIndex > 0 then
+					local kChild = kCurrentRoot[childIndex];
+					if getmetatable(kChild) then
+						kControl = kChild;
+						kCurrentRoot = kChild:GetChildren();
+						wasFound = true;
+					end
+				end
+			end
+		end
+	end
+
+	return kControl;
 end
 
 --[[ NAVIGATION ]]

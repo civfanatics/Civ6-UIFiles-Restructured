@@ -12,12 +12,16 @@ include( "GameCapabilities" );
 -- ===========================================================================
 local m_numOpen					:number = 0;
 
+local m_isAutoUnitCycle			:boolean = false;
+
 local isTechTreeOpen			:boolean = false;
 local isCivicsTreeOpen			:boolean = false;
 local isGreatPeopleOpen			:boolean = false;
 local isGreatWorksOpen			:boolean = false;
+local isHistoricMomentsOpen		:boolean = false;
 local isReligionOpen			:boolean = false;
 local isGovernmentOpen			:boolean = false;
+local isGovernorPanelOpen       :boolean = false;
 
 local m_isGreatPeopleUnlocked	:boolean = false;
 local m_isGreatWorksUnlocked	:boolean = false;
@@ -31,7 +35,7 @@ local m_isReligionAvailable		:boolean = false;
 local m_isGreatPeopleAvailable	:boolean = false;
 local m_isGreatWorksAvailable	:boolean = false;
 
-local isDebug			:boolean = false;			-- Set to true to force all hook buttons to show on game start	
+local isDebug					:boolean = false;			-- Set to true to force all hook buttons to show on game start	
 
 
 -- ===========================================================================
@@ -86,8 +90,20 @@ end
 
 -- ===========================================================================
 function OnGetPopupsOpen()
-	if isGovernmentOpen or isTechTreeOpen or isCivicsTreeOpen or isGreatPeopleOpen or isGreatWorksOpen or isReligionOpen then
+	if isGovernmentOpen or isTechTreeOpen or isCivicsTreeOpen or isGreatPeopleOpen or isGreatWorksOpen or isReligionOpen or isHistoricMomentsOpen or isGovernorPanelOpen then
 		LuaEvents.TradeRouteChooser_CloseIfPopups();
+		m_isAutoUnitCycle = false;
+		if UserConfiguration.IsAutoUnitCycle() then
+			m_isAutoUnitCycle = true; -- set to true so we know we need to open it after the currently open popup is closed.
+		end
+	end
+end
+
+-- ===========================================================================
+function OnOpenTradeRouteDueToAutoCycle()
+	--if another popup was open, trade route needs to open after it has been closed (when auto unit cycle is enabled)
+	if m_isAutoUnitCycle then
+		LuaEvents.TradeRouteChooser_ReOpen();		
 	end
 end
 
@@ -149,6 +165,16 @@ function OnOpenCulture()
 end
 
 -- ===========================================================================
+function OnOpenGovernors()
+	if isGovernorPanelOpen then
+		LuaEvents.GovernorPanel_Close();
+	else
+		CloseAllPopups();
+		LuaEvents.GovernorPanel_Open();
+	end
+end
+
+-- ===========================================================================
 function SetCivicsTreeOpen()
 	isCivicsTreeOpen = true;
 	OnOpen();
@@ -185,6 +211,18 @@ function SetGovernmentOpen()
 end
 
 -- ===========================================================================
+function SetGovernorPanelOpen()
+	isGovernorPanelOpen = true;
+	OnOpen();
+end
+
+-- ===========================================================================
+function SetHistoricMomentsOpened()
+	isHistoricMomentsOpen = true;
+	OnOpen();
+end
+
+-- ===========================================================================
 function SetCivicsTreeClosed()
 	isCivicsTreeOpen = false;
 	OnClose();
@@ -217,6 +255,18 @@ end
 -- ===========================================================================
 function SetGovernmentClosed()
 	isGovernmentOpen = false;
+	OnClose();
+end
+
+-- ===========================================================================
+function SetGovernorPanelClosed()
+	isGovernorPanelOpen = false;
+	OnClose();
+end
+
+-- ===========================================================================
+function SetHistoricMomentsClosed()
+	isHistoricMomentsOpen = false;
 	OnClose();
 end
 
@@ -581,11 +631,13 @@ end
 
 -- ===========================================================================
 function OnOpen()
+	m_isAutoUnitCycle = false;
 	m_numOpen = m_numOpen+1;
 	local screenX, screenY:number = UIManager:GetScreenSizeVal();
 	if screenY <= 850 then
 		Controls.LaunchContainer:SetOffsetY(-35);
 	end
+	LuaEvents.TradeRouteChooser_CloseIfPopups();
 	LuaEvents.LaunchBar_CloseChoosers();
 end
 
@@ -598,6 +650,7 @@ function OnClose()
 	if m_numOpen == 0 then
 		Controls.LaunchContainer:SetOffsetY(-5);
 	end
+	OnOpenTradeRouteDueToAutoCycle(); --open if this popup blocked traderoute from opening
 end
 
 -- ===========================================================================
@@ -663,7 +716,7 @@ function OnInputActionTriggered( actionId )
 		if ( actionId == Input.GetActionId("ToggleGreatWorks") and UI.QueryGlobalParameterInt("DISABLE_GREAT_WORKS_HOTKEY") ~= 1 ) then
 			OnOpenGreatWorks();
 		end
-	end
+	end	
 end
 
 -- ===========================================================================
@@ -696,11 +749,15 @@ function Unsubscribe()
 	LuaEvents.CivicsTree_CloseCivicsTree.Remove( SetCivicsTreeClosed );
 	LuaEvents.CivicsTree_OpenCivicsTree.Remove( SetCivicsTreeOpen );	
 	LuaEvents.Government_CloseGovernment.Remove( SetGovernmentClosed );
-	LuaEvents.Government_OpenGovernment.Remove( SetGovernmentOpen );	
+	LuaEvents.Government_OpenGovernment.Remove( SetGovernmentOpen );
+	LuaEvents.GovernorPanel_Closed.Remove( SetGovernorPanelClosed );
+	LuaEvents.GovernorPanel_Opened.Remove( SetGovernorPanelOpen );	
 	LuaEvents.GreatPeople_CloseGreatPeople.Remove( SetGreatPeopleClosed );
 	LuaEvents.GreatPeople_OpenGreatPeople.Remove( SetGreatPeopleOpen );
 	LuaEvents.GreatWorks_CloseGreatWorks.Remove( SetGreatWorksClosed );
 	LuaEvents.GreatWorks_OpenGreatWorks.Remove( SetGreatWorksOpen );
+	LuaEvents.HistoricMoments_Closed.Remove( SetHistoricMomentsClosed );
+	LuaEvents.HistoricMoments_Opened.Remove( SetHistoricMomentsOpened );
 	LuaEvents.LaunchBar_CheckPopupsOpen.Remove( OnGetPopupsOpen );
 	LuaEvents.Religion_CloseReligion.Remove( SetReligionClosed );
 	LuaEvents.Religion_OpenReligion.Remove( SetReligionOpen );	
@@ -742,11 +799,15 @@ function Subscribe()
 	LuaEvents.CivicsTree_CloseCivicsTree.Add( SetCivicsTreeClosed );
 	LuaEvents.CivicsTree_OpenCivicsTree.Add( SetCivicsTreeOpen );	
 	LuaEvents.Government_CloseGovernment.Add( SetGovernmentClosed );
-	LuaEvents.Government_OpenGovernment.Add( SetGovernmentOpen );	
+	LuaEvents.Government_OpenGovernment.Add( SetGovernmentOpen );
+	LuaEvents.GovernorPanel_Closed.Add( SetGovernorPanelClosed );
+	LuaEvents.GovernorPanel_Opened.Add( SetGovernorPanelOpen );	
 	LuaEvents.GreatPeople_CloseGreatPeople.Add( SetGreatPeopleClosed );
 	LuaEvents.GreatPeople_OpenGreatPeople.Add( SetGreatPeopleOpen );
 	LuaEvents.GreatWorks_CloseGreatWorks.Add( SetGreatWorksClosed );
 	LuaEvents.GreatWorks_OpenGreatWorks.Add( SetGreatWorksOpen );
+	LuaEvents.HistoricMoments_Closed.Add( SetHistoricMomentsClosed );
+	LuaEvents.HistoricMoments_Opened.Add( SetHistoricMomentsOpened );
 	LuaEvents.LaunchBar_CheckPopupsOpen.Add( OnGetPopupsOpen );
 	LuaEvents.Religion_CloseReligion.Add( SetReligionClosed );
 	LuaEvents.Religion_OpenReligion.Add( SetReligionOpen );	

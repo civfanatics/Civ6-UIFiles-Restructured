@@ -1028,13 +1028,15 @@ function Open()
 	else
 		-- Select the previously completed trade route automatically
 		m_selectedUnit = UI.GetHeadSelectedUnit();
-		local trade:table = m_selectedUnit:GetTrade();
-		local prevOriginComponentID:table = trade:GetLastOriginTradeCityComponentID();
-		local prevDestComponentID:table = trade:GetLastDestinationTradeCityComponentID();
-
-		local originCity:table = Cities.GetCityInPlot(m_selectedUnit:GetX(), m_selectedUnit:GetY());
-		if originCity:GetID() == prevOriginComponentID.id and originCity:GetOwner() == prevOriginComponentID.player then
-			TradeRouteSelected( prevDestComponentID.player, prevDestComponentID.id );
+		if m_selectedUnit then
+			local trade:table = m_selectedUnit:GetTrade();
+			local prevOriginComponentID:table = trade:GetLastOriginTradeCityComponentID();
+			local prevDestComponentID:table = trade:GetLastDestinationTradeCityComponentID();
+		
+			local originCity:table = Cities.GetCityInPlot(m_selectedUnit:GetX(), m_selectedUnit:GetY());
+			if originCity:GetID() == prevOriginComponentID.id and originCity:GetOwner() == prevOriginComponentID.player then
+				TradeRouteSelected( prevDestComponentID.player, prevDestComponentID.id );
+			end
 		end
 	end
 
@@ -1216,6 +1218,7 @@ function OnWorldInputMakeTradeRoute( plotId:number )
 	local plotX,plotY	= Map.GetPlotLocation( plotId );
 	local pCity			:table = Cities.GetCityInPlot( plotX, plotY );
 	if pCity then
+		UI.PlaySound("Play_UI_Click");
 		TradeRouteSelected( pCity:GetOwner(), pCity:GetID() );
 	end
 end
@@ -1234,6 +1237,7 @@ function Initialize()
 	LuaEvents.GameDebug_Return.Add( OnGameDebugReturn );
 	LuaEvents.TradeOverview_SelectRouteFromOverview.Add( OnSelectRouteFromOverview );
 	LuaEvents.TradeRouteChooser_CloseIfPopups.Add( OnClose );
+	LuaEvents.TradeRouteChooser_ReOpen.Add( Open );
 	LuaEvents.WorldInput_MakeTradeRouteDestination.Add( OnWorldInputMakeTradeRoute );	
 
 	-- Game Engine Events	

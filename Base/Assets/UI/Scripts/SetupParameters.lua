@@ -57,7 +57,7 @@ ResultsId = 1;
 -------------------------------------------------------------------------------
 -- Global function for caching the result of a database query with arguments.
 -------------------------------------------------------------------------------
-function CachedQuery(sql, arg1, arg2, arg3, arg4)
+function CachedQuery(sql, ...)
 
 	-- If the database has been updated.  Invalidate the cache.
 	local changes = DB.ConfigurationChanges();
@@ -73,10 +73,26 @@ function CachedQuery(sql, arg1, arg2, arg3, arg4)
 		QueryCache[sql] = cache;
 	end
 
+
+	local arg_count = select("#", ...);
+	local args = {};
+	for arg_index = 1, arg_count, 1 do
+		args[arg_index] = select(arg_index, ...);
+	end
+
 	-- Obtain the cached results.
 	local results;
 	for i, v in ipairs(cache) do
-		if(v[1] == arg1 and v[2] == arg2 and v[3] == arg3 and v[4] == arg4) then
+
+		local match = true;
+		for arg_index, arg_value in ipairs(args) do
+			if(v[arg_index] ~= arg_value) then
+				match = false;
+				break;
+			end
+		end
+
+		if(match) then
 			results = v[0];
 			break;
 		end
@@ -84,8 +100,8 @@ function CachedQuery(sql, arg1, arg2, arg3, arg4)
 
 	-- Otherwise query ourselves.
 	if(results == nil) then
-		local entry = {arg1, arg2, arg3, arg4};
-		results = DB.ConfigurationQuery(sql, arg1, arg2, arg3, arg4);
+		local entry = args;
+		results = DB.ConfigurationQuery(sql, ...);
 		results.Id = ResultsId;
 		ResultsId = ResultsId + 1;
 
@@ -694,13 +710,71 @@ function SetupParameters:Config_WriteAuxParameterValues(parameter)
 		self:Config_Write(parameter.ConfigurationGroup, parameter.ValueNameConfigurationId, bundle);
 	end
 
+	if(parameter.NameArrayConfigurationId) then
+		
+		-- Avoid table lookups by copying to local
+		local paramValue = parameter.Value;
+		local paramRawName = parameter.RawName;
+		local paramConfigGroup = parameter.ConfigurationGroup;
+		local paramNameArrayConfigurationId = parameter.NameArrayConfigurationId;
+		
+		local config_value = self:Config_Read(paramConfigGroup, paramNameArrayConfigurationId);
+		local tvalue = type(paramValue);
+		if(tvalue == "boolean" and paramValue == true) then
+
+			local bundle = Locale.Bundle(paramRawName) or paramRawName;
+
+			-- Add the value to the list.
+			if(config_value == nil) then
+				config_value = {bundle};
+			else
+				for i,v in ipairs(config_value or {}) do
+					if(v == bundle) then
+						config_value = nil;
+						break;
+					end
+				end
+
+				if(config_value) then
+					table.insert(config_value, bundle);
+				end
+			end	
+
+			if(config_value) then
+				self:Config_Write(paramConfigGroup, paramNameArrayConfigurationId, config_value);
+			end
+		else
+			-- Remove it from the list.
+			-- Do nothing if config_value is nil.
+			if(config_value) then
+
+				local bundle = Locale.Bundle(paramRawName) or paramRawName;
+
+				-- Since the table contains only unique value, a simple iterate and remove will suffice.
+				for i,v in ipairs(config_value) do
+					if(v == bundle) then
+						table.remove(config_value, i);
+						break;
+					end
+				end
+
+				-- If the array is empty, remove the value, otherwise update.
+				if(#config_value > 0) then
+					self:Config_Write(paramConfigGroup, paramNameArrayConfigurationId, config_value);
+				else
+					self:Config_Write(paramConfigGroup, paramNameArrayConfigurationId, nil);
+				end
+			end
+		end
+	end
+
 	if(parameter.ValueDomainConfigurationId) then
 		local domain = (type(parameter.Value) == "table") and parameter.Value.Domain;
 		self:Config_Write(parameter.ConfigurationGroup, parameter.ValueDomainConfigurationId, domain);
 	end
 
 	-- KLUDGE!  This should be in PlayerSetupLogic.lua
-	-- Extend auxilery values to include CivilizationTypeName and Hash
+	-- Extend auxiliary values to include CivilizationTypeName and Hash
 	if(parameter.ParameterId == "PlayerLeader") then
 		local civilizationType = (parameter.Value ~= nil) and GetPlayerCivilization(parameter.Value.Domain, parameter.Value.Value);
 		local civilizationTypeId = (civilizationType) and DB.MakeHash(civilizationType);
@@ -880,6 +954,7 @@ function SetupParameters:Data_DiscoverParameters()
 						DomainValuesConfigurationId = row[pq.DomainValuesConfigurationIdField],
 						ValueNameConfigurationId = row[pq.ValueNameConfigurationIdField],
 						ValueDomainConfigurationId = row[pq.ValueDomainConfigurationIdField],
+						NameArrayConfigurationId = row[pq.NameArrayConfigurationIdField],
 						GroupId = row[pq.GroupField],
 						Visible = self.Utility_ToBool(row[pq.VisibleField]),
 						ReadOnly = self.Utility_ToBool(row[pq.ReadOnlyField]),
@@ -1178,6 +1253,7 @@ function SetupParameters:Data_DiscoverParameters()
 			end
 		end
 		
+		Modding.UpdateParameter(p);
 		p.Enabled = self:Parameter_GetEnabled(p);
 	end
 
@@ -1386,6 +1462,14 @@ function SetupParameters:Parameter_GetEnabled(parameter)
 	-- Disable if parameter does not meet criteria or is read-only.
 	-- Otherwise, If a game is in session, disable unless you are host.
 	-- Otherwise, enable.
+
+	-- Disable if the parameter is Invalid but *not* if the parameter is Error.
+	-- This is because an Error'd parameter may be correctable if the user selects a different value.
+	-- While an invalid parameter cannot be corrected.
+	if(parameter.Invalid) then
+		return false;
+	end
+
 	if((not parameter.MeetsCriteria) or parameter.ReadOnly) then
 		return false;
 	end
@@ -1407,8 +1491,9 @@ function SetupParameters:Parameter_GetEnabled(parameter)
 	if(Network.IsInSession()) then
 		-- Some parameters can only be changed before the network session is created.
 		if(parameter.ParameterId == "Ruleset"				-- Can't change because the ruleset cascades to pretty much everything.
-			or parameter.ParameterId == "NoTeams") then		-- Can't change because the no teams setting cascades to the player configuration team setting.
-															-- This should be removed once the player configuration team pulldown is handled like a proper player parameter.
+			or parameter.ParameterId == "NoTeams"           -- Can't change because the no teams setting cascades to the player configuration team setting.
+			                                                -- This should be removed once the player configuration team pulldown is handled like a proper player parameter.
+			or parameter.GroupId == "GameModes" ) then      -- Can't change game modes because the lobby has the game mode specified in it.'											
 			return false;
 		end
 

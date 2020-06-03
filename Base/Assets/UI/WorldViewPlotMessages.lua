@@ -191,10 +191,19 @@ end
 
 ----------------------------------------------------------------        
 ----------------------------------------------------------------        
-function AddPlotText( messageType, delay, x, y, text )
-
+function AddPlotText( messageType, delay, x, y, text, visibility, targetID )
+	
 	-- Convert to an index
 	local plotIndex = Map.GetPlotIndex(x, y);
+	local localPlayerID : number = Game.GetLocalPlayer();
+	local localPlayerVis : table = PlayersVisibility[localPlayerID];
+
+	--Check to make sure everyone or the local player is the target
+	if(targetID ~= -1 and targetID ~= localPlayerID) then return; end
+
+	--Check to make sure local player has proper visibility to see this message
+	if(visibility == RevealedState.VISIBLE and (not localPlayerVis:IsVisible(x, y))) then return; end
+	if(visibility == RevealedState.REVEALED and (not localPlayerVis:IsRevealed(x,y))) then return; end
 
 	-- Create a plot text message.
 	-- Currently this is ignoring the eMessageType, though in the future it

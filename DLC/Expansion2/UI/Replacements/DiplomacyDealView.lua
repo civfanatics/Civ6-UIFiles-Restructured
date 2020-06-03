@@ -26,6 +26,9 @@ g_ValueEditDealItemControlTable = nil; -- The control table of the deal item tha
 DealItemGroupTypes = nil;
 AvailableDealItemGroupTypes = nil;
 
+g_uiMyOffers = {};
+g_uiTheirOffers = {};
+
 -- ===========================================================================
 --	VARIABLES
 -- ===========================================================================
@@ -33,6 +36,8 @@ local ms_PlayerPanelIM		:table		= InstanceManager:new( "PlayerAvailablePanel",  
 local ms_LeftRightListIM	:table		= InstanceManager:new( "LeftRightList",  "List", Controls.LeftRightListContainer );
 local ms_TopDownListIM		:table		= InstanceManager:new( "TopDownList",  "List", Controls.TopDownListContainer );
 local ms_AgreementOptionIM	:table		= InstanceManager:new( "AgreementOptionInstance",  "AgreementOptionButton", Controls.ValueEditStack );
+local ms_CityDetailsIM		:table		= InstanceManager:new( "CityIconAndDetails", "CityDetailsContainer", Controls.IconAndTextContainer );
+local ms_MinimizedSectionIM :table		= InstanceManager:new( "MinimizedSection","MinimizedSectionContainer" );
 
 local OTHER_PLAYER = 0;
 local LOCAL_PLAYER = 1;
@@ -64,6 +69,17 @@ local ms_bForceUpdateOnCommit = false;
 local ms_bDontUpdateOnBack = false;
 
 local MAX_DEAL_ITEM_EDIT_HEIGHT = 300;
+
+local m_kCollapsedCityDetails : table = {};
+
+--Panel resizing variables
+local m_StartingMouseX	: number;
+local m_StartingMouseY	: number;
+local m_OffersStartSizeY: number;
+local m_InvStartSizeY	: number;
+
+local m_MaxDragResizeY : number = 81;
+local m_MinDragResizeY : number = 193; -- Will be dynamically set to account for different resolutions
 
 -- ===========================================================================
 function SetIconToSize(iconControl, iconName, iconSize)
@@ -206,7 +222,6 @@ function OnToggleCollapseGroup(iconList : table)
 	end
 
 	iconList.List:CalculateSize();
-	iconList.List:ReprocessAnchoring();
 end
 -- ===========================================================================
 function CreateHorizontalGroup(rootStack : table, title : string)
@@ -217,7 +232,6 @@ function CreateHorizontalGroup(rootStack : table, title : string)
 		iconList.TitleText:LocalizeAndSetText(title);
 	end
 	iconList.List:CalculateSize();
-	iconList.List:ReprocessAnchoring();
 
 	return iconList;
 end
@@ -231,7 +245,6 @@ function CreateVerticalGroup(rootStack : table, title : string)
 		iconList.TitleText:LocalizeAndSetText(title);
 	end
 	iconList.List:CalculateSize();
-	iconList.List:ReprocessAnchoring();
 
 	return iconList;
 end
@@ -252,7 +265,6 @@ function CreatePlayerAvailablePanel(playerType : number, rootControl : table)
 	g_AvailableGroups[AvailableDealItemGroupTypes.CAPTIVES][playerType]			= CreateVerticalGroup(rootControl, "LOC_DIPLOMACY_DEAL_CAPTIVES");
 
 	rootControl:CalculateSize();
-	rootControl:ReprocessAnchoring();
 
 	return playerPanel;
 end
@@ -298,9 +310,9 @@ function OnValuePulldownCommit(forType)
 end
 
 -- ===========================================================================
-function SetValueText(icon, pDealItem)
+function SetValueText(uiIcon, pDealItem)
 
-	if (icon.ValueText ~= nil) then
+	if (uiIcon.ValueText ~= nil) then
 		local valueName = pDealItem:GetValueTypeNameID();
 		if (valueName == nil) then
 			if (pDealItem:HasPossibleValues()) then
@@ -308,10 +320,10 @@ function SetValueText(icon, pDealItem)
 			end
 		end
 		if (valueName ~= nil) then
-			icon.ValueText:LocalizeAndSetText(valueName);
-			icon.ValueText:SetHide(false);
+			uiIcon.ValueText:LocalizeAndSetText(valueName);
+			uiIcon.ValueText:SetHide(false);
 		else
-			icon.ValueText:SetHide(true);
+			uiIcon.ValueText:SetHide(true);
 		end
 	end
 end
@@ -325,8 +337,8 @@ function CreatePanels()
 	-- Create the Local Player Panels
 	CreatePlayerAvailablePanel(LOCAL_PLAYER, Controls.MyInventoryStack);
 
-	CreatePlayerDealPanel(OTHER_PLAYER, Controls.TheirOfferStack);
-	CreatePlayerDealPanel(LOCAL_PLAYER, Controls.MyOfferStack);
+	CreatePlayerDealPanel(OTHER_PLAYER, g_uiTheirOffers);
+	CreatePlayerDealPanel(LOCAL_PLAYER, g_uiMyOffers);
 
 	Controls.EqualizeDeal:RegisterCallback( Mouse.eLClick, OnEqualizeDeal );
 	Controls.EqualizeDeal:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
@@ -454,6 +466,11 @@ function UpdateDealStatus()
 			Controls.DemandDeal:SetHide(true);
 		end
 	end
+	-- Hide/show directions if either side has no items
+	local itemsFromLocal : number = pDeal:GetItemCount(g_LocalPlayer:GetID(), g_OtherPlayer:GetID());
+	local itemsFromOther : number = pDeal:GetItemCount(g_OtherPlayer:GetID(), g_LocalPlayer:GetID());
+	g_uiMyOffers.DirectionsBracket:SetHide( itemsFromLocal > 0);
+	g_uiTheirOffers.DirectionsBracket:SetHide( itemsFromOther > 0);
 
 	UpdateProposalButtons(bDealValid);
 
@@ -487,14 +504,11 @@ function ResizeDealAndButtons()
 	end
 
 	Controls.DealOptionsStack:CalculateSize();
-	Controls.DealOptionsStack:ReprocessAnchoring();
 
-	Controls.TheirOfferStack:CalculateSize();
-	Controls.TheirOfferBracket:DoAutoSize();
+	g_uiTheirOffers.OfferStack:CalculateSize();
 	Controls.TheirOfferScroll:CalculateSize();
 
-	Controls.MyOfferStack:CalculateSize();
-	Controls.MyOfferBracket:DoAutoSize();
+	g_uiMyOffers.OfferStack:CalculateSize();
 	Controls.MyOfferScroll:CalculateSize();
 end
 
@@ -797,8 +811,8 @@ function UpdateDealPanel(player)
 
 	UpdateDealStatus();
 
-	PopulatePlayerDealPanel(Controls.TheirOfferStack, g_OtherPlayer);
-	PopulatePlayerDealPanel(Controls.MyOfferStack, g_LocalPlayer);
+	PopulatePlayerDealPanel(g_uiTheirOffers, g_OtherPlayer);
+	PopulatePlayerDealPanel(g_uiMyOffers, g_LocalPlayer);
 	
 	ResizeDealAndButtons();
 
@@ -950,13 +964,13 @@ end
 -- Check to see if the deal should be auto-proposed.
 function IsAutoPropose()
 	if (not ms_OtherPlayerIsHuman) then
-		local pDeal = DealManager.GetWorkingDeal(DealDirection.OUTGOING, g_LocalPlayer:GetID(), g_OtherPlayer:GetID());
+		local pDeal : table = DealManager.GetWorkingDeal(DealDirection.OUTGOING, g_LocalPlayer:GetID(), g_OtherPlayer:GetID());
 		pDeal:Validate();
 		if (pDeal ~= nil and not ms_bIsDemand and pDeal:IsValid() and not DealManager.HasPendingDeal(g_LocalPlayer:GetID(), g_OtherPlayer:GetID())) then
-			local iItemsFromLocal = pDeal:GetItemCount(g_LocalPlayer:GetID(), g_OtherPlayer:GetID());
-			local iItemsFromOther = pDeal:GetItemCount(g_OtherPlayer:GetID(), g_LocalPlayer:GetID());
+			local itemsFromLocal : number = pDeal:GetItemCount(g_LocalPlayer:GetID(), g_OtherPlayer:GetID());
+			local itemsFromOther : number = pDeal:GetItemCount(g_OtherPlayer:GetID(), g_LocalPlayer:GetID());
 
-			if (iItemsFromLocal > 0 or iItemsFromOther > 0) then
+			if (itemsFromLocal > 0 or itemsFromOther > 0) then
 				return true;
 			end
 		end
@@ -966,8 +980,8 @@ end
 
 -- ===========================================================================
 -- Check the state of the deal and show/hide the special proposal buttons for a possible gift (not actually possible until XP2)
-function UpdateProposalButtonsForGift(iItemsFromLocal : number, iItemsFromOther : number)
-	if (iItemsFromLocal == 0 and iItemsFromOther > 0) then
+function UpdateProposalButtonsForGift(itemsFromLocal : number, itemsFromOther : number)
+	if (itemsFromLocal == 0 and itemsFromOther > 0) then
 		return true;
 	end
 
@@ -978,21 +992,17 @@ end
 -- Check the state of the deal and show/hide the special proposal buttons
 function UpdateProposalButtons(bDealValid)
 
-	local bDealIsPending = DealManager.HasPendingDeal(g_LocalPlayer:GetID(), g_OtherPlayer:GetID());
+	local bDealIsPending : boolean = DealManager.HasPendingDeal(g_LocalPlayer:GetID(), g_OtherPlayer:GetID());
 
 	if (bDealValid and (not bDealIsPending or not ms_OtherPlayerIsHuman)) then
 		Controls.ResumeGame:SetHide(true);
-		local pDeal = DealManager.GetWorkingDeal(DealDirection.OUTGOING, g_LocalPlayer:GetID(), g_OtherPlayer:GetID());
+		local pDeal : table = DealManager.GetWorkingDeal(DealDirection.OUTGOING, g_LocalPlayer:GetID(), g_OtherPlayer:GetID());
 		Controls.EqualizeDeal:SetHide(ms_bIsDemand);
 		if (pDeal ~= nil) then
 
-			local iItemsFromLocal = pDeal:GetItemCount(g_LocalPlayer:GetID(), g_OtherPlayer:GetID());
-			local iItemsFromOther = pDeal:GetItemCount(g_OtherPlayer:GetID(), g_LocalPlayer:GetID());
-			ms_bIsGift = pDeal:IsGift() and iItemsFromOther > 0;
-
-			-- Hide/show directions if either side has no items
-			Controls.MyDirections:SetHide( iItemsFromLocal > 0);
-			Controls.TheirDirections:SetHide( iItemsFromOther > 0);
+			local itemsFromLocal : number = pDeal:GetItemCount(g_LocalPlayer:GetID(), g_OtherPlayer:GetID());
+			local itemsFromOther : number = pDeal:GetItemCount(g_OtherPlayer:GetID(), g_LocalPlayer:GetID());
+			ms_bIsGift = pDeal:IsGift() and itemsFromOther > 0;
 
 			if (not ms_bIsDemand) then
 				if (not ms_OtherPlayerIsHuman) then
@@ -1001,7 +1011,7 @@ function UpdateProposalButtons(bDealValid)
 						Controls.EqualizeDeal:SetHide(true);
 						Controls.AcceptDeal:SetHide(true);
 						SetLeaderDialog("LOC_DIPLO_DEAL_UNACCEPTABLE_DEAL", "");
-					elseif (iItemsFromLocal > 0 and iItemsFromOther == 0) then
+					elseif (itemsFromLocal > 0 and itemsFromOther == 0) then
 						-- One way gift?
 
 						if ms_LastIncomingDealProposalAction == DealProposalAction.EQUALIZE_FAILED then
@@ -1031,7 +1041,7 @@ function UpdateProposalButtons(bDealValid)
 					elseif ms_bIsGift then -- Incoming gift
 						Controls.EqualizeDeal:SetShow(false);
 					else
-						if (UpdateProposalButtonsForGift(iItemsFromLocal, iItemsFromOther)) then
+						if (UpdateProposalButtonsForGift(itemsFromLocal, itemsFromOther)) then
 							-- AI was unable to equalize for the requested items so hide the equalize button
 							if ms_LastIncomingDealProposalAction == DealProposalAction.EQUALIZE_FAILED then
 								Controls.EqualizeDeal:SetHide(true);
@@ -1075,22 +1085,22 @@ function UpdateProposalButtons(bDealValid)
 
 					if (ms_LastIncomingDealProposalAction == DealProposalAction.PENDING) then
 						-- Just starting the deal
-						if (iItemsFromLocal > 0 and iItemsFromOther == 0) then
+						if (itemsFromLocal > 0 and itemsFromOther == 0) then
 							-- Is this one way to them?
-							Controls.MyDirections:SetHide(true);
-							Controls.TheirDirections:SetHide(false);
+							g_uiMyOffers.Directions:SetHide(true);
+							g_uiTheirOffers.Directions:SetHide(false);
 							Controls.AcceptDeal:LocalizeAndSetText("LOC_DIPLOMACY_DEAL_GIFT_DEAL");
 						else
 							-- Everything else is a proposal to another human
-							Controls.MyDirections:SetHide(true);
-							Controls.TheirDirections:SetHide(true);
+							g_uiMyOffers.Directions:SetHide(true);
+							g_uiTheirOffers.Directions:SetHide(true);
 							Controls.AcceptDeal:LocalizeAndSetText("LOC_DIPLOMACY_DEAL_PROPOSE_DEAL");
 						end
 						-- Make sure the leader text is set to something appropriate.
 						SetDefaultLeaderDialogText();
 					else
-						Controls.MyDirections:SetHide(true);
-						Controls.TheirDirections:SetHide(true);
+						g_uiMyOffers.Directions:SetHide(true);
+						g_uiTheirOffers.Directions:SetHide(true);
 						-- Are the incoming and outgoing deals the same?
 						if (DealManager.AreWorkingDealsEqual(g_LocalPlayer:GetID(), g_OtherPlayer:GetID())) then 
 							Controls.AcceptDeal:LocalizeAndSetText("LOC_DIPLOMACY_DEAL_ACCEPT_DEAL");
@@ -1102,14 +1112,14 @@ function UpdateProposalButtons(bDealValid)
 			else
 				-- Is a Demand
 				if (ms_InitiatedByPlayerID == ms_OtherPlayerID) then
-					Controls.MyDirections:SetHide(true);
-					Controls.TheirDirections:SetHide(true);
+					g_uiMyOffers.Directions:SetHide(true);
+					g_uiTheirOffers.Directions:SetHide(true);
 					SetDefaultLeaderDialogText();
 				else
-					if (iItemsFromOther == 0) then
-						Controls.TheirDirections:SetHide(false);
+					if (itemsFromOther == 0) then
+						g_uiTheirOffers.Directions:SetHide(false);
 					else
-						Controls.TheirDirections:SetHide(true);
+						g_uiTheirOffers.Directions:SetHide(true);
 					end
 					-- Demand against another player
 					SetLeaderDialog("LOC_DIPLO_DEAL_LEADER_DEMAND", "LOC_DIPLO_DEAL_LEADER_DEMAND_EFFECT");
@@ -1121,19 +1131,19 @@ function UpdateProposalButtons(bDealValid)
 		end
 	else															
 		--There isn't a valid deal, or we are just viewing a pending deal.
-		local bIsViewing = (bDealIsPending and ms_OtherPlayerIsHuman);
+		local bIsViewing : boolean = (bDealIsPending and ms_OtherPlayerIsHuman);
 
-		local iItemsFromLocal = 0;
-		local iItemsFromOther = 0;
+		local itemsFromLocal : number = 0;
+		local itemsFromOther : number = 0;
 
-		local pDeal = DealManager.GetWorkingDeal(DealDirection.OUTGOING, g_LocalPlayer:GetID(), g_OtherPlayer:GetID());
+		local pDeal : table = DealManager.GetWorkingDeal(DealDirection.OUTGOING, g_LocalPlayer:GetID(), g_OtherPlayer:GetID());
 		if (pDeal ~= nil) then
-			iItemsFromLocal = pDeal:GetItemCount(g_LocalPlayer:GetID(), g_OtherPlayer:GetID());
-			iItemsFromOther = pDeal:GetItemCount(g_OtherPlayer:GetID(), g_LocalPlayer:GetID());
+			itemsFromLocal = pDeal:GetItemCount(g_LocalPlayer:GetID(), g_OtherPlayer:GetID());
+			itemsFromOther = pDeal:GetItemCount(g_OtherPlayer:GetID(), g_LocalPlayer:GetID());
 		end
 
-		Controls.MyDirections:SetHide( bIsViewing or iItemsFromLocal > 0);
-		Controls.TheirDirections:SetHide( bIsViewing or iItemsFromOther > 0);
+		g_uiMyOffers.Directions:SetHide( bIsViewing or itemsFromLocal > 0);
+		g_uiTheirOffers.Directions:SetHide( bIsViewing or itemsFromOther > 0);
 		Controls.EqualizeDeal:SetHide(true);
 		Controls.AcceptDeal:SetHide(true);
 		Controls.DemandDeal:SetHide(true);
@@ -1178,40 +1188,39 @@ function UpdateProposalButtons(bDealValid)
 		end
 	end
 	Controls.DealOptionsStack:CalculateSize();
-	Controls.DealOptionsStack:ReprocessAnchoring();
 
 	if (ms_bIsDemand) then
 		if (ms_InitiatedByPlayerID == ms_OtherPlayerID) then
 			-- Demand from the other player and we are responding
-			Controls.MyOfferBracket:SetHide(false);
 			Controls.MyOfferLabel:SetHide(false);
 			Controls.TheirOfferLabel:SetHide(true);
-			Controls.TheirOfferBracket:SetHide(true);
+			g_uiTheirOffers.OfferStack:SetHide(true);
+			g_uiMyOffers.OfferStack:SetHide(false);
 		else
 			-- Demand from us, to the other player
-			Controls.MyOfferBracket:SetHide(true);
 			Controls.MyOfferLabel:SetHide(true);
+			g_uiMyOffers.OfferStack:SetHide(true);
 			Controls.TheirOfferLabel:SetHide(false);
-			Controls.TheirOfferBracket:SetHide(false);
+			g_uiTheirOffers.OfferStack:SetHide(false);
 		end
 	else
 		Controls.MyOfferLabel:SetHide(false);
-		Controls.MyOfferBracket:SetHide(false);
 		Controls.TheirOfferLabel:SetHide(false);
-		Controls.TheirOfferBracket:SetHide(false);
+		g_uiTheirOffers.OfferStack:SetHide(false);
+		g_uiMyOffers.OfferStack:SetHide(false);
 	end
 end
 
 -- ===========================================================================
 function PopulateAvailableGold(player : table, iconList : table)
 
-	local iAvailableItemCount = 0;
+	local availableItemCount : number = 0;
 
-	local eFromPlayerID = player:GetID();
-	local eToPlayerID = GetOtherPlayer(player):GetID();
+	local eFromPlayerID : number = player:GetID();
+	local eToPlayerID : number = GetOtherPlayer(player):GetID();
 
-	local pForDeal = DealManager.GetWorkingDeal(DealDirection.OUTGOING, g_LocalPlayer:GetID(), g_OtherPlayer:GetID());
-	local possibleResources = DealManager.GetPossibleDealItems(eFromPlayerID, eToPlayerID, DealItemTypes.GOLD, pForDeal);
+	local pForDeal : table = DealManager.GetWorkingDeal(DealDirection.OUTGOING, g_LocalPlayer:GetID(), g_OtherPlayer:GetID());
+	local possibleResources : table = DealManager.GetPossibleDealItems(eFromPlayerID, eToPlayerID, DealItemTypes.GOLD, pForDeal);
 	if (possibleResources ~= nil) then
 		for i, entry in ipairs(possibleResources) do
 			if (entry.Duration == 0) then
@@ -1221,34 +1230,36 @@ function PopulateAvailableGold(player : table, iconList : table)
 
 				if (not ms_bIsDemand) then
 					-- One time gold
-					local icon = g_IconOnlyIM:GetInstance(iconList.ListStack);
-					icon.AmountText:SetText(goldBalance);
-					icon.SelectButton:SetToolTipString(nil);		-- We recycle the entries, so make sure this is clear.
-					SetIconToSize(icon.Icon, "ICON_YIELD_GOLD_5");
-					icon.SelectButton:RegisterCallback( Mouse.eLClick, function() OnClickAvailableOneTimeGold(player, ms_DefaultOneTimeGoldAmount); end );
-					icon.SelectButton:RegisterCallback( Mouse.eLClick, function() OnClickAvailableOneTimeGold(player, ms_DefaultOneTimeGoldAmount); end );
-					icon.Icon:SetColor(1, 1, 1);
-					iAvailableItemCount = iAvailableItemCount + 1;
+					local uiIcon : table = g_IconOnlyIM:GetInstance(iconList.ListStack);
+					uiIcon.AmountText:SetHide(false);
+					uiIcon.AmountText:SetText(goldBalance);
+					uiIcon.SelectButton:SetToolTipString(nil);		-- We recycle the entries, so make sure this is clear.
+					SetIconToSize(uiIcon.Icon, "ICON_YIELD_GOLD_5");
+					uiIcon.SelectButton:RegisterCallback( Mouse.eLClick, function() OnClickAvailableOneTimeGold(player, ms_DefaultOneTimeGoldAmount); end );
+					uiIcon.SelectButton:RegisterCallback( Mouse.eLClick, function() OnClickAvailableOneTimeGold(player, ms_DefaultOneTimeGoldAmount); end );
+					uiIcon.RemoveButton:SetHide(true);
+					uiIcon.Icon:SetColor(1, 1, 1);
+					availableItemCount = availableItemCount + 1;
 				end
 			else
 				-- Multi-turn gold
-				icon = g_IconAndTextIM:GetInstance(iconList.ListStack);
-				SetIconToSize(icon.Icon, "ICON_YIELD_GOLD_5");
-				icon.IconText:LocalizeAndSetText("LOC_DIPLOMACY_DEAL_GOLD_PER_TURN");
-				icon.SelectButton:SetToolTipString(nil);		-- We recycle the entries, so make sure this is clear.
-				icon.SelectButton:RegisterCallback( Mouse.eLClick, function() OnClickAvailableMultiTurnGold(player, ms_DefaultMultiTurnGoldAmount, ms_DefaultMultiTurnGoldDuration); end );
-				icon.ValueText:SetHide(true);
-				icon.Icon:SetColor(1, 1, 1);
+				uiIcon = g_IconAndTextIM:GetInstance(iconList.ListStack);
+				SetIconToSize(uiIcon.Icon, "ICON_YIELD_GOLD_5");
+				uiIcon.IconText:LocalizeAndSetText("LOC_DIPLOMACY_DEAL_GOLD_PER_TURN");
+				uiIcon.SelectButton:SetToolTipString(nil);		-- We recycle the entries, so make sure this is clear.
+				uiIcon.SelectButton:RegisterCallback( Mouse.eLClick, function() OnClickAvailableMultiTurnGold(player, ms_DefaultMultiTurnGoldAmount, ms_DefaultMultiTurnGoldDuration); end );
+				uiIcon.ValueText:SetHide(true);
+				uiIcon.RemoveButton:SetHide(true);
+				uiIcon.Icon:SetColor(1, 1, 1);
 
 				iconList.ListStack:CalculateSize();
-				iconList.List:ReprocessAnchoring();
 
-				iAvailableItemCount = iAvailableItemCount + 1;
+				availableItemCount = availableItemCount + 1;
 			end
 		end
 	end
 
-	return iAvailableItemCount;
+	return availableItemCount;
 end
 
 -- ===========================================================================
@@ -1284,12 +1295,12 @@ function OnClickAvailableResource(player, resourceType)
 		return;
 	end
 
-	local pDeal = DealManager.GetWorkingDeal(DealDirection.OUTGOING, g_LocalPlayer:GetID(), g_OtherPlayer:GetID());
+	local pDeal : table = DealManager.GetWorkingDeal(DealDirection.OUTGOING, g_LocalPlayer:GetID(), g_OtherPlayer:GetID());
 	if (pDeal ~= nil) then
 
 		-- Already there?
-		local dealItems = pDeal:FindItemsByType(DealItemTypes.RESOURCES, DealItemSubTypes.NONE, player:GetID());
-		local pDealItem;
+		local dealItems : table = pDeal:FindItemsByType(DealItemTypes.RESOURCES, DealItemSubTypes.NONE, player:GetID());
+		local pDealItem : table;
 		if (dealItems ~= nil) then
 			for i, pDealItem in ipairs(dealItems) do
 				if pDealItem:GetValueType() == resourceType then
@@ -1301,10 +1312,10 @@ function OnClickAvailableResource(player, resourceType)
 			end
 		end
 
-		local pPlayerResources = player:GetResources();
+		local pPlayerResources : table = player:GetResources();
 		-- Get the total amount of the resource we have. This does not take into account anything already in the deal.
-		local iAmount = pPlayerResources:GetResourceAmount( resourceType );
-		if (iAmount > 0) then
+		local amount : number = pPlayerResources:GetResourceAmount( resourceType );
+		if (amount > 0) then
 				
 			pDealItem = pDeal:AddItemOfType(DealItemTypes.RESOURCES, player:GetID());
 			if (pDealItem ~= nil) then
@@ -1646,321 +1657,391 @@ end
 -- ===========================================================================
 function PopulateAvailableResources(player : table, iconList : table, className : string)
 
-	local iAvailableItemCount = 0;
-	local pForDeal = DealManager.GetWorkingDeal(DealDirection.OUTGOING, g_LocalPlayer:GetID(), g_OtherPlayer:GetID());
-	local possibleResources = DealManager.GetPossibleDealItems(player:GetID(), GetOtherPlayer(player):GetID(), DealItemTypes.RESOURCES, pForDeal);
+	local availableItemCount : number = 0;
+	local pForDeal : table = DealManager.GetWorkingDeal(DealDirection.OUTGOING, g_LocalPlayer:GetID(), g_OtherPlayer:GetID());
+	local possibleResources : table = DealManager.GetPossibleDealItems(player:GetID(), GetOtherPlayer(player):GetID(), DealItemTypes.RESOURCES, pForDeal);
 	if (possibleResources ~= nil) then
 		for i, entry in ipairs(possibleResources) do
 	
-			local resourceDesc = GameInfo.Resources[entry.ForType];
+			local resourceDesc : table = GameInfo.Resources[entry.ForType];
 			if (resourceDesc ~= nil) then
 				-- Do we have some and is it a luxury item?
 				if (entry.MaxAmount > 0 and resourceDesc.ResourceClassType == className ) then
-					local icon = g_IconOnlyIM:GetInstance(iconList.ListStack);
-					SetIconToSize(icon.Icon, "ICON_" .. resourceDesc.ResourceType);
-					icon.AmountText:SetText(tostring(entry.MaxAmount));
-					icon.AmountText:SetHide(false);
+					local uiIcon : table = g_IconOnlyIM:GetInstance(iconList.ListStack);
+					SetIconToSize(uiIcon.Icon, "ICON_" .. resourceDesc.ResourceType);
+					uiIcon.AmountText:SetText(tostring(entry.MaxAmount));
+					uiIcon.AmountText:SetHide(false);
+					uiIcon.RemoveButton:SetHide(true);
 
-					local resourceType = entry.ForType;
+					local resourceType : number = entry.ForType;
 					-- What to do when double clicked/tapped.
-					icon.SelectButton:RegisterCallback( Mouse.eLClick, function() OnClickAvailableResource(player, resourceType); end );
+					uiIcon.SelectButton:RegisterCallback( Mouse.eLClick, function() OnClickAvailableResource(player, resourceType); end );
 					-- Set a tool tip
 					if entry.IsValid then
-						icon.SelectButton:LocalizeAndSetToolTip(resourceDesc.Name);
-                        icon.SelectButton:SetDisabled(false);
-						icon.Icon:SetColor(1, 1, 1);
+						uiIcon.SelectButton:LocalizeAndSetToolTip(resourceDesc.Name);
+                        uiIcon.SelectButton:SetDisabled(false);
+						uiIcon.Icon:SetColor(1, 1, 1);
 					else
-                        local tempstr = Locale.Lookup(resourceDesc.Name).."[NEWLINE][COLOR_RED]";
+                        local tempstr : string = Locale.Lookup(resourceDesc.Name).."[NEWLINE][COLOR_RED]";
 					    if player ~= g_LocalPlayer then
                             tempstr = tempstr .. Locale.Lookup("LOC_DEAL_PLAYER_HAS_NO_CAP_ROOM");
-	                        icon.SelectButton:SetToolTipString(tempstr);
+	                        uiIcon.SelectButton:SetToolTipString(tempstr);
 						else
                             tempstr = tempstr .. Locale.Lookup("LOC_DEAL_AI_HAS_NO_CAP_ROOM");
-	                        icon.SelectButton:SetToolTipString(tempstr);
+	                        uiIcon.SelectButton:SetToolTipString(tempstr);
 						end
-                        icon.SelectButton:SetDisabled(true);
-						icon.Icon:SetColor(0.5, 0.5, 0.5);
+                        uiIcon.SelectButton:SetDisabled(true);
+						uiIcon.Icon:SetColor(0.5, 0.5, 0.5);
 					end
-					icon.SelectButton:ReprocessAnchoring();
 
-					iAvailableItemCount = iAvailableItemCount + 1;
+					availableItemCount = availableItemCount + 1;
 				end
 			end
 		end
 
 		iconList.ListStack:CalculateSize();
-		iconList.List:ReprocessAnchoring();
 	end
 
 	-- Hide if empty
 	iconList.GetTopControl():SetHide( iconList.ListStack:GetSizeX()==0 );
 
-	return iAvailableItemCount;
+	return availableItemCount;
 end
 
 -- ===========================================================================
 function PopulateAvailableLuxuryResources(player : table, iconList : table)
 
-	local iAvailableItemCount = 0;
-	iAvailableItemCount = iAvailableItemCount + PopulateAvailableResources(player, iconList, "RESOURCECLASS_LUXURY");
-	return iAvailableItemCount;
+	local availableItemCount : number = 0;
+	availableItemCount = availableItemCount + PopulateAvailableResources(player, iconList, "RESOURCECLASS_LUXURY");
+	return availableItemCount;
 end
 
 -- ===========================================================================
 function PopulateAvailableStrategicResources(player : table, iconList : table)
 
-	local iAvailableItemCount = 0;
-	iAvailableItemCount = iAvailableItemCount + PopulateAvailableResources(player, iconList, "RESOURCECLASS_STRATEGIC");
-	return iAvailableItemCount; 
+	local availableItemCount : number = 0;
+	availableItemCount = availableItemCount + PopulateAvailableResources(player, iconList, "RESOURCECLASS_STRATEGIC");
+	return availableItemCount; 
 end
 
 -- ===========================================================================
 function PopulateAvailableAgreements(player : table, iconList : table)
 
-	local iAvailableItemCount = 0;
-	local pForDeal = DealManager.GetWorkingDeal(DealDirection.OUTGOING, g_LocalPlayer:GetID(), g_OtherPlayer:GetID());
-	local possibleAgreements = DealManager.GetPossibleDealItems(player:GetID(), GetOtherPlayer(player):GetID(), DealItemTypes.AGREEMENTS, pForDeal);
+	local availableItemCount : number = 0;
+	local pForDeal : table = DealManager.GetWorkingDeal(DealDirection.OUTGOING, g_LocalPlayer:GetID(), g_OtherPlayer:GetID());
+	local possibleAgreements : table = DealManager.GetPossibleDealItems(player:GetID(), GetOtherPlayer(player):GetID(), DealItemTypes.AGREEMENTS, pForDeal);
+	local uiMinimizedSection : table = ms_MinimizedSectionIM:GetInstance(iconList.List);
+
 	if (possibleAgreements ~= nil) then
 		for i, entry in ipairs(possibleAgreements) do
-			local agreementType = entry.SubType;
+			local agreementType : number = entry.SubType;
 
-			local agreementDuration = entry.Duration;
-			local icon = g_IconAndTextIM:GetInstance(iconList.ListStack);
+			local agreementDuration : number = entry.Duration;
+			local uiIcon : table = g_IconAndTextIM:GetInstance(iconList.ListStack);
+			local uiMinimizedIcon : table = g_IconOnlyIM:GetInstance(uiMinimizedSection.MinimizedSectionStack);
 
 			local info: table = GameInfo.DiplomaticActions[ agreementType ];
 			if (info ~= nil) then
-				SetIconToSize(icon.Icon, "ICON_".. info.DiplomaticActionType, 38);
+				SetIconToSize(uiIcon.Icon, "ICON_".. info.DiplomaticActionType, 38);
+				SetIconToSize(uiMinimizedIcon.Icon, "ICON_".. info.DiplomaticActionType, 38);
 			end
-			icon.AmountText:SetHide(true);
-			icon.IconText:LocalizeAndSetText(entry.SubTypeName);
-			icon.SelectButton:SetDisabled( not entry.IsValid and entry.ValidationResult ~= DealValidationResult.MISSING_DEPENDENCY );	-- Hide if invalid, unless it is just missing a dependency, the user will update that when it is added to the deal.
-			icon.ValueText:SetHide(true);
-			icon.Icon:SetColor(1, 1, 1);
+			uiIcon.AmountText:SetHide(true);
+			uiIcon.IconText:LocalizeAndSetText(entry.SubTypeName);
+			uiIcon.SelectButton:SetDisabled( not entry.IsValid and entry.ValidationResult ~= DealValidationResult.MISSING_DEPENDENCY );	-- Hide if invalid, unless it is just missing a dependency, the user will update that when it is added to the deal.
+			uiIcon.ValueText:SetHide(true);
+			uiIcon.RemoveButton:SetHide(true);
+			uiIcon.Icon:SetColor(1, 1, 1);
+
+			uiMinimizedIcon.AmountText:SetHide(true);
+			uiMinimizedIcon.SelectButton:SetDisabled( not entry.IsValid and entry.ValidationResult ~= DealValidationResult.MISSING_DEPENDENCY );	-- Hide if invalid, unless it is just missing a dependency, the user will update that when it is added to the deal.
+			uiMinimizedIcon.RemoveButton:SetHide(true);
+			uiMinimizedIcon.Icon:SetColor(1, 1, 1);
 
 			-- What to do when double clicked/tapped.
-			icon.SelectButton:RegisterCallback( Mouse.eLClick, function() OnClickAvailableAgreement(player, agreementType, agreementDuration); end );
+			uiIcon.SelectButton:RegisterCallback( Mouse.eLClick, function() OnClickAvailableAgreement(player, agreementType, agreementDuration); end );
+			uiMinimizedIcon.SelectButton:RegisterCallback( Mouse.eLClick, function() OnClickAvailableAgreement(player, agreementType, agreementDuration); end );
+
 			-- Set a tool tip if their is a duration
+			local szTooltip : string;
 			if (entry.Duration > 0) then
-				local szTooltip = Locale.Lookup("LOC_DIPLOMACY_DEAL_PARAMETER_WITH_TURNS", entry.SubTypeName, entry.Duration);
-				icon.SelectButton:SetToolTipString(szTooltip);
+				szTooltip = Locale.Lookup("LOC_DIPLOMACY_DEAL_PARAMETER_WITH_TURNS", entry.SubTypeName, entry.Duration);
+				uiIcon.SelectButton:SetToolTipString(szTooltip);
 			else
-				icon.SelectButton:SetToolTipString(nil);
+				szTooltip = Locale.Lookup(entry.SubTypeName);
+				uiIcon.SelectButton:SetToolTipString(nil);
 			end
+			uiMinimizedIcon.SelectButton:SetToolTipString(szTooltip);
 
-			-- icon.SelectButton:LocalizeAndSetToolTip( );
-			icon.SelectButton:ReprocessAnchoring();
-
-			iAvailableItemCount = iAvailableItemCount + 1;
+			availableItemCount = availableItemCount + 1;
 		end
 
 		iconList.ListStack:CalculateSize();
-		iconList.List:ReprocessAnchoring();
 	end
+
+	uiMinimizedSection.MinimizedSectionContainer:SetHide(iconList.ListStack:IsVisible());
+	iconList.HeaderExpandButton:RegisterCallback(Mouse.eLClick, function() OnDealsHeaderCollapseButton(iconList.ListStack, uiMinimizedSection.MinimizedSectionContainer, iconList.HeaderExpandButton); end);
+	iconList.HeaderExpandButton:SetHide(table.count(iconList.ListStack:GetChildren()) == 1);
 
 	-- Hide if empty
 	iconList.GetTopControl():SetHide( iconList.ListStack:GetSizeX()==0 );
 
-	return iAvailableItemCount;
+	return availableItemCount;
 end
 
 -- ===========================================================================
 function MakeCityToolTip(player : table, cityID : number)
 	local pCity = player:GetCities():FindID( cityID );
-	if (pCity ~= nil) then	
-		local szToolTip = Locale.Lookup("LOC_DEAL_CITY_POPULATION_TOOLTIP", pCity:GetPopulation());
-		local districtNames = {};
-		local pCityDistricts = pCity:GetDistricts();
-		if (pCityDistricts ~= nil) then
-
-			for i, pDistrict in pCityDistricts:Members() do
-				local pDistrictDef = GameInfo.Districts[ pDistrict:GetType() ];
-				if (pDistrictDef ~= nil) then
-					local districtType:string = pDistrictDef.DistrictType;
-					-- Skip the city center and any wonder districts
-					if (districtType ~= "DISTRICT_CITY_CENTER" and districtType ~= "DISTRICT_WONDER") then
-						table.insert(districtNames, pDistrictDef.Name);
-					end
-				end
-			end
-		end
-
-		if (#districtNames > 0) then
-			szToolTip = szToolTip .. "[NEWLINE]" .. Locale.Lookup("LOC_DEAL_CITY_DISTRICTS_TOOLTIP");
-			for i, name in ipairs(districtNames) do
-				szToolTip = szToolTip .. "[NEWLINE]" .. Locale.Lookup(name);
-			end
-		end
-
-		-- Add Resources
-		local extractedResources = player:GetResources():GetResourcesExtractedByCity( cityID, ResultFormat.SUMMARY );
-		if extractedResources ~= nil and #extractedResources > 0 then
-			szToolTip = szToolTip .. "[NEWLINE]" .. Locale.Lookup("LOC_DEAL_CITY_RESOURCES_TOOLTIP");
-			for i, entry in ipairs(extractedResources) do
-				local resourceDesc = GameInfo.Resources[entry.ResourceType];
-				if resourceDesc ~= nil then
-					szToolTip = szToolTip .. "[NEWLINE]" .. Locale.Lookup(resourceDesc.Name) .. " : " .. tostring(entry.Amount);
-				end
-			end
-		end
-
-		-- Add Great Works
-		local cityGreatWorks = player:GetCulture():GetGreatWorksInCity( cityID );
-		if cityGreatWorks ~= nil and #cityGreatWorks > 0 then
-			szToolTip = szToolTip .. "[NEWLINE]" .. Locale.Lookup("LOC_DEAL_CITY_GREAT_WORKS_TOOLTIP");
-			for i, entry in ipairs(cityGreatWorks) do
-				local greatWorksDesc = GameInfo.GreatWorks[entry.GreatWorksType];
-				if greatWorksDesc ~= nil then
-					szToolTip = szToolTip .. "[NEWLINE]" .. Locale.Lookup(greatWorksDesc.Name);
-				end
-			end
-		end
-
-		return szToolTip;			
+	if (pCity == nil) then	
+		UI.DataError("Unable to find city object to make tooltip for cityID: "..tostring(cityID));
+		return "";
 	end
 
-	return "";
+	local szToolTip : string = Locale.Lookup("LOC_DEAL_CITY_POPULATION_TOOLTIP", pCity:GetPopulation());
+	local districtNames : table = {};
+	local pCityDistricts : table = pCity:GetDistricts();
+	if (pCityDistricts ~= nil) then
+
+		for i, pDistrict in pCityDistricts:Members() do
+			local pDistrictDef = GameInfo.Districts[ pDistrict:GetType() ];
+			if (pDistrictDef ~= nil) then
+				local districtType:string = pDistrictDef.DistrictType;
+				-- Skip the city center and any wonder districts
+				if (districtType ~= "DISTRICT_CITY_CENTER" and districtType ~= "DISTRICT_WONDER") then
+					local iconAndName : string = Locale.Lookup("[ICON_"..pDistrictDef.PrimaryKey.."]")..Locale.Lookup(pDistrictDef.Name);
+					table.insert(districtNames, iconAndName);
+				end
+			end
+		end
+	end
+
+	if (#districtNames > 0) then
+		szToolTip = szToolTip .."[NEWLINE]  -----------------------" .. "[NEWLINE]" .. Locale.Lookup("LOC_DEAL_CITY_DISTRICTS_TOOLTIP");
+		for i, name in ipairs(districtNames) do
+			szToolTip = szToolTip .. "[NEWLINE]" .. Locale.Lookup(name);
+		end
+	end
+
+	-- Add Resources
+	local extractedResources = player:GetResources():GetResourcesExtractedByCity( cityID, ResultFormat.SUMMARY );
+	if extractedResources ~= nil and #extractedResources > 0 then
+		szToolTip = szToolTip .. "[NEWLINE]  -----------------------" .. "[NEWLINE]" .. Locale.Lookup("LOC_DEAL_CITY_RESOURCES_TOOLTIP");
+		for i, entry in ipairs(extractedResources) do
+			local resourceDesc = GameInfo.Resources[entry.ResourceType];
+			if resourceDesc ~= nil then
+				szToolTip = szToolTip .. "[NEWLINE]" .. Locale.Lookup(resourceDesc.Name) .. " : " .. tostring(entry.Amount);
+			end
+		end
+	end
+
+	-- Add Great Works
+	local cityGreatWorks = player:GetCulture():GetGreatWorksInCity( cityID );
+	if cityGreatWorks ~= nil and #cityGreatWorks > 0 then
+		szToolTip = szToolTip .. "[NEWLINE]  -----------------------" .. "[NEWLINE]" .. Locale.Lookup("LOC_DEAL_CITY_GREAT_WORKS_TOOLTIP");
+		for i, entry in ipairs(cityGreatWorks) do
+			local greatWorksDesc = GameInfo.GreatWorks[entry.GreatWorksType];
+			if greatWorksDesc ~= nil then
+				szToolTip = szToolTip .. "[NEWLINE]" .. Locale.Lookup(greatWorksDesc.Name);
+			end
+		end
+	end
+
+	return szToolTip;	
 end
 
 -- ===========================================================================
 function PopulateAvailableCities(player : table, iconList : table)
 
-	local iAvailableItemCount = 0;
-	local pForDeal = DealManager.GetWorkingDeal(DealDirection.OUTGOING, g_LocalPlayer:GetID(), g_OtherPlayer:GetID());
-	local possibleItems = DealManager.GetPossibleDealItems(player:GetID(), GetOtherPlayer(player):GetID(), DealItemTypes.CITIES, pForDeal);
+	local availableItemCount : number = 0;
+	local pForDeal : table = DealManager.GetWorkingDeal(DealDirection.OUTGOING, g_LocalPlayer:GetID(), g_OtherPlayer:GetID());
+	local possibleItems : table = DealManager.GetPossibleDealItems(player:GetID(), GetOtherPlayer(player):GetID(), DealItemTypes.CITIES, pForDeal);
+	local uiMinimizedSection : table = ms_MinimizedSectionIM:GetInstance(iconList.List);
+
 	if (possibleItems ~= nil) then
 		for i, entry in ipairs(possibleItems) do
 
-			local type = entry.ForType;
-			local subType = entry.SubType;
-			local icon = g_IconAndTextIM:GetInstance(iconList.ListStack);
-			SetIconToSize(icon.Icon, "ICON_BUILDINGS", 45);
-			icon.AmountText:SetHide(true);
-			icon.IconText:LocalizeAndSetText(entry.ForTypeName);
-			icon.SelectButton:SetDisabled( not entry.IsValid and entry.ValidationResult ~= DealValidationResult.MISSING_DEPENDENCY );	-- Hide if invalid, unless it is just missing a dependency, the user will update that when it is added to the deal.
-			icon.ValueText:SetHide(true);
-			icon.Icon:SetColor(1, 1, 1);
+			local type : number = entry.ForType;
+			local subType : number = entry.SubType;
+			local uiIcon : table = g_IconAndTextIM:GetInstance(iconList.ListStack);
+			local uiMinimizedIcon : table = g_IconOnlyIM:GetInstance(uiMinimizedSection.MinimizedSectionStack);
+
+			SetIconToSize(uiIcon.Icon, "ICON_BUILDINGS", 45);
+			SetIconToSize(uiMinimizedIcon.Icon, "ICON_BUILDINGS", 45);
+
+			uiIcon.AmountText:SetHide(true);
+			uiIcon.IconText:LocalizeAndSetText(entry.ForTypeName);
+			uiIcon.SelectButton:SetDisabled( not entry.IsValid and entry.ValidationResult ~= DealValidationResult.MISSING_DEPENDENCY );	-- Hide if invalid, unless it is just missing a dependency, the user will update that when it is added to the deal.
+			uiIcon.ValueText:SetHide(true);
+			uiIcon.RemoveButton:SetHide(true);
+			uiIcon.Icon:SetColor(1, 1, 1);
+
+			uiMinimizedIcon.AmountText:SetHide(true);
+			uiMinimizedIcon.SelectButton:SetDisabled( not entry.IsValid and entry.ValidationResult ~= DealValidationResult.MISSING_DEPENDENCY );	-- Hide if invalid, unless it is just missing a dependency, the user will update that when it is added to the deal.
+			uiMinimizedIcon.RemoveButton:SetHide(true);
+			uiMinimizedIcon.Icon:SetColor(1, 1, 1);
 
 			-- What to do when double clicked/tapped.
-			icon.SelectButton:RegisterCallback( Mouse.eLClick, function() OnClickAvailableCity(player, type, subType); end );
+			uiIcon.SelectButton:RegisterCallback( Mouse.eLClick, function() OnClickAvailableCity(player, type, subType); end );
+			uiMinimizedIcon.SelectButton:RegisterCallback( Mouse.eLClick, function() OnClickAvailableCity(player, type, subType); end );
 
 			-- Since we're ceding this city make sure to look for this city in the current owners city list
 			if entry.SubType == 1 then -- CitySubTypes:CEDE_OCCUPIED
-				icon.SelectButton:SetToolTipString( MakeCityToolTip(GetOtherPlayer(player), type) );
+				uiIcon.SelectButton:SetToolTipString( MakeCityToolTip(GetOtherPlayer(player), type) );
+				uiMinimizedIcon.SelectButton:SetToolTipString(Locale.Lookup(entry.ForTypeName).."[NEWLINE]"..MakeCityToolTip(GetOtherPlayer(player), type ));
 			else
-				icon.SelectButton:SetToolTipString( MakeCityToolTip(player, type) );
+				uiIcon.SelectButton:SetToolTipString( MakeCityToolTip(player, type) );
+				uiMinimizedIcon.SelectButton:SetToolTipString(Locale.Lookup(entry.ForTypeName).."[NEWLINE]"..MakeCityToolTip(player, type ));
 			end
 
-			iAvailableItemCount = iAvailableItemCount + 1;
+			availableItemCount = availableItemCount + 1;
 		end
 
 		iconList.ListStack:CalculateSize();
 	end
 
+	uiMinimizedSection.MinimizedSectionContainer:SetHide(iconList.ListStack:IsVisible());
+	iconList.HeaderExpandButton:RegisterCallback(Mouse.eLClick, function() OnDealsHeaderCollapseButton(iconList.ListStack, uiMinimizedSection.MinimizedSectionContainer, iconList.HeaderExpandButton); end);
+	iconList.HeaderExpandButton:SetHide(table.count(iconList.ListStack:GetChildren()) == 1);
+
 	-- Hide if empty
 	iconList.GetTopControl():SetHide( iconList.ListStack:GetSizeX()==0 );
 
-	return iAvailableItemCount;
+	return availableItemCount;
 end
 
 -- ===========================================================================
 function PopulateAvailableOtherPlayers(player : table, iconList : table)
 
-	local iAvailableItemCount = 0;
+	local availableItemCount : number = 0;
 	-- Hide if empty
 	iconList.GetTopControl():SetHide( iconList.ListStack:GetSizeX()==0 );
 
-	return iAvailableItemCount;
+	return availableItemCount;
 end
 
 -- ===========================================================================
 function PopulateAvailableGreatWorks(player : table, iconList : table)
 
-	local iAvailableItemCount = 0;
-	local pForDeal = DealManager.GetWorkingDeal(DealDirection.OUTGOING, g_LocalPlayer:GetID(), g_OtherPlayer:GetID());
-	local possibleItems = DealManager.GetPossibleDealItems(player:GetID(), GetOtherPlayer(player):GetID(), DealItemTypes.GREATWORK, pForDeal);
+	local availableItemCount : number = 0;
+	local pForDeal : table = DealManager.GetWorkingDeal(DealDirection.OUTGOING, g_LocalPlayer:GetID(), g_OtherPlayer:GetID());
+	local possibleItems : table = DealManager.GetPossibleDealItems(player:GetID(), GetOtherPlayer(player):GetID(), DealItemTypes.GREATWORK, pForDeal);
+	local uiMinimizedSection : table = ms_MinimizedSectionIM:GetInstance(iconList.List);
+
 	if (possibleItems ~= nil) then
 		for i, entry in ipairs(possibleItems) do
-			local greatWorkDesc = GameInfo.GreatWorks[entry.ForTypeDescriptionID];
+			local greatWorkDesc : table = GameInfo.GreatWorks[entry.ForTypeDescriptionID];
 			if (greatWorkDesc ~= nil) then
-				local type = entry.ForType;
-				local icon = g_IconAndTextIM:GetInstance(iconList.ListStack);
-				SetIconToSize(icon.Icon, "ICON_" .. greatWorkDesc.GreatWorkType, 45);
-				icon.AmountText:SetHide(true);
-				icon.IconText:LocalizeAndSetText(entry.ForTypeName);
-				icon.SelectButton:SetDisabled( not entry.IsValid and entry.ValidationResult ~= DealValidationResult.MISSING_DEPENDENCY );	-- Hide if invalid, unless it is just missing a dependency, the user will update that when it is added to the deal.
-				icon.ValueText:SetHide(true);
-				icon.Icon:SetColor(1, 1, 1);
+				local type : number = entry.ForType;
+				local uiIcon : table = g_IconAndTextIM:GetInstance(iconList.ListStack);
+				local uiMinimizedIcon : table = g_IconOnlyIM:GetInstance(uiMinimizedSection.MinimizedSectionStack);
+
+				SetIconToSize(uiIcon.Icon, "ICON_" .. greatWorkDesc.GreatWorkType, 45);
+				SetIconToSize(uiMinimizedIcon.Icon, "ICON_" .. greatWorkDesc.GreatWorkType, 45);
+
+				uiIcon.AmountText:SetHide(true);
+				uiIcon.IconText:LocalizeAndSetText(entry.ForTypeName);
+				uiIcon.SelectButton:SetDisabled( not entry.IsValid and entry.ValidationResult ~= DealValidationResult.MISSING_DEPENDENCY );	-- Hide if invalid, unless it is just missing a dependency, the user will update that when it is added to the deal.
+				uiIcon.ValueText:SetHide(true);
+				uiIcon.RemoveButton:SetHide(true);
+				uiIcon.Icon:SetColor(1, 1, 1);
+
+				uiMinimizedIcon.AmountText:SetHide(true);
+				uiMinimizedIcon.SelectButton:SetDisabled( not entry.IsValid and entry.ValidationResult ~= DealValidationResult.MISSING_DEPENDENCY );	-- Hide if invalid, unless it is just missing a dependency, the user will update that when it is added to the deal.
+				uiMinimizedIcon.RemoveButton:SetHide(true);
+				uiMinimizedIcon.Icon:SetColor(1, 1, 1);
 
 				-- What to do when double clicked/tapped.
-				icon.SelectButton:RegisterCallback( Mouse.eLClick, function() OnClickAvailableGreatWork(player, type); end );
+				uiIcon.SelectButton:RegisterCallback( Mouse.eLClick, function() OnClickAvailableGreatWork(player, type); end );
+				uiMinimizedIcon.SelectButton:RegisterCallback( Mouse.eLClick, function() OnClickAvailableGreatWork(player, type); end );
 				-- Set a tool tip
 				
-				local strGreatWorkTooltip = GreatWorksSupport_GetBasicTooltip(entry.ForType, false);
-				icon.SelectButton:SetToolTipString(strGreatWorkTooltip);
-				icon.SelectButton:ReprocessAnchoring();
+				local greatWorkTooltip : string = GreatWorksSupport_GetBasicTooltip(entry.ForType, false);
+				uiIcon.SelectButton:SetToolTipString(greatWorkTooltip);
 
-				iAvailableItemCount = iAvailableItemCount + 1;
+				local minimizedTooltip : string = Locale.Lookup(entry.ForTypeName) .. "[NEWLINE]"..greatWorkTooltip;
+				uiMinimizedIcon.SelectButton:SetToolTipString(minimizedTooltip);
+
+				availableItemCount = availableItemCount + 1;
 			end
 		end
 
 		iconList.ListStack:CalculateSize();
-		iconList.List:ReprocessAnchoring();
 	end
+
+	uiMinimizedSection.MinimizedSectionContainer:SetHide(iconList.ListStack:IsVisible());
+	iconList.HeaderExpandButton:RegisterCallback(Mouse.eLClick, function() OnDealsHeaderCollapseButton(iconList.ListStack, uiMinimizedSection.MinimizedSectionContainer, iconList.HeaderExpandButton); end);
+	iconList.HeaderExpandButton:SetHide( table.count(iconList.ListStack:GetChildren()) == 1 );
 
 	-- Hide if empty
 	iconList.GetTopControl():SetHide( iconList.ListStack:GetSizeX()==0 );
 
-	return iAvailableItemCount;
+	return availableItemCount;
 
 end
 
 -- ===========================================================================
 function PopulateAvailableCaptives(player : table, iconList : table)
 
-	local iAvailableItemCount = 0;
+	local availableItemCount : number = 0;
 
-	local pForDeal = DealManager.GetWorkingDeal(DealDirection.OUTGOING, g_LocalPlayer:GetID(), g_OtherPlayer:GetID());
-	local possibleItems = DealManager.GetPossibleDealItems(player:GetID(), GetOtherPlayer(player):GetID(), DealItemTypes.CAPTIVE, pForDeal);
+	local pForDeal : table = DealManager.GetWorkingDeal(DealDirection.OUTGOING, g_LocalPlayer:GetID(), g_OtherPlayer:GetID());
+	local possibleItems : table = DealManager.GetPossibleDealItems(player:GetID(), GetOtherPlayer(player):GetID(), DealItemTypes.CAPTIVE, pForDeal);
+	local uiMinimizedSection : table = ms_MinimizedSectionIM:GetInstance(iconList.List);
+
 	if (possibleItems ~= nil) then
 		for i, entry in ipairs(possibleItems) do
 
-			local type = entry.ForType;
-			local icon = g_IconAndTextIM:GetInstance(iconList.ListStack);
-			SetIconToSize(icon.Icon, "ICON_UNIT_SPY");
-			icon.AmountText:SetHide(true);
+			local type : number = entry.ForType;
+			local uiIcon : table = g_IconAndTextIM:GetInstance(iconList.ListStack);
+			local uiMinimizedIcon : table = g_IconOnlyIM:GetInstance(uiMinimizedSection.MinimizedSectionStack);
+
+			SetIconToSize(uiIcon.Icon, "ICON_UNIT_SPY");
+			SetIconToSize(uiMinimizedIcon.Icon, "ICON_UNIT_SPY");
+
+			uiIcon.AmountText:SetHide(true);
 			if (entry.ForTypeName ~= nil ) then
-				icon.IconText:LocalizeAndSetText(entry.ForTypeName);
+				uiIcon.IconText:LocalizeAndSetText(entry.ForTypeName);
+				uiMinimizedIcon.SelectButton:LocalizeAndSetToolTip(entry.ForTypeName);
 			end
-			icon.SelectButton:SetDisabled( not entry.IsValid and entry.ValidationResult ~= DealValidationResult.MISSING_DEPENDENCY );	-- Hide if invalid, unless it is just missing a dependency, the user will update that when it is added to the deal.
-			icon.ValueText:SetHide(true);
-			icon.Icon:SetColor(1, 1, 1);
+			uiIcon.SelectButton:SetDisabled( not entry.IsValid and entry.ValidationResult ~= DealValidationResult.MISSING_DEPENDENCY );	-- Hide if invalid, unless it is just missing a dependency, the user will update that when it is added to the deal.
+			uiIcon.ValueText:SetHide(true);
+			uiIcon.RemoveButton:SetHide(true);
+			uiIcon.Icon:SetColor(1, 1, 1);
+
+			uiMinimizedIcon.AmountText:SetHide(true);
+			uiMinimizedIcon.SelectButton:SetDisabled( not entry.IsValid and entry.ValidationResult ~= DealValidationResult.MISSING_DEPENDENCY );	-- Hide if invalid, unless it is just missing a dependency, the user will update that when it is added to the deal.
+			uiMinimizedIcon.RemoveButton:SetHide(true);
+			uiMinimizedIcon.Icon:SetColor(1, 1, 1);
 
 			-- What to do when double clicked/tapped.
-			icon.SelectButton:RegisterCallback( Mouse.eLClick, function() OnClickAvailableCaptive(player, type); end );
-			icon.SelectButton:SetToolTipString(nil);		-- We recycle the entries, so make sure this is clear.
-			icon.SelectButton:ReprocessAnchoring();
+			uiIcon.SelectButton:RegisterCallback( Mouse.eLClick, function() OnClickAvailableCaptive(player, type); end );
+			uiMinimizedIcon.SelectButton:RegisterCallback( Mouse.eLClick, function() OnClickAvailableCaptive(player, type); end );
 
-			iAvailableItemCount = iAvailableItemCount + 1;
+			uiIcon.SelectButton:SetToolTipString(nil);		-- We recycle the entries, so make sure this is clear.
+
+			availableItemCount = availableItemCount + 1;
 		end
 
 		iconList.ListStack:CalculateSize();
-		iconList.List:ReprocessAnchoring();
 	end
+
+	uiMinimizedSection.MinimizedSectionContainer:SetHide(iconList.ListStack:IsVisible());
+	iconList.HeaderExpandButton:RegisterCallback(Mouse.eLClick, function() OnDealsHeaderCollapseButton(iconList.ListStack, uiMinimizedSection.MinimizedSectionContainer, iconList.HeaderExpandButton); end);
+	iconList.HeaderExpandButton:SetHide( table.count(iconList.ListStack:GetChildren()) == 1 );
 
 	-- Hide if empty
 	iconList.GetTopControl():SetHide( iconList.ListStack:GetSizeX()==0 );
 
-	return iAvailableItemCount;
+	return availableItemCount;
 end
 
 -- ===========================================================================
 function PopulatePlayerAvailablePanel(rootControl : table, player : table)
 
-	local iAvailableItemCount = 0;
+	local availableItemCount : number = 0;
 
 	if (player ~= nil) then
 	
-		local playerType = GetPlayerType(player);
+		local playerType : number = GetPlayerType(player);
 		if (ms_bIsDemand and player:GetID() == ms_InitiatedByPlayerID) then
 			-- This is a demand, so hide all the demanding player's items
 			for i = 1, table.count(AvailableDealItemGroupTypes), 1 do
@@ -1969,75 +2050,103 @@ function PopulatePlayerAvailablePanel(rootControl : table, player : table)
 		else
 			g_AvailableGroups[AvailableDealItemGroupTypes.GOLD][playerType].GetTopControl():SetHide(false);
 
-			iAvailableItemCount = iAvailableItemCount + PopulateAvailableGold(player, g_AvailableGroups[AvailableDealItemGroupTypes.GOLD][playerType]);
-			iAvailableItemCount = iAvailableItemCount + PopulateAvailableLuxuryResources(player, g_AvailableGroups[AvailableDealItemGroupTypes.LUXURY_RESOURCES][playerType]);
-			iAvailableItemCount = iAvailableItemCount + PopulateAvailableStrategicResources(player, g_AvailableGroups[AvailableDealItemGroupTypes.STRATEGIC_RESOURCES][playerType]);
+			availableItemCount = availableItemCount + PopulateAvailableGold(player, g_AvailableGroups[AvailableDealItemGroupTypes.GOLD][playerType]);
+			availableItemCount = availableItemCount + PopulateAvailableLuxuryResources(player, g_AvailableGroups[AvailableDealItemGroupTypes.LUXURY_RESOURCES][playerType]);
+			availableItemCount = availableItemCount + PopulateAvailableStrategicResources(player, g_AvailableGroups[AvailableDealItemGroupTypes.STRATEGIC_RESOURCES][playerType]);
 
 			if (not ms_bIsDemand) then
-				iAvailableItemCount = iAvailableItemCount + PopulateAvailableAgreements(player, g_AvailableGroups[AvailableDealItemGroupTypes.AGREEMENTS][playerType]);
+				availableItemCount = availableItemCount + PopulateAvailableAgreements(player, g_AvailableGroups[AvailableDealItemGroupTypes.AGREEMENTS][playerType]);
 			else
 				g_AvailableGroups[AvailableDealItemGroupTypes.AGREEMENTS][playerType].GetTopControl():SetHide(true);
 			end
 
-			iAvailableItemCount = iAvailableItemCount + PopulateAvailableCities(player, g_AvailableGroups[AvailableDealItemGroupTypes.CITIES][playerType]);
+			availableItemCount = availableItemCount + PopulateAvailableCities(player, g_AvailableGroups[AvailableDealItemGroupTypes.CITIES][playerType]);
 
 			if (not ms_bIsDemand) then
-				iAvailableItemCount = iAvailableItemCount + PopulateAvailableOtherPlayers(player, g_AvailableGroups[AvailableDealItemGroupTypes.OTHER_PLAYERS][playerType]);
+				availableItemCount = availableItemCount + PopulateAvailableOtherPlayers(player, g_AvailableGroups[AvailableDealItemGroupTypes.OTHER_PLAYERS][playerType]);
 			else
 				g_AvailableGroups[AvailableDealItemGroupTypes.OTHER_PLAYERS][playerType].GetTopControl():SetHide(false);
 			end
 
-			iAvailableItemCount = iAvailableItemCount + PopulateAvailableGreatWorks(player, g_AvailableGroups[AvailableDealItemGroupTypes.GREAT_WORKS][playerType]);
-			iAvailableItemCount = iAvailableItemCount + PopulateAvailableCaptives(player, g_AvailableGroups[AvailableDealItemGroupTypes.CAPTIVES][playerType]);
+			availableItemCount = availableItemCount + PopulateAvailableGreatWorks(player, g_AvailableGroups[AvailableDealItemGroupTypes.GREAT_WORKS][playerType]);
+			availableItemCount = availableItemCount + PopulateAvailableCaptives(player, g_AvailableGroups[AvailableDealItemGroupTypes.CAPTIVES][playerType]);
 
 		end
 
 		rootControl:CalculateSize();
-		rootControl:ReprocessAnchoring();
 
 	end
 
-	return iAvailableItemCount; 
+	return availableItemCount; 
 end
 
 -- ===========================================================================
 function PopulateDealBasic(player : table, iconList : table, populateType : number, iconName : string)
 
-	local pDeal = DealManager.GetWorkingDeal(DealDirection.OUTGOING, g_LocalPlayer:GetID(), g_OtherPlayer:GetID());
-	local playerType = GetPlayerType(player);
+	local pDeal : table = DealManager.GetWorkingDeal(DealDirection.OUTGOING, g_LocalPlayer:GetID(), g_OtherPlayer:GetID());
+	local playerType : number = GetPlayerType(player);
 	if (pDeal ~= nil) then
+	g_IconAndTextIM:ReleaseInstanceByParent(iconList.CaptivesDealsStack);
+	g_IconOnlyIM:ReleaseInstanceByParent(iconList.MinimizedCaptivesDealsStack);
 		
-		local pDealItem;
+		local pDealItem : table;
 		for pDealItem in pDeal:Items() do
-			local type = pDealItem:GetType();
+			local type : number = pDealItem:GetType();
 			if (pDealItem:GetFromPlayerID() == player:GetID()) then
-				local iDuration = pDealItem:GetDuration();
-				local dealItemID = pDealItem:GetID();
+				local iDuration : number = pDealItem:GetDuration();
+				local dealItemID : number = pDealItem:GetID();
 				
 				if (type == populateType) then
-					local icon = g_IconAndTextIM:GetInstance(iconList);
-					SetIconToSize(icon.Icon, iconName);
-					icon.AmountText:SetHide(true);
-					local typeName = pDealItem:GetValueTypeNameID();
+					local uiIcon : table = g_IconAndTextIM:GetInstance(iconList.CaptivesDealsStack);
+					SetIconToSize(uiIcon.Icon, iconName);
+					uiIcon.AmountText:SetHide(true);
+
+					local uiMinimizedIcon : table = g_IconOnlyIM:GetInstance(iconList.MinimizedCaptivesDealsStack);
+					SetIconToSize(uiMinimizedIcon.Icon, iconName);
+					uiMinimizedIcon.AmountText:SetHide(true);
+
+					local typeName : string = pDealItem:GetValueTypeNameID();
 					if (typeName ~= nil) then
-						icon.IconText:LocalizeAndSetText(typeName);
+						uiIcon.IconText:LocalizeAndSetText(typeName);
 					end
 
 					-- Show/hide unacceptable item notification
-					icon.UnacceptableIcon:SetHide(not pDealItem:IsUnacceptable());
+					uiIcon.UnacceptableIcon:SetHide(not pDealItem:IsUnacceptable());
+					uiIcon.RemoveButton:SetHide(false);
 				
-					icon.SelectButton:RegisterCallback(Mouse.eRClick, function(void1, void2, self) OnRemoveDealItem(player, dealItemID, self); end);
-					icon.SelectButton:RegisterCallback( Mouse.eLClick, function(void1, void2, self) OnSelectValueDealItem(player, dealItemID, self); end );
+					uiIcon.RemoveButton:RegisterCallback(Mouse.eLClick, function(void1, void2, self) OnRemoveDealItem(player, dealItemID, self); end)
+					uiIcon.SelectButton:RegisterCallback(Mouse.eRClick, function(void1, void2, self) OnRemoveDealItem(player, dealItemID, self); end);
+					uiIcon.SelectButton:RegisterCallback( Mouse.eLClick, function(void1, void2, self) OnSelectValueDealItem(player, dealItemID, self); end );
 
-					icon.SelectButton:SetToolTipString(nil);		-- We recycle the entries, so make sure this is clear.
-					icon.SelectButton:SetDisabled(false);
-					icon.Icon:SetColor(1, 1, 1);
+					uiIcon.SelectButton:SetToolTipString(nil);		-- We recycle the entries, so make sure this is clear.
+					uiIcon.SelectButton:SetDisabled(false);
+					uiIcon.Icon:SetColor(1, 1, 1);
+
+					uiMinimizedIcon.UnacceptableIcon:SetHide(not pDealItem:IsUnacceptable());
+					uiMinimizedIcon.RemoveButton:SetHide(false);
+
+					uiMinimizedIcon.RemoveButton:RegisterCallback(Mouse.eLClick, function(void1, void2, self) OnRemoveDealItem(player, dealItemID, self); end)
+					uiMinimizedIcon.SelectButton:RegisterCallback(Mouse.eRClick, function(void1, void2, self) OnRemoveDealItem(player, dealItemID, self); end);
+					uiMinimizedIcon.SelectButton:RegisterCallback( Mouse.eLClick, function(void1, void2, self) OnSelectValueDealItem(player, dealItemID, self); end );
+
+					uiMinimizedIcon.SelectButton:SetToolTipString(Locale.Lookup(typeName));		-- We recycle the entries, so make sure this is clear.
+					uiMinimizedIcon.SelectButton:SetDisabled(false);
+					uiMinimizedIcon.Icon:SetColor(1, 1, 1);
 				end
 			end
 		end
 
-		iconList:CalculateSize();
-		iconList:ReprocessAnchoring();
+		local itemCount : number = table.count(iconList.CaptivesDealsStack:GetChildren());
+
+		if(itemCount <= 1 and iconList.CaptivesDealsStack:IsHidden())then
+			OnDealsHeaderCollapseButton(iconList.CaptivesDealsStack, iconList.MinimizedCaptivesDealsStack, iconList.CaptivesDealsExpandButton);
+		end
+
+		iconList.CaptivesDealsExpandButton:SetHide(not (itemCount > 1));
+		iconList.CaptivesDealsGrid:SetHide(itemCount == 0);
+		iconList.CaptivesDealsHeader:SetHide(itemCount == 0);
+
+		iconList.OfferStack:CalculateSize();
 
 	end
 
@@ -2063,101 +2172,105 @@ function GetParentItemTransferToolTip(parentDealItem)
 end
 -- ===========================================================================
 function PopulateDealResources(player : table, iconList : table)
-	local pDeal = DealManager.GetWorkingDeal(DealDirection.OUTGOING, g_LocalPlayer:GetID(), g_OtherPlayer:GetID());
-	local playerType = GetPlayerType(player);
+	local pDeal : table = DealManager.GetWorkingDeal(DealDirection.OUTGOING, g_LocalPlayer:GetID(), g_OtherPlayer:GetID());
+	local playerType : number = GetPlayerType(player);
 	if (pDeal ~= nil) then
-		g_IconOnlyIM:ReleaseInstanceByParent(iconList);
-		g_IconAndTextIM:ReleaseInstanceByParent(iconList);
+		g_IconOnlyIM:ReleaseInstanceByParent(iconList.OneTimeDealsStack);
+		g_IconOnlyIM:ReleaseInstanceByParent(iconList.For30TurnsDealsStack);
 
-		local pDealItem;
+		local pDealItem : table;
 		for pDealItem in pDeal:Items() do
 
-			local type = pDealItem:GetType();
+			local type : number = pDealItem:GetType();
 			if (pDealItem:GetFromPlayerID() == player:GetID()) then
-				local iDuration = pDealItem:GetDuration();
-				local dealItemID = pDealItem:GetID();
+				local iDuration : number = pDealItem:GetDuration();
+				local dealItemID : number = pDealItem:GetID();
 				-- Gold?
 				if (type == DealItemTypes.GOLD) then
-					local icon;
+					local uiIcon : table;
 					if (iDuration == 0) then
 						-- One time
-						icon = g_IconOnlyIM:GetInstance(iconList);
+						uiIcon = g_IconOnlyIM:GetInstance(iconList.OneTimeDealsStack);
 					else
 						-- Multi-turn
-						icon = g_IconAndTextIM:GetInstance(iconList);
-						icon.IconText:LocalizeAndSetText("LOC_DIPLOMACY_DEAL_FOR_TURNS", iDuration);
-						icon.ValueText:SetHide(true);
+						uiIcon = g_IconOnlyIM:GetInstance(iconList.For30TurnsDealsStack);
+
 					end
-					SetIconToSize(icon.Icon, "ICON_YIELD_GOLD_5");
-					icon.AmountText:SetText(tostring(pDealItem:GetAmount()));
-					icon.AmountText:SetHide(false);
+					SetIconToSize(uiIcon.Icon, "ICON_YIELD_GOLD_5");
+					uiIcon.AmountText:SetText(tostring(pDealItem:GetAmount()));
+					uiIcon.AmountText:SetHide(false);
 
 					-- Show/hide unacceptable item notification
-					icon.UnacceptableIcon:SetHide(not pDealItem:IsUnacceptable());
-
-					icon.SelectButton:RegisterCallback(Mouse.eRClick, function(void1, void2, self) OnRemoveDealItem(player, dealItemID, self); end);
-					icon.SelectButton:RegisterCallback( Mouse.eLClick, function(void1, void2, self) OnSelectValueDealItem(player, dealItemID, self); end );
-					icon.SelectButton:SetToolTipString(nil);		-- We recycle the entries, so make sure this is clear.
-					icon.SelectButton:SetDisabled(false);
-					icon.Icon:SetColor(1, 1, 1);
+					uiIcon.UnacceptableIcon:SetHide(not pDealItem:IsUnacceptable());
+					uiIcon.RemoveButton:SetHide(false);
+				
+					uiIcon.RemoveButton:RegisterCallback(Mouse.eLClick, function(void1, void2, self) OnRemoveDealItem(player, dealItemID, self); end)
+					uiIcon.SelectButton:RegisterCallback(Mouse.eRClick, function(void1, void2, self) OnRemoveDealItem(player, dealItemID, self); end);
+					uiIcon.SelectButton:RegisterCallback( Mouse.eLClick, function(void1, void2, self) OnSelectValueDealItem(player, dealItemID, self); end );
+					uiIcon.SelectButton:SetToolTipString(nil);		-- We recycle the entries, so make sure this is clear.
+					uiIcon.SelectButton:SetDisabled(false);
+					uiIcon.Icon:SetColor(1, 1, 1);
 					if (dealItemID == g_ValueEditDealItemID) then
-						g_ValueEditDealItemControlTable = icon;
+						g_ValueEditDealItemControlTable = uiIcon;
 					end
 				else
 					if (type == DealItemTypes.RESOURCES) then
 
-						local resourceType = pDealItem:GetValueType();
-						local icon;
+						local resourceType :number = pDealItem:GetValueType();
+						local uiIcon : table;
 						if (iDuration == 0) then
 							-- One time
-							icon = g_IconOnlyIM:GetInstance(iconList);
+							uiIcon = g_IconOnlyIM:GetInstance(iconList.OneTimeDealsStack);
 						else
 							-- Multi-turn
-							icon = g_IconAndTextIM:GetInstance(iconList);
-							icon.IconText:LocalizeAndSetText("LOC_DIPLOMACY_DEAL_FOR_TURNS", iDuration);
-							icon.ValueText:SetHide(true);
+							uiIcon = g_IconOnlyIM:GetInstance(iconList.For30TurnsDealsStack);
 						end
-						local resourceDesc = GameInfo.Resources[resourceType];
-						SetIconToSize(icon.Icon, "ICON_" .. resourceDesc.ResourceType);
-						icon.AmountText:SetText(tostring(pDealItem:GetAmount()));
-						icon.AmountText:SetHide(false);
+						local resourceDesc : table = GameInfo.Resources[resourceType];
+						SetIconToSize(uiIcon.Icon, "ICON_" .. resourceDesc.ResourceType);
+						uiIcon.AmountText:SetText(tostring(pDealItem:GetAmount()));
+						uiIcon.AmountText:SetHide(false);
 
 						-- Show/hide unacceptable item notification
-						icon.UnacceptableIcon:SetHide(not pDealItem:IsUnacceptable());
+						uiIcon.UnacceptableIcon:SetHide(not pDealItem:IsUnacceptable());
 
-						local szToolTip = Locale.Lookup(resourceDesc.Name);
+						local szToolTip : string = Locale.Lookup(resourceDesc.Name);
 
-						local parentDealItem = pDeal:GetItemParent(pDealItem);
+						local parentDealItem : table = pDeal:GetItemParent(pDealItem);
 
 						if parentDealItem == nil then
 							-- No parent, the user can click on the item to change it.
-							icon.SelectButton:RegisterCallback(Mouse.eRClick, function(void1, void2, self) OnRemoveDealItem(player, dealItemID, self); end);
-							icon.SelectButton:RegisterCallback( Mouse.eLClick, function(void1, void2, self) OnSelectValueDealItem(player, dealItemID, self); end );
-							icon.SelectButton:SetDisabled(false);
-							icon.Icon:SetColor(1, 1, 1);
+							uiIcon.RemoveButton:SetHide(false);
+				
+							uiIcon.RemoveButton:RegisterCallback(Mouse.eLClick, function(void1, void2, self) OnRemoveDealItem(player, dealItemID, self); end)
+							uiIcon.SelectButton:RegisterCallback(Mouse.eRClick, function(void1, void2, self) OnRemoveDealItem(player, dealItemID, self); end);
+							uiIcon.SelectButton:RegisterCallback( Mouse.eLClick, function(void1, void2, self) OnSelectValueDealItem(player, dealItemID, self); end );
+							uiIcon.SelectButton:SetDisabled(false);
+							uiIcon.Icon:SetColor(1, 1, 1);
 						else
-							icon.SelectButton:ClearCallback( Mouse.eRClick );		-- Clear, we are re-using control instances
-							icon.SelectButton:ClearCallback( Mouse.eLClick );
+							uiIcon.SelectButton:ClearCallback( Mouse.eRClick );		-- Clear, we are re-using control instances
+							uiIcon.SelectButton:ClearCallback( Mouse.eLClick );
 
 							szToolTip = szToolTip .. GetParentItemTransferToolTip(parentDealItem);
 						end
 
 						-- Set a tool tip
-						icon.SelectButton:SetToolTipString(szToolTip);
+						uiIcon.SelectButton:SetToolTipString(szToolTip);
 
 						-- KWG: Make a way for the icon manager to have categories, so the API is like this
-						-- icon.Icon:SetTexture(IconManager:FindIconAtlasForType(IconTypes.RESOURCE, resourceType));
+						-- uiIcon.Icon:SetTexture(IconManager:FindIconAtlasForType(IconTypes.RESOURCE, resourceType));
 
 						if (dealItemID == g_ValueEditDealItemID) then
-							g_ValueEditDealItemControlTable = icon;
+							g_ValueEditDealItemControlTable = uiIcon;
 						end
 					end --end else if the item isn't gold
 				end -- end for each item in dael
 			end -- end if deal
 		end
 
-		iconList:CalculateSize();
-		iconList:ReprocessAnchoring();
+		iconList.OneTimeDealsHeader:SetHide(table.count(iconList.OneTimeDealsStack:GetChildren()) == 0);
+		iconList.For30TurnsDealsHeader:SetHide(table.count(iconList.For30TurnsDealsStack:GetChildren()) == 0);
+
+		iconList.OfferStack:CalculateSize();
 
 	end
 
@@ -2166,53 +2279,89 @@ end
 -- ===========================================================================
 function PopulateDealAgreements(player : table, iconList : table)
 
-	local pDeal = DealManager.GetWorkingDeal(DealDirection.OUTGOING, g_LocalPlayer:GetID(), g_OtherPlayer:GetID());
-	local playerType = GetPlayerType(player);
+	local pDeal : table = DealManager.GetWorkingDeal(DealDirection.OUTGOING, g_LocalPlayer:GetID(), g_OtherPlayer:GetID());
+	local playerType : number = GetPlayerType(player);
 	if (pDeal ~= nil) then
-		
-		local pDealItem;
+		g_IconAndTextIM:ReleaseInstanceByParent(iconList.AgreementDealsStack);
+		g_IconOnlyIM:ReleaseInstanceByParent(iconList.MinimizedAgreementDealsStack);
+		local pDealItem : table;
 		for pDealItem in pDeal:Items() do
 
-			local type = pDealItem:GetType();
+			local type : number = pDealItem:GetType();
 			if (pDealItem:GetFromPlayerID() == player:GetID()) then
-				local dealItemID = pDealItem:GetID();
+				local dealItemID : number = pDealItem:GetID();
 				-- Agreement?
 				if (type == DealItemTypes.AGREEMENTS) then
-					local icon = g_IconAndTextIM:GetInstance(iconList);
+					local uiMinimizedIcon : table = g_IconOnlyIM:GetInstance(iconList.MinimizedAgreementDealsStack);
+					local uiIcon : table = g_IconAndTextIM:GetInstance(iconList.AgreementDealsStack);
 					local info: table = GameInfo.DiplomaticActions[ pDealItem:GetSubType() ];
 					if (info ~= nil) then
-						SetIconToSize(icon.Icon, "ICON_".. info.DiplomaticActionType, 38);
+						SetIconToSize(uiIcon.Icon, "ICON_".. info.DiplomaticActionType, 38);
+						SetIconToSize(uiMinimizedIcon.Icon, "ICON_".. info.DiplomaticActionType, 38);
 					end
 
-					icon.AmountText:SetHide(true);
-					local subTypeDisplayName = pDealItem:GetSubTypeNameID();
+					uiIcon.AmountText:SetHide(true);
+					uiMinimizedIcon.AmountText:SetHide(true);
+
+					local subTypeDisplayName : string = pDealItem:GetSubTypeNameID();
 					if (subTypeDisplayName ~= nil) then
-						icon.IconText:LocalizeAndSetText(subTypeDisplayName);
+						uiIcon.IconText:LocalizeAndSetText(subTypeDisplayName);
+						uiMinimizedIcon.SelectButton:SetToolTipString(Locale.Lookup(subTypeDisplayName));
 					end
-					icon.SelectButton:SetToolTipString(nil);		-- We recycle the entries, so make sure this is clear.
+					uiIcon.SelectButton:SetToolTipString(nil);		-- We recycle the entries, so make sure this is clear.
 
 					-- Show/hide unacceptable item notification
-					icon.UnacceptableIcon:SetHide(not pDealItem:IsUnacceptable());
+					uiIcon.UnacceptableIcon:SetHide(not pDealItem:IsUnacceptable());
+					uiIcon.RemoveButton:SetHide(false);
+
+					uiMinimizedIcon.UnacceptableIcon:SetHide(not pDealItem:IsUnacceptable());
+					uiMinimizedIcon.RemoveButton:SetHide(false);
 
 					-- Populate the value pulldown
-					SetValueText(icon, pDealItem);
-				
-					icon.SelectButton:RegisterCallback(Mouse.eRClick, function(void1, void2, self) OnRemoveDealItem(player, dealItemID, self); end);
+					SetValueText(uiIcon, pDealItem);
+
+					local toolTip : string = uiMinimizedIcon.SelectButton:GetToolTipString();
+					if(info.DiplomaticActionType == "DIPLOACTION_JOINT_WAR")then
+						toolTip = toolTip .. "[NEWLINE]" .. Locale.Lookup(pDealItem:GetValueTypeNameID());
+						uiMinimizedIcon.SelectButton:SetToolTipString(toolTip);
+					end
+					
+					uiIcon.RemoveButton:RegisterCallback(Mouse.eLClick, function(void1, void2, self) OnRemoveDealItem(player, dealItemID, self); end);
+					uiIcon.SelectButton:RegisterCallback(Mouse.eRClick, function(void1, void2, self) OnRemoveDealItem(player, dealItemID, self); end);
+
+					uiMinimizedIcon.RemoveButton:RegisterCallback(Mouse.eLClick, function(void1, void2, self) OnRemoveDealItem(player, dealItemID, self); end);
+					uiMinimizedIcon.SelectButton:RegisterCallback(Mouse.eRClick, function(void1, void2, self) OnRemoveDealItem(player, dealItemID, self); end);
 
 					if(info.DiplomaticActionType == "DIPLOACTION_JOINT_WAR" and pDealItem:GetFromPlayerID() == g_OtherPlayer:GetID()) then
-						icon.SelectButton:SetDisabled(true);
-						icon.SelectButton:SetToolTipString(Locale.Lookup("LOC_JOINT_WAR_CANNOT_EDIT_THEIRS_TOOLTIP"));
+						uiIcon.SelectButton:SetDisabled(true);
+						uiIcon.SelectButton:SetToolTipString(Locale.Lookup("LOC_JOINT_WAR_CANNOT_EDIT_THEIRS_TOOLTIP"));
+						uiMinimizedIcon.SelectButton:SetDisabled(true);
+						
+						toolTip = toolTip .. "[NEWLINE]" .. Locale.Lookup("LOC_JOINT_WAR_CANNOT_EDIT_THEIRS_TOOLTIP");
+						uiMinimizedIcon.SelectButton:SetToolTipString(toolTip);
 					else
-						icon.SelectButton:SetDisabled(false);
-						icon.SelectButton:RegisterCallback( Mouse.eLClick, function(void1, void2, self) OnSelectValueDealItem(player, dealItemID, self); end );
-						icon.Icon:SetColor(1, 1, 1);
+						uiIcon.SelectButton:SetDisabled(false);
+						uiIcon.SelectButton:RegisterCallback( Mouse.eLClick, function(void1, void2, self) OnSelectValueDealItem(player, dealItemID, self); end );
+						uiIcon.Icon:SetColor(1, 1, 1);
+
+						uiMinimizedIcon.SelectButton:SetDisabled(false);
+						uiMinimizedIcon.SelectButton:RegisterCallback( Mouse.eLClick, function(void1, void2, self) OnSelectValueDealItem(player, dealItemID, self); end );
+						uiMinimizedIcon.Icon:SetColor(1, 1, 1);
 					end
 				end
 			end
 		end
 
-		iconList:CalculateSize();
-		iconList:ReprocessAnchoring();
+		local itemCount : number = table.count(iconList.AgreementDealsStack:GetChildren());
+
+		if(itemCount <= 1 and iconList.AgreementDealsStack:IsHidden())then
+			OnDealsHeaderCollapseButton(iconList.AgreementDealsStack, iconList.MinimizedAgreementDealsStack, iconList.AgreementDealsExpandButton);
+		end
+
+		iconList.AgreementDealsExpandButton:SetHide(not (itemCount > 1));
+		iconList.AgreementDealsGrid:SetHide(itemCount == 0);
+		iconList.AgreementDealsHeader:SetHide(itemCount == 0);
+		iconList.OfferStack:CalculateSize();
 
 	end
 
@@ -2221,63 +2370,90 @@ end
 -- ===========================================================================
 function PopulateDealGreatWorks(player : table, iconList : table)
 
-	local pDeal = DealManager.GetWorkingDeal(DealDirection.OUTGOING, g_LocalPlayer:GetID(), g_OtherPlayer:GetID());
-	local playerType = GetPlayerType(player);
+	local pDeal : table = DealManager.GetWorkingDeal(DealDirection.OUTGOING, g_LocalPlayer:GetID(), g_OtherPlayer:GetID());
+	local playerType : number = GetPlayerType(player);
 	if (pDeal ~= nil) then
-		
-		local pDealItem;
+		g_IconAndTextIM:ReleaseInstanceByParent(iconList.GreatWorksDealsStack);
+		g_IconOnlyIM:ReleaseInstanceByParent(iconList.MinimizedGreatWorksDealsStack);
+		local pDealItem : table;
 		for pDealItem in pDeal:Items() do
 
 			local type = pDealItem:GetType();
 			if (pDealItem:GetFromPlayerID() == player:GetID()) then
-				local iDuration = pDealItem:GetDuration();
-				local dealItemID = pDealItem:GetID();
+				local iDuration : number = pDealItem:GetDuration();
+				local dealItemID : number = pDealItem:GetID();
 				
 				if (type == DealItemTypes.GREATWORK) then
-					local icon = g_IconAndTextIM:GetInstance(iconList);
+					local uiIcon : table = g_IconAndTextIM:GetInstance(iconList.GreatWorksDealsStack);
+					local uiMinimizedIcon : table = g_IconOnlyIM:GetInstance(iconList.MinimizedGreatWorksDealsStack);
 
-					local typeID = pDealItem:GetValueTypeID();
-					SetIconToSize(icon.Icon, "ICON_" .. typeID, 45);
-					icon.AmountText:SetHide(true);
+					local typeID : string = pDealItem:GetValueTypeID();
+					SetIconToSize(uiIcon.Icon, "ICON_" .. typeID, 45);
+					SetIconToSize(uiMinimizedIcon.Icon, "ICON_" .. typeID, 45);
 
-					local typeName = pDealItem:GetValueTypeNameID();
+					uiIcon.AmountText:SetHide(true);
+					uiMinimizedIcon.AmountText:SetHide(true);
+
+					local typeName : string = pDealItem:GetValueTypeNameID();
 
 					local strTooltip :string = "";
 
 					if (typeName ~= nil) then
-						icon.IconText:LocalizeAndSetText(typeName);
+						uiIcon.IconText:LocalizeAndSetText(typeName);
 						strTooltip = Locale.Lookup( GreatWorksSupport_GetBasicTooltip(pDealItem:GetValueType(), false) );
 					else
-						icon.IconText:SetText(nil);
+						uiIcon.IconText:SetText(nil);
 					end
 
-					icon.ValueText:SetHide(true);
+					uiIcon.ValueText:SetHide(true);
 					
 					-- Show/hide unacceptable item notification
-					icon.UnacceptableIcon:SetHide(not pDealItem:IsUnacceptable());
+					uiIcon.UnacceptableIcon:SetHide(not pDealItem:IsUnacceptable());
+					uiMinimizedIcon.UnacceptableIcon:SetHide(not pDealItem:IsUnacceptable());
 
-					local parentDealItem = pDeal:GetItemParent(pDealItem);
+					local parentDealItem : table = pDeal:GetItemParent(pDealItem);
 
 					if parentDealItem == nil then
 						-- No parent, we can remove independently
-						icon.SelectButton:RegisterCallback(Mouse.eRClick, function(void1, void2, self) OnRemoveDealItem(player, dealItemID, self); end);
-						icon.SelectButton:RegisterCallback( Mouse.eLClick, function(void1, void2, self) OnSelectValueDealItem(player, dealItemID, self); end );
-						icon.SelectButton:SetDisabled(false);
-						icon.Icon:SetColor(1, 1, 1);
+						uiIcon.RemoveButton:SetHide(false);
+						uiIcon.RemoveButton:RegisterCallback(Mouse.eLClick, function(void1, void2, self) OnRemoveDealItem(player, dealItemID, self); end);
+						uiIcon.SelectButton:RegisterCallback(Mouse.eRClick, function(void1, void2, self) OnRemoveDealItem(player, dealItemID, self); end);
+						uiIcon.SelectButton:RegisterCallback( Mouse.eLClick, function(void1, void2, self) OnSelectValueDealItem(player, dealItemID, self); end );
+						uiIcon.SelectButton:SetDisabled(false);
+						
+						uiIcon.Icon:SetColor(1, 1, 1);
+
+						uiMinimizedIcon.RemoveButton:SetHide(false);
+						uiMinimizedIcon.RemoveButton:RegisterCallback(Mouse.eLClick, function(void1, void2, self) OnRemoveDealItem(player, dealItemID, self); end);
+						uiMinimizedIcon.SelectButton:RegisterCallback(Mouse.eRClick, function(void1, void2, self) OnRemoveDealItem(player, dealItemID, self); end);
+						uiMinimizedIcon.SelectButton:SetDisabled(false);
 					else
-						icon.SelectButton:ClearCallback( Mouse.eRClick );
-						icon.SelectButton:ClearCallback( Mouse.eLClick );
+						uiIcon.SelectButton:ClearCallback( Mouse.eRClick );
+						uiIcon.SelectButton:ClearCallback( Mouse.eLClick );
+
+						uiMinimizedIcon.SelectButton:ClearCallback( Mouse.eRClick );
+						uiMinimizedIcon.SelectButton:ClearCallback( Mouse.eLClick );
+
 						-- Add on to the tool tip to show why it is there.
 						strTooltip = strTooltip .. GetParentItemTransferToolTip(parentDealItem);
 					end
 
-					icon.SelectButton:SetToolTipString(strTooltip);
+					uiIcon.SelectButton:SetToolTipString(strTooltip);
+					uiMinimizedIcon.SelectButton:SetToolTipString(strTooltip);
 				end
 			end
 		end
 
-		iconList:CalculateSize();
-		iconList:ReprocessAnchoring();
+		local itemCount : number = table.count(iconList.GreatWorksDealsStack:GetChildren());
+
+		if(itemCount <= 1 and iconList.GreatWorksDealsStack:IsHidden())then
+			OnDealsHeaderCollapseButton(iconList.GreatWorksDealsStack, iconList.MinimizedGreatWorksDealsStack, iconList.GreatWorksDealsExpandButton);
+		end
+
+		iconList.GreatWorksDealsExpandButton:SetHide(not (itemCount > 1));
+		iconList.GreatWorksDealsGrid:SetHide(itemCount == 0);
+		iconList.GreatWorksDealsHeader:SetHide(itemCount == 0);
+		iconList.OfferStack:CalculateSize();
 
 	end
 
@@ -2293,42 +2469,99 @@ end
 -- ===========================================================================
 function PopulateDealCities(player : table, iconList : table)
 
-	local pDeal = DealManager.GetWorkingDeal(DealDirection.OUTGOING, g_LocalPlayer:GetID(), g_OtherPlayer:GetID());
-	local playerType = GetPlayerType(player);
+	local pDeal : table = DealManager.GetWorkingDeal(DealDirection.OUTGOING, g_LocalPlayer:GetID(), g_OtherPlayer:GetID());
+	local playerType : number = GetPlayerType(player);
 	if (pDeal ~= nil) then
-		
-		local pDealItem;
+
+		ms_CityDetailsIM:ReleaseInstanceByParent(iconList.CityDealsStack);
+		g_IconOnlyIM:ReleaseInstanceByParent(iconList.MinimizedCityDealsStack);
+
+		local pDealItem : table;
 		for pDealItem in pDeal:Items() do
 
-			local type = pDealItem:GetType();
+			local type : number = pDealItem:GetType();
 			if (pDealItem:GetFromPlayerID() == player:GetID()) then
-				local dealItemID = pDealItem:GetID();
+				local dealItemID : number = pDealItem:GetID();
 				
 				if (type == DealItemTypes.CITIES) then
-					local icon = g_IconAndTextIM:GetInstance(iconList);
-					SetIconToSize(icon.Icon, "ICON_BUILDINGS");
-					icon.AmountText:SetHide(true);
-					local typeName = pDealItem:GetValueTypeNameID();
+					local uiMinimizedIcon : table = g_IconOnlyIM:GetInstance(iconList.MinimizedCityDealsStack);
+					SetIconToSize(uiMinimizedIcon.Icon, "ICON_BUILDINGS");
+
+					local uiIcon : table = ms_CityDetailsIM:GetInstance(iconList.CityDealsStack);
+					SetIconToSize(uiIcon.Icon, "ICON_BUILDINGS");
+					uiIcon.AmountText:SetHide(true);
+					local typeName : string = pDealItem:GetValueTypeNameID();
 					if (typeName ~= nil) then
-						icon.IconText:LocalizeAndSetText(typeName);
+						uiIcon.IconText:LocalizeAndSetText(typeName);
 					end
 
 					-- Show/hide unacceptable item notification
-					icon.UnacceptableIcon:SetHide(not pDealItem:IsUnacceptable());
-				
-					icon.SelectButton:RegisterCallback(Mouse.eRClick, function(void1, void2, self) OnRemoveDealItem(player, dealItemID, self); end);
-					icon.SelectButton:RegisterCallback( Mouse.eLClick, function(void1, void2, self) OnSelectValueDealItem(player, dealItemID, self); end );
-					icon.SelectButton:SetDisabled(false);
-					icon.Icon:SetColor(1, 1, 1);
+					uiIcon.UnacceptableIcon:SetHide(not pDealItem:IsUnacceptable());
+					uiIcon.RemoveButton:SetHide(false);
 
-					icon.SelectButton:SetToolTipString( MakeCityToolTip(player, pDealItem:GetValueType() ) );
+					uiIcon.RemoveButton:RegisterCallback(Mouse.eLClick, function(void1, void2, self) OnRemoveDealCity(typeName, player, dealItemID, self); end);
+					uiIcon.SelectButton:RegisterCallback(Mouse.eRClick, function(void1, void2, self) OnRemoveDealCity(typeName, player, dealItemID, self); end);
+					uiIcon.SelectButton:RegisterCallback( Mouse.eLClick, function(void1, void2, self) OnSelectValueDealItem(player, dealItemID, self); end );
+					uiIcon.SelectButton:SetDisabled(false);
+					uiIcon.Icon:SetColor(1, 1, 1);
+
+					uiMinimizedIcon.UnacceptableIcon:SetHide(not pDealItem:IsUnacceptable());
+					uiMinimizedIcon.RemoveButton:SetHide(false);
+					uiMinimizedIcon.RemoveButton:RegisterCallback(Mouse.eLClick, function(void1, void2, self) OnRemoveDealItem(player, dealItemID, self); end);
+					uiMinimizedIcon.SelectButton:RegisterCallback(Mouse.eRClick, function(void1, void2, self) OnRemoveDealItem(player, dealItemID, self); end);
+					uiMinimizedIcon.SelectButton:SetDisabled(false);
+
+					uiIcon.SelectButton:SetToolTipString( MakeCityToolTip(player, pDealItem:GetValueType() ) );
+					uiMinimizedIcon.SelectButton:SetToolTipString(Locale.Lookup(typeName).."[NEWLINE]"..MakeCityToolTip(player, pDealItem:GetValueType() ));
+					local hasChildDealItems : boolean = false;
+
+					--Check if this city comes with dependants (resources or great works)
+					for pChildDealItem in pDeal:Items() do
+						if (pDeal:GetItemParent(pChildDealItem) == pDealItem) then
+							hasChildDealItems = true;
+							local type : number = pChildDealItem:GetType();
+							local childIcon : table = g_IconOnlyIM:GetInstance(uiIcon.CityDetailsStack);
+
+							if(type == DealItemTypes.RESOURCES)then
+								childIcon.AmountText:SetText(tostring(pChildDealItem:GetAmount()));
+								childIcon.AmountText:SetHide(false);
+								
+								local resourceDescription : table = GameInfo.Resources[pChildDealItem:GetValueType()];
+								SetIconToSize(childIcon.Icon, "ICON_" .. resourceDescription.ResourceType);
+								
+								local childToolTip : string = Locale.Lookup(resourceDescription.Name);
+								childIcon.SelectButton:SetToolTipString(childToolTip);
+
+							elseif(type == DealItemTypes.GREATWORK) then
+								childIcon.AmountText:SetHide(true);
+
+								local childToolTip : string = Locale.Lookup(GreatWorksSupport_GetBasicTooltip(pChildDealItem:GetValueType(), false))
+								childIcon.SelectButton:SetToolTipString(childToolTip);
+
+								local childTypeID : string = pChildDealItem:GetValueTypeID();
+								SetIconToSize(childIcon.Icon, "ICON_"..childTypeID,45);
+							end
+						end
+					end
+					uiIcon.CollapseButton:RegisterCallback(Mouse.eLClick, function() OnCityDetailsCollapse(uiIcon.CityDetails, typeName, uiIcon.CollapseButton); end);
+					uiIcon.CollapseButton:SetHide(not hasChildDealItems);
+					if(m_kCollapsedCityDetails[typeName])then
+						uiIcon.CityDetails:SetHide(false);
+					end
 				end
 			end
 		end
 
-		iconList:CalculateSize();
-		iconList:ReprocessAnchoring();
+		local itemCount : number = table.count(iconList.CityDealsStack:GetChildren());
 
+		if(itemCount <= 1 and iconList.CityDealsStack:IsHidden())then
+			OnDealsHeaderCollapseButton(iconList.CityDealsStack, iconList.MinimizedCityDealsStack, iconList.CityDealsExpandButton);
+		end
+
+		iconList.CityDealsHeader:SetHide(itemCount == 0);
+		iconList.CityDealsExpandButton:SetHide(not (itemCount > 1));
+		iconList.CityDealsGrid:SetHide(itemCount == 0);
+		iconList.OfferStack:CalculateSize();
 	end
 
 
@@ -2339,15 +2572,14 @@ function PopulatePlayerDealPanel(rootControl : table, player : table)
 
 	if (player ~= nil) then
 		
-		local playerType = GetPlayerType(player);
+		local playerType : number = GetPlayerType(player);
 		PopulateDealResources(player, ms_DealGroups[DealItemGroupTypes.RESOURCES][playerType]);
 		PopulateDealAgreements(player, ms_DealGroups[DealItemGroupTypes.AGREEMENTS][playerType]);
 		PopulateDealCaptives(player, ms_DealGroups[DealItemGroupTypes.CAPTIVES][playerType]);
 		PopulateDealGreatWorks(player, ms_DealGroups[DealItemGroupTypes.GREAT_WORKS][playerType]);
 		PopulateDealCities(player, ms_DealGroups[DealItemGroupTypes.CITIES][playerType]);
 
-		rootControl:CalculateSize();
-		rootControl:ReprocessAnchoring();
+		rootControl.OfferStack:CalculateSize();
 	end
 end
 
@@ -2438,8 +2670,8 @@ function OnDiplomacyIncomingDeal(eFromPlayer, eToPlayer, eAction)
 			DealManager.CopyIncomingToOutgoingWorkingDeal(g_LocalPlayer:GetID(), g_OtherPlayer:GetID());
 			ms_LastIncomingDealProposalAction = eAction;
 
-			PopulatePlayerDealPanel(Controls.TheirOfferStack, g_OtherPlayer);
-			PopulatePlayerDealPanel(Controls.MyOfferStack, g_LocalPlayer);
+			PopulatePlayerDealPanel(g_uiTheirOffers, g_OtherPlayer);
+			PopulatePlayerDealPanel(g_uiMyOffers, g_LocalPlayer);
 			UpdateDealStatus();
 		end
 	end
@@ -2475,7 +2707,6 @@ function SetLeaderDialog(leaderDialog:string, leaderEffect:string)
 
 	-- Recenter text
 	Controls.LeaderDialogStack:CalculateSize();
-	Controls.LeaderDialogStack:ReprocessAnchoring();
 end
 
 -- ===========================================================================
@@ -2555,9 +2786,56 @@ function RefreshYields()
 	end
 	
 	Controls.YieldStack:CalculateSize();
-	Controls.YieldStack:ReprocessAnchoring();
 end
+
 -- ===========================================================================
+function OnRemoveDealCity(name : string, player : table, itemID : number)
+	m_kCollapsedCityDetails[name] = nil;
+	OnRemoveDealItem(player, itemID);
+end
+
+-- ===========================================================================
+function OnCityDetailsCollapse(control : table, name : string, button : table)
+	control:SetHide(not control:IsHidden());
+	if(control:IsHidden()) then
+		m_kCollapsedCityDetails[name] = nil;
+		button:LocalizeAndSetToolTip("LOC_DIPLO_DEAL_EXPAND_CITY_INFO");
+	else
+		m_kCollapsedCityDetails[name] = true;
+		button:LocalizeAndSetToolTip("LOC_DIPLO_DEAL_COLLAPSE_CITY_INFO");
+	end
+end
+
+-- ===========================================================================
+function OnDealsHeaderCollapseButton(control : table, minimizedControl : table, button : table)
+	if(control["isCollapsed"] == nil) then
+		control["isCollapsed"] = false;
+	end
+	control["isCollapsed"] = not control["isCollapsed"];
+	control:SetHide(control["isCollapsed"]);
+	minimizedControl:SetHide(not control["isCollapsed"]);
+	control:CalculateSize();
+	if(control["isCollapsed"]) then
+		button:SetTexture("Controls_CategoryExpand");
+		button:LocalizeAndSetToolTip("LOC_DIPLO_DEAL_EXPAND_CATEGORY");
+	else
+		button:SetTexture("Controls_CategoryCollapse");
+		button:LocalizeAndSetToolTip("LOC_DIPLO_DEAL_COLLAPSE_CATEGORY");
+	end
+end
+
+-- ===========================================================================
+function OnDragResizer()
+	local mouseX : number, mouseY : number = UIManager:GetMousePos();
+
+	--How far has the mouse traveled while dragging?
+	local yDiff : number = m_StartingMouseY - mouseY;
+	yDiff = math.clamp(yDiff, m_MinDragResizeY, m_MaxDragResizeY);
+
+	Controls.OfferColumns:SetSizeY(m_OffersStartSizeY - yDiff);
+	Controls.InventoryColumns:SetSizeY(m_InvStartSizeY + yDiff);
+	Controls.DragButton:SetOffsetY((m_InvStartSizeY + yDiff) - 20);
+end
 
 -- ===========================================================================
 function OnShow()
@@ -2578,6 +2856,10 @@ function OnShow()
 
 	g_IconOnlyIM:ResetInstances();
 	g_IconAndTextIM:ResetInstances();
+	ms_MinimizedSectionIM:ResetInstances();
+
+	--Reset the cityDetails states to closed
+	m_kCollapsedCityDetails = {};
 
 	ms_bExiting = false;
 
@@ -2626,17 +2908,17 @@ function OnShow()
 	UpdateOtherPlayerText(1);
 	SetDefaultLeaderDialogText();
 
-	local iAvailableItemCount = 0;
+	local availableItemCount : number = 0;
 	-- Available content to trade.  Shouldn't change during the session, but it might, especially in multiplayer.
-	iAvailableItemCount = iAvailableItemCount + PopulatePlayerAvailablePanel(Controls.MyInventoryStack, g_LocalPlayer);
-	iAvailableItemCount = iAvailableItemCount + PopulatePlayerAvailablePanel(Controls.TheirInventoryStack, g_OtherPlayer);
+	availableItemCount = availableItemCount + PopulatePlayerAvailablePanel(Controls.MyInventoryStack, g_LocalPlayer);
+	availableItemCount = availableItemCount + PopulatePlayerAvailablePanel(Controls.TheirInventoryStack, g_OtherPlayer);
 
 	Controls.MyInventoryScroll:CalculateSize();
 	Controls.TheirInventoryScroll:CalculateSize();
 
 	m_kPopupDialog:Close(); -- Close and reset the popup in case it's open
 
-	if (iAvailableItemCount == 0) then
+	if (availableItemCount == 0) then
 		if (ms_bIsDemand) then
 			m_kPopupDialog:AddText(Locale.Lookup("LOC_DIPLO_DEMAND_NO_AVAILABLE_ITEMS"));
 			m_kPopupDialog:AddTitle( Locale.ToUpper(Locale.Lookup("LOC_DIPLO_CHOICE_MAKE_DEMAND")))
@@ -2649,8 +2931,8 @@ function OnShow()
 		m_kPopupDialog:Open();
 	end
 
-	PopulatePlayerDealPanel(Controls.TheirOfferStack, g_OtherPlayer);
-	PopulatePlayerDealPanel(Controls.MyOfferStack, g_LocalPlayer);
+	PopulatePlayerDealPanel(g_uiTheirOffers, g_OtherPlayer);
+	PopulatePlayerDealPanel(g_uiMyOffers, g_LocalPlayer);
 	UpdateDealStatus();
 
 	-- We may be coming into this screen with a deal already set, which needs to be sent to the AI for inspection. Check that.
@@ -2666,7 +2948,6 @@ function OnShow()
 	TTManager:ClearCurrent();	-- Clear any tool tips raised;
 
 	Controls.DealOptionsStack:CalculateSize();
-	Controls.DealOptionsStack:ReprocessAnchoring();
 end
 
 ----------------------------------------------------------------    
@@ -2734,8 +3015,8 @@ function OnUserRequestClose()
 	if (not ContextPtr:IsHidden()) then
 		m_kPopupDialog:Reset();
 		m_kPopupDialog:AddText(Locale.Lookup("LOC_CONFIRM_EXIT_TXT"));
-		m_kPopupDialog:AddButton(Locale.Lookup("LOC_NO"), nil);
 		m_kPopupDialog:AddButton(Locale.Lookup("LOC_YES"), OnQuitYes, nil, nil, "PopupButtonInstanceRed");
+		m_kPopupDialog:AddButton(Locale.Lookup("LOC_NO"), nil);
 		m_kPopupDialog:Open();
 	end
 end
@@ -2766,6 +3047,32 @@ function Initialize()
 	Events.UserRequestClose.Add( OnUserRequestClose );
 
 	m_kPopupDialog = PopupDialog:new( "DiplomacyDealView" );
+
+	ContextPtr:BuildInstanceForControl("MyOffers", g_uiMyOffers, Controls.MyOfferScroll);
+	ContextPtr:BuildInstanceForControl("TheirOffers", g_uiTheirOffers, Controls.TheirOfferScroll);
+
+	g_uiMyOffers.CityDealsExpandButton:RegisterCallback(Mouse.eLClick, function() OnDealsHeaderCollapseButton(g_uiMyOffers.CityDealsStack, g_uiMyOffers.MinimizedCityDealsStack, g_uiMyOffers.CityDealsExpandButton); end);
+	g_uiTheirOffers.CityDealsExpandButton:RegisterCallback(Mouse.eLClick, function() OnDealsHeaderCollapseButton(g_uiTheirOffers.CityDealsStack, g_uiTheirOffers.MinimizedCityDealsStack, g_uiTheirOffers.CityDealsExpandButton); end);
+
+	g_uiMyOffers.GreatWorksDealsExpandButton:RegisterCallback(Mouse.eLClick, function() OnDealsHeaderCollapseButton(g_uiMyOffers.GreatWorksDealsStack, g_uiMyOffers.MinimizedGreatWorksDealsStack, g_uiMyOffers.GreatWorksDealsExpandButton); end);
+	g_uiTheirOffers.GreatWorksDealsExpandButton:RegisterCallback(Mouse.eLClick, function() OnDealsHeaderCollapseButton(g_uiTheirOffers.GreatWorksDealsStack, g_uiTheirOffers.MinimizedGreatWorksDealsStack, g_uiTheirOffers.GreatWorksDealsExpandButton); end);
+
+	g_uiMyOffers.AgreementDealsExpandButton:RegisterCallback(Mouse.eLClick, function() OnDealsHeaderCollapseButton(g_uiMyOffers.AgreementDealsStack, g_uiMyOffers.MinimizedAgreementDealsStack, g_uiMyOffers.AgreementDealsExpandButton); end);
+	g_uiTheirOffers.AgreementDealsExpandButton:RegisterCallback(Mouse.eLClick, function() OnDealsHeaderCollapseButton(g_uiTheirOffers.AgreementDealsStack, g_uiTheirOffers.MinimizedAgreementDealsStack, g_uiTheirOffers.AgreementDealsExpandButton); end);
+
+	g_uiMyOffers.CaptivesDealsExpandButton:RegisterCallback(Mouse.eLClick, function() OnDealsHeaderCollapseButton(g_uiMyOffers.CaptivesDealsStack, g_uiMyOffers.MinimizedCaptivesDealsStack, g_uiMyOffers.CaptivesDealsExpandButton); end);
+	g_uiTheirOffers.CaptivesDealsExpandButton:RegisterCallback(Mouse.eLClick, function() OnDealsHeaderCollapseButton(g_uiTheirOffers.CaptivesDealsStack, g_uiTheirOffers.MinimizedCaptivesDealsStack, g_uiTheirOffers.CaptivesDealsExpandButton); end);
+
+	m_OffersStartSizeY = Controls.OfferColumns:GetSizeY();
+	m_InvStartSizeY = Controls.InventoryColumns:GetSizeY();
+
+	Controls.DragButton:SetOffsetY(m_InvStartSizeY - 20);
+
+	m_StartingMouseX, m_StartingMouseY = Controls.DragButton:GetScreenOffset();
+	m_StartingMouseY = m_StartingMouseY + 24;
+	m_MinDragResizeY = m_MinDragResizeY - m_InvStartSizeY;
+
+	Controls.DragSizer:RegisterCallback(Drag.eDrag, function() OnDragResizer(); end);
 end
 
 Initialize();

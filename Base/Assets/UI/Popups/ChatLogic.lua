@@ -160,10 +160,11 @@ function AddChatEntry( chatString :string, chatEntryStack :table, chatInstances 
 		chatEntryStack:ReleaseChild( chatInstances[ 1 ].ChatControl.ChatRoot );
 		table.remove( chatInstances, 1 );
 	end
-	    
+	local chatTextSize:number = UserConfiguration.GetChatTextValue();
+	controlTable.String:SetFontSize(chatTextSize);
 	controlTable.String:SetText(chatString);	
 	controlTable.ChatRoot:SetSize(controlTable.String:GetSize());	
-
+	
 	chatEntryStack:CalculateSize();
 	chatLogPanel:CalculateInternalSize();
 end

@@ -1,15 +1,22 @@
--- Copyright 2018, Firaxis Games.
+-- Copyright 2018-2019, Firaxis Games.
 
-include("LuaClass");
 include("SupportFunctions");
 
--- Class Table
-CongressButton = LuaClass:Extend()
+-- ===========================================================================
+--	Class Table
+-- ===========================================================================
+CongressButton = {
+	worldCongressStartFunc = nil,
+	worldCongressFinishedFunc = nil,
+	updateCongressButtonFunc = nil,
+	localPlayerTurnBeginFunc = nil,
+	localPlayerTurnEnd = nil
+};
+
 
 -- ===========================================================================
 --	CONSTANTS
 -- ===========================================================================
-CongressButton.DATA_FIELD_CLASS = "CONGRESS_BUTTON_CLASS";
 local WORLD_CONGRESS_STAGE_1	:number = DB.MakeHash("TURNSEG_WORLDCONGRESS_1");
 local WORLD_CONGRESS_STAGE_2	:number = DB.MakeHash("TURNSEG_WORLDCONGRESS_2");
 local WORLD_CONGRESS_RESOLUTION	:number = DB.MakeHash("TURNSEG_WORLDCONGRESS_RESOLUTION");
@@ -18,45 +25,62 @@ local WORLD_CONGRESS_RESOLUTION	:number = DB.MakeHash("TURNSEG_WORLDCONGRESS_RES
 -- ===========================================================================
 --	FUNCTIONS
 -- ===========================================================================
-function CongressButton:GetInstance(instanceManager:table, kParent:table)
-	local instance :table = instanceManager:GetInstance(kParent);
+function CongressButton:GetInstance(instanceManager:table, uiNewParent:table)
+	local instance :table = instanceManager:GetInstance(uiNewParent);
 	return CongressButton:AttachInstance(instance);
 end
 
 
 -- ===========================================================================
-function CongressButton:AttachInstance( uiInstance:table )
-	self = uiInstance[CongressButton.DATA_FIELD_CLASS];
-	if not self then
-		self = CongressButton:new(uiInstance);
-		uiInstance[CongressButton.DATA_FIELD_CLASS] = self;
+--	Essentially the "new"
+-- ===========================================================================
+function CongressButton:AttachInstance( instance:table )
+	if instance == nil then
+		UI.DataError("NIL instance passed into CongressButton:AttachInstance.  Setting the value to the ContextPtr's 'Controls'.");
+		instance = Controls;
 	end
+	setmetatable(instance, {__index = self });
+	self.Controls = instance;
+	self.Controls.Button:RegisterCallback( Mouse.eLClick, OnClick );		
 	self:Reset();
 	self:OnUpdateCongressButton();
-	return self, uiInstance;
+	
+	-- Ensures call is made by "self" and uses colon so "self" is available in the function.
+	self.worldCongressStartFunc		= function() self:OnWorldCongressStart(); end;
+	self.worldCongressFinishedFunc	= function() self:OnWorldCongressFinished(); end;
+	self.updateCongressButtonFunc	= function() self:OnUpdateCongressButton(); end;
+	self.localPlayerTurnBeginFunc	= function() self:OnLocalPlayerTurnBegin(); end;
+	self.localPlayerTurnEndFunc		= function() self:OnLocalPlayerTurnEnd(); end;
+
+
+	-- Attach game events
+	Events.WorldCongressStage1.Add(			self.worldCongressStartFunc );
+	Events.WorldCongressFinished.Add(		self.worldCongressFinishedFunc );
+	Events.WorldCongressRibbonUpdate.Add(	self.updateCongressButtonFunc);
+	Events.LocalPlayerTurnBegin.Add(		self.localPlayerTurnBeginFunc);
+	Events.LocalPlayerTurnEnd.Add(			self.localPlayerTurnEndFunc );
+
+	return instance;
 end
 
--- ===========================================================================
---	CTOR
--- ===========================================================================
-function CongressButton:new( uiInstance:table )	
-	self = LuaClass.new( CongressButton )
-	self.Controls = uiInstance;
-	self.Controls.Button:RegisterCallback(Mouse.eLClick, OnClick );		
-
-	Events.WorldCongressStage1.Add(			function() self:OnWorldCongressStart(); end );
-	Events.WorldCongressFinished.Add(		function() self:OnWorldCongressFinished(); end );
-	Events.WorldCongressRibbonUpdate.Add(	function() self:OnUpdateCongressButton(); end );
-	Events.LocalPlayerTurnBegin.Add(		function() self:OnLocalPlayerTurnBegin(); end );
-	Events.LocalPlayerTurnEnd.Add(			function() self:OnLocalPlayerTurnEnd(); end );
-
-	return self;
-end
 
 -- ===========================================================================
 function CongressButton:Reset()
 	self.Controls.ProgressMeter:SetPercent(0.0);
 end
+
+-- ===========================================================================
+--	Instance Manager Callback
+-- ===========================================================================
+--[[ TODO: Revisit - currently this will result in an event dispatch issue internally
+function CongressButton:OnResetting()
+	Events.WorldCongressStage1.Remove(			self.worldCongressStartFunc );
+	Events.WorldCongressFinished.Remove(		self.worldCongressFinishedFunc );
+	Events.WorldCongressRibbonUpdate.Remove(	self.updateCongressButtonFunc);
+	Events.LocalPlayerTurnBegin.Remove(			self.localPlayerTurnBeginFunc);
+	Events.LocalPlayerTurnEnd.Remove(			self.localPlayerTurnEndFunc );	
+end
+]]
 
 -- ===========================================================================
 --	Game Event

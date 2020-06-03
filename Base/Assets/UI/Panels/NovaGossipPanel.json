@@ -1,0 +1,68 @@
+{
+  "type": "context",
+  "id": "NovaGossipPanelRoot",
+
+  "children": [
+    {
+      "type": "container",
+      "id": "GossipStack",
+      "layout": "stack",
+      
+      "constraints": [
+        "L = 50",
+        "T = 400",
+        "W = 400",
+      ]
+    }
+  ],
+
+  "blueprints": {
+    "GossipInstance": {
+      "type": "container",
+      "id": "Root",
+
+      "children": [
+        {
+          "type": "widget",
+          "id": "Icon",
+          "components": [ { "type": "image", "image": "grid_unitbk", "slice": "8,8" } ]
+        },
+        {
+          "type": "widget",
+          "id": "Message",
+          "components": [ { "type": "text", "string": "GossipInstance" } ]
+        }
+      ],
+
+      "constraints": [
+        "W = Parent.W",
+        "L = 0",
+        "H = 52",
+
+        // Set fixed sizes
+        "Icon.W = 32",
+        "Icon.H = 32",
+        "Message.H = 32",
+
+        // Enforce Message and Icon are the same height
+        "Message.T = Icon.T",
+        "Message.B = Icon.B",
+
+        // Position things on the X axis
+        "Icon.L = 10",
+        "Message.L = Icon.R + 10",
+        "Message.R = W - 10",
+
+        // Position things on the Y axis
+        "Icon.T = 10",
+        "Icon.B = H - 10"
+      ],
+
+      "components": [
+        // input component to consume mouse
+        { "type": "input" },
+        { "type": "image", "image": "Parchment_Pattern" }
+      ]
+    }
+  }
+}

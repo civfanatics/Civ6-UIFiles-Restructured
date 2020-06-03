@@ -16,6 +16,9 @@
 	
 	<LuaContext ID="DebugHotloadCache"		FileName="UI/DebugContext/DebugHotloadCache"	Hidden="0" />
 
+	<!-- Creates a subtree of widgets, auto size and offsets should work, but the offset is relative to the screen and not the parent position -->
+	<!--WidgetControl File="WidgetTest.json" Offset="50,50" Size="500,800"/-->
+	
 	<Stack ID="DebugStack" >
 
 		<Grid Style="DebugPanelFrame" Anchor="L,T" Offset="90,0" Size="740,30" ID="Console" >
@@ -27,13 +30,13 @@
 				<Button Anchor="C,C" Texture="select_down" Size="18,18" ToolTip="Toggle Position" ID="RepositionButton" />
 			</Grid>
 			<Grid Style="DebugPanelFrame" Anchor="L,C" AnchorSide="o,i" Size="30,30" >
-				<Button Anchor="C,C" Texture="select_down" Size="18,18" ToolTip="Toggle Log" ID="LogButton" />
+				<Button Anchor="C,C" Texture="DebugLog" Size="18,18" ToolTip="Toggle Log" ID="LogButton" />
 			</Grid>
 			<Grid Style="DebugPanelFrame" Anchor="L,C" AnchorSide="o,i" Offset="30,0" Size="30,30" >
-				<Button Anchor="C,C" Texture="select_down" Size="18,18" ToolTip="Toggle Panel" ID="DebugPanelButton" />
+				<Button Anchor="C,C" Texture="DebugPanelOptions" Size="18,18" ToolTip="Toggle Panel" ID="DebugPanelButton" />
 			</Grid>
 			<Grid Style="DebugPanelFrame" Anchor="L,C" AnchorSide="o,i" Offset="60,0" Size="30,30" >
-				<Button Anchor="C,C" Texture="select_down" Size="18,18" ToolTip="Toggle Data Errors" ID="DataErrorButton" Color="COLOR_GREEN"/>
+				<Button Anchor="C,C" Texture="DebugDataNoErrors" Size="18,18" ToolTip="Toggle Data Errors" ID="DataErrorButton"/>
 			</Grid>
 		</Grid>
 

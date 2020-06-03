@@ -3,9 +3,12 @@
 --	Includes the main logic to populate the civilopedia.
 -- ===========================================================================
 include( "InstanceManager" );
+include( "SupportFunctions" );
 
 
 local LOC_TREE_SEARCH_W_DOTS = Locale.Lookup("LOC_TREE_SEARCH_W_DOTS");
+
+local m_kCrumbManager = InstanceManager:new("CrumbInstance", "Button", Controls.CrumbStack);
 
 local _SearchResultsManager = InstanceManager:new("SearchResultInstance", "Root", Controls.SearchResultsStack);
 
@@ -37,10 +40,21 @@ local _RightColumnStatIconLabelManager = InstanceManager:new("RightColumnStatIco
 local _RightColumnStatIconNumberLabelManager = InstanceManager:new("RightColumnStatIconNumberLabel", "Root", nil);
 local _RightColumnStatIconListManager = InstanceManager:new("RightColumnStatIconList", "Root", nil);
 
-local lastPageIndex:table = {
-	lastSection = "none",
-	lastPage = "none"
+local m_maxHistoryLimit:number = 10;  	-- max history depth/number of breadcrumbs
+local SIZE_CRUMB_TEXT_X:number = 124;	-- width to truncate text on a breadcrumb
+
+local ACTIVE_COLOR = UI.GetColorValue("COLOR_WHITE");
+local INACTIVE_COLOR = UI.GetColorValue("COLOR_DARK_GREY");
+
+local m_kPageTrail:table = {
+	pageIndex = 0,						-- current index in the history list
+	numPages = 0,						-- number of pages in the history list (can be 0 to m_maxHistoryLimit)
+	pageTable = {},						-- history list table
+	crumbList = {},						-- UI crumb instances
 };
+
+local m_BackNavId:number;
+local m_ForwardNavId:number;
 
 _HasSection = {};
 _Sections = {};
@@ -881,6 +895,78 @@ function CivilopediaSearch(term, max_results)
 	return results;
 end
 
+function UpdateCrumbHighlight()
+	for _, crumb in ipairs(m_kPageTrail.crumbList) do
+		if (crumb["index"] ~= m_kPageTrail.pageIndex) then
+			crumb.Icon:SetColor(INACTIVE_COLOR);
+		else
+			crumb.Icon:SetColor(ACTIVE_COLOR);
+		end
+	end
+end
+
+-- navigates to a page stored in the history index
+function NavigateToPageTrailIndex(index, bUpdateScroll)
+	local SectionId:string = m_kPageTrail.pageTable[index].lastSection;
+	local PageId:string = m_kPageTrail.pageTable[index].lastPage;
+
+	m_kPageTrail.pageIndex = index;
+
+	RefreshSections();
+	RefreshPageTabs(SectionId, (SectionId ~= prevSectionId));
+
+	if(SectionId ~= prevSectionId or PageId ~= prevPageId) then
+		local pages = GetPages(SectionId);
+
+		for i, page in ipairs(pages) do
+			local id = page.PageId;
+			if(id == PageId) then
+				RefreshPageContent(page);
+			end
+		end
+	end
+
+	-- scroll to ensure the new active item is visible
+	if (m_kPageTrail.numPages >= 5) and bUpdateScroll then
+		if (index == 1) then
+			Controls.CrumbScroll:SetScrollValue(0);
+		else
+			Controls.CrumbScroll:SetScrollValue((100 * index) / (100 * m_kPageTrail.numPages));
+		end
+	end
+
+	-- update the forward and back arrows
+	if m_kPageTrail.pageIndex > 1 then
+		Controls.BackIcon:SetEnabled(true);
+		Controls.BackIcon:SetColor(ACTIVE_COLOR);
+	else
+		Controls.BackIcon:SetEnabled(false);
+		Controls.BackIcon:SetColor(INACTIVE_COLOR);
+	end
+
+	if m_kPageTrail.pageIndex == m_kPageTrail.numPages then
+		Controls.ForwardIcon:SetEnabled(false);
+		Controls.ForwardIcon:SetColor(INACTIVE_COLOR);
+	else
+		Controls.ForwardIcon:SetEnabled(true);
+		Controls.ForwardIcon:SetColor(ACTIVE_COLOR);
+	end
+
+	UpdateCrumbHighlight();
+end
+
+function OnNavForward()
+	if m_kPageTrail.pageIndex < m_kPageTrail.numPages then
+		NavigateToPageTrailIndex(m_kPageTrail.pageIndex + 1, true);
+	end
+end
+
+function OnNavBackward()
+	if m_kPageTrail.pageIndex > 1 then
+		NavigateToPageTrailIndex(m_kPageTrail.pageIndex - 1, true);
+	end
+end
+
 -------------------------------------------------------------------------------
 -- Navigate to a specific section / page.
 
@@ -894,20 +980,70 @@ function NavigateTo(SectionId, PageId)
 	_CurrentSectionId = SectionId;
 	_CurrentPageId = PageId;   
 
-	--Save our last navigation
-	lastPageIndex.lastSection = _CurrentSectionId;
-	lastPageIndex.lastPage = _CurrentPageId;
-
 	RefreshSections();
 	RefreshPageTabs(SectionId, (SectionId ~= prevSectionId));
 
 	if(SectionId ~= prevSectionId or PageId ~= prevPageId) then
-		local pages = GetPages(SectionId);
+		local pages:table = GetPages(SectionId);
 
 		for i, page in ipairs(pages) do
 			local id = page.PageId;
 			if(id == PageId) then
 				RefreshPageContent(page);
+
+				--Generate the history
+				local lastSave:table = {};
+				if m_kPageTrail.numPages == m_maxHistoryLimit then
+					-- if we're at max crumbs, remove the oldest entry
+					table.remove(m_kPageTrail.pageTable, 1);
+
+					-- now repurpose the existing crumbs to their new IDs
+					for j, history in ipairs(m_kPageTrail.pageTable) do
+						local historyPages:table = GetPages(history.lastSection);
+
+						for _, historyPage in ipairs(historyPages) do
+							if (historyPage.PageId == history.lastPage) then
+								TruncateStringWithTooltip(m_kPageTrail.crumbList[j].Description, SIZE_CRUMB_TEXT_X, historyPage.Title);
+							end
+						end
+					end
+
+					TruncateStringWithTooltip(m_kPageTrail.crumbList[m_maxHistoryLimit].Description, SIZE_CRUMB_TEXT_X, page.Title);
+					m_kPageTrail.pageIndex = m_maxHistoryLimit;
+				else
+					-- otherwise add a new crumb/entry
+					Controls.BackIcon:SetEnabled(true);
+					Controls.BackIcon:SetColor(ACTIVE_COLOR);
+
+					m_kPageTrail.numPages = m_kPageTrail.numPages + 1;
+					m_kPageTrail.pageIndex = m_kPageTrail.numPages;
+
+					local uiCrumb:table = m_kCrumbManager:GetInstance();
+					local crumbIdx:number = m_kPageTrail.pageIndex;
+					TruncateStringWithTooltip(uiCrumb.Description, SIZE_CRUMB_TEXT_X, page.Title);
+					uiCrumb.Button:SetEnabled(true);
+					uiCrumb.Button:SetHide(false);
+					uiCrumb.Button:RegisterCallback( Mouse.eLClick,
+					   function()
+							NavigateToPageTrailIndex(crumbIdx, false);
+						end);
+					uiCrumb.Button:RegisterCallback(Mouse.eMouseEnter, function()
+						UI.PlaySound("Main_Menu_Mouse_Over");
+					end);
+
+					uiCrumb["index"] = crumbIdx;
+					table.insert(m_kPageTrail.crumbList, uiCrumb);
+					end
+
+				-- append the new page to the history
+				lastSave.lastSection = _CurrentSectionId;
+				lastSave.lastPage = _CurrentPageId;
+				table.insert(m_kPageTrail.pageTable, lastSave);
+
+				-- force scroll to the end when we're adding a new page
+				Controls.CrumbScroll:SetScrollValue(100);
+
+				UpdateCrumbHighlight();
 			end
 		end	 
 	end
@@ -920,8 +1056,6 @@ end
 function OnToggleCivilopedia()
 	if(ContextPtr:IsHidden()) then 
 		OnOpenCivilopedia();
-		-- Set focus on search bar
-		Controls.SearchEditBox:TakeFocus();
 	else
 		OnClose();
 	end
@@ -940,6 +1074,10 @@ end
 --
 -------------------------------------------------------------------------------
 function OnOpenCivilopedia(sectionId_or_search, pageId)
+	Controls.BackIcon:SetEnabled(false);
+	Controls.BackIcon:SetColor(INACTIVE_COLOR);
+	Controls.ForwardIcon:SetEnabled(false);
+	Controls.ForwardIcon:SetColor(INACTIVE_COLOR);
 
 	print("Received a request to open the Civilopedia");
 	if(pageId == nil and sectionId_or_search) then
@@ -970,20 +1108,14 @@ function OnOpenCivilopedia(sectionId_or_search, pageId)
 			NavigateTo(page.SectionId, page.PageId);
 		end
 	else
-		local sectionID = nil;
-		local pageID = nil;
-		if(lastPageIndex.lastSection ~= "none" and lastPageIndex.lastPage ~= "none") then
-			sectionID = lastPageIndex.lastSection;
-			pageID = lastPageIndex.lastPage;
+		if (m_kPageTrail.numPages > 0) then
+			NavigateToPageTrailIndex(m_kPageTrail.pageIndex, true)
 		else
 			local sections = GetSections();
 			local pages = GetPages(sections[1].SectionId);
 			local page = pages[1];
-			sectionID = page.SectionId;
-			pageID = page.PageId;
+			NavigateTo(page.SectionId, page.PageId);
 		end
-
-		NavigateTo(sectionID, pageID);
 	end
 
 	UIManager:QueuePopup(ContextPtr, PopupPriority.Civilopedia);
@@ -1009,6 +1141,10 @@ end
 function OnInputActionTriggered( actionId )
 	if (actionId == m_OpenPediaId) then
 		OnToggleCivilopedia();
+	elseif (actionId == m_BackNavId) then
+		OnNavBackward();
+	elseif (actionId == m_ForwardNavId) then
+		OnNavForward();
     end
 end
 
@@ -1089,15 +1225,26 @@ function Shutdown()
 end
 
 function Initialize()
+	m_kPageTrail.numPages = 0;
+	m_kPageTrail.pageIndex = 0;
+	m_kPageTrail.pageTable = {};
+	m_kPageTrail.crumbList = {};
+
 	ContextPtr:SetShutdown( Shutdown );
 	Controls.WindowCloseButton:RegisterCallback(Mouse.eLClick, OnClose);
 	Controls.WindowCloseButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
+
+	Controls.ForwardButton:RegisterCallback(Mouse.eLClick, OnNavForward);
+	Controls.BackButton:RegisterCallback(Mouse.eLClick, OnNavBackward);
+
 	LuaEvents.OpenCivilopedia.Add(OnOpenCivilopedia);
 	LuaEvents.ToggleCivilopedia.Add(OnToggleCivilopedia);
 	
 	-- Hotkey support
 	ContextPtr:SetInputHandler( OnInputHandler, true );
 	m_OpenPediaId = Input.GetActionId("OpenCivilopedia");
+	m_BackNavId = Input.GetActionId("CivilopediaBack");
+	m_ForwardNavId = Input.GetActionId("CivilopediaForward");
     Events.InputActionTriggered.Add( OnInputActionTriggered );
 
 	-- Search support

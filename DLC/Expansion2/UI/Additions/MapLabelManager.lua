@@ -38,6 +38,9 @@ local m_TerritoryTracker = { };
 local m_RiverTracker     = { };
 local m_WonderTracker    = { };
 
+local m_bUpdateNaturalWonderLabels : boolean = false;
+local m_bUpdateNationalParkLabels : boolean = false;
+
 local FontParams_MajorRegion = {
 	FontSize       = 24.0,
 	Kerning        = 4.0,
@@ -138,6 +141,7 @@ function CreateLabelManager(szLensLayer, szOverlayName, pRebuildFunction, pUpdat
 
 	local pManager = {
 		m_szOverlayName   = szOverlayName;
+		m_szFontStyle     = szFontStyle;
 		m_OverlayInstance = pOverlayInstance;
 		m_RebuildFunction = pRebuildFunction;
 		m_UpdateFunction  = pUpdateFunction;
@@ -450,6 +454,11 @@ end
 function Refresh()
 	for nLayerHash,pManager in pairs(m_LabelManagerMap) do
 		pManager.m_OverlayInstance = UILens.GetOverlay(pManager.m_szOverlayName);
+		
+		if pManager.m_OverlayInstance and pManager.m_szFontStyle then
+			local szFontFamily = UIManager:GetFontFamilyFromStyle(pManager.m_szFontStyle);
+			pManager.m_OverlayInstance:SetFontFamily(szFontFamily);
+		end
 
 		if pManager.m_RebuildFunction and pManager.m_OverlayInstance then
 			pManager.m_RebuildFunction(pManager.m_OverlayInstance);
@@ -522,12 +531,7 @@ end
 
 -- ===========================================================================
 function OnNationalParksChanged()
-	local pManager = m_LabelManagerMap[NATIONAL_PARK_LAYER_HASH];
-	if pManager.m_RebuildFunction and pManager.m_OverlayInstance then
-		pManager.m_RebuildFunction(pManager.m_OverlayInstance);
-	end
-	
-	UpdateVisibleNaturalWonderLabels();
+	m_bUpdateNationalParkLabels = true;
 end
 
 -- ===========================================================================
@@ -539,6 +543,50 @@ function OnCityReligionChanged(playerID: number, cityID : number, eNewReligion :
 	end
 end
 
+-- ===========================================================================
+function OnFeatureAddedToMap(x: number, y : number)
+
+	local pPlot = Map.GetPlot(x, y);
+	if (pPlot ~= nil and pPlot:IsNaturalWonder()) then
+		local pFeature = pPlot:GetFeature();
+		local pFeaturePlots = pFeature:GetPlots();
+		m_NaturalWonderPlots[pFeaturePlots[1]] = pFeature;
+		m_bUpdateNaturalWonderLabels = true;
+	end
+end
+
+-- ===========================================================================
+function OnFeatureRemovedFromMap(x: number, y : number)
+
+	local iPlot:number = Map.GetPlotIndex(x, y);
+	-- Was that plot in the Natural Wonder Plots list?
+	if m_NaturalWonderPlots[iPlot] ~= nil then
+		-- Remove it and rebuild
+		m_NaturalWonderPlots[iPlot] = nil;
+		m_bUpdateNaturalWonderLabels = true;
+	end
+end
+
+-- ===========================================================================
+-- Handle expensive updates when all events are complete.  Prevents redundant updates.
+function OnEventPlaybackComplete()
+	if m_bUpdateNationalParkLabels == true then
+		m_bUpdateNationalParkLabels = false
+		local pManager = m_LabelManagerMap[NATIONAL_PARK_LAYER_HASH];
+		if pManager.m_RebuildFunction and pManager.m_OverlayInstance then
+			pManager.m_RebuildFunction(pManager.m_OverlayInstance);
+		end
+		-- Need to update the NW labels because they can overlap
+		m_bUpdateNaturalWonderLabels = true;
+	end
+	
+	m_bUpdateNaturalWonderLabels = true;
+
+	if m_bUpdateNaturalWonderLabels == true then
+		m_bUpdateNaturalWonderLabels = false;
+		UpdateVisibleNaturalWonderLabels();
+	end		
+end
 -- ===========================================================================
 function OnInit(isHotload : boolean)
 	-- If hotloading, rebuild from scratch.
@@ -596,6 +644,10 @@ function Initialize()
 	Events.NationalParkAdded.Add( OnNationalParksChanged );
 	Events.NationalParkRemoved.Add( OnNationalParksChanged );
 	Events.CityReligionChanged.Add( OnCityReligionChanged );
+	Events.FeatureAddedToMap.Add( OnFeatureAddedToMap );
+	Events.FeatureRemovedFromMap.Add( OnFeatureRemovedFromMap );
+
+	Events.GameCoreEventPlaybackComplete.Add(OnEventPlaybackComplete);
 
 	--TODO subscribe to other gameplay events that change which labels are visible
 	--feature naming, player changing, etc

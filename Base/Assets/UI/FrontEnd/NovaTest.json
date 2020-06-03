@@ -1,0 +1,170 @@
+{
+  "type": "context",
+  "id": "NovaTest",
+  "children": [ /* render order/reversed input order */
+    
+    {
+      "id": "TopBar",
+      "type": "widget",
+      "components": [
+        { "type": "image", "image": "grid_unitbk", "slice": "8,8" },
+        { "type": "text", "string": "TopBar" },
+        { "type": "input" }
+      ],
+      "constraints": [ "#REQUIRED", "L = 0", "T = 0", "W = Parent.W", "H = 50" ]
+    },
+    
+    {
+      "id": "LeftActionButtons",
+      "type": "widget",
+      "components": [
+        { "type": "image", "image": "grid_unitbk", "slice": "8,8" },
+        { "type": "text", "string": "LeftActionButtons" },
+        { "type": "input" }
+      ],
+      "constraints": [ "W = 400", "#REQUIRED", "H = 64", "L = 0" ]
+    },
+    
+    {
+      "id": "RightActionButtons",
+      "type": "widget",
+      "components": [
+        { "type": "image", "image": "grid_unitbk", "slice": "8,8" },
+        { "type": "text", "string": "RightActionButtons" },
+        { "type": "input" }
+      ],
+      "constraints": [ "W = 300", "#REQUIRED", "H = 64", "R = Parent.W" ]
+    },
+    
+    {
+      "id": "DiplomacyPanel",
+      "type": "widget",
+      "components": [
+        { "type": "image", "image": "grid_unitbk", "slice": "8,8" },
+        { "type": "text", "string": "DiplomacyPanel" },
+        { "type": "input" }
+      ],
+      "constraints": [ "W = 200" ]
+    },
+
+    {
+      "id": "WorldTracker",
+      "type": "widget",
+      "components": [
+        { "type": "image", "image": "grid_unitbk", "slice": "8,8" },
+        { "type": "text", "string": "WorldTracker" },
+        { "type": "input" }
+      ],
+      "constraints": [ "L = 0", "W = 320", "H = 240" ]
+    },
+    
+    {
+      "id": "MapPanel",
+      "type": "widget",
+      "components": [
+        { "type": "image", "image": "grid_unitbk", "slice": "8,8" },
+        { "type": "text", "string": "MapPanel" },
+        { "type": "input" }
+      ],
+      "constraints": [
+        // default is #MEDIUM
+        "#REQUIRED",
+        "L = 0",
+        "B = Parent.H",
+        "H = 0.75 * W", // 4:3
+
+        "#STRONG",
+        "W >= 160",
+        "H >= 120",
+        "W <= 640",
+        "H <= 480",
+
+        "#MEDIUM",
+        "W = 0.25 * Screen.W",
+        "H = 0.25 * Screen.H"
+      ]
+    },
+  
+    {
+      "id": "ActionPanel",
+      "type": "widget",
+      "components": [
+        { "type": "image", "image": "grid_unitbk", "slice": "8,8" },
+        { "type": "text", "string": "ActionPanel" },
+        { "type": "input" }
+      ],
+      "constraints": [ "#REQUIRED", "W = 200", "H = 200", "R = Parent.W", "B = Parent.H" ]
+    },
+  
+    {
+      "id": "SelectionPanel",
+      "type": "widget",
+      "components": [
+        { "type": "image", "image": "grid_unitbk", "slice": "8,8" },
+        { "type": "text", "string": "SelectionPanel" },
+        { "type": "input" }
+      ],
+      "constraints": [ "W = 400", "B = Parent.H" ]
+    },
+  
+    {
+      "id": "NotificationPanel",
+      "type": "container",
+      "children": [
+        {
+          "id": "NotificationPanelBG",
+          "type": "widget",
+          "components": [ { "type": "image", "image": "ActionPanel_Rail" }, { "type": "input" } ],
+          "constraints": [ "R = Parent.W", "W = 39", "T = 0", "H = Parent.H" ]
+        },
+        {
+          "id": "NotificationScroll",
+          "type": "ScrollPanel",
+          "constraints":[ "R = Parent.W", "T = 0", "W = Parent.W", "H = Parent.H" ],
+          "layout": "stack"
+        }
+      ],
+      "constraints": [ "R = Parent.W", "W = 64", "H = 400" ]
+    },
+    
+  ],
+
+  "constraints": [
+
+    "#REQUIRED",
+    "LeftActionButtons.T = TopBar.B",
+    "RightActionButtons.T = TopBar.B",
+
+    "DiplomacyPanel.T = TopBar.B",
+    "DiplomacyPanel.H = RightActionButtons.H",
+    "DiplomacyPanel.R = RightActionButtons.L",
+
+    "WorldTracker.T = LeftActionButtons.B",
+    "WorldTracker.B < MapPanel.T + 10",
+
+    "SelectionPanel.H = ActionPanel.H - 10",
+
+    "NotificationPanel.B = ActionPanel.T",
+
+    "NotificationPanel.T > RightActionButtons.B",
+    
+    "LeftActionButtons.R < DiplomacyPanel.L",
+
+    "SelectionPanel.L > MapPanel.R + 10",
+    "SelectionPanel.R + 10 = ActionPanel.L",
+  ],
+
+  "blueprints": {
+    "NotificationInstance": {
+      "type": "widget",
+      "id": "root",
+      "constraints": [ "#REQUIRED", "R = Parent.W - 8", "W = 40", "H = 40"],
+      "components": [
+        { "type": "image", "image": "ActionPanel_Notification2" },
+        { "type": "text", "string": "  0" },
+        { "type": "input" }
+      ]
+    }
+  }
+
+}

@@ -8,6 +8,9 @@ include( "LocalPlayerActionSupport" );
 
 local RELOAD_CACHE_ID: string = "LoadGameMenu";		-- hotloading
 
+local MIN_SCREEN_Y       :number = 768;
+local SCREEN_OFFSET_Y    :number = 63;
+local MIN_SCREEN_OFFSET_Y:number = -53;
 
 -------------------------------------------------
 -- Globals
@@ -235,7 +238,7 @@ function OnShow()
 	local directoryVisible = Controls.DirectoryPullDown:IsVisible();
     local dummyCloudVisible = Controls.CloudDummy:IsVisible();
 
-	local count = 0;
+	local count:number = 0;
 	if(autoSavesVisible) then
 		count = count + 1;
 	end
@@ -251,10 +254,11 @@ function OnShow()
 	if(dummyCloudVisible) then
 		count = count + 1;
 	end
-		
-	local decoSize = 611;
-	Controls.DecoContainer:SetSizeY(decoSize - (count * 23));
 	
+	local decoSize:number = Controls.InspectorArea:GetSizeY();
+	
+	Controls.DecoContainer:SetSizeY(decoSize - (count * 25) - count);	
+
 	SetupFileList();
 end
 
@@ -447,13 +451,17 @@ end
 -- ===========================================================================
 
 function Resize()
-	local screenX, screenY:number = UIManager:GetScreenSizeVal();
-	local hideLogo = true;
-	if(screenY >= Controls.MainWindow:GetSizeY() + (Controls.LogoContainer:GetSizeY()+ Controls.LogoContainer:GetOffsetY())*2) then
+	local screenX, screenY:number  = UIManager:GetScreenSizeVal();
+	local hideLogo        :boolean = true;
+	
+	if(screenY >= MIN_SCREEN_Y + (Controls.LogoContainer:GetSizeY()+ Controls.LogoContainer:GetOffsetY() * 2)) then
+		Controls.MainWindow:SetSizeY(screenY-(Controls.LogoContainer:GetSizeY() + Controls.LogoContainer:GetOffsetY() * 2));
 		hideLogo = false;
+	else
+		Controls.MainWindow:SetSizeY(screenY);
 	end
+	
 	Controls.LogoContainer:SetHide(hideLogo);
-	Controls.MainGrid:ReprocessAnchoring();
 end
 
 -- ===========================================================================

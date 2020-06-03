@@ -1,4 +1,3 @@
-include("LuaClass");
 include("InstanceManager");
 
 -- ===========================================================================
@@ -26,15 +25,27 @@ include("InstanceManager");
 --
 -- ===========================================================================
 
--- This class manages PopupDialog controls defined in PopupDialog.xml
-PopupDialog = LuaClass:Extend()
+-- ===========================================================================
+--	Class Table
+-- ===========================================================================
+-- Manages PopupDialog controls defined in PopupDialog.xml
+PopupDialog = {
+	ID				= "",
+	Controls		= nil,
+	AnimsOnOpen		= {},
+	PopupControls	= {}
+}
 
 -- Helper class to interface with InGamePopup context
-PopupDialogInGame = LuaClass:Extend()
+PopupDialogInGame = {
+	ID			= "",
+	m_options	= {}
+}
 
-------------------------------------------------------------------
--- Class Constants
-------------------------------------------------------------------
+
+-- ===========================================================================
+--	Class Constants
+-- ===========================================================================
 PopupDialog.TOP_CONTROL_ROW				= "Row";
 PopupDialog.TOP_CONTROL_TEXT			= "Text";
 PopupDialog.TOP_CONTROL_BUTTON			= "Button";
@@ -63,7 +74,6 @@ PopupDialog.COMMAND_DEFAULT				= "_CMD_DEFAULT";
 --	RETURNS: PopupDialog object
 -- ===========================================================================
 function PopupDialog:new( id:string, myControls:table )
-	self = LuaClass.new(PopupDialog)
 	
 	self.ID				= id;
 	self.Controls		= myControls or Controls;
@@ -454,24 +464,18 @@ end
 
 
 -- ===========================================================================
---	PopupDialogInGame Constructor
+--	Interfaces with the LUA context that is part of Ingame.
 --
---	Original Author: Tronster
+--	It is essentially a helper that:
+--		1) builds the layout of the popup; storing details in table
+--		2) sends daya to InGamePopup.lua via a LuaEvent
+--
+--	For customized popups, create them in XML and use PopupDialog instead.
+--
 -- ===========================================================================
---	Usage Notes:
---  Perhaps better titled 'InGamePopupDialogBuilder'.
---	This builds a table that's sent over to OnPopupOpen in InGamePopup.lua, which builds the actual popup.
---	Don't bother preallocating unless you're laying down an improbable number of these, they're just parameters.
---	The benefit of this is that certain keypresses can also trigger button actions, and will automatically close the popup.
---	For example, VK_ENTER will trigger Confirm buttons, VK_ESCAPE will trigger Cancel buttons, and either can trigger Default buttons.
---	Custom buttons may be added, as above, but they will not be triggered by any keypresses.
--- ===========================================================================
-function PopupDialogInGame:new( id:string )
-	self = LuaClass.new(PopupDialogInGame)
-	
+function PopupDialogInGame:new( id:string )	
 	self.ID			= id;
 	self.m_options	= {};
-	
 	return self;
 end
 

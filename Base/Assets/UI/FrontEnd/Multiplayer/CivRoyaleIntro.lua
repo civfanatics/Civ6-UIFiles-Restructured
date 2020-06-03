@@ -28,11 +28,11 @@ local INTRO_DESCRIPTIONS_DETAILS:table = {
 local NEXT_BUTTON_TEXT = Locale.Lookup("LOC_CIVROYALE_INTRO_NEXT");
 local PLAY_BUTTON_TEXT = Locale.Lookup("LOC_CIVROYALE_INTRO_PLAY");
 
+
 -- ===========================================================================
 --	MEMBERS
 -- ===========================================================================
 local m_PageIndex:number = 1;
-
 
 
 -- ===========================================================================
@@ -53,15 +53,20 @@ function Realize()
 	Controls.ButtonStack:CalculateSize();
 end
 
--- ===========================================================================
-function OnShow()
-	m_PageIndex = 1;
-	Realize();
-	UIManager:QueuePopup(ContextPtr, PopupPriority.TutorialHigh);
-end
 
 -- ===========================================================================
 function OnShowFromMenu()
+
+	-- Set CivRoyale specific textures in LUA (rather than XML) so they are not
+	-- loaded if this fails to initialize due to the MOD being disabled.
+	-- Other textures aren't an issue as they are either in the base game assets
+	-- or are loaded dynamically by navigating to them.
+	-- This must be done on every show as the player may have turned on/off the
+	-- CivRoyale mod and if it started off, this will ensure the title is loaded.
+	if IsCivRoyaleActive() then
+		Controls.Logo:SetTexture("CivRoyaleIntro_Logo");
+	end
+
 	m_PageIndex = 1;
 	Realize();
 	UIManager:QueuePopup(ContextPtr, PopupPriority.Current);
@@ -115,9 +120,17 @@ function HideIfVisible()
 	end
 end
 
+-- ===========================================================================
+--	If the CivRoyale scenario active.
+-- ===========================================================================
+function IsCivRoyaleActive()
+	local isActive:boolean  = Modding.IsModEnabled("F264EE10-F21B-4A9A-BBCD-D534E9843E90");
+	return isActive;
+end
 
 -- ===========================================================================
 function Initialize()
+
 	ContextPtr:SetInputHandler( OnInput, true );
 
 	Controls.Close:RegisterCallback(Mouse.eLClick, OnClose);
@@ -128,6 +141,5 @@ function Initialize()
 	LuaEvents.JoiningRoom_Showing.Add(OnJoiningRoom_Showing);
 	LuaEvents.InGameTopOptionsMenu_ShowExpansionIntro.Add( OnShowFromMenu );
 	LuaEvents.DiplomacyActionView_HideIngameUI.Add( HideIfVisible );
-
 end
 Initialize();

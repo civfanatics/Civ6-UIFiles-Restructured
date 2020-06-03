@@ -22,6 +22,11 @@ function RealizeGreatPersonLens(kUnit:table )
 			local kUnitArchaeology:table = kUnit:GetArchaeology();
 			local kUnitGreatPerson:table = kUnit:GetGreatPerson();
 			local kUnitRockBand:table = kUnit:GetRockBand();
+			local bCanCauseDisasters:boolean = false;
+			local sUnitType = GameInfo.Units[kUnit:GetUnitType()].UnitType;
+			if (sUnitType ~= nil and GameInfo.Units_XP2[sUnitType] ~= nil and GameInfo.Units_XP2[sUnitType].CanCauseDisasters ~= nil) then
+				bCanCauseDisasters = GameInfo.Units_XP2[sUnitType].CanCauseDisasters;
+			end
 			if kUnitGreatPerson ~= nil and kUnitGreatPerson:IsGreatPerson() then
 				local greatPersonInfo:table = GameInfo.GreatPersonIndividuals[kUnitGreatPerson:GetIndividual()];
 				-- Highlight an area around the Great Person (if they have an area of effect trait)
@@ -61,6 +66,15 @@ function RealizeGreatPersonLens(kUnit:table )
 				-- Highlight the plots the RockBand could use its action on
 				local activationPlots:table = {};
 				local rawActivationPlots:table = kUnitRockBand:GetActivationHighlightPlots();
+				for _,plotIndex:number in ipairs(rawActivationPlots) do
+					table.insert(activationPlots, {"Great_People", plotIndex});
+				end
+					
+				UILens.SetLayerHexesArea(m_HexColoringGreatPeople, playerID, {}, activationPlots);
+				UILens.ToggleLayerOn(m_HexColoringGreatPeople);
+			elseif bCanCauseDisasters then -- Highlight plots that this unit can trigger disasters on
+				local activationPlots:table = {};
+				local rawActivationPlots:table = GameClimate.GetLocationsForPossibleTriggerableEvents(playerID);
 				for _,plotIndex:number in ipairs(rawActivationPlots) do
 					table.insert(activationPlots, {"Great_People", plotIndex});
 				end

@@ -45,11 +45,7 @@ function OnClickAvailableResource(player, resourceType)
 		if (dealItems ~= nil) then
 			for i, pDealItem in ipairs(dealItems) do
 				if pDealItem:GetValueType() == resourceType then
-					-- Check for non-zero duration.  There may already be a one-time transfer of the resource if a city is in the deal.
-					if (pDealItem:GetDuration() ~= 0) then
-						return;	-- Already in there.
-					end
-					if (pResourceDef ~= nil and pResourceDef.Accumulate) then
+					if (pResourceDef ~= nil and pResourceDef.Accumulate and (not pDeal:GetItemParent(pDealItem)) or pDealItem:GetDuration() ~= 0) then
 						-- already have this, up the amount
 						local iAddAmount = pDealItem:GetAmount() + 1;
 						iAddAmount = clip(iAddAmount, nil, pDealItem:GetMaxAmount());
@@ -138,20 +134,19 @@ function PopulateDealResources(player: table, iconList: table)
 
 	BASE_PopulateDealResources(player, iconList);
 
-	local pDeal = DealManager.GetWorkingDeal(DealDirection.OUTGOING, g_LocalPlayer:GetID(), g_OtherPlayer:GetID());
-	local playerType = GetPlayerType(player);
+	local pDeal : table = DealManager.GetWorkingDeal(DealDirection.OUTGOING, g_LocalPlayer:GetID(), g_OtherPlayer:GetID());
 	if (pDeal ~= nil) then
 		for pDealItem in pDeal:Items() do
 			if (pDealItem:GetFromPlayerID() == player:GetID()) then
-				local type = pDealItem:GetType();
-				local iDuration = pDealItem:GetDuration();
-				local dealItemID = pDealItem:GetID();
+				local type : number = pDealItem:GetType();
+				local iDuration : number = pDealItem:GetDuration();
+				local dealItemID : number = pDealItem:GetID();
 				-- Gold?
 				if (type == DealItemTypes.FAVOR) then
-					local icon;
+					local icon : table;
 					if (iDuration == 0) then
 						-- One time
-						icon = g_IconOnlyIM:GetInstance(iconList);
+						icon = g_IconOnlyIM:GetInstance(iconList.OneTimeDealsStack);
 						SetIconToSize(icon.Icon, "ICON_YIELD_FAVOR");
 						icon.AmountText:SetText(tostring(pDealItem:GetAmount()));
 						icon.AmountText:SetHide(false);
@@ -159,7 +154,9 @@ function PopulateDealResources(player: table, iconList: table)
 
 						-- Show/hide unacceptable item notification
 						icon.UnacceptableIcon:SetHide(not pDealItem:IsUnacceptable());
+						icon.RemoveButton:SetHide(false);
 
+						icon.RemoveButton:RegisterCallback(Mouse.eLClick, function(void1, void2, self) OnRemoveDealItem(player, dealItemID, self); end);
 						icon.SelectButton:RegisterCallback(Mouse.eRClick, function(void1, void2, self) OnRemoveDealItem(player, dealItemID, self); end);
 						icon.SelectButton:RegisterCallback( Mouse.eLClick, function(void1, void2, self) OnSelectValueDealItem(player, dealItemID, self); end );
 						icon.SelectButton:SetToolTipString(nil);		-- We recycle the entries, so make sure this is clear.
@@ -175,6 +172,9 @@ function PopulateDealResources(player: table, iconList: table)
 			end -- end if deal
 		end
 	end
+
+	iconList.OneTimeDealsHeader:SetHide(table.count(iconList.OneTimeDealsStack:GetChildren()) == 0);
+	iconList.For30TurnsDealsHeader:SetHide(table.count(iconList.For30TurnsDealsStack:GetChildren()) == 0);
 	
 end
 

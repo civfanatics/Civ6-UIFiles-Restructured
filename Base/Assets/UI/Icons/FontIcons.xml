@@ -22,6 +22,8 @@
 		<Row Name="ICON_SINGLE_PROMISES_CITYSTATE"		Baseline="6" IconSize="22" IconsPerRow="1"	IconsPerColumn="1" Filename="Promises22_CityState"/>
 		<Row Name="ICON_SINGLE_PROMISES_ESPIONAGE"		Baseline="6" IconSize="22" IconsPerRow="1"	IconsPerColumn="1" Filename="Promises22_Espionage"/>
 		<Row Name="ICON_SINGLE_PROMISES_RELIGION"			Baseline="6" IconSize="22" IconsPerRow="1"	IconsPerColumn="1" Filename="Promises22_Religion"/>
+
+    <Row Name="ICON_ATLAS_AERODROME_FONT_ICON" Baseline="4" IconSize="22" IconsPerRow="8" IconsPerColumn="8" Filename="Districts22.dds"/> 
 	</IconTextureAtlases>
 	<IconSingleDefinitions>
 		<!-- TODO: Implement formats
@@ -211,6 +213,7 @@
 		<Row Name="DISTRICT_COMMERCIAL_HUB" Atlas="ICON_ATLAS_FONT_ICON_BASELINE_4" Index="178"/>
 		<Row Name="DISTRICT_ENCAMPMENT" Atlas="ICON_ATLAS_FONT_ICON_BASELINE_4" Index="179"/>
 		<Row Name="DISTRICT_HOLYSITE" Atlas="ICON_ATLAS_FONT_ICON_BASELINE_4" Index="180"/>
+    <Row Name="DISTRICT_HOLY_SITE" Atlas="ICON_ATLAS_FONT_ICON_BASELINE_4" Index="180"/>
 		<Row Name="DISTRICT_LAVRA" Atlas="ICON_ATLAS_FONT_ICON_BASELINE_4" Index="181"/>
 		<Row Name="DISTRICT_NEIGHBORHOOD" Atlas="ICON_ATLAS_FONT_ICON_BASELINE_4" Index="181"/>
 		<Row Name="DISTRICT_MBANZA" Atlas="ICON_ATLAS_FONT_ICON_BASELINE_4" Index="181"/>
@@ -225,6 +228,7 @@
 		<Row Name="DISTRICT_SPACEPORT" Atlas="ICON_ATLAS_FONT_ICON_BASELINE_4" Index="186"/>
 		<Row Name="DISTRICT_WONDER" Atlas="ICON_ATLAS_FONT_ICON_BASELINE_4" Index="187"/>
 		<Row Name="DISTRICT_ENTERTAINMENT" Atlas="ICON_ATLAS_FONT_ICON_BASELINE_4" Index="188"/>
+    <Row Name="DISTRICT_ENTERTAINMENT_COMPLEX" Atlas="ICON_ATLAS_FONT_ICON_BASELINE_4" Index="188"/>
 		<Row Name="Corps" Atlas="ICON_ATLAS_FONT_ICON_BASELINE_6" Index="198"/>
 		<Row Name="Army" Atlas="ICON_ATLAS_FONT_ICON_BASELINE_6" Index="199"/>
 		<Row Name="Exclamation" Atlas="ICON_ATLAS_FONT_ICON_BASELINE_4" Index="200"/>
@@ -305,6 +309,7 @@
 		<Row Name="PROMISES_CITY"					Atlas="ICON_SINGLE_PROMISES_CITY"				Index="0" />
 		<Row Name="PROMISES_CITYSTATE"		Atlas="ICON_SINGLE_PROMISES_CITYSTATE"	Index="0" />
 		<Row Name="PROMISES_ESPIONAGE"		Atlas="ICON_SINGLE_PROMISES_ESPIONAGE"	Index="0" />
-		<Row Name="PROMISES_RELIGION"			Atlas="ICON_SINGLE_PROMISES_RELIGION"		Index="0" />		
+		<Row Name="PROMISES_RELIGION"			Atlas="ICON_SINGLE_PROMISES_RELIGION"		Index="0" />
+    <Row Name="DISTRICT_AERODROME"    Atlas="ICON_ATLAS_AERODROME_FONT_ICON"  Index="5"/>
 	</IconDefinitions>
 </GameInfo>

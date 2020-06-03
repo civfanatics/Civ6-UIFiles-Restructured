@@ -157,7 +157,7 @@
 
 				<!-- Settlement Water Guide -->
 				<Container ID="SettlementWaterContainer" Anchor="C,B" Offset="40,26" Size="180,36">
-					<Label Anchor="C,T" Style="CityPanelHeader" String="LOC_HUD_UNIT_PANEL_WATER_AVAILABILITY_GUIDE"/>
+					<Label ID="SettlementWaterHeader" Anchor="C,T" Style="CityPanelHeader" String="LOC_HUD_UNIT_PANEL_WATER_AVAILABILITY_GUIDE"/>
 					<Grid Anchor="C,B"  Size="auto,auto" AutoSizePadding="1,1" Texture="Controls_KeySwatch" SliceCorner="6,6" SliceSize="5,5" Color="Black">
 						<Stack Anchor="C,C" StackGrowth="Right" StackPadding="-1">
 							<!-- Fresh Water -->

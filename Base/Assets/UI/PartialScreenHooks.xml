@@ -16,7 +16,7 @@
         <Button ID="WorldRankingsButton" Anchor="L,C" Size="40,40"  Texture="LaunchBar_Hook_ButtonSmall.dds" Style="ButtonNormalText" ToolTip="LOC_PARTIALSCREEN_WORLDRANKINGS_TOOLTIP">
           <Image Texture="LaunchBar_Hook_WorldRankings" Size="26,26" Anchor="C,C" Offset="0,-1"/>
 
-          <Tutorial  ID="TutOpenWorldRankings" Style="TutorialContainer" Anchor="R,T" Offset="216,10" TriggerBy="TutorialOpenWorldRankings" >
+          <Tutorial  ID="TutOpenWorldRankings" Style="TutorialContainer" Anchor="R,T" Offset="175,10" TriggerBy="TutorialOpenWorldRankings" >
             <Grid Style="TutorialCalloutGrid">
               <Label Style="TutorialHeaderText" String="LOC_META_119a_HEAD" />
               <Label Style="TutorialBodyText" String="LOC_META_119a_BODY" />

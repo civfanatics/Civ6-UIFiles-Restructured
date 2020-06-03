@@ -127,6 +127,7 @@ function ShowEmergency( kData: table )
 	else
 		Controls.VictorStack:SetHide(false);
 		Controls.CrisisDetailsStack:SetHide(true);
+		Controls.CrisisDuration:SetText(Locale.Lookup("LOC_EMERGENCY_TURNS_OVER"));
 		if GameInfo.Emergencies_XP2[emergencyType].Hostile then
 			local isTarget :boolean =  localPlayerID == m_targetPlayerID;
 			if (not kData.crisisSuccess and isTarget) then

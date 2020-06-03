@@ -3,13 +3,24 @@
 -------------------------------------------------
 include("LobbyTypes"); --MPLobbyMode
 
+-- ===========================================================================
+function GetInternetGameOfflineTT()
+	if( Network.GetNetworkPlatform() == NetworkPlatform.NETWORK_PLATFORM_EOS ) then
+		return Locale.Lookup("LOC_EPIC_MULTIPLAYER_INTERNET_GAME_OFFLINE_TT");
+	end
+
+	return Locale.Lookup("LOC_MULTIPLAYER_INTERNET_GAME_OFFLINE_TT");
+end
+
 -------------------------------------------------
 -- Globals
 -------------------------------------------------
+
+
 local displayNetworkModes = false;	-- Are we displaying the network mode buttons?
 
 local InternetButtonOnlineStr : string = Locale.Lookup("LOC_MULTIPLAYER_INTERNET_GAME_TT");
-local InternetButtonOfflineStr : string = Locale.Lookup("LOC_MULTIPLAYER_INTERNET_GAME_OFFLINE_TT");
+local InternetButtonOfflineStr : string = GetInternetGameOfflineTT();
 
 
 -------------------------------------------------

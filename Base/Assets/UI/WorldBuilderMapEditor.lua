@@ -28,6 +28,8 @@ local m_LanguageEntries		: table = {};
 local m_CurLanguageSel		: number = 1;
 local m_TextEntries			: table = {};
 
+local m_ReferenceMapName	: string = nil;
+
 local m_ItemAnnotations :table = 
 {
 	{ "LOC_WORLDBUILDER_MAPEDIT_MODTITLE" }, { "LOC_WORLDBUILDER_MAPEDIT_MODDESC" }, { "LOC_WORLDBUILDER_MAPEDIT_MAPTITLE" }, { "LOC_WORLDBUILDER_MAPEDIT_MAPDESC" },
@@ -97,7 +99,9 @@ function RefreshAnnotations()
 
 				-- Set button text as 
 				TruncateString(controlEntry.Root.Button, controlEntry.Root.Button:GetSizeX()-30, entry.Text, "");
-				toolTip = toolTip.."[NEWLINE]"..entry.Text;
+				if entry.Text ~= nil then
+					toolTip = toolTip.."[NEWLINE]"..entry.Text;
+				end
 
 				controlEntry.Root.Button:SetToolTipString(toolTip);
 			end
@@ -404,6 +408,37 @@ function OnMapScriptEdited( text, control )
 end
 
 -- ===========================================================================
+function OnMapReferenceEdited( text, control )
+	StrategicView_ClearReferenceMap();
+	local bResult : boolean = StrategicView_SetReferenceMap(text);
+	if bResult then
+		LuaEvents.WorldBuilder_SetPlacementStatus(Locale.Lookup("LOC_WORLDBUILDER_REFERENCE_MAP_LOADED"));
+	else
+		LuaEvents.WorldBuilder_SetPlacementStatus(Locale.Lookup("LOC_WORLDBUILDER_REFERENCE_MAP_NOT_FOUND"));
+	end
+	m_ReferenceMapName = text;
+end
+
+-- ===========================================================================
+function OnMapReferenceAlphaEdited( text, control )
+	if text == nil then
+		LuaEvents.WorldBuilder_SetPlacementStatus(Locale.Lookup("LOC_WORLDBUILDER_REFERENCE_ALPHA_BAD_2"));
+	else
+		local refAlpha : number = tonumber(text);
+		if refAlpha ~= nil then
+			if (refAlpha >= 0.0 and refAlpha <= 1.0) then
+				StrategicView_SetReferenceMapAlpha(refAlpha);
+				LuaEvents.WorldBuilder_SetPlacementStatus(Locale.Lookup("LOC_WORLDBUILDER_REFERENCE_ALPHA_SET"));
+			else
+				LuaEvents.WorldBuilder_SetPlacementStatus(Locale.Lookup("LOC_WORLDBUILDER_REFERENCE_ALPHA_BAD"));
+			end
+		else
+			LuaEvents.WorldBuilder_SetPlacementStatus(Locale.Lookup("LOC_WORLDBUILDER_REFERENCE_ALPHA_BAD_2"));
+		end
+	end
+end
+
+-- ===========================================================================
 function OnRulesetEdited( text, control )
 	
 	WorldBuilder.ConfigurationManager():SetMapValue("Ruleset", text);
@@ -442,13 +477,26 @@ function UpdateGeneralPage()
 		m_ViewingTab.GeneralInstance.IDEdit:SetDisabled(true);
 		m_ViewingTab.GeneralInstance.IDEdit:SetText( WorldBuilder.GetID() );
 		local attribs = WorldBuilder.ConfigurationManager():GetMapValues();
-		m_ViewingTab.GeneralInstance.WidthEdit:SetText( tostring( attribs.Width ) );
-		m_ViewingTab.GeneralInstance.WidthEdit:SetDisabled(true);
-		m_ViewingTab.GeneralInstance.HeightEdit:SetText( tostring( attribs.Height ) );
-		m_ViewingTab.GeneralInstance.HeightEdit:SetDisabled(true);
+		m_ViewingTab.GeneralInstance.WidthLabel:SetText( tostring( attribs.Width ) );
+		m_ViewingTab.GeneralInstance.HeightLabel:SetText( tostring( attribs.Height ) );
 		m_ViewingTab.GeneralInstance.RulesetEdit:SetText( tostring( attribs.Ruleset ) );
 		m_ViewingTab.GeneralInstance.MapScriptEdit:SetText( tostring( attribs.MapScript ) );
-
+		local refAlpha : number = StrategicView_GetReferenceMapAlpha();
+		if refAlpha == nil then
+			refAlpha = 0.5;
+			StrategicView_SetReferenceMapAlpha(0.5);
+		else
+			if refAlpha < 0.0 or refAlpha > 1.0 then
+				refAlpha = 0.5;
+				StrategicView_SetReferenceMapAlpha(0.5);
+			end
+		end
+		m_ViewingTab.GeneralInstance.MapReferenceAlphaEdit:SetText( tostring(refAlpha) );
+		if m_ReferenceMapName ~= nil then
+			m_ViewingTab.GeneralInstance.MapReferenceEdit:SetText( m_ReferenceMapName );
+		end
+		m_ViewingTab.GeneralInstance.MapReferenceEdit:SetDisabled(false);
+		m_ViewingTab.GeneralInstance.MapReferenceAlphaEdit:SetDisabled(false);
 	end
 
 end
@@ -469,6 +517,8 @@ function ViewMapGeneralPage()
 	m_ViewingTab.GeneralInstance.GenerateNewIDButton:RegisterCallback(Mouse.eLClick, OnGenerateID);
 	m_ViewingTab.GeneralInstance.MapScriptEdit:RegisterCommitCallback( OnMapScriptEdited );
 	m_ViewingTab.GeneralInstance.RulesetEdit:RegisterCommitCallback( OnRulesetEdited );
+	m_ViewingTab.GeneralInstance.MapReferenceEdit:RegisterCommitCallback( OnMapReferenceEdited );
+	m_ViewingTab.GeneralInstance.MapReferenceAlphaEdit:RegisterCommitCallback( OnMapReferenceAlphaEdited );
 
 	UpdateGeneralPage();
 
@@ -582,5 +632,9 @@ function OnInit()
 	LuaEvents.WorldBuilder_ShowPlayerEditor.Add( OnShowPlayerEditor );
 	LuaEvents.WorldBuilder_ShowMapEditor.Add( OnShowMapEditor );
 
+	local pFriends = Network.GetFriends();
+	if (pFriends ~= nil) then
+		pFriends:SetRichPresence("civPresence", "LOC_PRESENCE_WORLD_BUILDER");
+	end
 end
 ContextPtr:SetInitHandler( OnInit );

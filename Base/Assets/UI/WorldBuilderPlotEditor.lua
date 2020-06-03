@@ -28,6 +28,7 @@ local m_CityEntries            : table = {};
 local m_IDsToCityEntry         : table = {};
 local m_CoastalLowlandEntries  : table = {};
 local m_CoastIndex			   : number = 1;
+local m_CurDirection		   : number = DirectionTypes.NO_DIRECTION;
 
 local m_StartPosTypeEntries : table =
 {
@@ -41,7 +42,7 @@ local m_StartPosTypeEntries : table =
 
 local m_DirectionTypeEntries : table = 
 {
-	{ Text="LOC_WORLDBUILDER_NO_DIRECTION", Type=DirectionTypes.NO_DIRECTION },
+	{ Text="LOC_WORLDBUILDER_AUTO_FIT", Type=DirectionTypes.NO_DIRECTION },
 	{ Text="LOC_WORLDBUILDER_DIRECTION_NORTHEAST", Type=DirectionTypes.DIRECTION_NORTHEAST },
 	{ Text="LOC_WORLDBUILDER_DIRECTION_EAST", Type=DirectionTypes.DIRECTION_EAST },
 	{ Text="LOC_WORLDBUILDER_DIRECTION_SOUTHEAST", Type=DirectionTypes.DIRECTION_SOUTHEAST },
@@ -70,6 +71,38 @@ function UpdateActiveStartPosControl(startPostType)
 	else
 		Controls.StartPosTabControl:SetHide( true );
 	end
+end
+
+-- ===========================================================================
+-- Convert a Leader Type index (the index in the database, 0 based)
+-- to an index into the leader entries table, which may be filtered/sorted
+-- This returns a lua style 1 based index, and 0 if not found.
+-- This lines up with the way the pulldown SetSelected work, where 0 is 'no selection'
+function LeaderTypeIndexToListEntryIndex(typeIndex : number )
+
+	for i, entry in ipairs(m_LeaderEntries) do
+		if entry.Type.Index == typeIndex then
+			return i;	-- Note this will be from 1!
+		end
+	end
+
+	return 0;	-- 0 means we didn't find it
+end
+
+-- ===========================================================================
+-- Convert a Civilization Type index (the index in the database, 0 based)
+-- to an index into the local civilization entries table, which may be filtered/sorted
+-- This returns a lua style 1 based index, and 0 if not found.
+-- This lines up with the way the pulldown SetSelected work, where 0 is 'no selection'
+function CivTypeIndexToListEntryIndex(typeIndex : number )
+
+	for i, entry in ipairs(m_CivEntries) do
+		if entry.Type.Index == typeIndex then
+			return i;	-- Note this will be from 1!
+		end
+	end
+
+	return 0;	-- 0 means we didn't find it
 end
 
 -- ===========================================================================
@@ -151,7 +184,7 @@ function UpdatePlotInfo()
 		for i, entry in ipairs(m_FeatureTypeEntries) do
 			if entry.Type ~= nil then
 				if plotDir == -1 then
-					entry.Button:SetDisabled(not WorldBuilder.MapManager():CanPlaceFeature(m_SelectedPlot, entry.Type.Index));
+					entry.Button:SetDisabled(not WorldBuilder.MapManager():CanPlaceFeature(m_SelectedPlot, entry.Type.Index, { Direction = m_CurDirection, IgnoreExisting = true }));
 				else
 					entry.Button:SetDisabled(false);
 				end
@@ -187,9 +220,9 @@ function UpdatePlotInfo()
 					Controls.StartPosPlayerPulldown:SetSelectedIndex( playerEntry.EntryIndex, false );
 				end
 			elseif startPosInfo.Type == "Leader" then
-				Controls.StartPosLeaderPulldown:SetSelectedIndex( startPosInfo.Leader + 1, false );
+				Controls.StartPosLeaderPulldown:SetSelectedIndex( LeaderTypeIndexToListEntryIndex(startPosInfo.Leader), false );
 			elseif startPosInfo.Type == "Civilization" then
-				Controls.StartPosCivPulldown:SetSelectedIndex( startPosInfo.Civilization + 1, false );
+				Controls.StartPosCivPulldown:SetSelectedIndex( CivTypeIndexToListEntryIndex( startPosInfo.Civilization ), false );
 			end
 		end
 	end
@@ -393,7 +426,7 @@ function OnTerrainTypeSelected(entry)
 			WorldBuilder.MapManager():SetTerrainType( m_SelectedPlot, entry.Type.Index );
 
 			-- how about the existing feature?
-			if featureType ~= nil and not WorldBuilder.MapManager():CanPlaceFeature( m_SelectedPlot, featureType, true ) then
+			if featureType ~= nil and not WorldBuilder.MapManager():CanPlaceFeature( m_SelectedPlot, featureType, { IgnoreExisting=true } ) then
 				WorldBuilder.MapManager():SetFeatureType( m_SelectedPlot, -1 );
 			end
 
@@ -422,7 +455,7 @@ function OnTerrainTypeSelected(entry)
 							end
 							local foo = plot:GetIndex();
 							WorldBuilder.MapManager():SetTerrainType( plot:GetIndex(), coast.Type.Index);
-							if featureType ~= nil and not WorldBuilder.MapManager():CanPlaceFeature( plot:GetIndex(), featureType, true ) then
+							if featureType ~= nil and not WorldBuilder.MapManager():CanPlaceFeature( plot:GetIndex(), featureType, { IgnoreExisting=true } ) then
 								WorldBuilder.MapManager():SetFeatureType( plot:GetIndex(), -1 );
 							end
 							if impType ~= nil and not WorldBuilder.MapManager():CanPlaceImprovement( plot:GetIndex(), impType, plot:GetOwner(), true ) then
@@ -439,7 +472,7 @@ function OnTerrainTypeSelected(entry)
 								impType = pkPlot:GetImprovementType();
 							end
 							WorldBuilder.MapManager():SetTerrainType( plot:GetIndex(), coast.Type.Index);
-							if featureType ~= nil and not WorldBuilder.MapManager():CanPlaceFeature( plot:GetIndex(), featureType, true ) then
+							if featureType ~= nil and not WorldBuilder.MapManager():CanPlaceFeature( plot:GetIndex(), featureType, { IgnoreExisting=true } ) then
 								WorldBuilder.MapManager():SetFeatureType( plot:GetIndex(), -1 );
 							end
 							if impType ~= nil and not WorldBuilder.MapManager():CanPlaceImprovement( plot:GetIndex(), impType, adjPlots[i]:GetOwner(), true ) then
@@ -459,7 +492,7 @@ function OnFeatureTypeSelected(entry)
 
 	if m_SelectedPlot ~= nil then
 		if entry.Type~= nil then
-			WorldBuilder.MapManager():SetFeatureType( m_SelectedPlot, entry.Type.Index );
+			WorldBuilder.MapManager():SetFeatureType( m_SelectedPlot, entry.Type.Index, { Direction = m_CurDirection, IgnoreExisting = true } );
 		else
 			WorldBuilder.MapManager():SetFeatureType( m_SelectedPlot, -1 );
 		end
@@ -472,20 +505,38 @@ end
 
 -- ===========================================================================
 function OnFeatureDirectionSelected(featureEntry)
+	m_CurDirection = featureEntry.Type;
 
 	if m_SelectedPlot ~= nil then
-		if featureEntry.Type~= nil then
+		if featureEntry.Type ~= nil then
 			WorldBuilder.MapManager():SetPlotValue( m_SelectedPlot, "Feature", "Direction", featureEntry.Type );
 			for i, entry in ipairs(m_FeatureTypeEntries) do
 				if entry.Type ~= nil then
-					entry.Button:SetDisabled(not WorldBuilder.MapManager():CanPlaceFeature(m_SelectedPlot, entry.Type.Index));
+					local plot = Map.GetPlotByIndex( m_SelectedPlot );
+					if plot ~= nil then
+						local curFeature : number = plot:GetFeatureType() + 1;
+						if curFeature > 0 then
+
+							for i, entry in ipairs(m_FeatureTypeEntries) do
+								if entry.Index == curFeature then
+									if WorldBuilder.MapManager():CanPlaceFeature( plot, entry.Type.Index, { Direction=m_CurDirection, IgnoreExisting=true } ) then
+										WorldBuilder.MapManager():SetFeatureType( m_SelectedPlot, entry.Type.Index, { Direction = m_CurDirection, IgnoreExisting = true } );
+										LuaEvents.WorldBuilder_SetPlacementStatus(Locale.Lookup("LOC_WORLDBUILDER_FEATURE_ROTATION"));
+									else
+										LuaEvents.WorldBuilder_SetPlacementStatus(Locale.Lookup("LOC_WORLDBUILDER_FAILURE_FEATURE_ROTATION"));
+									end
+									return;
+								end
+							end
+						end
+					end
 				end
 			end
 		else
 			WorldBuilder.MapManager():SetPlotValue( m_SelectedPlot, "Feature", "Direction", DirectionTypes.NO_DIRECTION );
 			for i, entry in ipairs(m_FeatureTypeEntries) do
 				if entry.Type ~= nil then
-					entry.Button:SetDisabled(not WorldBuilder.MapManager():CanPlaceFeature(m_SelectedPlot, entry.Type.Index));
+					entry.Button:SetDisabled(not WorldBuilder.MapManager():CanPlaceFeature(m_SelectedPlot, entry.Type.Index, { Direction = m_CurDirection, IgnoreExisting = true }));
 				end
 			end
 		end

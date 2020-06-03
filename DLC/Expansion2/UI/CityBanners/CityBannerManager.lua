@@ -8,7 +8,6 @@ include( "SupportFunctions" );
 include( "LoyaltySupport" );
 include( "Civ6Common" );
 include( "Colors" );
-include( "LuaClass" );
 include( "CitySupport" );
 
 -- ===========================================================================
@@ -153,22 +152,23 @@ function CityBanner:new( playerID: number, cityID : number, districtID : number,
 		UI.DataError("Missing bannerStyle: "..tostring(playerID)..", "..tostring(cityID)..", "..tostring(districtID)..", "..tostring(bannerType) ); 
 	end
 
-	self = LuaClass.new(CityBanner);
-	self:Initialize(playerID, cityID, districtID, bannerType, bannerStyle);
+	local oNewCityBanner:object = {};
+	setmetatable(oNewCityBanner, {__index = CityBanner });
+	oNewCityBanner:Initialize(playerID, cityID, districtID, bannerType, bannerStyle);
 
 	if (bannerType == BANNERTYPE_CITY_CENTER) then
 		if (CityBannerInstances[playerID] == nil) then
 			CityBannerInstances[playerID] = {};
 		end
-		CityBannerInstances[playerID][cityID] = self;
+		CityBannerInstances[playerID][cityID] = oNewCityBanner;
 	else
 		if (MiniBannerInstances[playerID] == nil) then
 			MiniBannerInstances[playerID] = {};
 		end
-		MiniBannerInstances[playerID][districtID] = self;
+		MiniBannerInstances[playerID][districtID] = oNewCityBanner;
 	end
 
-	return self;
+	return oNewCityBanner;
 end
 
 -- ===========================================================================
@@ -1436,7 +1436,7 @@ function CityBanner:UpdateDetails()
 			kPowerDetailEffectInst.Button:RegisterCallback( Mouse.eLClick, function() OnPowerIconClicked(cityOwner, pCity:GetID()); end );
 		end
 
-		self.m_Instance.CityDetailsEffects:CalculateSize();
+		self.m_Instance.CityDetailsEffects:CalculateSize();		
 	end
 
 	self:Resize();
@@ -2268,7 +2268,7 @@ function CityBanner:UpdateLoyalty()
 									instance.LineTitle:SetText(hasBeenMet and civName or Locale.Lookup("LOC_LOYALTY_PANEL_UNMET_CIV"));
 									instance.LineValue:SetText(lineVal);
 
-									local civIconManager = CivilizationIcon:AttachInstance(instance.CivilizationIcon);
+									local civIconManager :object = CivilizationIcon:AttachInstance(instance.CivilizationIcon);
 									civIconManager:UpdateIconFromPlayerID(playerPresence.Player);
 								end
 							end

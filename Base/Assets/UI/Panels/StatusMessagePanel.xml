@@ -2,6 +2,9 @@
 
 <Context Name="StatusMessagePanel" >
 
+	<!-- Creates a subtree of widgets, auto size and offsets should work, but the offset is relative to the screen and not the parent position -->
+	<!--WidgetControl ID="NovaGossipPanel" File="NovaGossipPanel.json" Offset="0,0" Size="parent,parent" Hidden="0"/-->
+
 	<Container	ID="MainArea"				Anchor="R,T" Offset="100,240" Size="630,10" >
 		<Stack		ID="DefaultStack"		Anchor="L,T" Offset="0,-5" StackPadding="-16" />
 		<Stack		ID="GossipStack"		Anchor="R,T" StackPadding="6" />

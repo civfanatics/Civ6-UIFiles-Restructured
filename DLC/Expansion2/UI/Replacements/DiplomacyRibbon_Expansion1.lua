@@ -1,4 +1,4 @@
--- Copyright 2017-2018, Firaxis Games.
+-- Copyright 2017-2019, Firaxis Games.
 
 -- Base File
 include("DiplomacyRibbon");
@@ -10,10 +10,10 @@ BASE_AddLeader = AddLeader;
 
 -- ===========================================================================
 function AddLeader(iconName : string, playerID : number, kProps: table)	
-	local leaderIcon, instance = BASE_AddLeader(iconName, playerID, kProps);
-	local localPlayerID:number = Game.GetLocalPlayer();
+	local oLeaderIcon	:object = BASE_AddLeader(iconName, playerID, kProps);
+	local localPlayerID	:number = Game.GetLocalPlayer();
 
-	if localPlayerID == -1 or localPlayerID == 1000 then
+	if localPlayerID == PlayerTypes.NONE or localPlayerID == PlayerTypes.OBSERVER then
 		return;
 	end
 
@@ -25,8 +25,10 @@ function AddLeader(iconName : string, playerID : number, kProps: table)
 			if allianceType ~= -1 then
 				local allianceName = Locale.Lookup(GameInfo.Alliances[allianceType].Name);
 				local allianceLevel = localPlayerDiplomacy:GetAllianceLevel(playerID);
-				leaderIcon.Controls.Relationship:SetToolTipString(Locale.Lookup("LOC_DIPLOMACY_ALLIANCE_FLAG_TT", allianceName, allianceLevel));
+				oLeaderIcon.Controls.Relationship:SetToolTipString(Locale.Lookup("LOC_DIPLOMACY_ALLIANCE_FLAG_TT", allianceName, allianceLevel));
 			end
 		end
 	end
+
+	return oLeaderIcon;
 end

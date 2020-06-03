@@ -575,7 +575,7 @@ function SetUniqueCivLeaderData(info:table, tooltipControls:table)
 end
 
 -- Checks external conditions where this player parameter should be disabled.
-function CheckExternalEnabled(playerID:number, inputEnabled:boolean, lockCheck:boolean)
+function CheckExternalEnabled(playerID:number, inputEnabled:boolean, lockCheck:boolean, parameter)
 	-- Early out if the input enabled status is already disabled.
 	if(not inputEnabled) then
 		return false;
@@ -610,6 +610,13 @@ function CheckExternalEnabled(playerID:number, inputEnabled:boolean, lockCheck:b
 			or slotStatus == SlotStatus.SS_TAKEN
 			or localPlayerConfig:GetReady())) then
 		return false;
+	end
+
+	-- Disable HandicapTypeID if matchmaking
+	if(GameConfiguration.IsMatchMaking() 
+		and parameter ~= nil 
+		and parameter.ParameterId == "PlayerDifficulty") then
+		return false; 
 	end
 
 	if(lockCheck and pPlayerConfig:IsLocked()) then
@@ -812,13 +819,13 @@ function SetupLeaderPulldown(
 
 				colorControl:CalculateInternals();
 
-				local notExternalEnabled = not CheckExternalEnabled(playerId, true, true);
+				local notExternalEnabled = not CheckExternalEnabled(playerId, true, true, parameter);
 				local singleOrEmpty = itemCount == 0 or itemCount == 1;
 
 				colorControl:SetDisabled(notExternalEnabled or singleOrEmpty);
 			end,
 			SetEnabled = function(enabled, parameter)
-				local notExternalEnabled = not CheckExternalEnabled(playerId, enabled, true);
+				local notExternalEnabled = not CheckExternalEnabled(playerId, enabled, true, parameter);
 				--local singleOrEmpty = #parameter.Values <= 1;
 				--colorControl:SetDisabled(notExternalEnabled or singleOrEmpty);
 			end
@@ -986,7 +993,7 @@ function SetupLeaderPulldown(
 			end
 		end,
 		SetEnabled = function(enabled, parameter)
-			local notExternalEnabled = not CheckExternalEnabled(playerId, enabled, true);
+			local notExternalEnabled = not CheckExternalEnabled(playerId, enabled, true, parameter);
 			local singleOrEmpty = #parameter.Values <= 1;
 
 			control:SetDisabled(notExternalEnabled or singleOrEmpty);
@@ -1022,8 +1029,8 @@ function SetupHandicapPulldown(playerId, control)
 			end
 			control:CalculateInternals();
 		end,
-		SetEnabled = function(enabled)
-			control:SetDisabled(not CheckExternalEnabled(playerId, enabled, false));
+		SetEnabled = function(enabled, parameter)
+			control:SetDisabled(not CheckExternalEnabled(playerId, enabled, false, parameter));
 		end,
 	};
 end

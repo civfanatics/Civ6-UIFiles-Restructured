@@ -11,6 +11,12 @@ g_ExtraIconData["MODIFIER_PLAYER_ADD_FAVOR"] = {
 		end,
 
 	Reset = function(self)
-			self.IM:ResetInstances();
-		end
+		self.IM:ResetInstances();
+	end,
+
+	Destroy = function(self)
+		self.IM:DestroyInstances();
+	end
+
+
 };

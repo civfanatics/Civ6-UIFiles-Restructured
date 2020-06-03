@@ -526,6 +526,27 @@ function UpdateGlobalCache()
 	end
 end
 
+
+function GetVictoryDetails(victoryType)
+	local name = "LOC_GAMESUMMARY_VICTORY";
+	local icons = {"ICON_VICTORY_UNIVERSAL"};
+
+	local victory = g_RulesetVictories[g_GameData.VictoryType];
+	if(victory) then
+		name = victory.Name;
+		icons = victory.Icons;
+	else
+		victory = g_RulesetTypes[g_GameData.VictoryType];
+		if(victory) then
+			table.insert(icons, "ICON_" .. victory.Type);
+			table.insert(icons, victory.Icon);
+			name = victory.Name;
+		end				
+	end
+
+	return name, icons;
+end
+
 local colorDistances = {};
 local pow = math.pow;
 function ColorDistance(color1, color2)
@@ -856,23 +877,9 @@ function Overview_UpdateMajorCivs()
 	
 				if(g_GameData.VictorTeamId == p.TeamId) then
 					
-					local name = "LOC_GAMESUMMARY_VICTORY";
-					local icons = {"ICON_VICTORY_UNIVERSAL"};
+					local name, icons = GetVictoryDetails(g_GameData.VictoryType);
 
-					local victory = g_RulesetVictories[g_GameData.VictoryType];
-					if(victory) then
-						name = victory.Name;
-						icons = victory.Icons;
-					else
-						victory = g_RulesetTypes[g_GameData.VictoryType];
-						if(victory) then
-							table.insert(icons, "ICON_" .. victory.Type);
-							table.insert(icons, victory.Icon);
-							name = victory.Name;
-						end				
-					end
-
-					instance.VictoryName:LocalizeAndSetText(victory.Name);
+					instance.VictoryName:LocalizeAndSetText(name);
 					SetControlIcon(instance.VictoryIcon, icons);
 				else
 					instance.VictoryIcon:SetIcon("ICON_DEFEAT_GENERIC");
@@ -891,7 +898,7 @@ end
 
 function Overview_UpdateVictoryBanner(playerObjectId)
 
-	local victory;	
+	local victoryName, victoryIcons;
 	if(playerObjectId) then
 		local player;
 		for i,v in ipairs(g_GameData.Players) do 
@@ -903,22 +910,18 @@ function Overview_UpdateVictoryBanner(playerObjectId)
 	
 		if(player) then
 			if(player.TeamId == g_GameData.VictorTeamId) then
-				victory = g_RulesetTypes[g_GameData.VictoryType];	
+				victoryName, victoryIcons = GetVictoryDetails(g_GameData.VictoryType);
 			end
 		end		
 	end
 	
-	if(victory) then
-		local icons = {
-			"ICON_VICTORY_UNIVERSAL",
-			"ICON_" .. victory.Type,
-			victory.Icon
-		};
-		SetControlIcon(Controls.RibbonIcon, icons);
+	if(victoryName and victoryIcons) then
+		
+		SetControlIcon(Controls.RibbonIcon, victoryIcons);
 
 		Controls.RibbonTile:SetTexture("EndGame_RibbonTile_Time");
 		Controls.Ribbon:SetTexture("EndGame_Ribbon_Time");
-		Controls.RibbonLabel:LocalizeAndSetText(victory.Name);
+		Controls.RibbonLabel:LocalizeAndSetText(victoryName);
 		Controls.RibbonContainer:SetHide(false);
 	elseif(playerObjectId) then
 		Controls.RibbonIcon:SetIcon("ICON_DEFEAT_GENERIC");

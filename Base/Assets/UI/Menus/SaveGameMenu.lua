@@ -5,7 +5,9 @@ include( "SupportFunctions" );
 include( "LoadSaveMenu_Shared" );
 
 local RELOAD_CACHE_ID: string = "SaveGameMenu";		-- hotloading
+local MIN_SCREEN_Y   : number = 768;
 g_IsDeletingFile = false;
+
 ----------------------------------------------------------------        
 ----------------------------------------------------------------        
 function OnBack()
@@ -198,7 +200,7 @@ function OnShow()
 	local directoryVisible = Controls.DirectoryPullDown:IsVisible();
     local dummyCloudVisible = Controls.CloudDummy:IsVisible();
 
-	local count = 0;
+	local count:number = 0;
 	if(cloudSavesVisible) then
 		count = count + 1;
 	end
@@ -210,11 +212,13 @@ function OnShow()
 	end
 	if(dummyCloudVisible) then
 		count = count + 1;
-	end
-		
-	local decoSize = 611;
-	Controls.DecoContainer:SetSizeY(decoSize - (count * 23));	
+	end		
+	
 	Controls.FileName:TakeFocus();
+	
+	local decoSize:number = Controls.InspectorArea:GetSizeY();
+
+	Controls.DecoContainer:SetSizeY(decoSize - (count * 25) - count);	
 
 	if g_GameType == SaveTypes.WORLDBUILDER_MAP then
 		Controls.GameDetailIconsArea:SetHide(true);
@@ -329,13 +333,17 @@ end
 -- ===========================================================================
 
 function Resize()
-	local screenX, screenY:number = UIManager:GetScreenSizeVal();
-	local hideLogo = true;
-	if(screenY >= Controls.MainWindow:GetSizeY() + Controls.LogoContainer:GetSizeY()+ Controls.LogoContainer:GetOffsetY()) then
+	local screenX, screenY:number  = UIManager:GetScreenSizeVal();
+	local hideLogo        :boolean = true;
+	
+	if(screenY >= MIN_SCREEN_Y + (Controls.LogoContainer:GetSizeY()+ Controls.LogoContainer:GetOffsetY() * 2)) then
+		Controls.MainWindow:SetSizeY(screenY-(Controls.LogoContainer:GetSizeY() + Controls.LogoContainer:GetOffsetY() * 2));
 		hideLogo = false;
+	else
+		Controls.MainWindow:SetSizeY(screenY);
 	end
+	
 	Controls.LogoContainer:SetHide(hideLogo);
-	Controls.MainGrid:ReprocessAnchoring();
 	Controls.DeleteConfirm:SetSizeVal(screenX,screenY);
 	Controls.DeleteConfirm:ReprocessAnchoring();
 end
@@ -370,6 +378,7 @@ function Initialize()
 	LuaEvents.GameDebug_Return.Add(OnGameDebugReturn);
 	SetupSortPulldown();
 	InitializeDirectoryBrowsing();
+	Resize();
 
 	LuaEvents.FileListQueryComplete.Add( OnFileListQueryComplete );
 
@@ -386,6 +395,8 @@ function Initialize()
 	Controls.Delete:RegisterCallback( Mouse.eLClick, OnDelete );
 	Controls.Delete:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 	Controls.SelectedFileStack:RegisterSizeChanged( OnSelectedFileStackSizeChanged );
+
+	Events.SystemUpdateUI.Add( OnUpdateUI );
 
 	-- UI Events
 	ContextPtr:SetShowHandler( OnShow );

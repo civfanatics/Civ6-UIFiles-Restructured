@@ -36,7 +36,7 @@
 		<!-- ==================================================================	-->
 		<Container ID="OverallView" Offset="0,52">
 
-			<ScrollPanel ID="OverallViewScrollbar" Offset="15,63" Size="parent-35,parent-124" Style="WorldRankingsScrollPanel">
+			<ScrollPanel ID="OverallViewScrollbar" Offset="15,63" Size="parent-35,parent-122" Style="WorldRankingsScrollPanel">
 				<Stack ID="OverallViewStack" Offset="0,-3"/>
 			</ScrollPanel>
 

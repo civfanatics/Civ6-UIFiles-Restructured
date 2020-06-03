@@ -161,7 +161,7 @@ function OnExitGameAskAreYouSure()
 		Controls.SaveGameMenu:SetHide( true );
 		Controls.LoadGameMenu:SetHide( true );
 
-		m_kPopupDialog:AddText(	  Locale.Lookup("LOC_GAME_MENU_QUIT_WARNING"));
+		m_kPopupDialog:AddText(	  Locale.Lookup("LOC_GAME_MENU_QUIT_WARNING"));		
 		m_kPopupDialog:AddButton( Locale.Lookup("LOC_COMMON_DIALOG_YES_BUTTON_CAPTION"), OnExitGame, nil, nil, "PopupButtonInstanceRed" );
 		m_kPopupDialog:AddButton( Locale.Lookup("LOC_COMMON_DIALOG_NO_BUTTON_CAPTION"), OnCancelExit );
 		m_kPopupDialog:Open();
@@ -438,6 +438,9 @@ function OnYes( )
 	UITutorialManager:EnableOverlay( false );	
 	UITutorialManager:HideAll();
 
+	-- make sure any reference map is cleared
+	StrategicView_ClearReferenceMap();
+
 	UIManager:Log("Shutting down via user exit on menu.");
 	if(ms_ExitToMain) then
 		Events.ExitToMainMenu();
@@ -453,6 +456,7 @@ end
 
 -- ===========================================================================
 function KeyHandler( key:number )
+	local bHandled:boolean = false;
 	if key == Keys.VK_ESCAPE then		
 		if m_kPopupDialog:IsOpen() then
 			m_kPopupDialog:Close();
@@ -461,17 +465,24 @@ function KeyHandler( key:number )
 				Close();
 			end
 		end
-		return true;
+		bHandled = true;
 	end
-	return false;
+	return bHandled;
 end
 
+-- ===========================================================================
+--	If this is receiving input (e.g., is visible) then do not let any input
+--	fall past it.  Forge will send input to popups and children first before
+--	this context gets a crack at it.
 -- ===========================================================================
 function OnInput( pInputStruct:table )
 	local uiMsg = pInputStruct:GetMessageType();
 	if uiMsg == KeyEvents.KeyUp then 
 		return KeyHandler( pInputStruct:GetKey() ); 
-	end;
+	elseif uiMsg == KeyEvents.KeyDown then 
+		return true;
+	end
+
 	return false;
 end
 
@@ -549,9 +560,9 @@ function OnShow()
 	Controls.PauseWindow:SetHide(false);
 
 	if WorldBuilder and WorldBuilder:IsActive() then
-		Controls.GameDetails:SetHide(true);
+		Controls.DetailsBox:SetHide(true);
 	else
-		Controls.GameDetails:SetHide(false);
+		Controls.DetailsBox:SetHide(false);
 	end
 
 end

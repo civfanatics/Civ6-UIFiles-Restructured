@@ -15,94 +15,6 @@
 include("PopupDialog.lua");
 -- More interface-specific includes before the initialization
 
--- ===========================================================================
--- Horizontal shake tracker
--- This works by creating two 'cells' with user-specified size around the center
--- location for the detection.  As the user moves the mouse around, it keeps track
--- of the unique cells the mouse has entered along with the time it entered. If 
--- the mouse moves so far it is outside the cell regions, we re-locate the cell 
--- regions to just keep the mouse contained.  If we detect a series of four cell 
--- changes within the specified amount of time, we detect a shake gesture.
--- ===========================================================================
-local m_ShakeTracker =
-{
-	m_nHistorySize = 4;
-	m_aHistory = {};
-	m_aTime = {};
-	m_i = 1;
-	
-	m_OffsetX = 0;
-	m_SizeX = 0;
-	m_ShakeTime = 0.5; --Only register shake if it happens within this number of seconds
-};
-
-function Shake_Setup( this : table, CenterX : number, SizeX : number )
-	this.m_SizeX = SizeX;
-	this.m_OffsetX = CenterX - (SizeX / 2);
-	Shake_Clear(this);
-end
-
-function Shake_Clear( this : table )
-	for i,v in ipairs(this.m_aHistory) do this.m_aHistory[i] = nil end
-	for i,v in ipairs(this.m_aTime) do this.m_aTime[i] = nil end
-	this.m_i = 0;
-end
-
-function Shake_ProcessMouse( this : table, MouseX : number )
-	MouseLocalX = math.floor( 2 * (MouseX - this.m_OffsetX) / this.m_SizeX );
-
-	if MouseLocalX < 0 then
-		this.m_OffsetX = MouseX;
-	end
-
-	if MouseLocalX >= 2 then
-		this.m_OffsetX = MouseX - this.m_SizeX;
-	end
-
-	if( MouseLocalX >= 0 and MouseLocalX < 2 ) then
-		CurrentCell = MouseLocalX;
-
-		if not(this.m_aHistory[this.m_i] == CurrentCell) then
-			this.m_i = this.m_i + 1;	
-			if this.m_i > this.m_nHistorySize then
-				this.m_i = 0;
-			end
-			this.m_aHistory[this.m_i] = CurrentCell;
-			this.m_aTime[this.m_i] = os.clock();
-		end
-	end
-end
-
-function Shake_Test( this:table, Shake:table )
-	nSize = 0;
-	for i,v in ipairs(Shake) do nSize = nSize +1 end;
-
-	iTest = this.m_i - nSize + 1;
-	if iTest < 0 then
-		iTest = iTest + this.m_nHistorySize;
-	end
-
-	local StartTime:number = os.clock() - this.m_ShakeTime;
-
-	if (this.m_aTime[iTest] == nil) or (this.m_aTime[iTest] < StartTime) then
-		return false;
-	end
-
-	for i,v in ipairs(Shake) do
-		if not (this.m_aHistory[iTest] == v) then
-			return false;
-		end
-		iTest = iTest + 1;
-	end
-	return true;
-end
-
-function Shake_IsShake( this:table )
-	ShakeLeft =  {1,0,1,0};
-	ShakeRight = {0,1,0,1};
-
-	return Shake_Test(this, ShakeLeft) or Shake_Test(this, ShakeRight);
-end
 
 -- ===========================================================================
 --	Debug
@@ -114,6 +26,8 @@ local m_isDebuging				:boolean = false;	-- Turn on local debug systems
 --	CONSTANTS
 -- ===========================================================================
 
+INTERFACEMODE_ENTER		= "InterfaceModeEnter";				-- Global constant
+INTERFACEMODE_LEAVE		= "InterfaceModeLeave";				-- Global constant
 local NORMALIZED_DRAG_THRESHOLD	:number = 0.035;			-- How much movement to kick off a drag
 local NORMALIZED_DRAG_THRESHOLD_SQR :number = NORMALIZED_DRAG_THRESHOLD*NORMALIZED_DRAG_THRESHOLD;
 local MOUSE_SCALAR				:number = 6.0;
@@ -121,6 +35,7 @@ local PAN_SPEED					:number = 1;
 local ZOOM_SPEED				:number = 0.1;
 local DOUBLETAP_THRESHHOLD		:number = 2;
 local SHAKE_PIXEL_THRESHOLD     :number = 128; --theshold for shake gesture detection
+local FORM_CORPS_DIRECTION_OVERLAY_NAME		:string = "FormCorps";
 
 -- ===========================================================================
 --	Table of tables of functions for each interface mode & event the mode handles
@@ -160,7 +75,8 @@ InterfaceModeMessageHandler =
 	[InterfaceModeTypes.CINEMATIC]			= {},	
 	[InterfaceModeTypes.VIEW_MODAL_LENS]	= {},
 	[InterfaceModeTypes.FULLSCREEN_MAP]	= {},
-	[InterfaceModeTypes.CITY_SELECTION]	= {}
+	[InterfaceModeTypes.CITY_SELECTION]	= {},
+	[InterfaceModeTypes.SACRIFICE_SELECTION] = {}
 }
 
 -- ===========================================================================
@@ -170,8 +86,13 @@ g_isTouchEnabled		= false;
 g_isMouseDragging		= false;
 g_isMouseDownInWorld	= false;	-- Did mouse-down start here (true), or in some other UI context?
 g_targetPlots			= nil;
-INTERFACEMODE_ENTER		= "InterfaceModeEnter";
-INTERFACEMODE_LEAVE		= "InterfaceModeLeave";
+g_MovementPath			= UILens.CreateLensLayerHash("Movement_Path");
+g_Numbers				= UILens.CreateLensLayerHash("Numbers");
+g_AttackRange			= UILens.CreateLensLayerHash("Attack_Range");
+g_HexColoringAttack		= UILens.CreateLensLayerHash("Hex_Coloring_Attack");
+g_HexColoringMovement	= UILens.CreateLensLayerHash("Hex_Coloring_Movement");
+g_HexColoringPlacement	= UILens.CreateLensLayerHash("Hex_Coloring_Placement");
+
 
 -- ===========================================================================
 --	MEMBERS
@@ -187,6 +108,10 @@ local m_actionHotkeyNextUnit	:number = Input.GetActionId("NextUnit");		--	Hot Ke
 local m_actionHotkeyPrevCity	:number = Input.GetActionId("PrevCity");		--	Hot Key Handling
 local m_actionHotkeyNextCity	:number = Input.GetActionId("NextCity");		--	Hot Key Handling
 local m_actionHotkeyCapitalCity :number = Input.GetActionId("CapitalCity");     --  Hot Key Handling
+local m_actionHotkeyCameraPanUp		:number = Input.GetActionId("CameraPanUp");     --  Hot Key Handling
+local m_actionHotkeyCameraPanDown	:number = Input.GetActionId("CameraPanDown");     --  Hot Key Handling
+local m_actionHotkeyCameraPanLeft	:number = Input.GetActionId("CameraPanLeft");     --  Hot Key Handling
+local m_actionHotkeyCameraPanRight	:number = Input.GetActionId("CameraPanRight");     --  Hot Key Handling
 local m_kTouchesDownInWorld		:table	= {};		-- Tracks "down" touches that occurred in this context.
 local m_isALTDown				:boolean= false;
 local m_isMouseButtonLDown		:boolean= false;
@@ -227,14 +152,8 @@ local m_kTutorialPermittedHexes			:table = nil;		-- Which hexes are permitted fo
 local m_kTutorialUnitHexRestrictions	:table = nil;		-- Any restrictions on where units can move.  (Key=UnitType, Value={restricted plotIds})
 local m_isPlotFlaggedRestricted			:boolean = false;	-- In a previous operation to determine a move path, was a plot flagged restrticted/bad? (likely due to the tutorial system)
 local m_kTutorialUnitMoveRestrictions	:table = nil;		-- Restrictions for moving (anywhere) of a selected unit type.
-local m_isInputBlocked					:boolean = false;
 
-g_MovementPath = UILens.CreateLensLayerHash("Movement_Path");
-g_Numbers = UILens.CreateLensLayerHash("Numbers");
-g_AttackRange = UILens.CreateLensLayerHash("Attack_Range");
-g_HexColoringAttack = UILens.CreateLensLayerHash("Hex_Coloring_Attack");
-g_HexColoringMovement = UILens.CreateLensLayerHash("Hex_Coloring_Movement");
-g_HexColoringPlacement = UILens.CreateLensLayerHash("Hex_Coloring_Placement");
+
 
 -- ===========================================================================
 --	FUNCTIONS
@@ -267,6 +186,100 @@ function clear()				m_debugTrace = {};									end
 function OnDoNothing()
 end
 
+
+-- ===========================================================================
+-- Horizontal shake tracker
+-- This works by creating two 'cells' with user-specified size around the center
+-- location for the detection.  As the user moves the mouse around, it keeps track
+-- of the unique cells the mouse has entered along with the time it entered. If 
+-- the mouse moves so far it is outside the cell regions, we re-locate the cell 
+-- regions to just keep the mouse contained.  If we detect a series of four cell 
+-- changes within the specified amount of time, we detect a shake gesture.
+-- ===========================================================================
+local m_ShakeTracker =
+{
+	m_nHistorySize = 4;
+	m_aHistory = {};
+	m_aTime = {};
+	m_i = 1;
+	
+	m_OffsetX = 0;
+	m_SizeX = 0;
+	m_ShakeTime = 0.5; --Only register shake if it happens within this number of seconds
+};
+
+-- ===========================================================================
+function Shake_Setup( this : table, CenterX : number, SizeX : number )
+	this.m_SizeX = SizeX;
+	this.m_OffsetX = CenterX - (SizeX / 2);
+	Shake_Clear(this);
+end
+
+-- ===========================================================================
+function Shake_Clear( this : table )
+	for i,v in ipairs(this.m_aHistory) do this.m_aHistory[i] = nil end
+	for i,v in ipairs(this.m_aTime) do this.m_aTime[i] = nil end
+	this.m_i = 0;
+end
+
+-- ===========================================================================
+function Shake_ProcessMouse( this : table, MouseX : number )
+	MouseLocalX = math.floor( 2 * (MouseX - this.m_OffsetX) / this.m_SizeX );
+
+	if MouseLocalX < 0 then
+		this.m_OffsetX = MouseX;
+	end
+
+	if MouseLocalX >= 2 then
+		this.m_OffsetX = MouseX - this.m_SizeX;
+	end
+
+	if( MouseLocalX >= 0 and MouseLocalX < 2 ) then
+		CurrentCell = MouseLocalX;
+
+		if not(this.m_aHistory[this.m_i] == CurrentCell) then
+			this.m_i = this.m_i + 1;	
+			if this.m_i > this.m_nHistorySize then
+				this.m_i = 0;
+			end
+			this.m_aHistory[this.m_i] = CurrentCell;
+			this.m_aTime[this.m_i] = os.clock();
+		end
+	end
+end
+
+-- ===========================================================================
+function Shake_Test( this:table, Shake:table )
+	nSize = 0;
+	for i,v in ipairs(Shake) do nSize = nSize +1 end;
+
+	iTest = this.m_i - nSize + 1;
+	if iTest < 0 then
+		iTest = iTest + this.m_nHistorySize;
+	end
+
+	local StartTime:number = os.clock() - this.m_ShakeTime;
+
+	if (this.m_aTime[iTest] == nil) or (this.m_aTime[iTest] < StartTime) then
+		return false;
+	end
+
+	for i,v in ipairs(Shake) do
+		if not (this.m_aHistory[iTest] == v) then
+			return false;
+		end
+		iTest = iTest + 1;
+	end
+	return true;
+end
+
+-- ===========================================================================
+function Shake_IsShake( this:table )
+	ShakeLeft =  {1,0,1,0};
+	ShakeRight = {0,1,0,1};
+
+	return Shake_Test(this, ShakeLeft) or Shake_Test(this, ShakeRight);
+end
 
 -- ===========================================================================
 --	Pan camera
@@ -1157,7 +1170,7 @@ end
 -- ===========================================================================
 -- ===========================================================================
 function DefaultKeyDownHandler( uiKey:number )
-	local keyPanChanged :boolean = false;
+
 	if uiKey == Keys.VK_ALT then
 		if m_isALTDown == false then
 			m_isALTDown = true;
@@ -1165,25 +1178,7 @@ function DefaultKeyDownHandler( uiKey:number )
 			ReadyForDragMap();
 		end
 	end
-	if( uiKey == Keys.VK_UP ) then
-		keyPanChanged = true;
-		m_isUPpressed = true;
-	end
-	if( uiKey == Keys.VK_RIGHT ) then
-		keyPanChanged = true;
-		m_isRIGHTpressed = true;
-	end
-	if( uiKey == Keys.VK_DOWN ) then
-		keyPanChanged = true;
-		m_isDOWNpressed = true;
-	end
-	if( uiKey == Keys.VK_LEFT ) then
-		keyPanChanged = true;
-		m_isLEFTpressed = true;
-	end
-	if( keyPanChanged == true ) then
-		ProcessPan(m_edgePanX,m_edgePanY);
-	end
+	
 	return false;
 end
 
@@ -1191,33 +1186,12 @@ end
 -- ===========================================================================
 function DefaultKeyUpHandler( uiKey:number )
 	
-	local keyPanChanged	:boolean = false;
 	if uiKey == Keys.VK_ALT then
 		if m_isALTDown == true then
 			m_isALTDown = false;
 			EndDragMap(true);
 			ReadyForDragMap();
 		end
-	end
-
-	if( uiKey == Keys.VK_UP ) then
-		m_isUPpressed = false;
-		keyPanChanged = true;
-	end
-	if( uiKey == Keys.VK_RIGHT ) then
-		m_isRIGHTpressed = false;
-		keyPanChanged = true;
-	end
-	if( uiKey == Keys.VK_DOWN ) then
-		m_isDOWNpressed = false;
-		keyPanChanged = true;
-	end
-	if( uiKey == Keys.VK_LEFT ) then
-		m_isLEFTpressed = false;
-		keyPanChanged = true;
-	end
-	if( keyPanChanged == true ) then
-		ProcessPan(m_edgePanX,m_edgePanY);
 	end
 
 	if( uiKey == Keys.VK_ADD or uiKey == Keys.VK_SUBTRACT ) then
@@ -1241,15 +1215,7 @@ end
 -- .,;/^`'^\:,.,;/^`'^\:,.,;/^`'^\:,.,;/^`'^\:,.,;/^`'^\:,.,;/^`'^\:,.,;/^`'^\:,.,;/^`'^\:,
 
 -- ===========================================================================
-function OnBlockInput()
-	m_isInputBlocked = true;
-end
 
--- ===========================================================================
-function OnUnblockInput()
-	m_isInputBlocked = false;
-	ClearAllCachedInputState();
-end
 
 -- ===========================================================================
 function OnDefaultKeyDown( pInputStruct:table )
@@ -1526,7 +1492,6 @@ function OnMouseMakeTradeRouteEnd( pInputStruct:table )
 	else
 		local plotId:number = UI.GetCursorPlotID();
 		if (Map.IsPlot(plotId)) then
-			UI.PlaySound("Play_UI_Click");
 			LuaEvents.WorldInput_MakeTradeRouteDestination( plotId );
 		end
 	end
@@ -2021,42 +1986,53 @@ function OnTouchUnitRangeAttack( pInputStruct:table )
 end
 
 
--------------------------------------------------------------------------------
-function OnInterfaceModeChange_UnitRangeAttack(eNewMode)
-	UIManager:SetUICursor(CursorTypes.RANGE_ATTACK);
-	local pSelectedUnit = UI.GetHeadSelectedUnit();
-	if (pSelectedUnit ~= nil) then
 
-		if m_focusedTargetPlot ~= -1 then
-			UILens.UnFocusHex(g_AttackRange, m_focusedTargetPlot);
-			m_focusedTargetPlot = -1;
-		end
+-- ===========================================================================
+--	Determine the target plots for a give unit.
+-- ===========================================================================
+function RealizeTargetPlots( pUnit:table )
 
-		local unitPlotID = pSelectedUnit:GetPlotId();
-		local tResults = UnitManager.GetOperationTargets(pSelectedUnit, UnitOperationTypes.RANGE_ATTACK );
-		local allPlots = tResults[UnitOperationResults.PLOTS];
-		if (allPlots ~= nil) then
-			g_targetPlots = {};
-			for i,modifier in ipairs(tResults[UnitOperationResults.MODIFIERS]) do
-				if(modifier == UnitOperationResults.MODIFIER_IS_TARGET) then	
-					table.insert(g_targetPlots, allPlots[i]);
-				end
-			end 
-
-			-- Highlight the plots available to attack
-			if (table.count(g_targetPlots) ~= 0) then			
-				-- Variation will hold specific targets in range 
-				local kVariations:table = {};
-				for _,targetPlotId in ipairs(g_targetPlots) do
-					-- Variant needed to place the attack arc, but we don't want to double-draw the crosshair on the hex.
-					table.insert(kVariations, {"EmptyVariant", unitPlotID, targetPlotId} );	
-				end
-				local eLocalPlayer:number = Game.GetLocalPlayer();
-
-				UILens.SetLayerHexesArea(g_AttackRange, eLocalPlayer, allPlots, kVariations);
-			end
-		end
+	if m_focusedTargetPlot ~= -1 then
+		UILens.UnFocusHex(g_AttackRange, m_focusedTargetPlot);
+		m_focusedTargetPlot = -1;
 	end
+
+	local tResults	:table = UnitManager.GetOperationTargets(pUnit, UnitOperationTypes.RANGE_ATTACK );
+	local allPlots	:table = tResults[UnitOperationResults.PLOTS];
+	if allPlots == nil then
+		return;
+	end
+
+	g_targetPlots = {};
+	local unitPlotID:number = pUnit:GetPlotId();
+
+	for i,modifier in ipairs(tResults[UnitOperationResults.MODIFIERS]) do
+		if(modifier == UnitOperationResults.MODIFIER_IS_TARGET) then	
+			table.insert(g_targetPlots, allPlots[i]);
+		end
+	end 
+
+	-- Highlight the plots available to attack	
+	if #g_targetPlots ~= 0 then			
+		-- Variation will hold specific targets in range 
+		local kVariations:table = {};
+		for _,targetPlotId in ipairs(g_targetPlots) do
+			-- Variant needed to place the attack arc, but we don't want to double-draw the crosshair on the hex.
+			table.insert(kVariations, {"EmptyVariant", unitPlotID, targetPlotId} );	
+		end
+		local eLocalPlayer:number = Game.GetLocalPlayer();
+
+		UILens.SetLayerHexesArea(g_AttackRange, eLocalPlayer, allPlots, kVariations);
+	end
+end
+
+-- ===========================================================================
+function OnInterfaceModeChange_UnitRangeAttack( eNewMode:number )
+	UIManager:SetUICursor(CursorTypes.RANGE_ATTACK);
+	local pSelectedUnit:table = UI.GetHeadSelectedUnit();
+	if pSelectedUnit ~= nil then
+		RealizeTargetPlots( pSelectedUnit );
+	end	
 end
 
 -------------------------------------------------------------------------------
@@ -2909,6 +2885,11 @@ end
 
 ------------------------------------------------------------------------------------------------
 function OnInterfaceModeChange_UnitFormCorps(eNewMode)
+	local pFormCorpsOverlay:object = UILens.GetOverlay(FORM_CORPS_DIRECTION_OVERLAY_NAME);
+	if(pFormCorpsOverlay == nil) then
+		print("Error: missing Form Corps overlay");
+		return;
+	end	
 	UIManager:SetUICursor(CursorTypes.RANGE_ATTACK);
 	local pSelectedUnit = UI.GetHeadSelectedUnit();
 	local player = pSelectedUnit:GetOwner();
@@ -2916,14 +2897,25 @@ function OnInterfaceModeChange_UnitFormCorps(eNewMode)
 	if (tResults[UnitCommandResults.UNITS] ~= nil and #tResults[UnitCommandResults.UNITS] ~= 0) then
 		local tUnits = tResults[UnitCommandResults.UNITS];
 		local unitPlots :table = {};
-		g_targetPlots = {};
+		g_targetPlots = {};		
+		local waves:table = {};
 		for i, unitComponentID in ipairs(tUnits) do
 			local unit = Players[player]:GetUnits():FindID(unitComponentID.id);
-			table.insert(unitPlots, Map.GetPlotIndex(unit:GetX(), unit:GetY()));
-		end
+			table.insert(unitPlots, Map.GetPlotIndex(unit:GetX(), unit:GetY()));						
+			local wave = {
+				pos1  = Map.GetPlotIndex(unit:GetX(), unit:GetY());
+				pos2  = Map.GetPlotIndex(pSelectedUnit:GetX(), pSelectedUnit:GetY());				
+				color = UI.GetColorValueFromHexLiteral(0xFFFFFFFF);
+				speed = 2;
+				type  = "CIVILIZATION_UNKNOWN";
+			};			
+			table.insert(waves, wave);
+		end		
+	
 		UILens.ToggleLayerOn(g_HexColoringPlacement);
 		UILens.SetLayerHexesArea(g_HexColoringPlacement, player, unitPlots);
 		g_targetPlots = unitPlots;
+		pFormCorpsOverlay:CreateLinearWaves(waves);				
 	end
 end
 
@@ -2932,6 +2924,10 @@ function OnInterfaceModeLeave_UnitFormCorps( eNewMode:number )
 	UIManager:SetUICursor(CursorTypes.NORMAL);
 	UILens.ToggleLayerOff( g_HexColoringPlacement );
 	UILens.ClearLayerHexes( g_HexColoringPlacement );
+	local pFormCorpsOverlay:object = UILens.GetOverlay(FORM_CORPS_DIRECTION_OVERLAY_NAME);
+	if(pFormCorpsOverlay ~= nil) then
+		pFormCorpsOverlay:ResetAllWaves();
+	end	
 end
 
 ------------------------------------------------------------------------------------------------
@@ -2960,6 +2956,11 @@ end
 
 ------------------------------------------------------------------------------------------------
 function OnInterfaceModeChange_UnitFormArmy(eNewMode)
+	local pFormCorpsOverlay:object = UILens.GetOverlay(FORM_CORPS_DIRECTION_OVERLAY_NAME);
+	if(pFormCorpsOverlay == nil) then
+		print("Error: missing Form Corps overlay");
+		return;
+	end	
 	UIManager:SetUICursor(CursorTypes.RANGE_ATTACK);
 	local pSelectedUnit = UI.GetHeadSelectedUnit();
 	local player = pSelectedUnit:GetOwner();
@@ -2968,13 +2969,23 @@ function OnInterfaceModeChange_UnitFormArmy(eNewMode)
 		local tUnits = tResults[UnitCommandResults.UNITS];
 		local unitPlots :table = {};
 		g_targetPlots = {};
+		local waves:table = {};
 		for i, unitComponentID in ipairs(tUnits) do
 			local unit = Players[player]:GetUnits():FindID(unitComponentID.id);
 			table.insert(unitPlots, Map.GetPlotIndex(unit:GetX(), unit:GetY()));
+			local wave = {
+				pos1  = Map.GetPlotIndex(unit:GetX(), unit:GetY());
+				pos2  = Map.GetPlotIndex(pSelectedUnit:GetX(), pSelectedUnit:GetY());				
+				color = UI.GetColorValueFromHexLiteral(0xFFFFFFFF);
+				speed = 2;
+				type  = "CIVILIZATION_UNKNOWN";
+			};			
+			table.insert(waves, wave);
 		end
 		UILens.ToggleLayerOn(g_HexColoringPlacement);
 		UILens.SetLayerHexesArea(g_HexColoringPlacement, player, unitPlots);
 		g_targetPlots = unitPlots;
+		pFormCorpsOverlay:CreateLinearWaves(waves);	
 	end
 end
 
@@ -2983,6 +2994,10 @@ function OnInterfaceModeLeave_UnitFormArmy( eNewMode:number )
 	UIManager:SetUICursor(CursorTypes.NORMAL);
 	UILens.ToggleLayerOff( g_HexColoringPlacement );
 	UILens.ClearLayerHexes( g_HexColoringPlacement );
+	local pFormCorpsOverlay:object = UILens.GetOverlay(FORM_CORPS_DIRECTION_OVERLAY_NAME);
+	if(pFormCorpsOverlay ~= nil) then
+		pFormCorpsOverlay:ResetAllWaves();
+	end	
 end
 
 ------------------------------------------------------------------------------------------------
@@ -3054,6 +3069,71 @@ function OnInterfaceModeChange_Selection(eNewMode)
 	UIManager:SetUICursor(CursorTypes.NORMAL);
 	UILens.SetActive("Default");
 end
+
+-- ===========================================================================
+--	Code related to the Sacrifice Selection interface mode
+-- ===========================================================================
+function OnMouseSacrificeEnd( pInputStruct )
+	-- If a drag was occurring, end it; otherwise raise event.
+	if g_isMouseDragging then
+		g_isMouseDragging = false;
+	else
+		if IsSelectionAllowedAt( UI.GetCursorPlotID() ) then
+			DOSacrificeSelection(pInputStruct);
+		end
+	end
+	EndDragMap(true);
+	g_isMouseDownInWorld = false;
+	return true;
+end
+-------------------------------------------------------------------------------
+function DOSacrificeSelection( pInputStruct )
+	local plotID = UI.GetCursorPlotID();
+	if (Map.IsPlot(plotID)) then
+		local plot = Map.GetPlotByIndex(plotID);
+			
+		local tParameters = {};
+		tParameters[UnitOperationTypes.PARAM_X] = plot:GetX();
+		tParameters[UnitOperationTypes.PARAM_Y] = plot:GetY();
+
+		local pSelectedUnit = UI.GetHeadSelectedUnit();
+		if (UnitManager.CanStartOperation( pSelectedUnit, "UNITOPERATION_SOOTHSAYER_SACRIFICE", nil, tParameters)) then
+			UnitManager.RequestOperation( pSelectedUnit, "UNITOPERATION_SOOTHSAYER_SACRIFICE", tParameters);
+			UI.SetInterfaceMode(InterfaceModeTypes.SELECTION);
+		end
+	end						
+	return true;
+end
+-------------------------------------------------------------------------------
+function OnInterfaceModeChange_Sacrifice(eNewMode)
+	UIManager:SetUICursor(CursorTypes.RANGE_ATTACK);
+	local pSelectedUnit = UI.GetHeadSelectedUnit();
+	if (pSelectedUnit ~= nil) then
+
+		local tResults = UnitManager.GetOperationTargets(pSelectedUnit, "UNITOPERATION_SOOTHSAYER_SACRIFICE" );
+		local allPlots = tResults[UnitOperationResults.PLOTS];
+		if (allPlots ~= nil) then
+			g_targetPlots = {};
+			for i,modifier in ipairs(tResults[UnitOperationResults.PLOTS]) do
+				table.insert(g_targetPlots, allPlots[i]);
+			end 
+
+			if (table.count(g_targetPlots) ~= 0) then
+				local eLocalPlayer:number = Game.GetLocalPlayer();
+				UILens.ToggleLayerOn(g_HexColoringMovement);
+				UILens.SetLayerHexesArea(g_HexColoringMovement, eLocalPlayer, g_targetPlots);
+			end
+		end
+	end
+end
+
+---------------------------------------------------------------------------------
+function OnInterfaceModeLeave_Sacrifice( eNewMode:number )
+	UIManager:SetUICursor(CursorTypes.NORMAL);
+	UILens.ToggleLayerOff( g_HexColoringMovement );
+	UILens.ClearLayerHexes( g_HexColoringMovement );
+end
+
 
 
 
@@ -3279,10 +3359,7 @@ function OnInputHandler( pInputStruct:table )
 
 	local uiMsg :number = pInputStruct:GetMessageType();
 	local mode  :number = UI.GetInterfaceMode();
-	
-	if m_isInputBlocked == true then
-		return;
-	end
+
 
 	if uiMsg == MouseEvents.PointerLeave then
 		ClearAllCachedInputState();
@@ -3518,6 +3595,7 @@ function LateInitialize()
 	InterfaceModeMessageHandler[InterfaceModeTypes.SPY_TRAVEL_TO_CITY]	[INTERFACEMODE_ENTER]		= OnInterfaceModeChange_SpyTravelToCity;
 	InterfaceModeMessageHandler[InterfaceModeTypes.FULLSCREEN_MAP]		[INTERFACEMODE_ENTER]		= OnInterfaceModeChange_FullscreenMap;
 	InterfaceModeMessageHandler[InterfaceModeTypes.CITY_SELECTION]		[INTERFACEMODE_ENTER]		= OnInterfaceModeChange_CitySelection;
+	InterfaceModeMessageHandler[InterfaceModeTypes.SACRIFICE_SELECTION]		[INTERFACEMODE_ENTER]		= OnInterfaceModeChange_Sacrifice;
 
 	
 	
@@ -3541,6 +3619,7 @@ function LateInitialize()
 	InterfaceModeMessageHandler[InterfaceModeTypes.FORM_CORPS]				[INTERFACEMODE_LEAVE]		= OnInterfaceModeLeave_UnitFormCorps;
 	InterfaceModeMessageHandler[InterfaceModeTypes.FORM_ARMY]				[INTERFACEMODE_LEAVE]		= OnInterfaceModeLeave_UnitFormArmy;
 	InterfaceModeMessageHandler[InterfaceModeTypes.AIRLIFT]					[INTERFACEMODE_LEAVE]		= OnInterfaceModeLeave_UnitAirlift;
+	InterfaceModeMessageHandler[InterfaceModeTypes.SACRIFICE_SELECTION]					[INTERFACEMODE_LEAVE]		= OnInterfaceModeLeave_Sacrifice;
 
 	-- Keyboard Events (all happen on up!)
 	InterfaceModeMessageHandler[InterfaceModeTypes.BUILDING_PLACEMENT]		[KeyEvents.KeyUp]		= OnPlacementKeyUp;
@@ -3610,6 +3689,7 @@ function LateInitialize()
 	InterfaceModeMessageHandler[InterfaceModeTypes.WB_SELECT_PLOT]		[MouseEvents.RButtonUp]  	= OnRButtonUp_WBSelectPlot;
 	InterfaceModeMessageHandler[InterfaceModeTypes.WB_SELECT_PLOT]		[MouseEvents.RButtonDown]  	= OnRButtonDown_WBSelectPlot;
 	InterfaceModeMessageHandler[InterfaceModeTypes.WB_SELECT_PLOT]		[MouseEvents.MouseMove]		= OnMouseMove_WBSelectPlot;
+	InterfaceModeMessageHandler[InterfaceModeTypes.SACRIFICE_SELECTION]				[MouseEvents.LButtonUp]		= OnMouseSacrificeEnd;
 
 	-- Touch Events (if a touch system)
 	if g_isTouchEnabled then
@@ -3648,6 +3728,7 @@ function LateInitialize()
 		InterfaceModeMessageHandler[InterfaceModeTypes.COASTAL_RAID]		[MouseEvents.PointerUp]		= CoastalRaid;
 		InterfaceModeMessageHandler[InterfaceModeTypes.PLACE_MAP_PIN]		[MouseEvents.PointerUp]		= PlaceMapPin;
 		InterfaceModeMessageHandler[InterfaceModeTypes.CITY_MANAGEMENT]		[MouseEvents.PointerUp]		= OnDoNothing;
+		InterfaceModeMessageHandler[InterfaceModeTypes.SACRIFICE_SELECTION]				[MouseEvents.PointerUp]		= DOSacrificeSelection;
 	end
 
 	
@@ -3657,6 +3738,8 @@ function LateInitialize()
 	Events.CityMadePurchase.Add( OnCityMadePurchase_StrategicView_MapPlacement );
 	Events.CycleUnitSelectionRequest.Add( OnCycleUnitSelectionRequest );
 	Events.InputActionTriggered.Add( OnInputActionTriggered );
+	Events.InputActionStarted.Add( OnInputActionStarted );
+	Events.InputActionFinished.Add( OnInputActionFinished );
 	Events.InterfaceModeChanged.Add(OnInterfaceModeChanged);
 	Events.MultiplayerGameLastPlayer.Add(OnMultiplayerGameLastPlayer);
 	Events.MultiplayerGameAbandoned.Add(OnMultiplayerGameAbandoned);
@@ -3677,14 +3760,6 @@ function LateInitialize()
 	LuaEvents.Tutorial_AddUnitMoveRestriction.Add( OnTutorial_AddUnitMoveRestriction );
 	LuaEvents.Tutorial_RemoveUnitMoveRestrictions.Add( OnTutorial_RemoveUnitMoveRestrictions );
 
-	LuaEvents.InGameTopOptionsMenu_Show.Add(OnBlockInput);
-	LuaEvents.InGameTopOptionsMenu_Close.Add(OnUnblockInput);
-
-	LuaEvents.DiploScene_SceneClosed.Add(OnUnblockInput);
-	LuaEvents.DiploScene_SceneOpened.Add(OnBlockInput);
-	
-	LuaEvents.FullscreenMap_Shown.Add(OnBlockInput);
-	LuaEvents.FullscreenMap_Closed.Add(OnUnblockInput);
 end
 
 -- ===========================================================================
@@ -3779,6 +3854,54 @@ function OnInputActionTriggered( actionId:number )
 		if (GameConfiguration.IsNetworkMultiplayer() and Network.IsMatchMaking()==false) then
 			TogglePause();
 		end
+	end
+end
+
+-- ===========================================================================
+function OnInputActionStarted( actionId:number, x:number, y:number )
+	
+	local keyPanChanged	:boolean = false;
+	
+	if actionId == m_actionHotkeyCameraPanUp then
+		m_isUPpressed = true;
+		keyPanChanged = true;
+	elseif actionId == m_actionHotkeyCameraPanDown then
+		m_isDOWNpressed = true;
+		keyPanChanged = true;
+	elseif actionId == m_actionHotkeyCameraPanLeft then
+		m_isLEFTpressed = true;
+		keyPanChanged = true;
+	elseif actionId == m_actionHotkeyCameraPanRight then
+		m_isRIGHTpressed = true;
+		keyPanChanged = true;
+	end
+
+	if( keyPanChanged == true ) then
+		ProcessPan(m_edgePanX,m_edgePanY);
+	end
+end
+
+-- ===========================================================================
+function OnInputActionFinished( actionId:number, x:number, y:number )
+
+	local keyPanChanged	:boolean = false;
+	
+	if actionId == m_actionHotkeyCameraPanUp then
+		m_isUPpressed = false;
+		keyPanChanged = true;
+	elseif actionId == m_actionHotkeyCameraPanDown then
+		m_isDOWNpressed = false;
+		keyPanChanged = true;
+	elseif actionId == m_actionHotkeyCameraPanLeft then
+		m_isLEFTpressed = false;
+		keyPanChanged = true;
+	elseif actionId == m_actionHotkeyCameraPanRight then
+		m_isRIGHTpressed = false;
+		keyPanChanged = true;
+	end
+
+	if( keyPanChanged == true ) then
+		ProcessPan(m_edgePanX,m_edgePanY);
 	end
 end
 

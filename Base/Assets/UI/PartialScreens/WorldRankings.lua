@@ -20,6 +20,7 @@ local m_isDebugForceShowAllScoreCategories:boolean = false; -- (false) Show all 
 --	GLOBALS
 -- ===========================================================================
 g_TabSupport = nil; -- Gets initialized in PopulateTabs
+g_CultureInst = nil; -- Also initialized in PopulateTabs.  Used by OpenCulture()
 g_victoryData = {
 	VICTORY_CONQUEST = {
 		GetText = function(p) return "LOC_WORLD_RANKINGS_OVERVIEW_DOMINATION_MILITARY_STRENGTH" end,
@@ -69,6 +70,10 @@ setmetatable(g_victoryData, {
 -- ===========================================================================
 --	CONSTANTS
 -- ===========================================================================
+SIZE_SCORE_ITEM_DEFAULT = 54;
+SIZE_SCORE_ITEM_DETAILS = 180;
+SIZE_HEADER_MAX_Y = 270;
+
 local RELOAD_CACHE_ID:string = "WorldRankings"; -- Must be unique (usually the same as the file name)
 local REQUIREMENT_CONTEXT:string = "VictoryProgress";
 local DATA_FIELD_SELECTION:string = "Selection";
@@ -102,13 +107,10 @@ local SIZE_VICTORY_ICON_SMALL:number = 64;
 local SIZE_RELIGION_BG_HEIGHT:number = 55;
 local SIZE_RELIGION_ICON_SMALL:number = 22;
 local SIZE_GENERIC_ITEM_MIN_Y:number = 54;
-local SIZE_SCORE_ITEM_DEFAULT:number = 54;
-local SIZE_SCORE_ITEM_DETAILS:number = 180;
 local SIZE_LOCAL_PLAYER_BORDER_PADDING:number = 9;
 local SIZE_STACK_DEFAULT:number = 225;
 local SIZE_HEADER_DEFAULT:number = 60;
 local SIZE_HEADER_MIN_Y:number = 46;
-local SIZE_HEADER_MAX_Y:number = 270;
 local SIZE_HEADER_ICON:number = 80;
 local SIZE_LEADER_ICON:number = 55;
 local SIZE_CIV_ICON:number = 36;
@@ -128,8 +130,8 @@ TAB_CULTURE = Locale.Lookup("LOC_WORLD_RANKINGS_CULTURE_TAB");
 TAB_RELIGION = Locale.Lookup("LOC_WORLD_RANKINGS_RELIGION_TAB");
 TAB_DOMINATION = Locale.Lookup("LOC_WORLD_RANKINGS_DOMINATION_TAB");
 
-local SCORE_TITLE:string = Locale.Lookup("LOC_WORLD_RANKINGS_SCORE_VICTORY");
-local SCORE_DETAILS:string = Locale.Lookup("LOC_WORLD_RANKINGS_SCORE_DETAILS");
+SCORE_TITLE = Locale.Lookup("LOC_WORLD_RANKINGS_SCORE_VICTORY");
+SCORE_DETAILS = Locale.Lookup("LOC_WORLD_RANKINGS_SCORE_DETAILS");
 
 local SCIENCE_ICON:string = "ICON_VICTORY_TECHNOLOGY";
 local SCIENCE_TITLE:string = Locale.Lookup("LOC_WORLD_RANKINGS_SCIENCE_VICTORY");
@@ -148,14 +150,14 @@ local CULTURE_VISITING_TOURISTS:string = Locale.Lookup("LOC_WORLD_RANKINGS_CULTU
 
 local DOMINATION_ICON:string = "ICON_VICTORY_DOMINATION";
 local DOMINATION_TITLE:string = Locale.Lookup("LOC_WORLD_RANKINGS_DOMINATION_VICTORY");
-local DOMINATION_DETAILS:string = Locale.Lookup("LOC_WORLD_RANKINGS_DOMINATION_DETAILS");
-local DOMINATION_HAS_ORIGINAL_CAPITAL:string = Locale.Lookup("LOC_WORLD_RANKINGS_DOMINATION_HAS_ORIGINAL_CAPITAL");
+local DOMINATION_DETAILS:string  = Locale.Lookup("LOC_WORLD_RANKINGS_DOMINATION_DETAILS");
+local DOMINATION_HAS_ORIGINAL_CAPITAL:string  = Locale.Lookup("LOC_WORLD_RANKINGS_DOMINATION_HAS_ORIGINAL_CAPITAL");
 
 local RELIGION_ICON:string = "ICON_VICTORY_RELIGIOUS";
 local RELIGION_TITLE:string = Locale.Lookup("LOC_WORLD_RANKINGS_RELIGION_VICTORY");
 local RELIGION_DETAILS:string = Locale.Lookup("LOC_WORLD_RANKINGS_RELIGION_DETAILS");
 
-local ICON_GENERIC:string = "ICON_VICTORY_GENERIC";
+ICON_GENERIC = "ICON_VICTORY_GENERIC";
 local ICON_UNKNOWN_CIV:string = "ICON_CIVILIZATION_UNKNOWN";
 local LOC_UNKNOWN_CIV:string = Locale.Lookup("LOC_WORLD_RANKING_UNMET_PLAYER");
 local LOC_UNKNOWN_CIV_COLORED:string = Locale.Lookup("LOC_WORLD_RANKING_UNMET_PLAYER_COLORED");
@@ -209,28 +211,31 @@ end
 -- ===========================================================================
 --	PLAYER VARIABLES
 -- ===========================================================================
-m_LocalPlayer = {};
-m_LocalPlayerID = 0;
+g_LocalPlayer = {};
+g_LocalPlayerID = 0;
 -- ===========================================================================
 --	SCREEN VARIABLES
 -- ===========================================================================
-local m_AnimSupport:table; --AnimSidePanelSupport
-m_ActiveHeader = {};
-m_TotalTabSize = 0;
-m_MaxExtraTabSize = 0;
+g_activeheader = {};
 m_ExtraTabs = {};
-local m_HeaderInstances:table = {};
+
+g_TabSupportIM = InstanceManager:new("TabInstance", "Button", Controls.TabContainer);
+m_GenericHeaderIM = InstanceManager:new("GenericHeaderInstance", "HeaderTop"); -- Used by Score, Religion and Domination Views
+
+g_ScoreIM = InstanceManager:new("ScoreInstance", "ButtonBG", Controls.ScoreViewStack);
+g_ScoreTeamIM = InstanceManager:new("ScoreTeamInstance", "ButtonFrame", Controls.ScoreViewStack);
+
+local m_AnimSupport		:table; --AnimSidePanelSupport
+local m_TotalTabSize    :number = 0;
+local m_MaxExtraTabSize :number = 0;
+local m_HeaderInstances :table = {};
 local m_ActiveViewUpdate:ifunction;
 local m_ShowScoreDetails:boolean = false;
 local m_CultureHeaderState:number = CULTURE_HEADER_STATES.WHAT_IS_CULTURE_VICTORY;
-m_TabSupportIM = InstanceManager:new("TabInstance", "Button", Controls.TabContainer);
-m_GenericHeaderIM = InstanceManager:new("GenericHeaderInstance", "HeaderTop"); -- Used by Score, Religion and Domination Views
-local m_ScienceHeaderIM:table = InstanceManager:new("ScienceHeaderInstance", "HeaderTop", Controls.ScienceViewHeader);
-local m_CultureHeaderIM:table = InstanceManager:new("CultureHeaderInstance", "HeaderTop", Controls.CultureViewHeader);
-local m_OverallIM:table = InstanceManager:new("OverallInstance", "ButtonBG", Controls.OverallViewStack);
 
-local m_ScoreIM:table = InstanceManager:new("ScoreInstance", "ButtonBG", Controls.ScoreViewStack);
-local m_ScoreTeamIM:table = InstanceManager:new("ScoreTeamInstance", "ButtonFrame", Controls.ScoreViewStack);
+local m_ScienceHeaderIM	:table = InstanceManager:new("ScienceHeaderInstance", "HeaderTop", Controls.ScienceViewHeader);
+local m_CultureHeaderIM	:table = InstanceManager:new("CultureHeaderInstance", "HeaderTop", Controls.CultureViewHeader);
+local m_OverallIM		:table = InstanceManager:new("OverallInstance", "ButtonBG", Controls.OverallViewStack);
 
 local m_ScienceIM:table = InstanceManager:new("ScienceInstance", "ButtonBG", Controls.ScienceViewStack);
 local m_ScienceTeamIM:table = InstanceManager:new("ScienceTeamInstance", "ButtonFrame", Controls.ScienceViewStack);
@@ -238,16 +243,16 @@ local m_ScienceTeamIM:table = InstanceManager:new("ScienceTeamInstance", "Button
 local m_CultureIM:table = InstanceManager:new("CultureInstance", "ButtonBG", Controls.CultureViewStack);
 local m_CultureTeamIM:table = InstanceManager:new("CultureTeamInstance", "ButtonFrame", Controls.CultureViewStack);
 
-local m_DominationIM:table = InstanceManager:new("DominationInstance", "ButtonBG", Controls.DominationViewStack);
-local m_DominationTeamIM:table = InstanceManager:new("DominationTeamInstance", "ButtonFrame", Controls.DominationViewStack);
+local m_DominationIM = InstanceManager:new("DominationInstance", "ButtonBG", Controls.DominationViewStack);
+local m_DominationTeamIM = InstanceManager:new("DominationTeamInstance", "ButtonFrame", Controls.DominationViewStack);
 
 local m_ReligionIM:table = InstanceManager:new("ReligionInstance", "ButtonBG", Controls.ReligionViewStack);
 local m_ReligionTeamIM:table = InstanceManager:new("ReligionTeamInstance", "ButtonFrame", Controls.ReligionViewStack);
 
-m_GenericIM = InstanceManager:new("GenericInstance", "ButtonBG", Controls.GenericViewStack);
-m_GenericTeamIM = InstanceManager:new("GenericTeamInstance", "ButtonFrame", Controls.GenericViewStack);
+g_GenericIM = InstanceManager:new("GenericInstance", "ButtonBG", Controls.GenericViewStack);
+g_GenericTeamIM = InstanceManager:new("GenericTeamInstance", "ButtonFrame", Controls.GenericViewStack);
 
-m_ExtraTabsIM = InstanceManager:new("ExtraTabInstance", "Button", Controls.ExtraTabStack);
+g_ExtraTabsIM = InstanceManager:new("ExtraTabInstance", "Button", Controls.ExtraTabStack);
 
 local m_CivTooltip = {};
 TTManager:GetTypeControlTable("CivTooltip", m_CivTooltip);
@@ -301,8 +306,8 @@ function PopulateTabs()
 	m_ExtraTabs = {};
 	m_TotalTabSize = 0;
 	m_MaxExtraTabSize = 0;
-	m_ExtraTabsIM:ResetInstances();
-	m_TabSupportIM:ResetInstances();
+	g_ExtraTabsIM:ResetInstances();
+	g_TabSupportIM:ResetInstances();
 	
 	-- Deselect previously selected tab
 	if g_TabSupport then
@@ -314,31 +319,41 @@ function PopulateTabs()
 	-- Create TabSupport object
 	g_TabSupport = CreateTabs(Controls.TabContainer, 42, 34, UI.GetColorValueFromHexLiteral(0xFF331D05));
 
-	local defaultTab = AddTab(TAB_OVERALL, ViewOverall);
+	if (ShouldShowOverall()) then
+		defaultTab = AddTab(TAB_OVERALL, ViewOverall);
+	else
+		defaultTab = nil;
+	end
+
+	-- Add custom (modded) victory types
+	if(ShouldCheckCustomVictories()) then
+		for row in GameInfo.Victories() do
+			local victoryType:string = row.VictoryType;
+			if IsCustomVictoryType(victoryType) and Game.IsVictoryEnabled(victoryType) then
+				if(defaultTab == nil) then
+					defaultTab = AddTab(Locale.Lookup(row.Name), function() ViewGeneric(victoryType); end);
+				else
+					AddTab(Locale.Lookup(row.Name), function() ViewGeneric(victoryType); end);
+				end
+			end
+		end
+	end
 
 	-- Add default victory types in a pre-determined order
-	if(GameConfiguration.IsAnyMultiplayer() or Game.IsVictoryEnabled("VICTORY_SCORE")) then
+	if(GameConfiguration.IsAnyMultiplayer() or Game.IsVictoryEnabled("VICTORY_SCORE") or ForceShowScore()) then
 		AddTab(TAB_SCORE, ViewScore);
 	end
 	if(Game.IsVictoryEnabled("VICTORY_TECHNOLOGY")) then
 		AddTab(TAB_SCIENCE, ViewScience);
 	end
 	if(Game.IsVictoryEnabled("VICTORY_CULTURE")) then
-		AddTab(TAB_CULTURE, ViewCulture);
+		g_CultureInst = AddTab(TAB_CULTURE, ViewCulture);
 	end
 	if(Game.IsVictoryEnabled("VICTORY_CONQUEST")) then
 		AddTab(TAB_DOMINATION, ViewDomination);
 	end
 	if(Game.IsVictoryEnabled("VICTORY_RELIGIOUS")) then
 		AddTab(TAB_RELIGION, ViewReligion);
-	end
-
-	-- Add custom (modded) victory types
-	for row in GameInfo.Victories() do
-		local victoryType:string = row.VictoryType;
-		if IsCustomVictoryType(victoryType) and Game.IsVictoryEnabled(victoryType) then
-			AddTab(Locale.Lookup(row.Name), function() ViewGeneric(victoryType); end);
-		end
 	end
 
 	if m_TotalTabSize > Controls.TabContainer:GetSizeX() then
@@ -356,7 +371,7 @@ end
 
 function AddTab(label:string, onClickCallback:ifunction)
 
-	local tabInst:table = m_TabSupportIM:GetInstance();
+	local tabInst:table = g_TabSupportIM:GetInstance();
 	tabInst.Button[DATA_FIELD_SELECTION] = tabInst.Selection;
 
 	tabInst.Button:SetText(label);
@@ -370,10 +385,19 @@ function AddTab(label:string, onClickCallback:ifunction)
 
 	m_TotalTabSize = m_TotalTabSize + tabInst.Button:GetSizeX();
 	if m_TotalTabSize > Controls.TabContainer:GetSizeX() then
-		m_TabSupportIM:ReleaseInstance(tabInst);
+		g_TabSupportIM:ReleaseInstance(tabInst);
 		AddExtraTab(label, onClickCallback);
 	else
-		g_TabSupport.AddTab(tabInst.Button, OnTabClicked(tabInst, onClickCallback));
+		local callback:ifunction = function()
+			if(g_TabSupport.prevSelectedControl ~= nil) then
+				g_TabSupport.prevSelectedControl[DATA_FIELD_SELECTION]:SetHide(true);
+			end
+			tabInst.Selection:SetHide(false);
+			onClickCallback();
+			CloseExtraTabs();
+		end
+
+		g_TabSupport.AddTab(tabInst.Button, callback);
 	end
 
 	return tabInst.Button;
@@ -390,7 +414,7 @@ function OnTabClicked(tabInst:table, onClickCallback:ifunction)
 end
 
 function AddExtraTab(label:string, onClickCallback:ifunction)
-	local extraTabInst:table = m_ExtraTabsIM:GetInstance();
+	local extraTabInst:table = g_ExtraTabsIM:GetInstance();
 	
 	extraTabInst.Button:SetText(label);
 	extraTabInst.Button:RegisterCallback(Mouse.eLClick, OnExtraTabClicked(extraTabInst, onClickCallback));
@@ -422,7 +446,7 @@ end
 --	Called anytime player switches tabs
 -- ===========================================================================
 function ResetState(newView:ifunction)
-	m_ActiveHeader = nil;
+	g_activeheader = nil;
 	m_ActiveViewUpdate = newView;
 	Controls.OverallView:SetHide(true);
 	Controls.ScoreView:SetHide(true);
@@ -441,19 +465,19 @@ function ResetState(newView:ifunction)
 end
 
 function ChangeActiveHeader(headerType:string, headerIM:table, parentControl:table)
-	m_ActiveHeader = m_HeaderInstances[headerType];
-	if(m_ActiveHeader == nil) then
-		m_ActiveHeader = headerIM:GetInstance(parentControl);
-		m_HeaderInstances[headerType] = m_ActiveHeader;
+	g_activeheader = m_HeaderInstances[headerType];
+	if(g_activeheader == nil) then
+		g_activeheader = headerIM:GetInstance(parentControl);
+		m_HeaderInstances[headerType] = g_activeheader;
 	end
 end
 
 function GetCivNameAndIcon(playerID:number, bColorUnmetPlayer:boolean)
 	local name:string, icon:string;
 	local playerConfig:table = PlayerConfigurations[playerID];
-	if(playerID == m_LocalPlayerID or playerConfig:IsHuman() or m_LocalPlayer == nil or m_LocalPlayer:GetDiplomacy():HasMet(playerID)) then
+	if(playerID == g_LocalPlayerID or playerConfig:IsHuman() or g_LocalPlayer == nil or g_LocalPlayer:GetDiplomacy():HasMet(playerID)) then
 		name = Locale.Lookup(playerConfig:GetPlayerName());
-		if playerID == m_LocalPlayerID or m_LocalPlayer == nil or m_LocalPlayer:GetDiplomacy():HasMet(playerID) then
+		if playerID == g_LocalPlayerID or g_LocalPlayer == nil or g_LocalPlayer:GetDiplomacy():HasMet(playerID) then
 			icon = "ICON_" .. playerConfig:GetCivilizationTypeName();
 		else
 			icon = ICON_UNKNOWN_CIV;
@@ -474,27 +498,27 @@ function PopulateGenericHeader(resizeCallback:ifunction, title:string, subTitle:
 	if(textureSheet == nil or textureSheet == "") then
 		UI.DataError("Could not find icon in PopulateGenericHeader: icon=\""..headerIcon.."\", iconSize="..tostring(SIZE_HEADER_ICON));
 	else
-		m_ActiveHeader.HeaderIcon:SetTexture(textureOffsetX, textureOffsetY, textureSheet);
+		g_activeheader.HeaderIcon:SetTexture(textureOffsetX, textureOffsetY, textureSheet);
 	end
 
-	m_ActiveHeader.HeaderLabel:SetText(Locale.ToUpper(Locale.Lookup(title)));
+	g_activeheader.HeaderLabel:SetText(Locale.ToUpper(Locale.Lookup(title)));
 	if(subTitle ~= nil and subTitle ~= "") then
-		m_ActiveHeader.HeaderSubLabel:SetHide(false);
-		m_ActiveHeader.HeaderSubLabel:SetText(Locale.Lookup(subTitle));
+		g_activeheader.HeaderSubLabel:SetHide(false);
+		g_activeheader.HeaderSubLabel:SetText(Locale.Lookup(subTitle));
 	else
-		m_ActiveHeader.HeaderSubLabel:SetHide(true);
+		g_activeheader.HeaderSubLabel:SetHide(true);
 	end
 
-	m_ActiveHeader.AdvisorText:SetText(details and Locale.Lookup(details) or "");
+	g_activeheader.AdvisorText:SetText(details and Locale.Lookup(details) or "");
 	
-	m_ActiveHeader.ExpandHeaderButton:RegisterCallback(Mouse.eLClick, OnExpandHeader);
-	m_ActiveHeader.ContractHeaderButton:RegisterCallback(Mouse.eLClick, OnContractHeader);
+	g_activeheader.ExpandHeaderButton:RegisterCallback(Mouse.eLClick, OnExpandHeader);
+	g_activeheader.ContractHeaderButton:RegisterCallback(Mouse.eLClick, OnContractHeader);
 	
-	if(m_ActiveHeader[DATA_FIELD_HEADER_EXPANDED] == nil) then 
-		m_ActiveHeader[DATA_FIELD_HEADER_EXPANDED] = true;
+	if(g_activeheader[DATA_FIELD_HEADER_EXPANDED] == nil) then 
+		g_activeheader[DATA_FIELD_HEADER_EXPANDED] = true;
 	end
 
-	m_ActiveHeader[DATA_FIELD_HEADER_RESIZED] = resizeCallback;
+	g_activeheader[DATA_FIELD_HEADER_RESIZED] = resizeCallback;
 	RealizeHeaderSize();
 end
 
@@ -502,24 +526,24 @@ end
 --	Called anytime player presses expand/contract button on a Header Instance 
 -- ===========================================================================
 function OnExpandHeader(data1:number, data2:number, control:table)
-	if(control == m_ActiveHeader.ExpandHeaderButton) then
-		m_ActiveHeader.AdvisorIcon:SetHide(false);
-		m_ActiveHeader.AdvisorText:SetHide(false);
-		m_ActiveHeader.AdvisorTextBG:SetHide(false);
-		m_ActiveHeader.ExpandHeaderButton:SetHide(true);
-		m_ActiveHeader.ContractHeaderButton:SetHide(false);
-		m_ActiveHeader[DATA_FIELD_HEADER_EXPANDED] = true;
+	if(control == g_activeheader.ExpandHeaderButton) then
+		g_activeheader.AdvisorIcon:SetHide(false);
+		g_activeheader.AdvisorText:SetHide(false);
+		g_activeheader.AdvisorTextBG:SetHide(false);
+		g_activeheader.ExpandHeaderButton:SetHide(true);
+		g_activeheader.ContractHeaderButton:SetHide(false);
+		g_activeheader[DATA_FIELD_HEADER_EXPANDED] = true;
 		RealizeHeaderSize();
 	end
 end
 function OnContractHeader(data1:number, data2:number, control:table)
-	if(control == m_ActiveHeader.ContractHeaderButton) then
-		m_ActiveHeader.AdvisorIcon:SetHide(true);
-		m_ActiveHeader.AdvisorText:SetHide(true);
-		m_ActiveHeader.AdvisorTextBG:SetHide(true);
-		m_ActiveHeader.ExpandHeaderButton:SetHide(false);
-		m_ActiveHeader.ContractHeaderButton:SetHide(true);
-		m_ActiveHeader[DATA_FIELD_HEADER_EXPANDED] = false;
+	if(control == g_activeheader.ContractHeaderButton) then
+		g_activeheader.AdvisorIcon:SetHide(true);
+		g_activeheader.AdvisorText:SetHide(true);
+		g_activeheader.AdvisorTextBG:SetHide(true);
+		g_activeheader.ExpandHeaderButton:SetHide(false);
+		g_activeheader.ContractHeaderButton:SetHide(true);
+		g_activeheader[DATA_FIELD_HEADER_EXPANDED] = false;
 		RealizeHeaderSize();
 	end
 end
@@ -528,29 +552,29 @@ end
 --	Called anytime header changes size (when it's expanded / contracted)
 -- ===========================================================================
 function RealizeHeaderSize()
-	if(m_ActiveHeader[DATA_FIELD_HEADER_EXPANDED]) then
-		local textBubbleHeight:number = m_ActiveHeader.AdvisorText:GetSizeY() + PADDING_ADVISOR_TEXT_BG;
+	if(g_activeheader[DATA_FIELD_HEADER_EXPANDED]) then
+		local textBubbleHeight:number = g_activeheader.AdvisorText:GetSizeY() + PADDING_ADVISOR_TEXT_BG;
 		if(textBubbleHeight > SIZE_HEADER_MAX_Y) then
 			textBubbleHeight = SIZE_HEADER_MAX_Y;
 		elseif textBubbleHeight < SIZE_HEADER_MIN_Y then
 			textBubbleHeight = SIZE_HEADER_MIN_Y;
 		end
-		m_ActiveHeader.AdvisorIcon:SetOffsetY(OFFSET_ADVISOR_ICON_Y + textBubbleHeight);
-		m_ActiveHeader.HeaderFrame:SetSizeY(OFFSET_ADVISOR_TEXT_Y + textBubbleHeight);
-		m_ActiveHeader.ContractHeaderButton:SetOffsetY(OFFSET_CONTRACT_BUTTON_Y + textBubbleHeight);
-		m_ActiveHeader[DATA_FIELD_HEADER_HEIGHT] = textBubbleHeight;
+		g_activeheader.AdvisorIcon:SetOffsetY(OFFSET_ADVISOR_ICON_Y + textBubbleHeight);
+		g_activeheader.HeaderFrame:SetSizeY(OFFSET_ADVISOR_TEXT_Y + textBubbleHeight);
+		g_activeheader.ContractHeaderButton:SetOffsetY(OFFSET_CONTRACT_BUTTON_Y + textBubbleHeight);
+		g_activeheader[DATA_FIELD_HEADER_HEIGHT] = textBubbleHeight;
 	else
-		m_ActiveHeader.HeaderFrame:SetSizeY(SIZE_HEADER_DEFAULT);
-		m_ActiveHeader[DATA_FIELD_HEADER_HEIGHT] = SIZE_HEADER_DEFAULT;
+		g_activeheader.HeaderFrame:SetSizeY(SIZE_HEADER_DEFAULT);
+		g_activeheader[DATA_FIELD_HEADER_HEIGHT] = SIZE_HEADER_DEFAULT;
 	end
 	-- Center header label if sub label is not present
-	if(m_ActiveHeader.HeaderSubLabel:IsHidden()) then
-		m_ActiveHeader.HeaderLabel:SetOffsetY(25);
+	if(g_activeheader.HeaderSubLabel:IsHidden()) then
+		g_activeheader.HeaderLabel:SetOffsetY(25);
 	else
-		m_ActiveHeader.HeaderLabel:SetOffsetY(18);
+		g_activeheader.HeaderLabel:SetOffsetY(18);
 	end
-	if(m_ActiveHeader[DATA_FIELD_HEADER_RESIZED] ~= nil) then
-		m_ActiveHeader[DATA_FIELD_HEADER_RESIZED]();
+	if(g_activeheader[DATA_FIELD_HEADER_RESIZED] ~= nil) then
+		g_activeheader[DATA_FIELD_HEADER_RESIZED]();
 	end
 end
 
@@ -788,7 +812,7 @@ function PopulateOverallInstance(instance:table, victoryType:string, typeText:st
 	local isLocalPlayerLeading:boolean = false;
 	local leadingTeam:table = teamData[1];
 	for playerID, data in pairs(teamData[1].PlayerData) do
-		if playerID == m_LocalPlayerID then
+		if playerID == g_LocalPlayerID then
 			isLocalPlayerLeading = true;
 		end
 	end
@@ -809,7 +833,7 @@ function PopulateOverallInstance(instance:table, victoryType:string, typeText:st
 			topName = Locale.Lookup("LOC_WORLD_RANKINGS_TEAM", GameConfiguration.GetTeamName(teamData[1].TeamID));
 		else
 			local topPlayerID:number = Teams[teamData[1].TeamID][1];
-			if(m_LocalPlayer == nil or m_LocalPlayer:GetDiplomacy():HasMet(topPlayerID))then
+			if(g_LocalPlayer == nil or g_LocalPlayer:GetDiplomacy():HasMet(topPlayerID))then
 				topName = Locale.Lookup(GameInfo.Civilizations[PlayerConfigurations[Teams[teamData[1].TeamID][1]]:GetCivilizationTypeID()].Name);
 			else
 				topName = LOC_UNKNOWN_CIV;
@@ -820,7 +844,7 @@ function PopulateOverallInstance(instance:table, victoryType:string, typeText:st
 		-- Set local team/player text
 		for teamPosition, team in ipairs(teamData) do
 			for playerID, data in pairs(team.PlayerData) do
-				if playerID == m_LocalPlayerID then
+				if playerID == g_LocalPlayerID then
 					local localPlayerPositionText:string = Locale.Lookup("LOC_WORLD_RANKINGS_" .. teamPosition .. "_PLACE");
 					local localPlayerDescription:string = "";
 
@@ -855,7 +879,7 @@ function PopulateOverallTeamIconInstance(instance:table, teamData:table, iconSiz
 	-- Determine if this is the local players team
 	instance.LocalPlayer:SetHide(true);
 	for playerID, data in pairs(teamData.PlayerData) do
-		if playerID == m_LocalPlayerID then
+		if playerID == g_LocalPlayerID then
 			instance.LocalPlayer:SetHide(false);
 		end
 	end
@@ -911,7 +935,7 @@ function UpdateTeamTooltip(control, teamData)
 
 	-- Create an instance for each met player on this team
 	for playerID, playerData in pairs(teamData.PlayerData) do
-		if m_LocalPlayerID == playerID or m_LocalPlayer:GetDiplomacy():HasMet(playerID) then
+		if g_LocalPlayerID == playerID or g_LocalPlayer:GetDiplomacy():HasMet(playerID) then
 			local civInstance:table = m_TeamTooltip.TooltipIM:GetInstance();
 
 			-- Hide/show necessary controls
@@ -921,7 +945,7 @@ function UpdateTeamTooltip(control, teamData)
 			civInstance.UnmetLabel:SetHide(true);
 
 			-- Update local player indicator
-			civInstance.YouIndicator:SetHide(playerID ~= m_LocalPlayerID);
+			civInstance.YouIndicator:SetHide(playerID ~= g_LocalPlayerID);
 		
 			local playerConfig:table = PlayerConfigurations[playerID];
 			local leaderTypeName:string = playerConfig:GetLeaderTypeName();
@@ -965,7 +989,7 @@ function UpdateTeamTooltip(control, teamData)
 
 	-- Create an unmet instance for each unmet player on this team
 	for playerID, playerData in pairs(teamData.PlayerData) do
-		if m_LocalPlayerID ~= playerID and not m_LocalPlayer:GetDiplomacy():HasMet(playerID) then
+		if g_LocalPlayerID ~= playerID and not g_LocalPlayer:GetDiplomacy():HasMet(playerID) then
 			local civInstance:table = m_TeamTooltip.TooltipIM:GetInstance();
 
 			-- Hide/show necessary controls
@@ -1015,8 +1039,8 @@ function ViewScore()
 	-- Sort teams
 	table.sort(scoreData, function(a, b) return a.TeamScore > b.TeamScore; end);
 
-	m_ScoreIM:ResetInstances();
-	m_ScoreTeamIM:ResetInstances();
+	g_ScoreIM:ResetInstances();
+	g_ScoreTeamIM:ResetInstances();
 
 	for i, teamData in ipairs(scoreData) do
 		if #teamData.PlayerData > 1 then
@@ -1024,10 +1048,10 @@ function ViewScore()
 			table.sort(teamData.PlayerData, function(a, b) return a.PlayerScore> b.PlayerScore; end);
 
 			-- Display as team
-			PopulateScoreTeamInstance(m_ScoreTeamIM:GetInstance(), teamData);
+			PopulateScoreTeamInstance(g_ScoreTeamIM:GetInstance(), teamData);
 		elseif #teamData.PlayerData > 0 then
 			-- Display as single civ
-			PopulateScoreInstance(m_ScoreIM:GetInstance(), teamData.PlayerData[1]);
+			PopulateScoreInstance(g_ScoreIM:GetInstance(), teamData.PlayerData[1]);
 		end
 	end
 
@@ -1133,8 +1157,8 @@ end
 function RealizeScoreStackSize()
 	local _, screenY:number = UIManager:GetScreenSizeVal();
 
-	if(m_ActiveHeader[DATA_FIELD_HEADER_EXPANDED]) then
-		local headerHeight:number = m_ActiveHeader[DATA_FIELD_HEADER_HEIGHT];
+	if(g_activeheader[DATA_FIELD_HEADER_EXPANDED]) then
+		local headerHeight:number = g_activeheader[DATA_FIELD_HEADER_HEIGHT];
 		Controls.ScoreViewContents:SetOffsetY(OFFSET_VIEW_CONTENTS + headerHeight + PADDING_HEADER);
 		Controls.ScoreViewScrollbar:SetSizeY(screenY - (SIZE_STACK_DEFAULT + (headerHeight + PADDING_HEADER)));
 	else
@@ -1171,16 +1195,16 @@ function ViewScience()
 	local finishedProjects:table = { {}, {}, {} };
 	
 	local bHasSpaceport:boolean = false;
-	if (m_LocalPlayer ~= nil) then
-		for _,district in m_LocalPlayer:GetDistricts():Members() do
+	if (g_LocalPlayer ~= nil) then
+		for _,district in g_LocalPlayer:GetDistricts():Members() do
 			if (district ~= nil and district:IsComplete() and district:GetType() == SPACE_PORT_DISTRICT_INFO.Index) then
 				bHasSpaceport = true;
 				break;
 			end
 		end
 
-		local pPlayerStats:table = m_LocalPlayer:GetStats();
-		local pPlayerCities:table = m_LocalPlayer:GetCities();
+		local pPlayerStats:table = g_LocalPlayer:GetStats();
+		local pPlayerCities:table = g_LocalPlayer:GetCities();
 		for _, city in pPlayerCities:Members() do
 			local pBuildQueue:table = city:GetBuildQueue();
 			-- 1st milestone - satelite launch
@@ -1235,7 +1259,7 @@ function ViewScience()
 		if(result < 1) then
 			progressText = progressText .. "[ICON_Bolt]";
 			if(nextStep == "") then
-				nextStep = GetNextStepForScienceProject(m_LocalPlayer, SCIENCE_PROJECTS[i], bHasSpaceport, finishedProjects[i]);
+				nextStep = GetNextStepForScienceProject(g_LocalPlayer, SCIENCE_PROJECTS[i], bHasSpaceport, finishedProjects[i]);
 			end
 		else
 			progressText = progressText .. "[ICON_CheckmarkBlue] ";
@@ -1244,8 +1268,8 @@ function ViewScience()
 		if(i < 3) then progressText = progressText .. "[NEWLINE]"; end
 	end
 
-	m_ActiveHeader.AdvisorTextCentered:SetText(progressText);
-	m_ActiveHeader.AdvisorTextNextStep:SetText(Locale.Lookup("LOC_WORLD_RANKINGS_SCIENCE_NEXT_STEP", nextStep));
+	g_activeheader.AdvisorTextCentered:SetText(progressText);
+	g_activeheader.AdvisorTextNextStep:SetText(Locale.Lookup("LOC_WORLD_RANKINGS_SCIENCE_NEXT_STEP", nextStep));
 
 	m_ScienceIM:ResetInstances();
 	m_ScienceTeamIM:ResetInstances();
@@ -1517,21 +1541,21 @@ end
 function RealizeScienceStackSize()
 	local _, screenY:number = UIManager:GetScreenSizeVal();
 
-	if(m_ActiveHeader[DATA_FIELD_HEADER_EXPANDED]) then
-		local headerHeight:number = m_ActiveHeader[DATA_FIELD_HEADER_HEIGHT];
-		headerHeight = headerHeight + m_ActiveHeader.AdvisorTextCentered:GetSizeY() + m_ActiveHeader.AdvisorTextNextStep:GetSizeY() + (PADDING_HEADER * 2);
-		m_ActiveHeader.AdvisorIcon:SetOffsetY(OFFSET_ADVISOR_ICON_Y + headerHeight);
-		m_ActiveHeader.HeaderFrame:SetSizeY(OFFSET_ADVISOR_TEXT_Y + headerHeight);
-		m_ActiveHeader.ContractHeaderButton:SetOffsetY(OFFSET_CONTRACT_BUTTON_Y + headerHeight);
+	if(g_activeheader[DATA_FIELD_HEADER_EXPANDED]) then
+		local headerHeight:number = g_activeheader[DATA_FIELD_HEADER_HEIGHT];
+		headerHeight = headerHeight + g_activeheader.AdvisorTextCentered:GetSizeY() + g_activeheader.AdvisorTextNextStep:GetSizeY() + (PADDING_HEADER * 2);
+		g_activeheader.AdvisorIcon:SetOffsetY(OFFSET_ADVISOR_ICON_Y + headerHeight);
+		g_activeheader.HeaderFrame:SetSizeY(OFFSET_ADVISOR_TEXT_Y + headerHeight);
+		g_activeheader.ContractHeaderButton:SetOffsetY(OFFSET_CONTRACT_BUTTON_Y + headerHeight);
 		Controls.ScienceViewContents:SetOffsetY(OFFSET_VIEW_CONTENTS + headerHeight + PADDING_HEADER);
 		Controls.ScienceViewScrollbar:SetSizeY(screenY - (SIZE_STACK_DEFAULT + (headerHeight + PADDING_HEADER)));
-		m_ActiveHeader.AdvisorTextCentered:SetHide(false);
-		m_ActiveHeader.AdvisorTextNextStep:SetHide(false);
+		g_activeheader.AdvisorTextCentered:SetHide(false);
+		g_activeheader.AdvisorTextNextStep:SetHide(false);
 	else
 		Controls.ScienceViewContents:SetOffsetY(OFFSET_VIEW_CONTENTS);
 		Controls.ScienceViewScrollbar:SetSizeY(screenY - SIZE_STACK_DEFAULT);
-		m_ActiveHeader.AdvisorTextCentered:SetHide(true);
-		m_ActiveHeader.AdvisorTextNextStep:SetHide(true);
+		g_activeheader.AdvisorTextCentered:SetHide(true);
+		g_activeheader.AdvisorTextNextStep:SetHide(true);
 	end
 
 	RealizeStackAndScrollbar(Controls.ScienceViewStack, Controls.ScienceViewScrollbar, true);
@@ -1569,8 +1593,8 @@ function ViewCulture()
 	local detailsText:string;
 	if(m_CultureHeaderState == CULTURE_HEADER_STATES.WHAT_IS_CULTURE_VICTORY) then
 		detailsText = CULTURE_VICTORY_DETAILS;
-		m_ActiveHeader.DomesticTourism:SetText(CULTURE_DOMESTIC_TOURISTS);
-		m_ActiveHeader.VisitingTourism:SetText(CULTURE_VISITING_TOURISTS);
+		g_activeheader.DomesticTourism:SetText(CULTURE_DOMESTIC_TOURISTS);
+		g_activeheader.VisitingTourism:SetText(CULTURE_VISITING_TOURISTS);
 	else
 		UI.DataError("Unknown m_CultureHeaderState in ViewCulture: " .. tostring(m_CultureHeaderState));
 	end
@@ -1685,11 +1709,11 @@ function PopulateCultureInstance(instance:table, playerData:table)
 
 	instance.VisitingTourists:SetText(playerData.NumVisitingUs .. "/" .. playerData.NumRequiredTourists);
 	instance.TouristsFill:SetPercent(playerData.NumVisitingUs / playerData.NumRequiredTourists);
-	instance.VisitingUsContainer:SetHide(playerData.PlayerID == m_LocalPlayerID);
+	instance.VisitingUsContainer:SetHide(playerData.PlayerID == g_LocalPlayerID);
 
 	local backColor, _ = UI.GetPlayerColors(playerData.PlayerID);
 	local brighterBackColor = UI.DarkenLightenColor(backColor,35,255);
-	if(playerData.PlayerID == m_LocalPlayerID or m_LocalPlayer == nil or m_LocalPlayer:GetDiplomacy():HasMet(playerData.PlayerID)) then
+	if(playerData.PlayerID == g_LocalPlayerID or g_LocalPlayer == nil or g_LocalPlayer:GetDiplomacy():HasMet(playerData.PlayerID)) then
 		instance.DomesticTouristsIcon:SetColor(brighterBackColor);
 	else
 		instance.DomesticTouristsIcon:SetColor(UI.GetColorValue(1, 1, 1, 0.35));
@@ -1707,8 +1731,8 @@ function PopulateCultureInstance(instance:table, playerData:table)
 		end
 	end
 
-	if (m_LocalPlayer ~= nil) then
-		local pLocalPlayerCulture:table = m_LocalPlayer:GetCulture();
+	if (g_LocalPlayer ~= nil) then
+		local pLocalPlayerCulture:table = g_LocalPlayer:GetCulture();
 		instance.VisitingUsTourists:SetText(pLocalPlayerCulture:GetTouristsFrom(playerData.PlayerID));
 		instance.VisitingUsTourists:SetToolTipString(pLocalPlayerCulture:GetTouristsFromTooltip(playerData.PlayerID));
 		instance.VisitingUsIcon:SetToolTipString(pLocalPlayerCulture:GetTouristsFromTooltip(playerData.PlayerID));
@@ -1718,35 +1742,35 @@ end
 function RealizeCultureStackSize()
 	local _, screenY:number = UIManager:GetScreenSizeVal();
 
-	if(m_ActiveHeader[DATA_FIELD_HEADER_EXPANDED]) then
-		local headerHeight:number = m_ActiveHeader.AdvisorText:GetSizeY() + PADDING_ADVISOR_TEXT_BG;
+	if(g_activeheader[DATA_FIELD_HEADER_EXPANDED]) then
+		local headerHeight:number = g_activeheader.AdvisorText:GetSizeY() + PADDING_ADVISOR_TEXT_BG;
 
 		if(m_CultureHeaderState == CULTURE_HEADER_STATES.WHAT_IS_CULTURE_VICTORY) then
-			m_ActiveHeader.HowToAttractTourists:SetOffsetY(headerHeight);
-			headerHeight = headerHeight + math.max(m_ActiveHeader.DomesticTourism:GetSizeY(), m_ActiveHeader.DomesticTourismIcon:GetSizeY()) + (PADDING_HEADER * 2);
-			headerHeight = headerHeight + math.max(m_ActiveHeader.VisitingTourism:GetSizeY(), m_ActiveHeader.VisitingTourismIcon:GetSizeY()) + PADDING_HEADER;
-			m_ActiveHeader.HowToAttractTourists:SetHide(false);
+			g_activeheader.HowToAttractTourists:SetOffsetY(headerHeight);
+			headerHeight = headerHeight + math.max(g_activeheader.DomesticTourism:GetSizeY(), g_activeheader.DomesticTourismIcon:GetSizeY()) + (PADDING_HEADER * 2);
+			headerHeight = headerHeight + math.max(g_activeheader.VisitingTourism:GetSizeY(), g_activeheader.VisitingTourismIcon:GetSizeY()) + PADDING_HEADER;
+			g_activeheader.HowToAttractTourists:SetHide(false);
 		else
 			UI.DataError("Unknown m_CultureHeaderState in ViewCulture: " .. tostring(m_CultureHeaderState));
 		end
 
-		m_ActiveHeader.AdvisorTextBG:SetSizeY(headerHeight);
-		m_ActiveHeader.AdvisorIcon:SetOffsetY(OFFSET_ADVISOR_ICON_Y + headerHeight);
-		m_ActiveHeader.HeaderFrame:SetSizeY(OFFSET_ADVISOR_TEXT_Y + headerHeight);
-		m_ActiveHeader.ContractHeaderButton:SetOffsetY(OFFSET_CONTRACT_BUTTON_Y + headerHeight);
+		g_activeheader.AdvisorTextBG:SetSizeY(headerHeight);
+		g_activeheader.AdvisorIcon:SetOffsetY(OFFSET_ADVISOR_ICON_Y + headerHeight);
+		g_activeheader.HeaderFrame:SetSizeY(OFFSET_ADVISOR_TEXT_Y + headerHeight);
+		g_activeheader.ContractHeaderButton:SetOffsetY(OFFSET_CONTRACT_BUTTON_Y + headerHeight);
 
-		m_ActiveHeader.StateBG:SetOffsetY(headerHeight + PADDING_CULTURE_HEADER);
+		g_activeheader.StateBG:SetOffsetY(headerHeight + PADDING_CULTURE_HEADER);
 
-		headerHeight = headerHeight + m_ActiveHeader.StateBG:GetSizeY() + PADDING_HEADER;
+		headerHeight = headerHeight + g_activeheader.StateBG:GetSizeY() + PADDING_HEADER;
 
-		m_ActiveHeader.NextState:SetOffsetX(m_ActiveHeader.StateBG:GetSizeX());
+		g_activeheader.NextState:SetOffsetX(g_activeheader.StateBG:GetSizeX());
 		
 		Controls.CultureViewContents:SetOffsetY(OFFSET_VIEW_CONTENTS + headerHeight + PADDING_HEADER);
 		Controls.CultureViewScrollbar:SetSizeY(screenY - (SIZE_STACK_DEFAULT + (headerHeight + PADDING_HEADER)));
 	else
 		Controls.CultureViewContents:SetOffsetY(OFFSET_VIEW_CONTENTS);
 		Controls.CultureViewScrollbar:SetSizeY(screenY - SIZE_STACK_DEFAULT);
-		m_ActiveHeader.HowToAttractTourists:SetHide(true);
+		g_activeheader.HowToAttractTourists:SetHide(true);
 	end
 
 	RealizeStackAndScrollbar(Controls.CultureViewStack, Controls.CultureViewScrollbar, true);
@@ -1882,6 +1906,9 @@ function PopulateDominationInstance(instance:table, playerData:table)
 	end
 
 	instance.CapitalsCaptured:SetText(Locale.Lookup("LOC_WORLD_RANKINGS_DOMINATION_SUMMARY", #playerData.CapturedCapitals));
+
+	--Resize with padding; border starts higher and must end lower than rest of instance
+	ResizeLocalPlayerBorder(instance, SIZE_SCORE_ITEM_DEFAULT + SIZE_LOCAL_PLAYER_BORDER_PADDING);
 end
 
 -- ===========================================================================
@@ -1893,8 +1920,8 @@ end
 function RealizeDominationStackSize()
 	local _, screenY:number = UIManager:GetScreenSizeVal();
 
-	if(m_ActiveHeader[DATA_FIELD_HEADER_EXPANDED]) then
-		local headerHeight:number = m_ActiveHeader[DATA_FIELD_HEADER_HEIGHT];
+	if(g_activeheader[DATA_FIELD_HEADER_EXPANDED]) then
+		local headerHeight:number = g_activeheader[DATA_FIELD_HEADER_HEIGHT];
 		Controls.DominationViewContents:SetOffsetY(OFFSET_VIEW_CONTENTS + headerHeight + PADDING_HEADER);
 		Controls.DominationViewScrollbar:SetSizeY(screenY - (SIZE_STACK_DEFAULT + (headerHeight + PADDING_HEADER)));
 	else
@@ -2089,8 +2116,8 @@ end
 function RealizeReligionStackSize()
 	local _, screenY:number = UIManager:GetScreenSizeVal();
 
-	if(m_ActiveHeader[DATA_FIELD_HEADER_EXPANDED]) then
-		local headerHeight:number = m_ActiveHeader[DATA_FIELD_HEADER_HEIGHT];
+	if(g_activeheader[DATA_FIELD_HEADER_EXPANDED]) then
+		local headerHeight:number = g_activeheader[DATA_FIELD_HEADER_HEIGHT];
 		Controls.ReligionViewContents:SetOffsetY(OFFSET_VIEW_CONTENTS + headerHeight + PADDING_HEADER);
 		Controls.ReligionViewScrollbar:SetSizeY(screenY - (SIZE_STACK_DEFAULT + (headerHeight + PADDING_HEADER)));
 	else
@@ -2119,14 +2146,14 @@ function ViewGeneric(victoryType:string)
 
 	local genericData:table = GatherGenericData();
 
-	m_GenericIM:ResetInstances();
-	m_GenericTeamIM:ResetInstances();
+	g_GenericIM:ResetInstances();
+	g_GenericTeamIM:ResetInstances();
 
 	for i, teamData in ipairs(genericData) do
 		if #teamData.PlayerData > 1 then
-			PopulateGenericTeamInstance(m_GenericTeamIM:GetInstance(), theData.teamData, victoryType);
+			PopulateGenericTeamInstance(g_GenericTeamIM:GetInstance(), teamData, victoryType);
 		else
-			local uiGenericInstance:table = m_GenericIM:GetInstance();
+			local uiGenericInstance:table = g_GenericIM:GetInstance();
 			PopulateGenericInstance(uiGenericInstance, teamData.PlayerData[1], victoryType, true);
 		end
 	end
@@ -2269,8 +2296,8 @@ end
 function RealizeGenericStackSize()
 	local _, screenY:number = UIManager:GetScreenSizeVal();
 
-	if(m_ActiveHeader[DATA_FIELD_HEADER_EXPANDED]) then
-		local headerHeight:number = m_ActiveHeader[DATA_FIELD_HEADER_HEIGHT];
+	if(g_activeheader[DATA_FIELD_HEADER_EXPANDED]) then
+		local headerHeight:number = g_activeheader[DATA_FIELD_HEADER_HEIGHT];
 		Controls.GenericViewContents:SetOffsetY(OFFSET_VIEW_CONTENTS + headerHeight + PADDING_HEADER);
 		Controls.GenericViewScrollbar:SetSizeY(screenY - (SIZE_STACK_DEFAULT + (headerHeight + PADDING_HEADER)));
 	else
@@ -2303,17 +2330,17 @@ end
 -- ===========================================================================
 function UpdatePlayerData()
 	if (Game.GetLocalPlayer() ~= -1) then
-		m_LocalPlayer = Players[Game.GetLocalPlayer()];
-		m_LocalPlayerID = m_LocalPlayer:GetID();
+		g_LocalPlayer = Players[Game.GetLocalPlayer()];
+		g_LocalPlayerID = g_LocalPlayer:GetID();
 	else
-		m_LocalPlayer = nil;
-		m_LocalPlayerID = -1;
+		g_LocalPlayer = nil;
+		g_LocalPlayerID = -1;
 	end
 end
 
 function UpdateData()
 	UpdatePlayerData();
-	if(m_LocalPlayer ~= nil and m_ActiveViewUpdate ~= nil) then
+	if(g_LocalPlayer ~= nil and m_ActiveViewUpdate ~= nil) then
 		m_ActiveViewUpdate();
 	end
 end
@@ -2391,8 +2418,8 @@ function OnShutdown()
 	if(g_TabSupport ~= nil and g_TabSupport.selectedControl ~= nil) then
 		LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "selectedTabText", g_TabSupport.selectedControl:GetTextControl():GetText());
 	end
-	if(m_ActiveHeader ~= nil) then
-		LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "activeHeaderExpanded", m_ActiveHeader[DATA_FIELD_HEADER_EXPANDED]);
+	if(g_activeheader ~= nil) then
+		LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "activeHeaderExpanded", g_activeheader[DATA_FIELD_HEADER_EXPANDED]);
 	end
 end
 function OnGameDebugReturn(context:string, contextTable:table)
@@ -2406,12 +2433,12 @@ function OnGameDebugReturn(context:string, contextTable:table)
 			end
 		end
 
-		if(m_ActiveHeader ~= nil) then
-			m_ActiveHeader[DATA_FIELD_HEADER_EXPANDED] = contextTable["activeHeaderExpanded"];
-			if(m_ActiveHeader[DATA_FIELD_HEADER_EXPANDED]) then
-				OnExpandHeader(0, 0, m_ActiveHeader.ExpandHeaderButton);
+		if(g_activeheader ~= nil) then
+			g_activeheader[DATA_FIELD_HEADER_EXPANDED] = contextTable["activeHeaderExpanded"];
+			if(g_activeheader[DATA_FIELD_HEADER_EXPANDED]) then
+				OnExpandHeader(0, 0, g_activeheader.ExpandHeaderButton);
 			else
-				OnContractHeader(0, 0, m_ActiveHeader.ContractHeaderButton);
+				OnContractHeader(0, 0, g_activeheader.ContractHeaderButton);
 			end
 		end
 	end
@@ -2459,7 +2486,39 @@ end
 -- ===========================================================================
 function OpenCulture()
     Open();
-    ViewCulture();
+	if g_TabSupport ~= nil then
+		-- deselect previous selected tab
+		g_TabSupport.SelectTab(nil);
+		DeselectPreviousTab();
+		DeselectExtraTabs();
+
+		-- select Culture
+		g_TabSupport.SelectTab(g_CultureInst);
+	end
+end
+
+-- ===========================================================================
+-- FOR OVERRIDE
+-- ===========================================================================
+-- Overridden in scenarios where we don't want to show world rankings for custom victories (AlexanderScenario)
+function ShouldCheckCustomVictories()
+	return true;
+end
+
+-- ===========================================================================
+-- FOR OVERRIDE
+-- ===========================================================================
+-- Overridden in scenarios where we don't want an Overall tab (NubiaScenario)
+function ShouldShowOverall()
+	return true;
+end
+
+-- ===========================================================================
+-- FOR OVERRIDE
+-- ===========================================================================
+-- Overridden in scenarios where we want to show Score tab despite not having score victory capabilities (NubiaScenario)
+function ForceShowScore()
+	return false;
 end
 
 -- ===========================================================================

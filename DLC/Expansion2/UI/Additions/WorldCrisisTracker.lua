@@ -18,8 +18,8 @@ local COLOR_INVITED_SECONDARY = UI.GetColorValue(.415, .427, .450, 1);
 -- ===========================================================================
 --	MEMBERS
 -- ===========================================================================
-local m_CrisisIM :table = InstanceManager:new( "CrisisInstance", "RootControl", Controls.CrisisStack);
-
+local m_CrisisIM		:table  = InstanceManager:new( "CrisisInstance", "RootControl", Controls.CrisisStack);
+local m_numEmergencies	:number = 0;
 
 -- ===========================================================================
 --	FUNCTIONS
@@ -31,6 +31,7 @@ function Realize()
 	m_CrisisIM:ResetInstances();
 	local playerID = Game.GetLocalPlayer();
 	local crisisData = Game.GetEmergencyManager():GetEmergencyInfoTable(playerID);
+	m_numEmergencies = 0;
 
 	for _, crisis in ipairs(crisisData) do
 		local crisisInstance:table = m_CrisisIM:GetInstance();
@@ -47,7 +48,8 @@ function Realize()
 
 		if ( crisis.HasBegun) then
 			local progressString:string = goalsTotal > 0 and "(" .. goalsCompleted .. "/" .. goalsTotal .. ") " or "";
-			crisisInstance.CrisisProgress:SetText(crisis.TargetID ~= playerID and (progressString .. crisis.ShortGoalDescription) or ("(" .. goalsTotal - goalsCompleted .. "/" .. goalsTotal .. ") " .. crisis.TargetShortGoalDescription));
+			local inverseProgressString:string = goalsTotal > 0 and "(" .. goalsTotal - goalsCompleted .. "/" .. goalsTotal .. ") " or "";
+			crisisInstance.CrisisProgress:SetText(crisis.TargetID ~= playerID and (progressString .. crisis.ShortGoalDescription) or (inverseProgressString .. crisis.TargetShortGoalDescription));
 		else
 			crisisInstance.CrisisProgress:SetText(Locale.Lookup("LOC_EMERGENCY_PENDING_SHORT_DESCRIPTION"));
 		end
@@ -114,7 +116,9 @@ function Realize()
 			crisisInstance.CrisisTitle:SetColor(COLOR_INVITED_PRIMARY);
 			crisisInstance.CrisisProgress:SetColor(COLOR_INVITED_SECONDARY);
 		end
+		m_numEmergencies = m_numEmergencies + 1;
 	end
+	LuaEvents.WorldTracker_SetEmergencies( m_numEmergencies );
 end
 
 -- ===========================================================================

@@ -1,6 +1,7 @@
 ----------------------------------------------------------------
 -- A set of standard automation tests. 
 ----------------------------------------------------------------
+include("LobbyTypes");
 
 local GAMELISTUPDATE_ADD		:number = 3;
 local DEFAULT_AUTOMATION_TURNS		:number = 5;
@@ -81,29 +82,79 @@ function ReadUserConfigOptions()
 end
 
 -----------------------------------------------------------------
+function GetTestLobbyType()
+	local lobbyType :number = LobbyTypes.LOBBY_LAN;
+	local mpLobbyTypeParam :string = Automation.GetSetParameter("CurrentTest", "MPLobbyType");
+	if(mpLobbyTypeParam ~= nil) then
+		local paramLobbyType :number = LobbyTypeForMPLobbyType(mpLobbyTypeParam);
+		if(paramLobbyType ~= LobbyTypes.LOBBY_NONE) then
+			lobbyType = paramLobbyType;
+		end
+	end
+	return lobbyType;
+end
+
+-----------------------------------------------------------------
+function GetTestServerType()
+	local serverType :number = ServerType.SERVER_TYPE_LAN;
+	local mpLobbyTypeParam :string = Automation.GetSetParameter("CurrentTest", "MPLobbyType");
+	if(mpLobbyTypeParam ~= nil) then
+		local paramServerType :number = ServerTypeForMPLobbyType(mpLobbyTypeParam);
+		if(paramServerType ~= ServerType.SERVER_TYPE_NONE) then
+			serverType = paramServerType;
+		end
+	end
+	return serverType;
+end
+
+-----------------------------------------------------------------
 function RestoreUserConfigOptions()
 
 	UserConfiguration.LockValue("QuickMovement", false);
 	UserConfiguration.LockValue("QuickCombat", false);
 
 end
+-----------------------------------------------------------------
+
+function ApplyHumanPlayersToConfiguration()
+	local humanPlayerCount = Automation.GetSetParameter("CurrentTest", "HumanPlayers");
+
+	-- Convert any human slots to AI
+	if ( humanPlayerCount == nil or humanPlayerCount == 0) then
+		local aHumanIDs = GameConfiguration.GetHumanPlayerIDs();
+		for _, id in ipairs(aHumanIDs) do
+			PlayerConfigurations[id]:SetSlotStatus(SlotStatus.SS_COMPUTER);
+		end
+	else
+		local neededHumanPlayers = humanPlayerCount - GameConfiguration.GetHumanPlayerCount();
+		if neededHumanPlayers > 0 then
+			local aAvailableIDs = GameConfiguration.GetAvailablePlayerIDs();
+			for _, id in ipairs(aAvailableIDs) do
+				PlayerConfigurations[id]:SetSlotStatus(SlotStatus.SS_TAKEN);
+				neededHumanPlayers = neededHumanPlayers - 1;
+				if neededHumanPlayers == 0 then
+					break;
+				end
+			end
+		end
+		-- Still need human players? Take them from the AI slots
+		if neededHumanPlayers > 0 then
+			local aAIIDs = GameConfiguration.GetAIPlayerIDs();
+			for _, id in ipairs(aAIIDs) do
+				if (PlayerConfigurations[id]:GetCivilizationLevelTypeID() == CivilizationLevelTypes.CIVILIZATION_LEVEL_FULL_CIV) then
+					PlayerConfigurations[id]:SetSlotStatus(SlotStatus.SS_TAKEN);
+					neededHumanPlayers = neededHumanPlayers - 1;
+					if neededHumanPlayers == 0 then
+						break;
+					end
+				end
+			end
+		end
+	end
+end
 
 -----------------------------------------------------------------
-Tests["PlayGame"] = {};
-
--- Startup function for "PlayGame"
-Tests["PlayGame"].Run = function()
-
-	-- We must be at the Main Menu to do this test.
-	if (not UI.IsInFrontEnd()) then
-		-- Exit back to the main menu
-		Events.ExitToMainMenu();
-		return;
-	end
-
-	-- Start a game
-	GameConfiguration.SetToDefaults();
-
+function ApplyCommonNewGameParametersToConfiguration()
 	-- Did they specify a ruleset?
 	local ruleSet = Automation.GetSetParameter("CurrentTest", "RuleSet");
 	if (ruleSet ~= nil) then
@@ -117,6 +168,16 @@ Tests["PlayGame"].Run = function()
 		UpdatePlayerCounts();
 	end
 
+	-- Did they have a map size?
+	local mapSize = Automation.GetSetParameter("CurrentTest", "MapSize");
+	if (mapSize ~= nil) then		
+		MapConfiguration.SetMapSize(mapSize);
+		UpdatePlayerCounts();
+	end
+
+	-- Update the human counts.  Make sure this is after the MapScript and MapSize, that changes counts.
+	ApplyHumanPlayersToConfiguration();
+
 	-- Did they have a handicap/difficulty level?
 	local handicap = Automation.GetSetParameter("CurrentTest", "Handicap");
 	if (handicap == nil) then		
@@ -126,23 +187,10 @@ Tests["PlayGame"].Run = function()
 		GameConfiguration.SetHandicapType(handicap);
 	end
 
-	-- Did they have a map size?
-	local mapSize = Automation.GetSetParameter("CurrentTest", "MapSize");
-	if (mapSize ~= nil) then		
-		MapConfiguration.SetMapSize(mapSize);
-		UpdatePlayerCounts();
-	end
-
 	-- Did they have a game speed?
 	local gameSpeed = Automation.GetSetParameter("CurrentTest", "GameSpeed");
 	if ( gameSpeed ~= nil ) then
 		GameConfiguration.SetGameSpeedType(gameSpeed);
-	end
-
-	-- Convert any human slots to AI
-	local aHumanIDs = GameConfiguration.GetHumanPlayerIDs();
-	for _, id in ipairs(aHumanIDs) do
-		PlayerConfiguration[id].SetSlotStatus(SlotStatus.SS_COMPUTER);
 	end
 	
 	-- Did they have a map seed?
@@ -169,7 +217,90 @@ Tests["PlayGame"].Run = function()
 		GameConfiguration.SetMaxTurns(maxTurns);
 		GameConfiguration.SetTurnLimitType(TurnLimitTypes.CUSTOM);
 	end
+
+	local all_parameters = Automation.GetParameterSet("CurrentTest");
+	if(all_parameters) then
+
+		local tokGameConfiguration = "Game";
+		local tokMapConfiguration = "Map";
+
+		for k,v in pairs(all_parameters) do
+			-- Apply custom configuration parameters.
+			if(k:sub(1, #tokGameConfiguration) == tokGameConfiguration) then
+				-- Game.<key> = <value>|#<hashed_value>
+
+				local key = k:sub(#tokGameConfiguration+2);
+				if(key and #key > 0) then
+					local value = v;
+
+					if(type(v) == "string") then
+						if(string.sub(v, 1,1) == "#") then
+							value = DB.MakeHash(v:sub(2));
+						end
+					end
+					GameConfiguration.SetValue(key, value);
+				end
+			elseif(k:sub(1, #tokMapConfiguration) == tokMapConfiguration) then
+				-- Map.<key> = <value>|#<hashed_value>
+
+				local key = k:sub(#tokMapConfiguration+2);
+				if(key and #key > 0) then
+					local value = v;
+
+					if(type(v) == "string") then
+						if(string.sub(v, 1,1) == "#") then
+							value = DB.MakeHash(v:sub(2));
+						end
+					end
+					MapConfiguration.SetValue(key, value);
+				end
+			end
+		end
+	end
+end
+-----------------------------------------------------------------
+Tests["PlayGame"] = {};
+
+-- Startup function for "PlayGame"
+Tests["PlayGame"].Run = function()
+
+	-- We must be at the Main Menu to do this test.
+	if (not UI.IsInFrontEnd()) then
+		-- Exit back to the main menu
+		Events.ExitToMainMenu();
+		return;
+	end
+
+	-- Start a game
+	GameConfiguration.SetToDefaults();
+
+	-- Did they want to load a configuration?
+	local configurationFile = Automation.GetSetParameter("CurrentTest", "LoadConfiguration");
+	if (configurationFile ~= nil) then
+
+		local loadParams = {};
+
+		loadParams.Location = SaveLocations.LOCAL_STORAGE;
+		loadParams.Type = SaveTypes.SINGLE_PLAYER;
+		loadParams.FileType = SaveFileTypes.GAME_CONFIGURATION;
+		loadParams.IsAutosave = false;
+		loadParams.IsQuicksave = false;
+		loadParams.Directory = SaveDirectories.DEFAULT;
+
+		loadParams.Name = configurationFile;
+		
+		local configDirectory = Automation.GetSetParameter("CurrentTest", "ConfigurationDirectory");
+		if (configDirectory ~= nil) then
+			loadParams.Directory = configDirectory;
+		end
+		local bResult = Network.LoadGame(loadParams, ServerType.SERVER_TYPE_NONE);
+		if (bResult == false) then
+			Automation.SendTestComplete();
+			return
+		end
+	end
 	
+	ApplyCommonNewGameParametersToConfiguration();
 	
 	ReadUserConfigOptions();
 
@@ -188,15 +319,18 @@ Tests["PlayGame"].PostGameInitialization = function(bWasLoaded)
 	LuaEvents.AutoPlayEnd.Add( SharedGame_OnAutoPlayEnd );
 
 	-- Get the optional Turns parameter from the CurrentTest parameter set
-	local turnCount = Automation.GetSetParameter("CurrentTest", "Turns", 5);
-
-	local observeAs = GetCurrentTestObserver();
+	-- If no turns are specified, we will assume that the auto-play is not active.
+	-- A turn count of 0 means no turn limit.
+	local turnCount = Automation.GetSetParameter("CurrentTest", "Turns");
+	if turnCount ~= nil then
+		local observeAs = GetCurrentTestObserver();
 		
-	AutoplayManager.SetTurns(turnCount);
-	AutoplayManager.SetReturnAsPlayer(0);
-	AutoplayManager.SetObserveAsPlayer(observeAs);
+		AutoplayManager.SetTurns(turnCount);
+		AutoplayManager.SetReturnAsPlayer(0);
+		AutoplayManager.SetObserveAsPlayer(observeAs);
 
-	AutoplayManager.SetActive(true);
+		AutoplayManager.SetActive(true);
+	end
 
 end
 
@@ -211,6 +345,10 @@ Tests["PlayGame"].GameStarted = function()
 		-- We are starting as PlayerTypes.NONE and are most likely looking at nothing in particular.
 		-- Look at who we are going to play.
 		StartupObserverCamera(observeAs);
+	else
+		-- If there is a local player, then we have a human in the game.
+		-- This test is complete.
+		Automation.SendTestComplete();		
 	end
 
 end
@@ -300,14 +438,19 @@ Tests["LoadGame"].PostGameInitialization = function(bWasLoaded)
 	-- Add a handler for when the autoplay ends
 	LuaEvents.AutoPlayEnd.Add( LoadGame_OnAutoPlayEnd );
 
-	local observeAs = GetCurrentTestObserver();		
-	local turnCount = Automation.GetSetParameter("CurrentTest", "Turns", 1);
+	-- Get the optional Turns parameter from the CurrentTest parameter set
+	-- If no turns are specified, we will assume that the auto-play is not active.
+	-- A turn count of 0 means no turn limit.
+	local turnCount = Automation.GetSetParameter("CurrentTest", "Turns");
+	if turnCount ~= nil then
+		local observeAs = GetCurrentTestObserver();
+		
+		AutoplayManager.SetTurns(turnCount);
+		AutoplayManager.SetReturnAsPlayer(0);
+		AutoplayManager.SetObserveAsPlayer(observeAs);
 
-	AutoplayManager.SetTurns(turnCount);
-	AutoplayManager.SetReturnAsPlayer(0);
-	AutoplayManager.SetObserveAsPlayer(observeAs);
-
-	AutoplayManager.SetActive(true);
+		AutoplayManager.SetActive(true);
+	end
 
 end
 
@@ -321,6 +464,10 @@ Tests["LoadGame"].GameStarted = function()
 		-- We are starting as PlayerTypes.NONE and are most likely looking at nothing in particular.
 		-- Look at who we are going to play.
 		StartupObserverCamera(observeAs);
+	else
+		-- If there is a local player, then we have a human in the game.
+		-- This test is complete.
+		Automation.SendTestComplete();		
 	end
 
 end
@@ -349,68 +496,37 @@ Tests["HostGame"].Run = function()
 	-- Start a game
 	GameConfiguration.SetToDefaults();
 
-	-- Did they specify a ruleset?
-	local ruleSet = Automation.GetSetParameter("CurrentTest", "RuleSet");
-	if (ruleSet ~= nil) then
-		GameConfiguration.SetRuleSet(ruleSet);
+	-- Did they want to load a configuration?
+	local configurationFile = Automation.GetSetParameter("CurrentTest", "LoadConfiguration");
+	if (configurationFile ~= nil) then
+
+		local loadParams = {};
+
+		loadParams.Location = SaveLocations.LOCAL_STORAGE;
+		loadParams.Type = SaveTypes.NETWORK_MULTIPLAYER;
+		loadParams.FileType = SaveFileTypes.GAME_CONFIGURATION;
+		loadParams.IsAutosave = false;
+		loadParams.IsQuicksave = false;
+		loadParams.Directory = SaveDirectories.DEFAULT;
+
+		loadParams.Name = configurationFile;
+		
+		local configDirectory = Automation.GetSetParameter("CurrentTest", "ConfigurationDirectory");
+		if (configDirectory ~= nil) then
+			loadParams.Directory = configDirectory;
+		end
+		local bResult = Network.LoadGame(loadParams, GetTestServerType());
+		if (bResult == false) then
+			Automation.SendTestComplete();
+			return
+		end
 	end
 
-	-- Did they have a map script?
-	local mapScript = Automation.GetSetParameter("CurrentTest", "MapScript");
-	if (mapScript ~= nil) then		
-		MapConfiguration.SetScript(mapScript);
-		UpdatePlayerCounts();
-	end
-
-	-- Did they have a handicap/difficulty level?
-	local handicap = Automation.GetSetParameter("CurrentTest", "Handicap");
-	if (handicap == nil) then		
-		handicap = Automation.GetSetParameter("CurrentTest", "Difficulty");		-- Letting them use an alias
-	end
-	if (handicap ~= nil) then		
-		GameConfiguration.SetHandicapType(handicap);
-	end
-
-	-- Did they have a map size?
-	local mapSize = Automation.GetSetParameter("CurrentTest", "MapSize");
-	if (mapSize ~= nil) then		
-		MapConfiguration.SetMapSize(mapSize);
-		UpdatePlayerCounts();
-	end
-
-	-- Did they have a game speed?
-	local gameSpeed = Automation.GetSetParameter("CurrentTest", "GameSpeed");
-	if ( gameSpeed ~= nil ) then
-		GameConfiguration.SetGameSpeedType(gameSpeed);
-	end
-
-	-- Did they have a map seed?
-	local mapSeed = Automation.GetSetParameter("CurrentTest", "MapSeed");
-	if (mapSeed ~= nil) then
-		MapConfiguration.SetValue("RANDOM_SEED", mapSeed);
-	end
-
-	-- Or a Game Seed?
-	local gameSeed = Automation.GetSetParameter("CurrentTest", "GameSeed");
-	if (gameSeed ~= nil) then
-		GameConfiguration.SetValue("GAME_SYNC_RANDOM_SEED", gameSeed);
-	end
-
-	-- Or a Start Era?
-	local gameStartEra = Automation.GetSetParameter("CurrentTest", "StartEra");
-	if (gameStartEra ~= nil) then
-		GameConfiguration.SetStartEra(gameStartEra);
-	end
-
-	-- Or Max Turns?  This is Max turns for a Score victory, not the number of turns for the test.
-	local maxTurns = Automation.GetSetParameter("CurrentTest", "MaxTurns");
-	if (maxTurns ~= nil and maxTurns >= 1) then
-		GameConfiguration.SetMaxTurns(maxTurns);
-		GameConfiguration.SetTurnLimitType(TurnLimitTypes.CUSTOM);
-	end
+	ApplyCommonNewGameParametersToConfiguration();
 
 	local gameName = Automation.GetSetParameter("CurrentTest", "GameName");
 	if(gameName == nil) then
+		-- KWG: If they loaded a configuration, and they didn't specify a name, we might want to not overwriate the game name automatically if a valid one is there.
 		gameName = "autoplay";
 	end
 	GameConfiguration.SetValue("GAME_NAME", gameName);
@@ -422,12 +538,21 @@ Tests["HostGame"].Run = function()
 		local saveFileTable = {};
 		saveFileTable.Name = saveFileName;
 		saveFileTable.Type = SaveTypes.NETWORK_MULTIPLAYER;
+		saveFileTable.Directory = SaveDirectories.DEFAULT;
+
+		local saveDirectory = Automation.GetSetParameter("CurrentTest", "SaveDirectory");
+		if (saveDirectory ~= nil) then
+			saveFileTable.Directory = saveDirectory;
+		end
+
 		Automation.Log("Loading save file " .. saveFileName);
-		Network.LoadGame(saveFileTable, ServerType.SERVER_TYPE_LAN);
+		Network.LoadGame(saveFileTable, GetTestServerType());
 	else
 		Automation.Log("Hosting new lan game.");
-		Network.HostGame(ServerType.SERVER_TYPE_LAN);
+		Network.HostGame(GetTestServerType());
 	end
+
+	Events.MultiplayerGameLastPlayer.Add( HostGame_OnMultiplayerGameLastPlayer );
 end
 
 -----------------------------------------------------------------
@@ -441,15 +566,19 @@ Tests["HostGame"].PostGameInitialization = function(bWasLoaded)
 	LuaEvents.AutoPlayEnd.Add( SharedGame_OnAutoPlayEnd );
 
 	-- Get the optional Turns parameter from the CurrentTest parameter set
-	local turnCount = Automation.GetSetParameter("CurrentTest", "Turns", 5);
-
-	local observeAs = GetCurrentTestObserver();
+	-- If no turns are specified, we will assume that the auto-play is not active.
+	-- A turn count of 0 means no turn limit.
+	local turnCount = Automation.GetSetParameter("CurrentTest", "Turns");
+	if turnCount ~= nil then
+		local observeAs = GetCurrentTestObserver();
 		
-	AutoplayManager.SetTurns(turnCount);
-	AutoplayManager.SetReturnAsPlayer(0);
-	AutoplayManager.SetObserveAsPlayer(observeAs);
+		AutoplayManager.SetTurns(turnCount);
+		AutoplayManager.SetReturnAsPlayer(0);
+		AutoplayManager.SetObserveAsPlayer(observeAs);
 
-	AutoplayManager.SetActive(true);
+		AutoplayManager.SetActive(true);
+	end
+
 end
 
 -----------------------------------------------------------------
@@ -459,12 +588,18 @@ Tests["HostGame"].GameStarted = function()
 	
 	local observeAs = GetCurrentTestObserver();
 		
+	-- The subscription in Run() is lost on game load.  Resubscribe so it works while ingame.
+	Events.MultiplayerGameLastPlayer.Add( HostGame_OnMultiplayerGameLastPlayer );
+
 	if (Game.GetLocalPlayer() == PlayerTypes.NONE) then
 		-- We are starting as PlayerTypes.NONE and are most likely looking at nothing in particular.
 		-- Look at who we are going to play.
 		StartupObserverCamera(observeAs);
+	else
+		-- If there is a local player, then we have a human in the game.
+		-- This test is complete.
+		Automation.SendTestComplete();		
 	end
-
 end
 
 -----------------------------------------------------------------
@@ -475,6 +610,7 @@ Tests["HostGame"].Stop = function()
 	LuaEvents.AutoPlayEnd.RemoveAll();
 
 	Events.SaveComplete.Remove( SharedGame_OnSaveComplete );
+	Events.MultiplayerGameLastPlayer.Remove( HostGame_OnMultiplayerGameLastPlayer );
 
 	AutoplayManager.SetActive(false);		-- Make sure this is off
 
@@ -483,7 +619,19 @@ Tests["HostGame"].Stop = function()
 end
 
 -----------------------------------------------------------------
+function HostGame_OnMultiplayerGameLastPlayer()
+	local quitParam = Automation.GetSetParameter("CurrentTest", "QuitOnLastPlayer");
+	if (quitParam == nil or quitParam == 1) then	
+		Automation.Log("Completing HostGame test due to becoming the last player.");
+		-- Signal that the test is complete.  Do not call LuaEvents.AutomationTestComplete() directly.  The Automation system will do that at a safe time.
+		Automation.SendTestComplete();
+	end
+end
+
+-----------------------------------------------------------------
 -- Join a multiplayer autoplay game
+--
+-- QuitOnHostMigrate - [True] Should we quit the game and end the test if a host migration occurs?
 -----------------------------------------------------------------
 Tests["JoinGame"] = {};
 
@@ -508,7 +656,7 @@ Tests["JoinGame"].Run = function()
 	Events.MultiplayerHostMigrated.Add(JoinGame_MultiplayerHostMigrated);
 
 	-- initialize and refresh lan games list.
-	Matchmaking.InitLobby(LobbyTypes.LOBBY_LAN);
+	Matchmaking.InitLobby(GetTestLobbyType());
 	Matchmaking.RefreshGameList();
 
 	-- Next step is in JoinGame_OnGameListComplete() or JoinGame_OnGameListUpdated()
@@ -577,7 +725,7 @@ end
 -----------------------------------------------------------------
 -- Received a game list update while waiting to join a multiplayer game for the "JoinGame" test.
 function JoinGame_OnGameListUpdated(eAction, idLobby, eLobbyType, eSearchType)
-	if(eLobbyType ~= LobbyTypes.LOBBY_LAN) then
+	if(eLobbyType ~= GetTestLobbyType()) then
 		-- This is a game list update for another lobbytype.  This is probably a PlayByCloud turn notification check and should be ignored.
 		return;
 	end
@@ -611,7 +759,7 @@ end
 -- Received a game list complete during the "JoinGame" test.
 function JoinGame_OnGameListComplete(eLobbyType, eSearchType)
 
-	if(eLobbyType ~= LobbyTypes.LOBBY_LAN) then
+	if(eLobbyType ~= GetTestLobbyType()) then
 		-- This is a game list update for another lobbytype.  This is probably a PlayByCloud turn notification check and should be ignored.
 		return;
 	end
@@ -631,7 +779,7 @@ end
 -----------------------------------------------------------------
 function JoinGame_MultiplayerHostMigrated( newHostID )
 	local quitParam = Automation.GetSetParameter("CurrentTest", "QuitOnHostMigrate");
-	if (quitParam ~= nil and quitParam ~= 0) then	
+	if (quitParam == nil or quitParam == 1) then	
 		Automation.Log("Completing JoinGame test due to host migration.");
 		-- Signal that the test is complete.  Do not call LuaEvents.AutomationTestComplete() directly.  The Automation system will do that at a safe time.
 		Automation.SendTestComplete();

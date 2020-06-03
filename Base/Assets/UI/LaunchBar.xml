@@ -74,7 +74,7 @@
         <Label Style="TutorialBodyText" String="LOC_META_129b_BODY"/>
       </Grid>
       <SlideAnim Anchor="C,T" Start="0,-30" EndOffset="0,10" Cycle="Bounce" Function="OutQuad">
-        <Image Texture="Tutorial_ArrowV" Offset="5,-15" Size="44,58" FlipY="true"/>
+        <Image Texture="Tutorial_ArrowV" Offset="10,-15" Size="44,58" FlipY="true"/>
       </SlideAnim>
     </Tutorial>
 
@@ -94,7 +94,7 @@
         <Label Style="TutorialBodyText" String="LOC_META_136b_BODY"/>
       </Grid>
       <SlideAnim Anchor="C,T" Start="0,-30" EndOffset="0,10" Cycle="Bounce" Function="OutQuad">
-        <Image Texture="Tutorial_ArrowV" Offset="-148,-15" Size="44,58" FlipY="true"/>
+        <Image Texture="Tutorial_ArrowV" Offset="-92,-15" Size="44,58" FlipY="true"/>
       </SlideAnim>
     </Tutorial>
 

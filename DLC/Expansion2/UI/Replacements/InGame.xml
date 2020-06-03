@@ -141,7 +141,8 @@
 	
 	<LuaContext		ID="Civilopedia"							FileName="CivilopediaScreen"				Hidden="1"/>
 	<LuaContext		ID="PausePanel"								FileName="PausePanel"						Hidden="1"/>
-	
+  <LuaContext   ID="SwitchLayoutPopup"        FileName="SwitchLayoutPopup"        Hidden="1"/>
+  
 	<!-- Always very last/top: the in-game 'SHELL' menu. -->
 	<LuaContext		ID="HotSeatBackground"				FileName="HotSeatBackground"				Hidden="1" />
 	<LuaContext		ID="TopOptionsMenu"						FileName="InGameTopOptionsMenu"			Hidden="1"	TutorialActive="1" />

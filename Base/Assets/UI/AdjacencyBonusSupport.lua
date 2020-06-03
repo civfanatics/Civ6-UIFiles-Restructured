@@ -43,6 +43,8 @@ function GetAdjacentIconArtdefName( targetDistrictType:string, plot:table, pkCit
 			return "Terrain_Forest";
 		elseif iSubType == g_FEATURE_GEOTHERMAL_FISSURE then
 			return "Terrain_Generic_Resource";
+		elseif iSubType == g_FEATURE_REEF then
+			return "Terrain_Reef";
 		end
 	elseif eType == AdjacencyBonusTypes.ADJACENCY_IMPROVEMENT then
 		if iSubType == 1 then
@@ -76,7 +78,8 @@ function GetAdjacentIconArtdefName( targetDistrictType:string, plot:table, pkCit
 		return "Generic_Wonder";
 	end
 	
-	return "";	-- None (or error)
+	-- Default to generic icon
+	return "Terrain_Generic_Resource";
 end
 
 -- ===========================================================================

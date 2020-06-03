@@ -4,6 +4,10 @@ local m_friendProfile = { name ="LOC_FRIEND_ACTION_PROFILE",	tooltip = "LOC_FRIE
 local m_friendChat =	{ name ="LOC_FRIEND_ACTION_CHAT",		tooltip = "LOC_FRIEND_ACTION_CHAT_TT",		action = "chat" };
 local m_friendInvite =	{ name = "LOC_FRIEND_ACTION_INVITE",	tooltip = "LOC_FRIEND_ACTION_INVITE_TT",	action = "invite" };
 
+if( Network.GetNetworkPlatform() == NetworkPlatform.NETWORK_PLATFORM_EOS ) then
+	m_friendProfile = { name ="LOC_FRIEND_ACTION_PROFILE",	tooltip = "LOC_EPIC_FRIEND_ACTION_PROFILE_TT",	action = "profile" };
+end
+
 function DefaultFriendsSortFunction(a:table,b:table)
 	if not a.PlayingCiv and b.PlayingCiv then
 		return false;
@@ -109,4 +113,20 @@ function PopulateFriendsInstance(instance:table, friendData:table, friendActions
 		
 		instance.FriendPulldown:CalculateInternals();
 	end
+end
+
+-- ===========================================================================
+--	Returns: true if friends can be invited in this current network environment
+--			 false otherwise
+-- ===========================================================================
+function CanInviteFriends(checkOverlayAccess:boolean)
+	local isNotLan			:boolean= not GameConfiguration.IsLANMultiplayer() ;
+	local isNotHotSeat		:boolean= not GameConfiguration.IsHotseat();
+	local isNotPBC			:boolean= not GameConfiguration.IsPlayByCloud();
+	local isNotEOS			:boolean = ( Network.GetNetworkPlatform() ~= NetworkPlatform.NETWORK_PLATFORM_EOS );
+	local canAccessOverlay	:boolean = true;
+	if(checkOverlayAccess) then
+		canAccessOverlay = Network.GetFriends(Network.GetTransportType()) ~= nil;
+	end
+	return isNotLan and isNotHotSeat and isNotPBC and isNotEOS and canAccessOverlay;
 end

@@ -1,43 +1,30 @@
--- Copyright 2017-2018, Firaxis Games.
+-- Copyright 2017-2019, Firaxis Games.
 
 LuaClass = {}
 
-function LuaClass:new(o:table)
-	--
-	-- The new instance of the object needs an index table.
-	-- This next statement prefers to use "o" as the
-	-- index table, but will fall back to self.
-	-- Without the proper index table, your new object will
-	-- not have the proper behavior.
-	--
-	o = o or self;
-	
-	--
-	-- This call to setmetatable does 3 things:
-	-- 1. Makes a new table.
-	-- 2. Sets its metatable to the "index" table
-	-- 3. Returns that table.
-	--
-	local object = setmetatable({}, o);
-	
-	--
-	-- Obtain the metatable of the newly instantiated table.
-	-- Make sure that if the user attempts to access newObject[key]
-	-- and newObject[key] is nil, that it will actually fall
-	-- back to looking up template[key]...and so on, because template
-	-- should also have a metatable with the correct __index metamethod.
-	--
-	local mt = getmetatable(object);
-	mt.__index = o;
-	
-	return object;
+-- ===========================================================================
+--	Syntatic sugar for obtaining an object (a table that may have funcs)
+--
+--	metaTableObject			The table with functions to base this new object
+--	optionalExistingObject	If present then instead of a new table, this
+--							table will be used to inherent the metaTable.
+--
+--	EXAMPLES:	m_oFoo = LuaClass:new( fooFunctionsObject, uiInstance );
+--				m_oBar = LuaClass:new( barTypeOfFunctions );
+-- ===========================================================================
+function LuaClass:new( metaTableObject:table, optionalExistingObject:table )
+	if metaTableObject == nil then 
+		UI.DataAssert("NIL metaTableObject when creating a new LuaClass.");
+		metaTableObject = {}; 
+	end
+
+	local oNewObject :table = optionalExistingObject and optionalExistingObject or {};
+	setmetatable(oNewObject, { __index=metaTableObject } );
+	return oNewObject;
 end
 
+-- ===========================================================================
 function LuaClass:Extend()
-	--
-	-- This is just a convenience function/semantic extension
-	-- so that objects which need to inherit from a base object
-	-- use a clearer function name to describe what they are doing.
-	--
-	return setmetatable({}, {__index = self})
+	print("LuaClass:Extend() is deprecated!");
+	return {};
 end

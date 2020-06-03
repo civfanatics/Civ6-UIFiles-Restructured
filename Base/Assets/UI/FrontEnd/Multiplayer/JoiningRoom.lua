@@ -58,17 +58,22 @@ end
 -------------------------------------------------
 function OnJoinRoomFailed( iExtendedError)
 	if (not ContextPtr:IsHidden()) then
-		if iExtendedError == JoinGameErrorType.JOINGAME_ROOM_FULL then
-			LuaEvents.MultiplayerPopup( "LOC_MP_ROOM_FULL", "LOC_MP_ROOM_FULL_TITLE" );
-		elseif iExtendedError == JoinGameErrorType.JOINGAME_GAME_STARTED then
-			LuaEvents.MultiplayerPopup( "LOC_MP_ROOM_GAME_STARTED", "LOC_MP_ROOM_GAME_STARTED_TITLE" );
-		elseif iExtendedError == JoinGameErrorType.JOINGAME_TOO_MANY_MATCHES then
-			LuaEvents.MultiplayerPopup( "LOC_MP_ROOM_TOO_MANY_MATCHES", "LOC_MP_ROOM_TOO_MANY_MATCHES_TITLE" );
+		if(Network.IsMatchMaking()) then
+			-- If we abandon the game while matchmaking, we should remain on the matchmaking screen while the network session finds another game.		
+			print("Ignoring JoinRoomFailed because we are matchmaking.");
 		else
-			LuaEvents.MultiplayerPopup( "LOC_MP_JOIN_FAILED", "LOC_MP_JOIN_FAILED_TITLE" );
+			if iExtendedError == JoinGameErrorType.JOINGAME_ROOM_FULL then
+				LuaEvents.MultiplayerPopup( "LOC_MP_ROOM_FULL", "LOC_MP_ROOM_FULL_TITLE" );
+			elseif iExtendedError == JoinGameErrorType.JOINGAME_GAME_STARTED then
+				LuaEvents.MultiplayerPopup( "LOC_MP_ROOM_GAME_STARTED", "LOC_MP_ROOM_GAME_STARTED_TITLE" );
+			elseif iExtendedError == JoinGameErrorType.JOINGAME_TOO_MANY_MATCHES then
+				LuaEvents.MultiplayerPopup( "LOC_MP_ROOM_TOO_MANY_MATCHES", "LOC_MP_ROOM_TOO_MANY_MATCHES_TITLE" );
+			else
+				LuaEvents.MultiplayerPopup( "LOC_MP_JOIN_FAILED", "LOC_MP_JOIN_FAILED_TITLE" );
+			end
+			Network.LeaveGame();
+			UIManager:DequeuePopup( ContextPtr );
 		end
-		Network.LeaveGame();
-		UIManager:DequeuePopup( ContextPtr );
 	end
 end
 
@@ -106,6 +111,15 @@ function CheckTransitionToStagingRoom()
 	DoTransitionToStagingRoom();
 end
 
+function OnMultiplayerMatchmakingFailed()
+	if (not ContextPtr:IsHidden()) then
+		-- Just show the generic error message for now.  We do not have new text for a dedicated error message yet.
+		LuaEvents.MultiplayerPopup( "LOC_MP_JOIN_FAILED", "LOC_MP_JOIN_FAILED_TITLE" );
+		Network.LeaveGame();
+		UIManager:DequeuePopup( ContextPtr );
+	end
+end
+
 -------------------------------------------------
 -- Event Handler: FinishedGameplayContentConfigure
 -------------------------------------------------
@@ -128,24 +142,33 @@ end
 -------------------------------------------------
 function OnMultiplayerGameAbandoned(eReason)
 	if (not ContextPtr:IsHidden()) then
-		if (eReason == KickReason.KICK_HOST) then
-			LuaEvents.MultiplayerPopup( "LOC_GAME_ABANDONED_KICKED", "LOC_GAME_ABANDONED_KICKED_TITLE" );
-		elseif (eReason == KickReason.KICK_NO_ROOM) then
-			LuaEvents.MultiplayerPopup( "LOC_GAME_ABANDONED_ROOM_FULL", "LOC_GAME_ABANDONED_ROOM_FULL_TITLE" );
-		elseif (eReason == KickReason.KICK_VERSION_MISMATCH) then
-			LuaEvents.MultiplayerPopup( "LOC_GAME_ABANDONED_VERSION_MISMATCH", "LOC_GAME_ABANDONED_VERSION_MISMATCH_TITLE" );
-		elseif (eReason == KickReason.KICK_MOD_ERROR) then
-			LuaEvents.MultiplayerPopup( "LOC_GAME_ABANDONED_MOD_ERROR", "LOC_GAME_ABANDONED_MOD_ERROR_TITLE" );
-		elseif (eReason == KickReason.KICK_MOD_MISSING) then
-			local modMissingErrorStr = Modding.GetLastModErrorString();
-			LuaEvents.MultiplayerPopup( modMissingErrorStr, "LOC_GAME_ABANDONED_MOD_MISSING_TITLE" );
-		elseif (eReason == KickReason.KICK_MATCH_DELETED) then
-			LuaEvents.MultiplayerPopup( "LOC_GAME_ABANDONED_MATCH_DELETED", "LOC_GAME_ABANDONED_MATCH_DELETED_TITLE" );
+		if(Network.IsMatchMaking()) then
+			-- If we abandon the game while matchmaking, we should remain on the matchmaking screen while the network session finds another game.		
+			print("Ignoring JoinRoomFailed because we are matchmaking.");
 		else
-			LuaEvents.MultiplayerPopup( "LOC_GAME_ABANDONED_JOIN_FAILED", "LOC_GAME_ABANDONED_JOIN_FAILED_TITLE" );
+			if (eReason == KickReason.KICK_HOST) then
+				LuaEvents.MultiplayerPopup( "LOC_GAME_ABANDONED_KICKED", "LOC_GAME_ABANDONED_KICKED_TITLE" );
+			elseif (eReason == KickReason.KICK_NO_HOST) then
+				-- This can happen if the host refuses the client's connection.
+				LuaEvents.MultiplayerPopup( "LOC_GAME_ABANDONED_HOST_LOSTED", "LOC_GAME_ABANDONED_HOST_LOSTED_TITLE" );
+			elseif (eReason == KickReason.KICK_NO_ROOM) then
+				LuaEvents.MultiplayerPopup( "LOC_GAME_ABANDONED_ROOM_FULL", "LOC_GAME_ABANDONED_ROOM_FULL_TITLE" );
+			elseif (eReason == KickReason.KICK_VERSION_MISMATCH) then
+				LuaEvents.MultiplayerPopup( "LOC_GAME_ABANDONED_VERSION_MISMATCH", "LOC_GAME_ABANDONED_VERSION_MISMATCH_TITLE" );
+			elseif (eReason == KickReason.KICK_MOD_ERROR) then
+				LuaEvents.MultiplayerPopup( "LOC_GAME_ABANDONED_MOD_ERROR", "LOC_GAME_ABANDONED_MOD_ERROR_TITLE" );
+			elseif (eReason == KickReason.KICK_MOD_MISSING) then
+				local modMissingErrorStr = Modding.GetLastModErrorString();
+				LuaEvents.MultiplayerPopup( modMissingErrorStr, "LOC_GAME_ABANDONED_MOD_MISSING_TITLE" );
+			elseif (eReason == KickReason.KICK_MATCH_DELETED) then
+				LuaEvents.MultiplayerPopup( "LOC_GAME_ABANDONED_MATCH_DELETED", "LOC_GAME_ABANDONED_MATCH_DELETED_TITLE" );
+			else
+				LuaEvents.MultiplayerPopup( "LOC_GAME_ABANDONED_JOIN_FAILED", "LOC_GAME_ABANDONED_JOIN_FAILED_TITLE" );
+			end
+
+			Network.LeaveGame();
+			UIManager:DequeuePopup( ContextPtr );	
 		end
-		Network.LeaveGame();
-		UIManager:DequeuePopup( ContextPtr );	
 	end
 end
 
@@ -300,6 +323,7 @@ function Initialize()
 	Events.MultiplayerJoinRoomComplete.Add( OnJoinRoomComplete );
 	Events.MultiplayerJoinRoomFailed.Add( OnJoinRoomFailed );
 	Events.MultiplayerJoinGameComplete.Add( OnJoinGameComplete);
+	Events.MultiplayerMatchmakingFailed.Add( OnMultiplayerMatchmakingFailed);
 	Events.FinishedGameplayContentConfigure.Add(OnFinishedGameplayContentConfigure);
 	Events.MultiplayerGameAbandoned.Add( OnMultiplayerGameAbandoned );
 	Events.SystemUpdateUI.Add( OnUpdateUI );

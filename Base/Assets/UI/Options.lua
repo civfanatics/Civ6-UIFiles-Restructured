@@ -48,8 +48,10 @@ local BORDERLESS_OPTION = 2;
 local FULLSCREEN_OPTION = 1;
 local WINDOWED_OPTION = 0;
 
-local MIN_SCROLL_SPEED = 0.5;
-local MAX_SCROLL_SPEED = 5.0;
+local MIN_CHAT_TEXT_SIZE = 12;
+local MAX_CHAT_TEXT_SIZE = 18;
+local MIN_SCROLL_SPEED = 0;
+local MAX_SCROLL_SPEED = 1.0;
 local MIN_SCREEN_Y = 768;
 local SCREEN_OFFSET_Y = 63;
 local MIN_SCREEN_OFFSET_Y = -53;
@@ -131,6 +133,10 @@ function OnCancel()
 	value = Options.GetGraphicsOption("General", "MinimapSize") or 0.0;
 	Controls.MinimapSizeSlider:SetValue(value);
 	UI.SetMinimapSize(value);
+
+	value = Options.GetUserOption("Interface", "ChatTextValue") or 12;
+	Controls.ChatTextSizeSlider:SetValue(value);
+	Options.SetUserOption("Interface", "ChatTextValue", value);
 
     value = Options.GetAudioOption("Sound", "Mute Focus"); 
     if (value == 0) then
@@ -237,6 +243,7 @@ function OnConfirm()
 		UserConfiguration.SetValue("AutoUnitCycle",		Options.GetUserOption("Gameplay", "AutoUnitCycle"));
 		UserConfiguration.SetValue("RibbonStats",		Options.GetUserOption("Interface", "RibbonStats"));
 		UserConfiguration.SetValue("PlotTooltipDelay",	Options.GetUserOption("Interface", "PlotTooltipDelay"));
+		UserConfiguration.SetValue("ChatTextValue",		Options.GetUserOption("Interface", "ChatTextValue"));
 		UserConfiguration.SetValue("ScrollSpeed",		Options.GetUserOption("Interface", "ScrollSpeed"));
 
 
@@ -1375,10 +1382,16 @@ function TemporaryHardCodedGoodness()
 		_PromptRestartApp = true;
 	end);	
 
-	PopulateComboBox(Controls.AutoDownloadPullDown, boolean_options, Options.GetUserOption("Multiplayer", "AutoModDownload"), function(option)
-		Options.SetUserOption("Multiplayer", "AutoModDownload", option);
-		Controls.ConfirmButton:SetDisabled(false);
-	end);	
+	-- Only steam supports the auto download of mods feature.
+	if(Network.GetNetworkPlatform() == NetworkPlatform.NETWORK_PLATFORM_STEAM) then
+		PopulateComboBox(Controls.AutoDownloadPullDown, boolean_options, Options.GetUserOption("Multiplayer", "AutoModDownload"), function(option)
+			Options.SetUserOption("Multiplayer", "AutoModDownload", option);
+			Controls.ConfirmButton:SetDisabled(false);
+		end);	
+	else
+		Controls.AutoDownloadPullDown:SetHide(true);
+		Controls.AutoDownloadLabel:SetHide(true);
+	end
 
 	PopulateComboBox(Controls.TutorialPullDown, tutorial_options, Options.GetUserOption("Gameplay", "TutorialLevel"), function(option)
 		Options.SetUserOption("Gameplay", "TutorialLevel", option);
@@ -1629,7 +1642,43 @@ function TemporaryHardCodedGoodness()
 	end,
 	UserConfiguration.IsValueLocked("RibbonStats"));
 	
-	local minimapSize = Options.GetGraphicsOption("General", "MinimapSize") or 0.0;
+	local chatTextSize  : number = Options.GetUserOption("Interface", "ChatTextValue") or MIN_CHAT_TEXT_SIZE;
+	local chatSliderVal : number;
+	if(chatTextSize == MAX_CHAT_TEXT_SIZE) then
+		chatSliderVal = 1;
+	end
+	if(chatTextSize == 16) then
+		chatSliderVal = .8;
+	end
+	if(chatTextSize == 14) then
+		chatSliderVal = .4;
+	end
+	if(chatTextSize == MIN_CHAT_TEXT_SIZE) then
+		chatSliderVal = 0;
+	end
+	Controls.ChatTextSizeSlider:SetValue(chatSliderVal);
+	Controls.ChatTextValue:LocalizeAndSetText("LOC_OPTIONS_CHAT_TEXT_SIZE_VALUE", chatTextSize);
+	Controls.ChatTextSizeSlider:RegisterSliderCallback(function(value)
+		local adjustedValue : number;
+		if(value == 1) then
+			adjustedValue = MAX_CHAT_TEXT_SIZE;
+		end
+		if(value < 1) then
+			adjustedValue = 16;
+		end
+		if(value < .5) then
+			adjustedValue = 14;
+		end
+		if(value < .3) then
+			adjustedValue = MIN_CHAT_TEXT_SIZE;
+		end
+		adjustedValue = math.clamp(adjustedValue, MIN_CHAT_TEXT_SIZE, MAX_CHAT_TEXT_SIZE);
+		Options.SetUserOption("Interface", "ChatTextValue", adjustedValue);
+		Controls.ConfirmButton:SetDisabled(false);
+		Controls.ChatTextValue:LocalizeAndSetText("LOC_OPTIONS_CHAT_TEXT_SIZE_VALUE", adjustedValue);
+	end);
+
+	local minimapSize : number = Options.GetGraphicsOption("General", "MinimapSize") or 0.0;
 	Controls.MinimapSizeSlider:SetValue(minimapSize);
 	UI.SetMinimapSize(minimapSize);
 	Controls.MinimapSizeSlider:RegisterSliderCallback(function(value)
@@ -1638,24 +1687,30 @@ function TemporaryHardCodedGoodness()
 		UI.SetMinimapSize(value);
 	end);
 
-	local plotTooltipDelay = Options.GetUserOption("Interface", "PlotTooltipDelay") or 0.2;
+	local plotTooltipDelay : number = Options.GetUserOption("Interface", "PlotTooltipDelay") or 0.2;
 	Controls.PlotToolTipDelaySlider:SetValue(plotTooltipDelay / 2);
 	Controls.PlotToolTipDelayValue:LocalizeAndSetText("LOC_OPTIONS_PLOT_TOOLTIP_DELAY_VALUE", plotTooltipDelay);
 	Controls.PlotToolTipDelaySlider:RegisterSliderCallback(function(value)
-		local adjustedValue = value * 2;
+		local adjustedValue : number = value * 2;
 		Options.SetUserOption("Interface", "PlotTooltipDelay", adjustedValue);
 		Controls.ConfirmButton:SetDisabled(false);
 		Controls.PlotToolTipDelayValue:LocalizeAndSetText("LOC_OPTIONS_PLOT_TOOLTIP_DELAY_VALUE", adjustedValue);
 	end);
 
-	local scrollSpeed = Options.GetUserOption("Interface", "ScrollSpeed") or 1.0;
+	local scrollSpeed : number = Options.GetUserOption("Interface", "ScrollSpeed") or 1.0;
+	if(scrollSpeed > MAX_SCROLL_SPEED or scrollSpeed < MIN_SCROLL_SPEED)then
+		scrollSpeed = math.clamp(scrollSpeed, MIN_SCROLL_SPEED, (MAX_SCROLL_SPEED/2.0));
+		Options.SetUserOption("Interface", "ScrollSpeed", scrollSpeed);
+		Options.SaveOptions();
+	end
 	Controls.ScrollSpeedSlider:SetValue((scrollSpeed - MIN_SCROLL_SPEED) / MAX_SCROLL_SPEED);
-	Controls.ScrollSpeedValue:LocalizeAndSetText("LOC_OPTIONS_SCROLL_SPEED_VALUE", scrollSpeed);
+	Controls.ScrollSpeedValue:LocalizeAndSetText("LOC_OPTIONS_SCROLL_SPEED_VALUE", scrollSpeed*100);	-- Show 0 to 100 instead of 0 to 1
 	Controls.ScrollSpeedSlider:RegisterSliderCallback(function(value)
-		local adjustedValue = MIN_SCROLL_SPEED + (MAX_SCROLL_SPEED * value);
+		local adjustedValue : number = MIN_SCROLL_SPEED + (MAX_SCROLL_SPEED * value);
+		adjustedValue = math.clamp(adjustedValue, MIN_SCROLL_SPEED, MAX_SCROLL_SPEED);
 		Options.SetUserOption("Interface", "ScrollSpeed", adjustedValue);
 		Controls.ConfirmButton:SetDisabled(false);
-		Controls.ScrollSpeedValue:LocalizeAndSetText("LOC_OPTIONS_SCROLL_SPEED_VALUE", adjustedValue);
+		Controls.ScrollSpeedValue:LocalizeAndSetText("LOC_OPTIONS_SCROLL_SPEED_VALUE", adjustedValue*100);
 	end);
 	
     -- Application
@@ -1712,7 +1767,7 @@ function InitializeKeyBinding()
 		local count = Input.GetActionCount();
 		for i = 0, count - 1, 1 do
 			local action = Input.GetActionId(i);
-			if(Input.GetActionEnabled(action)) then
+			if(Input.ShouldShowActionKeybinding(action)) then
 				local info = {
 					action,
 					Locale.Lookup(Input.GetActionName(action)),
@@ -1897,6 +1952,10 @@ function OnToggleAdvancedOptions()
 	Controls.GraphicsOptionsPanel:CalculateSize();
 end
 -------------------------------------------------------------------------------
+function OnSwitchUILayout()
+	LuaEvents.SwitchLayoutPopup_OpenSwitchLayoutPopup();
+end
+-------------------------------------------------------------------------------
 function Resize()
 	local screenX, screenY:number = UIManager:GetScreenSizeVal();
 	if(screenY >= MIN_SCREEN_Y + (Controls.LogoContainer:GetSizeY()+ Controls.LogoContainer:GetOffsetY() * 2)) then
@@ -1965,6 +2024,9 @@ function Initialize()
 	Controls.WindowCloseButton:RegisterCallback(Mouse.eLClick, OnCancel);
 	Controls.WindowCloseButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 
+	Controls.SwitchUILayout:RegisterCallback(Mouse.eLClick, OnSwitchUILayout);
+	Controls.SwitchUILayout:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
+
 	Controls.ResetButton:RegisterCallback(Mouse.eLClick, OnReset);
 	Controls.ResetButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 
@@ -2018,6 +2080,10 @@ function Initialize()
 		end);
 		button:RegisterCallback(Mouse.eLClick, function() OnSelectTab(tab); end );
 		button:SetHide(false);
+	end
+
+	if (Network.GetNetworkPlatform() == NetworkPlatform.NETWORK_PLATFORM_EOS) then
+		Controls.SteamControllerMessage:SetHide(true);
 	end
 
 	m_tabs[1][1]:SetSelected(true);

@@ -4,8 +4,8 @@
 	<Container Style="FullScreenVignetteConsumer" />
 
 	<Grid			ID="Background"		Anchor="C,C" Size="1056,800"	Texture="Intro_Window" ConsumeMouse="1">
-		<Image										Anchor="C,T" Offset="0,40"		Texture="CivRoyaleIntro_Logo"/>
-		<Image	ID="Illustration"	Anchor="L,T" Offset="30,160"	Texture="CivRoyaleIntro_Diagram_1"/>
+		<Image	ID="Logo"					Anchor="C,T" Offset="0,40"		StretchMode="Auto" />
+		<Image	ID="Illustration"	Anchor="L,T" Offset="30,160"	StretchMode="Auto" />
 
 		<Grid ID="DescriptionColumn" Size="492,544" Anchor="R,T" Offset="38,170" SliceCorner="10,10" SliceSize="1,1" SliceTextureSize="40,40" Texture="Controls_SubContainer3" Color="0,0,0,60" >
 			<Stack ID="RightDescStack" Anchor="C,C" StackGrowth="Down" StackPadding="0" >

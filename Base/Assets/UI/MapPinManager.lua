@@ -627,6 +627,12 @@ end
 function OnPlayerInfoChanged(playerID)
 	Refresh();
 end
+
+------------------------------------------------------------------
+function OnLoadGameViewStateDone()
+	Refresh();
+end
+
 -------------------------------------------------
 -- Position the flags appropriately in 2D and 3D view
 -------------------------------------------------
@@ -692,5 +698,6 @@ function Initialize()
 	Events.MultiplayerPostPlayerDisconnected.Add( OnPlayerConnectChanged );
 	Events.WorldRenderViewChanged.Add(PositionFlagsToView);
 	Events.PlayerInfoChanged.Add(OnPlayerInfoChanged);
+	Events.LoadGameViewStateDone.Add( OnLoadGameViewStateDone );  
 end
 Initialize();

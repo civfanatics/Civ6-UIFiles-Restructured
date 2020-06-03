@@ -328,6 +328,10 @@ function GetDetails(data)
 		table.insert(details, Locale.Lookup("LOC_TOOLTIP_RIVER"));
 	end
 
+	if (data.IsNWOfCliff or data.IsWOfCliff or data.IsNEOfCliff) then
+		table.insert(details, Locale.Lookup("LOC_TOOLTIP_CLIFF"));
+	end
+
 	-- Movement cost
 	if (not data.Impassable and data.MovementCost > 0) then
 		table.insert(details, Locale.Lookup("LOC_TOOLTIP_MOVEMENT_COST", data.MovementCost));
@@ -561,13 +565,28 @@ function View( data:table )
 	end
 	Controls.PlotDetails:SetText(table.concat(details, "[NEWLINE]"));
 			
-	-- Some conditions, jump past "pause" and show immediately
-	if m_isShiftDown or UserConfiguration.GetValue("PlotToolTipFollowsMouse") == 0 then
-		Controls.TooltipMain:SetPauseTime( 0 );
+	-- If manager object has Aspyr addition, use that for tooltips. (This interface will likely change in the future.)
+	if (UIManager["IsGamepadActive"]~=nil and UIManager:IsGamepadActive()) then
+		
+		-- Since using a gamepad, assume plot tooltip behavior should mimic Forge-wide tooltips.
+		local toolTipBehavior:number = Options.GetAppOption("UI", "TooltipBehavior");
+		if toolTipBehavior == TooltipBehavior.AlwaysShowing then		
+			Controls.TooltipMain:SetPauseTime( 0 );
+		elseif toolTipBehavior == TooltipBehavior.ShowAfterDelay then	
+			Controls.TooltipMain:SetPauseTime( 2.0 );
+		elseif toolTipBehavior == TooltipBehavior.ShowOnButton then
+			Controls.TooltipMain:SetPauseTime( 0 );
+		end
+		
 	else
-		-- Pause time is shorter when using touch.
-		local pauseTime = UserConfiguration.GetPlotTooltipDelay() or TIME_DEFAULT_PAUSE;
-		Controls.TooltipMain:SetPauseTime( m_isUsingMouse and pauseTime or (pauseTime/2) );
+		-- Some conditions, jump past "pause" and show immediately
+		if m_isShiftDown or UserConfiguration.GetValue("PlotToolTipFollowsMouse") == 0 then
+			Controls.TooltipMain:SetPauseTime( 0 );
+		else
+			-- Pause time is shorter when using touch.
+			local pauseTime = UserConfiguration.GetPlotTooltipDelay() or TIME_DEFAULT_PAUSE;
+			Controls.TooltipMain:SetPauseTime( m_isUsingMouse and pauseTime or (pauseTime/3.0) );
+		end
 	end
 
 	Controls.TooltipMain:SetToBeginning();
@@ -600,6 +619,7 @@ end
 function FetchData( plot:table )
 
 	local kFalloutManager = Game.GetFalloutManager();
+
 	return {
 		X		= plot:GetX(),
 		Y		= plot:GetY(),

@@ -127,6 +127,19 @@ Tests["PauseGame"].Run = function()
 end
 
 -----------------------------------------------------------------
+-- End the tests.  This will simply stop the automation, 
+-- leaving the game in its current state.
+-----------------------------------------------------------------
+Tests["End"] = {};
+
+-- Startup function for "End"
+Tests["End"].Run = function()
+
+	Automation.SetActive(false);
+
+end
+
+-----------------------------------------------------------------
 function GetCurrentTestHandler()
 	-- Get the list of test the caller requested to be performed
 	local aTests = Automation.GetStartupParameter("RunTests");

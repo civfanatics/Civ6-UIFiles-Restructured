@@ -14,78 +14,6 @@ local BASE_GetCurrentData = GetCurrentData;
 ITEM_STATUS["UNREVEALED"] = 0xB87BE593;
 STATUS_ART[ITEM_STATUS.UNREVEALED]	= { Name="UNREVEALED",	TextColor0=UI.GetColorValueFromHexLiteral(0xff202726), TextColor1=UI.GetColorValueFromHexLiteral(0x00000000), FillTexture="TechTree_GearButtonTile_Disabled.dds",BGU=0,BGV=(SIZE_NODE_Y*3),	IsButton=false,	BoltOn=false,	IconBacking=PIC_METER_BACK  };
 															
-
--- ===========================================================================
---	Complete override
--- ===========================================================================
-function PopulateItemData() -- Note that we are overriding this function without calling its base version. This version requires no parameters.
-	
-	local kItemDefaults :table = {};		-- Table to return
-	
-	function GetHash(t)
-		local r = GameInfo.Types[t];
-		if(r) then
-			return r.Hash;
-		else
-			return 0;
-		end
-	end
-
-	local techNodes:table = Game.GetTechs():GetActiveTechNodes();
-	for _,techNode in ipairs(techNodes) do
-
-		local row:table		= GameInfo.Technologies[techNode.TechType];
-
-		local kEntry:table	= {};
-		kEntry.Type			= row.TechnologyType;
-		kEntry.Name			= row.Name;
-		kEntry.BoostText	= "";
-		kEntry.Column		= -1;
-		kEntry.Cost			= techNode.Cost;
-		kEntry.Description	= row.Description and Locale.Lookup( row.Description );
-		kEntry.EraType		= row.EraType;
-		kEntry.Hash			= GetHash(kEntry.Type);
-		kEntry.Index		= row.Index;
-		kEntry.IsBoostable	= false;
-		kEntry.Prereqs		= {};				-- IDs for prerequisite item(s)
-		kEntry.UITreeRow	= row.UITreeRow;		
-		kEntry.Unlocks		= {};				-- Each unlock has: unlockType, iconUnavail, iconAvail, tooltip
-
-		-- Boost?
-		for boostRow in GameInfo.Boosts() do
-			if boostRow.TechnologyType == kEntry.Type then				
-				kEntry.BoostText = Locale.Lookup( boostRow.TriggerDescription );
-				kEntry.IsBoostable = true;
-				kEntry.BoostAmount = boostRow.Boost;
-				break;
-			end
-		end
-
-		if (table.count(techNode.PrereqTechTypes) > 0) then
-			for __,prereqTechType in ipairs(techNode.PrereqTechTypes) do
-				local prereqRow:table = GameInfo.Technologies[prereqTechType];
-				table.insert( kEntry.Prereqs, prereqRow.TechnologyType );
-			end
-		end
-		-- If no prereqs were found, set item to special tree start value
-		if table.count(kEntry.Prereqs) == 0 then
-			table.insert(kEntry.Prereqs, PREREQ_ID_TREE_START);
-		end
-
-		-- Warn if DB has an out of bounds entry.
-		if kEntry.UITreeRow < ROW_MIN or kEntry.UITreeRow > ROW_MAX then
-			UI.DataError("UITreeRow for '"..kEntry.Type.."' has an out of bound UITreeRow="..tostring(kEntry.UITreeRow).."  MIN="..tostring(ROW_MIN).."  MAX="..tostring(ROW_MAX));
-		end
-
-		AddTechToEra( kEntry );
-
-		-- Save entry into master list.
-		kItemDefaults[kEntry.Type] = kEntry;
-	end
-
-	return kItemDefaults;
-end
-
 -- ===========================================================================
 --	Fill out live data from base game and then add IsRevealed to items.
 -- ===========================================================================
@@ -116,32 +44,36 @@ function PopulateNode(uiNode, playerTechData)
 		for _,prereqId in pairs(item.Prereqs) do
 			if(prereqId ~= PREREQ_ID_TREE_START) then
 				local prereq		:table = g_kItemDefaults[prereqId];
-				local previousRow	:number = prereq.UITreeRow;
-				local previousColumn:number = g_kEras[prereq.EraType].PriorColumns;
+				if prereq ~= nil then
+					local previousRow	:number = prereq.UITreeRow;
+					local previousColumn:number = g_kEras[prereq.EraType].PriorColumns;
 
-				for lineNum,line in pairs(g_uiConnectorSets[item.Type..","..prereqId]) do
-					if(lineNum == 1 or lineNum == 5) then
-						line:SetTexture("Controls_TreePathEW");
-					end
-					if( lineNum == 3) then
-						line:SetTexture("Controls_TreePathNS");
-					end
+					for lineNum,line in pairs(g_uiConnectorSets[item.Type..","..prereqId]) do
+						if(lineNum == 1 or lineNum == 5) then
+							line:SetTexture("Controls_TreePathEW");
+						end
+						if( lineNum == 3) then
+							line:SetTexture("Controls_TreePathNS");
+						end
 
-					if(lineNum == 2)then
-						if previousRow < item.UITreeRow  then
-							line:SetTexture("Controls_TreePathSE");
-						else
-							line:SetTexture("Controls_TreePathNE");
+						if(lineNum == 2)then
+							if previousRow < item.UITreeRow  then
+								line:SetTexture("Controls_TreePathSE");
+							else
+								line:SetTexture("Controls_TreePathNE");
+							end
+						end
+
+						if(lineNum == 4)then
+							if previousRow < item.UITreeRow  then
+								line:SetTexture("Controls_TreePathES");
+							else
+								line:SetTexture("Controls_TreePathEN");
+							end
 						end
 					end
-
-					if(lineNum == 4)then
-						if previousRow < item.UITreeRow  then
-							line:SetTexture("Controls_TreePathES");
-						else
-							line:SetTexture("Controls_TreePathEN");
-						end
-					end
+				else
+					print("Unresolved prereq "..prereqId);
 				end
 			end
 		end
@@ -210,7 +142,7 @@ function PopulateNode(uiNode, playerTechData)
 	end
 
 	-- Show/Hide Recommended Icon
-	if live.IsRecommended and live.AdvisorType ~= nil then
+	if live.IsRecommended and live.AdvisorType ~= nil and live.Status ~= ITEM_STATUS.RESEARCHED then
 		uiNode.RecommendedIcon:SetIcon(live.AdvisorType);
 		uiNode.RecommendedIcon:SetHide(false);
 	else

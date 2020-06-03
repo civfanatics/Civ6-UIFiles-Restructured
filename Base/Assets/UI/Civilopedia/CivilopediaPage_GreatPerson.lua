@@ -92,7 +92,9 @@ PageLayouts["GreatPerson" ] = function(page)
 		if(greatPerson.EraType) then
 			local era = GameInfo.Eras[greatPerson.EraType];
 			if(era) then
-				s:AddLabel(era.Name);
+				if(gpClass and gpClass.AvailableInTimeline) then
+					s:AddLabel(era.Name);
+				end
 			end
 		end
 

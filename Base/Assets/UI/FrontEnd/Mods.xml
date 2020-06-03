@@ -9,7 +9,7 @@
 		<Box Color="32,70,101,150" Anchor="L,T" Size="2,parent"/>
 		<Box Color="32,70,101,150" Anchor="R,T" Size="2,parent"/>
 
-		<Container ID="MainWindow" Size="1024,768" Anchor="C,C">
+		<Container ID="MainWindow" Size="1024,768" Anchor="C,B">
 			<!-- Logo -->
 			<Grid ID="LogoContainer" Style="SubContainer4" Size="parent-10,116" Anchor="C,T" Color="7,28,50" AnchorSide="I,O" Offset="0,4">
 				<Image ID="Logo"				Anchor="C,C" Texture="MainLogo.dds" StretchMode="Auto"/>
@@ -30,7 +30,7 @@
 				<GridButton ID="SubscriptionsTab" Style="ShellTab" Size="300,41"  String="LOC_MODS_SUBSCRIPTIONS"/>
 			</Stack>
 
-			<Container ID="InstalledTabPanel" Size="parent-30,parent-115"  Anchor="L,T" Offset="15,115">
+			<Container ID="InstalledTabPanel" Size="parent-30,parent-115"  Anchor="L,T" Offset="15,105">
 				<Stack Padding="5">
 					<Stack StackGrowth="Right">
 						<PullDown ID="ModGroupPullDown" Anchor="L,T" Style="PullDownBlue" Size="350,24" ScrollThreshold="110" AutoSizePopUp="1" SpaceForScroll="0" Offset="0,0"/>

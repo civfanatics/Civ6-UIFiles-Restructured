@@ -127,7 +127,8 @@
 	
 	<LuaContext		ID="Civilopedia"							FileName="CivilopediaScreen"				Hidden="1"	/>
 	<LuaContext		ID="PausePanel"								FileName="PausePanel"						Hidden="1"	/>
-
+  <LuaContext   ID="SwitchLayoutPopup"        FileName="SwitchLayoutPopup"        Hidden="1"/>
+  
 	<!-- Additional UI screens specified by <AddUserInterfaces> tag in modinfo files. -->
 	<Container		ID="AdditionalUserInterfaces"/>
 	

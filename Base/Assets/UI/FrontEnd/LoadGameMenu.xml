@@ -10,7 +10,7 @@
       <Box Color="32,70,101,150" Anchor="L,T" Size="2,parent"/>
       <Box Color="32,70,101,150" Anchor="R,T" Size="2,parent"/>
 
-      <Container ID="MainWindow" Size="1024,768" Anchor="C,C">
+      <Container ID="MainWindow" Size="1024,768" Anchor="C,B">
         <!-- Logo -->
         <Grid ID="LogoContainer" Style="SubContainer4" Size="parent-10,116" Anchor="C,T" Color="7,28,50" AnchorSide="I,O" Offset="0,4">
           <Image ID="Logo"				Anchor="C,C" Texture="MainLogo.dds" StretchMode="Auto"/>
@@ -29,12 +29,12 @@
 
         <Grid Style="SubContainer4" Size="parent-10,parent-60" Anchor="C,T" Color="7,28,50" Offset="0,55">
           <!-- Decorative Border -->
-          <Grid Style="SubContainer3" Size="685,625" Anchor="C,C" Color="7,28,50,200" Offset="0,-20">
+          <Grid Style="SubContainer3" Size="685,parent-60" Anchor="C,C" Color="7,28,50,200" Offset="0,-20">
             <!-- Border Around both Inspector and Game Select -->
             <Stack StackGrowth="Right" Anchor="C,C">
               <!-- Stack of SELECTOR and INSPECTOR-->
               <!-- SELECTOR AREA -->
-              <Grid Size="340,620" Style="SubContainerFill" Color="8,36,68">
+              <Grid Size="340,parent+8" Style="SubContainerFill" Color="8,36,68">
                 <!-- SELECTOR opaque background -->
                 <Stack StackGrowth="Down"  Anchor="C,T" Padding="2">
                   <!-- Stack of Selector Controls-->
@@ -50,7 +50,7 @@
 									<!-- USE THIS WITH CLOUD CHECK ENABLED:
 									<Grid Style="SubContainer3" Size="parent-5,parent-83" Anchor="C,T" Color="6,54,93,255" Offset="0,2">
 									-->
-                  <Grid ID="DecoContainer" Style="SubContainer3" Size="parent-5,parent-58" Anchor="C,T" Color="6,54,93,255" Offset="0,2">
+                  <Grid ID="DecoContainer" Style="SubContainer3" Size="parent-5,parent-105" Anchor="C,T" Color="6,54,93,255" Offset="-2,0">
                     <!-- SELECTOR decorative border-->
                     <Image Texture="Controls_Compass" StretchMode="Auto" Anchor="C,B" Color="6,54,93,150"/>
                     <Label ID="NoGames" Anchor="C,C" Style="BlueGlow" String="{LOC_NO_SAVED_GAMES:upper}"/>
@@ -66,7 +66,7 @@
               </Grid>
               <!-- /SELECTOR opaque background -->
               <!-- INSPECTOR AREA -->
-              <Grid Size="340,620" Style="SubContainerFill" Color="19,51,91">
+              <Grid ID="InspectorArea" Size="340,parent+8" Style="SubContainerFill" Color="19,51,91">
                 <!-- INSPECTOR opaque background -->
                 <Grid Style="SubContainer3" Size="parent-5,parent-5" Anchor="C,C" Color="2,89,148,255">
                   <!-- INSPECTOR decorative border -->

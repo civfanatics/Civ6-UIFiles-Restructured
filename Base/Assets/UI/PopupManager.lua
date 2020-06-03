@@ -64,6 +64,26 @@ ExclusivePopupManager =
 	end,
 
 	-- ===========================================================================
+	--	Releases only the sequence lock.  This is used by popups that want to 
+	--	transfer to using another event in the event queue
+	-- ===========================================================================
+	ReleaseSequenceLock = function( self )		
+		if self.m_eventID ~= 0 then
+			UI.ReleaseEventID( self.m_eventID );	-- Release engine hold.
+		end
+	end,
+
+	-- ===========================================================================
+	--	Get a the sequence lock from the current event.
+	-- ===========================================================================
+	AcquireSequenceLock = function( self )		
+		if self.m_eventID ~= 0 then
+			UI.ReleaseEventID( self.m_eventID );	-- Release engine hold.
+		end
+		self.m_eventID = UI.ReferenceCurrentEvent();	
+	end,
+
+	-- ===========================================================================
 	Unlock = function( self )
 		if self.m_eventID == 0 then
 			UI.DataAssert("Attempt to Unlock '"..self.m_name.."' but it's already unlocked!");

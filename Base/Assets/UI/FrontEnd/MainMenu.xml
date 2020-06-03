@@ -84,20 +84,21 @@
 
 	<Label				ID="VersionLabel" Anchor="L,B"  Offset="2,2" Style="FontNormal12" ColorSet="ButtonCS"  />
   
-	<LuaContext		ID="Options"							FileName="Options"						Hidden="1" />
-	<LuaContext		ID="ModsContext"					DeferLoad="1"	FileName="Mods"								Hidden="1" />
-	<LuaContext		ID="AdvancedSetup"				DeferLoad="1"	FileName="AdvancedSetup"			Hidden="1" />
-	<LuaContext		ID="ScenarioSetup"        DeferLoad="1" FileName="ScenarioSetup"      Hidden="1" /> 
-	<LuaContext		ID="CreditsScreen"											FileName="CreditsScreen"			Hidden="1" />
-	<LuaContext		ID="My2K"										            FileName="My2K"								Hidden="1" />
-  <LuaContext		ID="WorldBuilder"					DeferLoad="1" FileName="WorldBuilderMenu"		Hidden="1" />
-	<LuaContext		ID="HallofFame"						DeferLoad="1"	FileName="GameSummaries"			Hidden="1" />
-	<LuaContext		ID="TutorialSetup"				DeferLoad="1" FileName="TutorialSetup"		  Hidden="1" />
-	<LuaContext		ID="Lobby"															FileName="Lobby"							Hidden="1" />
-	<LuaContext		ID="HostGame"														FileName="HostGame"						Hidden="1" />
-	<LuaContext		ID="StagingRoom"												FileName="StagingRoom"				Hidden="1" />
-	<LuaContext		ID="LoadGameMenu"												FileName="LoadGameMenu"				Hidden="1" />
-	<LuaContext		ID="SaveGameMenu"												FileName="SaveGameMenu"				Hidden="1" />
-	<LuaContext		ID="FrontEndPopup"											FileName="FrontEndPopup"			Hidden="1" />
-	<LuaContext		ID="CivRoyaleIntro"											FileName="CivRoyaleIntro"			Hidden="1" />
+  <LuaContext    ID="Options"                             FileName="Options"          Hidden="1" />
+  <LuaContext    ID="ModsContext"         DeferLoad="1"   FileName="Mods"             Hidden="1" />
+  <LuaContext    ID="AdvancedSetup"       DeferLoad="1"   FileName="AdvancedSetup"    Hidden="1" />
+  <LuaContext    ID="ScenarioSetup"       DeferLoad="1"   FileName="ScenarioSetup"    Hidden="1" /> 
+  <LuaContext    ID="CreditsScreen"                       FileName="CreditsScreen"    Hidden="1" />
+  <LuaContext    ID="My2K"                                FileName="My2K"             Hidden="1" />
+  <LuaContext    ID="WorldBuilder"        DeferLoad="1"   FileName="WorldBuilderMenu" Hidden="1" />
+  <LuaContext    ID="HallofFame"          DeferLoad="1"   FileName="GameSummaries"    Hidden="1" />
+  <LuaContext    ID="TutorialSetup"       DeferLoad="1"   FileName="TutorialSetup"    Hidden="1" />
+  <LuaContext    ID="Lobby"                               FileName="Lobby"            Hidden="1" />
+  <LuaContext    ID="HostGame"                            FileName="HostGame"         Hidden="1" />
+  <LuaContext    ID="StagingRoom"                         FileName="StagingRoom"      Hidden="1" />
+  <LuaContext    ID="LoadGameMenu"                        FileName="LoadGameMenu"     Hidden="1" />
+  <LuaContext    ID="SaveGameMenu"                        FileName="SaveGameMenu"     Hidden="1" />
+  <LuaContext    ID="FrontEndPopup"                       FileName="FrontEndPopup"    Hidden="1" />
+  <LuaContext    ID="CivRoyaleIntro"                      FileName="CivRoyaleIntro"   Hidden="1" />
+  <LuaContext    ID="CrossPlay"                           FileName="CrossPlayLogin"   Hidden="1" />
 </ContextDefaults>

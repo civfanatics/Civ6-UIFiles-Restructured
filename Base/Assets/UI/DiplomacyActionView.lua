@@ -1942,9 +1942,9 @@ function PopulateDiplomacyRibbon(diplomacyRibbon : table)
 		-- diplomacyRibbon.Advisor:SetTexture(IconManager:FindIconAtlas("ADVISOR_GENERIC", 48));
 
 		-- Add an entry for the local player at the top
-		local leaderIcon, leaderInstance = LeaderIcon:GetInstance(ms_DiplomacyRibbonLeaderIM, diplomacyRibbon.Leaders);
-		ms_LeaderIDToRibbonEntry[ms_LocalPlayerID] = leaderInstance;
-		PopulateLeader(leaderIcon, ms_LocalPlayer);
+		local oLeaderIcon	 :object = LeaderIcon:GetInstance(ms_DiplomacyRibbonLeaderIM, diplomacyRibbon.Leaders);
+		ms_LeaderIDToRibbonEntry[ms_LocalPlayerID] = oLeaderIcon;
+		PopulateLeader(oLeaderIcon, ms_LocalPlayer);
 
 		--Then, let's do a check to see if any of these players are duplicate leaders and track it.
 		--		Must go through entire list to detect duplicates (would be lovely if we had an IsUnique from PlayerConfigurations)
@@ -1966,16 +1966,16 @@ function PopulateDiplomacyRibbon(diplomacyRibbon : table)
 		local aPlayers = PlayerManager.GetAliveMajors();
 		for _, pPlayer in ipairs(aPlayers) do
 			if (pPlayer:GetID() ~= ms_LocalPlayerID and pLocalPlayerDiplomacy:HasMet(pPlayer:GetID())) then
-				local leaderIcon, leaderInstance = LeaderIcon:GetInstance(ms_DiplomacyRibbonLeaderIM, diplomacyRibbon.Leaders);
-				ms_LeaderIDToRibbonEntry[pPlayer:GetID()] = leaderInstance;
+				local oLeaderIcon :object = LeaderIcon:GetInstance(ms_DiplomacyRibbonLeaderIM, diplomacyRibbon.Leaders);
+				ms_LeaderIDToRibbonEntry[pPlayer:GetID()] = oLeaderIcon;
 				-- Save the current coordinate in the scrollpanel so that we can autoscroll to this point later
 				m_LeaderCoordinates[pPlayer:GetID()] = currentCoordinateY;
 				currentCoordinateY = currentCoordinateY + coordinateOffsetIncrement;
 				local leaderName:string = PlayerConfigurations[pPlayer:GetID()]:GetLeaderTypeName();
 				if(isUniqueLeader[leaderName] ~= nil) then
-					PopulateLeader(leaderIcon, pPlayer, isUniqueLeader[leaderName]);
+					PopulateLeader(oLeaderIcon, pPlayer, isUniqueLeader[leaderName]);
 				else
-					PopulateLeader(leaderIcon, pPlayer);
+					PopulateLeader(oLeaderIcon, pPlayer);
 				end
 			end
 		end
@@ -2675,15 +2675,22 @@ end
 --	If this context is visible, it will get a crack at the input.
 -- ===========================================================================
 function KeyHandler( key:number )
-	if (key == Keys.VK_ESCAPE) then CloseFocusedState(); return true; end
-	return false;
+	if (key == Keys.VK_ESCAPE) then 
+		CloseFocusedState();
+	end	
 end
 
+-- ===========================================================================
+--	UI Callback
+--	Consume all key input so it doens't fall through to world
 -- ===========================================================================
 function OnInputHandler( pInputStruct:table )
 	local uiMsg = pInputStruct:GetMessageType();
 	if uiMsg == KeyEvents.KeyUp then 
-		return KeyHandler( pInputStruct:GetKey() ); 
+		KeyHandler( pInputStruct:GetKey() ); 
+		return true;
+	elseif uiMsg == KeyEvents.KeyDown then
+		return true;
 	end
 
 	return false;
@@ -2953,8 +2960,8 @@ function OnUserRequestClose()
 	if (not ContextPtr:IsHidden() and ms_currentViewMode ~= DEAL_MODE) then
 		m_PopupDialog:Reset();
 		m_PopupDialog:AddText(Locale.Lookup("LOC_CONFIRM_EXIT_TXT"));
-		m_PopupDialog:AddButton(Locale.Lookup("LOC_NO"), nil);
 		m_PopupDialog:AddButton(Locale.Lookup("LOC_YES"), OnQuitYes, nil, nil, "PopupButtonInstanceRed");
+		m_PopupDialog:AddButton(Locale.Lookup("LOC_NO"), nil);
 		m_PopupDialog:Open();
 	end
 end

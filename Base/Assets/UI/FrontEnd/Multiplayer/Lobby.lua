@@ -50,6 +50,7 @@ local SEARCH_LAN				:number = 1;	-- LAN Servers/Lobbies
 local SEARCH_FRIENDS			:number = 2;
 local SEARCH_FAVORITES			:number = 3;
 local SEARCH_HISTORY			:number = 4;
+local SEARCH_CROSSPLAY			:number = 5;
 
 local GAMELISTUPDATE_CLEAR		:number = 1;
 local GAMELISTUPDATE_COMPLETE	:number = 2;
@@ -202,6 +203,13 @@ function IsUsingInternetGameList()
 	else
 		return false;
 	end
+end
+
+function IsUsingCrossPlayGameList()
+	if (m_lobbyModeName == MPLobbyTypes.CROSSPLAY_INTERNET) then
+		return true;
+	end
+	return false;
 end
 
 function IsUsingPitbossGameList()
@@ -374,7 +382,7 @@ function OnJoinCodeButtonClick()
 	m_kPopupDialog:Close();
 	m_kPopupDialog:AddTitle( Locale.Lookup("LOC_JOIN_CODE_POPUP_TITLE") );
 	m_kPopupDialog:AddText( Locale.Lookup("LOC_JOIN_CODE_POPUP_TEXT"));
-	m_kPopupDialog:AddEditBox( Locale.Lookup("LOC_JOIN_CODE_POPUP_EDITBOX"), OnJoinCodeCommit, OnJoinCodeStringChange, JOINCODE_EDITBOX_COMMAND );
+	m_kPopupDialog:AddEditBox( Locale.Lookup("LOC_JOIN_CODE_POPUP_EDITBOX"), nil, OnJoinCodeStringChange, JOINCODE_EDITBOX_COMMAND );
 	m_kPopupDialog:AddButton( Locale.Lookup("LOC_CANCEL_BUTTON"), nil );
 	m_kPopupDialog:AddButton( Locale.Lookup("LOC_MULTIPLAYER_JOIN_GAME"), OnJoinCodeOK );
 	m_kPopupDialog:Open();
@@ -407,6 +415,11 @@ function IsCurrentSearchType(eSearchType)
 	if(IsUsingPlayByCloudGameList()
 		and m_browserMode ~= eSearchType) then
 		return false;	
+	end
+
+	-- When browsing CrossPlay, only let the CrossPlay games show
+	if(IsUsingCrossPlayGameList()) then
+		return (eSearchType == LobbyTypes.LOBBY_CROSSPLAY);
 	end
 
 	return true;
@@ -670,6 +683,7 @@ function AddServer(serverEntry)
 		GameSpeed = serverEntry.GameSpeed,
 		GameSpeedName = gameSpeedName,
 		EnabledMods = serverEntry.EnabledMods,
+		EnabledGameModeNames = serverEntry.EnabledGameModeNames,
 		MapSizeName = mapSizeName,
 		GameStarted = serverEntry.GameStarted,
 		SavedGame = serverEntry.SavedGame,
@@ -1011,6 +1025,24 @@ function SortAndDisplayListings(resetSelection:boolean)
 			end
 		end
 
+		-- Game Mode Info
+		local hasGameModes : boolean = listing.EnabledGameModeNames ~= nil;
+
+		if(hasGameModes)then
+			local gameModes = Modding.GetGameModesFromConfigurationString(listing.EnabledGameModeNames);
+			if(gameModes)then
+				local ToolTipPrefix = Locale.Lookup("LOC_MULTIPLAYER_LOBBY_GAMEMODES_OFFICIAL") .. "[NEWLINE][NEWLINE]";
+				local gameModeNames : string = "";
+				for i,v in pairs(gameModes) do
+					gameModeNames = gameModeNames .. "   " .. v.Name .. "[NEWLINE]";
+				end
+				if(gameModeNames ~= "")then
+					local officialContentTooltip = controlTable.ModsOfficial:GetToolTipString();
+					controlTable.ModsOfficial:SetToolTipString(ToolTipPrefix .. gameModeNames .. "[NEWLINE]" .. officialContentTooltip)
+				end
+			end
+		end
+
 		controlTable.ModsOfficial:SetHide(not hasOfficialMods);
 		controlTable.ModsCommunity:SetHide(not hasCommunityMods);
 
@@ -1080,24 +1112,33 @@ end
 
 -- ===========================================================================
 function AdjustScreenSize()
-	local screenX, screenY:number = UIManager:GetScreenSizeVal();
-	if (IsUsingPlayByCloudGameList()) then 
-		Controls.GameListRoot:SetSizeY( Controls.MainWindow:GetSizeY() - (Controls.BottomButtons:GetSizeY() + Controls.TopNavigationPanel:GetSizeY() +15 ));
-		Controls.GameListGrid:SetSizeY( Controls.GameListRoot:GetSizeY());
-		Controls.ListingScrollPanel:SetSizeY(Controls.GameListRoot:GetSizeY() -100);
-		Controls.ListingScrollPanelBar:SetSizeY(Controls.GameListRoot:GetSizeY()-130);
+	local _, screenY:number = UIManager:GetScreenSizeVal();	
+
+	local gameListY	:number = 0;
+	Controls.ListingScrollPanel:CalculateSize();
+	Controls.MainWindow:SetSizeY( screenY- (Controls.LogoContainer:GetSizeY() + Controls.LogoContainer:GetOffsetY()));
+
+	local HEIGHT_SHELL_TABS :number = 40;	-- Approx height (this is the row that includes the join button)
+
+	-- Account for whether or not there is a navigation bar above the list.
+	if IsJoinCodeAllowed() then 
+		Controls.GameListRoot:SetSizeY( Controls.MainWindow:GetSizeY() - (Controls.BottomButtons:GetSizeY() + Controls.TopNavigationPanel:GetSizeY() + HEIGHT_SHELL_TABS));
+		gameListY = Controls.GameListRoot:GetSizeY();		
+		Controls.GameListGrid:SetSizeY( gameListY );
 		Controls.GameListRoot:SetOffsetY(GAME_LIST_TABS_OFFSET_Y);
 	else
-		Controls.ListingScrollPanel:CalculateInternalSize();
-		Controls.FriendsButton:SetSizeX(Controls.FriendsCheck:GetSizeX() + 20);
-		Controls.MainWindow:SetSizeY(screenY- (Controls.LogoContainer:GetSizeY() + Controls.LogoContainer:GetOffsetY()));
-		Controls.GameListRoot:SetSizeY( Controls.MainWindow:GetSizeY() - (Controls.BottomButtons:GetSizeY() + Controls.TopNavigationPanel:GetSizeY()+15 ));
-		Controls.GameListGrid:SetSizeY( Controls.GameListRoot:GetSizeY());
-		Controls.LogoContainer:SetHide(hideLogo);
-		Controls.ListingScrollPanel:SetSizeY(Controls.GameListRoot:GetSizeY() -50);
-		Controls.ListingScrollPanelBar:SetSizeY(Controls.GameListRoot:GetSizeY()-85);
+		Controls.GameListRoot:SetSizeY( Controls.MainWindow:GetSizeY() - (Controls.BottomButtons:GetSizeY() + Controls.TopNavigationPanel:GetSizeY() ));
+		gameListY = Controls.GameListRoot:GetSizeY();		
+		Controls.GameListGrid:SetSizeY( gameListY );				
+		
 		Controls.GameListRoot:SetOffsetY(GAME_LIST_OFFSET_Y);
+		Controls.FriendsButton:SetSizeX(Controls.FriendsCheck:GetSizeX() + 20);
 	end
+
+	local HEIGHT_BOTTOM_NAVIGATION :number = 60;
+	local HEIGHT_SCROLLBAR_BUTTONS :number = 30;
+	Controls.ListingScrollPanel:SetSizeY( gameListY - HEIGHT_BOTTOM_NAVIGATION );
+	Controls.ListingScrollPanelBar:SetSizeY( gameListY - (HEIGHT_BOTTOM_NAVIGATION + HEIGHT_SCROLLBAR_BUTTONS) );
 end
 
 -- ===========================================================================
@@ -1353,6 +1394,8 @@ function OnShow()
 		Matchmaking.SetGameListType( LIST_SERVERS, SEARCH_INTERNET );
 	elseif (m_lobbyModeName == MPLobbyTypes.PITBOSS_LAN) then 
 		Matchmaking.SetGameListType( LIST_SERVERS, SEARCH_LAN );
+	elseif (m_lobbyModeName == MPLobbyTypes.CROSSPLAY_INTERNET) then 
+		Matchmaking.SetGameListType( LIST_LOBBIES, SEARCH_CROSSPLAY );
 	else
 		Matchmaking.SetGameListType( LIST_LOBBIES, SEARCH_INTERNET );
 	end
@@ -1368,6 +1411,8 @@ function OnShow()
 		Controls.TitleLabel:LocalizeAndSetText("LOC_MULTIPLAYER_PITBOSS_LOBBY");
 	elseif IsUsingInternetGameList() then
 		Controls.TitleLabel:LocalizeAndSetText("LOC_MULTIPLAYER_INTERNET_LOBBY");
+	elseif IsUsingCrossPlayGameList() then
+		Controls.TitleLabel:LocalizeAndSetText("LOC_MULTIPLAYER_CROSSPLAY_LOBBY");
 	else
 		Controls.TitleLabel:LocalizeAndSetText("LOC_MULTIPLAYER_LAN_LOBBY");
 	end
@@ -1380,13 +1425,6 @@ function OnShow()
 	end
 
 	if(IsUsingPlayByCloudGameList()) then
-		-- Toggle SeenPlayByCloudLobby user option flag
-		local oldSeenPBC = Options.GetUserOption("Interface", "SeenPlayByCloudLobby");
-		if (oldSeenPBC == nil or oldSeenPBC == 0) then
-			Options.SetUserOption("Interface", "SeenPlayByCloudLobby", 1);
-			Options.SaveOptions(OptionFileTypes.User);
-		end
-
 		-- Display PlayByCloud Notification Setup Reminder if no notification methods are set.
 		local remindNotify = Options.GetUserOption("Interface", "PlayByCloudNotifyRemind");
 		if(m_firstTimeShow and remindNotify ~= nil and remindNotify == 1) then
@@ -1465,12 +1503,21 @@ function AddShellTab(browserModeType :number, buttonText :string, buttonTooltip 
 end
 
 -- ===========================================================================
+--	Can join codes be used in the current lobby system?
+-- ===========================================================================
+function IsJoinCodeAllowed()
+	local pbcMode			:boolean = IsUsingPlayByCloudGameList();
+	local crossPlayMode		:boolean = IsUsingCrossPlayGameList();
+	local eosAllowed		:boolean = (Network.GetNetworkPlatform() == NetworkPlatform.NETWORK_PLATFORM_EOS) and IsUsingInternetGameList();
+	return pbcMode or crossPlayMode or eosAllowed;
+end
+
+-- ===========================================================================
 function RealizeShellTabs()
 	m_shellTabIM:ResetInstances();
 	g_TabInstances = {};
 
-	if(IsUsingPlayByCloudGameList()) then
-
+	if IsUsingPlayByCloudGameList() then
 		AddShellTab(LIST_PERSONAL_GAMES, LOC_LOBBY_MY_GAMES, LOC_LOBBY_MY_GAMES_TT);
 		AddShellTab(LIST_PUBLIC_GAMES, LOC_LOBBY_OPEN_GAMES, LOC_LOBBY_OPEN_GAMES_TT);
 
@@ -1482,10 +1529,9 @@ function RealizeShellTabs()
 
 		-- Set the current browser mode tab as selected.
 		FilterTabsSetSelected(g_TabInstances[m_browserMode]); 
-		Controls.JoinCodeButton:SetHide(false);
-	else
-		Controls.JoinCodeButton:SetHide(true);		
 	end
+
+	Controls.JoinCodeButton:SetHide( IsJoinCodeAllowed()==false );
 	
 	AdjustScreenSize();
 	AutoSizeGridButton(Controls.JoinCodeButton,200,32,10,"H");

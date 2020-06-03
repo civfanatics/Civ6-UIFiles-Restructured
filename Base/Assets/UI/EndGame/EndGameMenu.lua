@@ -34,8 +34,6 @@ g_GraphHorizontalMarkers = {
 	Controls.HorizontalLabel5
 };
 
-
-
 -- Custom popup setup
 g_kPopupDialog = PopupDialog:new( "EndGameMenu" );
 
@@ -58,6 +56,24 @@ Styles = {
 		RibbonTile = "EndGame_RibbonTile_Time",
 		Background = "EndGame_BG_Time",
 		Color = "COLOR_VICTORY_DEFAULT",
+	},
+	["DEFEAT_DEFAULT"] ={
+		RibbonIcon = "ICON_DEFEAT_GENERIC",
+		Ribbon = "EndGame_Ribbon_Defeat",
+		RibbonTile = "EndGame_RibbonTile_Defeat",
+		Background = "EndGame_BG_Defeat",
+		Movie = "Defeat.bk2",
+		SndStart = "Play_Cinematic_Endgame_Defeat",
+		SndStop = "Stop_Cinematic_Endgame_Defeat",
+	},
+	["DEFEAT_TIME"] ={
+		RibbonIcon = "ICON_DEFEAT_GENERIC",
+		Ribbon = "EndGame_Ribbon_Defeat",
+		RibbonTile = "EndGame_RibbonTile_Defeat",
+		Background = "EndGame_BG_Defeat",
+		Movie = "Defeat.bk2",
+		SndStart = "Play_Cinematic_Endgame_Defeat",
+		SndStop = "Stop_Cinematic_Endgame_Defeat",
 	},
 	["VICTORY_SCORE"] = {
 		RibbonIcon = "ICON_VICTORY_SCORE",
@@ -698,10 +714,27 @@ function View(data:table)
 	end
 
 	---- Movie begins play-back when UI is shown.
-	m_movie = data.RibbonStyle.Movie;
-    m_soundtrackStart = data.RibbonStyle.SndStart;
-    m_soundtrackStop = data.RibbonStyle.SndStop;
+	local tMovie = type(data.RibbonStyle.Movie);
+	if(tMovie == "string") then
+		m_movie = data.RibbonStyle.Movie;
+	elseif(tMovie == "function") then
+		m_movie = data.RibbonStyle.Movie();
+	end
 
+	local tSndStart = type(data.RibbonStyle.SndStart);
+	if(tSndStart == "string") then
+	    m_soundtrackStart = data.RibbonStyle.SndStart;
+	elseif(tSndStart == "function") then
+	    m_soundtrackStart = data.RibbonStyle.SndStart();
+	end
+
+	local tSndStop = type(data.RibbonStyle.SndStop);
+	if(tSndStop == "string") then
+	    m_soundtrackStop = data.RibbonStyle.SndStop;
+	elseif(tSndStop == "function") then
+	    m_soundtrackStop = data.RibbonStyle.SndStop();
+	end
+	
     if m_movie ~= nil then
         UI.LoadSoundBankGroup(5);   -- BANKS_FMV, must teach Lua these constants
     end
@@ -777,10 +810,15 @@ function PlayerDefeatedData(playerID:number, defeatType:string)
 	else
 		data.RibbonText = Locale.ToUpper("LOC_DEFEAT_DEFAULT_NAME");
 	end
-
+	
 	-- Gather ribbon data
-	data.RibbonIcon = "ICON_DEFEAT_GENERIC";
-	data.RibbonStyle = Styles["GENERIC_DEFEAT"];
+	local style = Styles[defeatType];
+	if(style == nil) then
+		style = Styles["GENERIC_DEFEAT"];
+	end
+
+	data.RibbonStyle = style;
+	data.RibbonIcon = style.RibbonIcon or "ICON_DEFEAT_GENERIC";
 
 	-- No winner so clear out winner name
 	data.WinnerName = "";

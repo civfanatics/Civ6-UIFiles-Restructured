@@ -8,6 +8,7 @@ include( "CombatInfo" );
 include( "PopupDialog" );
 include( "Civ6Common" );
 include( "EspionageSupport" );
+include("GameCapabilities");
 
 
 -- ===========================================================================
@@ -63,7 +64,7 @@ local m_kSoundCV1               :table = {};
 local m_kTutorialDisabled		:table = {};	-- key = Unit Type, value = lockedHashes
 local m_kTutorialAllDisabled	:table = {};	-- hashes of actions disabled for all units
 
-local m_DeleteInProgress        :boolean = false;
+local m_DeleteInProgress		:boolean = false;
 local m_showPromotionBanner		:boolean = false;
 
 local m_attackerUnit = nil;
@@ -119,6 +120,7 @@ function InitSubjectData()
 		Range						= 0,
 		Owner						= 0,
 		BuildCharges				= 0,
+		DisasterCharges				= 0,
 		SpreadCharges				= 0,
 		HealCharges					= 0,
 		GreatPersonActionCharges	= 0,
@@ -166,6 +168,7 @@ function InitTargetData()
 		MaxWallDamage				= 0,
 		PotentialWallDamage			= 0,
 		BuildCharges				= 0,
+		DisasterCharges				= 0,
 		SpreadCharges				= 0,
 		HealCharges					= 0,
 		ReligiousStrength			= 0,
@@ -298,7 +301,7 @@ function AddActionToTable( actionsTable:table, action:table, disabled:boolean, t
 	if (action.HotkeyId~=nil) and disabled==false then
 		local actionId = Input.GetActionId( action.HotkeyId );
 		if actionId ~= nil then
-			m_kHotkeyActions[actionId] = callbackFunc;
+			m_kHotkeyActions[actionId] = wrappedCallback;
 			m_kHotkeyCV1[actionId] = callbackVoid1;
 			m_kHotkeyCV2[actionId] = callbackVoid2;
             m_kSoundCV1[actionId] = action.Sound;
@@ -313,6 +316,13 @@ end
 -- ===========================================================================
 function GetUnitOperationTooltip( unitCommand )
 	return Locale.Lookup( unitCommand.Description );
+end
+
+-- ===========================================================================
+--	Needed for other files ( e.g. UnitPanel_CivRoyaleScenario) to get the member variable.
+-- ===========================================================================
+function GetPromotionBannerVisibility()
+	return m_showPromotionBanner;
 end
 
 -- ===========================================================================
@@ -1047,6 +1057,26 @@ function View(data)
 	-- Settler Water Availability Info
 	if data.IsSettler then
 		Controls.SettlementWaterContainer:SetHide(false);
+
+		local HAS_WATER_BONUS_GRID_SIZE : number = 46;
+		local NO_WATER_BONUS_GRID_SIZE	: number = 92;
+
+		--Check if this civilization receives no bonus from water availability (i.e. Mayans)
+		if HasTrait("TRAIT_CIVILIZATION_MAYAB", Game.GetLocalPlayer())then
+			Controls.SettlementWaterGrid_FreshWater:SetHide(true);
+			Controls.SettlementWaterGrid_CoastalWater:SetHide(true);
+			Controls.SettlementWaterGrid_NoWater:SetSizeX(NO_WATER_BONUS_GRID_SIZE);
+			Controls.SettlementWaterGrid_NoWater:SetToolTipString(Locale.Lookup("LOC_HUD_UNIT_PANEL_TOOLTIP_VALID_LOCATION"));
+			Controls.SettlementWaterGrid_SettlementBlocked:SetSizeX(NO_WATER_BONUS_GRID_SIZE);
+			Controls.SettlementWaterHeader:SetText(Locale.Lookup("LOC_HUD_UNIT_PANEL_SETTLING_LOCATION_GUIDE"));
+		else
+			Controls.SettlementWaterGrid_FreshWater:SetHide(false);
+			Controls.SettlementWaterGrid_CoastalWater:SetHide(false);
+			Controls.SettlementWaterGrid_NoWater:SetSizeX(HAS_WATER_BONUS_GRID_SIZE);
+			Controls.SettlementWaterGrid_NoWater:SetToolTipString(Locale.Lookup("LOC_HUD_UNIT_PANEL_TOOLTIP_NO_WATER"));
+			Controls.SettlementWaterGrid_SettlementBlocked:SetSizeX(HAS_WATER_BONUS_GRID_SIZE);
+			Controls.SettlementWaterHeader:SetText(Locale.Lookup("LOC_HUD_UNIT_PANEL_WATER_AVAILABILITY_GUIDE"));
+		end
 	else
 		Controls.SettlementWaterContainer:SetHide(true);
 	end
@@ -1176,6 +1206,34 @@ function ShowDistrictStats( showCombat:boolean )
 	end
 
 	Controls.SubjectStatStack:CalculateSize();
+end
+
+-- ===========================================================================
+-- USED TO RESET STAT STACK IN SCENARIOS
+-- ===========================================================================
+function ResetSubjectStatStack()
+	m_subjectStatStackIM:ResetInstances();
+end
+
+-- ===========================================================================
+-- USED TO GET COMBAT STATS IN SCENARIOS
+-- ===========================================================================
+function GetCombatStats()
+	return FilterUnitStatsFromUnitData(m_subjectData, m_combatResults[CombatResultParameters.COMBAT_TYPE]);
+end
+
+-- ===========================================================================
+-- USED TO GET UNIT STATS IN SCENARIOS
+-- ===========================================================================
+function GetSubjectData()
+	return m_subjectData;
+end
+
+-- ===========================================================================
+-- USED TO GET COMBAT PREVIEW RESULTS IN SCENARIOS
+-- ===========================================================================
+function GetCombatPreviewResults()
+	return m_combatResults;
 end
 
 -- ===========================================================================
@@ -1337,6 +1395,9 @@ function FilterUnitStatsFromUnitData( unitData:table, ignoreStatType:number )
 	if (unitData.BuildCharges > 0) then
 		table.insert(data, {Value = unitData.BuildCharges, Type = "BuildCharges",		Label = "LOC_HUD_UNIT_PANEL_BUILDS",				FontIcon="[ICON_Charges_Large]",		IconName="ICON_BUILD_CHARGES"});
 	end
+	if (unitData.DisasterCharges > 0) then
+		table.insert(data, {Value = unitData.DisasterCharges, Type = "DisasterCharges",		Label = "LOC_HUD_UNIT_PANEL_CHARGES",				FontIcon="[ICON_Charges_Large]",		IconName="ICON_BUILD_CHARGES"});
+	end 
 	if (unitData.HealCharges > 0) then
 		table.insert(data, {Value = unitData.HealCharges, Type = "HealCharges",		Label = "LOC_HUD_UNIT_PANEL_HEALS",				FontIcon="[ICON_ReligionStat_Large]",		IconName="ICON_RELIGION"});
 	end
@@ -1567,7 +1628,6 @@ function OnShowCombat( showCombat )
 	if m_combatResults == nil then
 		showCombat = false;
 	end
-
 	if (showCombat) then
 
 		ShowCombatAssessment();
@@ -1670,7 +1730,6 @@ function OnShowCombat( showCombat )
 	Controls.CombatPreview_CombatStat:SetHide(not showCombat);
 	Controls.CombatPreviewBanners:SetHide(not showCombat);
 	Controls.EnemyUnitPanel:SetHide(not showCombat);
-	
 	if (bAttackerIsUnit and m_showPromotionBanner) then
 		if (pAttacker:GetExperience():GetLevel() > 1) then
 			m_showPromotionBanner = true;
@@ -2105,6 +2164,7 @@ function ReadUnitData( unit:table )
 	kSubjectData.Range						= unit:GetRange();
 	kSubjectData.Owner						= unit:GetOwner();
 	kSubjectData.BuildCharges				= unit:GetBuildCharges();
+	kSubjectData.DisasterCharges			= unit:GetDisasterCharges();
 	kSubjectData.SpreadCharges				= unit:GetSpreadCharges();
 	kSubjectData.HealCharges				= unit:GetReligiousHealCharges();
 	kSubjectData.ReligiousStrength			= unit:GetReligiousStrength();
@@ -2259,6 +2319,7 @@ function OnUnitSelectionChanged(player, unitId, locationX, locationY, locationZ,
 			Hide();
 		end
 	end
+	HideNameUnitPanel();
 end
 
 -- ===========================================================================
@@ -2325,6 +2386,13 @@ end
 
 -- ===========================================================================
 function OnUnitMovementPointsChanged(player, unitId)
+	if(player == m_selectedPlayerId and unitId == m_UnitId) then
+		ContextPtr:RequestRefresh();		-- Set a refresh request, the UI will update on the next frame.
+	end
+end
+
+-- ===========================================================================
+function OnUnitAbilityLost(player :number, unitId :number, eAbilityType :number)
 	if(player == m_selectedPlayerId and unitId == m_UnitId) then
 		ContextPtr:RequestRefresh();		-- Set a refresh request, the UI will update on the next frame.
 	end
@@ -2729,6 +2797,7 @@ end
 
 -- ===========================================================================
 function OnContextInitialize( isHotload : boolean)
+	LateInitialize();
 	if isHotload then				
 		OnPlayerTurnActivated( Game.GetLocalPlayer(), true ) ;	-- Fake player activated call.
 	end
@@ -3005,7 +3074,6 @@ function ShowCombatAssessment()
 			ShowCombatVictoryBanner();
 		end
 	end
-
 	Controls.CombatAssessmentText:SetText(Locale.ToUpper(combatAssessmentStr));
 
 	-- Show interceptor information
@@ -3048,7 +3116,7 @@ function ShowCombatAssessment()
 		Controls.AAGrid:SetHide(false);
 	else
 		Controls.AAGrid:SetHide(true);
-	end
+	end	
 end
 
 -- ===========================================================================
@@ -3198,7 +3266,6 @@ function OnUnitFlagPointerEntered( playerID:number, unitID:number )
 			end
 		end
 	end
-
 	OnShowCombat( isValidToShow );
 end
 
@@ -3254,7 +3321,6 @@ function InspectPlot( plot:table )
 	end
 
 	isValidToShow = isValidToShow and CanShowCombat();
-
 	OnShowCombat( isValidToShow );
 end
 
@@ -3282,6 +3348,7 @@ function ReadTargetData_Unit( pkDefender:table )
 	m_targetData.MaxDamage					= pkDefender:GetMaxDamage();
 	m_targetData.PotentialDamage			= potentialDamage;
 	m_targetData.BuildCharges				= pkDefender:GetBuildCharges();
+	m_targetData.DisasterCharges			= pkDefender:GetDisasterCharges();
 	m_targetData.SpreadCharges				= pkDefender:GetSpreadCharges();
 	m_targetData.HealCharges				= pkDefender:GetReligiousHealCharges();
 	m_targetData.ReligiousStrength			= pkDefender:GetReligiousStrength();
@@ -3587,6 +3654,12 @@ function OnInterfaceModeChanged( eOldMode:number, eNewMode:number )
 		SetTheSelectedButton("UNITOPERATION_DEPLOY", false);
 	end
 
+	if (eNewMode == InterfaceModeTypes.SACRIFICE_SELECTION) then
+		SetTheSelectedButton("UNITOPERATION_SOOTHSAYER_SACRIFICE", true);
+	elseif (eOldMode == InterfaceModeTypes.SACRIFICE_SELECTION) then
+		SetTheSelectedButton("UNITOPERATION_SOOTHSAYER_SACRIFICE", false);
+	end
+
 	-- Set MOVE_TO Selected
 	if (eNewMode == InterfaceModeTypes.MOVE_TO) then
 		SetTheSelectedButton("UNITOPERATION_MOVE_TO", true);
@@ -3730,7 +3803,6 @@ end
 -- ===========================================================================
 function OnInputHandler( pInputStruct:table )
 	local uiMsg = pInputStruct:GetMessageType();
-
 	-- If not the current turn or current unit is dictated by cursor/touch
 	-- hanging over a flag
 	if ( not g_isOkayToProcess or m_isFlagFocused ) then
@@ -4000,6 +4072,11 @@ function OnPortraitRightClick()
 end
 
 -- ===========================================================================
+function LateInitialize()
+	-- Needed for UnitPanel_CivRoyaleScenario
+end
+
+-- ===========================================================================
 function Initialize()
 
 	-- Events
@@ -4045,6 +4122,7 @@ function Initialize()
 	Events.UnitMovementPointsChanged.Add( OnUnitMovementPointsChanged );
 	Events.UnitMovementPointsCleared.Add( OnUnitMovementPointsChanged );
 	Events.UnitMovementPointsRestored.Add( OnUnitMovementPointsChanged );
+	Events.UnitAbilityLost.Add( OnUnitAbilityLost );
 	
 	LuaEvents.TradeOriginChooser_SetTradeUnitStatus.Add(OnSetTradeUnitStatus );
 	LuaEvents.TradeRouteChooser_SetTradeUnitStatus.Add(	OnSetTradeUnitStatus );
@@ -4069,6 +4147,7 @@ function Initialize()
 	Controls.SettlementWaterGrid_NoWater:SetColor(NoWaterColor);
 	local SettlementBlockedColor:number = UI.GetColorValue("COLOR_DISGUSTING_APPEAL");
 	Controls.SettlementWaterGrid_SettlementBlocked:SetColor(SettlementBlockedColor);
+
 end
 
 Initialize();

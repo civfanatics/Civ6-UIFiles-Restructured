@@ -669,7 +669,7 @@ function PopulateInspectorData(fileInfo, fileName, mod_errors)
 		Controls.SelectedTimeLabel:SetText("");
 	end
 
-	local hostEraName = LookupBundleOrText(fileInfo.HostEraName);
+	local hostEraName : string = LookupBundleOrText(fileInfo.HostEraName);
 	Controls.SelectedHostEraLabel:SetText(hostEraName);
 
 	g_DescriptionTextManager:ResetInstances();
@@ -680,7 +680,7 @@ function PopulateInspectorData(fileInfo, fileName, mod_errors)
 	optionsHeader.HeadingTitle:LocalizeAndSetText("LOC_LOADSAVE_GAME_OPTIONS_HEADER_TITLE");
 	
 	if(fileInfo.RulesetName) then
-		local rulesetName = LookupBundleOrText(fileInfo.RulesetName);
+		local rulesetName : string = LookupBundleOrText(fileInfo.RulesetName);
 		if(rulesetName) then
 			local item = g_DescriptionItemManager:GetInstance();
 			item.Title:LocalizeAndSetText("LOC_LOADSAVE_GAME_OPTIONS_RULESET_TYPE_TITLE");
@@ -688,28 +688,45 @@ function PopulateInspectorData(fileInfo, fileName, mod_errors)
 		end
 	end
 
+	if(fileInfo.EnabledGameModes)then
+		local enabledGameModeNames = Modding.GetGameModesFromConfigurationString(fileInfo.EnabledGameModes);
+		local gameModesString : string = "";
+		local gameModeNamesNum : number = table.count(enabledGameModeNames);
+		for k, v in ipairs(enabledGameModeNames)do
+			gameModesString = gameModesString .. v.Name;
+			if(k < gameModeNamesNum)then
+				gameModesString = gameModesString .. ",[NEWLINE]";
+			end
+		end
+		if(gameModesString ~= "")then
+			local item : table = g_DescriptionItemManager:GetInstance();
+			item.Title:LocalizeAndSetText("LOC_MULTIPLAYER_LOBBY_GAMEMODES_OFFICIAL");
+			item.Description:SetText(gameModesString);
+		end
+	end
+
 	local mapScriptName = LookupBundleOrText(fileInfo.MapScriptName);
 	if(mapScriptName) then
-		local maptype = g_DescriptionItemManager:GetInstance();
+		local maptype : table = g_DescriptionItemManager:GetInstance();
 		maptype.Title:LocalizeAndSetText("LOC_LOADSAVE_GAME_OPTIONS_MAP_TYPE_TITLE");
 		maptype.Description:SetText(mapScriptName);
 	end
 
 	local mapSizeName = LookupBundleOrText(fileInfo.MapSizeName);
 	if (mapSizeName) then
-		local mapsize = g_DescriptionItemManager:GetInstance();
+		local mapsize : table = g_DescriptionItemManager:GetInstance();
 		mapsize.Title:LocalizeAndSetText("LOC_LOADSAVE_GAME_OPTIONS_MAP_SIZE_TITLE");
 		mapsize.Description:SetText(mapSizeName);
 	end
 
 	if (fileInfo.SavedByVersion ~= nil) then
-		local savedByVersion = g_DescriptionItemManager:GetInstance();
+		local savedByVersion : table = g_DescriptionItemManager:GetInstance();
 		savedByVersion.Title:LocalizeAndSetText("LOC_LOADSAVE_SAVED_BY_VERSION_TITLE");
 		savedByVersion.Description:SetText(fileInfo.SavedByVersion);
 	end
 
 	if (fileInfo.TunerActive ~= nil and fileInfo.TunerActive == true) then
-		local tunerActive = g_DescriptionItemManager:GetInstance();
+		local tunerActive : table = g_DescriptionItemManager:GetInstance();
 		tunerActive.Title:LocalizeAndSetText("LOC_LOADSAVE_TUNER_ACTIVE_TITLE");
 		tunerActive.Description:LocalizeAndSetText("LOC_YES_BUTTON");
 	end
@@ -905,23 +922,22 @@ function UpdateActionButtonState()
 
 	local bWaitingForFileList = false;
 	local bAtMaximumSaves = false;
-	if (bIsValid) then
-		if (g_ShowCloudSaves) then
-			-- If we are doing a cloud save, the file query for the cloud save must be complete.
-			if (not UI.IsFileListQueryComplete(g_LastFileQueryRequestID)) then
+
+	if (g_ShowCloudSaves) then
+		-- If we are doing a cloud save, the file query for the cloud save must be complete.
+		if (not UI.IsFileListQueryComplete(g_LastFileQueryRequestID)) then
+			bIsValid = false;
+			bWaitingForFileList = true;
+		end
+
+		if (g_MenuType == SAVE_GAME) then
+			local gameFile = {};
+			gameFile.Location = UI.GetDefaultCloudSaveLocation();
+			gameFile.Type = g_GameType;
+
+			if (UI.IsAtMaxSaveCount(gameFile)) then
 				bIsValid = false;
-				bWaitingForFileList = true;
-			end
-
-			if (g_MenuType == SAVE_GAME) then
-				local gameFile = {};
-				gameFile.Location = UI.GetDefaultCloudSaveLocation();
-				gameFile.Type = g_GameType;
-
-				if (UI.IsAtMaxSaveCount(gameFile)) then
-					bIsValid = false;
-					bAtMaximumSaves = true;
-				end
+				bAtMaximumSaves = true;
 			end
 		end
 	end

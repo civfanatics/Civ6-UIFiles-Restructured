@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Context xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="..\..\..\..\..\..\..\CivTech\Libs\ForgeUI\ForgeUI_Assets\Controls.xsd">
+
+	<Box ID="CrossPlayBG" Style="BGBlock" />
+
+	<Instance Name="CrossPlayMessageDialogInstance" >
+		<Grid ID="Dialog" Size="500,300" Anchor="C,C" Offset="0,0" Style="My2KWindowPlain" >
+
+			<Stack ID="TitleStack" Anchor="C,T" Offset="0,10" Padding="24" StackGrowth="Bottom" >
+				<Label ID="Title" WrapWidth="440" Style="My2KTitleText" String="TXT_KEY_CROSSPLAY_LOGIN_ERROR_TITLE" />
+			</Stack>
+			
+			<Label ID="Message" Anchor="C,C" Offset="0,-20" WrapWidth="440" Style="FontNormal16" String=" " />
+
+			<Stack ID="ButtonStack" Anchor="C,B" Offset="0,40" Padding="12" StackGrowth="Right" >
+				<GridButton ID="OkButton" Size="200,42" Anchor="C,T" Style="ButtonConfirm"  >
+					<Label ID="OkText" Anchor="C,C" String="TXT_KEY_CROSSPLAY_OK" Style="ShellFlagButtonFont" />
+				</GridButton>
+			</Stack>
+			
+		</Grid>
+	</Instance>	
+	
+</Context>

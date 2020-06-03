@@ -8,6 +8,7 @@ MPLobbyTypes = {
 	PITBOSS_LAN = "PITBOSS_LAN",
 	HOTSEAT = "HOTSEAT",
 	PLAYBYCLOUD = "PLAYBYCLOUD",
+	CROSSPLAY_INTERNET = "CROSSPLAY_INTERNET",
 };
 
 function ServerTypeForMPLobbyType(mpLobbyType : string)
@@ -22,6 +23,8 @@ function ServerTypeForMPLobbyType(mpLobbyType : string)
 		serverType = ServerType.SERVER_TYPE_HOTSEAT;
 	elseif(mpLobbyType == MPLobbyTypes.PLAYBYCLOUD) then
 		serverType = ServerType.SERVER_TYPE_FIRAXIS_CLOUD;
+	elseif(mpLobbyType == MPLobbyTypes.CROSSPLAY_INTERNET) then
+		serverType = ServerType.SERVER_TYPE_CROSSPLAY;
 	end
 	return serverType;
 end
@@ -38,6 +41,8 @@ function GameModeTypeForMPLobbyType(mpLobbyType : string)
 		gameMode = GameModeTypes.HOTSEAT;
 	elseif(mpLobbyType == MPLobbyTypes.PLAYBYCLOUD) then
 		gameMode = GameModeTypes.PLAYBYCLOUD;
+	elseif(mpLobbyType == MPLobbyTypes.CROSSPLAY_INTERNET) then
+		gameMode = GameModeTypes.CROSSPLAY;
 	end
 	return gameMode;
 end
@@ -54,6 +59,8 @@ function LobbyTypeForMPLobbyType(mpLobbyType : string)
 		lobbyType = LobbyTypes.LOBBY_NONE;
 	elseif(mpLobbyType == MPLobbyTypes.PLAYBYCLOUD) then
 		lobbyType = LobbyTypes.LOBBY_FIRAXIS_CLOUD;
+	elseif(mpLobbyType == MPLobbyTypes.CROSSPLAY_INTERNET) then
+		lobbyType = LobbyTypes.LOBBY_CROSSPLAY;
 	end
 	return lobbyType;
 end

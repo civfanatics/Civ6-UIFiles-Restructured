@@ -189,6 +189,8 @@ function RegisterHandlers()
     g_notificationHandlers[NotificationTypes.WONDER_COMPLETED]                      = MakeDefaultHandlers();
     g_notificationHandlers[NotificationTypes.MY_CULTURE_VICTORY_SOON]			    = MakeDefaultHandlers();
     g_notificationHandlers[NotificationTypes.MY_DOMINANT_CULTURE]					= MakeDefaultHandlers();
+	g_notificationHandlers[NotificationTypes.OTHER_CULTURE_VICTORY_SOON]			= MakeDefaultHandlers();
+    g_notificationHandlers[NotificationTypes.OTHER_DOMINANT_CULTURE]				= MakeDefaultHandlers();
 	g_notificationHandlers[NotificationTypes.PLAYBYCLOUD_YOURTURN]					= MakeDefaultHandlers();
 	g_notificationHandlers[NotificationTypes.PLAYBYCLOUD_UNSEENCOMPLETE]			= MakeDefaultHandlers();
 
@@ -220,6 +222,8 @@ function RegisterHandlers()
 	g_notificationHandlers[NotificationTypes.TECH_DISCOVERED].Activate				= OnTechDiscoveredActivateNotification;
     g_notificationHandlers[NotificationTypes.MY_CULTURE_VICTORY_SOON].Activate      = OnLaunchWorldRankings;
     g_notificationHandlers[NotificationTypes.MY_DOMINANT_CULTURE].Activate			= OnLaunchWorldRankings;
+	g_notificationHandlers[NotificationTypes.OTHER_CULTURE_VICTORY_SOON].Activate   = OnLaunchWorldRankings;
+    g_notificationHandlers[NotificationTypes.OTHER_DOMINANT_CULTURE].Activate		= OnLaunchWorldRankings;
 	g_notificationHandlers[NotificationTypes.PLAYBYCLOUD_YOURTURN].Activate			= OnPBCYourTurnActivate;
 	g_notificationHandlers[NotificationTypes.PLAYBYCLOUD_UNSEENCOMPLETE].Activate	= OnPBCUnseenCompleteActivate;
 

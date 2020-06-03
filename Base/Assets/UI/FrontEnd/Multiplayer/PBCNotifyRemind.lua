@@ -50,6 +50,17 @@ function ShowHideHandler( bIsHide, bIsInit )
 	end
 end
 
+
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+function GetPBCRemindText()
+	if( Network.GetNetworkPlatform() == NetworkPlatform.NETWORK_PLATFORM_EOS ) then
+		return Locale.Lookup("LOC_EPIC_PBC_OVERVIEW_DESC");
+	end
+
+	return Locale.Lookup("LOC_PBC_OVERVIEW_DESC");
+end
+
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 function Initialize()
@@ -59,6 +70,8 @@ function Initialize()
 	Controls.AcceptButton:RegisterCallback( Mouse.eLClick, OnAccept );
 	Controls.OptionsButton:RegisterCallback( Mouse.eLClick, OnOptions );
 	Controls.DoNotRemindCheckbox:RegisterCheckHandler( OnDoNotRemindToggled );
+
+	Controls.RemindText:SetText( GetPBCRemindText() );
 end
 Initialize();
 

@@ -177,14 +177,18 @@ function AddGovernorCandidate(governorDef:table, canAppoint:boolean)
 	governorInstance.AssignButton:SetHide(true);
 	governorInstance.AppointButton:SetHide(false);
 
-	if canAppoint then
+	if (canAppoint and not IsReadOnly()) then
 		governorInstance.AppointButton:SetVoid1( governorDef.Index );
 		governorInstance.AppointButton:RegisterCallback( Mouse.eLClick, OnAppointGovernor );
 		governorInstance.AppointButton:SetDisabled(false);
 		governorInstance.AppointButton:SetToolTipString("");
 	else
 		governorInstance.AppointButton:SetDisabled(true);
-		governorInstance.AppointButton:SetToolTipString(Locale.Lookup("LOC_NO_GOVERNORS_TITLE_AVAILABLE"));
+		if(IsReadOnly()) then
+			governorInstance.AppointButton:SetToolTipString(Locale.Lookup(""));
+		else
+			governorInstance.AppointButton:SetToolTipString(Locale.Lookup("LOC_NO_GOVERNORS_TITLE_AVAILABLE"));
+		end
 	end
 
 	SetGovernorStatus(governorInstance, governorDef);
@@ -267,10 +271,15 @@ function AddGovernorAppointed(playerGovernors:table, governor:table, governorDef
 	governorInstance.GovernorDetailsButton:RegisterCallback(Mouse.eLClick, OnNameButton);
 
 	local numOfNeutralizedTurns:number = governor:GetNeutralizedTurns();
-	if (numOfNeutralizedTurns > 0) then
+	if (numOfNeutralizedTurns > 0 or IsReadOnly()) then
 		governorInstance.AssignButton:SetDisabled(true);
-		governorInstance.GovernorNeutralizedIndicator:SetHide(false);
-		governorInstance.FadeOutOverlay:SetHide(false);
+		if (numOfNeutralizedTurns > 0) then
+			governorInstance.GovernorNeutralizedIndicator:SetHide(false);
+			governorInstance.FadeOutOverlay:SetHide(false);
+		else
+			governorInstance.GovernorNeutralizedIndicator:SetHide(true);
+			governorInstance.FadeOutOverlay:SetHide(true);
+		end
 	else
 		governorInstance.AssignButton:SetDisabled(false);
 		governorInstance.GovernorNeutralizedIndicator:SetHide(true);
@@ -292,7 +301,7 @@ end
 
 -- ===========================================================================
 function OnNameButton( governorIndex:number )
-	LuaEvents.GovernorDetailsPanel_OpenDetails( governorIndex, m_CityBannerPlayerID, m_CityBannerCityID );
+	LuaEvents.GovernorDetailsPanel_OpenDetails( governorIndex, IsReadOnly(), m_CityBannerPlayerID, m_CityBannerCityID );
 	Controls.DetailsPanel:SetHide(false);
 end
 
@@ -536,6 +545,12 @@ function OnLocalPlayerTurnBegin()
 	if ContextPtr:IsVisible() then
 		Refresh();
 	end	
+end
+
+-- ===========================================================================
+function IsReadOnly()
+	local pWorldCongress:table = Game.GetWorldCongress();
+	return pWorldCongress:IsInSession();
 end
 
 -- ===========================================================================

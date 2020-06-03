@@ -387,6 +387,7 @@ end
 -- ===========================================================================
 function RealizeStackSize()
 	Controls.TimelineStack:CalculateSize();
+	Controls.TimelineScroller:CalculateSize();
 
 	local stackSizeX:number = Controls.TimelineStack:GetSizeX();
 	local shouldScroll:boolean = stackSizeX > m_ScreenWidth;

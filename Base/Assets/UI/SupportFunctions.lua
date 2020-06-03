@@ -442,6 +442,39 @@ function RandRange(min:number, max:number, logString:string)
 end
 
 -- ===========================================================================
+--	RandWeight()
+--	Performs a weighted random roll and returns a row from rollTable.  
+--  NOTE: Only table elements in rollTable that have a "Weight" value will be eligable for the roll.
+-- ===========================================================================
+function RandWeight(rollTable :table, logString:string)
+	if (Game.GetRandNum == nil) then
+		print("Error: missing GetRandNum!");
+		return rollTable[1];
+	end
+
+	local totalWeight = 0;
+	for _, totalRow in ipairs(rollTable) do
+		if(totalRow.Weight ~= nil) then
+			totalWeight = totalWeight + totalRow.Weight;
+		end
+	end
+
+	local randNum = Game.GetRandNum(totalWeight, logString);
+	for _, rollRow in ipairs(rollTable) do
+		if(rollRow.Weight ~= nil) then
+			randNum = randNum - rollRow.Weight;
+			if (randNum < 0) then
+				-- This row's weight puts the rand number into the negative.  This is the selected row!
+				return rollRow;
+			end
+		end
+	end
+
+	print("Error: no rollRow found! This shouldn't be possible.");
+	return rollTable[1];
+end
+
+-- ===========================================================================
 --	Triangular()
 --	Returns the triangular number for n.
 -- ===========================================================================
@@ -547,4 +580,44 @@ function DeepCompare( table1, table2 )
    end
 
    return recurse(table1, table2);
+end
+
+-- ===========================================================================
+--  RGBtoHSV	Convert RGB values to HSV.
+--	RETURNS:	HSV to determine color visibility.
+-- ===========================================================================
+function RBGtoHSV( red:number, green:number, blue:number)
+	local hue, value, saturation, max, min, delta = 0;
+	red = red;
+	blue = blue;
+	green = green;
+	min = math.min(red,(math.min(green,blue)));
+	max = math.max(red,(math.max(green,blue)));
+	value = max;
+	delta = max - min;
+	if max == 0 then
+		saturation = 0;
+	else
+		saturation = delta / max;
+	end
+	if saturation == 0 then
+		hue = 0;
+	else
+		if red == max then
+			hue = (green - blue) / delta;
+		elseif green == max then
+			hue = 2 + (blue - red) / delta;
+		else
+			hue = 4 + (red - green) / delta;
+		end
+		hue = hue * 60;
+		if hue < 0 then
+			hue = hue + 360;
+		end
+		if hue > 360 then
+			hue = hue - 360;
+		end
+	end
+	
+	return hue, saturation , (value/255);
 end

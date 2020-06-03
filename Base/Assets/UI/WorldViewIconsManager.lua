@@ -16,6 +16,7 @@ local g_MapIcons				:table = {};
 local m_kUntouchedPlots			:table = {};	-- Used to prevent multiple calls to mess with animation start for a plot change
 local m_isShowResources			:boolean = UserConfiguration.ShowMapResources();
 local m_isShowRecommendations	:boolean = true;
+local m_isFirstRefresh			:boolean = true;
 local m_kSettlerTooltip			:table = {};	-- Table of controls for custom tooltip access.
 
 local m_techsThatUnlockResources : table = {};
@@ -348,6 +349,11 @@ end
 
 -------------------------------------------------------------------------------
 function Rebuild()
+
+	if m_isFirstRefresh then
+		m_isFirstRefresh = false;
+		return;
+	end
 
 	local eObserverID = Game.GetLocalObserver();
 	local pLocalPlayerVis = PlayerVisibilityManager.GetPlayerVisibility(eObserverID);
@@ -687,13 +693,14 @@ function AddSettlementRecommendations()
 			-- Update custom tooltip
 			uiInstance.ImprovementRecommendationIcon:SetToolTipType("SettlerRecommendationTooltip");
 			uiInstance.ImprovementRecommendationIcon:SetToolTipCallback(
-				function() 
+				function( pControl:object ) 
 				
 					-- Don't rebuild tooltip everyframe, only if it's for a different plot.
 					if m_kSettlerTooltip["SettlingLocation"] == kRecommendation.SettlingLocation then
 						return;
 					end
-					m_kSettlerTooltip["SettlingLocation"] = kRecommendation.SettlingLocation;	-- Save last plot shown/
+					
+					m_kSettlerTooltip["SettlingLocation"] = kRecommendation.SettlingLocation;	-- Save last plot shown.
 					m_kSettlerTooltip.RecommendationStack:DestroyAllChildren();
 				
 					-- Obtain info and sort so good items show first.					
@@ -818,7 +825,6 @@ function Initialize()
 	Events.UnitSelectionChanged.Add( OnUnitSelectionChanged );
 	LuaEvents.WorldBuilder_ModeChanged.Add( Rebuild );
 	LuaEvents.WorldBuilder_PaintOpCompleted.Add( Rebuild );
-
 
 	for row in GameInfo.Resources() do
 		if row.PrereqTech ~= nil then

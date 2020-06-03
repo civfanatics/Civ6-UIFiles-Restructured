@@ -36,6 +36,8 @@ local m_GovernorIndex:number = -1;
 local m_SelectedPromotion:number = -1;
 
 local m_TopPanelConsideredHeight:number = 0;
+
+local m_isReadOnly : boolean = false;
 -- ===========================================================================
 function Refresh()
 	local localPlayerID:number = Game.GetLocalPlayer();
@@ -70,13 +72,13 @@ function Refresh()
 		Controls.AssignButton:SetVoid1(pGovernorDef.Index);
 		Controls.AssignButton:RegisterCallback( Mouse.eLClick, OnAssignGovernor );
 		local bCanAssign:boolean = pPlayerGovernors:HasGovernor(pGovernorDef.Hash) and pGovernor:GetNeutralizedTurns() == 0;
-		Controls.AssignButton:SetDisabled(not bCanAssign);
+		Controls.AssignButton:SetDisabled((not bCanAssign) or m_isReadOnly);
 	else
 		Controls.AssignButtonLabel:SetText(Locale.Lookup("LOC_GOVERNORS_SCREEN_BUTTON_APPOINT_GOVERNOR"));
 		Controls.AssignButton:SetVoid1(pGovernorDef.Index);
 		Controls.AssignButton:RegisterCallback( Mouse.eLClick, OnAppointGovernor );
 		local bCanAppoint:boolean = pPlayerGovernors:CanAppoint();
-		Controls.AssignButton:SetDisabled(not bCanAppoint);
+		Controls.AssignButton:SetDisabled((not bCanAppoint) or m_isReadOnly);
 	end
 
 	SetGovernorStatus(pGovernorDef, pGovernor);
@@ -108,7 +110,7 @@ function Refresh()
 					local canEarnPromotion = pPlayerGovernors:CanEarnPromotion(pGovernorDef.Hash, promotion.Hash);
 
 					-- Update button state and callback depending on the promotion state
-					if pGovernor and pGovernor:HasPromotion(promotion.Hash) then
+					if (pGovernor and pGovernor:HasPromotion(promotion.Hash)) then
 						promotionInst.PromotionButton:SetDisabled(true);
 						promotionInst.PromotionButton:SetVisState(4);
 						promotionInst.PromotionButton:ClearCallback( Mouse.eLClick );
@@ -125,7 +127,7 @@ function Refresh()
 						promotionInst.PromotionButton:SetVisState(3);
 						promotionInst.PromotionButton:ClearCallback( Mouse.eLClick );
 					else
-						promotionInst.PromotionButton:SetDisabled(false);
+						promotionInst.PromotionButton:SetDisabled(m_isReadOnly);
 						promotionInst.PromotionButton:SetSelected(false);
 						promotionInst.PromotionButton:SetVisState(0);
 						promotionInst.PromotionButton:SetVoid1(m_GovernorIndex);
@@ -257,8 +259,9 @@ function OnBack()
 end
 
 -- ===========================================================================
-function OnOpenDetails( governorIndex:number )
+function OnOpenDetails( governorIndex:number, isReadOnly : boolean )
 	m_GovernorIndex = governorIndex;
+	m_isReadOnly = isReadOnly;
 	Open();
 end
 

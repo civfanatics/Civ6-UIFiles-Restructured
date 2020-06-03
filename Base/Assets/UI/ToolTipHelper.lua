@@ -173,24 +173,6 @@ ToolTipHelper.GetBuildingToolTip = function(buildingHash, playerId, city)
 		end
 	end
 
-	local cost = building.Cost or 0;
-	if(cost ~= 0 and building.MustPurchase == false) then
-		local yield = GameInfo.Yields["YIELD_PRODUCTION"];
-		if(yield) then
-			table.insert(toolTipLines, Locale.Lookup("LOC_TOOLTIP_BASE_COST", cost, yield.IconString, yield.Name));
-		end
-	end
-
-	local maintenance = building.Maintenance or 0;
-	if(maintenance ~= 0) then
-		local yield = GameInfo.Yields["YIELD_GOLD"];
-		if(yield) then
-			table.insert(toolTipLines, Locale.Lookup("LOC_TOOLTIP_MAINTENANCE", maintenance, yield.IconString, yield.Name));
-		end
-	end
-
-	AddBuildingExtraCostTooltip(buildingHash, toolTipLines);
-
 	local stats = {};
 
 	AddBuildingYieldTooltip(buildingHash, city, stats);
@@ -403,7 +385,8 @@ ToolTipHelper.GetBuildingToolTip = function(buildingHash, playerId, city)
 
 end
 -------------------------------------------------------------------------------
-function AddBuildingExtraCostTooltip(buildingHash, tooltipLines)
+function AddBuildingExtraCostTooltip(buildingHash)
+	return "";
 end
 -------------------------------------------------------------------------------
 function AddBuildingYieldTooltip(buildingHash, city, tooltipLines)
@@ -591,8 +574,6 @@ ToolTipHelper.GetUnitToolTip = function(unitType, formationType, pBuildQueue)
 	local baseMoves = unitReference.BaseMoves;
 	local description = unitReference.Description;
 	local cost = unitReference.Cost or 0;
-	--local maintenance = unitReference.Maintenance or 0
-	local maintenance = UnitManager.GetUnitMaintenance(GameInfo.Units[unitType].Hash) or 0;
 
 	--If this is a specific military formation we need build queue to get correct production costs.
 	--The rest of this logic is copied from Unit_Instance:GetCombat functions because it is not exposed to the lua. 
@@ -601,8 +582,6 @@ ToolTipHelper.GetUnitToolTip = function(unitType, formationType, pBuildQueue)
 		local strengthMod = 0;
 		if formationType == MilitaryFormationTypes.CORPS_MILITARY_FORMATION then
 			strengthMod = GlobalParameters.COMBAT_CORPS_STRENGTH_MODIFIER; 
-			cost = pBuildQueue:GetUnitCorpsCost( unitReference.Index );
-			maintenance = UnitManager.GetUnitCorpsMaintenance(GameInfo.Units[unitType].Hash);
 			
 			if unitReference.Domain == "DOMAIN_SEA" then
 				nameLoc = nameLoc .. " " .. Locale.Lookup("LOC_UNITFLAG_FLEET_SUFFIX");
@@ -611,8 +590,6 @@ ToolTipHelper.GetUnitToolTip = function(unitType, formationType, pBuildQueue)
 			end
 		elseif formationType == MilitaryFormationTypes.ARMY_MILITARY_FORMATION then
 			strengthMod = GlobalParameters.COMBAT_ARMY_STRENGTH_MODIFIER;
-			cost = pBuildQueue:GetUnitArmyCost( unitReference.Index );
-			maintenance = UnitManager.GetUnitArmyMaintenance(GameInfo.Units[unitType].Hash);
 			
 			if unitReference.Domain == "DOMAIN_SEA" then
 				nameLoc = nameLoc .. " " .. Locale.Lookup("LOC_UNITFLAG_ARMADA_SUFFIX");
@@ -652,26 +629,6 @@ ToolTipHelper.GetUnitToolTip = function(unitType, formationType, pBuildQueue)
 	if(not Locale.IsNilOrWhitespace(promotionClass)) then
 		table.insert(toolTipLines, Locale.Lookup("LOC_UNIT_PROMOTION_CLASS", promotionClass));
 	end
-
-	if(cost ~= 0 and unitReference.MustPurchase == false and unitReference.CanTrain) then
-		local yield = GameInfo.Yields["YIELD_PRODUCTION"];
-		if(yield) then
-			table.insert(toolTipLines, Locale.Lookup("LOC_TOOLTIP_BASE_COST", cost, yield.IconString, yield.Name));
-		end
-	end
-
-	if(unitReference.StrategicResource) then
-		AddUnitStrategicResourceTooltip(unitReference, formationType, pBuildQueue, toolTipLines);
-	end
-
-	if(maintenance ~= 0) then
-		local yield = GameInfo.Yields["YIELD_GOLD"];
-		if(yield) then
-			table.insert(toolTipLines, Locale.Lookup("LOC_TOOLTIP_MAINTENANCE", maintenance, yield.IconString, yield.Name));
-		end
-	end
-
-	AddUnitResourceMaintenanceTooltip(unitReference, formationType, pBuildQueue, toolTipLines);
 	
 	if(not Locale.IsNilOrWhitespace(description)) then
 		description = "[NEWLINE]" .. Locale.Lookup(description);
@@ -709,23 +666,107 @@ ToolTipHelper.GetUnitToolTip = function(unitType, formationType, pBuildQueue)
 			table.insert(toolTipLines, v);
 		end
 	end
+
+	local costLines= {};
+	--If formation type or buildqueue is supplied, show the in-game values, otherwise just display the base values
+	if( formationType ~= nil and pBuildQueue ~= nil ) then
+		local nProductionCost		:number = pBuildQueue:GetUnitCost( unitReference.Index );
+		if (formationType == MilitaryFormationTypes.CORPS_MILITARY_FORMATION) then
+			nProductionCost	= pBuildQueue:GetUnitCorpsCost( unitReference.Index );
+		elseif (formationType == MilitaryFormationTypes.ARMY_MILITARY_FORMATION) then
+			nProductionCost	= pBuildQueue:GetUnitArmyCost( unitReference.Index );
+		end
+		
+		if (nProductionCost ~= 0) then
+			local costString		:string = tostring(nProductionCost);
+			local nProductionProgress	:number = pBuildQueue:GetUnitProgress( unitReference.Index );
+			if (nProductionProgress > 0) then -- Only show fraction if build progress has been made.
+				costString = tostring(nProductionProgress) .. "/" .. costString;
+			end
+			local prodCosts = Locale.Lookup("LOC_HUD_PRODUCTION_COST") .. ": " .. costString .. " [ICON_Production] " .. Locale.Lookup("LOC_HUD_PRODUCTION");
+			if(not Locale.IsNilOrWhitespace(prodCosts)) then
+				table.insert(costLines, prodCosts);
+			end
+		end
+		
+		local strategicCosts = AddUnitStrategicResourceTooltip(unitReference, formationType, pBuildQueue);
+		if(not Locale.IsNilOrWhitespace(strategicCosts)) then
+			table.insert(costLines, strategicCosts);
+		end
+
+		local nMaintenanceCost		:number = UnitManager.GetUnitMaintenance(unitReference.Hash) or 0;
+		if (nMaintenanceCost ~= nil and nMaintenanceCost > 0) then
+			local yield = GameInfo.Yields["YIELD_GOLD"];
+			if(yield) then
+				table.insert(costLines, Locale.Lookup("LOC_TOOLTIP_MAINTENANCE", nMaintenanceCost, yield.IconString, yield.Name));
+			end
+		end
+
+		local resourceMaintenance = AddUnitResourceMaintenanceTooltip(unitReference, formationType);
+		if(not Locale.IsNilOrWhitespace(resourceMaintenance)) then
+			table.insert(costLines, resourceMaintenance);
+		end
+
+	else
+		if(cost ~= 0 and unitReference.MustPurchase == false and unitReference.CanTrain) then
+			local yield = GameInfo.Yields["YIELD_PRODUCTION"];
+			if(yield) then
+				table.insert(costLines, Locale.Lookup("LOC_TOOLTIP_BASE_COST", cost, yield.IconString, yield.Name));
+			end
+		end
+
+		if(unitReference.StrategicResource) then
+			-- the base version of AddUnitStrategicResourceTooltip takes a table reference and inserts two lines and returns nil.
+			-- the XP2 version doesn't take the table reference and returns a string to insert.
+			-- this papers over the differences.
+			local strategicResourceTooltip : string = AddUnitStrategicResourceTooltip(unitReference, formationType, pBuildQueue, costLines);
+			if(not Locale.IsNilOrWhitespace(strategicResourceTooltip)) then
+				table.insert(costLines, strategicResourceTooltip);
+			end
+		end
+
+		local maintenance = unitReference.Maintenance or 0;
+		if(maintenance ~= 0) then
+			local yield = GameInfo.Yields["YIELD_GOLD"];
+			if(yield) then
+				table.insert(costLines, Locale.Lookup("LOC_TOOLTIP_MAINTENANCE", maintenance, yield.IconString, yield.Name));
+			end
+		end
+
+		local resourceMaintenance = AddUnitResourceMaintenanceTooltip(unitReference, formationType);
+		if(not Locale.IsNilOrWhitespace(resourceMaintenance)) then
+			table.insert(costLines, resourceMaintenance);
+		end;
+	end
+
+	if(#costLines > 0) then
+		local firstEntry = costLines[1];
+		costLines[1] = "[NEWLINE]" .. firstEntry;
+
+		for i, v in ipairs(costLines) do
+			table.insert(toolTipLines, v);
+		end
+	end
 	
-	-- Return the composite tooltip!
+	-- return the composite tooltip
 	return table.concat(toolTipLines, "[NEWLINE]");
-	
+
 end
 
 ------------------------------------------------------------------------------
-function AddUnitStrategicResourceTooltip(unitReference, formationType, pBuildQueue, toolTip)
+function AddUnitStrategicResourceTooltip(unitReference, formationType, pBuildQueue)
 	local resource = GameInfo.Resources[unitReference.StrategicResource];
+	local resourceString :string ="";
 	if(resource) then
-		table.insert(toolTip, "[NEWLINE]" .. Locale.Lookup("LOC_TOOLTIP_BUILDING_REQUIRES"));
-		table.insert(toolTip, "[ICON_BULLET] " .. "[ICON_" .. resource.ResourceType .. "]" .. Locale.Lookup(resource.Name));
+		resourceString = resourceString .. "[NEWLINE]" .. Locale.Lookup("LOC_TOOLTIP_BUILDING_REQUIRES");
+		resourceString = resourceString .. "[NEWLINE][ICON_BULLET] " .. "[ICON_" .. resource.ResourceType .. "]" .. Locale.Lookup(resource.Name);
 	end
+	return resourceString;
 end
 
 -------------------------------------------------------------------------------
-function AddUnitResourceMaintenanceTooltip(unitReference, formationType, pBuildQueue, toolTip)
+function AddUnitResourceMaintenanceTooltip(unitReference, formationType)
+	return "";
 end
 
 -------------------------------------------------------------------------------
@@ -763,22 +804,6 @@ ToolTipHelper.GetDistrictToolTip = function(districtType)
 		table.insert(toolTipLines, Locale.Lookup("LOC_DISTRICT_NAME_REPLACES", replaces_district.Name));
 	else
 		table.insert(toolTipLines, Locale.Lookup("LOC_DISTRICT_NAME"));
-	end
-
-	local cost = district.Cost or 0;
-	if(cost ~= 0) then
-		local yield = GameInfo.Yields["YIELD_PRODUCTION"];
-		if(yield) then
-			table.insert(toolTipLines, Locale.Lookup("LOC_TOOLTIP_BASE_COST", cost, yield.IconString, yield.Name));
-		end
-	end
-
-	local maintenance = district.Maintenance or 0;
-	if(maintenance ~= 0) then
-		local yield = GameInfo.Yields["YIELD_GOLD"];
-		if(yield) then
-			table.insert(toolTipLines, Locale.Lookup("LOC_TOOLTIP_MAINTENANCE", maintenance, yield.IconString, yield.Name));
-		end
 	end
 	
 	if(not Locale.IsNilOrWhitespace(description)) then
@@ -875,14 +900,6 @@ ToolTipHelper.GetProjectToolTip = function(projectType)
 	local toolTipLines = {};
 	table.insert(toolTipLines, Locale.ToUpper(name));
 	table.insert(toolTipLines, Locale.Lookup("LOC_PROJECT_NAME"));
-
-	local cost = projectReference.Cost or 0;
-	if(cost ~= 0) then
-		local yield = GameInfo.Yields["YIELD_PRODUCTION"];
-		if(yield) then
-			table.insert(toolTipLines, Locale.Lookup("LOC_TOOLTIP_BASE_COST", cost, yield.IconString, yield.Name));
-		end
-	end
 
 	AddProjectStrategicResourceTooltip(projectReference, toolTipLines);
 
@@ -1315,7 +1332,7 @@ g_ToolTipGenerators = {
 -------------------------------------------------------------------------------
 include ("ToolTipLoader_", true);
 
-ToolTipHelper.GetToolTip = function(typeName, playerId)
+ToolTipHelper.GetToolTip = function(typeName, playerId, bBaseValues)
 	local handler = g_ToolTipGenerators[typeName];
 	if(handler == nil) then
 		local t = GameInfo.Types[typeName];
@@ -1327,6 +1344,6 @@ ToolTipHelper.GetToolTip = function(typeName, playerId)
 	end
 	
 	if(handler) then
-		return handler(typeName, playerId);
+		return handler(typeName, playerId, bBaseValues);
 	end
 end

@@ -216,6 +216,15 @@ function OnLoadScreenContentReady()
 			Controls.BackgroundImage:SetTexture("LEADER_T_ROOSEVELT_BACKGROUND");	-- Set to well known texture
 		end
 
+		-- fix 720P
+		if (Controls.Background:GetSizeY() < 768) then
+			Controls.Banner:SetSizeY(920);
+			Controls.MainStack:SetOffsetY(20);
+		else
+			Controls.Banner:SetSizeY(987);
+			Controls.MainStack:SetOffsetY(0);
+		end
+
 		local LEADER_CONTAINER_X = 512;
 		local offsetX = math.floor((Controls.Portrait:GetSizeX() - LEADER_CONTAINER_X)/2);
 		if (offsetX > 0) then
@@ -326,9 +335,20 @@ function OnLoadScreenContentReady()
 		end
 
 		if bPlayDOM then
-			UI.SetSoundSwitchValue("Leader_Screen_Civilization", UI.GetCivilizationSoundSwitchValueByLeader(leaderID));
-			UI.SetSoundSwitchValue("Civilization", UI.GetCivilizationSoundSwitchValueByLeader(leaderID));
-			UI.SetSoundSwitchValue("Era_DawnOfMan", UI.GetEraSoundSwitchValue(startEra.Hash));
+			local dawnOfManLeaderID = leaderID;
+			local dawnOfManEraHash = startEra.Hash;
+
+			if(loadingInfo and loadingInfo.DawnOfManLeaderId) then
+				dawnOfManLeaderID = loadingInfo.DawnOfManLeaderId;	
+			end
+
+			if(loadingInfo and loadingInfo.DawnOfManEraId) then
+				dawnOfManEraHash = DB.MakeHash(loadingInfo.DawnOfManEraId);
+			end		
+			
+			UI.SetSoundSwitchValue("Leader_Screen_Civilization", UI.GetCivilizationSoundSwitchValueByLeader(dawnOfManLeaderID));
+			UI.SetSoundSwitchValue("Civilization", UI.GetCivilizationSoundSwitchValueByLeader(dawnOfManLeaderID));
+			UI.SetSoundSwitchValue("Era_DawnOfMan", UI.GetEraSoundSwitchValue(dawnOfManEraHash));
 			UI.PlaySound("Play_DawnOfMan_Speech");
 		end
 

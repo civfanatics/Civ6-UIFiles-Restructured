@@ -5,6 +5,8 @@ include( "InstanceManager" );
 include( "SupportFunctions" );
 include( "PopupDialog" );
 
+local MIN_SCREEN_Y				:number = 768;
+
 ----------------------------------------------------------------   
 -- Utilities
 ----------------------------------------------------------------    
@@ -365,6 +367,15 @@ function Overview_PopulateLeaderProgress()
 		return Locale.Compare(a.LeaderName, b.LeaderName) == -1;
 	end);
 	
+	-- Determine how many possible victories there are.
+	-- If there is only 1 possible visible victory type, we don't need to show it in the tooltip.
+	local visibleVictoryCount = 0;
+	for i,v in ipairs(g_RulesetVictories) do
+		if(not v.Hidden) then
+			visibleVictoryCount = visibleVictoryCount + 1;
+		end
+	end
+
 	g_LeaderProgressManager:ResetInstances();
 	for i, v in ipairs(leaders) do
 		local instance = g_LeaderProgressManager:GetInstance();
@@ -373,10 +384,14 @@ function Overview_PopulateLeaderProgress()
 		if(v.MostRecentVictoryType ~= nil) then
 			tooltip = tooltip .. "[NEWLINE]" .. Locale.Lookup("LOC_GAMESUMMARY_LEADERPROGRESS_WINCOUNT", v.VictoryCount, v.PlayCount);
 
-			local victory = g_RulesetVictories[v.MostRecentVictoryType];
-			if(victory) then
-				tooltip = tooltip .. "[NEWLINE]" .. Locale.Lookup("LOC_GAMESUMMARY_LEADERPROGRESS_VICTORY", victory.Name);
+			-- Only show the most recent victory type if there are more than 1 possible victories.
+			if(visibleVictoryCount > 1) then
+				local victory = g_RulesetVictories[v.MostRecentVictoryType];
+				if(victory) then
+					tooltip = tooltip .. "[NEWLINE]" .. Locale.Lookup("LOC_GAMESUMMARY_LEADERPROGRESS_VICTORY", victory.Name);
+				end
 			end
+
 			instance.Icon:SetColor(UI.GetColorValue(1,1,1,1));
 		else
 			if(tonumber(v.PlayCount) > 0) then
@@ -549,6 +564,7 @@ function History_PopulateGames()
 					v.MyPlayer = player_index;				
 					v.MyVictory = (v.VictorTeamId ~= nil) and (v.VictorTeamId == p.TeamId);
 					v.MyLeaderName = p.LeaderName;
+					v.MyCivilizationName = p.CivilizationName;
 					if(v.MyVictory) then
 						v.VictorLeaderName = v.MyLeaderName;
 						break;
@@ -641,7 +657,14 @@ function History_PopulateGames()
 		else
 			instance.VictoryOrDefeat:LocalizeAndSetText("LOC_GAMESUMMARY_DEFEAT");
 			instance.VictoryIcon:SetIcon("ICON_DEFEAT_GENERIC");
-			instance.VictorName:LocalizeAndSetText("LOC_GAMESUMMARY_NOBODY_WON");
+
+			-- If the game mode was not single player or hot seat, we cannot determine if there was a winner.
+			if(v.GameMode == GameModeTypes.SINGLEPLAYER or v.GameMode == GameModeTypes.HOTSEAT) then
+				instance.VictorName:LocalizeAndSetText("LOC_GAMESUMMARY_NOBODY_WON");
+			else
+				instance.VictorName:LocalizeAndSetText("LOC_GAMESUMMARY_UNKNOWN");
+			end
+
 			instance.VictoryName:SetText(nil);
 		end
 		
@@ -699,15 +722,20 @@ function History_SortByScore(a,b)
 end
 
 function History_SortByLeader(a,b)
-	-- LeaderName(d), Score(d), LastPlayed(d), GameId
+	-- LeaderName(a), CivilizationName(a), Score(d), LastPlayed(d), GameId
 	local aScore = a.Score or -1;
 	local bScore = b.Score or -1;
 
 	local aLeader = a.MyLeaderName;
 	local bLeader = b.MyLeaderName;
+
+	local aCivilization = a.MyCivilizationName;
+	local bCivilization = b.MyCivilizationName;
 	
 	if(aLeader ~= bLeader) then
 		return Locale.Compare(aLeader, bLeader) == -1;
+	elseif(aCivilization ~= bCivilization) then
+		return Locale.Compare(aCivilization, bCivilization) == -1;
 	elseif(aScore ~= bScore) then
 		return aScore > bScore;
 	elseif(a.LastPlayed ~= b.LastPlayed) then
@@ -819,7 +847,16 @@ end
 ----------------------------------------------------------------  
 function OnShow()
 	UpdateGlobalCache();
+	local screenX, screenY:number  = UIManager:GetScreenSizeVal();
+	local hideLogo        :boolean = true;	
+	if(screenY >= MIN_SCREEN_Y + (Controls.LogoContainer:GetSizeY()+ Controls.LogoContainer:GetOffsetY() * 2)) then
+		hideLogo = false;
+		Controls.MainWindow:SetSizeY(screenY- (Controls.LogoContainer:GetSizeY() + Controls.LogoContainer:GetOffsetY()));
+	else
+		Controls.MainWindow:SetSizeY(screenY);
+	end
 	
+	Controls.LogoContainer:SetHide(hideLogo);
 	History_RefreshSelectionState();
 	PopulateAvailableRulesets();
 	SelectRuleset(1);

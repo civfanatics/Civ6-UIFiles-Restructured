@@ -62,7 +62,7 @@
 								</Stack>
 								<Stack Anchor="R,T" StackGrowth="Left" Padding="5">
 									<PullDown ID="AutoDownloadPullDown" Style="PullDownBlue" ScrollThreshold="400" Size="400,24" Offset="0,0" SpaceForScroll="0"/>
-									<Label Anchor="L,C" Style="ShellOptionText" WrapWidth="350" String="LOC_OPTIONS_AUTO_DOWNLOAD_ADDITIONAL_CONTENT" ToolTip="LOC_OPTIONS_AUTO_DOWNLOAD_ADDITIONAL_CONTENT_TOOLTIP"/>
+									<Label Anchor="L,C" ID="AutoDownloadLabel" Style="ShellOptionText" WrapWidth="350" String="LOC_OPTIONS_AUTO_DOWNLOAD_ADDITIONAL_CONTENT" ToolTip="LOC_OPTIONS_AUTO_DOWNLOAD_ADDITIONAL_CONTENT_TOOLTIP"/>
 								</Stack>
 								<Stack Anchor="R,T" StackGrowth="Left" Padding="5">
 									<PullDown ID="TutorialPullDown" Style="PullDownBlue" ScrollThreshold="400" Size="400,24" Offset="0,0" SpaceForScroll="0"/>
@@ -394,6 +394,13 @@
 								<PullDown ID="RibbonStatsPullDown" Style="PullDownBlue" Anchor="R,T" ScrollThreshold="400" Size="400,24" Offset="0,0" SpaceForScroll="0"/>
 								<Label Anchor="L,C" Style="ShellOptionText" WrapWidth="350" String="LOC_OPTIONS_RIBBON_STATS_LABEL"/>
 							</Stack>
+              <Stack Anchor="R,T" StackGrowth="Right" Padding="5">
+								<Label  Style="ShellOptionText" WrapWidth="350" Anchor="C,C" String="LOC_OPTIONS_CHAT_TEXT_SIZE"/>
+								<Container Size="400,24">
+									<Label  ID="ChatTextValue"  Style="ShellOptionText" WrapWidth="350" Anchor="L,C" String="UNSET" />
+									<Slider ID="ChatTextSizeSlider" Style="SliderControl"   Anchor="R,C" Size="350,13" Steps="3" />
+								</Container>
+							</Stack>
 							<Stack Anchor="R,T" StackGrowth="Right" Padding="5">
 								<Label  Style="ShellOptionText" WrapWidth="350" Anchor="C,C" String="LOC_OPTIONS_INTERFACE_MINIMAP_SIZE"/>
 								<Container Size="400,24">
@@ -436,15 +443,18 @@
 								<PullDown ID="RGBControl" Style="PullDownBlue" ScrollThreshold="400" Size="400,24" Offset="0,0" SpaceForScroll="0"/>
 								<Label Anchor="L,C" Style="ShellOptionText" WrapWidth="350" String="LOC_OPTIONS_INTERFACE_LIGHTING" ToolTip="LOC_OPTIONS_INTERFACE_LIGHTING_TOOLTIP"/>
 							</Stack>
+              <Container Size="parent,44" Hidden="1">
+                <GridButton ID="SwitchUILayout" Size="parent-200,22" Style="ShellButton" Anchor="C,C" String="LOC_OPTIONS_SWITCH_UI_LAYOUT"/>
+              </Container>
 						</Stack>
 					</Container>
 					<Container ID="KeyBindings" Size="parent,parent" Hidden="1">
 						<ScrollPanel ID="KeyBindingsScrollPanel" Offset="20,3" Size="parent-40,parent" AutoScrollBar="1" Vertical="1" Anchor="R,T">
-							<Stack ID="KeyBindingsStack" Anchor="L,T" StackGrowth="Bottom" Size="parent,0" Padding="10" >
-								<Label Anchor="C,T" Offset="0,10"  WrapWidth="parent-100" String="LOC_OPTIONS_STEAM_CONTROLLER_MESSAGE" Style="BlueGlow"/>
+							<Stack ID="KeyBindingsStack" Anchor="L,T" StackGrowth="Bottom" Size="parent,0" Offset="60,0" Padding="10" >
+								<Label ID="SteamControllerMessage" Anchor="C,T" Offset="0,10"  WrapWidth="parent-110" String="LOC_OPTIONS_STEAM_CONTROLLER_MESSAGE" Style="BlueGlow"/>
 								<Stack ID="BindColHdr" Anchor="R,T" StackGrowth="Right" Padding="200" Offset="-20,0">
-									<Label Anchor="C,T" Offset="300,0" String="LOC_OPTIONS_BIND_HEADER_PRIMARY" Style="BlueGlow"/>
-									<Label Anchor="C,T" Offset="-100,0" String="LOC_OPTIONS_BIND_HEADER_ALT" Style="BlueGlow"/>
+									<Label Anchor="C,T" Offset="80,0" String="LOC_OPTIONS_BIND_HEADER_PRIMARY" Style="BlueGlow"/>
+									<Label Anchor="C,T" Offset="-80,0" String="LOC_OPTIONS_BIND_HEADER_ALT" Style="BlueGlow"/>
 								</Stack>
 							</Stack>
 							<ScrollBar Style="Slider_Blue" Anchor="R,C" AnchorSide="O,I"/>
@@ -494,10 +504,12 @@
 		<Label ID="CategoryName" Anchor="C,T" Offset="0,10" FontSize="20" String="CategoryName" Style="ShellOptionText"/>
 	</Instance>
 	<Instance Name="KeyBindingAction">
-		<Stack ID="Root" Anchor="R,T" StackGrowth="Left" Padding="5" Offset="120,0">
+		<Stack ID="Root" Size="210,auto" Anchor="R,T" StackGrowth="Left" Padding="5" Offset="120,0">
 			<GridButton ID="AltBinding" Style="ButtonControl" Size="210,30" String="AltBinding" TruncateWidth="205" />
 			<GridButton ID="Binding" Style="ButtonControl" Size="210,30" String="Binding" TruncateWidth="205" />
-			<Label ID="ActionName" Anchor="L,C" Style="ShellOptionText" String="ActionName" TruncateWidth="215" TruncatedTooltip="1"/>
+			<Stack Size="200,auto" StackGrowth="Down" Padding="1">
+				<Label ID="ActionName" Anchor="L,C" Style="ShellOptionText" String="ActionName"/>
+			</Stack>
 		</Stack>
 	</Instance>
 

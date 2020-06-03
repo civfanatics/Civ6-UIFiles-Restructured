@@ -172,7 +172,7 @@
 			<!-- ========== PANE Overview ========== -->
 			
 			<Container		ID="OverviewPane"																						Size="parent,parent">
-        <Container			ID="BGRings"									            							  Offset="0,30"                  Size="1024,546"     >
+        <Container			ID="BGRings"									            							  Offset="0,25"                  Size="1024,546"     >
           <Image				ID="BGRingLT"									Anchor="L,T"	FlipY="True"			              Size="512,273"			Texture="Climate_BGRings" />
           <Image				ID="BGRingLB"									Anchor="L,B"	            			              Size="512,273"			Texture="Climate_BGRings" />
           <Image				ID="BGRingRT"									Anchor="R,T"	FlipX="True"	FlipY="True"			Size="512,273"			Texture="Climate_BGRings" />
@@ -181,13 +181,13 @@
 				<Label			ID="ClimateChangePhaseText"			Anchor="C,T"	Offset="0,7"		Style="WorldClimateBigText" />
 
         <!-- Left Panel -->
-        <Grid Size="500,40" Offset="5,75" Style="Climate_StatHeading">
+        <Grid Size="500,40" Offset="5,70" Style="Climate_StatHeading">
           <Label Anchor="C,C" Offset="-50,2" Style="WorldClimateSection" Align="Center" String="{LOC_CLIMATE_CONTRIBUTING_TO_CLIMATE_CHANGE:upper}"/>
         </Grid>
         
-				<Stack Offset="5,115" StackGrowth="Down" StackPadding="2">
+				<Stack Offset="5,110" StackGrowth="Down" StackPadding="2">
           <!-- CO2 Levels -->
-          <Grid	ID="OverviewCO2Grid" Size="400,139" Style="Climate_StatFrame_Grid_Left">
+          <Grid	ID="OverviewCO2Grid" Size="400,141" Style="Climate_StatFrame_Grid_Left">
             <Stack Offset="170,0" Anchor="R,C" StackGrowth="Down" StackPadding="4">
               <Label													Anchor="R,C" Align="Right" WrapWidth="230" String="{LOC_CLIMATE_CO2_LEVELS:upper}" Style="WorldClimateStatArea"/>
               <Label		ID="ContributeTotal"	Anchor="R,C" Align="Right" WrapWidth="230" Style="WorldClimateText"/>
@@ -200,7 +200,7 @@
           </Grid>
 
           <!-- Temperature -->
-          <Grid	ID="GlobalTempGrid" Size="400,139" Style="Climate_StatFrame_Grid_Left">
+          <Grid	ID="GlobalTempGrid" Size="400,141" Style="Climate_StatFrame_Grid_Left">
             <Stack Offset="170,0" Anchor="R,C" StackGrowth="Down" StackPadding="4">
               <Label																Anchor="R,C" Align="Right" WrapWidth="230" String="{LOC_CLIMATE_GLOBAL_TEMPERATURE:upper}" Style="WorldClimateStatArea"/>
               <Label	  ID="TemperatureValue"	      Anchor="R,C" Align="Right" WrapWidth="230" Style="WorldClimateStatAreaLarge"/>
@@ -212,7 +212,7 @@
           </Grid>
 
           <!-- World Age -->
-          <Grid	Size="507,140" Style="Climate_StatFrame_Grid_Left">
+          <Grid	Size="507,141" Style="Climate_StatFrame_Grid_Left">
             <Stack Offset="277,0" Anchor="R,C" StackGrowth="Down" StackPadding="5">
               <Label														Anchor="R,C" Align="Right" WrapWidth="230" String="{LOC_CLIMATE_WORLD_SETTINGS:upper}" Style="WorldClimateStatArea"/>
               <Label		ID="WorldAgeText"				Anchor="R,C" Align="Right" WrapWidth="230" Style="WorldClimateText"/>
@@ -225,13 +225,13 @@
 				</Stack>
 
         <!-- Right Panel -->
-        <Grid Anchor="R,T" Size="500,40" Offset="5,75" Style="Climate_StatHeading">
+        <Grid Anchor="R,T" Size="500,40" Offset="5,70" Style="Climate_StatHeading">
           <Label Anchor="C,C" Offset="50,2" Style="WorldClimateSection" Align="Center" String="{LOC_CLIMATE_FORECAST:upper}"/>
         </Grid>
         
-        <Stack Anchor="R,T" Offset="5,115" StackGrowth="Down" StackPadding="2">
+        <Stack Anchor="R,T" Offset="5,110" StackGrowth="Down" StackPadding="2">
           <!-- Storms -->
-          <Grid	Size="400,104" Anchor="R,T" Style="Climate_StatFrame_Grid_Right" ToolTip="LOC_CLIMATE_STORM_EVENT_DESCRIPTION_TOOLTIP">
+          <Grid	Size="400,105" Anchor="R,T" Style="Climate_StatFrame_Grid_Right" ToolTip="LOC_CLIMATE_STORM_EVENT_DESCRIPTION_TOOLTIP">
             <Container Anchor="R,T" Size="230,parent" Offset="5,0">
               <Stack Offset="5,0" Anchor="L,C" StackGrowth="Down" StackPadding="2">
                 <Label																				Anchor="L,C" Align="Left" WrapWidth="parent-10" String="{LOC_CLIMATE_CHANCE_OF_STORMS:upper}" Style="WorldClimateStatArea"/>
@@ -245,7 +245,7 @@
           </Grid>
 
           <!-- Flooding -->
-          <Grid	Size="400,104" Anchor="R,T" Style="Climate_StatFrame_Grid_Right" ToolTip="LOC_CLIMATE_RIVER_FLOOD_EVENT_DESCRIPTION_TOOLTIP">
+          <Grid	Size="400,105" Anchor="R,T" Style="Climate_StatFrame_Grid_Right" ToolTip="LOC_CLIMATE_RIVER_FLOOD_EVENT_DESCRIPTION_TOOLTIP">
             <Container Anchor="R,T" Size="230,parent" Offset="5,0">
               <Stack Offset="5,0" Anchor="L,C" StackGrowth="Down" StackPadding="2">
                 <Label																							Anchor="L,C" Align="Left" WrapWidth="parent-10" String="{LOC_CLIMATE_CHANCE_OF_RIVER_FLOOD:upper}" Style="WorldClimateStatArea"/>
@@ -259,7 +259,7 @@
           </Grid>
 
           <!-- Droughts -->
-          <Grid	Size="505,104" Anchor="R,T" Style="Climate_StatFrame_Grid_Right" ToolTip="LOC_CLIMATE_DROUGHT_EVENT_DESCRIPTION_TOOLTIP">
+          <Grid	Size="400,105" Anchor="R,T" Style="Climate_StatFrame_Grid_Right" ToolTip="LOC_CLIMATE_DROUGHT_EVENT_DESCRIPTION_TOOLTIP">
             <Container Anchor="R,T" Size="230,parent" Offset="5,0">
               <Stack Offset="5,0" Anchor="L,C" StackGrowth="Down" StackPadding="2">
                 <Label																	Anchor="L,C" Align="Left" WrapWidth="parent-10" String="{LOC_CLIMATE_DROUGHTS:upper}" Style="WorldClimateStatArea"/>
@@ -273,7 +273,7 @@
           </Grid>
 
           <!-- Volcanic -->
-          <Grid	Size="507,104" Anchor="R,T" Style="Climate_StatFrame_Grid_Right" ToolTip="LOC_CLIMATE_VOLCANO_EVENT_DESCRIPTION_TOOLTIP">
+          <Grid	Size="507,106" Anchor="R,T" Style="Climate_StatFrame_Grid_Right" ToolTip="LOC_CLIMATE_VOLCANO_EVENT_DESCRIPTION_TOOLTIP">
             <Container Anchor="R,T" Size="230,parent" Offset="5,0">
               <Stack Offset="5,0" Anchor="L,C" StackGrowth="Down" StackPadding="2">
                 <Label																	Anchor="L,C" Align="Left" WrapWidth="parent-10" String="{LOC_CLIMATE_VOLCANIC_ACTIVITY:upper}" Style="WorldClimateStatArea"/>
@@ -292,10 +292,11 @@
               <Image Anchor="C,C" Size="64,64" Texture="ClimateEventStat_Volcanoes"/>
             </Image>
           </Grid>
+          
         </Stack>
 
         <!-- Middle - Current Event Status -->
-        <Image Anchor="C,T" Offset="0,-22" Size="523,535" Texture="Climate_Globe" ConsumeMouse="1">
+        <Image Anchor="C,T" Offset="0,-27" Size="523,535" Texture="Climate_Globe" ConsumeMouse="1">
           <Stack ID="CurrentEventStack" Anchor="C,T" Offset="0,130" StackGrowth="Down" StackPadding="5">
             <Image					ID="WeatherStatusImage"					Anchor="C,T"	Offset="0,0"		Texture="ClimateEvent_Flood" />
             <Grid Anchor="C,T" Size="350,auto" AutoSizePadding="0,10" Style="Climate_EventFrame_Grid">
@@ -336,7 +337,7 @@
         </Image>
 
         <!-- Climate Phase Meter -->
-        <Grid Anchor="C,T" Offset="0,45" Size="1022,20" Texture="Climate_PhaseMeterBG" SliceCorner="11,8" SliceSize="2,2">
+        <Grid Anchor="C,T" Offset="0,40" Size="1022,20" Texture="Climate_PhaseMeterBG" SliceCorner="11,8" SliceSize="2,2">
           <Stack Anchor="C,C" StackGrowth="Right" StackPadding="-1">
             <MakeInstance ID="Phase1" Name="PhaseSectionInstance" />
             <Image Anchor="L,C" Size="3,18" Texture="Climate_PhaseMeterDiv"/>
@@ -388,8 +389,6 @@
 			
 			<Container								ID="CO2LevelsPane"																					Size="parent,parent" >
 
-				<Image									ID="CO2BG"										Anchor="C,C"									Size="parent,parent"				Texture="Climate_BG"/>
-
 				<!-- Left pane -->
         <Stack Offset="11,2" StackPadding="6">
 
@@ -433,7 +432,6 @@
 			
 			<!-- ========== PANE Event History ========== -->
 			<Container						ID="EventHistoryPane"																			Size="parent,parent">
-        <Image							ID="HistoryBG"							Anchor="C,C"									Size="parent,parent"				Texture="Climate_BG"/>
         
         <MakeInstance Name="EventRowHeaderInstance"/>
         <ScrollPanel				ID="EventScroll"													Offset="4,42"		Size="parent,parent-46"				Vertical="1" AutoScrollBar="1"  >

@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- 	The UI files reference the SWITCH directly (should have used a generic term), so we are translated from those to our target. -->
+<IconAliasGroups>
+  <Group Name="XBOX">
+    <Entry From="SWITCH_GAMEPAD_A" To="XBOX_GAMEPAD_A"/>
+    <Entry From="SWITCH_GAMEPAD_B" To="XBOX_GAMEPAD_B"/>
+    <Entry From="SWITCH_GAMEPAD_X" To="XBOX_GAMEPAD_X"/>
+    <Entry From="SWITCH_GAMEPAD_Y" To="XBOX_GAMEPAD_Y"/>
+    <Entry From="SWITCH_GAMEPAD_L" To="XBOX_GAMEPAD_L"/>
+    <Entry From="SWITCH_GAMEPAD_R" To="XBOX_GAMEPAD_R"/>
+    <Entry From="SWITCH_GAMEPAD_ZL" To="XBOX_GAMEPAD_LT"/>
+    <Entry From="SWITCH_GAMEPAD_ZR" To="XBOX_GAMEPAD_RT"/>
+    <Entry From="SWITCH_GAMEPAD_UP" To="XBOX_GAMEPAD_UP"/>
+    <Entry From="SWITCH_GAMEPAD_DOWN" To="XBOX_GAMEPAD_DOWN"/>
+    <Entry From="SWITCH_GAMEPAD_LEFT" To="XBOX_GAMEPAD_LEFT"/>
+    <Entry From="SWITCH_GAMEPAD_RIGHT" To="XBOX_GAMEPAD_RIGHT"/>
+    <Entry From="SWITCH_GAMEPAD_PLUS" To="XBOX_GAMEPAD_MENU"/>
+    <Entry From="SWITCH_GAMEPAD_MINUS" To="XBOX_GAMEPAD_VIEW"/>
+    <Entry From="SWITCH_GAMEPAD_L3" To="XBOX_GAMEPAD_L3"/>
+    <Entry From="SWITCH_GAMEPAD_R3" To="XBOX_GAMEPAD_R3"/>
+    <Entry From="SWITCH_GAMEPAD_ROTATE_L" To="XBOX_GAMEPAD_ROTATE_L"/>
+    <Entry From="SWITCH_GAMEPAD_ROTATE_R" To="XBOX_GAMEPAD_ROTATE_R"/>
+  </Group>
+  <Group Name="PlayStation">
+    <Entry From="SWITCH_GAMEPAD_A" To="PS4_GAMEPAD_A"/>
+    <Entry From="SWITCH_GAMEPAD_B" To="PS4_GAMEPAD_B"/>
+    <Entry From="SWITCH_GAMEPAD_X" To="PS4_GAMEPAD_X"/>
+    <Entry From="SWITCH_GAMEPAD_Y" To="PS4_GAMEPAD_Y"/>
+    <Entry From="SWITCH_GAMEPAD_L" To="PS4_GAMEPAD_L"/>
+    <Entry From="SWITCH_GAMEPAD_R" To="PS4_GAMEPAD_R"/>
+    <Entry From="SWITCH_GAMEPAD_ZL" To="PS4_GAMEPAD_LT"/>
+    <Entry From="SWITCH_GAMEPAD_ZR" To="PS4_GAMEPAD_RT"/>
+    <Entry From="SWITCH_GAMEPAD_UP" To="PS4_GAMEPAD_UP"/>
+    <Entry From="SWITCH_GAMEPAD_DOWN" To="PS4_GAMEPAD_DOWN"/>
+    <Entry From="SWITCH_GAMEPAD_LEFT" To="PS4_GAMEPAD_LEFT"/>
+    <Entry From="SWITCH_GAMEPAD_RIGHT" To="PS4_GAMEPAD_RIGHT"/>
+    <Entry From="SWITCH_GAMEPAD_PLUS" To="PS4_GAMEPAD_OPTIONS"/>
+    <Entry From="SWITCH_GAMEPAD_MINUS" To="PS4_GAMEPAD_VIEW"/>
+    <Entry From="SWITCH_GAMEPAD_L3" To="PS4_GAMEPAD_L3"/>
+    <Entry From="SWITCH_GAMEPAD_R3" To="PS4_GAMEPAD_R3"/>
+    <Entry From="SWITCH_GAMEPAD_ROTATE_L" To="PS4_GAMEPAD_ROTATE_L"/>
+    <Entry From="SWITCH_GAMEPAD_ROTATE_R" To="PS4_GAMEPAD_ROTATE_R"/>
+  </Group>
+ 
+</IconAliasGroups>

@@ -16,8 +16,19 @@ include( "TeamSupport" );
 ----------------------------------------------------------------  
 -- Constants
 ---------------------------------------------------------------- 
-local READY_COUNTDOWN_DURATION :number		= 60; -- How long does the ready up countdown last in seconds?
-local READY_COUNTDOWN_TICK_START :number	= 10; -- How long before the end of the ready countdown time does the ticking start?
+local CountdownTypes = {
+	None				= "None",
+	Launch				= "Launch",						-- Standard Launch Countdown
+	Launch_Instant		= "Launch_Instant",				-- Instant Launch
+	WaitForPlayers		= "WaitForPlayers",				-- Used by Matchmaking games after the Ready countdown to try to fill up the game with human players before starting.
+	Ready_PlayByCloud	= "Ready_PlayByCloud",
+	Ready_MatchMaking	= "Ready_MatchMaking",
+};
+
+local TimerTypes = {
+	Script 				= "Script",						-- Timer is internally tracked in this script.
+	NetworkManager 		= "NetworkManager",				-- Timer is handled by the NetworkManager.  This is synchronized across all the clients in a matchmaking game.
+};
 
 
 ----------------------------------------------------------------  
@@ -73,7 +84,8 @@ local g_pbcNewGameCheck = true;					-- In a PlayByCloud game, only the game host
 local g_pbcMinHumanCheck = true;				-- PlayByCloud matches need at least two human players. 
 												-- The game and backend can not handle solo games. 
 												-- NOTE: The backend will automatically end started PBC matches that end up 
-												-- with a solo human due to quits/kicks. 				
+												-- with a solo human due to quits/kicks. 
+local g_matchMakeFullGameCheck = true;			-- In a Matchmaking game, we only game launch during the ready countdown if the game is full of human players.				
 local g_viewingGameSummary = true;
 local g_hotseatNumHumanPlayers = 0;
 local g_hotseatNumAIPlayers = 0;
@@ -83,15 +95,22 @@ local m_iFirstClosedSlot = -1;					-- Closed slot to show Add player line
 
 local NO_COUNTDOWN = -1;
 
--- Defines for m_countdownMode.
-local COUNTDOWN_LAUNCH :number	= 0;			-- Countdown to launching the match.
-local COUNTDOWN_READY :number	= 1;			-- Countdown to auto ready the player.
+local m_countdownType :string				= CountdownTypes.None;	-- Which countdown type is active?
+local g_fCountdownTimer :number 			= NO_COUNTDOWN;			-- Start game countdown timer.  Set to -1 when not in use.
+local g_fCountdownInitialTime :number 		= NO_COUNTDOWN;			-- Initial time for the current countdown.
+local g_fCountdownTickSoundTime	:number 	= NO_COUNTDOWN;			-- When was the last time we make a countdown tick sound?
+local g_fCountdownReadyButtonTime :number	= NO_COUNTDOWN;			-- When was the last time we updated the ready button countdown time?
 
-local m_countdownMode :number				= COUNTDOWN_LAUNCH;	-- What is the countdown for?
-local g_fCountdownTimer :number 			= NO_COUNTDOWN;		-- Start game countdown timer.  Set to -1 when not in use.
-local g_fCountdownInitialTime :number 		= NO_COUNTDOWN;		-- Initial time for the current countdown.
-local g_fCountdownTickSoundTime	:number 	= NO_COUNTDOWN;		-- When was the last time we make a countdown tick sound?
-local g_fCountdownReadyButtonTime :number	= NO_COUNTDOWN;		-- When was the last time we updated the ready button countdown time?
+-- Defines for the different Countdown Types.
+-- CountdownTime - How long does the ready up countdown last in seconds?
+-- TickStartTime - How long before the end of the ready countdown time does the ticking start?
+local g_CountdownData = {
+	[CountdownTypes.Launch]				= { CountdownTime = 10,		TimerType = TimerTypes.Script,				TickStartTime = 10},
+	[CountdownTypes.Launch_Instant]		= { CountdownTime = 0,		TimerType = TimerTypes.Script,				TickStartTime = 0},
+	[CountdownTypes.WaitForPlayers]		= { CountdownTime = 180,	TimerType = TimerTypes.NetworkManager,		TickStartTime = 10},
+	[CountdownTypes.Ready_PlayByCloud]	= { CountdownTime = 600,	TimerType = TimerTypes.Script,				TickStartTime = 10},
+	[CountdownTypes.Ready_MatchMaking]	= { CountdownTime = 60,		TimerType = TimerTypes.Script,				TickStartTime = 10},
+};
 
 -- hotseatOnly - Only available in hotseat mode.
 -- hotseatInProgress = Available for active civs (AI/HUMAN) when loading a hotseat game
@@ -145,6 +164,7 @@ local NUM_COLUMNS				:number = 5;
 
 local TEAM_ICON_SIZE			:number = 38;
 local TEAM_ICON_PREFIX			:string = "ICON_TEAM_ICON_";
+
 
 -------------------------------------------------
 -- Localized Constants
@@ -254,7 +274,7 @@ function IsCloudInProgressAndNotTurn()
 end
 
 function IsLaunchCountdownActive()
-	if(g_fCountdownTimer ~= NO_COUNTDOWN and m_countdownMode == COUNTDOWN_LAUNCH) then
+	if(m_countdownType == CountdownTypes.Launch or m_countdownType == CountdownTypes.Launch_Instant) then
 		return true;
 	end
 
@@ -262,7 +282,16 @@ function IsLaunchCountdownActive()
 end
 
 function IsReadyCountdownActive()
-	if(g_fCountdownTimer ~= NO_COUNTDOWN and m_countdownMode == COUNTDOWN_READY) then
+	if(m_countdownType == CountdownTypes.Ready_MatchMaking 
+		or m_countdownType == CountdownTypes.Ready_PlayByCloud) then
+		return true;
+	end
+
+	return false;
+end
+
+function IsWaitForPlayersCountdownActive()
+	if(m_countdownType == CountdownTypes.WaitForPlayers) then
 		return true;
 	end
 
@@ -270,12 +299,42 @@ function IsReadyCountdownActive()
 end
 
 function IsUseReadyCountdown()
-	if(GameConfiguration.IsPlayByCloud()) then
+	local type = GetReadyCountdownType();
+	if(type ~= CountdownTypes.None) then
 		return true;
 	end
 
 	return false;
 end
+
+function GetReadyCountdownType()
+	if(GameConfiguration.IsPlayByCloud()) then
+		return CountdownTypes.Ready_PlayByCloud;
+	elseif(GameConfiguration.IsMatchMaking()) then
+		return CountdownTypes.Ready_MatchMaking;
+	end
+	return CountdownTypes.None;
+end	
+
+function IsUseWaitingForPlayersCountdown()
+	return GameConfiguration.IsMatchMaking();
+end
+
+function GetCountdownTimeRemaining()
+	local countdownData :table = g_CountdownData[m_countdownType];
+	if(countdownData == nil) then
+		return 0;
+	end
+
+	if(countdownData.TimerType == TimerTypes.NetworkManager) then
+		local sessionTime :number = Network.GetElapsedSessionTime();
+		return countdownData.CountdownTime - sessionTime;
+	else
+		return g_fCountdownTimer;
+	end
+end
+
+
 ----------------------------------------------------------------  
 -- Event Handlers
 ---------------------------------------------------------------- 
@@ -318,7 +377,7 @@ function OnGameConfigChanged()
 			SetLocalReady(true);
 		end
 
-		CheckGameAutoStart();  -- Toggling "No Duplicate Leaders" can affect the start countdown.
+		CheckGameAutoStart();  -- Toggling "No Duplicate Leaders" can affect the autostart.
 	end
 	OnMapMaxMajorPlayersChanged(MapConfiguration.GetMaxMajorPlayers());	
 	OnMapMinMajorPlayersChanged(MapConfiguration.GetMinMajorPlayers());
@@ -907,6 +966,14 @@ function OnReadyButton()
 	end
 end
 
+-------------------------------------------------
+-- OnClickToCopy
+-------------------------------------------------
+function OnClickToCopy()
+	local sText:string = Controls.JoinCodeText:GetText();
+	UIManager:SetClipboardString(sText);
+end
+
 ----------------------------------------------------------------
 -- Screen Scripting
 ----------------------------------------------------------------
@@ -919,7 +986,7 @@ function SetLocalReady(newReady)
 		return;
 	end
 
-	-- When using the ready countdown, the player can not unready themselves outside of the ready countdown.
+	-- When using a ready countdown, the player can not unready themselves outside of the ready countdown.
 	if(IsUseReadyCountdown() 
 		and newReady == false
 		and not IsReadyCountdownActive()) then
@@ -1026,11 +1093,10 @@ function CheckGameAutoStart()
 	-- PlayByCloud Only - Autostart if we are the active turn player.
 	if IsCloudInProgress() and Network.IsCloudTurnPlayer() then
 		if(not IsLaunchCountdownActive()) then
-			-- Reset global blocking variables so the ready button i not possibly dirty from a previous session.
+			-- Reset global blocking variables so the ready button is not dirty from previous sessions.
 			ResetAutoStartFlags();				
 			SetLocalReady(true);
 			StartLaunchCountdown();
-			
 		end
 	-- Check to see if we should start/stop the multiplayer game.
 	
@@ -1118,6 +1184,15 @@ function CheckGameAutoStart()
 			g_pbcMinHumanCheck = false;
 		end
 
+		if(GameConfiguration.IsMatchMaking()
+			and GameConfiguration.GetGameState() ~= GameStateTypes.GAMESTATE_LAUNCHED
+			and totalHumans < totalPlayers
+			and (IsReadyCountdownActive() or IsWaitForPlayersCountdownActive())) then
+			print("CheckGameAutoStart: Can't start game because we are still in the Ready/Matchmaking Countdown and we do not have a full game yet. totalHumans: " .. totalHumans .. ", totalPlayers: " .. tostring(totalPlayers));
+			startCountdown = false;
+			g_matchMakeFullGameCheck = false;
+		end
+
 		if(not Network.IsEveryoneConnected()) then
 			print("CheckGameAutoStart: Can't start game because players are joining the game.");
 			startCountdown = false;
@@ -1165,6 +1240,7 @@ function ResetAutoStartFlags()
 	g_humanRequiredFilled = true;
 	g_pbcNewGameCheck = true;
 	g_pbcMinHumanCheck = true;
+	g_matchMakeFullGameCheck = true;
 end
 
 -------------------------------------------------
@@ -1289,7 +1365,8 @@ function PopulateSlotTypePulldown( pullDown, playerID, slotTypeOptions )
 			and playerSlotStatus ~= SlotStatus.SS_CLOSED -- Can't swap to closed slots.
 			and not pPlayerConfig:IsLocked() -- Can't swap to locked slots.
 			and not GameConfiguration.IsHotseat() -- no swap option in hotseat.
-			and not GameConfiguration.IsPlayByCloud(); -- no swap option in PlayByCloud.
+			and not GameConfiguration.IsPlayByCloud() -- no swap option in PlayByCloud.
+			and not GameConfiguration.IsMatchMaking(); -- or when matchmaking
 
 		-- This option is a valid slot type option.
 		local showSlotButton = pair.slotStatus ~= -1 
@@ -1305,7 +1382,8 @@ function PopulateSlotTypePulldown( pullDown, playerID, slotTypeOptions )
 			and not pPlayerConfig:IsLocked() -- Can't change the slot type of locked player slots.
 			-- Can normally only change slot types in the pregame unless this is a option that can be changed mid-game in hotseat.
 			and (GameConfiguration.GetGameState() == GameStateTypes.GAMESTATE_PREGAME 
-				or (pair.hotseatInProgress and GameConfiguration.IsHotseat())); 
+				or (pair.hotseatInProgress and GameConfiguration.IsHotseat()))
+			and not GameConfiguration.IsMatchMaking();	-- Can't change slot type in matchmaded games. 
 
 		-- Valid state for hotseatOnly flag
 		local hotseatOnlyCheck = (GameConfiguration.IsHotseat() and pair.hotseatAllowed) or (not GameConfiguration.IsHotseat() and not pair.hotseatOnly);
@@ -1633,9 +1711,10 @@ function UpdatePlayerEntry(playerID)
 				
 				if (m_iFirstClosedSlot == -1 or m_iFirstClosedSlot == playerID) 
 				and Network.IsGameHost() 
-				and not localPlayerConfig:GetReady() -- Hide when the host is ready (to be consistent with the player slot behavior)
+				and not localPlayerConfig:GetReady()			-- Hide when the host is ready (to be consistent with the player slot behavior)
 				and not gameInProgress 
-				and not IsLaunchCountdownActive() then -- Don't show Add Player button while in the launch countdown.
+				and not IsLaunchCountdownActive()				-- Don't show Add Player button while in the launch countdown.
+				and not GameConfiguration.IsMatchMaking() then	-- Players can't change number of slots when matchmaking.
 					m_iFirstClosedSlot = playerID;
 					playerEntry.AddPlayerButton:SetHide(false);
 					playerEntry.Root:SetHide(false);
@@ -1930,26 +2009,32 @@ function UpdateReadyButton_Hotseat()
 	if(GameConfiguration.IsHotseat()) then
 		if(g_hotseatNumHumanPlayers == 0) then
 			Controls.StartLabel:SetText(Locale.ToUpper(Locale.Lookup("LOC_READY_BLOCKED_HOTSEAT_NO_HUMAN_PLAYERS")));
+			Controls.ReadyButton:SetText("");
 			Controls.ReadyButton:LocalizeAndSetToolTip("LOC_READY_BLOCKED_HOTSEAT_NO_HUMAN_PLAYERS_TT");
 			Controls.ReadyButton:SetDisabled(true);
 		elseif(g_hotseatNumHumanPlayers + g_hotseatNumAIPlayers < 2) then
 			Controls.StartLabel:SetText(Locale.ToUpper(Locale.Lookup("LOC_READY_BLOCKED_NOT_ENOUGH_PLAYERS")));
+			Controls.ReadyButton:SetText("");
 			Controls.ReadyButton:LocalizeAndSetToolTip("LOC_READY_BLOCKED_NOT_ENOUGH_PLAYERS_TT");
 			Controls.ReadyButton:SetDisabled(true);
 		elseif(not m_bTeamsValid) then
 			Controls.StartLabel:SetText(Locale.ToUpper(Locale.Lookup("LOC_READY_BLOCKED_HOTSEAT_INVALID_TEAMS")));
+			Controls.ReadyButton:SetText("");
 			Controls.ReadyButton:LocalizeAndSetToolTip("LOC_READY_BLOCKED_HOTSEAT_INVALID_TEAMS_TT");
 			Controls.ReadyButton:SetDisabled(true);
 		elseif(g_badPlayerForMapSize) then
 			Controls.StartLabel:LocalizeAndSetText("LOC_READY_BLOCKED_PLAYER_MAP_SIZE");
+			Controls.ReadyButton:SetText("");
 			Controls.ReadyButton:LocalizeAndSetToolTip( "LOC_READY_BLOCKED_PLAYER_MAP_SIZE_TT", g_currentMaxPlayers);
 			Controls.ReadyButton:SetDisabled(true);
 		elseif(g_duplicateLeaders) then
 			Controls.StartLabel:SetText(Locale.ToUpper(Locale.Lookup("LOC_SETUP_ERROR_NO_DUPLICATE_LEADERS")));
+			Controls.ReadyButton:SetText("");
 			Controls.ReadyButton:LocalizeAndSetToolTip("LOC_SETUP_ERROR_NO_DUPLICATE_LEADERS");
 			Controls.ReadyButton:SetDisabled(true);
 		else
 			Controls.StartLabel:SetText(Locale.ToUpper(Locale.Lookup("LOC_START_GAME")));
+			Controls.ReadyButton:SetText("");
 			Controls.ReadyButton:LocalizeAndSetToolTip("");
 			Controls.ReadyButton:SetDisabled(false);
 		end
@@ -1967,19 +2052,24 @@ function UpdateReadyButton()
 
 	local localPlayerEntry = GetPlayerEntry(localPlayerID);
 	local localPlayerButton = localPlayerEntry.ReadyImage;
-	if(g_fCountdownTimer ~= -1) then
-		-- Countdown is active, just show that.
+	if(m_countdownType ~= CountdownTypes.None) then
 		local startLabel :string = Locale.ToUpper(Locale.Lookup("LOC_GAMESTART_COUNTDOWN_FORMAT"));  -- Defaults to COUNTDOWN_LAUNCH
-		if(m_countdownMode == COUNTDOWN_READY) then
+		local toolTip :string = "";
+		if(IsReadyCountdownActive()) then
 			startLabel = Locale.ToUpper(Locale.Lookup("LOC_READY_COUNTDOWN_FORMAT"));
+			toolTip = Locale.Lookup("LOC_READY_COUNTDOWN_TT");
+		elseif(IsWaitForPlayersCountdownActive()) then
+			startLabel = Locale.ToUpper(Locale.Lookup("LOC_WAITING_FOR_PLAYERS_COUNTDOWN_FORMAT"));
+			toolTip = Locale.Lookup("LOC_WAITING_FOR_PLAYERS_COUNTDOWN_TT");
 		end
 
-		local intTime = math.floor(g_fCountdownTimer);
+		local timeRemaining :number = GetCountdownTimeRemaining();
+		local intTime :number = math.floor(timeRemaining);
 		Controls.StartLabel:SetText( startLabel );
 		Controls.ReadyButton:LocalizeAndSetText(  intTime );
-		Controls.ReadyButton:LocalizeAndSetToolTip( "" );
-		Controls.ReadyCheck:LocalizeAndSetToolTip( "" );
-		localPlayerButton:LocalizeAndSetToolTip( "" );
+		Controls.ReadyButton:LocalizeAndSetToolTip( toolTip );
+		Controls.ReadyCheck:LocalizeAndSetToolTip( toolTip );
+		localPlayerButton:LocalizeAndSetToolTip( toolTip );
 	elseif(IsCloudInProgressAndNotTurn()) then
 		Controls.StartLabel:SetText( Locale.ToUpper(Locale.Lookup( "LOC_START_WAITING_FOR_TURN" )));
 		Controls.ReadyButton:SetText("");
@@ -2060,7 +2150,7 @@ function UpdateReadyButton()
 		Controls.StartLabel:LocalizeAndSetText("LOC_READY_BLOCKED_NOT_ENOUGH_HUMANS");
 		Controls.ReadyButton:LocalizeAndSetToolTip("LOC_READY_BLOCKED_NOT_ENOUGH_HUMANS_TT");
 		Controls.ReadyCheck:LocalizeAndSetToolTip( "LOC_READY_BLOCKED_NOT_ENOUGH_HUMANS_TT");
-		localPlayerButton:LocalizeAndSetToolTip("LOC_READY_BLOCKED_NOT_ENOUGH_HUMANS");	
+		localPlayerButton:LocalizeAndSetToolTip("LOC_READY_BLOCKED_NOT_ENOUGH_HUMANS");			
 	end
 
 	local errorReason;
@@ -2094,29 +2184,33 @@ end
 -------------------------------------------------
 -- Start Game Launch Countdown
 -------------------------------------------------
-function StartLaunchCountdown()
-	--print("StartLaunchCountdown");
-	m_countdownMode = COUNTDOWN_LAUNCH;	
-
-	local gameState = GameConfiguration.GetGameState();
-	if(GameConfiguration.IsPlayByCloud() and gameState == GameStateTypes.GAMESTATE_LAUNCHED) then
-		-- Joining a PlayByCloud game already in progress has a much faster countdown to be less annoying.
-		g_fCountdownTimer = 0;
-		g_fCountdownTickSoundTime = g_fCountdownTimer; -- start countdown tick now.
-	else
-		g_fCountdownTimer = 10;
-		g_fCountdownTickSoundTime = g_fCountdownTimer - 3; -- start countdown ticks in 3 seconds.
+function StartCountdown(countdownType :string)
+	if(m_countdownType == countdownType) then
+		return;
 	end
-	
-	g_fCountdownInitialTime = g_fCountdownTimer;
-	g_fCountdownReadyButtonTime = g_fCountdownTimer;
-	
-	-- Using animation control rather than context to call the update timer because
-	-- animation controls continue to tick even when hidden (e.g., when a player
-	-- navigates away from this screen but the countdown has started.)
-	Controls.CountdownTimerAnim:RegisterAnimCallback( OnUpdateTimers );	
 
-	-- Update m_iFirstClosedSlot's player slot so it will hide the Add Player button.
+	local countdownData = g_CountdownData[countdownType];
+	if(countdownData == nil) then
+		print("ERROR: missing countdownData for type " .. tostring(countdownType));
+		return;
+	end
+
+	print("Starting Countdown Type " .. tostring(countdownType));
+	m_countdownType = countdownType;
+
+	if(countdownData.TimerType == TimerTypes.Script) then
+		g_fCountdownTimer = countdownData.CountdownTime;
+	else
+		g_fCountdownTimer = NO_COUNTDOWN;
+	end
+
+	g_fCountdownTickSoundTime = countdownData.TickStartTime;
+	g_fCountdownInitialTime = countdownData.CountdownTime;
+	g_fCountdownReadyButtonTime = countdownData.CountdownTime;
+
+	Controls.CountdownTimerAnim:RegisterAnimCallback( OnUpdateTimers );
+
+	-- Update m_iFirstClosedSlot's player slot so it will hide the Add Player button if needed for this countdown type.
 	if(m_iFirstClosedSlot ~= -1) then
 		UpdatePlayerEntry(m_iFirstClosedSlot);
 	end
@@ -2124,28 +2218,33 @@ function StartLaunchCountdown()
 	ShowHideReadyButtons();
 end
 
-function StartReadyCountdown()
-	if(not IsReadyCountdownActive()) then
-		--print("StartReadyCountdown");
-		m_countdownMode = COUNTDOWN_READY;	
-
-		local gameState = GameConfiguration.GetGameState();
-		g_fCountdownTimer = READY_COUNTDOWN_DURATION;
-		g_fCountdownTickSoundTime = READY_COUNTDOWN_TICK_START; 
-		g_fCountdownInitialTime = g_fCountdownTimer;
-		g_fCountdownReadyButtonTime = g_fCountdownTimer;
-		Controls.CountdownTimerAnim:RegisterAnimCallback( OnUpdateTimers );
-
-		ShowHideReadyButtons();
+function StartLaunchCountdown()
+	--print("StartLaunchCountdown");
+	local gameState = GameConfiguration.GetGameState();
+	-- In progress PlayByCloud games and matchmaking games launch instantly.
+	if((GameConfiguration.IsPlayByCloud() and gameState == GameStateTypes.GAMESTATE_LAUNCHED)
+		or GameConfiguration.IsMatchMaking()) then
+		-- Joining a PlayByCloud game already in progress has a much faster countdown to be less annoying.
+		StartCountdown(CountdownTypes.Launch_Instant);
+	else
+		StartCountdown(CountdownTypes.Launch);
 	end
+end
+
+function StartReadyCountdown()
+	StartCountdown(GetReadyCountdownType());
 end
 
 -------------------------------------------------
 -- Stop Launch Countdown
 -------------------------------------------------
 function StopCountdown()
-	--print("StopCountdown");
+	if(m_countdownType ~= CountdownTypes.None) then
+		print("Stopping Countdown. m_countdownType=" .. tostring(m_countdownType));
+	end
+
 	Controls.TurnTimerMeter:SetPercent(0);
+	m_countdownType = CountdownTypes.None;	
 	g_fCountdownTimer = NO_COUNTDOWN;
 	g_fCountdownInitialTime = NO_COUNTDOWN;
 	UpdateReadyButton();
@@ -2232,43 +2331,74 @@ function OnUpdateTimers( uiControl:table, fProgress:number )
 
 	local fDTime:number = UIManager:GetLastTimeDelta();
 
-	-- Update launch countdown.
-	if(g_fCountdownInitialTime ~= NO_COUNTDOWN) then
-		g_fCountdownTimer = g_fCountdownTimer - fDTime;
-		Controls.TurnTimerMeter:SetPercent(g_fCountdownTimer / g_fCountdownInitialTime);
-		if( m_countdownMode == COUNTDOWN_LAUNCH and not Network.IsEveryoneConnected() ) then
+	if(m_countdownType == CountdownTypes.None) then
+		Controls.CountdownTimerAnim:ClearAnimCallback();
+	else
+		UpdateCountdownTimeRemaining();
+		local timeRemaining :number = GetCountdownTimeRemaining();
+		Controls.TurnTimerMeter:SetPercent(timeRemaining / g_fCountdownInitialTime);
+		if( IsLaunchCountdownActive() and not Network.IsEveryoneConnected() ) then
 			-- not all players are connected anymore.  This is probably due to a player join in progress.
 			StopCountdown();
-		elseif( g_fCountdownTimer <= 0 ) then
-			if( m_countdownMode == COUNTDOWN_LAUNCH ) then
+		elseif( timeRemaining <= 0 ) then
+			local stopCountdown = true;
+			local checkForStart = false;
+			if( IsLaunchCountdownActive() ) then
 				-- Timer elapsed, launch the game if we're the netsession host.
 				if(Network.IsNetSessionHost()) then
 					Network.LaunchGame();
 				end
-			elseif( m_countdownMode == COUNTDOWN_READY ) then
+			elseif( IsReadyCountdownActive() ) then
 				-- Force ready the local player
 				SetLocalReady(true);
+
+				if(IsUseWaitingForPlayersCountdown()) then
+					-- Transition to the Waiting For Players countdown.
+					StartCountdown(CountdownTypes.WaitForPlayers);
+					stopCountdown = false;
+				end
+			elseif( IsWaitForPlayersCountdownActive() ) then
+				-- After stopping the countdown, recheck for start.  This should trigger the launch countdown because all players should be past their ready countdowns.
+				checkForStart = true;			
 			end
-			StopCountdown(); 
+
+			if(stopCountdown == true) then
+				StopCountdown();
+			end
+
+			if(checkForStart == true) then
+				CheckGameAutoStart();
+			end
 		else
 			-- Update countdown tick sound.
-			if( g_fCountdownTimer < g_fCountdownTickSoundTime) then
+			if( timeRemaining < g_fCountdownTickSoundTime) then
 				g_fCountdownTickSoundTime = g_fCountdownTickSoundTime-1; -- set countdown tick for next second.
 				UI.PlaySound("Play_MP_Game_Launch_Timer_Beep");
 			end
 
 			-- Update countdown ready button.
-			if( g_fCountdownTimer < g_fCountdownReadyButtonTime) then
+			if( timeRemaining < g_fCountdownReadyButtonTime) then
 				g_fCountdownReadyButtonTime = g_fCountdownReadyButtonTime-1; -- set countdown tick for next second.
 				UpdateReadyButton();
 			end
 		end
 	end
+end
 
-	if(g_fCountdownTimer <= 0) then
-		-- Both timers have elapsed, we no longer have to tick.
-		Controls.CountdownTimerAnim:ClearAnimCallback();			
+function UpdateCountdownTimeRemaining()
+	local countdownData :table = g_CountdownData[m_countdownType];
+	if(countdownData == nil) then
+		print("ERROR: missing countdown data!");
+		return;
 	end
+
+	if(countdownData.TimerType == TimerTypes.NetworkManager) then
+		-- Network Manager timer updates itself.
+		return;
+	end
+
+	local fDTime:number = UIManager:GetLastTimeDelta();
+	g_fCountdownTimer = g_fCountdownTimer - fDTime;
 end
 
 -------------------------------------------------
@@ -2321,6 +2451,15 @@ function OnShow()
 		if(not Network.IsGameHost()) then
 			-- Remote clients ready up immediately.
 			SetLocalReady(true);
+		else
+			local minPlayers = Automation.GetSetParameter("CurrentTest", "MinPlayers", 2);
+			if (minPlayers ~= nil) then
+				-- See if we are going to be the only one in the game, set ourselves ready. 
+				if (minPlayers == 1) then
+					Automation.Log("HostGame MinPlayers==1, host readying up.");
+					SetLocalReady(true);
+				end
+			end
 		end
 	end
 end
@@ -2361,7 +2500,7 @@ end
 -------------------------------------------------
 -------------------------------------------------
 function ShowHideInviteButton()
-	local canInvite :boolean = Network.GetFriends(Network.GetTransportType()) ~= nil;
+	local canInvite :boolean = CanInviteFriends(true);
 	Controls.InviteButton:SetHide( not canInvite );
 end
 
@@ -2380,8 +2519,8 @@ end
 -------------------------------------------------
 -------------------------------------------------
 function ShowHideReadyButtons()
-	-- show ready button when in the countdown or hotseat.
-	local showReadyCheck = not GameConfiguration.IsHotseat() and (g_fCountdownTimer == -1);
+	-- show ready button when in not in a countdown or hotseat.
+	local showReadyCheck = not GameConfiguration.IsHotseat() and (m_countdownType == CountdownTypes.None);
 	Controls.ReadyCheckContainer:SetHide(not showReadyCheck);
 	Controls.ReadyButtonContainer:SetHide(showReadyCheck);
 end
@@ -2510,7 +2649,7 @@ function SetupSplitLeaderPulldown(playerId:number, instance:table, pulldownContr
 						end
 					end
 
-					local notExternalEnabled = not CheckExternalEnabled(playerId, true, true);
+					local notExternalEnabled = not CheckExternalEnabled(playerId, true, true, nil);
 					colorControl:SetDisabled(notExternalEnabled or colorCount == 0 or colorCount == 1);
 
                     -- also update collision check color
@@ -2594,7 +2733,7 @@ function SetupSplitLeaderPulldown(playerId:number, instance:table, pulldownContr
 			control:CalculateInternals();
 		end,
 		SetEnabled = function(enabled, parameter)
-			local notExternalEnabled = not CheckExternalEnabled(playerId, enabled, true);
+			local notExternalEnabled = not CheckExternalEnabled(playerId, enabled, true, parameter);
 			local singleOrEmpty = #parameter.Values <= 1;
 
             control:SetDisabled(notExternalEnabled or singleOrEmpty);
@@ -2701,6 +2840,18 @@ function RealizeGameSetup()
 	BuildAdditionalContent();
 end
 
+
+-- ===========================================================================
+--	Can join codes be used in the current lobby system?
+-- ===========================================================================
+function ShowJoinCode()
+	local pbcMode			:boolean = GameConfiguration.IsPlayByCloud() and (GameConfiguration.GetGameState() == GameStateTypes.GAMESTATE_LOAD_PREGAME or GameConfiguration.GetGameState() == GameStateTypes.GAMESTATE_PREGAME);
+	local crossPlayMode		:boolean = (Network.GetTransportType() == TransportType.TRANSPORT_EOS);
+	local eosAllowed		:boolean = (Network.GetNetworkPlatform() == NetworkPlatform.NETWORK_PLATFORM_EOS) and GameConfiguration.IsInternetMultiplayer();
+	return pbcMode or crossPlayMode or eosAllowed;
+end
+
+-- ===========================================================================
 function BuildGameState()
 	-- Indicate that this game is for loading a save or already in progress.
 	local gameState = GameConfiguration.GetGameState();
@@ -2720,23 +2871,22 @@ function BuildGameState()
 		Controls.GameStateText:SetHide(true);
 	end
 
-	-- Display join code for PlayByCloud games.
-	if(GameConfiguration.IsPlayByCloud()) then
-		local joinCode :string = Network.GetJoinCode();
-		if(joinCode ~= nil and joinCode ~= "") then
-			Controls.JoinCodeRoot:SetHide(false);
-			Controls.JoinCodeText:SetText(joinCode);
-		else
-			Controls.JoinCodeRoot:SetHide(true);
-		end
+	-- A 'join code' is a short string that can be sent through the MP system
+	-- to allow other players to connect to the same session of the game.
+	-- Originally only for PBC but added to support other MP game types.
+	local joinCode :string = Network.GetJoinCode();
+	Controls.JoinCodeRoot:SetHide( ShowJoinCode()==false );
+	if joinCode ~= nil and joinCode ~= "" then
+		Controls.JoinCodeText:SetText(joinCode);
 	else
-		Controls.JoinCodeRoot:SetHide(true);
+		Controls.JoinCodeText:SetText("---");			-- Better than showing nothing?
 	end
 
 	Controls.AdditionalContentStack:CalculateSize();
 	Controls.ParametersScrollPanel:CalculateSize();
 end
 
+-- ===========================================================================
 function BuildAdditionalContent()
 	m_modsIM:ResetInstances();
 
@@ -2813,9 +2963,7 @@ function UpdateFriendsList()
 	m_friendsIM:ResetInstances();
 	Controls.InfoContainer:SetHide(false);
 	local friends:table = GetFriendsList();
-	local bCanInvite:boolean = not GameConfiguration.IsLANMultiplayer() 
-								and not GameConfiguration.IsHotseat()
-								and not GameConfiguration.IsPlayByCloud();
+	local bCanInvite:boolean = CanInviteFriends(false);
 
 	-- DEBUG
 	--for i = 1, 19 do
@@ -2943,8 +3091,8 @@ end
 
 -- ===========================================================================
 function StartExitGame()
-	if(IsUseReadyCountdown()) then
-		-- If we are using the ready countdown, the local player needs to be set to ready before they can leave.
+	if(GetReadyCountdownType() == CountdownTypes.Ready_PlayByCloud) then
+		-- If we are using the PlayByCloud ready countdown, the local player needs to be set to ready before they can leave.
 		-- If we are not ready, we set ready and wait for that change to propagate to the backend.
 		local localPlayerID :number = Network.GetLocalPlayerID();
 		local localPlayerConfig :table = PlayerConfigurations[localPlayerID];
@@ -3020,6 +3168,15 @@ end
 
 
 -- ===========================================================================
+function GetInviteTT()
+	if( Network.GetNetworkPlatform() == NetworkPlatform.NETWORK_PLATFORM_EOS ) then
+		return Locale.Lookup("LOC_EPIC_INVITE_BUTTON_TT");
+	end
+
+	return Locale.Lookup("LOC_INVITE_BUTTON_TT");
+end
+
+-- ===========================================================================
 --	Initialize screen
 -- ===========================================================================
 function Initialize()
@@ -3046,7 +3203,9 @@ function Initialize()
 	Controls.ReadyButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 	Controls.ReadyCheck:RegisterCallback( Mouse.eLClick, OnReadyButton );
 	Controls.ReadyCheck:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
-	
+	Controls.JoinCodeText:RegisterCallback( Mouse.eLClick, OnClickToCopy );
+
+	Controls.InviteButton:SetToolTipString(GetInviteTT());
 
 	Events.MapMaxMajorPlayersChanged.Add(OnMapMaxMajorPlayersChanged); 
 	Events.MapMinMajorPlayersChanged.Add(OnMapMinMajorPlayersChanged);

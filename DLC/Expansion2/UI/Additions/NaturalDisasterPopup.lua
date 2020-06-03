@@ -1,4 +1,4 @@
--- Copyright 2018-2019, Firaxis Games
+﻿-- Copyright 2018-2019, Firaxis Games
 -- Popup for Natural Disasters (aka: Random events)
 
 include("PopupManager");
@@ -72,6 +72,16 @@ function GetAffectedPlots_Drought(plotx:number, ploty:number)
 end
 
 -- ===========================================================================
+--	OneOffs can be multiple hexes, and require their own code to find all affected hexes
+-- ===========================================================================
+function GetAffectedPlots_OneOff(plotx:number, ploty:number, eventID:number)
+	-- We need the ID, because there can be multiple events at one location (historical)
+	if eventID ~= nil then
+		return GameClimate.GetOneOffPlotsByID(eventID);
+	end
+end
+
+-- ===========================================================================
 --	Closes the immediate popup, will raise more if queued.
 -- ===========================================================================
 function Close()
@@ -86,6 +96,11 @@ function Close()
 	UI.PlaySound("Stop_Disaster_Volcano_Movie_Loop");
 	UI.PlaySound("Stop_Disaster_Drought_Movie_Loop");
 	UI.PlaySound("Stop_Disaster_Meltdown_Movie_Loop");
+	
+	UI.PlaySound("Stop_Disaster_CometStrike_Movie_Loop");
+	UI.PlaySound("Stop_Disaster_ForestFire_Movie_Loop");
+	UI.PlaySound("Stop_Disaster_MeteorShower_Movie_Loop");
+	UI.PlaySound("Stop_Disaster_SolarFlare_Movie_Loop");
 
 	-- Stop the camera animation if it hasn't finished already
 	if (m_kCurrentPopup ~= nil) then
@@ -127,7 +142,7 @@ function ShowPopup( kData:table )
 		UILens.SetActive("DisasterCinematic");
 		UI.SetInterfaceMode(InterfaceModeTypes.CINEMATIC);		
 	end
-
+	
 	if (kData.Plots and #kData.Plots > 0) then
 		-- Just in case the local player can't see all the plots, temporarily reveal them on the app side
 		UI.AddTemporaryPlotVisibility("NaturalDisaster", kData.Plots, RevealedState.VISIBLE);
@@ -143,11 +158,7 @@ function ShowPopup( kData:table )
 	if(kData.QuoteAudio) then
 		UI.PlaySound(kData.QuoteAudio);
 	end
-		
-	if(kData.VisualEffect) then
-		WorldView.PlayEffectAtXY(kData.VisualEffect, kData.PlotX, kData.PlotY);
-	end
-
+	
 	if kData.EffectOperatorType == NUCLEAR_OPERATOR_TYPE then
 		Controls.HeaderTitle:SetText(Locale.ToUpper("LOC_UI_FEATURE_NUCLEAR_DISASTER_DISCOVERY"));
 	else
@@ -217,7 +228,8 @@ end
 -- ===========================================================================
 --	Game EVENT
 -- ===========================================================================
-function OnRandomEventOccurred(type:number, severity:number, plotx:number, ploty:number, mitigationLevel:number)
+function ShowRandomEvent(type:number, severity:number, plotx:number, ploty:number, mitigationLevel:number, randomEventID:number, gameCorePlaybackEventID:number)
+	
 	local localPlayer = Game.GetLocalPlayer();
 	if (localPlayer < 0) then
 		return;	-- autoplay
@@ -226,27 +238,8 @@ function OnRandomEventOccurred(type:number, severity:number, plotx:number, ploty
 	local pPlayer :table = Players[localPlayer];
 	if not pPlayer:IsHuman() then 
 		return;
-	end	
-
-	-- Check if the event is visible to the local player
-	-- TODO check all affected plots instead of just one plot
-	local pPlayerVis:table = PlayersVisibility[localPlayer];
-	if (pPlayerVis ~= nil) then
-		if not pPlayerVis:IsRevealed(plotx, ploty) then
-			return;
-		end
-	end
-	
-	-- Check if the event is within 6 hexes of the local player's cities
-	-- TODO check all affected plots instead of just one plot
-	local playerCities:table = pPlayer:GetCities();
-	if not playerCities:IsCityWithinRange(plotx, ploty, 6) then
-		return;
 	end
 
-	UILens.SetActive("Default");
-	
-	-- The plot is fully visible, enqueue a full reveal
 	local info:table = GameInfo.RandomEvents[type];
 	if info ~= nil then
 		
@@ -259,12 +252,14 @@ function OnRandomEventOccurred(type:number, severity:number, plotx:number, ploty
 		local result : table = nil;
 		result = GameInfo.RandomEvent_Presentation[info.RandomEventType];
 
+		--[[ TODO: Bring back if natural disasters are allowed to be added to XML with no animation/sound attributes.
 		if (result == nil) then
 			UI.DataError("No DB entry for random event: '"..tostring(info.RandomEventType).."'");
 			return;
 		end
+		]]
 
-		if (result.Animation == nil) then
+		if (result == nil or result.Animation == nil) then
 			-- A handler exists, but the animation is nil, which means we should skip the popup
 			return;
 		end
@@ -273,7 +268,7 @@ function OnRandomEventOccurred(type:number, severity:number, plotx:number, ploty
 		g_AffectedPlots = nil;
 		if (result.Callback ~= nil) then
 			-- return here must be to a global variable because loadstring runs the called function outside of any scope
-			g_AffectedPlots = loadstring("return "..result.Callback.."(...)")(plotx, ploty);
+			g_AffectedPlots = loadstring("return "..result.Callback.."(...)")(plotx, ploty, randomEventID);
 		end
 
 		-- Default to just a single hex
@@ -296,23 +291,139 @@ function OnRandomEventOccurred(type:number, severity:number, plotx:number, ploty
 			PlotX				= plotx,
 			PlotY				= ploty,
 			IsMitigated			= mitigationLevel == 1 and true or false,
-			EffectOperatorType	= info.EffectOperatorType
+			EffectOperatorType	= info.EffectOperatorType,
+			EventID				= randomEventID
 		};
-		local kGameEvent :table = GameRandomEvents.GetCurrentTurnEvent();
+		local kGameEvent :table = GameRandomEvents.GetCurrentTurnEventAtPlot(Map.GetPlotIndex(plotx, ploty));
 		if kGameEvent ~= nil then
 			kData.PopLost = kGameEvent.PopLost;
 			kData.UnitsLost = kGameEvent.UnitsLost;
 			kData.TilesDamaged = kGameEvent.TilesDamaged;
 			kData.FertilityAdded = kGameEvent.FertilityAdded;
 		end
+				
+		local is_revealed = true;
+		local is_city_within_range = true;
+		local is_multiplayer = false;
+		
+		-- Check if the event is visible to the local player
+		-- TODO check all affected plots instead of just one plot
+		local pPlayerVis:table = PlayersVisibility[localPlayer];
+		if (pPlayerVis ~= nil) then
+			if not pPlayerVis:IsRevealed(plotx, ploty) then
+				is_revealed = false;				
+			end
+		end
+		
+		-- Check if the event is within 6 hexes of the local player's cities
+		-- TODO check all affected plots instead of just one plot
+		local playerCities:table = pPlayer:GetCities();
+		if not playerCities:IsCityWithinRange(plotx, ploty, 6) then
+			is_city_within_range = false;
+		end
+		
+		-- Because these popup movies lock the engine until complete; disable 
+		-- them if playing in any type of multiplayer game.
+		if GameConfiguration.IsAnyMultiplayer() or GameConfiguration.IsHotseat() then
+			is_multiplayer = true;
+		end
+		
+		local force_show_VFX = is_revealed and is_city_within_range and (not is_multiplayer);
+		local is_animation_sequenced = false;
+
+		-- VFX		
+		if(result.VFX) then
+			WorldView.PlayEffectAtXY(result.VFX, plotx, ploty, result.ForceShowVFX or force_show_VFX);
+		end
+		
+		-- Model FX
+		if(result.MFX) then
+			if AssetPreview ~= nil then
+				local worldX : number, worldY : number, worldZ : number = UI.GridToWorld(plotx, ploty);
+				local hMFXid = AssetPreview.Create(result.MFX, worldX, worldY);
+				if hMFXid >= 0 then
+					AssetPreview.SetInstanceCulling(hMFXid, "NONE");
+					AssetPreview.SetInstanceAnimation(hMFXid, "ANY", "IDLE");
+					-- Are we using this effect to do sequencing?
+					if result.SequenceType ~= nil and result.SequenceType == "SCENE_EVENT_TRIGGER" then
+						AssetPreview.SetInstanceSequenceLock(hMFXid, gameCorePlaybackEventID, "HIT");
+						is_animation_sequenced = true;
+					end
+					AssetPreview.SetInstanceAutoDestroy(hMFXid, "ANIMATION", true);
+					AssetPreview.SetInstanceAutoDestroy(hMFXid, "TIME", 30.0);
+				end
+			end
+		end
+		
+		if not is_revealed then
+			return;
+		end
+		
+		if not is_city_within_range then
+			return;
+		end
+		
+		if is_multiplayer then
+			return;
+		end
+
+		-- Store off the state of the animation sequencing.		
+		kData.IsAnimationSequenced = is_animation_sequenced;
+
+		UILens.SetActive("Default");
 
 		-- Add to queue if already showing a popup
-		if not m_kPopupMgr:IsLocked() then								
+		if not m_kPopupMgr:IsLocked() then
 			m_kPopupMgr:Lock( ContextPtr, PopupPriority.Medium );
+			-- If the animation is doing handling the sequencing, release the lock
+			if is_animation_sequenced then
+				m_kPopupMgr:ReleaseSequenceLock();
+			end
 			ShowPopup( kData );
 			LuaEvents.NaturalDisasterPopup_Shown(); -- Signal other systems (e.g., bulk hide UI)
 		else
 			table.insert( m_kQueuedPopups, kData );
+		end
+	end
+end
+
+-- ===========================================================================
+function ShouldShowOnRandomEventStarted(type:number)
+	local info:table = GameInfo.RandomEvents[type];
+	if info ~= nil then
+		local presentationInfo:table = GameInfo.RandomEvent_Presentation[info.RandomEventType];
+		if presentationInfo ~= nil then
+			if presentationInfo.SequenceType ~= nil then
+				if presentationInfo.SequenceType == "SCENE_EVENT_TRIGGER" then
+					-- The scene is set to be driven by triggers in the animation.
+					return true;
+				end
+			end
+		end
+	end
+	return false;
+end
+-- ===========================================================================
+--	Game EVENT
+-- ===========================================================================
+
+function OnRandomEventStarted(type:number, severity:number, plotx:number, ploty:number, mitigationLevel:number, randomEventID:number, gameCorePlaybackEventID:number)	
+
+	if ShouldShowOnRandomEventStarted(type) then
+		-- Show the popup now, which will lock the event flow before the event damage has been applied
+		ShowRandomEvent(type, severity, plotx, ploty, mitigationLevel, randomEventID, gameCorePlaybackEventID);
+	end
+end
+
+-- ===========================================================================
+function OnRandomEventOccurred(type:number, severity:number, plotx:number, ploty:number, mitigationLevel:number, randomEventID:number, gameCorePlaybackEventID:number)	
+	-- Check to see if there is already a popup, and the sequencing was controlled by an animation.
+	if m_kCurrentPopup ~= nil and m_kCurrentPopup.EventID ~= nil and m_kCurrentPopup.EventID == randomEventID and m_kCurrentPopup.IsAnimationSequenced then
+		-- Yes, just take a lock and wait for the user to exit.
+		m_kPopupMgr:AcquireSequenceLock();
+	else
+		if not ShouldShowOnRandomEventStarted(type) then
+			ShowRandomEvent(type, severity, plotx, ploty, mitigationLevel, randomEventID, gameCorePlaybackEventID);
 		end
 	end
 end
@@ -387,7 +498,9 @@ end
 --	Initialize the context
 -- ===========================================================================
 function Initialize()
-
+	Events.RandomEventStarted.Add( OnRandomEventStarted );
+	Events.RandomEventOccurred.Add( OnRandomEventOccurred );
+	
 	-- Because these popup movies lock the engine until complete; disable 
 	-- them if playing in any type of multiplayer game.
 	if GameConfiguration.IsAnyMultiplayer() or GameConfiguration.IsHotseat() then
@@ -403,7 +516,7 @@ function Initialize()
 	ContextPtr:SetShutdown( OnShutdown );
 	LuaEvents.GameDebug_Return.Add( OnGameDebugReturn );
 	
-	Events.RandomEventOccurred.Add( OnRandomEventOccurred );
+	
 	Events.LocalPlayerTurnEnd.Add( OnLocalPlayerTurnEnd );
 	Events.CameraAnimationStopped.Add( OnCameraAnimationStopped );
 	Events.CameraAnimationNotFound.Add( OnCameraAnimationNotFound );

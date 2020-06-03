@@ -193,6 +193,9 @@ InstanceManager =
 		for i = 1, #self.m_AllocatedInstances, 1
 		do
 			local iter = table.remove(self.m_AllocatedInstances);
+			if iter["OnResetting"] then		-- If a function has been attached to be called upon a reset, make that call.
+				iter:OnResetting();
+			end			
 			if (self.m_ParentControl ~= nil) then
 				-- Make sure the root is assigned back to the original parent
 				iter[self.m_RootControlName]:ChangeParent(self.m_ParentControl);
@@ -216,6 +219,10 @@ InstanceManager =
 		for i = 1, #self.m_AvailableInstances, 1
 		do
 			local iter = table.remove(self.m_AvailableInstances);
+			if iter["OnDestroying"] then		-- If a function has been attached to be called upon a destroy, make that call.
+				iter:OnDestroying();
+			end			
+
 			if(self.m_ParentControl == nil)
 			then
 				ContextPtr:DestroyChild(iter);
@@ -225,7 +232,7 @@ InstanceManager =
 		end 
 		
 		self.m_iAvailableInstances = 0;
-
+		self.m_iCount = 0;
 	end,
 	
 }

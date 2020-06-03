@@ -64,7 +64,7 @@
 
             <Container ID="GameDetails" Size="parent,105" Anchor="C,B">
               <!-- Game Info -->
-              <Box Size="parent-12,55" Color="30,125,182,50" Anchor="C,T" Offset="-1,0">
+              <Box ID="DetailsBox" Size="parent-12,55" Color="30,125,182,50" Anchor="C,T" Offset="-1,0">
                 <Grid Style="ShellGameDetailsContainer" Size="52,55" Anchor="L,C"/>
                 <Grid Style="ShellGameDetailsContainerR" Size="52,55" Anchor="R,C"/>
                 <Stack StackGrowth="Right" Anchor="C,C" Offset="0,1" Padding="-3">

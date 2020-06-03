@@ -17,7 +17,7 @@
 				</Container>
 
 				<Image						ID="Banner"						Anchor="C,C" Offset="-220,0"	Size="600,987"				Texture="Controls_BannerWideTint" Alpha="0.8" >
-          <Grid				    ID="BannerShadow"			Anchor="C,C"  	SliceCorner="6,6" Size="610,parent" "SliceSize="16,16"	  SliceTextureSize="28,28"	      Texture="Controls_DropShadow5"  />
+          <Grid				    ID="BannerShadow"			Anchor="C,C"  								Size="610,parent"			Texture="Controls_DropShadow5"  SliceCorner="6,6" SliceSize="16,16"	  SliceTextureSize="28,28"	      />
 					<Image																															Size="parent,parent" 	Texture="Loading_Map" Alpha="0.8"/>
 					<Image					ID="BannerBarLeft"		Anchor="L,C" Offset="5,0"			Size="5,987"					Texture="Controls_BannerWideTint" TextureOffset="5,0" Color="255,255,255,50" />
 					<Image					ID="BannerBarRight"		Anchor="R,C" Offset="5,0"			Size="5,987"					Texture="Controls_BannerWideTint" TextureOffset="5,0" Color="255,255,255,50" />

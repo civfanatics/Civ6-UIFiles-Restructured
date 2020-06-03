@@ -20,8 +20,8 @@
 				<Label ID="TitleLabel" Style="ShellHeader" Anchor="C,C" String="LOC_MULTIPLAYER_LAN_LOBBY" />
 			</Container>
 
+			<!-- These look like they are in the same row, but all items except the join button are in the stack to maintain left alignment -->
 			<Stack ID="ShellTabs" Anchor="L,T" Offset="10,54" StackGrowth="Right" Size="940,70" Padding="10"/>
-
 			<GridButton ID="JoinCodeButton"  Anchor="R,T" Offset="10,54" Style="ShellTab" String="LOC_MULTIPLAYER_JOIN_CODE" ToolTip="LOC_MULTIPLAYER_JOIN_CODE_TT"/>
 
 			<Container ID="GameListRoot" Anchor="L,T" Offset="0,114" Size="1024,661">
@@ -31,28 +31,28 @@
 				</Grid>
 
 				<!-- Top Panel  -->
-				<Grid Offset="5,5" Size="parent-10,30" Texture="Controls_SubHeader2" SliceCorner="19,0" SliceSize="1,40" SliceTextureSize="40,40">
+				<Grid Offset="5,5" Size="parent-10,30" Texture="Controls_SubHeader2" SliceCorner="20,2" SliceTextureSize="40,40" >
 
-					<Stack Anchor="L,T" Size="926,40" Offset="0,-2" Padding="0" StackGrowth="Right">
+					<Stack Anchor="L,T" Size="926,40" Offset="0,-4" Padding="0" StackGrowth="Right">
 
-						<GridButton Anchor="L,T" Size="275,28" Style="ShellHeaderButton" ID="SortbyName" >
+						<GridButton Anchor="L,T" Size="275,28" Style="ShellHeaderButton" ID="SortbyName">
 							<Label Anchor="L,C" Offset="7,1" String="LOC_MULTIPLAYER_GAME_NAME" Style="FontNormal14" FontStyle="Shadow" ColorSet="ServerColumnHeader" />
 						</GridButton>
 
-						<GridButton Anchor="L,T" Size="175,28" Style="ShellHeaderButton" ID="SortbyRuleSet" >
+						<GridButton Anchor="L,T" Size="175,28" Style="ShellHeaderButton" ID="SortbyRuleSet">
 							<Label Anchor="L,C" Offset="7,1" String="LOC_MULTIPLAYER_GAME_RULESET" Style="FontNormal14" FontStyle="Shadow" ColorSet="ServerColumnHeader"/>
 						</GridButton>
 
-						<GridButton Anchor="L,T" Size="175,28" Style="ShellHeaderButton" ID="SortbyMapName" >
+						<GridButton Anchor="L,T" Size="175,28" Style="ShellHeaderButton" ID="SortbyMapName">
 							<Label Anchor="L,C" Offset="7,1" String="LOC_AD_SETUP_MAP_TYPE" Style="FontNormal14" FontStyle="Shadow" ColorSet="ServerColumnHeader" />
 						</GridButton>
 
-						<GridButton Anchor="L,T" Size="175,28" Style="ShellHeaderButton" ID="SortbyGameSpeed" >
+						<GridButton Anchor="L,T" Size="175,28" Style="ShellHeaderButton" ID="SortbyGameSpeed">
 							<Label Anchor="L,C" Offset="7,1" String="LOC_AD_SETUP_GAME_SPEED" Style="FontNormal14" FontStyle="Shadow" ColorSet="ServerColumnHeader" />
 						</GridButton>
 
 						<GridButton  Anchor="L,T" Size="100,28"  Style="ShellHeaderButton" ID="SortbyModsHosted" ToolTip="LOC_MULTIPLAYER_LOBBY_MODS">
-			     <Image Texture="AdditionalContent_Header.dds" Anchor="C,C" />
+							<Image Texture="AdditionalContent_Header.dds" Anchor="C,C" />
 							<!--<Label Anchor="L,C" Offset="7,1" String="LOC_MULTIPLAYER_MODSHOSTED" Style="FontNormal14" FontStyle="Shadow" ColorSet="ServerColumnHeader" />-->
 						</GridButton>
 
@@ -92,8 +92,8 @@
 			</Stack>
 			
 			<!--  Friends Panel -->
-			<GridButton ID="FriendsButton" Anchor="L,B" Offset="5,10" Size="260,30" Texture="Controls_ButtonControl" SliceCorner="12,12" SliceTextureSize="24,24" StateOffsetIncrement="0,24" >
-				<CheckBox ID="FriendsCheck" Anchor="L,C" Style="MainCheckBox" Offset="10,0" Size="260,45" String="LOC_MULTIPLAYER_SHOW_FRIENDS" BoxOnLeft="1" IsChecked="1"/>
+			<GridButton ID="FriendsButton" Anchor="L,B" Offset="5,10" Size="250,30" Texture="Controls_ButtonControl" SliceCorner="12,12" SliceTextureSize="24,24" StateOffsetIncrement="0,24" >
+				<CheckBox ID="FriendsCheck" Anchor="L,C" Style="MainCheckBox" Offset="10,0" Size="250,45" String="LOC_MULTIPLAYER_SHOW_FRIENDS" BoxOnLeft="1" IsChecked="1"/>
 				<Container ID="Friends" Anchor="L,B" Hidden="0">
 
 					<Container ID="FriendsBackground" Anchor="L,B" Offset="0,30" Size="236,330">
@@ -144,8 +144,8 @@
 					<Image ID="ModsOfficial" Texture="OfficialContent_Owned.dds" Anchor="C,C" Offset="-32,0"/>
 					<Image ID="ModsCommunity" Texture="CommunityContent_Owned.dds" Anchor="C,C" Offset="18,0"/>
 				</Box>
-				<Box Anchor="L,C" Anchorside="I.O" Size="120,24" Color="255,255,255,0">
-					<Label Anchor="L,C" Offset="0,0" Style="FontNormal14" ColorSet="ServerText" FontStyle="Shadow" ID="MembersLabel" TruncateWidth="120"/>
+				<Box Anchor="L,C" Anchorside="I.O" Size="80,24" Color="255,255,255,0" >
+					<Label Anchor="L,C" Offset="0,0" Style="FontNormal14" ColorSet="ServerText" FontStyle="Shadow" ID="MembersLabel" TruncateWidth="parent"/>
 				</Box>
 			</Stack>
 			

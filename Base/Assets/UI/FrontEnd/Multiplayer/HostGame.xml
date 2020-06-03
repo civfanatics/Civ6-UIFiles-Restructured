@@ -40,13 +40,20 @@
 						<!-- Primary Parameters Stack -->
 						<Stack Anchor="L,T" Offset="50,0" Padding="0" StackGrowth="Bottom" Size="parent-60,auto" ID="PrimaryParametersStack"/>
 
+						<Grid ID="GameModeParametersHeader" Size="parent,21" Texture="Shell_SectionHeader" SliceCorner="154,10" SliceTextureSize="308,21" Color="20,144,140,100" Offset="0,8">
+							<Image Texture="Controls_Gradient_HalfRadial" Color="20,144,140,100" FlipY="1" Anchor="C,T" Size="225,94"/>
+							<Label Anchor="C,C" Style="ShellOptionText" WrapWidth="320" String="LOC_SETUP_GAME_MODES"/>
+						</Grid>
+
+						<Stack Anchor="L,T" Offset="50,0" Padding="0" StackGrowth="Bottom" Size="parent-60,auto" ID="GameModeParameterStack" />
+						
 						<Grid Size="parent,21" Texture="Shell_SectionHeader" SliceCorner="154,10" SliceTextureSize="308,21" Color="20,144,140,100" Offset="0,8">
 							<Image Texture="Controls_Gradient_HalfRadial" Color="20,144,140,100" FlipY="1" Anchor="C,T" Size="225,94"/>
 							<Label Anchor="C,C" Style="ShellOptionText" WrapWidth="320" String="LOC_SETUP_VICTORY_CONDITIONS"/>
 						</Grid>
 
 						<Stack Anchor="L,T" Offset="50,0" Padding="0" StackGrowth="Bottom" Size="parent-60,auto" ID="VictoryParameterStack" />
-
+						
 						<!-- Secondary Parameters Stack -->
 						<Grid Size="parent,21" Texture="Shell_SectionHeader" SliceCorner="154,10" SliceTextureSize="308,21" Color="20,144,140,100" Offset="0,8">
 							<Image Texture="Controls_Gradient_HalfRadial" Color="20,144,140,100" FlipY="1" Anchor="C,T" Size="225,94"/>

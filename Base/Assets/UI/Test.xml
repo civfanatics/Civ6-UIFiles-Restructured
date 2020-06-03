@@ -7,7 +7,37 @@
 	<!--
 		<GridButton ID="foo" Size="200,41"   Style="MainButton" String="asldfj asdfkljas dfljsaj lakdsj flsadk foo bar baz qux sadl" TruncateWidth="190" TruncatedTooltip="1" />	
 	-->
-	
+  
+  
+  <!--Scroll Panel Testing-->
+  <!--<Box Color ="50,30,50,255" Size="200,800" Offset="100,100">
+    <ScrollPanel			ID="MyOfferScroll"	Size="parent, parent" 	Anchor="C,C"		Vertical="1" AutoScollbar="1" debug="#321">
+      <Stack StackGrowth="Bottom" Padding="0">
+        <Box Color="100,100,255,255" Size ="200, 200"/>
+        <Box Color="100,255,100,255" Size ="200, 200"/>
+        <Box Color="255,100,100,255" Size ="200, 200"/>
+        <Box Color="50,255,255,255" Size ="200, 200"/>
+        <Box Color="255,50,255,255" Size ="200, 200"/>
+        <Box Color="255,255,50,255" Size ="200, 200"/>
+        <Box Color="100,100,255,255" Size ="200, 200"/>
+        <Box Color="100,255,100,255" Size ="200, 200"/>
+        <Box Color="255,100,100,255" Size ="200, 200"/>
+        <Box Color="50,255,255,255" Size ="200, 200"/>
+        <Box Color="255,50,255,255" Size ="200, 200"/>
+        <Box Color="255,255,50,255" Size ="200, 200"/>
+        <Box Color="100,100,255,255" Size ="200, 200"/>
+        <Box Color="100,255,100,255" Size ="200, 200"/>
+        <Box Color="255,100,100,255" Size ="200, 200"/>
+        <Box Color="50,255,255,255" Size ="200, 200"/>
+        <Box Color="255,50,255,255" Size ="200, 200"/>
+        <Box Color="255,255,50,255" Size ="200, 200"/>
+      </Stack>
+      <ScrollBar Size="15,parent" SliceTextureSize="11,11" SliceCorner="5,5" Anchor="R,B" Color="111,101,94,250" Offset="6,0" AnchorSide="O,I"  Texture="Controls_ScrollBarBacking" StateOffsetIncrement="0,0" Vertical="1" >
+        <Thumb																										Size="13,13"					Texture="Controls_ScrollBarHandleV_Brown" StateOffsetIncrement="0,0" SliceCorner="6,6" SliceTextureSize="13,13"/>
+      </ScrollBar>
+    </ScrollPanel>
+  </Box>-->
+  
 	<!--
 	<Box Color="0,0,0,255" Size="500,500" Anchor="C,C">
 		<Stack ID="s" StackGrowth="Down" StackPadding="10">

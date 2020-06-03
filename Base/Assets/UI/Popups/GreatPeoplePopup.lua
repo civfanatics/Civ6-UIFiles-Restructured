@@ -232,7 +232,7 @@ function AddRecruit( kData:table, kPerson:table )
 			instance.GoldButton:SetToolTipString(GetPatronizeWithGoldTT(kPerson));
 			instance.GoldButton:SetVoid1(kPerson.IndividualID);
 			instance.GoldButton:RegisterCallback(Mouse.eLClick, OnGoldButtonClick);
-			instance.GoldButton:SetDisabled(not kPerson.CanPatronizeWithGold);
+			instance.GoldButton:SetDisabled((not kPerson.CanPatronizeWithGold) or IsReadOnly());
 			instance.GoldButton:SetHide(false);
 		else
 			instance.GoldButton:SetHide(true);
@@ -244,7 +244,7 @@ function AddRecruit( kData:table, kPerson:table )
 			instance.FaithButton:SetToolTipString(GetPatronizeWithFaithTT(kPerson));
 			instance.FaithButton:SetVoid1(kPerson.IndividualID);
 			instance.FaithButton:RegisterCallback(Mouse.eLClick, OnFaithButtonClick);
-			instance.FaithButton:SetDisabled(not kPerson.CanPatronizeWithFaith);
+			instance.FaithButton:SetDisabled((not kPerson.CanPatronizeWithFaith) or IsReadOnly());
 			instance.FaithButton:SetHide(false);
 		else
 			instance.FaithButton:SetHide(true);
@@ -397,6 +397,9 @@ function ViewCurrent( data:table )
 		local scrollAmt			:number =  offsetx / totalWidth;
 		scrollAmt = math.clamp( scrollAmt, 0, 1);
 		Controls.PeopleScroller:SetScrollValue( scrollAmt );
+	end
+	if IsTutorialRunning() then
+		Controls.PeopleScroller:SetScrollValue( .3 );
 	end
 end
 
@@ -1003,6 +1006,13 @@ function OnPreviousRecruitedClick()
 	Controls.SelectPreviouslyRecruited:SetHide( false );
 	Controls.ButtonPreviouslyRecruited:SetSelected( true );
 	Refresh();
+end
+
+-- ===========================================================================
+-- FOR OVERRIDE
+-- ===========================================================================
+function IsReadOnly()
+	return false;
 end
 
 -- =======================================================================================

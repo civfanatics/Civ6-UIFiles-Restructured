@@ -1,35 +1,18 @@
 
-include("LuaClass");
-
 -- ===========================================================================
 --	Class Table
 -- ===========================================================================
-EspionageViewManager = LuaClass:Extend()
-
--- ===========================================================================
---	Class Constants
--- ===========================================================================
-EspionageViewManager.DATA_FIELD_CLASS = "ESPIONAGE_VIEW_MANAGER_CLASS";
-
--- ===========================================================================
---	Class Members
--- ===========================================================================
-EspionageViewManager.m_kEspionageViewCity = nil;
+EspionageViewManager = {
+	m_kEspionageViewCity = nil;
+}
 
 -- ===========================================================================
 -- Static-style initialization functions
 -- ===========================================================================
 function EspionageViewManager:CreateManager()
-	self = EspionageViewManager:new();
-	return self;
-end
-
--- ===========================================================================
--- Constructor
--- ===========================================================================
-function EspionageViewManager:new()
-	self = LuaClass.new(EspionageViewManager)
-	return self;
+	local oNewManager:object = {};
+	setmetatable(oNewManager, {__index = EspionageViewManager });
+	return oNewManager;
 end
 
 -- ===========================================================================

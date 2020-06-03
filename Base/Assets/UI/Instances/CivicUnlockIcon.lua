@@ -1,61 +1,50 @@
---[[
--- Created by Samuel Batista on Friday Apr 19 2017
--- Copyright (c) Firaxis Games
---]]
+-- Copyright 2017-2019, Firaxis Games
 
-include("LuaClass");
+-- ===========================================================================
+--	Define
+-- ===========================================================================
+CivicUnlockIcon = {};
 
-------------------------------------------------------------------
--- Class Table
-------------------------------------------------------------------
-CivicUnlockIcon = LuaClass:Extend()
 
-------------------------------------------------------------------
--- Class Constants
-------------------------------------------------------------------
-CivicUnlockIcon.DATA_FIELD_CLASS = "CIVIC_UNLOCK_ICON_CLASS";
+-- ===========================================================================
+--	Call this to get an instance.
+--	It will combine the UI control generated from the passed in instance
+--	manager with the functions of this class.
+-- ===========================================================================
+function CivicUnlockIcon.GetInstance( kIM:table, uiParent:table )
+	local ui :table = kIM:GetInstance( uiParent );	
+	return CivicUnlockIcon:new( ui );
+end
 
-------------------------------------------------------------------
+-- ===========================================================================
 -- Constructor
-------------------------------------------------------------------
-function CivicUnlockIcon.new(instance:table)
-	self = LuaClass.new(CivicUnlockIcon)
-	self.Controls = instance or Controls;
-	return self;
+-- ===========================================================================
+function CivicUnlockIcon.new(self, ui:table)
+	local object = setmetatable(ui, {__index = self});
+	return object ;
 end
 
-function CivicUnlockIcon.GetInstance(instanceManager:table, newParent:table)
-	local instance = instanceManager:GetInstance(newParent);
-	self = instance[CivicUnlockIcon.DATA_FIELD_CLASS];
-	if not self then
-		self = CivicUnlockIcon.new(instance);
-		instance[CivicUnlockIcon.DATA_FIELD_CLASS] = self;
-	end
-	return self, instance;
-end
-
-------------------------------------------------------------------
--- Member Functions
-------------------------------------------------------------------
+-- ===========================================================================
 function CivicUnlockIcon:UpdateIcon(icon:string, tooltip:string, onClick:ifunction)
-	self.Controls.Icon:SetIcon(icon);
-	self.Controls.Top:SetToolTipString(tooltip);
+	self.Icon:SetIcon(icon);
+	self.Top:SetToolTipString(tooltip);
 
 	if onClick then
-		self.Controls.Top:RegisterCallback(Mouse.eLClick, onClick);
+		self.Top:RegisterCallback(Mouse.eLClick, onClick);
 	else
-		self.Controls.Top:ClearCallback(Mouse.eLClick);
+		self.Top:ClearCallback(Mouse.eLClick);
 	end
 end
 
+-- ===========================================================================
 function CivicUnlockIcon:UpdateNumberedIcon(value:number, icon:string, tooltip:string, onClick:ifunction)
-	self.Controls.FontIcon:SetText(icon);
-	self.Controls.Top:SetToolTipString(tooltip);
-	self.Controls.NumberLabel:SetText(tostring(value));
+	self.FontIcon:SetText(icon);
+	self.Top:SetToolTipString(tooltip);
+	self.NumberLabel:SetText(tostring(value));
 
 	if onClick then
-		self.Controls.Top:RegisterCallback(Mouse.eLClick, onClick);
+		self.Top:RegisterCallback(Mouse.eLClick, onClick);
 	else
-		self.Controls.Top:ClearCallback(Mouse.eLClick);
+		self.Top:ClearCallback(Mouse.eLClick);
 	end
 end

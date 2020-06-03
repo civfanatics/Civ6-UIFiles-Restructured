@@ -31,12 +31,13 @@ AddBuildingExtraCostTooltip = function(buildingHash, tooltipLines)
 			for row in GameInfo.Buildings_XP2() do
 				if (row.BuildingType == buildingType) then
 					if (row.RequiredPower ~= nil and row.RequiredPower ~= 0) then
-						table.insert(tooltipLines, Locale.Lookup("LOC_TOOLTIP_POWER_REQUIRED", row.RequiredPower));
+						return Locale.Lookup("LOC_TOOLTIP_POWER_REQUIRED", row.RequiredPower);
 					end
 				end
 			end
 		end
 	end
+	return "";
 end
 
 -- ===========================================================================
@@ -102,13 +103,13 @@ AddBuildingEntertainmentTooltip = function(buildingHash, city, district, tooltip
 end
 
 -- ===========================================================================
-AddUnitStrategicResourceTooltip = function(unitReference, formationType, pBuildQueue, toolTip)
+AddUnitStrategicResourceTooltip = function(unitReference, formationType, pBuildQueue)
 	local resource = GameInfo.Resources[unitReference.StrategicResource];
 	if (pBuildQueue ~= nil ) then
 		local resourceAmount = pBuildQueue:GetUnitResourceCost(unitReference.Index, formationType);
 		if (resource ~= nil) then
 			local resourceIcon = "[ICON_" .. resource.ResourceType .. "]";
-			table.insert(toolTip, Locale.Lookup("LOC_UNIT_PRODUCTION_RESOURCE_COST", resourceAmount, resourceIcon, resource.Name));
+			return Locale.Lookup("LOC_UNIT_PRODUCTION_RESOURCE_COST", resourceAmount, resourceIcon, resource.Name);
 		end
 	else
 		if (GameInfo.Units_XP2~= nil) then
@@ -116,15 +117,16 @@ AddUnitStrategicResourceTooltip = function(unitReference, formationType, pBuildQ
 				if (row.UnitType == unitReference.UnitType) then
 					local resourceAmount = row.ResourceCost;
 					local resourceIcon = "[ICON_" .. resource.ResourceType .. "]";
-					table.insert(toolTip, Locale.Lookup("LOC_UNIT_PRODUCTION_RESOURCE_COST", resourceAmount, resourceIcon, resource.Name));
+					return Locale.Lookup("LOC_UNIT_PRODUCTION_RESOURCE_COST", resourceAmount, resourceIcon, resource.Name);
 				end
 			end
 		end
 	end
+	return "";
 end
 
 -- ===========================================================================
-AddUnitResourceMaintenanceTooltip = function(unitReference, formationType, pBuildQueue, toolTip)
+AddUnitResourceMaintenanceTooltip = function(unitReference, formationType)
 	if (GameInfo.Units_XP2~= nil) then
 		for row in GameInfo.Units_XP2() do
 			if (row.UnitType == unitReference.UnitType) then
@@ -134,12 +136,13 @@ AddUnitResourceMaintenanceTooltip = function(unitReference, formationType, pBuil
 					if (resource ~= nil) then
 						local fuelName = Locale.Lookup(resource.Name);
 						local iconName:string = "[ICON_" .. row.ResourceMaintenanceType .. "]";
-						table.insert(toolTip, Locale.Lookup("LOC_UNIT_PRODUCTION_FUEL_CONSUMPTION", resourceMaintenanceAmount,  iconName, fuelName));
+						return Locale.Lookup("LOC_UNIT_PRODUCTION_FUEL_CONSUMPTION", resourceMaintenanceAmount,  iconName, fuelName);
 					end
 				end
 			end
 		end
 	end
+	return "";
 end
 
 -- ===========================================================================

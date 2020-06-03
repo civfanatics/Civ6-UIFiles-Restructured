@@ -48,3 +48,11 @@ function GetGovernmentStatsTooltip(governmentType:string)
 	end
 	return text;
 end
+
+-- ===========================================================================
+--  OVERRIDE
+-- ===========================================================================
+function IsReadOnly()
+	local pWorldCongress:table = Game.GetWorldCongress();
+	return pWorldCongress:IsInSession();
+end

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<Context Name="SwitchLayoutPopup">
+
+  <Container Style="FullScreenVignetteConsumer"/>
+
+  <Grid ID="PopupDrowShadowGrid" Anchor="C,C" Offset="0,0"  Size="auto,auto" AutoSizePadding="50,50"	Style="DropShadow" >
+    <Image ID="PopupBackgroundImage" Anchor="C,C"  Size="auto,auto" AutoSizePadding="-10,-10" Texture="Parchment_Pattern"	StretchMode="Tile" ConsumeMouse="1">
+      <Grid ID="PopupFrameGrid" Anchor="C,C"  Size="800,600" Offset="0,0" Texture="CompletedPopup_Frame" SliceCorner="112,120" SliceSize="2,1">
+
+        <Button	ID="CloseButton"		Texture="Controls_CloseLarge" Size="44,44" Anchor="R,T"	Offset="11,11"	/>
+
+        <Stack Anchor="C,C" Offset="0,-20" StackGrowth="Right" StackPadding="50">
+          <GridButton	ID="PCLayoutButton" Size="285,285" Style="MainButton">
+            <Label Anchor="C,C" Style="FontNormal16" String="LOC_OPTIONS_LAYOUT_PC"/>
+          </GridButton>
+          <GridButton	ID="ConsoleLayoutButton" Size="285,285" Style="MainButton">
+            <Label Anchor="C,C" Style="FontNormal16" String="LOC_OPTIONS_LAYOUT_CONSOLE"/>
+          </GridButton>
+        </Stack>
+      </Grid>
+    </Image>
+  </Grid>
+
+</Context>

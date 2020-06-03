@@ -33,7 +33,7 @@ function PopulateItemData() -- Note that we are overriding this function without
 
 	local tCivicModCache:table = TechAndCivicSupport_BuildCivicModifierCache();
 
-	local civicNodes:table = Game.GetCulture():GetActiveCivicNodes();
+	local civicNodes:table = UITree.GetAvailableCivics();
 	for _,civicNode in ipairs(civicNodes) do
 
 		local row:table		= GameInfo.Civics[civicNode.CivicType];
@@ -51,7 +51,7 @@ function PopulateItemData() -- Note that we are overriding this function without
 		kEntry.IsBoostable	= false;
 		kEntry.IsRevealed	= false;
 		kEntry.Prereqs		= {};				-- IDs for prerequisite item(s)
-		kEntry.UITreeRow	= row.UITreeRow;		
+		kEntry.UITreeRow	= civicNode.TreeRow;		
 		kEntry.Unlocks		= {};				-- Each unlock has: unlockType, iconUnavail, iconAvail, tooltip
 
 		-- Only add if not debugging or in debug range.

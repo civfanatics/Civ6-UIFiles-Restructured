@@ -204,6 +204,15 @@ function IsValidEmail( email )
 end
 
 -- ===========================================================================
+function GetUnlinkedTooltip()
+	if( Network.GetNetworkPlatform() == NetworkPlatform.NETWORK_PLATFORM_EOS ) then
+		return Locale.Lookup("TXT_KEY_EPIC_MY2K_MODE_UNLINKED_TOOLTIP");
+	end
+
+	return Locale.Lookup("TXT_KEY_MY2K_MODE_UNLINKED_TOOLTIP");
+end
+
+-- ===========================================================================
 -- ===========================================================================
 
 function ChangeMy2KTexture( control, labelControl, my2KLinked )
@@ -216,7 +225,7 @@ function ChangeMy2KTexture( control, labelControl, my2KLinked )
 			end
 		else
 			control:SetTexture("My2KLogoButton");
-			control:SetToolTipString( Locale.Lookup("TXT_KEY_MY2K_MODE_UNLINKED_TOOLTIP"));
+			control:SetToolTipString( GetUnlinkedTooltip() );
 			if (labelControl ~= nil and labelControl.LocalizeAndSetText ~= nil) then
 				labelControl:LocalizeAndSetText("TXT_KEY_MY2K_ADDITION_LINK_ACCOUNT_TITLE");
 			end

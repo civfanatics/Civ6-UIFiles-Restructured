@@ -10,6 +10,7 @@ include("SupportFunctions");
 -- ===========================================================================
 
 local PULLDOWN_TRUNCATE_OFFSET:number = 40;
+local MIN_SCREEN_Y            :number = 768;
 
 -- ===========================================================================
 -- ===========================================================================
@@ -749,13 +750,16 @@ end
 -- ===========================================================================
 
 function Resize()
-	local screenX, screenY:number = UIManager:GetScreenSizeVal();
-	local hideLogo = true;
-	if(screenY >= Controls.MainWindow:GetSizeY() + (Controls.LogoContainer:GetSizeY()+ Controls.LogoContainer:GetOffsetY())*2) then
+	local screenX, screenY:number  = UIManager:GetScreenSizeVal();
+	local hideLogo		  :boolean = true;
+	if(screenY >= MIN_SCREEN_Y + (Controls.LogoContainer:GetSizeY()+ Controls.LogoContainer:GetOffsetY() * 2)) then
+		Controls.MainWindow:SetSizeY(screenY-(Controls.LogoContainer:GetSizeY() + Controls.LogoContainer:GetOffsetY() * 2));
+		Controls.CreateGameWindow:SetSizeY(screenY-(Controls.LogoContainer:GetSizeY() + Controls.LogoContainer:GetOffsetY() * 2));
 		hideLogo = false;
+	else
+		Controls.MainWindow:SetSizeY(screenY);
 	end
-	Controls.LogoContainer:SetHide(hideLogo);
-	Controls.MainGrid:ReprocessAnchoring();
+	Controls.LogoContainer:SetHide(hideLogo);	
 end
 
 -- ===========================================================================

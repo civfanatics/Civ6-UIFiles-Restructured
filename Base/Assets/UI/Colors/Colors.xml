@@ -1315,7 +1315,7 @@
 		</Row>
 		<Row>
 			<Type>COLOR_TEAM_1</Type>
-			<Color>COLOR_STANDARD_BLUE_DK</Color>
+			<Color>COLOR_STANDARD_BLUE_LT</Color>
 		</Row>
 		<Row>
 			<Type>COLOR_TEAM_2</Type>
@@ -1331,7 +1331,7 @@
 		</Row>
 		<Row>
 			<Type>COLOR_TEAM_5</Type>
-			<Color>COLOR_STANDARD_PURPLE_DK</Color>
+			<Color>COLOR_STANDARD_PURPLE_MD</Color>
 		</Row>
 		<Row>
 			<Type>COLOR_TEAM_6</Type>

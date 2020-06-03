@@ -126,8 +126,21 @@ function OnShow()
 			pFriends:SetRichPresence("civPresence", "LOC_PRESENCE_IN_GAME_SP");
 		end
 	end
+
+	RealizeTooltipBehavior();
 end
 
+-- ===========================================================================
+function RealizeTooltipBehavior()
+	local toolTipBehavior:number = Options.GetAppOption("UI", "TooltipBehavior");
+	if toolTipBehavior == TooltipBehavior.AlwaysShowing then		
+		TTManager:SetToolTipDelay( 0.0 );
+	elseif toolTipBehavior == TooltipBehavior.ShowAfterDelay then	
+		TTManager:SetToolTipDelay( 2.0 );	-- seconds to delay before showing
+	elseif toolTipBehavior == TooltipBehavior.ShowOnButton then
+		TTManager:SetToolTipDelay( 0.0 );	-- no delay (but require button.)
+	end
+end
 
 -- ===========================================================================
 --	Hide (or Show) all the contexts part of the BULK group.
@@ -261,6 +274,15 @@ end
 -- ===========================================================================
 --	Event
 -- ===========================================================================
+function OnUpdateUI( type, tag, iData1, iData2, strData1 )
+    if (type == SystemUpdateUI.TouchTipBehaviorChanged) then
+		RealizeTooltipBehavior();
+    end
+end
+
+-- ===========================================================================
+--	Event
+-- ===========================================================================
 function OnUIIdle()
 	-- If a countdown to check hasn't started, kick one off.
 	if m_timeUntilPopupCheck <= 0 then
@@ -344,6 +366,7 @@ function Initialize()
 	Events.LoadGameViewStateDone.Add( OnLoadGameViewStateDone );		
 	Events.LocalPlayerTurnBegin.Add( OnTurnBegin );
 	Events.LocalPlayerTurnEnd.Add( OnTurnEnd );	
+	Events.SystemUpdateUI.Add( OnUpdateUI );
 	Events.UIIdle.Add( OnUIIdle );
 	
 	

@@ -871,21 +871,14 @@ end
 --	Input
 --	UI Event Handler
 -- ===========================================================================
-function KeyHandler( key:number )
-	if key == Keys.VK_ESCAPE then
+function OnInputHandler( pInputStruct:table )
+	local uiMsg = pInputStruct:GetMessageType();
+	if (uiMsg == MouseEvents.RButtonUp) or (uiMsg == KeyEvents.KeyUp and pInputStruct:GetKey() == Keys.VK_ESCAPE) then
 		if ( m_isShowingPanel ) then
 			OnCloseButtonClicked();
 			return true;
-		else
-			return false;
 		end
 	end
-	return false;  
-end
-
-function OnInputHandler( pInputStruct:table )
-	local uiMsg = pInputStruct:GetMessageType();
-	if (uiMsg == KeyEvents.KeyUp) then return KeyHandler( pInputStruct:GetKey() ); end;
 	return false;
 end 
 
