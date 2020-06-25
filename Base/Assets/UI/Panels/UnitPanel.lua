@@ -25,6 +25,7 @@ local MIN_UNIT_PANEL_WIDTH			:number = 340;
 --	Likely to be overriden in MODs
 -- ===========================================================================
 g_isOkayToProcess = true;	-- Global processing of unit commands/improvements
+g_targetData = {};
 
 
 -- ===========================================================================
@@ -75,7 +76,6 @@ local INVALID_PLOT_ID	:number = -1;
 local m_plotId			:number = INVALID_PLOT_ID;
 
 local m_airAttackTargetPlots	:table = nil;
-local m_targetData				:table;
 local m_subjectData				:table;
 
 -- Defines the number of modifiers displayed per page in the combat preview
@@ -153,7 +153,7 @@ function InitSubjectData()
 end
 
 function InitTargetData()
-	m_targetData = 
+	g_targetData = 
 	{
 		Name						= "",
 		Combat						= 0,
@@ -629,9 +629,13 @@ function GetUnitActionsTable( pUnit )
 									toolTipString = toolTipString .. "[NEWLINE]" .. "[COLOR:Red]" .. Locale.Lookup(v) .. "[ENDCOLOR]";
 								end
 							end
+							if(not IsActionLimited(entry.WeaponType))then
+								AddActionToTable( actionsTable, operationRow, isWMDTypeDisabled, toolTipString, actionHash, callBack ); 	
+							end
+						else
+							AddActionToTable( actionsTable, operationRow, isWMDTypeDisabled, toolTipString, actionHash, callBack ); 
 						end
-
-						AddActionToTable( actionsTable, operationRow, isWMDTypeDisabled, toolTipString, actionHash, callBack ); 						
+											
 					end
 				end
 			else
@@ -673,7 +677,9 @@ function GetUnitActionsTable( pUnit )
 							end
 						end
 						isDisabled = bDisabled or isDisabled;
-						AddActionToTable( actionsTable, operationRow, isDisabled, toolTipString, actionHash, OnUnitActionClicked, UnitOperationTypes.TYPE, actionHash  );
+						if(not IsActionLimited(operationRow.PrimaryKey, pUnit))then
+							AddActionToTable( actionsTable, operationRow, isDisabled, toolTipString, actionHash, OnUnitActionClicked, UnitOperationTypes.TYPE, actionHash  );
+						end
 					end
 				end
 			end
@@ -1507,16 +1513,16 @@ function ShowTargetUnitStats()
 	m_targetStatStackIM:ResetInstances();
  
 	-- If unitType is 0 then we're probably attacking a city so don't show any unit stats
-	if m_targetData.UnitType > 0 and m_targetData.HasDefenses then
+	if g_targetData.UnitType > 0 and g_targetData.HasDefenses then
 		-- Since the target unit is defending, the melee combat stat will always be the primary stat (except for Religious units). Show the ranged/bombard as secondary
 		if m_combatResults ~= nil and m_combatResults[CombatResultParameters.COMBAT_TYPE] == CombatTypes.RELIGIOUS then
-			m_targetData.StatData = FilterUnitStatsFromUnitData(m_targetData, CombatTypes.RELIGIOUS);
+			g_targetData.StatData = FilterUnitStatsFromUnitData(g_targetData, CombatTypes.RELIGIOUS);
 		else
-			m_targetData.StatData = FilterUnitStatsFromUnitData(m_targetData, CombatTypes.MELEE);
+			g_targetData.StatData = FilterUnitStatsFromUnitData(g_targetData, CombatTypes.MELEE);
 		end
 
 		local currentStatIndex:number = 0;
-		for i,entry in ipairs(m_targetData.StatData) do
+		for i,entry in ipairs(g_targetData.StatData) do
 			if currentStatIndex == 0 then
 				AddTargetUnitStat(entry, -14);
 			elseif currentStatIndex == 1 then
@@ -1681,7 +1687,7 @@ function OnShowCombat( showCombat )
 		Controls.CombatPreview_CombatStatStrength:SetText(attackerTotal);
 
 		--If the target can defend show stats, if the target is passive don't show stats
-		if ( m_targetData.HasDefenses ) then
+		if ( g_targetData.HasDefenses ) then
 			local defenderTotal = (defenderStrength + defenderStrengthModifier);
 			if defenderTotal <= 0 then
 				defenderTotal = 0;
@@ -1804,7 +1810,7 @@ function UpdateTargetModifiers(startIndex:number)
 	-- If the target can defend show modifier list.  If the target is passive don't.
 	local modifierList:table = {};
 	local modifierListSize:number = 0;
-	if( m_targetData.HasDefenses ) then
+	if( g_targetData.HasDefenses ) then
 		modifierList, modifierListSize = GetCombatModifierList(CombatResultParameters.DEFENDER);
 	end
 	UpdateModifiers(startIndex, Controls.TargetModifierStack, Controls.TargetModifierStackAnim, UpdateTargetModifiers, m_targetModifierIM, modifierList, modifierListSize);
@@ -2923,8 +2929,8 @@ function ShowCombatAssessment()
 	--WND status is actually not piped through correctly yet since hashes are not generated.
 	--local wndStatus = m_combatResults[CombatResultParameters.WMD_STATUS];
 
-	if (m_targetData.HasDefenses == false ) then
-		if( m_targetData.HasImprovementOrDistrict ) then
+	if (g_targetData.HasDefenses == false ) then
+		if( g_targetData.HasImprovementOrDistrict ) then
 
 			--If this was an attempted pillage base outcome text on whether the pillage succeeded and the amount of damage to the attacker
 			local bPillaged = m_combatResults[CombatResultParameters.LOCATION_PILLAGED];
@@ -3085,14 +3091,14 @@ function ShowCombatAssessment()
 		local interceptorStrength = interceptorData[CombatResultParameters.COMBAT_STRENGTH];
 		local interceptorStrengthModifier = interceptorData[CombatResultParameters.STRENGTH_MODIFIER];
 		local modifiedStrength = interceptorStrength + interceptorStrengthModifier;
-		Controls.InterceptorName:SetText(m_targetData.InterceptorName);
+		Controls.InterceptorName:SetText(g_targetData.InterceptorName);
 		Controls.InterceptorStrength:SetText(modifiedStrength);
 
 		UpdateInterceptorModifiers(0);
 
 		-- Update interceptor health meters
-		local percent		:number = 1 - GetPercentFromDamage( m_targetData.InterceptorDamage + m_targetData.InterceptorPotentialDamage, m_targetData.InterceptorMaxDamage);
-		local shadowPercent :number = 1 - GetPercentFromDamage( m_targetData.InterceptorDamage, m_targetData.InterceptorMaxDamage );
+		local percent		:number = 1 - GetPercentFromDamage( g_targetData.InterceptorDamage + g_targetData.InterceptorPotentialDamage, g_targetData.InterceptorMaxDamage);
+		local shadowPercent :number = 1 - GetPercentFromDamage( g_targetData.InterceptorDamage, g_targetData.InterceptorMaxDamage );
 		RealizeHealthMeter( Controls.InterceptorHealthMeter, percent, Controls.InterceptorHealthMeterShadow, shadowPercent );
 
 		Controls.InterceptorGrid:SetHide(false);
@@ -3107,7 +3113,7 @@ function ShowCombatAssessment()
 	if (pkAntiAir ~= nil and antiAirID.id ~= defenderID.id) then
 		local antiAirStrength = m_combatResults[CombatResultParameters.ANTI_AIR][CombatResultParameters.COMBAT_STRENGTH];
 		local antiAirStrengthModifier = m_combatResults[CombatResultParameters.ANTI_AIR][CombatResultParameters.STRENGTH_MODIFIER];
-		Controls.AAName:SetText(m_targetData.AntiAirName);
+		Controls.AAName:SetText(g_targetData.AntiAirName);
 		local modifiedStrength = antiAirStrength + antiAirStrengthModifier;
 		Controls.AAStrength:SetText(modifiedStrength);
 
@@ -3333,31 +3339,31 @@ function ReadTargetData_Unit( pkDefender:table )
 	local unitGreatPerson = pkDefender:GetGreatPerson();
 	local iconName, iconNamePrefixOnly, iconNameEraOnly, fallbackIconName = GetUnitPortraitIconNames( pkDefender );
 
-	m_targetData.Name						= Locale.Lookup( pkDefender:GetName() );
-	m_targetData.IconName					= iconName;
-	m_targetData.PrefixOnlyIconName			= iconNamePrefixOnly;
-	m_targetData.EraOnlyIconName			= iconNameEraOnly;
-	m_targetData.FallbackIconName			= fallbackIconName;
-	m_targetData.Combat						= pkDefender:GetCombat();
-	m_targetData.RangedCombat				= pkDefender:GetRangedCombat();
-	m_targetData.BombardCombat				= pkDefender:GetBombardCombat();
-	m_targetData.AntiAirCombat				= pkDefender:GetAntiAirCombat();
-	m_targetData.ReligiousCombat			= pkDefender:GetReligiousStrength();
-	m_targetData.Range						= pkDefender:GetRange();
-	m_targetData.Damage						= pkDefender:GetDamage();
-	m_targetData.MaxDamage					= pkDefender:GetMaxDamage();
-	m_targetData.PotentialDamage			= potentialDamage;
-	m_targetData.BuildCharges				= pkDefender:GetBuildCharges();
-	m_targetData.DisasterCharges			= pkDefender:GetDisasterCharges();
-	m_targetData.SpreadCharges				= pkDefender:GetSpreadCharges();
-	m_targetData.HealCharges				= pkDefender:GetReligiousHealCharges();
-	m_targetData.ReligiousStrength			= pkDefender:GetReligiousStrength();
-	m_targetData.GreatPersonActionCharges	= unitGreatPerson:GetActionCharges();
-	m_targetData.Moves						= pkDefender:GetMovesRemaining();
-	m_targetData.MaxMoves					= pkDefender:GetMaxMoves();
-	m_targetData.UnitType					= pkDefender:GetUnitType();
-	m_targetData.UnitID						= pkDefender:GetID();
-	m_targetData.HasDefenses				= true;
+	g_targetData.Name						= Locale.Lookup( pkDefender:GetName() );
+	g_targetData.IconName					= iconName;
+	g_targetData.PrefixOnlyIconName			= iconNamePrefixOnly;
+	g_targetData.EraOnlyIconName			= iconNameEraOnly;
+	g_targetData.FallbackIconName			= fallbackIconName;
+	g_targetData.Combat						= pkDefender:GetCombat();
+	g_targetData.RangedCombat				= pkDefender:GetRangedCombat();
+	g_targetData.BombardCombat				= pkDefender:GetBombardCombat();
+	g_targetData.AntiAirCombat				= pkDefender:GetAntiAirCombat();
+	g_targetData.ReligiousCombat			= pkDefender:GetReligiousStrength();
+	g_targetData.Range						= pkDefender:GetRange();
+	g_targetData.Damage						= pkDefender:GetDamage();
+	g_targetData.MaxDamage					= pkDefender:GetMaxDamage();
+	g_targetData.PotentialDamage			= potentialDamage;
+	g_targetData.BuildCharges				= pkDefender:GetBuildCharges();
+	g_targetData.DisasterCharges			= pkDefender:GetDisasterCharges();
+	g_targetData.SpreadCharges				= pkDefender:GetSpreadCharges();
+	g_targetData.HealCharges				= pkDefender:GetReligiousHealCharges();
+	g_targetData.ReligiousStrength			= pkDefender:GetReligiousStrength();
+	g_targetData.GreatPersonActionCharges	= unitGreatPerson:GetActionCharges();
+	g_targetData.Moves						= pkDefender:GetMovesRemaining();
+	g_targetData.MaxMoves					= pkDefender:GetMaxMoves();
+	g_targetData.UnitType					= pkDefender:GetUnitType();
+	g_targetData.UnitID						= pkDefender:GetID();
+	g_targetData.HasDefenses				= true;
 end
 
 -- ===========================================================================
@@ -3387,24 +3393,24 @@ function ReadTargetData_District(pDistrict)
 	local potentialWallDamage	:number = m_combatResults[CombatResultParameters.DEFENDER][CombatResultParameters.DEFENSE_DAMAGE_TO];
 
 	-- populate the target data table
-	m_targetData.Name						= targetName;
-	m_targetData.Combat						= combat;
-	m_targetData.RangedCombat				= pDistrict:GetAttackStrength();
-	m_targetData.Damage						= damage;
-	m_targetData.MaxDamage					= maxDamage;
-	m_targetData.WallDamage					= wallDamage;
-	m_targetData.MaxWallDamage				= wallMaxDamage;
-	m_targetData.PotentialDamage			= potentialDamage;
-	m_targetData.PotentialWallDamage		= potentialWallDamage;
-	m_targetData.ShowCombatData				= true;
-	m_targetData.HasDefenses				= true;
+	g_targetData.Name						= targetName;
+	g_targetData.Combat						= combat;
+	g_targetData.RangedCombat				= pDistrict:GetAttackStrength();
+	g_targetData.Damage						= damage;
+	g_targetData.MaxDamage					= maxDamage;
+	g_targetData.WallDamage					= wallDamage;
+	g_targetData.MaxWallDamage				= wallMaxDamage;
+	g_targetData.PotentialDamage			= potentialDamage;
+	g_targetData.PotentialWallDamage		= potentialWallDamage;
+	g_targetData.ShowCombatData				= true;
+	g_targetData.HasDefenses				= true;
 
-	m_targetData.PrimaryColor, m_targetData.SecondaryColor = UI.GetPlayerColors(districtOwner);
+	g_targetData.PrimaryColor, g_targetData.SecondaryColor = UI.GetPlayerColors(districtOwner);
 
 	local civTypeName:string = PlayerConfigurations[districtOwner]:GetCivilizationTypeName();
 	if civTypeName ~= nil then
 		local civIconName = "ICON_"..civTypeName;
-		m_targetData.CivIconName = civIconName;
+		g_targetData.CivIconName = civIconName;
 	else
 		UI.DataError("Invalid type name returned by GetCivilizationTypeName");
 	end
@@ -3421,7 +3427,7 @@ function ReadTargetData_Plot(pkPlot)
 	end
 
 	local owner = pkPlot:GetOwner();
-	m_targetData.PrimaryColor, m_targetData.SecondaryColor = UI.GetPlayerColors(owner);
+	g_targetData.PrimaryColor, g_targetData.SecondaryColor = UI.GetPlayerColors(owner);
 
 	local impType = pkPlot:GetImprovementType();
 	local districtType = pkPlot:GetDistrictType();
@@ -3430,9 +3436,9 @@ function ReadTargetData_Plot(pkPlot)
 
 		-- Set the improvement target info
 		local improvementInfo = GameInfo.Improvements[impType];
-		m_targetData.Name = Locale.Lookup(improvementInfo.Name);
-		m_targetData.IconName = improvementInfo.Icon;
-		m_targetData.HasImprovementOrDistrict = true;
+		g_targetData.Name = Locale.Lookup(improvementInfo.Name);
+		g_targetData.IconName = improvementInfo.Icon;
+		g_targetData.HasImprovementOrDistrict = true;
 
 	elseif( districtType ~= -1 ) then 
 
@@ -3440,30 +3446,30 @@ function ReadTargetData_Plot(pkPlot)
 		local districtInfo = GameInfo.Districts[districtType];
 
 		if (not districtInfo.CityCenter) then
-			m_targetData.Name = Locale.Lookup(districtInfo.Name); 
+			g_targetData.Name = Locale.Lookup(districtInfo.Name); 
 		elseif (owningCity ~= nil) then
-			m_targetData.Name = owningCity:GetName();
+			g_targetData.Name = owningCity:GetName();
 		else
 			UI.DataError("Failed to find target name for district.");
 		end
 
 		--For now we are using the civ icon instead of the district icon since the district icon doesn't fit into the window very well
-		--m_targetData.IconName = "ICON_"..districtInfo.DistrictType;
+		--g_targetData.IconName = "ICON_"..districtInfo.DistrictType;
 		local civTypeName:string = PlayerConfigurations[owner]:GetCivilizationTypeName();
 		if civTypeName ~= nil then
 			local civIconName = "ICON_"..civTypeName;
-			m_targetData.CivIconName = civIconName;
+			g_targetData.CivIconName = civIconName;
 		else
 			UI.DataError("Invalid type name returned by GetCivilizationTypeName");
 		end
 
-		m_targetData.HasImprovementOrDistrict = true;
+		g_targetData.HasImprovementOrDistrict = true;
 	else
 		-- Set the owning player civ icon
 		local civTypeName:string = PlayerConfigurations[owner]:GetCivilizationTypeName();
 		if civTypeName ~= nil then
 			local civIconName = "ICON_"..civTypeName;
-			m_targetData.CivIconName = civIconName;
+			g_targetData.CivIconName = civIconName;
 		else
 			UI.DataError("Invalid type name returned by GetCivilizationTypeName");
 		end
@@ -3557,20 +3563,20 @@ function ReadTargetData( attacker )
 
 		
 		if (pkInterceptor ~= nil) then
-			m_targetData.InterceptorName			= Locale.Lookup(pkInterceptor:GetName());
-			m_targetData.InterceptorCombat			= pkInterceptor:GetCombat();
-			m_targetData.InterceptorDamage			= pkInterceptor:GetDamage();
-			m_targetData.InterceptorMaxDamage		= pkInterceptor:GetMaxDamage();
-			m_targetData.InterceptorPotentialDamage	= m_combatResults[CombatResultParameters.INTERCEPTOR][CombatResultParameters.DAMAGE_TO];
+			g_targetData.InterceptorName			= Locale.Lookup(pkInterceptor:GetName());
+			g_targetData.InterceptorCombat			= pkInterceptor:GetCombat();
+			g_targetData.InterceptorDamage			= pkInterceptor:GetDamage();
+			g_targetData.InterceptorMaxDamage		= pkInterceptor:GetMaxDamage();
+			g_targetData.InterceptorPotentialDamage	= m_combatResults[CombatResultParameters.INTERCEPTOR][CombatResultParameters.DAMAGE_TO];
 		end
 
 		if (pkAntiAir ~= nil) then
-			m_targetData.AntiAirName			= Locale.Lookup(pkAntiAir:GetName());
-			m_targetData.AntiAirCombat			= pkAntiAir:GetAntiAirCombat();
+			g_targetData.AntiAirName			= Locale.Lookup(pkAntiAir:GetName());
+			g_targetData.AntiAirCombat			= pkAntiAir:GetAntiAirCombat();
 		end
 
 		if (bShowTarget) then
-			ViewTarget(m_targetData);
+			ViewTarget(g_targetData);
 			return true; 
 		end
 	end
@@ -4038,6 +4044,14 @@ function OnTutorialEnableActions( actionType:string, unitType:string  )
 	else
 		UI.DataError("Tutorial could not re-enable on the UnitPanel '"..actionType.."' as it wasn't found as a command or an operation.");
 	end
+end
+
+-- ===========================================================================
+-- For override in scenarios, such as red death, where actions have to be more
+-- specifically validated based on unit or civilization types
+-- ===========================================================================
+function IsActionLimited(actionType : string, pUnit : table)
+	return false;
 end
 
 -- ===========================================================================

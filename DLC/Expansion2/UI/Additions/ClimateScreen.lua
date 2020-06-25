@@ -832,7 +832,7 @@ function TabCO2ByCiviliation()
 		local backColor, frontColor = UI.GetPlayerColors(playerID);
 
 		-- unmet players get a dark blue pie wedge and no clues about who the civ is
-		if not pPlayerDiplomacy:HasMet(playerID) then
+		if not pPlayerDiplomacy:HasMet(playerID) and playerID ~= m_playerID then
 			civType = "";
 			civName = Locale.Lookup("LOC_WORLD_RANKING_UNMET_PLAYER");
 			backColor = UI.GetColorValue("COLOR_STANDARD_BLUE_DK");

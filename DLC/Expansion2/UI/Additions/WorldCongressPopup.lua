@@ -76,11 +76,14 @@ local m_kActivePulldown:table;
 --	Checks the current turn segment and opens World Congress if necessary
 -- ===========================================================================
 function CheckShouldOpen()
-	local turnSegment = Game.GetCurrentTurnSegment();
-	if turnSegment == WORLD_CONGRESS_STAGE_1 then
-		SetupWorldCongress(1);
-	elseif turnSegment == WORLD_CONGRESS_STAGE_2 then
-		SetupWorldCongress(2);
+	local pPlayer = PlayerConfigurations[Game.GetLocalPlayer()];
+	if(pPlayer and pPlayer:IsAlive())then
+		local turnSegment = Game.GetCurrentTurnSegment();
+		if turnSegment == WORLD_CONGRESS_STAGE_1 then
+			SetupWorldCongress(1);
+		elseif turnSegment == WORLD_CONGRESS_STAGE_2 then
+			SetupWorldCongress(2);
+		end
 	end
 end
 
@@ -89,12 +92,17 @@ end
 -- ===========================================================================
 function SetupWorldCongress(stageNum:number, beginCongress:boolean)
 	-- Account for AutoPlay
-	if Game.GetLocalPlayer() < 0 then return; end;
+	local localPlayerID = Game.GetLocalPlayer();
+	if localPlayerID == PlayerTypes.NONE then return; end;
 
-	if SetStage(stageNum, beginCongress) then
-		ShowPopup();
-	else
-		ClosePopup();
+	--Account for Observer Mode
+	local pPlayer : table = PlayerConfigurations[localPlayerID];
+	if(pPlayer and pPlayer:IsAlive())then
+		if SetStage(stageNum, beginCongress) then
+			ShowPopup();
+		else
+			ClosePopup();
+		end
 	end
 end
 
@@ -416,6 +424,8 @@ function PopulateLeaderStack()
 	local localPlayerID:number = Game.GetLocalPlayer();
 	local aPlayers:table = PlayerManager.GetAliveMajors();
 	local pDiplomacy:table = Players[localPlayerID]:GetDiplomacy();
+	local pLocalPlayer:table = PlayerConfigurations[localPlayerID];
+	local isLocalPlayerAlive:boolean = pPlayer and pPlayer:IsAlive();
 
 	m_kLeaderButtonIM:ResetInstances();
 	
@@ -423,7 +433,7 @@ function PopulateLeaderStack()
 		local playerID:number = pPlayer:GetID();
 		local pPlayerConfig:table = PlayerConfigurations[playerID];
 		local isLocalPlayer:boolean = playerID == localPlayerID;
-		local hasMetPlayer:boolean = isLocalPlayer or pDiplomacy:HasMet(playerID);
+		local hasMetPlayer:boolean = isLocalPlayer or pDiplomacy:HasMet(playerID) or not isLocalPlayerAlive; -- If local player is dead (and observing), show all leaders
 		local instance:table = m_kLeaderButtonIM:GetInstance();
 		local uiLeaderIcon:table = LeaderIcon:AttachInstance(instance.Icon);
 

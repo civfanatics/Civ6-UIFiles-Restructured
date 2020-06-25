@@ -230,6 +230,7 @@ function CheckLeaveGame()
 									-- and should not trigger a game exit.
 		and Network.IsInSession()	-- Still in a network session.
 		and not Network.IsInGameStartedState() then -- Don't trigger leave game if we're being used as an ingame screen. Worldview is handling this instead.
+		print("HostGame::CheckLeaveGame() leaving the network session.");
 		Network.LeaveGame();
 	end
 end

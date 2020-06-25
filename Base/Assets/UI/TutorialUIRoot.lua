@@ -2583,6 +2583,9 @@ function OnProductionPanelOpen()					TutorialCheck("ProductionPanelOpen"); end
 -- ===========================================================================
 function OnImprovementVisibilityChanged( locX :number, locY :number, eImprovementType :number, eVisibility :number )
 	if ( eVisibility > 0 ) then
+		if(eImprovementType == -1) then
+			return
+		end
 		if( GameInfo.Improvements[eImprovementType].BarbarianCamp ) then
 			TutorialCheck("BarbarianVillageDiscovered"); 
 		end

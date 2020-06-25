@@ -99,17 +99,8 @@ function GameParameters_UI_AfterRefresh(o)
 	local sort = function(a,b)
 	
 		-- ForgUI requires a strict weak ordering sort.
-
 		local ap = g_SortingMap[tostring(a)];
 		local bp = g_SortingMap[tostring(b)];
-
-		if(ap == nil) then
-			print("GameParameters sort ap is nil: ",a.ParameterId);
-		end
-		
-		if(bp == nil) then
-			print("GameParameters sort bp is nil: ",b.ParameterId);
-		end
 
 		if(ap == nil and bp ~= nil) then
 			return true;

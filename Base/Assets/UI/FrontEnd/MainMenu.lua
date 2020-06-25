@@ -50,6 +50,7 @@ g_MostRecentSave = nil;					-- The most recent single player save a user has (lo
 function OnResumeGame()
 	if(g_MostRecentSave) then
 		local serverType : number = ServerType.SERVER_TYPE_NONE;
+		print("MainMenu::OnResumeGame() leaving the network session.");
 		Network.LeaveGame();
 		Network.LoadGame(g_MostRecentSave, serverType);
 	end
@@ -104,6 +105,7 @@ function OnPlayCiv6()
 	
 	local save = Options.GetAppOption("Debug", "PlayNowSave");
 	if(save ~= nil) then
+		print("MainMenu::OnPlayCiv6() PlayNowSave leaving the network session.");
 		Network.LeaveGame();
 
 		local serverType : number = ServerType.SERVER_TYPE_NONE;
@@ -383,6 +385,7 @@ function StartMatchMaking()
 	end
 
 	GameConfiguration.SetMatchMaking(true);
+	GameConfiguration.SetKickVoting(true);
 	Network.MatchMake();
 end
 
@@ -1305,11 +1308,7 @@ function UpdateCheckCloudNotify()
 	if(not m_checkedCloudNotify) then
 		local kandoConnected = FiraxisLive.IsFiraxisLiveLoggedIn();
 		if(kandoConnected) then
-			FiraxisLive.SetAutoCloudNotificationChecks(true); -- continue polling the turn notification check in the future.
-			local started = FiraxisLive.CheckForCloudNotifications();
-			if(started) then
-				m_checkedCloudNotify = true;
-			end
+			m_checkedCloudNotify = true;
 		end
 	end
 end

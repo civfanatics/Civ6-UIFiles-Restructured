@@ -419,7 +419,7 @@
       <Container Size="64,64" Anchor="C,T" Offset="0,0">
         <Image Anchor="C,C" Size="44,44" Texture="Circle44_Darker"  Color="0,0,0,50" />
         <Image Anchor="C,C" Size="44,44" Texture="Circle44_Lighter" Color="255,255,255,100" />
-        <Image ID="GameModeIcon" Texture="CivSymbols44" Size="44,44" Anchor="C,C"/>
+        <Image ID="GameModeIcon" Texture="CivSymbols44" Size="44,44" Anchor="C,C" Offset="0,-4"/>
         <Button ID="CheckBox" Texture="Controls_CircleGameMode" Anchor="C,T" Size="64,64"/>
       </Container>
     </Container>

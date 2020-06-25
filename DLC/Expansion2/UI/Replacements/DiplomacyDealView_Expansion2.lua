@@ -143,26 +143,26 @@ function PopulateDealResources(player: table, iconList: table)
 				local dealItemID : number = pDealItem:GetID();
 				-- Gold?
 				if (type == DealItemTypes.FAVOR) then
-					local icon : table;
+					local uiIcon : table;
 					if (iDuration == 0) then
 						-- One time
-						icon = g_IconOnlyIM:GetInstance(iconList.OneTimeDealsStack);
-						SetIconToSize(icon.Icon, "ICON_YIELD_FAVOR");
-						icon.AmountText:SetText(tostring(pDealItem:GetAmount()));
-						icon.AmountText:SetHide(false);
-						icon.Icon:SetColor(1, 1, 1);
+						uiIcon = g_IconOnlyIM:GetInstance(iconList.OneTimeDealsStack);
+						SetIconToSize(uiIcon.Icon, "ICON_YIELD_FAVOR");
+						uiIcon.AmountText:SetText(tostring(pDealItem:GetAmount()));
+						uiIcon.AmountText:SetHide(false);
+						uiIcon.Icon:SetColor(1, 1, 1);
 
 						-- Show/hide unacceptable item notification
-						icon.UnacceptableIcon:SetHide(not pDealItem:IsUnacceptable());
-						icon.RemoveButton:SetHide(false);
+						uiIcon.UnacceptableIcon:SetHide(not pDealItem:IsUnacceptable());
+						uiIcon.RemoveButton:SetHide(false);
 
-						icon.RemoveButton:RegisterCallback(Mouse.eLClick, function(void1, void2, self) OnRemoveDealItem(player, dealItemID, self); end);
-						icon.SelectButton:RegisterCallback(Mouse.eRClick, function(void1, void2, self) OnRemoveDealItem(player, dealItemID, self); end);
-						icon.SelectButton:RegisterCallback( Mouse.eLClick, function(void1, void2, self) OnSelectValueDealItem(player, dealItemID, self); end );
-						icon.SelectButton:SetToolTipString(nil);		-- We recycle the entries, so make sure this is clear.
-						icon.SelectButton:SetDisabled(false);
+						uiIcon.RemoveButton:RegisterCallback(Mouse.eLClick, function(void1, void2, self) OnRemoveDealItem(player, dealItemID, self); end);
+						uiIcon.SelectButton:RegisterCallback(Mouse.eRClick, function(void1, void2, self) OnRemoveDealItem(player, dealItemID, self); end);
+						uiIcon.SelectButton:RegisterCallback( Mouse.eLClick, function(void1, void2, self) OnSelectValueDealItem(player, dealItemID, self); end );
+						uiIcon.SelectButton:SetToolTipString(nil);		-- We recycle the entries, so make sure this is clear.
+						uiIcon.SelectButton:SetDisabled(false);
 						if (dealItemID == g_ValueEditDealItemID) then
-							g_ValueEditDealItemControlTable = icon;
+							g_ValueEditDealItemControlTable = uiIcon;
 						end
 					else
 						-- Multi-turn
@@ -195,27 +195,28 @@ end
 
 function PopulateAvailableFavor(player: table, iconList: table)
 
-	local iAvailableItemCount = 0;
+	local iAvailableItemCount : number = 0;
 
-	local eFromPlayerID = player:GetID();
-	local eToPlayerID = GetOtherPlayer(player):GetID();
+	local eFromPlayerID : number = player:GetID();
+	local eToPlayerID : number = GetOtherPlayer(player):GetID();
 
-	local pForDeal = DealManager.GetWorkingDeal(DealDirection.OUTGOING, g_LocalPlayer:GetID(), g_OtherPlayer:GetID());
-	local possibleResources = DealManager.GetPossibleDealItems(eFromPlayerID, eToPlayerID, DealItemTypes.FAVOR, pForDeal);
+	local pForDeal : table = DealManager.GetWorkingDeal(DealDirection.OUTGOING, g_LocalPlayer:GetID(), g_OtherPlayer:GetID());
+	local possibleResources : table = DealManager.GetPossibleDealItems(eFromPlayerID, eToPlayerID, DealItemTypes.FAVOR, pForDeal);
 	if ((possibleResources ~= nil) and (player:GetFavor() > 0)) then
 		for i, entry in ipairs(possibleResources) do
 			-- One time favor
 			local favorBalance:number	= player:GetFavor();
 
 			if (not ms_bIsDemand) then
-				local icon = g_IconOnlyIM:GetInstance(iconList.ListStack);
-				icon.AmountText:SetText(favorBalance);
-				icon.SelectButton:SetToolTipString(Locale.Lookup("LOC_DIPLOMATIC_FAVOR_NAME"));		-- We recycle the entries, so make sure this is clear.
-				SetIconToSize(icon.Icon, "ICON_YIELD_FAVOR");
-				icon.SelectButton:RegisterCallback( Mouse.eLClick, function() OnClickAvailableOneTimeFavor(player, ms_DefaultOneTimeFavorAmount); end );
-				icon.SelectButton:RegisterCallback( Mouse.eLClick, function() OnClickAvailableOneTimeFavor(player, ms_DefaultOneTimeFavorAmount); end );
-				icon.Icon:SetColor(1, 1, 1);
-				icon.SelectButton:SetDisabled(false);
+				local uiIcon = g_IconOnlyIM:GetInstance(iconList.ListStack);
+				uiIcon.AmountText:SetHide(false);
+				uiIcon.AmountText:SetText(favorBalance);
+				uiIcon.SelectButton:SetToolTipString(Locale.Lookup("LOC_DIPLOMATIC_FAVOR_NAME"));		-- We recycle the entries, so make sure this is clear.
+				SetIconToSize(uiIcon.Icon, "ICON_YIELD_FAVOR");
+				uiIcon.SelectButton:RegisterCallback( Mouse.eLClick, function() OnClickAvailableOneTimeFavor(player, ms_DefaultOneTimeFavorAmount); end );
+				uiIcon.SelectButton:RegisterCallback( Mouse.eLClick, function() OnClickAvailableOneTimeFavor(player, ms_DefaultOneTimeFavorAmount); end );
+				uiIcon.Icon:SetColor(1, 1, 1);
+				uiIcon.SelectButton:SetDisabled(false);
 
 				iAvailableItemCount = iAvailableItemCount + 1;
 			end

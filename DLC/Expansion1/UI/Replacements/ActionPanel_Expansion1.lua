@@ -30,38 +30,40 @@ function OnRefresh()
 
 	BASE_OnRefresh();
 
-	local ePlayer = Game.GetLocalPlayer();
-	if ePlayer == PlayerTypes.NONE then
+	local localPlayerID : number = Game.GetLocalPlayer();
+	local pPlayerConfig : object = PlayerConfigurations[localPlayerID];
+
+	if ((localPlayerID == PlayerTypes.NONE) or (not pPlayerConfig:IsAlive())) then
 		return;
 	end
 
-	local gameEras = Game.GetEras();
-	local score	= gameEras:GetPlayerCurrentScore(ePlayer);
-	local detailsString = Locale.Lookup("LOC_ERA_SCORE_HEADER") .. " " .. score;
+	local gameEras : table = Game.GetEras();
+	local score : number	= gameEras:GetPlayerCurrentScore(localPlayerID); 
+	local detailsString : string = Locale.Lookup("LOC_ERA_SCORE_HEADER") .. " " .. score;
 	local isFinalEra:boolean = gameEras:GetCurrentEra() == gameEras:GetFinalEra();
 
 	if not isFinalEra then
-		detailsString = detailsString .. Locale.Lookup("LOC_DARK_AGE_THRESHOLD_TEXT", gameEras:GetPlayerDarkAgeThreshold(ePlayer));
-		detailsString = detailsString .. Locale.Lookup("LOC_GOLDEN_AGE_THRESHOLD_TEXT", gameEras:GetPlayerGoldenAgeThreshold(ePlayer));
+		detailsString = detailsString .. Locale.Lookup("LOC_DARK_AGE_THRESHOLD_TEXT", gameEras:GetPlayerDarkAgeThreshold(localPlayerID));
+		detailsString = detailsString .. Locale.Lookup("LOC_GOLDEN_AGE_THRESHOLD_TEXT", gameEras:GetPlayerGoldenAgeThreshold(localPlayerID));
 	end
 	detailsString = detailsString .. "[NEWLINE][NEWLINE]";
 
 	--Set our animation based on our current age
-	if gameEras:HasHeroicGoldenAge(ePlayer) then
+	if gameEras:HasHeroicGoldenAge(localPlayerID) then
 		Controls.TurnAgeAnimation:SetTexture("ActionPanel_TurnProcessing_Heroic");
 		Controls.EndTurnButtonLabel:SetTexture("ActionPanel_TurnBlocker_Heroic");
 		Controls.GoldenAgeAnimation:SetHide(false);
 		Controls.DarkAgeShadow:SetHide(true);
 		--Tooltip setup
 		detailsString = detailsString .. Locale.Lookup("LOC_ERA_TT_HAVE_HEROIC_AGE_EFFECT");
-	elseif gameEras:HasGoldenAge(ePlayer) then
+	elseif gameEras:HasGoldenAge(localPlayerID) then
 		Controls.TurnAgeAnimation:SetTexture("ActionPanel_TurnProcessing_Golden");
 		Controls.EndTurnButtonLabel:SetTexture("ActionPanel_TurnBlocker_Golden");
 		Controls.GoldenAgeAnimation:SetHide(false);
 		Controls.DarkAgeShadow:SetHide(true);
 		--Tooltip setup
 		detailsString = detailsString .. Locale.Lookup("LOC_ERA_TT_HAVE_GOLDEN_AGE_EFFECT");
-	elseif gameEras:HasDarkAge(ePlayer) then
+	elseif gameEras:HasDarkAge(localPlayerID) then
 		Controls.TurnAgeAnimation:SetTexture("ActionPanel_TurnProcessing_Dark");
 		Controls.EndTurnButtonLabel:SetTexture("ActionPanel_TurnBlocker_Dark");
 		Controls.DarkAgeShadow:SetHide(false);
@@ -78,15 +80,15 @@ function OnRefresh()
 	end
 	
 	--Set our bar state
-	local baseline = gameEras:GetPlayerThresholdBaseline(ePlayer);
-	local darkAgeThreshold = gameEras:GetPlayerDarkAgeThreshold(ePlayer);
-	local goldenAgeThreshold = gameEras:GetPlayerGoldenAgeThreshold(ePlayer);
+	local baseline = gameEras:GetPlayerThresholdBaseline(localPlayerID);
+	local darkAgeThreshold = gameEras:GetPlayerDarkAgeThreshold(localPlayerID);
+	local goldenAgeThreshold = gameEras:GetPlayerGoldenAgeThreshold(localPlayerID);
 	local ageIconName = "[ICON_GLORY_NORMAL_AGE]";
 	Controls.TurnTimerMeterWarning:SetHide(true);
 	Controls.AgeLabelCurrent:SetColorByName("Age_Normal");
 	if score >= darkAgeThreshold then
 		--We are working towards, or scored Golden age
-		ageIconName = gameEras:HasDarkAge(ePlayer) and "[ICON_GLORY_GOLDEN_AGE]" or "[ICON_GLORY_SUPER_GOLDEN_AGE]";
+		ageIconName = gameEras:HasDarkAge(localPlayerID) and "[ICON_GLORY_GOLDEN_AGE]" or "[ICON_GLORY_SUPER_GOLDEN_AGE]";
 		if score >= goldenAgeThreshold then
 			--Just working toward a golden age
 			Controls.TurnTimerMeterGolden:SetTexture("ActionPanel_AgeMeterFill_Golden");
@@ -140,18 +142,18 @@ function OnRefresh()
 	end
 
 	--Tooltip
-	local activeCommemorations = gameEras:GetPlayerActiveCommemorations(ePlayer);
+	local activeCommemorations = gameEras:GetPlayerActiveCommemorations(localPlayerID);
 	for i,activeCommemoration in ipairs(activeCommemorations) do
 		local commemorationInfo = GameInfo.CommemorationTypes[activeCommemoration];
 		detailsString = detailsString .. "[NEWLINE][NEWLINE][ICON_BULLET]";
 		if (commemorationInfo ~= nil) then
 			local bonusText = nil;
-			if (gameEras:HasGoldenAge(ePlayer)) then
+			if (gameEras:HasGoldenAge(localPlayerID)) then
 				bonusText = Locale.Lookup(commemorationInfo.GoldenAgeBonusDescription);
-				if (gameEras:IsPlayerAlwaysAllowedCommemorationQuest(ePlayer)) then
+				if (gameEras:IsPlayerAlwaysAllowedCommemorationQuest(localPlayerID)) then
 					bonusText = bonusText .. "[NEWLINE][NEWLINE][ICON_BULLET]" .. Locale.Lookup(commemorationInfo.NormalAgeBonusDescription);
 				end
-			elseif (gameEras:HasDarkAge(ePlayer)) then
+			elseif (gameEras:HasDarkAge(localPlayerID)) then
 				bonusText = Locale.Lookup(commemorationInfo.DarkAgeBonusDescription);
 			else
 				bonusText = Locale.Lookup(commemorationInfo.NormalAgeBonusDescription);

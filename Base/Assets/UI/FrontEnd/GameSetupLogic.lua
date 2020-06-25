@@ -293,11 +293,6 @@ function GameParameters_UI_DefaultCreateParameterDriver(o, parameter, parent)
 			end,
 			SetEnabled = function(enabled, parameter)
 				c.OptionSlider:SetHide(not enabled or parameter.Values == nil or parameter.Values.MinimumValue == parameter.Values.MaximumValue);
-				if(not enabled) then
-					c.Root:SetOffsetX(-140);
-				else
-					c.Root:SetOffsetX(0);
-				end
 			end,
 			SetVisible = function(visible, parameter)
 				c.Root:SetHide(not visible or parameter.Value == nil );
@@ -327,6 +322,13 @@ function GameParameters_UI_DefaultCreateParameterDriver(o, parameter, parent)
 			UpdateValue = function(value)
 				local valueText = value and value.Name or nil;
 				local valueDescription = value and value.Description or nil
+
+				-- If value.Description doesn't exist, try value.RawDescription.
+				-- This allows dropdowns on Advanced Setup to properly track the user selection.
+				if valueDescription == nil and value and value.RawDescription then
+					valueDescription = Locale.Lookup(value.RawDescription);
+				end
+
 				if(cache.ValueText ~= valueText or cache.ValueDescription ~= valueDescription) then
 					local button = c.PullDown:GetButton();
 					button:SetText(valueText);

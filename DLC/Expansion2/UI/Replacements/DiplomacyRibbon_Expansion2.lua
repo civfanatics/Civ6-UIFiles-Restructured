@@ -32,8 +32,13 @@ function UpdateLeaders()
 	if m_kCongressButtonIM then
 		if Game.GetEras():GetCurrentEra() >= GlobalParameters.WORLD_CONGRESS_INITIAL_ERA then		
 			m_kCongressButtonIM:ResetInstances();
-			m_oCongressButton = CongressButton:GetInstance( m_kCongressButtonIM );
-			m_congressButtonWidth = m_oCongressButton.Top:GetSizeX();
+			local pPlayer:table = PlayerConfigurations[Game.GetLocalPlayer()];
+			if(pPlayer ~= nil and pPlayer:IsAlive())then
+				m_oCongressButton = CongressButton:GetInstance( m_kCongressButtonIM );
+				m_congressButtonWidth = m_oCongressButton.Top:GetSizeX();
+			else
+				m_congressButtonWidth = 0;
+			end
 		end
 	end
 

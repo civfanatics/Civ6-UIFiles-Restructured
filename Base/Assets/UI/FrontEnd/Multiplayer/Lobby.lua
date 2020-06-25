@@ -1,4 +1,4 @@
--- ===========================================================================
+﻿-- ===========================================================================
 -- Internet Lobby Screen
 -- ===========================================================================
 include( "InstanceManager" );	--InstanceManager
@@ -1037,8 +1037,8 @@ function SortAndDisplayListings(resetSelection:boolean)
 					gameModeNames = gameModeNames .. "   " .. v.Name .. "[NEWLINE]";
 				end
 				if(gameModeNames ~= "")then
-					local officialContentTooltip = controlTable.ModsOfficial:GetToolTipString();
-					controlTable.ModsOfficial:SetToolTipString(ToolTipPrefix .. gameModeNames .. "[NEWLINE]" .. officialContentTooltip)
+					local officialContentTooltip = controlTable.ModsOfficial:GetToolTipString() or "";
+					controlTable.ModsOfficial:SetToolTipString(ToolTipPrefix .. gameModeNames .. "[NEWLINE]" .. officialContentTooltip);
 				end
 			end
 		end
@@ -1099,6 +1099,7 @@ end
 function Close()
 	m_kPopupDialog:Close(); -- [TTP 43100] Close any popup dialogs so they won't still be around if the player comes back to the lobby.
 
+	print("Lobby::Close() leaving the network session.");
 	Network.LeaveGame();
 	UIManager:DequeuePopup( ContextPtr );
 	
@@ -1385,11 +1386,7 @@ function OnShow()
 	-- PLAYBYCLOUD uses Matchmaking.SetBrowseMode().
 	-- Steam Lobby (Internet) uses Matchmaking.SetGameListType().
 	if (m_lobbyModeName == MPLobbyTypes.PLAYBYCLOUD) then
-		if(m_inPBCGames) then
-			SetBrowserMode(LIST_PERSONAL_GAMES);
-		else
-			SetBrowserMode(LIST_PUBLIC_GAMES);
-		end
+		SetBrowserMode(LIST_PERSONAL_GAMES);
 	elseif (m_lobbyModeName == MPLobbyTypes.PITBOSS_INTERNET) then
 		Matchmaking.SetGameListType( LIST_SERVERS, SEARCH_INTERNET );
 	elseif (m_lobbyModeName == MPLobbyTypes.PITBOSS_LAN) then 
@@ -1519,7 +1516,6 @@ function RealizeShellTabs()
 
 	if IsUsingPlayByCloudGameList() then
 		AddShellTab(LIST_PERSONAL_GAMES, LOC_LOBBY_MY_GAMES, LOC_LOBBY_MY_GAMES_TT);
-		AddShellTab(LIST_PUBLIC_GAMES, LOC_LOBBY_OPEN_GAMES, LOC_LOBBY_OPEN_GAMES_TT);
 
 		if(m_hasCloudUnseenComplete == true) then
 			AddShellTab(LIST_COMPLETED_GAMES, LOC_LOBBY_COMPLETED_GAMES_UNSEEN, LOC_LOBBY_COMPLETED_GAMES_UNSEEN_TT);

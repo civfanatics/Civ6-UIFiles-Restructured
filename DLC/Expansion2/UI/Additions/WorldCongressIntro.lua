@@ -32,15 +32,18 @@ end
 --	OnOpen: Opens the popup 
 -- ===========================================================================
 function OnOpen(stageNum:number)
-	UI.PlaySound("WC_Open");
-	Controls.Title:LocalizeAndSetText(stageNum == 1 and "LOC_WORLD_CONGRESS_INTRO_TITLE" or "LOC_SPECIAL_CONGRESS_INTRO_TITLE");
-	Controls.Body1:LocalizeAndSetText(stageNum == 1 and "LOC_WORLD_CONGRESS_INTRO_BODY_1" or "LOC_SPECIAL_CONGRESS_INTRO_BODY_1");
-	Controls.Body2:LocalizeAndSetText(stageNum == 1 and "LOC_WORLD_CONGRESS_INTRO_BODY_2" or "LOC_SPECIAL_CONGRESS_INTRO_BODY_2");
+	local pPlayer = PlayerConfigurations[Game.GetLocalPlayer()];
+		if(pPlayer ~= nil and pPlayer:IsAlive())then
+		UI.PlaySound("WC_Open");
+		Controls.Title:LocalizeAndSetText(stageNum == 1 and "LOC_WORLD_CONGRESS_INTRO_TITLE" or "LOC_SPECIAL_CONGRESS_INTRO_TITLE");
+		Controls.Body1:LocalizeAndSetText(stageNum == 1 and "LOC_WORLD_CONGRESS_INTRO_BODY_1" or "LOC_SPECIAL_CONGRESS_INTRO_BODY_1");
+		Controls.Body2:LocalizeAndSetText(stageNum == 1 and "LOC_WORLD_CONGRESS_INTRO_BODY_2" or "LOC_SPECIAL_CONGRESS_INTRO_BODY_2");
 
-	--TODO: Flash animation stuff
-	UIManager:QueuePopup(ContextPtr, PopupPriority.WorldCongressIntro, { AlwaysVisibleInQueue = true });
+		--TODO: Flash animation stuff
+		UIManager:QueuePopup(ContextPtr, PopupPriority.WorldCongressIntro, { AlwaysVisibleInQueue = true });
 
-	m_currStageNum = stageNum;
+		m_currStageNum = stageNum;
+	end
 end
 
 -- ===========================================================================

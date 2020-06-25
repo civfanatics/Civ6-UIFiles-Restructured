@@ -6,14 +6,20 @@ include( "PlayerTargetLogic" );
 include( "ChatLogic" );
 include( "NetConnectionIconLogic" );
 include( "NetworkUtilities" );
+include( "InstanceManager");
 
 local CHAT_ENTRY_LOG_FADE_TIME	:number = 1; -- The fade time for chat entries that had already faded out
-											-- when reshown by mousing over the chat log.
 local CHAT_RESIZE_OFFSET		:number = 58;
 local PLAYER_LIST_BG_WIDTH		:number = 236;
 local PLAYER_LIST_BG_HEIGHT		:number = 195;
 local PLAYER_ENTRY_HEIGHT		:number = 46;
 local PLAYER_LIST_BG_PADDING	:number = 20;
+
+--KickVote constants
+local KICK_VOTE_BG_WIDTH		: number = 236;
+local KICK_VOTE_BG_MAX_HEIGHT	: number = 195;
+local KICK_VOTE_ENTRY_HEIGHT	: number = 50;
+local KICK_VOTE_BG_PADDING		: number = 20;
 
 local m_isDebugging				:boolean= false;	-- set to true to fill with test messages
 local m_isExpanded				:boolean= false;	-- Is the chat panel expanded?
@@ -25,6 +31,10 @@ local m_expandedChatTargetEntries :table = {};		-- Chat target pulldown entries 
 
 local m_isPlayerListVisible		:boolean = false;	-- Is the player list visible?
 local m_playerListEntries		:table = {};
+
+local m_isChatPanelFilled		:boolean = false;
+local m_isExpandedChatPanelFilled : boolean = false;
+
 -- See below for g_playerListPullData.
 
 local PlayerConnectedChatStr = Locale.Lookup( "LOC_MP_PLAYER_CONNECTED_CHAT" );
@@ -38,12 +48,29 @@ local m_ChatStartSizeY  : number = 45;
 local m_numEmergencies  : number = 0;
 local m_isFirstDrag		: boolean = true;
 
+local m_kickVoteEntryIM : table = InstanceManager:new("VoteKickPlayerEntry", "RootContainer", Controls.KickVoteStack);
+local m_kActiveKickVotes	: table = {};
+
+local KICKVOTE_REASONS : table = {};
+KICKVOTE_REASONS[KickVoteReasonType.KICKVOTE_AFK] = "LOC_KICK_VOTE_REASON_AFK";
+KICKVOTE_REASONS[KickVoteReasonType.KICKVOTE_GRIEFING] = "LOC_KICK_VOTE_REASON_GRIEFING";
+KICKVOTE_REASONS[KickVoteReasonType.KICKVOTE_CHEATING] = "LOC_KICK_VOTE_REASON_CHEATING";
+
+
 ------------------------------------------------- 
 -- PlayerList Data Functions
 -- These have to be defined before g_playerListPullData to work correctly.
 -------------------------------------------------
 function IsKickPlayerValidPull(iPlayerID :number)
-	if(Network.IsGameHost() and iPlayerID ~= Game.GetLocalPlayer()) then
+	if(Network.IsGameHost() and iPlayerID ~= Game.GetLocalPlayer() and not GameConfiguration.GetValue("KICK_VOTE")) then
+		return true;
+	end
+	return false;
+end
+
+function IsStartKickVoteValidPull(iPlayerID : number)
+	if(GameConfiguration.GetValue("KICK_VOTE") and iPlayerID ~= Game.GetLocalPlayer() 
+	and not Network.HasKickVotedStarted(iPlayerID) and not Network.HasVotedToKick(iPlayerID))then
 		return true;
 	end
 	return false;
@@ -76,11 +103,13 @@ local g_playerListPullData = {}
 if( Network.GetNetworkPlatform() == NetworkPlatform.NETWORK_PLATFORM_EOS ) then
 	g_playerListPullData = {
 		{ name = "PLAYERACTION_KICKPLAYER",		tooltip = "PLAYERACTION_KICKPLAYER_TOOLTIP",	playerAction = "PLAYERACTION_KICKPLAYER",		isValidFunction=IsKickPlayerValidPull},
+		{ name = "LOC_PLAYERACTION_STARTKICKVOTE", tooltip = "LOC_PLAYERACTION_STARTKICKVOTE_TOOLTIP", playerAction = "PLAYERACTION_STARTKICKVOTE",		isValidFunction=IsStartKickVoteValidPull},
 	};
 else
 	g_playerListPullData = {
 		{ name = "PLAYERACTION_KICKPLAYER",		tooltip = "PLAYERACTION_KICKPLAYER_TOOLTIP",	playerAction = "PLAYERACTION_KICKPLAYER",		isValidFunction=IsKickPlayerValidPull},
 		{ name = "PLAYERACTION_FRIENDREQUEST",	tooltip = "PLAYERACTION_FRIENDREQUEST_TOOLTIP",	playerAction = "PLAYERACTION_FRIENDREQUEST",	isValidFunction=IsFriendRequestValidPull},	
+		{ name = "LOC_PLAYERACTION_STARTKICKVOTE", tooltip = "LOC_PLAYERACTION_STARTKICKVOTE_TOOLTIP", playerAction = "PLAYERACTION_STARTKICKVOTE",		isValidFunction=IsStartKickVoteValidPull},
 	};
 end
 
@@ -89,9 +118,14 @@ end
 -- OnChat
 -------------------------------------------------
 function OnChat( fromPlayer, toPlayer, text, eTargetType, playSounds :boolean )
+	
+	if(m_isExpandedChatPanelFilled and Controls.ExpandedChatEntryStack:GetSizeY() < Controls.ExpandedChatLogPanel:GetSizeY())then
+		m_isExpandedChatPanelFilled = false;
+	end
+	
 	local pPlayerConfig :table	= PlayerConfigurations[fromPlayer];
 	local playerName	:string = Locale.Lookup(pPlayerConfig:GetPlayerName()); 
-	
+
 	-- Selecting chat text color based on eTargetType	
 	local chatColor :string = "[color:ChatMessage_Global]";
 	if(eTargetType == ChatTargetTypes.CHATTARGET_TEAM) then
@@ -135,7 +169,9 @@ function OnChat( fromPlayer, toPlayer, text, eTargetType, playSounds :boolean )
 	-- Ensure text parsed properly
 	text = ParseChatText(text);
 
-	chatString			= chatString .. ": [ENDCOLOR]" .. chatColor .. text .. "[ENDCOLOR]"; 
+	-- If the user ends a message with \, that enables "escape mode" in the text control which ignores adjacent tags.
+	-- Putting a space between the user text and the [ENDCOLOR] tag prevents anything bad from happening.
+	chatString			= chatString .. ": [ENDCOLOR]" .. chatColor .. text .. " [ENDCOLOR]";
 
 	AddChatEntry( chatString, Controls.ChatEntryStack, m_ChatInstances, Controls.ChatLogPanel);
 	AddChatEntry( chatString, Controls.ExpandedChatEntryStack, m_expandedChatInstances, Controls.ExpandedChatLogPanel);
@@ -148,10 +184,124 @@ function OnChat( fromPlayer, toPlayer, text, eTargetType, playSounds :boolean )
 		local isHidden
 		LuaEvents.ChatPanel_OnChatReceived(fromPlayer, ContextPtr:GetParent():IsHidden());
 	end
+
+	--Ensure the chat panels begin to auto scroll when they are first filled
+	if( not m_isChatPanelFilled )then
+		if(Controls.ChatEntryStack:GetSizeY() > Controls.ChatLogPanel:GetSizeY())then
+			m_isChatPanelFilled = true;
+			Controls.ChatLogPanel:SetScrollValue(1);
+		end
+	end
+
+	if( not m_isExpandedChatPanelFilled )then
+		if(Controls.ExpandedChatEntryStack:GetSizeY() > Controls.ExpandedChatLogPanel:GetSizeY())then
+			m_isExpandedChatPanelFilled = true;
+			Controls.ExpandedChatLogPanel:SetScrollValue(1);
+		end
+	end
 end
 
 function OnMultiplayerChat( fromPlayer, toPlayer, text, eTargetType )
 	OnChat(fromPlayer, toPlayer, text, eTargetType, true);
+end
+
+
+function OnKickVoteStarted(targetPlayerID : number, fromPlayerID : number, reason : number)
+	BuildPlayerList();
+	local pPlayerConfig = PlayerConfigurations[targetPlayerID];
+	local playerName : string = pPlayerConfig:GetPlayerName();
+	local chatString : string = Locale.Lookup("LOC_KICK_VOTE_STARTED_CHAT_ENTRY", playerName, KICKVOTE_REASONS[reason])
+
+	AddChatEntry(chatString, Controls.ChatEntryStack, m_ChatInstances, Controls.ChatLogPanel);
+	AddChatEntry(chatString, Controls.ExpandedChatEntryStack, m_expandedChatInstances, Controls.ExpandedChatLogPanel);
+
+	local localPlayerID = Game.GetLocalPlayer();
+	if(localPlayerID ~= targetPlayerID and localPlayerID ~= fromPlayerID)then
+		local kickVoteEntry : table = m_kickVoteEntryIM:GetInstance();
+		kickVoteEntry.KickPayerTitle:LocalizeAndSetText("LOC_KICK_VOTE_LABEL", playerName);
+		kickVoteEntry.VoteYesButton:LocalizeAndSetToolTip("LOC_KICK_VOTE_YES_BUTTON_TOOLTIP", playerName);
+		kickVoteEntry.VoteNoButton:LocalizeAndSetToolTip("LOC_KICK_VOTE_NO_BUTTON_TOOLTIP", playerName);
+		kickVoteEntry.VoteYesButton:RegisterCallback(Mouse.eLClick, function() OnVoteKickYesButton(targetPlayerID, kickVoteEntry) end);
+		kickVoteEntry.VoteNoButton:RegisterCallback(Mouse.eLClick, function() OnVoteKickNoButton(targetPlayerID, kickVoteEntry) end);
+		UI.PlaySound("Play_MP_Chat_KickNotify");
+		RealizeKickVotePanel();
+		local kickVoteEntryData : table = {
+			Instance = kickVoteEntry,
+			TargetPlayerID = targetPlayerID 
+			};
+		table.insert(m_kActiveKickVotes, kickVoteEntryData);
+	end
+	
+end
+
+function OnKickVoteComplete(targetPlayerID :number, kickResult :number)
+
+	for k, v in ipairs(m_kActiveKickVotes)do
+		if(v.TargetPlayerID == targetPlayerID)then
+			m_kickVoteEntryIM:ReleaseInstance(v.Instance);
+			table.remove(m_kActiveKickVotes, k);
+		end
+	end
+	
+	local pPlayerConfig = PlayerConfigurations[targetPlayerID];
+	local playerName : string = pPlayerConfig:GetPlayerName();
+	local locKey :string = "LOC_KICK_VOTE_FAILED_CHAT_ENTRY";
+	if(kickResult == KickVoteResultType.KICKVOTERESULT_VOTE_PASSED) then
+		locKey = "LOC_KICK_VOTE_SUCCEEDED_CHAT_ENTRY";
+	elseif(kickResult == KickVoteResultType.KICKVOTERESULT_TIME_ELAPSED) then
+		locKey = "LOC_KICK_VOTE_TIME_ELAPSED_CHAT_ENTRY";
+	elseif(kickResult == KickVoteResultType.KICKVOTERESULT_VOTED_NO_KICK) then
+		locKey = "LOC_KICK_VOTE_FAILED_CHAT_ENTRY";
+	elseif(kickResult == KickVoteResultType.KICKVOTERESULT_NOT_ENOUGH_PLAYERS) then
+		locKey = "LOC_KICK_VOTE_NOT_ENOUGH_PLAYERS_CHAT_ENTRY";
+	end
+
+	local chatString : string = Locale.Lookup(locKey, playerName);
+	AddChatEntry(chatString, Controls.ChatEntryStack, m_ChatInstances, Controls.ChatLogPanel);
+	AddChatEntry(chatString, Controls.ExpandedChatEntryStack, m_expandedChatInstances, Controls.ExpandedChatLogPanel);
+	RealizeKickVotePanel();
+	BuildPlayerList();
+end
+
+function OnVoteKickYesButton(targetPlayerID : number, kickVoteEntry : table)
+	m_kickVoteEntryIM:ReleaseInstance(kickVoteEntry);
+	for k, v in ipairs(m_kActiveKickVotes)do
+		if(v.TargetPlayerID == targetPlayerID)then
+			table.remove(m_kActiveKickVotes, k);
+		end
+	end
+	Network.KickVote(targetPlayerID, true);
+	RealizeKickVotePanel();
+end
+
+function OnVoteKickNoButton(targetPlayerID : number, kickVoteEntry : table)
+	m_kickVoteEntryIM:ReleaseInstance(kickVoteEntry);
+	for k, v in ipairs(m_kActiveKickVotes)do
+		if(v.TargetPlayerID == targetPlayerID)then
+			table.remove(m_kActiveKickVotes, k);
+		end
+	end
+	Network.KickVote(targetPlayerID, false);
+	RealizeKickVotePanel();
+end
+
+function RealizeKickVotePanel()
+	local children : table = Controls.KickVoteStack:GetChildren();
+	local numChildren : number = 0;
+	for k, v in ipairs(children)do
+		if(not v:IsHidden())then
+			numChildren = numChildren + 1;
+		end
+	end
+	
+	if(numChildren > 0)then
+		Controls.KickVotePanel:SetHide(false);
+		local sizeY : number = numChildren * KICK_VOTE_ENTRY_HEIGHT + KICK_VOTE_BG_PADDING;
+		if(sizeY > KICK_VOTE_BG_MAX_HEIGHT) then sizeY = KICK_VOTE_BG_MAX_HEIGHT end;
+		Controls.KickVoteBackground:SetSizeY(sizeY);
+	else
+		Controls.KickVotePanel:SetHide(true);
+	end
 end
 
 --------------------------------------------------- 
@@ -254,6 +404,7 @@ function OnDragResizer()
 			OnResetChatButton(); --Ensures the mouse offset is set properly. Needed on the initial drag and when research/civic gets toggled on/off.
 			m_isFirstDrag = false;
 		end
+
 		local mouseX	: number, mouseY : number = UIManager:GetMousePos();
 		--How far has the mouse traveled while dragging?
 		local yDiff		: number = mouseY - m_StartingMouseY;
@@ -269,6 +420,15 @@ function OnDragResizer()
 		end
 		Controls.ChatEntryStack:CalculateSize();
 		LuaEvents.Tutorial_DisableMapDrag(true); --Disable map drag when resizing. Re-enabled in InputHandler();
+
+		if(Controls.ChatEntryStack:GetSizeY() > Controls.ChatLogPanel:GetSizeY())then
+			if(not m_isChatPanelFilled)then
+				m_isChatPanelFilled = true;
+				Controls.ChatLogPanel:SetScrollValue(1);
+			end
+		else
+			m_isChatPanelFilled = false;
+		end
 	end
 end
 
@@ -434,7 +594,7 @@ function UpdatePlayerEntry(iPlayerID :number)
 	local playerEntry :table = m_playerListEntries[iPlayerID];
 	local pPlayerConfig :table = PlayerConfigurations[iPlayerID];
 	local entryChanged :boolean = false;
-	if(pPlayerConfig ~= nil and pPlayerConfig:IsAlive() == true) then
+	if(pPlayerConfig ~= nil and (pPlayerConfig:IsAlive() or(GameConfiguration.IsNetworkMultiplayer() and Network.IsPlayerConnected(iPlayerID) and pPlayerConfig:GetSlotStatus() == 4))) then
 
 		-- Create playerEntry if it does not exist.
 		if(playerEntry == nil) then
@@ -478,7 +638,15 @@ end
 function OnPlayerListPull(iPlayerID :number, iPlayerListDataID :number)
 	local playerListData = g_playerListPullData[iPlayerListDataID];
 	if(playerListData ~= nil) then
-		if(playerListData.playerAction == "PLAYERACTION_KICKPLAYER") then
+		if(playerListData.playerAction == "PLAYERACTION_STARTKICKVOTE")then
+			UIManager:PushModal(Controls.ConfirmKick, true);
+			Controls.ConfirmKick:SetSizeVal(UIManager:GetScreenSizeVal());
+			local pPlayerConfig = PlayerConfigurations[iPlayerID];
+			if(pPlayerConfig ~= nil) then
+				local playerName = pPlayerConfig:GetPlayerName();
+				LuaEvents.StartKickVote(iPlayerID, playerName);
+			end
+		elseif(playerListData.playerAction == "PLAYERACTION_KICKPLAYER") then
 			UIManager:PushModal(Controls.ConfirmKick, true);
 			Controls.ConfirmKick:SetSizeVal(UIManager:GetScreenSizeVal());
 			local pPlayerConfig = PlayerConfigurations[iPlayerID];
@@ -544,10 +712,13 @@ function BuildPlayerList()
 
 	-- Call GetplayerEntry on each human player to initially create the entries.
 	local numPlayers:number = 0;
-	local player_ids = GameConfiguration.GetParticipatingPlayerIDs();
-	for i, iPlayer in ipairs(player_ids) do	
+	local kInUsePlayerIDs : table = GameConfiguration.GetInUsePlayerIDs();
+	for i, iPlayer in ipairs(kInUsePlayerIDs) do	
 		local pPlayerConfig = PlayerConfigurations[iPlayer];
 		if(pPlayerConfig ~= nil and pPlayerConfig:IsHuman() and not Network.IsPlayerKicked(iPlayer)) then
+			UpdatePlayerEntry(iPlayer);
+			numPlayers = numPlayers + 1;
+		elseif(pPlayerConfig ~= nil and pPlayerConfig:GetSlotStatus() == 4 and GameConfiguration.IsNetworkMultiplayer() and Network.IsPlayerConnected(iPlayer))then
 			UpdatePlayerEntry(iPlayer);
 			numPlayers = numPlayers + 1;
 		end
@@ -577,9 +748,7 @@ function BuildPlayerList()
 	end
 
 	Controls.PlayerListStack:CalculateSize();
-	Controls.PlayerListStack:ReprocessAnchoring();
 	Controls.PlayerListScroll:CalculateInternalSize();
-	Controls.PlayerListScroll:ReprocessAnchoring();
 
 	if Controls.PlayerListScroll:GetScrollBar():IsHidden() then
 
@@ -642,6 +811,13 @@ function OnChatPanelPlayerInfoChanged(playerID :number)
 	PlayerTarget_OnPlayerInfoChanged( playerID, Controls.ChatPull, Controls.ChatEntry, Controls.ChatIcon, m_chatTargetEntries, m_playerTarget, false);
 	PlayerTarget_OnPlayerInfoChanged( playerID, Controls.ExpandedChatPull, Controls.ExpandedChatEntry, Controls.ExpandedChatIcon, m_expandedChatTargetEntries, m_playerTarget, false);
 	BuildPlayerList(); -- Player connection status might have changed.
+end
+
+-------------------------------------------------
+-------------------------------------------------
+function OnChatPanelGameConfigChanged()
+	-- Kick Voting option might have affected the available player options.  Rebuild the player list.
+	BuildPlayerList();
 end
 
 -------------------------------------------------
@@ -737,6 +913,7 @@ function AdjustScreenSize()
 	Controls.ShowPlayerListButton:SetSizeX(Controls.ShowPlayerListCheck:GetSizeX() + 20);
 	Controls.PBCShowPlayerListButton:SetSizeX(Controls.PBCShowPlayerListCheck:GetSizeX() + 20);
 	LuaEvents.WorldTracker_OnScreenResize();
+	ContextPtr:RequestRefresh();
 end
 
 -------------------------------------------------
@@ -762,6 +939,23 @@ function SetDefaultPanelMode()
 		Controls.ExpandedChatPanelBG:SetHide(true);
 		Controls.PlayByCloudPanel:SetHide(true);
 		Controls.PlayByCloudPanelBG:SetHide(true);
+	end
+end
+
+-- ===========================================================================
+function OnRefresh()
+	ContextPtr:ClearRequestRefresh();
+	if(m_isExpandedChatPanelFilled and Controls.ExpandedChatEntryStack:GetSizeY() < Controls.ExpandedChatLogPanel:GetSizeY())then
+		m_isExpandedChatPanelFilled = false;
+	elseif(not m_isExpandedChatPanelFilled and Controls.ExpandedChatEntryStack:GetSizeY() > Controls.ExpandedChatLogPanel:GetSizeY())then
+		m_isExpandedChatPanelFilled = true;
+		Controls.ExpandedChatLogPanel:SetScrollValue(1);
+	end
+	if(m_isChatPanelFilled and Controls.ChatEntryStack:GetSizeY() < Controls.ChatLogPanel:GetSizeY())then
+		m_isChatPanelFilled = false;
+	elseif(not isChatPanelFilled and Controls.ChatEntryStack:GetSizeY() > Controls.ChatLogPanel:GetSizeY())then
+		m_isChatPanelFilled = true;
+		Controls.ChatLogPanel:SetScrollValue(1);
 	end
 end
 
@@ -793,6 +987,8 @@ end
 -- ===========================================================================
 function Initialize()
 
+	ContextPtr:SetRefreshHandler( OnRefresh );	
+
 	Controls.ChatEntry:RegisterCommitCallback( SendChat );
 	Controls.ContractButton:RegisterCallback(Mouse.eLClick, OnCloseExpandedPanel);
 	Controls.ExpandButton:RegisterCallback(Mouse.eLClick, OnOpenExpandedPanel);
@@ -815,7 +1011,11 @@ function Initialize()
 	Events.MultiplayerChat.Add( OnMultiplayerChat );
 	-- When player info is changed, this pulldown needs to know so it can update itself if it becomes invalid.
 	Events.PlayerInfoChanged.Add(OnChatPanelPlayerInfoChanged);
+	Events.GameConfigChanged.Add(OnChatPanelGameConfigChanged);
 	Events.SystemUpdateUI.Add( OnUpdateUI );
+
+	Events.KickVoteStarted.Add(OnKickVoteStarted);
+	Events.KickVoteComplete.Add(OnKickVoteComplete);
 
 	LuaEvents.ChatPanel_OnChatPanelRefresh.Add( OnChatPanelRefresh );
 	LuaEvents.ChatPanel_OnResetDraggedChatPanel.Add( OnResetDraggedChatPanel );
@@ -861,5 +1061,14 @@ function Initialize()
 	--Chat panel drag resizing init.
 	m_ChatStartSizeY = Controls.ChatPanel:GetSizeY();
 	m_StartingMouseX, m_StartingMouseY = Controls.DragButton:GetScreenOffset();
+
+	--This option requires a restart after changing, so we only need to check it at initialize
+	local replaceDragWithClick : number = Options.GetUserOption("Interface", "ReplaceDragWithClick");
+	if(replaceDragWithClick == 1)then
+		Controls.DragButton:LocalizeAndSetToolTip("LOC_CLICK_TO_RESIZE");
+	end
+	
+	m_isChatPanelFilled = false;
+	m_isExpandedChatPanelFilled = false;
 end
 Initialize()

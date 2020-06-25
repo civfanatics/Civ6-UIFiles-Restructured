@@ -89,6 +89,7 @@ function OnLoadYes()
 	-- Leave your current game if this is not a game configuration load.
 	-- Game Configuration should keep the game in the current state (hostgame/advanced setup).
 	if(g_FileType ~= SaveFileTypes.GAME_CONFIGURATION) then
+		print("LoadGameMenu::OnLoadYes() leaving the network session.");
 		Network.LeaveGame();
 	end
 

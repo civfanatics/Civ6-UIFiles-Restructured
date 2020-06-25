@@ -60,6 +60,10 @@
 			<Label				ID="EndTurnText"									Align="C,C" Anchor="C,C"	Offset="0,-3"	WrapWidth="165"					Style="ActionPanelText"	String="LOC_ACTION_PANEL_END_TURN" />
 		</AlphaAnim>
     </Button>
+
+    <Button					ID="ObserverButtonLabel"						Anchor="R,B"	Offset="-2,167"	Size="171,48"					Texture="ActionPanel_TurnBlocker.dds" NoStateChange="1" Hidden="1">
+      <Label				ID="ObserverText"									Align="C,C" Anchor="C,C"	Offset="0,-3"	WrapWidth="165"					Style="ActionPanelText"	String="LOC_ACTION_PANEL_OBSERVING" />
+    </Button>
   
 		<Image																						Anchor="R,B"																				Texture="ActionPanel_Gold2.dds" Offset="20,2" >
 
@@ -83,6 +87,10 @@
 					<Image																			Anchor="C,C"																				Texture="ActionPanel_EndTurnFlash.dds" />
 				</AlphaAnim>				
 			</BoxButton>
+
+      <BoxButton		ID="EndObserverModeButton"								Anchor="R,B"	Offset="11,30"	Size="108,108"	Color="0,0,0,0" NoStateChange="1" Hidden="1">
+        <Image      ID="EndObserverModeIcon"             Anchor="C,C" Texture="Notifications100" Size="100,100" Tooltip="LOC_ACTION_PANEL_END_OBSERVER_MODE"/>
+      </BoxButton>
 
 			<AlphaAnim		ID="TutorialSlowTurnEnableAnim"			Anchor="R,B" Speed="0.5" Offset="-20,0" Size="180,220" AlphaStart="1" AlphaEnd="1" Cycle="Once" ConsumeAllMouse="1" Hidden="1" />
       <Container ID="TurnTimerContainer" Size="148,147" Hidden="1">

@@ -1572,7 +1572,11 @@ end
 -- ===========================================================================
 function OnNotificationAdded( playerID:number, notificationID:number )
 	if (playerID == Game.GetLocalPlayer())	then -- Was it for us?
-		local pNotification = NotificationManager.Find( playerID, notificationID );
+
+		local pPlayer : table = PlayerConfigurations[playerID];
+		if(not pPlayer:IsAlive())then return end;
+
+		local pNotification : table = NotificationManager.Find( playerID, notificationID );
 		if pNotification ~= nil then
 			if pNotification:IsVisibleInUI() then
 				--print("    OnNotificationAdded():",notificationID, "for type "..tostring(pNotification:GetMessage()) );	--debug
@@ -1763,6 +1767,7 @@ function OnShutdown()
 	Events.LoadGameViewStateDone.Remove( OnLoadGameViewStateDone );
 
 	LuaEvents.ActionPanel_ActivateNotification.Remove( OnLuaActivateNotification );
+	LuaEvents.EndGameMenu_StartObserverMode.Remove( OnStartObserverMode );
 
 	ClearNotifications();
 	
@@ -1817,6 +1822,16 @@ function OnUnitKilledInCombat( targetUnit )
 end
 
 -- ===========================================================================
+--
+-- ===========================================================================
+function OnStartObserverMode()
+	ClearNotifications();
+	Controls.ScrollStack:DestroyAllChildren();
+	m_genericItemIM:DestroyInstances();
+	m_lastStackSize = 0;
+end
+
+-- ===========================================================================
 --	Late initialize pattern; friendly for MODs.
 -- ===========================================================================
 function LateInitialize()
@@ -1836,6 +1851,7 @@ function LateInitialize()
 	Events.LoadGameViewStateDone.Add( OnLoadGameViewStateDone );
 
 	LuaEvents.ActionPanel_ActivateNotification.Add( OnLuaActivateNotification );
+	LuaEvents.EndGameMenu_StartObserverMode.Add( OnStartObserverMode );
 end
 
 -- ===========================================================================

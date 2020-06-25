@@ -55,13 +55,13 @@
 					<AlphaAnim	ID="ChatIndicatorFade" Cycle="Once" AlphaBegin="0.0" AlphaEnd="1.0" Speed="3" Stopped="1">
 						<Image		ID="ChatIndicator" Offset="35,0" Size="22,22" Texture="DiploRibbon_TypingIndicator"/>
 					</AlphaAnim>
-					<Stack			ID="StatStack" StackGrowth="Bottom" Offset="1,55" StackPadding="3" EndPadding="6" >
+					<Stack			ID="StatStack" StackGrowth="Bottom" Offset="1,60" StackPadding="3" EndPadding="6" >
 						<Label		ID="Score"			Style="FontNormal14" FontStyle="shadow" Color0="255,200,0,255" Color2="180,130,200,255"		EffectColor="0,0,0,255" String="[ICON_Capital]-"	ToolTip="LOC_HUD_RIBBON_SCORE"		  />
-						<Label		ID="Military"		Style="FontNormal14" FontStyle="shadow" ColorSet="ResMilitaryLabelCS"	EffectColor="0,0,0,255" String="[ICON_Strength]-"	ToolTip="LOC_HUD_RIBBON_STRENGTH" />
-						<Label		ID="Science"		Style="FontNormal14" FontStyle="shadow" ColorSet="ResScienceLabelCS"	EffectColor="0,0,0,255" String="[ICON_Science]-"	ToolTip="LOC_HUD_RIBBON_SCIENCE"  />
-						<Label		ID="Culture"		Style="FontNormal14" FontStyle="shadow" ColorSet="ResCultureLabelCS"	EffectColor="0,0,0,255" String="[ICON_Culture]-"	ToolTip="LOC_HUD_RIBBON_CULTURE"  />
-						<Label		ID="Gold"				Style="FontNormal14" FontStyle="shadow" ColorSet="ResGoldLabelCS"			EffectColor="0,0,0,255" String="[ICON_Gold]-"			ToolTip="LOC_HUD_RIBBON_GOLD"     />
-						<Label		ID="Faith"			Style="FontNormal14" FontStyle="shadow" ColorSet="ResFaithLabelCS" 		EffectColor="0,0,0,255" String="[ICON_Faith]-"		ToolTip="LOC_HUD_RIBBON_FAITH"    />
+						<Label		ID="Military"		Style="FontNormal14" FontStyle="shadow" ColorSet="ResMilitaryLabelCS"	EffectColor="0,0,0,255" String="[ICON_Strength]-"	ToolTip="LOC_HUD_RIBBON_STRENGTH" TruncateWidth="61" TruncatedTooltip="1"/>
+						<Label		ID="Science"		Style="FontNormal14" FontStyle="shadow" ColorSet="ResScienceLabelCS"	EffectColor="0,0,0,255" String="[ICON_Science]-"	ToolTip="LOC_HUD_RIBBON_SCIENCE"  TruncateWidth="61" TruncatedTooltip="1"/>
+						<Label		ID="Culture"		Style="FontNormal14" FontStyle="shadow" ColorSet="ResCultureLabelCS"	EffectColor="0,0,0,255" String="[ICON_Culture]-"	ToolTip="LOC_HUD_RIBBON_CULTURE"  TruncateWidth="61" TruncatedTooltip="1"/>
+						<Label		ID="Gold"				Style="FontNormal14" FontStyle="shadow" ColorSet="ResGoldLabelCS"			EffectColor="0,0,0,255" String="[ICON_Gold]-"			ToolTip="LOC_HUD_RIBBON_GOLD"     TruncateWidth="61" TruncatedTooltip="1"/>
+						<Label		ID="Faith"			Style="FontNormal14" FontStyle="shadow" ColorSet="ResFaithLabelCS" 		EffectColor="0,0,0,255" String="[ICON_Faith]-"		ToolTip="LOC_HUD_RIBBON_FAITH"    TruncateWidth="61" TruncatedTooltip="1"/>
 					</Stack>
 				</SlideAnim>
 			</Grid>

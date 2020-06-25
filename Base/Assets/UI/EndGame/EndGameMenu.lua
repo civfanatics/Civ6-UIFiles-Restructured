@@ -246,6 +246,8 @@ function PopulateRankingResults()
 	Controls.RankingScrollPanel:CalculateInternalSize();
 end
 
+----------------------------------------------------------------  
+---------------------------------------------------------------- 
 function UpdateButtonStates(data:table)
 	-- Display a continue button if there are other players left in the game
 	local player = Players[Game.GetLocalPlayer()];
@@ -277,7 +279,7 @@ function UpdateButtonStates(data:table)
 		canExtendGame = data.OneMoreTurn;
 	end
 	
-	canExtendGame = canExtendGame and player and player:IsAlive();
+	canExtendGame = canExtendGame and player and player:IsAlive() and Game.GetLocalObserver() ~= PlayerTypes.OBSERVER;
 	
 	-- Don't show next player button if Just One More Turn will be shown as the functionality is the same.
 	nextPlayer = nextPlayer and not canExtendGame;
@@ -529,7 +531,7 @@ function OnShow()
 	-- TODO: Better place for this to happen so it doesn't get called on every show (every queue popup)
 	local isHiding:boolean = false;
 	HandlePauseGame( isHiding );
-
+	
 	if m_isFadeOutGame then
 		-- Hide anything that shouldn't be shown overtop of the win/lose screen
 		Controls.MainBacking:SetHide( true );
@@ -1031,22 +1033,29 @@ function OnTeamVictory(team, victory, eventID)
 	end
 end
 
+-- =============================================================
+function OnShowEndGame(playerID : number)
+	ShowEndGame(playerID);
+end
+
 ----------------------------------------------------------------
 -- Called when the display is to be manually shown.
 ----------------------------------------------------------------
-function OnShowEndGame(playerId)
+function ShowEndGame(playerId : number)
 	if(playerId == nil) then
 		playerId = Game.GetLocalPlayer();
 	end
 
-	local player = Players[playerId];
-	if(player:IsAlive()) then
-		local victor, victoryType = Game.GetWinningTeam();
-		if(victor == player:GetTeam()) then
-			local victory = GameInfo.Victories[victoryType];
-			if(victory) then
-				View(TeamVictoryData(victor, victory.VictoryType));
-				return;
+	if(playerId ~= PlayerTypes.NO_PLAYER)then
+		local player : table = Players[playerId];
+		if(player:IsAlive()) then
+			local victor, victoryType = Game.GetWinningTeam();
+			if(victor == player:GetTeam()) then
+				local victory = GameInfo.Victories[victoryType];
+				if(victory) then
+					View(TeamVictoryData(victor, victory.VictoryType));
+					return;
+				end
 			end
 		end
 	end
@@ -1217,7 +1226,6 @@ function OnExitGame()
 	Events.UserConfirmedClose();
 end
 
-
 -- ===========================================================================
 function LateInitialize()
 	Resize();
@@ -1300,12 +1308,12 @@ function Initialize()
 	-- Events
 
 	LuaEvents.GameDebug_Return.Add(OnGameDebugReturn);	
-	LuaEvents.ShowEndGame.Add(OnShowEndGame);
+	LuaEvents.ShowEndGame.Add(ShowEndGame);
 	
 	Events.SystemUpdateUI.Add( OnUpdateUI );
 	Events.UserRequestClose.Add( OnRequestClose );
 	Events.PlayerInfoChanged.Add( OnPlayerInfoChanged );
-	Events.MultiplayerPrePlayerDisconnected.Add( OnMultiplayerPrePlayerDisconnected );
+	Events.MultiplayerPrePlayerDisconnected.Add( OnMultiplayerPrePlayerDisconnected ); 
 	Events.MultiplayerPlayerConnected.Add( OnMultplayerPlayerConnected );
 	Events.MultiplayerChat.Add( OnChat );
 

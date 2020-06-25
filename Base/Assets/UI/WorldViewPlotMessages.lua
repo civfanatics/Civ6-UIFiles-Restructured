@@ -1,6 +1,9 @@
--------------------------------------------------------------------------------
--- This context manages the world anchored plot text.  These the the 'floater' values
--- that get displayed when a unit/city takes damage, etc.
+-- ===========================================================================
+--	Copyright 2014-2020, Firaxis Games
+--
+--	Manages the world anchored plot text.  
+--	These are the 'floater' values displayed when a unit/city takes damage, etc.
+-- ===========================================================================
 
 include( "InstanceManager" );
 local g_FloatUpPlotTextInstanceManager		= InstanceManager:new( "FloatUpPlotText", "Anchor", Controls.FloatUpPlotTextContainer );
@@ -193,13 +196,17 @@ end
 ----------------------------------------------------------------        
 function AddPlotText( messageType, delay, x, y, text, visibility, targetID )
 	
-	-- Convert to an index
-	local plotIndex = Map.GetPlotIndex(x, y);
 	local localPlayerID : number = Game.GetLocalPlayer();
-	local localPlayerVis : table = PlayersVisibility[localPlayerID];
+	if localPlayerID == PlayerTypes.NONE then
+		return;	-- Early out for non-player.
+	end
+
+	-- Convert to an index
+	local plotIndex		: number = Map.GetPlotIndex(x, y);	
+	local localPlayerVis: table = PlayersVisibility[localPlayerID];
 
 	--Check to make sure everyone or the local player is the target
-	if(targetID ~= -1 and targetID ~= localPlayerID) then return; end
+	if(targetID ~= PlayerTypes.NONE and targetID ~= localPlayerID) then return; end
 
 	--Check to make sure local player has proper visibility to see this message
 	if(visibility == RevealedState.VISIBLE and (not localPlayerVis:IsVisible(x, y))) then return; end
@@ -212,14 +219,19 @@ function AddPlotText( messageType, delay, x, y, text, visibility, targetID )
 		AddMessage(messageType, delay, plotIndex, text, Game.GetCurrentGameTurn());
 	end
 end
-Events.WorldTextMessage.Add( AddPlotText );
 
 ----------------------------------------------------------------
 -- Local player has changed
 ----------------------------------------------------------------
 function OnLocalPlayerChanged(iLocalPlayer, iPrevLocalPlayer)
-
 	DestroyAllPlotText();
-
 end
---- Events.LocalPlayerChanged.Add(OnLocalPlayerChanged);
+
+-- ===========================================================================
+--	Entry Point
+-- ===========================================================================
+function Initialize()
+	Events.WorldTextMessage.Add( AddPlotText );
+	--- Events.LocalPlayerChanged.Add(OnLocalPlayerChanged);
+end
+Initialize();

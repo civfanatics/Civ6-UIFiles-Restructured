@@ -5,10 +5,10 @@
 
 	<Box ID="MainGrid" Style="ShellBGBox">
 
-    <Container ID="MainWindow" Size="1024,768" Anchor="C,B" >
-      <Grid ID="LogoContainer" Style="SubContainer4" Size="parent-10,116" Anchor="C,T" Color="7,28,50" AnchorSide="I,O" Offset="0,4">
-        <Image ID="Logo"				Anchor="C,C" Texture="MainLogo.dds" StretchMode="Auto"/>
-      </Grid>
+		<Container ID="MainWindow" Size="1024,768" Anchor="C,B" >
+			<Grid ID="LogoContainer" Style="SubContainer4" Size="parent-10,116" Anchor="C,T" Color="7,28,50" AnchorSide="I,O" Offset="0,4">
+				<Image ID="Logo"				Anchor="C,C" Texture="MainLogo.dds" StretchMode="Auto"/>
+			</Grid>
 
 			<Container ID="Header" Style="ShellHeaderContainer">
 				<Grid Style="ShellHeaderButtonGrid">
@@ -109,11 +109,12 @@
 										<Label Anchor="C,C" Style="ShellOptionText" WrapWidth="320" String="LOC_MP_GAME_SUMMARY_GAME_SETTINGS"/>
 									</Grid>
 
-									<Stack ID="ParametersStack" Anchor="R,T" Offset="-78,42" Size="0,auto" Padding="0" StackGrowth="Bottom" >
+									<Stack ID="ParametersStack" Anchor="L,T" Offset="0,42" Size="parent,auto" Padding="0" StackGrowth="Bottom" >
 										<!-- Primary Parameters Stack -->
-										<Stack Anchor="C,T" Padding="0" StackGrowth="Bottom" ID="PrimaryParametersStack"/>
-										<Stack Anchor="C,T" Padding="0" StackGrowth="Bottom" ID="VictoryParameterStack" />
-										<Stack Anchor="C,T" Padding="0" StackGrowth="Bottom" ID="SecondaryParametersStack"/>
+										<Stack Anchor="L,T" Padding="5" Size="parent,auto" StackGrowth="Bottom" ID="PrimaryParametersStack"/>
+										<Stack Anchor="L,T" Padding="5" Size="parent,auto" StackGrowth="Bottom" ID="VictoryParameterStack" />
+										<Stack Anchor="L,T" Padding="5" Size="parent,auto" StackGrowth="Bottom" ID="SecondaryParametersStack"/>
+
 									</Stack>
 								</Container>
 							</Stack>
@@ -378,14 +379,14 @@
 								<PullDown ID="EdgeScrollPullDown" Style="PullDownBlue" Anchor="R,T" ScrollThreshold="400" Size="400,24" Offset="0,0" SpaceForScroll="0"/>
 								<Label Anchor="L,C" Style="ShellOptionText" WrapWidth="350" String="LOC_OPTIONS_INTERFACE_EDGE_SCROLL"/>
 							</Stack>
-              <Stack Anchor="R,T" StackGrowth="Left" Padding="5">
-                <PullDown ID="AutoProdQueuePullDown" Style="PullDownBlue" Anchor="R,T" ScrollThreshold="400" Size="400,24" Offset="0,0" SpaceForScroll="0"/>
-                <Label Anchor="L,C" Style="ShellOptionText" WrapWidth="350" String="LOC_OPTIONS_INTERFACE_OPEN_TO_PROD_QUEUE"/>
-              </Stack>
-              <Stack Anchor="R,T" StackGrowth="Left" Padding="5">
-                <PullDown ID="ReplaceDragWithClickPullDown" Style="PullDownBlue" Anchor="R,T" ScrollThreshold="400" Size="400,24" Offset="0,0" SpaceForScroll="0"/>
-                <Label Anchor="L,C" Style="ShellOptionText" WrapWidth="350" String="LOC_OPTIONS_INTERFACE_FORCE_CLICK_TO_DRAG" ToolTip="LOC_OPTIONS_INTERFACE_FORCE_CLICK_TO_DRAG_TT"/>
-              </Stack>
+							<Stack Anchor="R,T" StackGrowth="Left" Padding="5">
+								<PullDown ID="AutoProdQueuePullDown" Style="PullDownBlue" Anchor="R,T" ScrollThreshold="400" Size="400,24" Offset="0,0" SpaceForScroll="0"/>
+								<Label Anchor="L,C" Style="ShellOptionText" WrapWidth="350" String="LOC_OPTIONS_INTERFACE_OPEN_TO_PROD_QUEUE"/>
+							</Stack>
+							<Stack Anchor="R,T" StackGrowth="Left" Padding="5">
+								<PullDown ID="ReplaceDragWithClickPullDown" Style="PullDownBlue" Anchor="R,T" ScrollThreshold="400" Size="400,24" Offset="0,0" SpaceForScroll="0"/>
+								<Label Anchor="L,C" Style="ShellOptionText" WrapWidth="350" String="LOC_OPTIONS_INTERFACE_FORCE_CLICK_TO_DRAG" ToolTip="LOC_OPTIONS_INTERFACE_FORCE_CLICK_TO_DRAG_TT"/>
+							</Stack>
 							<Stack Anchor="R,T" StackGrowth="Left" Padding="5">
 								<PullDown ID="UnitCyclingPullDown" Style="PullDownBlue" Anchor="R,T" ScrollThreshold="400" Size="400,24" Offset="0,0" SpaceForScroll="0"/>
 								<Label Anchor="L,C" Style="ShellOptionText" WrapWidth="350" String="LOC_OPTIONS_AUTO_UNIT_CYCLING"/>
@@ -394,7 +395,7 @@
 								<PullDown ID="RibbonStatsPullDown" Style="PullDownBlue" Anchor="R,T" ScrollThreshold="400" Size="400,24" Offset="0,0" SpaceForScroll="0"/>
 								<Label Anchor="L,C" Style="ShellOptionText" WrapWidth="350" String="LOC_OPTIONS_RIBBON_STATS_LABEL"/>
 							</Stack>
-              <Stack Anchor="R,T" StackGrowth="Right" Padding="5">
+							<Stack Anchor="R,T" StackGrowth="Right" Padding="5">
 								<Label  Style="ShellOptionText" WrapWidth="350" Anchor="C,C" String="LOC_OPTIONS_CHAT_TEXT_SIZE"/>
 								<Container Size="400,24">
 									<Label  ID="ChatTextValue"  Style="ShellOptionText" WrapWidth="350" Anchor="L,C" String="UNSET" />
@@ -443,9 +444,9 @@
 								<PullDown ID="RGBControl" Style="PullDownBlue" ScrollThreshold="400" Size="400,24" Offset="0,0" SpaceForScroll="0"/>
 								<Label Anchor="L,C" Style="ShellOptionText" WrapWidth="350" String="LOC_OPTIONS_INTERFACE_LIGHTING" ToolTip="LOC_OPTIONS_INTERFACE_LIGHTING_TOOLTIP"/>
 							</Stack>
-              <Container Size="parent,44" Hidden="1">
-                <GridButton ID="SwitchUILayout" Size="parent-200,22" Style="ShellButton" Anchor="C,C" String="LOC_OPTIONS_SWITCH_UI_LAYOUT"/>
-              </Container>
+							<Container Size="parent,44" Hidden="1">
+								<GridButton ID="SwitchUILayout" Size="parent-200,22" Style="ShellButton" Anchor="C,C" String="LOC_OPTIONS_SWITCH_UI_LAYOUT"/>
+							</Container>
 						</Stack>
 					</Container>
 					<Container ID="KeyBindings" Size="parent,parent" Hidden="1">
@@ -517,46 +518,36 @@
 
 	<!-- Instance for a boolean parameters -->
 	<Instance Name="BooleanParameterInstance">
-		<GridButton ID="CheckBox" Anchor="C,T" Style="CheckBoxControl" Size="300,24" Offset="-3,0" States="8"/>
+		<GridButton ID="CheckBox" Anchor="R,T" Size="400,24" Style="CheckBoxControl" />
 	</Instance>
 
 	<!-- Slider with number display -->
 	<Instance Name="SliderParameterInstance">
-		<Container ID="Root" Size="450,55" Anchor="C,T">
-			<Container Size="300,55" Anchor="C,T">
-				<Label ID="OptionTitle" Offset="8,0" Style="ShellOptionText" AnchorSide="O,I" Anchor="L,C" String=""/>
-				<Stack StackGrowth="Right" Anchor="C,T">
-					<Slider ID="OptionSlider" Style="SliderControl" Size="198,13" Anchor="L,C" />
-					<Image Texture="Controls_CircleCompass" Size="52,53" Color="ShellControl">
-						<Label ID="NumberDisplay" Style="FontFlair40" String="10" Anchor="C,C" FontStyle="stroke" Color0="208,212,217,255"	Color1="0,0,0,50"/>
-					</Image>
-				</Stack>
-			</Container>
-		</Container>
+		<Stack ID="Root" StackGrowth="Left" Size="auto,55" Anchor="R,T">
+			<Image Texture="Controls_CircleCompass" Size="52,53" Color="ShellControl">
+				<Label ID="NumberDisplay" Style="FontFlair40" String="10" Anchor="C,C" FontStyle="stroke" Color0="208,212,217,255"	Color1="0,0,0,50"/>
+			</Image>
+			<Slider ID="OptionSlider" Style="SliderControl" Size="198,13" Anchor="L,C" />
+			<Label ID="OptionTitle" Style="ShellOptionText" Anchor="L,C" String=""/>
+		</Stack>
 	</Instance>
 
 	<!-- Instance for a string parameters -->
 	<Instance Name="StringParameterInstance">
-		<Container Size="300,auto" ID="StringRoot">
-			<Container Size="auto,auto" Anchor="R,T" Offset="232,0">
-				<Box Size="300,30" Color="0,0,0,0"/>
-				<Label ID="StringName" Anchor="R,C" Offset="0,0" Style="ShellOptionText" ColorSet="ShellOptionText" FontStyle="stroke" WrapWidth="180" String="UNKNOWN_EDIT_BOX"/>
-			</Container>
-			<Container Size="auto,auto" Anchor="R,T" Offset="-72,0">
-				<Grid Style="EditTextArea" Size="300,30">
-					<EditBox ID="StringEdit" Anchor="L,C" Offset="6,0" Size="300,23" EditMode="1" Style="FontNormal18" ColorSet="BodyTextCool" FontStyle="stroke" MaxLength="10"/>
-				</Grid>
-			</Container>
-		</Container>
+		<Stack Anchor="R,T" StackGrowth="Left" Padding="5" ID="StringRoot">
+			<Grid Style="EditTextArea" Size="400,30" InnerPadding="6,6">
+				<EditBox ID="StringEdit" Anchor="L,C" Offset="0,0" Size="parent,23" EditMode="1" Style="FontNormal14" ColorSet="BodyTextCool" FontStyle="stroke" MaxLength="2000"/>
+			</Grid>
+			<Label  ID="StringName" Anchor="L,C" Style="ShellOptionText" WrapWidth="350" String="UNKNOWN_EDIT_BOX"/>
+		</Stack>
 	</Instance>
 
 	<!-- Instance for a parameter that has multiple choices for the value, displayed as a dropdown -->
 	<Instance Name="PullDownParameterInstance">
-		<Container ID="Root" Anchor="C,T" Size="450,32" Offset="0,0">
-			<PullDown Anchor="C,T" ID="PullDown" Style="PullDownBlue" Size="300,24" Offset="-4,0">
-				<Label Offset="4,0" Style="ShellOptionText" ID="StringName" AnchorSide="O,I" Anchor="L,C" String=""/>
-			</PullDown>
-		</Container>
+		<Stack ID="Root" Anchor="R,T" StackGrowth="Left" Padding="5">
+			<PullDown ID="PullDown" Style="PullDownBlue" ScrollThreshold="400" Size="400,24" Offset="0,0" SpaceForScroll="0"/>
+			<Label ID="StringName" Anchor="L,C" Style="ShellOptionText" WrapWidth="350" String=""/>
+		</Stack>
 	</Instance>
 
 	<!-- Dialog Support -->

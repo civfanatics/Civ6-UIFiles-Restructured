@@ -51,10 +51,10 @@ end
 --	Refresh Data and View
 -- ===========================================================================
 function RealizeHookVisibility()
-	m_isGovernorsAvailable = isDebug or HasCapability("CAPABILITY_GOVERNORS");
+	m_isGovernorsAvailable = isDebug or (HasCapability("CAPABILITY_GOVERNORS") and not IsLocalPlayerObserving());
 	m_GovernorsInstance.LaunchItemButton:SetShow( m_isGovernorsAvailable );
 
-	m_isHistoricMomentsAvailable = isDebug or HasCapability("CAPABILITY_HISTORIC_MOMENTS");
+	m_isHistoricMomentsAvailable = isDebug or (HasCapability("CAPABILITY_HISTORIC_MOMENTS") and not IsLocalPlayerObserving());
 	m_HistorianInstance.LaunchItemButton:SetShow(m_isHistoricMomentsAvailable);
 
 	BASE_RealizeHookVisibility();

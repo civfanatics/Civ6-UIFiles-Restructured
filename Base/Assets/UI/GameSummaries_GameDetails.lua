@@ -182,7 +182,7 @@ function UpdateGlobalCache()
 	end); 	
 
 	local indexed_categories = {};
-	g_Categories = HallofFame.GetStatisticsCategories();
+	g_Categories = HallofFame.GetStatisticsCategories(ruleset);
 	for i,v in ipairs(g_Categories) do
 		indexed_categories[v.Category] = v;
 		v.Name = v.Name and Locale.Lookup(v.Name) or "";
@@ -196,7 +196,7 @@ function UpdateGlobalCache()
 	end);
 
 	g_Statistics = {};
-	local statistics = HallofFame.GetStatistics();
+	local statistics = HallofFame.GetStatistics(ruleset);
 	for i,stat in ipairs(statistics) do
 		local cat = indexed_categories[stat.Category];
 		if(cat and not cat.IsHidden) then
@@ -216,7 +216,7 @@ function UpdateGlobalCache()
 	g_AvailableContexts = Overview_GetContexts(g_GameData);	
 		
 	-- Graphs are not grouped.  Group them by Object Id. using AvailableContexts.
-	local graphs = HallofFame.GetGraphs(g_GameId);
+	local graphs = HallofFame.GetGraphs(g_GameId, ruleset);
 
 	-- Massage data, add data set names etc.
 	for i,g in ipairs(graphs) do
@@ -319,7 +319,7 @@ function UpdateGlobalCache()
 	end
 	
 	-- Massage the data, filter out empty groups, localize and sort groups.
-	local reports = HallofFame.GetReports(g_GameId);
+	local reports = HallofFame.GetReports(g_GameId, ruleset);
 	g_Reports = {};
 
 	for _, report in ipairs(reports) do

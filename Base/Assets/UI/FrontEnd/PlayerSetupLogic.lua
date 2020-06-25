@@ -192,6 +192,25 @@ function ReleasePlayerParameters()
 end
 
 function GetPlayerParameterError(playerId)
+	local gameState = GameConfiguration.GetGameState(); 
+	local isPreGame = (gameState == GameStateTypes.GAMESTATE_PREGAME);	
+	local max_unique_players = GameConfiguration.GetValue("MAX_UNIQUE_PLAYERS");
+	local unique_leaders = GameConfiguration.GetValue("NO_DUPLICATE_LEADERS");
+	local unique_civilizations = GameConfiguration.GetValue("NO_DUPLICATE_CIVILIZATIONS");
+	local player_ids = GameConfiguration.GetParticipatingPlayerIDs();
+	local player_count = 0;
+
+	-- Only count major civs.
+	for _, pid in ipairs(player_ids) do
+		local pPlayerConfig = PlayerConfigurations[pid];
+		if(pPlayerConfig) then
+			local civLevel = pPlayerConfig:GetCivilizationLevelTypeID();
+			if(civLevel == nil or civLevel == 0 or civLevel == CivilizationLevelTypes.CIVILIZATION_LEVEL_FULL_CIV) then
+				player_count = player_count + 1;
+			end
+		end
+	end
+
 	for i, pp in ipairs(g_PlayerParameters) do
 		local id = pp[1];
 		if(id == playerId) then
@@ -203,6 +222,18 @@ function GetPlayerParameterError(playerId)
 				-- parameters.
 				local playerLeader = p.Parameters["PlayerLeader"];
 				if(playerLeader) then
+
+					-- Only perform this check in pre-game.
+					-- After a game has been made, there will be additional participants that break this check.
+					if(isPreGame) then
+						if(max_unique_players and (unique_leaders or unique_civilizations)) then
+							if(player_count > max_unique_players) then
+								print("Player Count - " .. player_count .. " Max Unique Players - " .. max_unique_players);
+								return {Reason="LOC_SETUP_PLAYER_PARAMETER_ERROR"};
+							end
+						end
+					end
+
 					-- TTP 31558 - In multiplayer, Open and Closed slots have nil for most of their player configuration values because the slots have not been reset yet.
 					-- On the client, the player setup logic will try to change the nil values to their default values and fail because the client does not have write access.
 					-- This is OK and should not count as a player parameter error, which would block game start incorrectly.

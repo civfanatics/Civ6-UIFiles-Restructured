@@ -2312,10 +2312,23 @@ function PopulateDealAgreements(player : table, iconList : table)
 
 					-- Show/hide unacceptable item notification
 					uiIcon.UnacceptableIcon:SetHide(not pDealItem:IsUnacceptable());
-					uiIcon.RemoveButton:SetHide(false);
-
 					uiMinimizedIcon.UnacceptableIcon:SetHide(not pDealItem:IsUnacceptable());
-					uiMinimizedIcon.RemoveButton:SetHide(false);
+					
+					if(pDealItem:IsLocked())then
+						uiIcon.RemoveButton:SetHide(true);
+						uiIcon.SelectButton:ClearCallback(Mouse.eRClick);
+
+						uiMinimizedIcon.RemoveButton:SetHide(true);
+						uiMinimizedIcon.SelectButton:ClearCallback(Mouse.eRClick);
+					else
+						uiIcon.RemoveButton:SetHide(false);
+						uiIcon.RemoveButton:RegisterCallback(Mouse.eLClick, function(void1, void2, self) OnRemoveDealItem(player, dealItemID, self); end);
+						uiIcon.SelectButton:RegisterCallback(Mouse.eRClick, function(void1, void2, self) OnRemoveDealItem(player, dealItemID, self); end);
+
+						uiMinimizedIcon.RemoveButton:SetHide(false);
+						uiMinimizedIcon.RemoveButton:RegisterCallback(Mouse.eLClick, function(void1, void2, self) OnRemoveDealItem(player, dealItemID, self); end);
+						uiMinimizedIcon.SelectButton:RegisterCallback(Mouse.eRClick, function(void1, void2, self) OnRemoveDealItem(player, dealItemID, self); end);
+					end
 
 					-- Populate the value pulldown
 					SetValueText(uiIcon, pDealItem);
@@ -2325,12 +2338,6 @@ function PopulateDealAgreements(player : table, iconList : table)
 						toolTip = toolTip .. "[NEWLINE]" .. Locale.Lookup(pDealItem:GetValueTypeNameID());
 						uiMinimizedIcon.SelectButton:SetToolTipString(toolTip);
 					end
-					
-					uiIcon.RemoveButton:RegisterCallback(Mouse.eLClick, function(void1, void2, self) OnRemoveDealItem(player, dealItemID, self); end);
-					uiIcon.SelectButton:RegisterCallback(Mouse.eRClick, function(void1, void2, self) OnRemoveDealItem(player, dealItemID, self); end);
-
-					uiMinimizedIcon.RemoveButton:RegisterCallback(Mouse.eLClick, function(void1, void2, self) OnRemoveDealItem(player, dealItemID, self); end);
-					uiMinimizedIcon.SelectButton:RegisterCallback(Mouse.eRClick, function(void1, void2, self) OnRemoveDealItem(player, dealItemID, self); end);
 
 					if(info.DiplomaticActionType == "DIPLOACTION_JOINT_WAR" and pDealItem:GetFromPlayerID() == g_OtherPlayer:GetID()) then
 						uiIcon.SelectButton:SetDisabled(true);
@@ -2497,18 +2504,29 @@ function PopulateDealCities(player : table, iconList : table)
 
 					-- Show/hide unacceptable item notification
 					uiIcon.UnacceptableIcon:SetHide(not pDealItem:IsUnacceptable());
-					uiIcon.RemoveButton:SetHide(false);
+					uiMinimizedIcon.UnacceptableIcon:SetHide(not pDealItem:IsUnacceptable());
 
-					uiIcon.RemoveButton:RegisterCallback(Mouse.eLClick, function(void1, void2, self) OnRemoveDealCity(typeName, player, dealItemID, self); end);
-					uiIcon.SelectButton:RegisterCallback(Mouse.eRClick, function(void1, void2, self) OnRemoveDealCity(typeName, player, dealItemID, self); end);
+					if(pDealItem:IsLocked())then
+						uiIcon.RemoveButton:SetHide(true);
+						uiIcon.SelectButton:ClearCallback(Mouse.eRClick);
+
+						uiMinimizedIcon.RemoveButton:SetHide(true);
+						uiMinimizedIcon.SelectButton:ClearCallback(Mouse.eRClick);
+					else
+						uiIcon.RemoveButton:SetHide(false);
+						uiIcon.RemoveButton:RegisterCallback(Mouse.eLClick, function(void1, void2, self) OnRemoveDealCity(typeName, player, dealItemID, self); end);
+						uiIcon.SelectButton:RegisterCallback(Mouse.eRClick, function(void1, void2, self) OnRemoveDealCity(typeName, player, dealItemID, self); end);
+
+						uiMinimizedIcon.RemoveButton:SetHide(false);
+						uiMinimizedIcon.SelectButton:RegisterCallback(Mouse.eRClick, function(void1, void2, self) OnRemoveDealItem(player, dealItemID, self); end);
+					end
+
 					uiIcon.SelectButton:RegisterCallback( Mouse.eLClick, function(void1, void2, self) OnSelectValueDealItem(player, dealItemID, self); end );
 					uiIcon.SelectButton:SetDisabled(false);
 					uiIcon.Icon:SetColor(1, 1, 1);
-
-					uiMinimizedIcon.UnacceptableIcon:SetHide(not pDealItem:IsUnacceptable());
-					uiMinimizedIcon.RemoveButton:SetHide(false);
+					
+					
 					uiMinimizedIcon.RemoveButton:RegisterCallback(Mouse.eLClick, function(void1, void2, self) OnRemoveDealItem(player, dealItemID, self); end);
-					uiMinimizedIcon.SelectButton:RegisterCallback(Mouse.eRClick, function(void1, void2, self) OnRemoveDealItem(player, dealItemID, self); end);
 					uiMinimizedIcon.SelectButton:SetDisabled(false);
 
 					uiIcon.SelectButton:SetToolTipString( MakeCityToolTip(player, pDealItem:GetValueType() ) );

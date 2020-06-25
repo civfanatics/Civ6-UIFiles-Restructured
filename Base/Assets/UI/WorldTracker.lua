@@ -190,7 +190,14 @@ end
 -- ===========================================================================
 function UpdateResearchPanel( isHideResearch:boolean )
 
-	if not HasCapability("CAPABILITY_TECH_CHOOSER") then
+	-- If not an actual player (observer, tuner, etc...) then we're done here...
+	local ePlayer		:number = Game.GetLocalPlayer();
+	if (ePlayer == PlayerTypes.NONE or ePlayer == PlayerTypes.OBSERVER) then
+		return;
+	end
+	local pPlayerConfig : table = PlayerConfigurations[ePlayer];
+
+	if not HasCapability("CAPABILITY_TECH_CHOOSER") or not pPlayerConfig:IsAlive() then
 		isHideResearch = true;
 		Controls.ResearchCheck:SetHide(true);
 	end
@@ -206,12 +213,6 @@ function UpdateResearchPanel( isHideResearch:boolean )
 	LuaEvents.WorldTracker_ToggleResearchPanel(m_hideResearch or m_hideAll);
 	RealizeEmptyMessage();
 	RealizeStack();
-
-	-- If not an actual player (observer, tuner, etc...) then we're done here...
-	local ePlayer		:number = Game.GetLocalPlayer();
-	if (ePlayer == PlayerTypes.NONE or ePlayer == PlayerTypes.OBSERVER) then
-		return;
-	end
 
 	-- Set the technology to show (or -1 if none)...
 	local iTech			:number = m_currentResearchID;
@@ -245,7 +246,14 @@ end
 -- ===========================================================================
 function UpdateCivicsPanel(hideCivics:boolean)
 
-	if not HasCapability("CAPABILITY_CIVICS_CHOOSER") then
+	-- If not an actual player (observer, tuner, etc...) then we're done here...
+	local ePlayer		:number = Game.GetLocalPlayer();
+	if (ePlayer == PlayerTypes.NONE or ePlayer == PlayerTypes.OBSERVER) then
+		return;
+	end
+	local pPlayerConfig : table = PlayerConfigurations[ePlayer];
+
+	if not HasCapability("CAPABILITY_CIVICS_CHOOSER") or (localPlayerID ~= PlayerTypes.NONE and not pPlayerConfig:IsAlive()) then
 		hideCivics = true;
 		Controls.CivicsCheck:SetHide(true);
 	end
@@ -261,12 +269,6 @@ function UpdateCivicsPanel(hideCivics:boolean)
 	LuaEvents.WorldTracker_ToggleCivicPanel(m_hideCivics or m_hideAll);
 	RealizeEmptyMessage();
 	RealizeStack();
-
-	-- If not an actual player (observer, tuner, etc...) then we're done here...
-	local ePlayer		:number = Game.GetLocalPlayer();
-	if (ePlayer == PlayerTypes.NONE or ePlayer == PlayerTypes.OBSERVER) then
-		return;
-	end
 
 	-- Set the civic to show (or -1 if none)...
 	local iCivic :number = m_currentCivicID;
@@ -702,6 +704,12 @@ function OnForceShow()
 end
 
 -- ===========================================================================
+function OnStartObserverMode()
+	UpdateResearchPanel();
+	UpdateCivicsPanel();
+end
+
+-- ===========================================================================
 function Subscribe()
 	Events.CityInitialized.Add(OnCityInitialized);
 	Events.BuildingChanged.Add(OnBuildingChanged);
@@ -722,6 +730,7 @@ function Subscribe()
 	
 	LuaEvents.CivicChooser_ForceHideWorldTracker.Add(	OnForceHide );
 	LuaEvents.CivicChooser_RestoreWorldTracker.Add(		OnForceShow);
+	LuaEvents.EndGameMenu_StartObserverMode.Add(		OnStartObserverMode );
 	LuaEvents.ResearchChooser_ForceHideWorldTracker.Add(OnForceHide);
 	LuaEvents.ResearchChooser_RestoreWorldTracker.Add(	OnForceShow);
 	LuaEvents.Tutorial_ForceHideWorldTracker.Add(		OnForceHide);
@@ -757,6 +766,7 @@ function Unsubscribe()
 	
 	LuaEvents.CivicChooser_ForceHideWorldTracker.Remove(	OnForceHide );
 	LuaEvents.CivicChooser_RestoreWorldTracker.Remove(		OnForceShow);
+	LuaEvents.EndGameMenu_StartObserverMode.Remove(			OnStartObserverMode );
 	LuaEvents.ResearchChooser_ForceHideWorldTracker.Remove(	OnForceHide);
 	LuaEvents.ResearchChooser_RestoreWorldTracker.Remove(	OnForceShow);
 	LuaEvents.Tutorial_ForceHideWorldTracker.Remove(		OnForceHide);

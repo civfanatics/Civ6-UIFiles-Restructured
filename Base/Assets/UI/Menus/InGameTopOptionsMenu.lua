@@ -303,12 +303,18 @@ end
 -- ===========================================================================
 function SetupButtons()
 
-	local bWorldBuilder = WorldBuilder and WorldBuilder:IsActive();
-	local bIsAutomation = Automation.IsActive();
-	local bIsMultiplayer = GameConfiguration.IsAnyMultiplayer();
-	local bCanSave = CanLocalPlayerSaveGame();
-	local bCanLoad = CanLocalPlayerLoadGame();
-	local bCanRestart = not GameConfiguration.IsAnyMultiplayer() 
+	local bIsObserver : boolean = false;
+	local localPlayerID : number = Game.GetLocalPlayer();
+	if(localPlayerID ~= PlayerTypes.NONE)then
+		local localPlayerConfig = PlayerConfigurations[Game.GetLocalPlayer()];
+		bIsObserver = not localPlayerConfig:IsAlive();
+	end
+	local bWorldBuilder : boolean = WorldBuilder and WorldBuilder:IsActive();
+	local bIsAutomation : boolean = Automation.IsActive();
+	local bIsMultiplayer: boolean = GameConfiguration.IsAnyMultiplayer();
+	local bCanSave		: boolean = CanLocalPlayerSaveGame();
+	local bCanLoad		: boolean = CanLocalPlayerLoadGame();
+	local bCanRestart	: boolean = not GameConfiguration.IsAnyMultiplayer() 
 					-- TTP 34989 - Only allow restarts in hotseat if this is not a loaded save.  
 					-- The restart mechanic uses the game configuration prior to the very beginning of the game.
 					-- This can be unexpected if the user changed the player types post launch. 
@@ -317,7 +323,7 @@ function SetupButtons()
 	-- Restarting in worldbuilder can cause a bunch of problems, disabling for now.
 	bCanRestart = bCanRestart and not bWorldBuilder;
 
-	local bIsLocalPlayersTurn = IsLocalPlayerTurnActive();
+	local bIsLocalPlayersTurn : boolean = IsLocalPlayerTurnActive();
 
 	if(bWorldBuilder) then
 		Controls.ReturnButton:LocalizeAndSetText("{LOC_GAME_MENU_RETURN_TO_WORLDBUILDER:upper}");
@@ -336,6 +342,11 @@ function SetupButtons()
 	Controls.SaveGameButton:SetHide(m_isSimpleMenu or bIsAutomation);			
 	Controls.LoadGameButton:SetHide(m_isSimpleMenu or bIsAutomation or bIsMultiplayer or bWorldBuilder);
 	Controls.OptionsButton:SetHide(bIsAutomation or not CanLocalPlayerChangeOptions());	
+
+	if(bIsObserver)then
+		Controls.QuickSaveButton:SetToolTipString(Locale.Lookup("LOC_SAVE_OBSERVER_MODE_TT"));
+		Controls.SaveGameButton:SetToolTipString(Locale.Lookup("LOC_SAVE_OBSERVER_MODE_TT"));
+	end
 
 	-- Eventually remove this check.  Retiring after winning is perfectly fine
 	-- so long as we update the tooltip to no longer state the player will be defeated.
@@ -476,10 +487,13 @@ end
 --	this context gets a crack at it.
 -- ===========================================================================
 function OnInput( pInputStruct:table )
-	local uiMsg = pInputStruct:GetMessageType();
+	local uiMsg:number = pInputStruct:GetMessageType();
+	local key:number = pInputStruct:GetKey();
+
 	if uiMsg == KeyEvents.KeyUp then 
 		return KeyHandler( pInputStruct:GetKey() ); 
-	elseif uiMsg == KeyEvents.KeyDown then 
+	elseif uiMsg == KeyEvents.KeyDown and not (key == Keys.VK_ALT or key == Keys.VK_CONTROL or key == Keys.VK_SHIFT) then 
+		-- Don't consume Alt, Control, or Shift so those can be used for keybindings
 		return true;
 	end
 

@@ -144,8 +144,8 @@ function OnRefresh()
 	m_numberVisibleBlockers = 1; -- Start at 1 to account for current main blocker
 	m_visibleBlockerTypes = {};
 
-	local pPlayer = Players[Game.GetLocalPlayer()];
-	if (pPlayer == nil) then
+	local pPlayer : object = Players[Game.GetLocalPlayer()];
+	if (pPlayer == nil or not pPlayer:IsAlive()) then
 		return;
 	end
 
@@ -930,41 +930,49 @@ end
 
 -- ===========================================================================
 function OnLocalPlayerTurnBegin()
-	-- Standard disable is set to false in the refresh.
-	-- This extra level of input catching is done when tutorial has raised
-	-- this boolean and will prevent spam clicking through; as the tutorial
-	-- system itself sets ENABLED as it's hiding all controls.
-	if m_isSlowTurnEnable then
-		Controls.TutorialSlowTurnEnableAnim:SetHide(false);
-		Controls.TutorialSlowTurnEnableAnim:SetToBeginning();
-		Controls.TutorialSlowTurnEnableAnim:RegisterEndCallback(
-			function()
-				Controls.TutorialSlowTurnEnableAnim:SetHide(true);
-			end
-		);
-		Controls.TutorialSlowTurnEnableAnim:Play();
+	-- If the player is dead (observing), then automatically end their turn
+	local pPlayerConfig :table	= PlayerConfigurations[Game.GetLocalPlayer()];
+	if(not pPlayerConfig:IsAlive())then
+		DoEndTurn();
+	else
+		-- Standard disable is set to false in the refresh.
+		-- This extra level of input catching is done when tutorial has raised
+		-- this boolean and will prevent spam clicking through; as the tutorial
+		-- system itself sets ENABLED as it's hiding all controls.
+		if m_isSlowTurnEnable then
+			Controls.TutorialSlowTurnEnableAnim:SetHide(false);
+			Controls.TutorialSlowTurnEnableAnim:SetToBeginning();
+			Controls.TutorialSlowTurnEnableAnim:RegisterEndCallback(
+				function()
+					Controls.TutorialSlowTurnEnableAnim:SetHide(true);
+				end
+			);
+			Controls.TutorialSlowTurnEnableAnim:Play();
+		end
+
+		ContextPtr:RequestRefresh();
+
+		-- if auto-cycle is OFF, play this sound to indicate "start of turn"
+		if (not UserConfiguration.IsAutoUnitCycle()) then
+			UI.PlaySound("SP_Turn_Start");
+		end
 	end
-
-	ContextPtr:RequestRefresh();
-
-    -- if auto-cycle is OFF, play this sound to indicate "start of turn"
-    if (not UserConfiguration.IsAutoUnitCycle()) then
-        UI.PlaySound("SP_Turn_Start");
-    end
 end
 
 -- ===========================================================================
 function OnLocalPlayerTurnEnd()
-	
-	-- Only disable if not in multi-player, so turns can "unend"...
-	if not GameConfiguration.IsAnyMultiplayer() then
-		Controls.EndTurnButton:SetDisabled(true);
-		Controls.EndTurnButtonLabel:SetDisabled(true);
-	end
+	local pPlayerConfig :table	= PlayerConfigurations[Game.GetLocalPlayer()];
+	if(pPlayerConfig:IsAlive())then
+		-- Only disable if not in multi-player, so turns can "unend"...
+		if not GameConfiguration.IsAnyMultiplayer() then
+			Controls.EndTurnButton:SetDisabled(true);
+			Controls.EndTurnButtonLabel:SetDisabled(true);
+		end
 
-	SetEndTurnWaiting();
-	UI.SetInterfaceMode(InterfaceModeTypes.SELECTION);
-	m_kSoundsPlayed = {};
+		SetEndTurnWaiting();
+		UI.SetInterfaceMode(InterfaceModeTypes.SELECTION);
+		m_kSoundsPlayed = {};
+	end
 end
 
 -- ===========================================================================
@@ -1272,6 +1280,15 @@ function ChangePleaseWaitTooltip(newTooltip:string)
 end
 
 -- ===========================================================================
+function OnStartObserverMode()
+	ChangePleaseWaitTooltip(Locale.Lookup("LOC_ACTION_PANEL_END_OBSERVER_MODE"));
+	Controls.EndTurnButton:SetToolTipString(Locale.Lookup("LOC_ACTION_PANEL_END_OBSERVER_MODE"));
+	Controls.ObserverButtonLabel:SetHide(false);
+	Controls.EndObserverModeButton:SetHide(false);
+	DoEndTurn();
+end
+
+-- ===========================================================================
 --	Input Hotkey Event
 -- ===========================================================================
 function OnInputActionTriggered( actionId )
@@ -1302,6 +1319,9 @@ function LateInitialize()
 	Controls.OverflowCheckbox:RegisterCallback(		Mouse.eLClick, OnOverflowClick);
 	Controls.TurnBlockerContainerAlpha:RegisterEndCallback( HideOverflowContainer );
 
+	Controls.ObserverButtonLabel:RegisterCallback(Mouse.eLClick, function() LuaEvents.ActionPanel_EndObserverMode() end);
+	Controls.EndObserverModeButton:RegisterCallback(Mouse.eLClick, function() LuaEvents.ActionPanel_EndObserverMode() end);
+
 	-- Engine Events
 	Events.CityCommandStarted.Add(			OnCityCommandStarted);
 	Events.CityProductionChanged.Add(		OnCityProductionChanged );	
@@ -1330,6 +1350,7 @@ function LateInitialize()
 	LuaEvents.AutoPlayEnd.Add(					OnAutoPlayEnd );		-- Raised by engine AutoPlay_Manager!	
 	LuaEvents.Tutorial_SlowNextTurnEnable.Add(	OnTutorialSlowTurnEnable );
 	LuaEvents.ProductionPanel_IsQueueOpen.Add(	OnIsProdQueueOpen );
+	LuaEvents.EndGameMenu_StartObserverMode.Add(OnStartObserverMode);
 
 	m_kPopupDialog = PopupDialog:new( "ActionPanelPopupDialog" );
 end

@@ -305,6 +305,8 @@ function SetCurrentGraphDataSet(dataSetType)
 		end
 	end
 	
+	g_GraphData = nil;
+
 	if(dataSetIndex) then
 		local graphDataSetPulldownButton = Controls.GraphDataSetPulldown:GetButton();
 		graphDataSetPulldownButton:LocalizeAndSetText(dataSetDisplayName);
@@ -320,9 +322,9 @@ function SetCurrentGraphDataSet(dataSetType)
 			--[4] = {1,2,3,4,5,6,7,8,9,10},
 			--[5] = {1,2,3,4,5,6,7,8,9,10},
 		--};
-		
-		ReplayGraphDrawGraph();
 	end	
+
+	ReplayGraphDrawGraph();
 end
 
 -- ===========================================================================
@@ -364,7 +366,11 @@ local function RefreshGraphDataSets()
 	graphDataSetPulldown:CalculateInternals();
 
 	if(#dataSets > 0) then
+		graphDataSetPulldown:SetEnabled(true);
 		SetCurrentGraphDataSet(dataSets[1][2]);
+	else
+		graphDataSetPulldown:SetEnabled(false);
+		SetCurrentGraphDataSet(nil);
 	end
 end
 

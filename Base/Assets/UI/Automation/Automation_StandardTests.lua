@@ -3,8 +3,8 @@
 ----------------------------------------------------------------
 include("LobbyTypes");
 
-local GAMELISTUPDATE_ADD		:number = 3;
-local DEFAULT_AUTOMATION_TURNS		:number = 5;
+local GAMELISTUPDATE_ADD			:number = 3;
+local DEFAULT_AUTOMATION_TURNS		:number = -1;
 
 Tests = {};	-- The table of test routines.
 
@@ -15,12 +15,14 @@ Tests = {};	-- The table of test routines.
 
 function SharedGame_OnSaveComplete()
 	-- Signal that the test is complete.  Do not call LuaEvents.AutomationTestComplete() directly.  The Automation system will do that at a safe time.
+	Automation.Log("Save complete. Completing current test.");
 	Automation.SendTestComplete();
 end
 
 -----------------------------------------------------------------
 -- Handle the autoplay end for the "PlayGame" and "HostGame" tests
 function SharedGame_OnAutoPlayEnd()
+	Automation.Log("The autoplay manager has deactivated. (See autoplay.log) Saving game prior to completing current test. ");
 
 	local saveGame = {};
 	saveGame.Name = Automation.GenerateSaveName();
@@ -598,6 +600,7 @@ Tests["HostGame"].GameStarted = function()
 	else
 		-- If there is a local player, then we have a human in the game.
 		-- This test is complete.
+		Automation.Log("Completing HostGame test due to there being a local player.");
 		Automation.SendTestComplete();		
 	end
 end
@@ -772,8 +775,11 @@ end
 function JoinGame_OnTurnEnd(iTurn :number)
 	-- Decrement cached "RemainingTurns".  We need to remember this in case the client had to reload due to resyncs.
 	local remainingTurns = Automation.GetSetParameter("CurrentTest", "RemainingTurns", DEFAULT_AUTOMATION_TURNS);
-	remainingTurns = remainingTurns - 1;
-	Automation.SetSetParameter("CurrentTest", "RemainingTurns", remainingTurns);
+	if(remainingTurns ~= nil 
+		and remainingTurns >= 0) then -- Don't increment the -1 default (no turn limit).
+		remainingTurns = remainingTurns - 1;
+		Automation.SetSetParameter("CurrentTest", "RemainingTurns", remainingTurns);
+	end
 end
 
 -----------------------------------------------------------------

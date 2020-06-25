@@ -30,7 +30,7 @@
 
 					<!-- Scroll Controls -->
 					<ScrollBar Style="Slider_Blue" Length="420" Offset="2,0" Anchor="R,T"/>
-					<Stack ID="ParametersStack" Anchor="C,T" Offset="0,0" Padding="20" StackGrowth="Bottom" >
+					<Stack ID="ParametersStack" Anchor="C,T" Offset="0,0" Padding="10" StackGrowth="Bottom" >
 
 						<Grid Size="parent,21" Texture="Shell_SectionHeader" SliceCorner="154,10" SliceTextureSize="308,21" Color="20,144,140,100" Offset="0,8">
 							<Image Texture="Controls_Gradient_HalfRadial" Color="20,144,140,100" FlipY="1" Anchor="C,T" Size="225,94"/>
@@ -38,21 +38,21 @@
 						</Grid>
 
 						<!-- Primary Parameters Stack -->
-						<Stack Anchor="L,T" Offset="50,0" Padding="0" StackGrowth="Bottom" Size="parent-60,auto" ID="PrimaryParametersStack"/>
+						<Stack Anchor="L,T" Offset="50,0" Padding="3" StackGrowth="Bottom" Size="parent-60,auto" ID="PrimaryParametersStack"/>
 
 						<Grid ID="GameModeParametersHeader" Size="parent,21" Texture="Shell_SectionHeader" SliceCorner="154,10" SliceTextureSize="308,21" Color="20,144,140,100" Offset="0,8">
 							<Image Texture="Controls_Gradient_HalfRadial" Color="20,144,140,100" FlipY="1" Anchor="C,T" Size="225,94"/>
 							<Label Anchor="C,C" Style="ShellOptionText" WrapWidth="320" String="LOC_SETUP_GAME_MODES"/>
 						</Grid>
 
-						<Stack Anchor="L,T" Offset="50,0" Padding="0" StackGrowth="Bottom" Size="parent-60,auto" ID="GameModeParameterStack" />
+						<Stack Anchor="L,T" Offset="50,0" Padding="3" StackGrowth="Bottom" Size="parent-60,auto" ID="GameModeParameterStack" />
 						
 						<Grid Size="parent,21" Texture="Shell_SectionHeader" SliceCorner="154,10" SliceTextureSize="308,21" Color="20,144,140,100" Offset="0,8">
 							<Image Texture="Controls_Gradient_HalfRadial" Color="20,144,140,100" FlipY="1" Anchor="C,T" Size="225,94"/>
 							<Label Anchor="C,C" Style="ShellOptionText" WrapWidth="320" String="LOC_SETUP_VICTORY_CONDITIONS"/>
 						</Grid>
 
-						<Stack Anchor="L,T" Offset="50,0" Padding="0" StackGrowth="Bottom" Size="parent-60,auto" ID="VictoryParameterStack" />
+						<Stack Anchor="L,T" Offset="50,0" Padding="3" StackGrowth="Bottom" Size="parent-60,auto" ID="VictoryParameterStack" />
 						
 						<!-- Secondary Parameters Stack -->
 						<Grid Size="parent,21" Texture="Shell_SectionHeader" SliceCorner="154,10" SliceTextureSize="308,21" Color="20,144,140,100" Offset="0,8">
@@ -60,7 +60,7 @@
 							<Label Anchor="C,C" Style="ShellOptionText" WrapWidth="320" String="LOC_ADVANCED_OPTIONS"/>
 						</Grid>
 
-						<Stack Anchor="L,T" Offset="50,0" Padding="2" StackGrowth="Bottom" Size="parent-60,auto" ID="SecondaryParametersStack"/>
+						<Stack Anchor="L,T" Offset="50,0" Padding="3" StackGrowth="Bottom" Size="parent-60,auto" ID="SecondaryParametersStack"/>
 					</Stack>
 				</ScrollPanel>
 			</Grid>
@@ -92,7 +92,7 @@
 
 	<!-- Instance for a boolean parameters -->
 	<Instance Name="BooleanParameterInstance">
-		<GridButton ID="CheckBox" Offset="-15,0" Anchor="C,T" Style="CheckBoxControl"  Size="360,24" States="8"/>
+		<GridButton ID="CheckBox" Offset="-15,0" Anchor="C,T" Style="CheckBoxControl"  Size="330,24" States="8"/>
 	</Instance>
 
 	<!-- Slider with number display -->
@@ -113,7 +113,7 @@
 
 	<!-- Instance for a string parameters -->
 	<Instance Name="StringParameterInstance">
-		<Container			ID="StringRoot" Anchor="C,T"	Size="300,36">
+		<Container			ID="StringRoot" Anchor="C,T"	Size="300,30">
 				<Grid				Style="EditTextArea"					Size="300,30">
 					<EditBox	ID="StringEdit" Anchor="L,C" Offset="6,0" Size="parent,23" EditMode="1" Style="FontNormal14" ColorSet="BodyTextCool" FontStyle="stroke" MaxLength="22"/>
 					<Label		ID="StringName" Anchor="L,C" AnchorSide="O,I" Style="FontNormal16" ColorSet="ShellOptionText" FontStyle="stroke" WrapWidth="180" String="UNKNOWN_EDIT_BOX"/>
@@ -123,7 +123,7 @@
 
 	<!-- Instance for a parameter that has multiple choices for the value, displayed as a dropdown -->
 	<Instance Name="PullDownParameterInstance">
-		<Container ID="Root" Anchor="C,T" Size="330,32" Offset="0,0">
+		<Container ID="Root" Anchor="C,T" Size="330,24" Offset="0,0">
 			<PullDown Anchor="C,T" ID="PullDown" Style="PullDownBlue" Size="300,24" Offset="0,0">
 				<Label Style="ShellOptionText" ID="StringName" AnchorSide="O,I" Anchor="L,C" String=""/>
 			</PullDown>

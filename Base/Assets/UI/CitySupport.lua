@@ -73,7 +73,7 @@ function GetFilteredUnitStatString( statData:table )
 end
 
 -- ===========================================================================
-function FilterUnitStats( hashOrType:number, ignoreStatType:number )
+function FilterUnitStats( hashOrType:number, eMilitaryFormationType:number )
 	local unitInfo = GameInfo.Units[hashOrType];
 
 	if(unitInfo == nil) then
@@ -81,23 +81,32 @@ function FilterUnitStats( hashOrType:number, ignoreStatType:number )
 		return {};
 	end
 
+	local strengthMod : number = 0;
+
+	if(eMilitaryFormationType ~= nil)then
+		if eMilitaryFormationType == MilitaryFormationTypes.CORPS_MILITARY_FORMATION then
+			strengthMod = GlobalParameters.COMBAT_CORPS_STRENGTH_MODIFIER; 
+		elseif eMilitaryFormationType == MilitaryFormationTypes.ARMY_MILITARY_FORMATION then
+			strengthMod = GlobalParameters.COMBAT_ARMY_STRENGTH_MODIFIER;
+		end
+	end
 
 	local data:table = {};
 
 	-- Strength
-	if ( unitInfo.Combat > 0 and (ignoreStatType == nil or ignoreStatType ~= CombatTypes.MELEE)) then
-		table.insert(data, {Value = unitInfo.Combat, Type = "Combat", Label = "LOC_HUD_UNIT_PANEL_STRENGTH",				FontIcon="[ICON_Strength_Large]",		IconName="ICON_STRENGTH"});
+	if ( unitInfo.Combat > 0) then
+		table.insert(data, {Value = unitInfo.Combat + strengthMod, Type = "Combat", Label = "LOC_HUD_UNIT_PANEL_STRENGTH",				FontIcon="[ICON_Strength_Large]",		IconName="ICON_STRENGTH"});
 	end
-	if ( unitInfo.RangedCombat > 0 and (ignoreStatType == nil or ignoreStatType ~= CombatTypes.RANGED)) then
-		table.insert(data, {Value = unitInfo.RangedCombat,		Label = "LOC_HUD_UNIT_PANEL_RANGED_STRENGTH",		FontIcon="[ICON_RangedStrength_Large]",	IconName="ICON_RANGED_STRENGTH"});
+	if ( unitInfo.RangedCombat > 0) then
+		table.insert(data, {Value = unitInfo.RangedCombat + strengthMod,		Label = "LOC_HUD_UNIT_PANEL_RANGED_STRENGTH",		FontIcon="[ICON_RangedStrength_Large]",	IconName="ICON_RANGED_STRENGTH"});
 	end
-	if (unitInfo.Bombard > 0 and (ignoreStatType == nil or ignoreStatType ~= CombatTypes.BOMBARD)) then
-		table.insert(data, {Value = unitInfo.Bombard,	Label = "LOC_HUD_UNIT_PANEL_BOMBARD_STRENGTH",		FontIcon="[ICON_Bombard_Large]",		IconName="ICON_BOMBARD"});
+	if (unitInfo.Bombard > 0) then
+		table.insert(data, {Value = unitInfo.Bombard + strengthMod,	Label = "LOC_HUD_UNIT_PANEL_BOMBARD_STRENGTH",		FontIcon="[ICON_Bombard_Large]",		IconName="ICON_BOMBARD"});
 	end
-	if (unitInfo.ReligiousStrength > 0 and (ignoreStatType == nil or ignoreStatType ~= CombatTypes.RELIGIOUS)) then
+	if (unitInfo.ReligiousStrength > 0) then
 		table.insert(data, {Value = unitInfo.ReligiousStrength,	Label = "LOC_HUD_UNIT_PANEL_RELIGIOUS_STRENGTH",	FontIcon="[ICON_ReligionStat_Large]",	IconName="ICON_RELIGION"});
 	end
-	if (unitInfo.AntiAirCombat > 0 and (ignoreStatType == nil or ignoreStatType ~= CombatTypes.AIR)) then
+	if (unitInfo.AntiAirCombat > 0) then
 		table.insert(data, {Value = unitInfo.AntiAirCombat,	Label = "LOC_HUD_UNIT_PANEL_ANTI_AIR_STRENGTH",		FontIcon="[ICON_AntiAir_Large]",		IconName="ICON_STATS_ANTIAIR"});
 	end
 
@@ -232,7 +241,7 @@ function GetProductionInfoOfCity( pCity:table, productionHash:number )
 		progress		= pBuildQueue:GetUnitProgress(unitDef.Index);
 		prodTurnsLeft	= pBuildQueue:GetTurnsLeft(unitDef.UnitType);		
 		kIcons			= { iconName, prefixOnlyIconName, eraOnlyIconName, fallbackIconName, "ICON_"..unitDef.UnitType.."_PORTRAIT"}
-		statString		= GetFilteredUnitStatString(FilterUnitStats(hash));
+		statString		= GetFilteredUnitStatString(FilterUnitStats(hash, eMilitaryFormationType));
 		type			= ProductionType.UNIT;
 
 		--Units need some additional information to represent the Standard, Corps, and Army versions. This is determined by the MilitaryFormationType

@@ -1122,7 +1122,7 @@ function CheckGameAutoStart()
 			
 			if((curSlotStatus == SlotStatus.SS_TAKEN -- Human civ
 				or Network.IsPlayerConnected(iPlayer))	-- network connection on this slot, could be an multiplayer autoplay.
-				and curPlayerConfig:IsAlive()) then -- Dead players do not block launch countdown.
+				and (curPlayerConfig:IsAlive() or curSlotStatus == SlotStatus.SS_OBSERVER)) then -- Dead players do not block launch countdown.  Observers count as dead but should still block launch to be consistent. 
 				if(not curPlayerConfig:GetReady()) then
 					print("CheckGameAutoStart: Can't start game because player ".. iPlayer .. " isn't ready");
 					startCountdown = false;
@@ -1252,6 +1252,7 @@ function CheckLeaveGame()
 									-- and should not trigger a game exit.
 		and Network.IsInSession()	-- Still in a network session.
 		and not Network.IsInGameStartedState() then -- Don't trigger leave game if we're being used as an ingame screen. Worldview is handling this instead.
+		print("StagingRoom::CheckLeaveGame() leaving the network session.");
 		Network.LeaveGame();
 	end
 end
@@ -1366,31 +1367,17 @@ function PopulateSlotTypePulldown( pullDown, playerID, slotTypeOptions )
 			and not pPlayerConfig:IsLocked() -- Can't swap to locked slots.
 			and not GameConfiguration.IsHotseat() -- no swap option in hotseat.
 			and not GameConfiguration.IsPlayByCloud() -- no swap option in PlayByCloud.
-			and not GameConfiguration.IsMatchMaking(); -- or when matchmaking
+			and not GameConfiguration.IsMatchMaking() -- or when matchmaking
+			and playerID ~= Network.GetLocalPlayerID();
 
 		-- This option is a valid slot type option.
-		local showSlotButton = pair.slotStatus ~= -1 
-			and Network.IsGameHost() -- Only the game host can change slot types.
-			-- You can't switch a civilization to open/closed if the game is at the minimum player count.
-			and ((pair.slotStatus ~= SlotStatus.SS_CLOSED and pair.slotStatus ~= SlotStatus.SS_OPEN)		-- Target SlotType isn't open/close
-				or (playerSlotStatus ~= SlotStatus.SS_TAKEN and playerSlotStatus ~= SlotStatus.SS_COMPUTER) -- Current SlotType isn't a civ
-				or (GameConfiguration.IsPlayByCloud() and pair.slotStatus == SlotStatus.SS_OPEN)			-- In PlayByCloud OPEN slots are autoflagged as HumanRequired.
-																											-- We allow them to bypass the minimum player count because 
-																											-- a human player must occupy the slot for the game to launch. 
-				or GameConfiguration.GetParticipatingPlayerCount() > g_currentMinPlayers)					-- Above player count
-			and (playerSlotStatus ~= SlotStatus.SS_TAKEN or GameConfiguration.IsHotseat())					-- You can only change the slot type of humans while in hotseat.
-			and not pPlayerConfig:IsLocked() -- Can't change the slot type of locked player slots.
-			-- Can normally only change slot types in the pregame unless this is a option that can be changed mid-game in hotseat.
-			and (GameConfiguration.GetGameState() == GameStateTypes.GAMESTATE_PREGAME 
-				or (pair.hotseatInProgress and GameConfiguration.IsHotseat()))
-			and not GameConfiguration.IsMatchMaking();	-- Can't change slot type in matchmaded games. 
+		local showSlotButton = CheckShowSlotButton(pair, playerID);
 
 		-- Valid state for hotseatOnly flag
 		local hotseatOnlyCheck = (GameConfiguration.IsHotseat() and pair.hotseatAllowed) or (not GameConfiguration.IsHotseat() and not pair.hotseatOnly);
 
 		if(	hotseatOnlyCheck 
-			and playerID ~= Network.GetLocalPlayerID()
-			and (showSwapButton or showSlotButton)) then
+			and (showSwapButton or showSlotButton))then
 
 			pullDown.ItemCount = pullDown.ItemCount + 1;
 			local instance = instanceManager:GetInstance();
@@ -1418,6 +1405,60 @@ function PopulateSlotTypePulldown( pullDown, playerID, slotTypeOptions )
 	pullDown:CalculateInternals();
 	pullDown:RegisterSelectionCallback(OnSlotType);
 	pullDown:SetDisabled(pullDown.ItemCount < 1);
+end
+
+function CheckShowSlotButton(slotData :table, playerID: number)
+	local pPlayerConfig :object = PlayerConfigurations[playerID];
+	local playerSlotStatus :number = pPlayerConfig:GetSlotStatus();
+
+	if(slotData.slotStatus == -1) then
+		return false;
+	end
+
+	
+	-- Special conditions for changing slot types for human slots in network games.
+	if(playerSlotStatus == SlotStatus.SS_TAKEN and not GameConfiguration.IsHotseat()) then
+		-- You can't change human player slots outside of hotseat mode.
+		return false;
+	end
+
+	-- You can't switch a civilization to open/closed if the game is at the minimum player count.
+	if(slotData.slotStatus == SlotStatus.SS_CLOSED or slotData.slotStatus == SlotStatus.SS_OPEN) then
+		if(playerSlotStatus == SlotStatus.SS_TAKEN or playerSlotStatus == SlotStatus.SS_COMPUTER) then -- Current SlotType is a civ
+			-- In PlayByCloud OPEN slots are autoflagged as HumanRequired.
+			-- We allow them to bypass the minimum player count because 
+			-- a human player must occupy the slot for the game to launch. 
+			if(not GameConfiguration.IsPlayByCloud() or slotData.slotStatus ~= SlotStatus.SS_OPEN) then
+				if(GameConfiguration.GetParticipatingPlayerCount() <= g_currentMinPlayers)	 then
+					return false;				
+				end
+			end
+		end
+	end
+
+	-- Can't change the slot type of locked player slots.
+	if(pPlayerConfig:IsLocked()) then
+		return false;
+	end
+
+	-- Can't change slot type in matchmaded games. 
+	if(GameConfiguration.IsMatchMaking()) then
+		return false;
+	end
+
+	-- Only the host can change non-local slots.
+	if(not Network.IsGameHost() and playerID ~= Network.GetLocalPlayerID()) then
+		return false;
+	end
+
+	-- Can normally only change slot types before the game has started unless this is a option that can be changed mid-game in hotseat.
+	if(GameConfiguration.GetGameState() ~= GameStateTypes.GAMESTATE_PREGAME) then
+		if(not slotData.hotseatInProgress or not GameConfiguration.IsHotseat()) then
+			return false;
+		end
+	end
+
+	return true;
 end
 
 -------------------------------------------------
@@ -1551,7 +1592,6 @@ function UpdatePlayerEntry_SlotTypeDisabled(playerID)
 		-- The slot type pulldown handles user access permissions internally (See PopulateSlotTypePulldown()).  
 		-- However, we need to disable the pulldown entirely if the local player has readied up.
 		local bCanChangeSlotType:boolean = not localPlayerConfig:GetReady() 
-											and playerID ~= Network.GetLocalPlayerID()
 											and itemCount > 0; -- No available slot type options.
 
 		playerEntry.AlternateSlotTypePulldown:SetDisabled(not bCanChangeSlotType);
@@ -1568,7 +1608,10 @@ function UpdatePlayerEntry(playerID)
 		local slotStatus = pPlayerConfig:GetSlotStatus();
 		local isMinorCiv = pPlayerConfig:GetCivilizationLevelTypeID() ~= CivilizationLevelTypes.CIVILIZATION_LEVEL_FULL_CIV;
 		local isAlive = pPlayerConfig:IsAlive();
-		local isActiveSlot = not isMinorCiv and (slotStatus ~= SlotStatus.SS_CLOSED) and (slotStatus ~= SlotStatus.SS_OPEN) 
+		local isActiveSlot = not isMinorCiv 
+			and (slotStatus ~= SlotStatus.SS_CLOSED) 
+			and (slotStatus ~= SlotStatus.SS_OPEN) 
+			and (slotStatus ~= SlotStatus.SS_OBSERVER)
 			-- In PlayByCloud, the local player still gets an active slot even if they are dead.  We do this so that players
 			--		can rejoin the match to see the end game screen,
 			and (isAlive or (GameConfiguration.IsPlayByCloud() and playerID == localPlayerID));
@@ -1592,7 +1635,7 @@ function UpdatePlayerEntry(playerID)
 
 			
 		local isKickable:boolean = Network.IsGameHost()			-- Only the game host may kick
-			and slotStatus == SlotStatus.SS_TAKEN
+			and (slotStatus == SlotStatus.SS_TAKEN or slotStatus == SlotStatus.SS_OBSERVER)
 			and playerID ~= localPlayerID			-- Can't kick yourself
 			and not isHotSeat;	-- Can't kick in hotseat, players use the slot type pulldowns instead.
 
@@ -1611,12 +1654,15 @@ function UpdatePlayerEntry(playerID)
 			statusText = Locale.Lookup(playerID == hostID and "LOC_SLOTLABEL_HOST" or "LOC_SLOTLABEL_PLAYER");
 		elseif slotStatus == SlotStatus.SS_COMPUTER then
 			statusText = Locale.Lookup("LOC_SLOTLABEL_COMPUTER");
+		elseif slotStatus == SlotStatus.SS_OBSERVER then
+			local hostID:number = Network.GetGameHostPlayerID();
+			statusText = Locale.Lookup(playerID == hostID and "LOC_SLOTLABEL_OBSERVER_HOST" or "LOC_SLOTLABEL_OBSERVER");
 		end
 		playerEntry.PlayerStatus:SetText(statusText);
 		playerEntry.AlternateStatus:SetText(statusText);
 
 		-- Update cached ready status and play sound if player is newly ready.
-		if slotStatus == SlotStatus.SS_TAKEN then
+		if slotStatus == SlotStatus.SS_TAKEN or slotStatus == SlotStatus.SS_OBSERVER then
 			local isReady:boolean = pPlayerConfig:GetReady();
 			if(isReady ~= g_PlayerReady[playerID]) then
 				g_PlayerReady[playerID] = isReady;
@@ -1721,6 +1767,13 @@ function UpdatePlayerEntry(playerID)
 				else
 					playerEntry.Root:SetHide(true);
 				end
+			elseif slotStatus == SlotStatus.SS_OBSERVER and Network.IsPlayerConnected(playerID) then
+				playerEntry.Root:SetHide(false);
+				playerEntry.PlayerPullDown:SetHide(true);
+				playerEntry.TeamPullDown:SetHide(true);
+				playerEntry.ReadyImage:SetHide(false);
+				playerEntry.HandicapPullDown:SetHide(true);
+				playerEntry.KickButton:SetHide(not isKickable);
 			else 
 				if(gameInProgress
 					-- Explicitedly always hide city states.  

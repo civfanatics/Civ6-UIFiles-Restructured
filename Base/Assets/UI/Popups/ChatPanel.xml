@@ -76,6 +76,22 @@
 			<Stack			ID="PlayerListStack"	Anchor="C,T" StackGrowth="Bottom" Padding="0"/>
 		</ScrollPanel>
 	</Container>
+
+  <!-- Vote Kick Panel -->
+  <Container ID="KickVotePanel" Offset="300,0" Hidden="1">
+
+    <Container ID="KickVoteBackground" Anchor="L,T" Size="236,195" ConsumeMouseOver="1">
+      <Grid Style="SubContainerFill" Anchor="L,B" Size="parent,parent" Color="19,47,77,255"/>
+      <Grid Style="SubContainer4" Anchor="L,B" Offset="-2,0" Size="parent+4,parent" Color="0,0,0,255"/>
+      <Grid Style="DecoGrid" Anchor="L,B" Size="parent-4,parent-8" Offset="2,4" Color="29,60,90,255"/>
+    </Container>
+
+    <ScrollPanel ID="KickVoteScroll" Anchor="L,T" Offset="0,10" Size="236,175" Vertical="1" AutoScrollBar="1">
+      <ScrollBar Style="Slider_Blue" Offset="-7,0" Anchor="R,T"/>
+      <Stack			ID="KickVoteStack"	Anchor="C,T" StackGrowth="Bottom" Padding="0">
+      </Stack>
+    </ScrollPanel>
+  </Container>
 	
   <!-- ==================================================================== -->
   <!--	INSTANCES																														-->
@@ -125,6 +141,19 @@
     
   </Instance>
   
+  <Instance Name="VoteKickPlayerEntry">
+    <Container ID="RootContainer" Size="218,50">
+      <Container Anchor="C,T" Size="parent,parent" ConsumeMouseOver="1">
+			  <Grid Style="SubContainerFill" Anchor="L,B" Size="parent,parent" Color="29,60,90,255"/>
+			  <Grid Style="SubContainer4" Anchor="L,B" Offset="-2,0" Size="parent+4,parent" Color="0,0,0,80"/>
+			  <Grid Style="DecoGrid" Anchor="L,B" Size="parent-4,parent-8" Offset="2,4" Color="19,47,77,255"/>
+		  </Container>
+      
+      <Label ID="KickPayerTitle" Anchor="C,T" Offset="0,7"  Style="WhiteSemiBold14" String="Kick Player?" TruncateWidth = "185" TruncatedTooltip="1"/>
+      <Button ID="VoteYesButton" Texture="Controls_VoteYes" Size="24,20" Anchor="C,T" Offset ="-25, 25"/>
+      <Button ID="VoteNoButton"  Texture="Controls_VoteNo" Size="24,20" Anchor="C,T" Offset="25, 25"/>
+    </Container>
+  </Instance>
   <!-- ==================================================================== -->
 	<!--	CHILDREN CONTEXTS																													-->
 	<!-- ==================================================================== -->

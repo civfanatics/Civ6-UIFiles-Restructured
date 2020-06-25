@@ -3793,7 +3793,7 @@ function OnInputActionTriggered( actionId:number )
 		LuaEvents.MinimapPanel_RefreshMinimapOptions();
 		UI.PlaySound("Play_UI_Click");
 
-	elseif actionId == m_actionHotkeyToggleRes then
+	elseif actionId == m_actionHotkeyToggleRes and GameCapabilities.HasCapability("CAPABILITY_DISPLAY_MINIMAP_RESOURCES") then
 		if UserConfiguration.ShowMapResources() then
 			UserConfiguration.ShowMapResources( false );
 		else
@@ -3802,7 +3802,7 @@ function OnInputActionTriggered( actionId:number )
 		UI.PlaySound("Play_UI_Click");
 		LuaEvents.MinimapPanel_RefreshMinimapOptions();
 
-	elseif actionId == m_actionHotkeyToggleYield then
+	elseif actionId == m_actionHotkeyToggleYield and GameCapabilities.HasCapability("CAPABILITY_DISPLAY_MINIMAP_YIELDS") then
 		if UserConfiguration.ShowMapYield() then    -- yield already visible, hide
 			LuaEvents.PlotInfo_HideYieldIcons();
 			UserConfiguration.ShowMapYield( false );

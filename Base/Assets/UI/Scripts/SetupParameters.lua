@@ -1245,6 +1245,8 @@ function SetupParameters:Data_DiscoverParameters()
 				-- Sort Values.
 				self.Utility_SortValues(values);	
 
+				p.AllValues = values;
+
 				-- Call a hook to filter possible values for the parameter.
 				values = self:Parameter_FilterValues(p, values);	
 
@@ -1636,7 +1638,7 @@ function SetupParameters:Parameter_SyncAuxConfigurationValues(parameter)
 	end
 
 	-- KLUDGE!  This should be in PlayerSetupLogic.lua
-	-- Extend auxilery values to include CivilizationTypeName and Hash
+	-- Extend auxiliary values to include CivilizationTypeName and Hash
 	if(parameter.ParameterId == "PlayerLeader") then
 		local civilizationType = (parameter.Value ~= nil) and GetPlayerCivilization(parameter.Value.Domain, parameter.Value.Value);
 		local civilizationTypeId = (civilizationType) and DB.MakeHash(civilizationType);
@@ -1716,6 +1718,14 @@ function SetupParameters:Parameter_SyncConfigurationValues(parameter)
 		if(config_value) then
 			-- Does the current Value match config_value?
 			if(parameter.Value and parameter.Value.Value == config_value) then
+				
+				if(parameter.Value.Value.Invalid) then
+
+					parameter.Error = {
+						Id = "InvalidDomainValue",
+						Reason = v.InvalidReason
+					}
+				end
 				return self:Parameter_SyncAuxConfigurationValues(parameter);
 			else
 				-- Does config_value exist in Values?
@@ -1729,7 +1739,6 @@ function SetupParameters:Parameter_SyncConfigurationValues(parameter)
 								Reason = v.InvalidReason
 							}
 						end
-
 						return self:Parameter_SyncAuxConfigurationValues(parameter);
 					end
 				end
@@ -1748,8 +1757,15 @@ function SetupParameters:Parameter_SyncConfigurationValues(parameter)
 				end
 			end
 
-			-- blech! get the first value.
-			local first_value = parameter.Values[1];
+			-- blech! get the first valid value.
+			local first_value;
+			for i,v in ipairs(parameter.Values) do
+				if(v.Invalid ~= true) then
+					first_value = v;
+					break;
+				end
+			end
+
 			if(first_value) then
 				SetupParameters_Log("Defaulting to first value - " .. parameter.ConfigurationId);
 				parameter.Value = first_value;

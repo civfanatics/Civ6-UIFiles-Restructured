@@ -25,6 +25,7 @@ end
 -- Leave the game we're trying to join.
 -------------------------------------------------
 function HandleExitRequest()
+	print("JoiningRoom::HandleExitRequest() leaving the network session.");
 	Network.LeaveGame();
 	UIManager:DequeuePopup( ContextPtr );
 end
@@ -71,6 +72,7 @@ function OnJoinRoomFailed( iExtendedError)
 			else
 				LuaEvents.MultiplayerPopup( "LOC_MP_JOIN_FAILED", "LOC_MP_JOIN_FAILED_TITLE" );
 			end
+			print("JoiningRoom::OnJoinRoomFailed() leaving the network session.");
 			Network.LeaveGame();
 			UIManager:DequeuePopup( ContextPtr );
 		end
@@ -115,6 +117,7 @@ function OnMultiplayerMatchmakingFailed()
 	if (not ContextPtr:IsHidden()) then
 		-- Just show the generic error message for now.  We do not have new text for a dedicated error message yet.
 		LuaEvents.MultiplayerPopup( "LOC_MP_JOIN_FAILED", "LOC_MP_JOIN_FAILED_TITLE" );
+		print("JoiningRoom::OnMultiplayerMatchmakingFailed() leaving the network session.");
 		Network.LeaveGame();
 		UIManager:DequeuePopup( ContextPtr );
 	end
@@ -166,6 +169,7 @@ function OnMultiplayerGameAbandoned(eReason)
 				LuaEvents.MultiplayerPopup( "LOC_GAME_ABANDONED_JOIN_FAILED", "LOC_GAME_ABANDONED_JOIN_FAILED_TITLE" );
 			end
 
+			print("JoiningRoom::OnMultiplayerGameAbandoned() leaving the network session.");
 			Network.LeaveGame();
 			UIManager:DequeuePopup( ContextPtr );	
 		end
@@ -213,6 +217,7 @@ function OnMultiplayerConnectionFailed()
 	if (not ContextPtr:IsHidden()) then
 		-- We should only get this if we couldn't complete the connection to the host of the room	
 		LuaEvents.MultiplayerPopup( "LOC_MP_JOIN_FAILED" );
+		print("JoiningRoom::OnMultiplayerConnectionFailed() leaving the network session.");
 		Network.LeaveGame();
 		UIManager:DequeuePopup( ContextPtr );
 	end

@@ -3,7 +3,7 @@
 
   <Grid ID="Background" Size="200,auto" Anchor="R,T" Padding="10,5" Offset="0,69" SizePadding="0,20" Style="EventPopupFrame" ConsumeMouse="1">
     <Stack ID="MainStack" Padding="3" Anchor="C,T" Offset="0,26">
-      <Label Anchor="C,C" Offset="5,0" Style="ReportBottomLabelText" String="LOC_REPORTS_LIST_EMPIRE" />
+      <Label ID ="EmpireTitle" Anchor="C,C" Offset="5,0" Style="ReportBottomLabelText" String="LOC_REPORTS_LIST_EMPIRE" />
       <Stack ID="EmpireReportsStack"		Anchor="C,C" StackGrowth="Down" Align="Center" />
     
 			<Label ID="GlobalTitle"					Anchor="C,C" Offset="5,5" Style="ReportBottomLabelText" String="LOC_REPORTS_LIST_GLOBAL" />

@@ -60,7 +60,9 @@ function OnLeaderClicked(playerID : number )
 	-- Send an event to open the leader in the diplomacy view (only if they met)
 
 	local localPlayerID:number = Game.GetLocalPlayer();
-	if playerID == localPlayerID or Players[localPlayerID]:GetDiplomacy():HasMet(playerID) then
+	local pPlayer:table = PlayerConfigurations[localPlayerID];
+	local isAlive:boolean = (localPlayerID ~= PlayerTypes.NONE and pPlayer:IsAlive())
+	if (playerID == localPlayerID or Players[localPlayerID]:GetDiplomacy():HasMet(playerID)) and isAlive then
 		LuaEvents.DiplomacyRibbon_OpenDiplomacyActionView( playerID );
 	end
 end
@@ -208,7 +210,8 @@ function UpdateLeaders()
 	local kUniqueLeaders:table = {};
 
 	local localPlayerID:number = Game.GetLocalPlayer();
-	if localPlayerID ~= -1 then
+	local pPlayer : table = PlayerConfigurations[localPlayerID];
+	if localPlayerID ~= -1 and pPlayer:IsAlive() then
 		local localPlayer	:table = Players[localPlayerID];
 		local localDiplomacy:table = localPlayer:GetDiplomacy();
 		table.sort(kPlayers, function(a:table,b:table) return localDiplomacy:GetMetTurn(a:GetID()) < localDiplomacy:GetMetTurn(b:GetID()) end);
@@ -216,7 +219,7 @@ function UpdateLeaders()
 		AddLeader("ICON_"..PlayerConfigurations[localPlayerID]:GetLeaderTypeName(), localPlayerID, {});		--First, add local player.
 		kMetPlayers, kUniqueLeaders = GetMetPlayersAndUniqueLeaders();										--Fill table for other players.
 	else
-		-- No local player so assume it's auto-playing; show everyone.
+		-- No local player so assume it's auto-playing, or local player is dead and observing; show everyone.
 		for _, pPlayer in ipairs(kPlayers) do
 			local playerID:number = pPlayer:GetID();
 			kMetPlayers[ playerID ] = true;
@@ -757,6 +760,20 @@ function SetRibbonOption( option : number )
 end
 
 -- ===========================================================================
+function StopRibbonAnimation(playerID)
+	local uiLeader		:table = m_uiLeadersByID[playerID];
+	if(uiLeader ~= nil) then
+		uiLeader.ActiveLeaderAndStats:SetToBeginning();
+		uiLeader.ActiveSlide:SetToBeginning();
+	end
+end
+
+-- ===========================================================================
+function OnStartObserverMode()
+	UpdateLeaders();
+end
+
+-- ===========================================================================
 --	Define EVENT callback functions so they can be added/removed based on
 --	whether or not yield stats are being shown.
 -- ===========================================================================
@@ -881,6 +898,7 @@ function OnShutdown()
 	Events.UserOptionChanged.Remove( OnUserOptionChanged );	
 
 	LuaEvents.ChatPanel_OnChatReceived.Remove(OnChatReceived);
+	LuaEvents.EndGameMenu_StartObserverMode.Remove( OnStartObserverMode );
 	LuaEvents.LaunchBar_Resize.Remove( OnLaunchBarResized );
 	LuaEvents.PartialScreenHooks_Realize.Remove(RealizeSize);
 	LuaEvents.WorldTracker_OnChatShown.Remove(OnChatPanelShown);
@@ -917,6 +935,7 @@ function LateInitialize()
 	Events.UserOptionChanged.Add( OnUserOptionChanged );	
 
 	LuaEvents.ChatPanel_OnChatReceived.Add(OnChatReceived);
+	LuaEvents.EndGameMenu_StartObserverMode.Add( OnStartObserverMode );
 	LuaEvents.LaunchBar_Resize.Add( OnLaunchBarResized );
 	LuaEvents.PartialScreenHooks_Realize.Add(RealizeSize);
 	LuaEvents.WorldTracker_OnChatShown.Add(OnChatPanelShown);

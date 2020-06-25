@@ -17,7 +17,15 @@ end
 -- ===========================================================================
 function CanLocalPlayerSaveGame()
 	if UI.HasFeature("Saving") then
-		if GameConfiguration.IsNetworkMultiplayer() or IsLocalPlayerTurnActive() or WorldBuilder:IsActive() then
+		-- World Builder doesn't rely on having a valid local player
+		if WorldBuilder:IsActive() then
+			return true;
+		end
+
+		local localPlayerID = Game.GetLocalPlayer();
+		if(localPlayerID == PlayerTypes.NONE or not PlayerConfigurations[localPlayerID]:IsAlive()) then
+			return false;
+		elseif GameConfiguration.IsNetworkMultiplayer() or IsLocalPlayerTurnActive() then
 			return true;
 		end
 	end

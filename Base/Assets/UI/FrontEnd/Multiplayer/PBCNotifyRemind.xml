@@ -8,8 +8,8 @@
 			<CheckBox ID="DoNotRemindCheckbox" Anchor="L,C" Style="MainMenuCheck" FontStyle="Shadow" Color0="5,29,51,255" Color1="0,0,0,50" Offset="0,0" String="LOC_DO_NOT_REMIND" ToolTip="LOC_DO_NOT_REMIND_TT" BoxOnLeft="1" IsChecked="0"/>
 			<!-- Bottom Buttons  -->
 			<Stack ID="BottomContents" Anchor="C,B" Offset="0,0" StackGrowth="Right" StackPadding="30" InnerPadding="0,0">
-				<GridButton		ID="OptionsButton"			Size="160,42"		Style="MainButton" String="LOC_MAIN_MENU_OPTIONS" />
-				<GridButton		ID="AcceptButton"			Size="160,42"		Style="MainButton" String="LOC_OK" />
+				<GridButton		ID="OptionsButton"			Size="240,42"		Style="MainButton" String="LOC_MAIN_MENU_OPTIONS" />
+				<GridButton		ID="AcceptButton"			Size="240,42"		Style="MainButton" String="LOC_OK" />
 			</Stack>			
 		</Stack>
 	</Grid>

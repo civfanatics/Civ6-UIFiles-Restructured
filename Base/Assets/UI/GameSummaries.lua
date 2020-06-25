@@ -104,38 +104,6 @@ function UpdateGlobalCache()
 				return Locale.Compare(a.DisplayName, b.DisplayName) == -1;
 			end
 		end);
-
-		local indexed_categories = {};
-		g_Categories = HallofFame.GetStatisticsCategories();
-		for i,v in ipairs(g_Categories) do
-			indexed_categories[v.Category] = v;
-			v.Name = v.Name and Locale.Lookup(v.Name) or "";
-		end
-		table.sort(g_Categories, function(a,b)
-			if(a.SortIndex ~= b.SortIndex) then
-				return a.SortIndex < b.SortIndex;
-			else
-				return Locale.Compare(a.Name,b.Name) == -1;
-			end
-		end);
-
-		g_Statistics = {};
-		local statistics = HallofFame.GetStatistics();
-		for i,stat in ipairs(statistics) do
-			local cat = indexed_categories[stat.Category];
-			if(cat and not cat.IsHidden) then
-				stat.Name = Locale.Lookup(stat.Name);
-				table.insert(g_Statistics, stat);
-			end
-		end
-
-		table.sort(g_Statistics, function(a,b)
-			if(a.Importance ~= b.Importance) then
-				return a.Importance > b.Importance;
-			else
-				return Locale.Compare(a.Name, b.Name) == -1;
-			end
-		end);
 	else
 		g_CurrentRuleset = nil;
 	end
@@ -173,7 +141,39 @@ function UpdateRulesetCache()
 	
 	table.sort(g_RulesetVictories, function(a,b)
 		return Locale.Compare(a.Name, b.Name) == -1;
-	end); 
+	end);
+	
+	local indexed_categories = {};
+	g_Categories = HallofFame.GetStatisticsCategories(ruleset);
+	for i,v in ipairs(g_Categories) do
+		indexed_categories[v.Category] = v;
+		v.Name = v.Name and Locale.Lookup(v.Name) or "";
+	end
+	table.sort(g_Categories, function(a,b)
+		if(a.SortIndex ~= b.SortIndex) then
+			return a.SortIndex < b.SortIndex;
+		else
+			return Locale.Compare(a.Name,b.Name) == -1;
+		end
+	end);
+
+	g_Statistics = {};
+	local statistics = HallofFame.GetStatistics(ruleset);
+	for i,stat in ipairs(statistics) do
+		local cat = indexed_categories[stat.Category];
+		if(cat and not cat.IsHidden) then
+			stat.Name = Locale.Lookup(stat.Name);
+			table.insert(g_Statistics, stat);
+		end
+	end
+
+	table.sort(g_Statistics, function(a,b)
+		if(a.Importance ~= b.Importance) then
+			return a.Importance > b.Importance;
+		else
+			return Locale.Compare(a.Name, b.Name) == -1;
+		end
+	end);
 end
 
 function SelectTab(index)

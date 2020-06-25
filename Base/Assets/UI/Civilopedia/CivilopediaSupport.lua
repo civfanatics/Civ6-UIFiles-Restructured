@@ -1074,6 +1074,9 @@ end
 --
 -------------------------------------------------------------------------------
 function OnOpenCivilopedia(sectionId_or_search, pageId)
+
+	if(not GameCapabilities.HasCapability("CAPABILITY_CIVILOPEDIA"))then return; end
+		
 	Controls.BackIcon:SetEnabled(false);
 	Controls.BackIcon:SetColor(INACTIVE_COLOR);
 	Controls.ForwardIcon:SetEnabled(false);

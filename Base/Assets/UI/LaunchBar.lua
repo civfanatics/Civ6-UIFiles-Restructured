@@ -308,19 +308,19 @@ function RealizeHookVisibility()
 	Controls.CultureButton:SetShow(m_isCivicsTreeAvailable);
 	Controls.CultureBolt:SetShow(m_isCivicsTreeAvailable);
 
-	m_isGreatPeopleAvailable = isDebug or (m_isGreatPeopleUnlocked and HasCapability("CAPABILITY_GREAT_PEOPLE_VIEW"));
+	m_isGreatPeopleAvailable = isDebug or (m_isGreatPeopleUnlocked and HasCapability("CAPABILITY_GREAT_PEOPLE_VIEW") and not IsLocalPlayerObserving());
 	Controls.GreatPeopleButton:SetShow(m_isGreatPeopleAvailable);
 	Controls.GreatPeopleBolt:SetShow(m_isGreatPeopleAvailable);
 
-	m_isReligionAvailable = isDebug or (m_isReligionUnlocked and HasCapability("CAPABILITY_RELIGION_VIEW"));
+	m_isReligionAvailable = isDebug or (m_isReligionUnlocked and HasCapability("CAPABILITY_RELIGION_VIEW") and not IsLocalPlayerObserving());
 	Controls.ReligionButton:SetShow(m_isReligionAvailable);
 	Controls.ReligionBolt:SetShow(m_isReligionAvailable);
 
-	m_isGreatWorksAvailable = isDebug or (m_isGreatWorksUnlocked and HasCapability("CAPABILITY_GREAT_WORKS_VIEW"));
+	m_isGreatWorksAvailable = isDebug or (m_isGreatWorksUnlocked and HasCapability("CAPABILITY_GREAT_WORKS_VIEW") and not IsLocalPlayerObserving());
 	Controls.GreatWorksButton:SetShow(m_isGreatWorksAvailable);
 	Controls.GreatWorksBolt:SetShow(m_isGreatWorksAvailable);
 
-	m_isGovernmentAvailable = isDebug or (m_isGovernmentUnlocked and HasCapability("CAPABILITY_GOVERNMENTS_VIEW"));
+	m_isGovernmentAvailable = isDebug or (m_isGovernmentUnlocked and HasCapability("CAPABILITY_GOVERNMENTS_VIEW") and not IsLocalPlayerObserving());
 	Controls.GovernmentButton:SetShow(m_isGovernmentAvailable);
 	Controls.GovernmentBolt:SetShow(m_isGovernmentAvailable);
 
@@ -719,6 +719,17 @@ function OnInputActionTriggered( actionId )
 	end	
 end
 
+function IsLocalPlayerObserving()
+	local localPlayerID : number = Game.GetLocalPlayer();
+	if(localPlayerID == PlayerTypes.NONE)then return false; end
+	local pPlayer : table = PlayerConfigurations[Game.GetLocalPlayer()]
+	return not pPlayer:IsAlive();
+end
+
+function OnStartObserverMode()
+	RefreshView();
+end
+
 -- ===========================================================================
 function PlayMouseoverSound()
 	UI.PlaySound("Main_Menu_Mouse_Over");
@@ -748,6 +759,7 @@ function Unsubscribe()
 
 	LuaEvents.CivicsTree_CloseCivicsTree.Remove( SetCivicsTreeClosed );
 	LuaEvents.CivicsTree_OpenCivicsTree.Remove( SetCivicsTreeOpen );	
+	LuaEvents.EndGameMenu_StartObserverMode.Remove( OnStartObserverMode );
 	LuaEvents.Government_CloseGovernment.Remove( SetGovernmentClosed );
 	LuaEvents.Government_OpenGovernment.Remove( SetGovernmentOpen );
 	LuaEvents.GovernorPanel_Closed.Remove( SetGovernorPanelClosed );
@@ -798,6 +810,7 @@ function Subscribe()
 
 	LuaEvents.CivicsTree_CloseCivicsTree.Add( SetCivicsTreeClosed );
 	LuaEvents.CivicsTree_OpenCivicsTree.Add( SetCivicsTreeOpen );	
+	LuaEvents.EndGameMenu_StartObserverMode.Add( OnStartObserverMode );
 	LuaEvents.Government_CloseGovernment.Add( SetGovernmentClosed );
 	LuaEvents.Government_OpenGovernment.Add( SetGovernmentOpen );
 	LuaEvents.GovernorPanel_Closed.Add( SetGovernorPanelClosed );

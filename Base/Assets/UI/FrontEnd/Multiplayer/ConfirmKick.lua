@@ -23,6 +23,36 @@ function OnAccept()
 	ContextPtr:SetHide( true );
 end
 
+-------------------------------------------------
+-------------------------------------------------
+function OnKickVoteAFK()
+	print("OnKickVote: g_kickIdx: " .. tostring(g_kickIdx));
+	Network.KickVote(g_kickIdx, true, KickVoteReasonType.KICKVOTE_AFK);
+	UIManager:PopModal( ContextPtr );
+	ContextPtr:CallParentShowHideHandler( true );
+	ContextPtr:SetHide( true );
+end
+
+-------------------------------------------------
+-------------------------------------------------
+function OnKickVoteGriefing()
+	print("OnKickVote: g_kickIdx: " .. tostring(g_kickIdx));
+	Network.KickVote(g_kickIdx, true, KickVoteReasonType.KICKVOTE_GRIEFING);
+	UIManager:PopModal( ContextPtr );
+	ContextPtr:CallParentShowHideHandler( true );
+	ContextPtr:SetHide( true );
+end
+
+-------------------------------------------------
+-------------------------------------------------
+function OnKickVoteCheating()
+	print("OnKickVote: g_kickIdx: " .. tostring(g_kickIdx));
+	Network.KickVote(g_kickIdx, true, KickVoteReasonType.KICKVOTE_CHEATING);
+	UIManager:PopModal( ContextPtr );
+	ContextPtr:CallParentShowHideHandler( true );
+	ContextPtr:SetHide( true );
+end
+
 ----------------------------------------------------------------
 -- Input processing
 ----------------------------------------------------------------
@@ -53,6 +83,21 @@ end
 
 -------------------------------------------------
 -------------------------------------------------
+function OnStartKickVote(playerID, playerName)
+	g_kickIdx = playerID;
+
+	m_kPopupDialog:Close();
+	m_kPopupDialog:AddText( Locale.Lookup("LOC_CONFIRM_START_KICK_VOTE_DESC", playerName) );
+	m_kPopupDialog:AddButton( Locale.Lookup("LOC_KICK_VOTE_REASON_AFK"), OnKickVoteAFK, nil, nil, "PopupButtonInstanceRed" );
+	m_kPopupDialog:AddButton( Locale.Lookup("LOC_KICK_VOTE_REASON_GRIEFING"), OnKickVoteGriefing, nil, nil, "PopupButtonInstanceRed" );
+	m_kPopupDialog:AddButton( Locale.Lookup("LOC_KICK_VOTE_REASON_CHEATING"), OnKickVoteCheating, nil, nil, "PopupButtonInstanceRed" );
+	m_kPopupDialog:AddButton( Locale.Lookup("LOC_CANCEL_BUTTON"), OnCancel );
+	Controls.PopupBox:SetSizeX(870);
+	m_kPopupDialog:Open();
+end
+
+-------------------------------------------------
+-------------------------------------------------
 function OnMultiplayerPostPlayerDisconnected(iPlayerID)
 	-- Cancel out if the target player has disconnected from the game.
 	if(ContextPtr:IsHidden() == false) then
@@ -69,6 +114,7 @@ function Initialize()
 	Events.MultiplayerPostPlayerDisconnected.Add(OnMultiplayerPostPlayerDisconnected);
 
 	LuaEvents.SetKickPlayer.Add(OnSetKickPlayer);
+	LuaEvents.StartKickVote.Add(OnStartKickVote);
 
 	m_kPopupDialog = PopupDialog:new( "ConfirmKick" );
 end

@@ -42,6 +42,14 @@ end
 --	LUA Event
 -- ===========================================================================
 function OnOpen()
+	local localPlayerID:number = Game.GetLocalPlayer();
+	if(localPlayerID ~= PlayerTypes.NONE)then
+		local pPlayer:table = PlayerConfigurations[localPlayerID];
+		if(not pPlayer:IsAlive())then
+			Controls.EmpireReportsStack:SetHide(true);
+			Controls.EmpireTitle:SetHide(true);
+		end	
+	end
 	Controls.EmpireReportsStack:CalculateSize();
 	Controls.GlobalReportsStack:CalculateSize();
 	Controls.MainStack:CalculateSize();
