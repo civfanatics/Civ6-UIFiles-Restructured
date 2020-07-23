@@ -1,14 +1,16 @@
--- Copyright 2017-2018, Firaxis Games
+-- Copyright 2017-2020, Firaxis Games
 
-include("NotificationPanel");
-
-BASE_RegisterHandlers = RegisterHandlers;
-
+-- This file is being included into the base NotificationPanel file using the wildcard include setup in NotificationPanel.lua
+-- Refer to the bottom of NotificationPanel.lua to see how that's happening
+-- DO NOT include any NotificationPanel files here or it will cause problems
+--include("NotificationPanel");
 
 -- ===========================================================================
 -- CACHE BASE FUNCTIONS
 -- ===========================================================================
+local BASE_RegisterHandlers = RegisterHandlers;
 
+-- ===========================================================================
 function OnConsiderDisloyalCityNotification( notificationEntry )
 	if (notificationEntry ~= nil and notificationEntry.m_PlayerID == Game.GetLocalPlayer()) then
 		local pNotification :table = GetActiveNotificationFromEntry(notificationEntry);
@@ -19,6 +21,7 @@ function OnConsiderDisloyalCityNotification( notificationEntry )
 	end
 end
 
+-- ===========================================================================
 function OnCityLosingCulturalIdentityNotification( notificationEntry )
 	if (notificationEntry ~= nil and notificationEntry.m_PlayerID == Game.GetLocalPlayer()) then
 		local pNotification :table = GetActiveNotificationFromEntry(notificationEntry);
@@ -29,6 +32,7 @@ function OnCityLosingCulturalIdentityNotification( notificationEntry )
 	end
 end
 
+-- ===========================================================================
 function OnConsiderEmergency( notificationEntry )
 	if (notificationEntry ~= nil and notificationEntry.m_PlayerID == Game.GetLocalPlayer()) then
 		local pNotification :table = GetActiveNotificationFromEntry(notificationEntry);
@@ -45,6 +49,7 @@ function OnConsiderEmergency( notificationEntry )
 	end
 end
 
+-- ===========================================================================
 function OnCommemorate( notificationEntry )
 	if (notificationEntry ~= nil and notificationEntry.m_PlayerID == Game.GetLocalPlayer()) then
 		local pNotification :table = GetActiveNotificationFromEntry(notificationEntry);
@@ -59,6 +64,7 @@ function OnCommemorate( notificationEntry )
 	end
 end
 
+-- ===========================================================================
 function OnDedicate( notificationEntry )
 	if (notificationEntry ~= nil and notificationEntry.m_PlayerID == Game.GetLocalPlayer()) then
 		local pNotification :table = GetActiveNotificationFromEntry(notificationEntry);
@@ -68,6 +74,7 @@ function OnDedicate( notificationEntry )
 	end
 end
 
+-- ===========================================================================
 function OnPrideMomentActivate( notificationEntry, notificationID, activatedByUser:boolean )
 	if (notificationEntry ~= nil and notificationEntry.m_PlayerID == Game.GetLocalPlayer() and activatedByUser) then
 		if (notificationEntry ~= nil) then
@@ -77,7 +84,9 @@ function OnPrideMomentActivate( notificationEntry, notificationID, activatedByUs
 	end
 end
 
+-- ===========================================================================
 -- Similar to LookAtNotification, but we want to always look at the location and never try to select the city (since the city does not belong to us)
+-- ===========================================================================
 function OnForeignCityBecameFreeCityNotification( notificationEntry, notificationID, activatedByUser:boolean )
 	if (notificationEntry ~= nil and notificationEntry.m_PlayerID == Game.GetLocalPlayer()) then
 		local pNotification :table = GetActiveNotificationFromEntry(notificationEntry, notificationID);

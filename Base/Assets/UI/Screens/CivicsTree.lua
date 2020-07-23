@@ -134,6 +134,8 @@ local TREE_START_NONE_ID			:number = -999;			-- Special, unique value, to mark n
 local VERTICAL_CENTER				:number = (SIZE_NODE_Y) / 2;
 local MAX_BEFORE_TRUNC_GOV_TITLE	:number = 165;
 
+local NO_PLAYER						:number = -1;			-- Value GetLocalPlayer() returns during autoplay
+
 -- ===========================================================================
 --	MEMBERS / VARIABLES
 -- ===========================================================================
@@ -440,38 +442,40 @@ function LayoutNodeGrid()
 
 		-- determine if this is a large node
 		local playerId = Game.GetLocalPlayer();
-		local civic:table		= GameInfo.Civics[item.Type];
-		local civicType:string	= civic and civic.CivicType;
-		local unlockableTypes	= GetUnlockablesForCivic_Cached(civicType, playerId);
-		local numUnlocks		:number = 0;
-		local extraUnlocks		:table = {};
-		
-		if unlockableTypes ~= nil then
-			for _, unlockItem in ipairs(unlockableTypes) do
-				local typeInfo = GameInfo.Types[unlockItem[1]];
+		if playerId ~= nil and playerId ~= NO_PLAYER then
+			local civic:table		= GameInfo.Civics[item.Type];
+			local civicType:string	= civic and civic.CivicType;
+			local unlockableTypes	= GetUnlockablesForCivic_Cached(civicType, playerId);
+			local numUnlocks		:number = 0;
+			local extraUnlocks		:table = {};
 
-				if typeInfo.Kind == "KIND_GOVERNMENT" then
-					numUnlocks = numUnlocks + 4;				-- 4 types of policy slots
-				else
-					numUnlocks = numUnlocks + 1;
+			if unlockableTypes ~= nil then
+				for _, unlockItem in ipairs(unlockableTypes) do
+					local typeInfo = GameInfo.Types[unlockItem[1]];
+
+					if typeInfo.Kind == "KIND_GOVERNMENT" then
+						numUnlocks = numUnlocks + 4;				-- 4 types of policy slots
+					else
+						numUnlocks = numUnlocks + 1;
+					end
 				end
 			end
-		end
 
-		-- Include extra icons in total unlocks
-		if ( item.ModifierList ) then
-			for _,tModifier in ipairs(item.ModifierList) do
-				local tIconData :table = g_ExtraIconData[tModifier.ModifierType];
-				if ( tIconData ) then
-					numUnlocks = numUnlocks + 1;
-					hideDescriptionIcon = hideDescriptionIcon or tIconData.HideDescriptionIcon;
-					table.insert(extraUnlocks, {IconData=tIconData, ModifierTable=tModifier});
+			-- Include extra icons in total unlocks
+			if ( item.ModifierList ) then
+				for _,tModifier in ipairs(item.ModifierList) do
+					local tIconData :table = g_ExtraIconData[tModifier.ModifierType];
+					if ( tIconData ) then
+						numUnlocks = numUnlocks + 1;
+						hideDescriptionIcon = hideDescriptionIcon or tIconData.HideDescriptionIcon;
+						table.insert(extraUnlocks, {IconData=tIconData, ModifierTable=tModifier});
+					end
 				end
 			end
-		end
 
-		if numUnlocks > 8 then
-			item.IsLarge = true;
+			if numUnlocks > 8 then
+				item.IsLarge = true;
+			end
 		end
 
 		-- Randomize UI tree row (if this game & era does that sort of thing.)

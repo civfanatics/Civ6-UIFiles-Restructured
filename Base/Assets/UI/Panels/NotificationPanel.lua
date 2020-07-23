@@ -1,4 +1,5 @@
--- Copyright 2017-2019, Firaxis Games
+-- Copyright 2017-2020, Firaxis Games
+
 include( "ToolTipHelper" );	
 include( "InstanceManager" );
 
@@ -32,7 +33,7 @@ local TITLE_OFFSET_DEFAULT					:number = 1;
 --	VARIABLES
 -- ===========================================================================
 
-local m_genericItemIM	:table = InstanceManager:new( "ItemInstance",	"Top", Controls.ScrollStack );
+m_genericItemIM	= InstanceManager:new( "ItemInstance",	"Top", Controls.ScrollStack );		-- TODO: Change to "g_" prefix.
 
 local m_screenX, m_screenY		:number	= UIManager:GetScreenSizeVal();
 local _, offsetY		:number	= 0,0; --Controls.OuterStack:GetOffsetVal();
@@ -939,6 +940,15 @@ function RealizeMaxWidth( notificationEntry:NotificationType , pNotification:tab
 	notificationEntry.m_maxWidth = maxWidth;
 end
 
+
+-- ===========================================================================
+--	MODDERS: Override this in your LUA if you need to do something that
+--			 isn't available via XML.
+-- ===========================================================================
+function ApplyNotificationTextOverrides( notificationEntry:NotificationType, pNotification:table, messageName:string, summary:string )
+	return messageName, summary;
+end
+
 -- ===========================================================================
 --	Assign the notification summary and title to the notification instance, 
 --		and set wrap width if needs to be wrapped
@@ -949,7 +959,12 @@ function SetNotificationText( notificationEntry:NotificationType , pNotification
 		local summary:string = Locale.Lookup(pNotification:GetSummary());
 		local widthSummary :number = 0;
 
-		notificationEntry.m_Instance.TitleInfo:SetString( Locale.ToUpper(messageName) );
+		messageName = Locale.ToUpper(messageName);
+
+		-- Give DLC,MODs,etc... a chance to override text.
+		messageName, summary = ApplyNotificationTextOverrides( notificationEntry, pNotification, messageName, summary );
+
+		notificationEntry.m_Instance.TitleInfo:SetString( messageName );
 		notificationEntry.m_Instance.Summary:SetString( summary );
 		notificationEntry.m_Instance.Summary:SetWrapWidth(m_screenX);
 		widthSummary = notificationEntry.m_Instance.Summary:GetSizeX();
@@ -1873,4 +1888,10 @@ function Initialize()
 
 	m_isLoadComplete = false;
 end
+
+-- This wildcard include will include all loaded files beginning with "NotificationPanel_"
+-- This method replaces the uses of include("NotificationPanel") in files that want to override 
+-- functions from this file. If you're implementing a new "NotificationPanel_" file DO NOT include this file.
+include("NotificationPanel_", true);
+
 Initialize();

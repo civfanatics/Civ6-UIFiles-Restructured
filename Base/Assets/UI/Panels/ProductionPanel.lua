@@ -21,14 +21,14 @@ local WINDOW_HEADER_Y	:number	= 150;
 local TOPBAR_Y			:number	= 28;
 local SEPARATOR_Y		:number	= 20;
 local DISABLED_PADDING_Y:number	= 10;
-local TEXTURE_BASE				:string = "UnitFlagBase";
-local TEXTURE_CIVILIAN			:string = "UnitFlagCivilian";
-local TEXTURE_RELIGION			:string = "UnitFlagReligion";
-local TEXTURE_EMBARK			:string = "UnitFlagEmbark";
-local TEXTURE_FORTIFY			:string = "UnitFlagFortify";
-local TEXTURE_NAVAL				:string = "UnitFlagNaval";
-local TEXTURE_SUPPORT			:string = "UnitFlagSupport";
-local TEXTURE_TRADE				:string = "UnitFlagTrade";
+local TEXTURE_BASE				:string = "UnitFlagBase_Combo";
+local TEXTURE_CIVILIAN			:string = "UnitFlagCivilian_Combo";
+local TEXTURE_RELIGION			:string = "UnitFlagReligion_Combo";
+local TEXTURE_EMBARK			:string = "UnitFlagEmbark_Combo";
+local TEXTURE_FORTIFY			:string = "UnitFlagFortify_Combo";
+local TEXTURE_NAVAL				:string = "UnitFlagNaval_Combo";
+local TEXTURE_SUPPORT			:string = "UnitFlagSupport_Combo";
+local TEXTURE_TRADE				:string = "UnitFlagTrade_Combo";
 local BUILDING_IM_PREFIX		:string = "buildingListingIM_";
 local BUILDING_DRAWER_PREFIX	:string = "buildingDrawer_";
 local ICON_PREFIX				:string = "ICON_";
@@ -1221,11 +1221,7 @@ end
 function PopulateUnits(data:table, listMode:number, listIM:table)
 	local unitList = listIM:GetInstance();
 	
-	local primaryColor, secondaryColor  = UI.GetPlayerColors( Players[Game.GetLocalPlayer()]:GetID() );
-	local darkerFlagColor	:number = UI.DarkenLightenColor(primaryColor,(-85),255);
-	local brighterFlagColor :number = UI.DarkenLightenColor(primaryColor,90,255);
-	local brighterIconColor :number = UI.DarkenLightenColor(secondaryColor,20,255);
-	local darkerIconColor	:number = UI.DarkenLightenColor(secondaryColor,-30,255);
+	local primaryColor, secondaryColor  = UI.GetPlayerColors( Game.GetLocalPlayer() );
 	
 	local sHeaderText:string = Locale.ToUpper("LOC_TECH_FILTER_UNITS");
 	unitList.Header:SetText(sHeaderText);
@@ -1330,14 +1326,8 @@ function PopulateUnits(data:table, listMode:number, listIM:table)
 			end
 
 			-- Set colors and icons for the flag instance
-			unitListing.FlagBase:SetTexture(textureName);
-			unitListing.FlagBaseOutline:SetTexture(textureName);
-			unitListing.FlagBaseDarken:SetTexture(textureName);
-			unitListing.FlagBaseLighten:SetTexture(textureName);
+			unitListing.FlagBase:SetTexture( textureName );
 			unitListing.FlagBase:SetColor( primaryColor );
-			unitListing.FlagBaseOutline:SetColor( primaryColor );
-			unitListing.FlagBaseDarken:SetColor( darkerFlagColor );
-			unitListing.FlagBaseLighten:SetColor( brighterFlagColor );
 			unitListing.Icon:SetColor( secondaryColor );
 		
             unitListing.Button:RegisterCallback( Mouse.eMouseEnter,	function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
@@ -1416,14 +1406,8 @@ function PopulateUnits(data:table, listMode:number, listIM:table)
 				unitListing.CorpsLabelIcon:SetText(item.CorpsName);
 				unitListing.CorpsLabelText:SetText(Locale.Lookup(item.Name));
 				
-				unitListing.CorpsFlagBase:SetTexture(textureName);
-				unitListing.CorpsFlagBaseOutline:SetTexture(textureName);
-				unitListing.CorpsFlagBaseDarken:SetTexture(textureName);
-				unitListing.CorpsFlagBaseLighten:SetTexture(textureName);
+				unitListing.CorpsFlagBase:SetTexture( textureName );
 				unitListing.CorpsFlagBase:SetColor( primaryColor );
-				unitListing.CorpsFlagBaseOutline:SetColor( primaryColor );
-				unitListing.CorpsFlagBaseDarken:SetColor( darkerFlagColor );
-				unitListing.CorpsFlagBaseLighten:SetColor( brighterFlagColor );
 				unitListing.CorpsIcon:SetColor( secondaryColor );
 				unitListing.CorpsIcon:SetIcon(ICON_PREFIX..item.Type);
 				unitListing.TrainCorpsButton:SetToolTipString(item.CorpsTooltip);
@@ -1478,14 +1462,8 @@ function PopulateUnits(data:table, listMode:number, listIM:table)
 				
 				unitListing.ArmyLabelIcon:SetText(item.ArmyName);
 				unitListing.ArmyLabelText:SetText(Locale.Lookup(item.Name));
-				unitListing.ArmyFlagBase:SetTexture(textureName);
-				unitListing.ArmyFlagBaseOutline:SetTexture(textureName);
-				unitListing.ArmyFlagBaseDarken:SetTexture(textureName);
-				unitListing.ArmyFlagBaseLighten:SetTexture(textureName);
+				unitListing.ArmyFlagBase:SetTexture( textureName );
 				unitListing.ArmyFlagBase:SetColor( primaryColor );
-				unitListing.ArmyFlagBaseOutline:SetColor( primaryColor );
-				unitListing.ArmyFlagBaseDarken:SetColor( darkerFlagColor );
-				unitListing.ArmyFlagBaseLighten:SetColor( brighterFlagColor );
 				unitListing.ArmyIcon:SetColor( secondaryColor );
 				unitListing.ArmyIcon:SetIcon(ICON_PREFIX..item.Type);
 				unitListing.TrainArmyButton:SetToolTipString(item.ArmyTooltip);

@@ -25,6 +25,7 @@ BASE_ShouldAddTopLevelStatementOption = ShouldAddTopLevelStatementOption;
 --	MEMBERS
 -- ===========================================================================
 local m_AllianceRowContext = nil;
+local m_uiSecretSocietyRowContext = nil;
 local m_EmergencyRowContext = nil;
 
 local m_AllianceTabContext = nil;
@@ -271,6 +272,12 @@ function PopulateIntelOverview(overviewInstance:table)
 	AddIntelOverviewDivider(overviewInstance);
 	AddOverviewAccessLevel(overviewInstance);
 	AddIntelOverviewDivider(overviewInstance);
+
+	if HasCapability("CAPABILITY_SECRETSOCIETIES") then
+		m_uiSecretSocietyRowContext = AddOverviewRow(m_uiSecretSocietyRowContext, "DiplomacyActionView_SecretSocietyRow", overviewInstance.IntelOverviewStack);
+		AddIntelOverviewDivider(overviewInstance);
+	end
+
 	AddOverviewGovernment(overviewInstance);
 	AddIntelOverviewDivider(overviewInstance);
 	m_AllianceRowContext = AddOverviewRow(m_AllianceRowContext, "DiplomacyActionView_AllianceRow", overviewInstance.IntelOverviewStack);

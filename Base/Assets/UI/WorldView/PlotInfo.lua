@@ -923,6 +923,7 @@ end
 -- ===========================================================================
 function OnClearDistrictPlacementShadowHexes()
 	m_kLensMask[KEY_DISTRICT_PLACEMENT] = nil;
+	RealizeShadowMask();
 end
 
 -- ===========================================================================
@@ -1057,7 +1058,6 @@ function OnInterfaceModeChanged( oldMode:number, newMode:number )
 		if oldMode == InterfaceModeTypes.DISTRICT_PLACEMENT or
 			oldMode == InterfaceModeTypes.BUILDING_PLACEMENT then
 			OnClearDistrictPlacementShadowHexes();
-			RealizeShadowMask();
 		end
 	end
 end

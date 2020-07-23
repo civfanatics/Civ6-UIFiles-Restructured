@@ -344,6 +344,7 @@ function OnCloudCheck( )
 
 	SetupDirectoryBrowsePulldown();
 	SetupFileList();
+	UpdateActionButtonState();
 end
 
 
@@ -473,6 +474,11 @@ function OnUpdateUI( type:number, tag:string, iData1:number, iData2:number, strD
 end
 
 -- ===========================================================================
+function OnFileListQueryComplete()
+	UpdateActionButtonState();
+end
+
+-- ===========================================================================
 function OnRefresh()
 	SetupDirectoryBrowsePulldown();
 	SetupFileList();
@@ -514,6 +520,8 @@ function Initialize()
 	SetupSortPulldown();
 	InitializeDirectoryBrowsing();
 	Resize();
+
+	LuaEvents.FileListQueryComplete.Add( OnFileListQueryComplete );
 
 	-- UI Events
 	ContextPtr:SetInputHandler( OnInputHandler, true );

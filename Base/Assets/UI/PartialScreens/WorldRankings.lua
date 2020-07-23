@@ -842,9 +842,10 @@ function PopulateOverallInstance(instance:table, victoryType:string, typeText:st
 		instance.VictoryLeading:SetText(Locale.Lookup("LOC_WORLD_RANKINGS_FIRST_PLACE_OTHER_SIMPLE", topName));
 
 		-- Set local team/player text
+		local isVictoryPlayerSet:boolean = false;
 		for teamPosition, team in ipairs(teamData) do
 			for playerID, data in pairs(team.PlayerData) do
-				if playerID == g_LocalPlayerID then
+				if playerID == m_LocalPlayerID then
 					local localPlayerPositionText:string = Locale.Lookup("LOC_WORLD_RANKINGS_" .. teamPosition .. "_PLACE");
 					local localPlayerDescription:string = "";
 
@@ -855,8 +856,12 @@ function PopulateOverallInstance(instance:table, victoryType:string, typeText:st
 					end
 
 					instance.VictoryPlayer:SetText(localPlayerDescription);
+					isVictoryPlayerSet = true;
 				end
 			end
+		end
+		if (not isVictoryPlayerSet) then
+			instance.VictoryPlayer:SetText("");		
 		end
 	end
 

@@ -3,6 +3,7 @@ include("SupportFunctions");
 include("EspionageViewManager");
 
 local m_kPowerBreakdownIM:table = InstanceManager:new( "PowerLineInstance",	"Top");
+local m_KeyStackIM:table = InstanceManager:new( "KeyEntry", "KeyColorImage", Controls.KeyStack );
 
 local m_kEspionageViewManager = EspionageViewManager:CreateManager();
 
@@ -123,7 +124,32 @@ function OnRefresh()
 		Controls.PowerAdvisor:SetHide(false);
 	end
 
+	m_KeyStackIM:ResetInstances();
+
+	AddKeyEntry("LOC_POWER_LENS_KEY_POWER_SOURCE", UI.GetColorValue("COLOR_STANDARD_GREEN_MD"), true);
+	AddKeyEntry("LOC_POWER_LENS_KEY_FULLY_POWERED", UI.GetColorValue("COLOR_STANDARD_GREEN_MD"));
+	AddKeyEntry("LOC_POWER_LENS_KEY_UNDERPOWERED", UI.GetColorValue("COLOR_STANDARD_RED_MD"));
+	AddKeyEntry("LOC_POWER_LENS_KEY_POWER_RANGE", UI.GetColorValue("COLOR_YELLOW"), true);
+
 	Controls.TabStack:CalculateSize();
+end
+
+-- ===========================================================================
+function AddKeyEntry(textString:string, colorValue:number, bUseEmptyTexture:boolean)
+	local keyEntryInstance:table = m_KeyStackIM:GetInstance();
+
+	-- Update key text
+	keyEntryInstance.KeyLabel:SetText(Locale.Lookup(textString));
+
+	-- Set the texture if we want to use the hollow, border only hex texture
+	if bUseEmptyTexture == true then
+		keyEntryInstance.KeyColorImage:SetTexture("Controls_KeySwatchHexEmpty");
+	else
+		keyEntryInstance.KeyColorImage:SetTexture("Controls_KeySwatchHex");
+	end
+
+	-- Update key color
+	keyEntryInstance.KeyColorImage:SetColor(colorValue);
 end
 
 -- ===========================================================================
@@ -137,15 +163,6 @@ function OnTabStackSizeChanged()
 	-- Manually resize the context to fit the child stack
 	ContextPtr:SetSizeX(Controls.TabStack:GetSizeX());
 	ContextPtr:SetSizeY(Controls.TabStack:GetSizeY());
-end
-
--- ===========================================================================
-function OnTogglePowerPanel(pCity:table)
-	if (pCity ~= nil) then
-		UI.LookAtPlot(pCity:GetX(), pCity:GetY());
-		UI.SelectCity(pCity);
-		LuaEvents.CityPanel_ToggleOverviewPower();
-	end
 end
 
 -- ===========================================================================

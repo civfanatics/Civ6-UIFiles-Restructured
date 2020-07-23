@@ -4,7 +4,6 @@
 	<SlideAnim							ID="ForceAutoCloseMarketingMode" Start="0,0" End="0,0" Pause="27" Cycle="Once" />
 
   <!-- Darken the screen -->
-  <Box Color="0,0,0,0" Size="parent,parent" ConsumeMouse="1"/>
   <Image ID="VignetteRB" Texture="Controls_Vignette" Size="500,500"   Color="0,0,0,255" Anchor="R,B"/>
   <Image ID="VignetteRT" Texture="Controls_Vignette" Size="500,500"   Color="0,0,0,255" Anchor="R,T" FlipY="1"/>
   <Image ID="VignetteLT" Texture="Controls_Vignette" Size="500,500"   Color="0,0,0,255" Anchor="L,T" FlipY="1" FlipX="1"/>

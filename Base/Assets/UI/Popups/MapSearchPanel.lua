@@ -44,6 +44,7 @@ local ResourceClassNameMap = {
 ["RESOURCECLASS_LUXURY"]    = "LOC_TOOLTIP_LUXURY_RESOURCE",
 ["RESOURCECLASS_STRATEGIC"] = "LOC_TOOLTIP_STRATEGIC_RESOURCE",
 ["RESOURCECLASS_ARTIFACT"]  = "LOC_TOOLTIP_ARTIFACT_RESOURCE",
+["RESOURCECLASS_LEY_LINE"]  = "LOC_TOOLTIP_LEY_LINE_RESOURCE",
 };
 
 local GreatWorkTypeNameMap = {
@@ -242,7 +243,11 @@ function GetPlotSearchTerms(data)
 
 	local pSearchTerms = { };
 	local AddLocalizedSearchTerm = function(kLocKey)
-		table.insert( pSearchTerms, Locale.Lookup(kLocKey) );
+		if kLocKey then
+			table.insert( pSearchTerms, Locale.Lookup(kLocKey) );
+		else
+			UI.DataError( "nil key passed in to AddLocalizedSearchTerm.");
+		end
 	end
 
 	-- OWNER
@@ -533,7 +538,7 @@ end
 -- ===========================================================================
 -- Collect plot data and return it as a table
 -- ===========================================================================
-function FetchData(plot)
+function FetchData( plot:object )
 
 	local kFalloutManager = Game.GetFalloutManager();
 	return {
@@ -588,12 +593,12 @@ end
 -- ===========================================================================
 function GetPlotInfo( plotId:number, pPlayerVis )
 
-	local plot = Map.GetPlotByIndex(plotId);
+	local plot :object = Map.GetPlotByIndex(plotId);
 	if (plot == nil) then
 		return;
 	end
 
-	local new_data = FetchData(plot);
+	local new_data :table = FetchData(plot);
 
 	-- TODO move the below stuff into FetchData
 	if (new_data.OwnerCity) then
@@ -638,32 +643,38 @@ function GetPlotInfo( plotId:number, pPlayerVis )
 			end
 		end
 	end
-	if (new_data.IsCity == true or new_data.DistrictID == -1) then
+
+	if ((new_data.IsCity == true) or (new_data.DistrictID == -1)) then
 		for row in GameInfo.Yields() do
-			local yield = plot:GetYield(row.Index);
+			local yield :number = plot:GetYield(row.Index);
 			if (yield > 0) then
 				new_data.Yields[row.YieldType] = yield;
 			end
 		end	
+	elseif (new_data.DistrictID) then
+		local plotOwner	:number = plot:GetOwner();
+		local plotPlayer:object = Players[plotOwner];
+		local district	:object = plotPlayer:GetDistricts():FindID(new_data.DistrictID);
+
+		if (district ~= nil) then
+			for row in GameInfo.Yields() do
+				local yield = plot:GetYield(row.Index);
+				local workers = plot:GetWorkerCount();
+				if (yield > 0 and workers > 0) then
+					yield = yield * workers;
+					new_data.Yields[row.YieldType] = yield;
+				end
+
+				local districtYield :number = district:GetYield(row.Index);
+				if (districtYield > 0) then
+					new_data.DistrictYields[row.YieldType] = districtYield;
+				end
+			end
+		else
+			UI.DataError("Unable to obtain district object for districtID: "..tostring(new_data.DistrictID));
+		end
 	else
-		local plotOwner = plot:GetOwner();
-		local plotPlayer = Players[plotOwner];
-		local district = plotPlayer:GetDistricts():FindID(new_data.DistrictID);
-
-		for row in GameInfo.Yields() do
-			local yield = plot:GetYield(row.Index);
-			local workers = plot:GetWorkerCount();
-			if (yield > 0 and workers > 0) then
-				yield = yield * workers;
-				new_data.Yields[row.YieldType] = yield;
-			end
-
-			local districtYield = district:GetYield(row.Index);
-			if (districtYield > 0) then
-				new_data.DistrictYields[row.YieldType] = districtYield;
-			end
-
-		end									
+		UI.DataError("Unexpected NIL DistrictID when building search results.  (If not set, should be -1 instead.)");		
 	end
 
 	return GetPlotSearchTerms(new_data);

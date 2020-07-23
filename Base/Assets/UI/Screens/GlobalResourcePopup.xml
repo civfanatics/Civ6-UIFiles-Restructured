@@ -89,7 +89,7 @@
       <Stack ID="MainStack" Anchor="L,C" StackGrowth="Right" Size="auto,20" Padding="0" Offset="10,0">
 				<Container Anchor="L,C" Size="85,60">
 					<Image ID="ResourceIcon" Anchor="C,C" Offset="0,-6" Size="50,50"/>
-					<Label ID="ResourceName" Anchor="C,C" Offset="0,20" Style="FontNormal12" String="$ResourceName$" />
+					<Label ID="ResourceName" Anchor="C,C" Offset="0,20" Style="FontNormal12" String="$ResourceName$" TruncateWidth="90" TruncatedTooltip="1"/>
 				</Container>
 				<Stack ID="LeaderStack" Offset="10,0" Size="auto,30" StackGrowth="Right" Anchor="L,C" Padding="9" WrapWidth="950" />
       </Stack>

@@ -356,8 +356,10 @@ function CacheData_SortData()
 			return false;
 		elseif(a.SortIndex ~= b.SortIndex) then
 			return SortNumberOrNil(a.SortIndex, b.SortIndex);
+		elseif(a.TabName ~= b.TabName) then
+			return Locale.Compare(a.TabName, b.TabName) == -1;    
 		else
-		   return Locale.Compare(a.TabName, b.TabName) == -1;    
+			return Locale.Compare(a.PageGroupId, b.PageGroupId) == -1;
 		end
 	end
 	

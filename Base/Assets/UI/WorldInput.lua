@@ -3009,7 +3009,6 @@ function OnMouseAirliftEnd( pInputStruct )
 		g_isMouseDragging = false;
 	else
 		if IsSelectionAllowedAt( UI.GetCursorPlotID() ) then
-			UI.PlaySound("Unit_Airlift");
 			UnitAirlift(pInputStruct);
 		end
 	end
@@ -3731,35 +3730,7 @@ function LateInitialize()
 		InterfaceModeMessageHandler[InterfaceModeTypes.SACRIFICE_SELECTION]				[MouseEvents.PointerUp]		= DOSacrificeSelection;
 	end
 
-	
-	-- ===== EVENTS =====
-	
-	-- Game Engine Events
-	Events.CityMadePurchase.Add( OnCityMadePurchase_StrategicView_MapPlacement );
-	Events.CycleUnitSelectionRequest.Add( OnCycleUnitSelectionRequest );
-	Events.InputActionTriggered.Add( OnInputActionTriggered );
-	Events.InputActionStarted.Add( OnInputActionStarted );
-	Events.InputActionFinished.Add( OnInputActionFinished );
-	Events.InterfaceModeChanged.Add(OnInterfaceModeChanged);
-	Events.MultiplayerGameLastPlayer.Add(OnMultiplayerGameLastPlayer);
-	Events.MultiplayerGameAbandoned.Add(OnMultiplayerGameAbandoned);
-	Events.MatchEndTurnComplete.Add(OnMatchEndTurnComplete);
-	Events.UnitSelectionChanged.Add( OnUnitSelectionChanged );
-	Events.UnitCommandStarted.Add( OnUnitCommandStarted );
-
-	-- LUA Events
-	LuaEvents.Tutorial_ConstrainMovement.Add( OnTutorial_ConstrainMovement );
-	LuaEvents.Tutorial_DisableMapDrag.Add( OnTutorial_DisableMapDrag );
-	LuaEvents.Tutorial_DisableMapSelect.Add( OnTutorial_DisableMapSelect );
-	LuaEvents.Tutorial_DisableMapCancel.Add( OnTutorial_DisableMapCancel );
-	
-	LuaEvents.Tutorial_AddUnitHexRestriction.Add( OnTutorial_AddUnitHexRestriction );	
-	LuaEvents.Tutorial_RemoveUnitHexRestriction.Add( OnTutorial_RemoveUnitHexRestriction );
-	LuaEvents.Tutorial_ClearAllHexMoveRestrictions.Add( OnTutorial_ClearAllUnitHexRestrictions );
-	
-	LuaEvents.Tutorial_AddUnitMoveRestriction.Add( OnTutorial_AddUnitMoveRestriction );
-	LuaEvents.Tutorial_RemoveUnitMoveRestrictions.Add( OnTutorial_RemoveUnitMoveRestrictions );
-
+	Subscribe();
 end
 
 -- ===========================================================================
@@ -3775,13 +3746,7 @@ end
 --	UI Event
 -- ===========================================================================
 function OnShutdown()
-	-- Clean up events
-	Events.CycleUnitSelectionRequest.Remove( OnCycleUnitSelectionRequest );
-	Events.InterfaceModeChanged.Remove( OnInterfaceModeChanged );
-	
-	LuaEvents.Tutorial_ConstrainMovement.Remove( OnTutorial_ConstrainMovement );
-	LuaEvents.Tutorial_DisableMapDrag.Remove( OnTutorial_DisableMapDrag );
-	LuaEvents.Tutorial_DisableMapSelect.Remove( OnTutorial_DisableMapSelect );
+	Unsubscribe();
 end
 
 -- ===========================================================================
@@ -3916,6 +3881,16 @@ function OnLocalPlayerChanged()
 end
 
 -- ===========================================================================
+function OnPopupActivated()
+	-- Stop panning if a popup takes focus
+	m_isUPpressed       = false;
+	m_isDOWNpressed     = false;
+	m_isLEFTpressed     = false;
+	m_isRIGHTpressed    = false;
+	ProcessPan(0,0);
+end
+
+-- ===========================================================================
 --	INCLUDES
 --	Other handlers & helpers that may utilze functionality defined above.
 -- ===========================================================================
@@ -3923,6 +3898,67 @@ end
 include ("StrategicView_MapPlacement");	-- handlers for: BUILDING_PLACEMENT, DISTRICT_PLACEMENT
 include ("StrategicView_DebugSupport");	-- the Debug interface mode
 
+-- ===========================================================================
+function Subscribe()
+	Events.UserRequestClose.Add( OnUserRequestClose );
+	Events.LocalPlayerChanged.Add( OnLocalPlayerChanged );
+	Events.PopupActivated.Add( OnPopupActivated );
+
+	Events.CityMadePurchase.Add( OnCityMadePurchase_StrategicView_MapPlacement );
+	Events.CycleUnitSelectionRequest.Add( OnCycleUnitSelectionRequest );
+	Events.InputActionTriggered.Add( OnInputActionTriggered );
+	Events.InputActionStarted.Add( OnInputActionStarted );
+	Events.InputActionFinished.Add( OnInputActionFinished );
+	Events.InterfaceModeChanged.Add(OnInterfaceModeChanged);
+	Events.MultiplayerGameLastPlayer.Add(OnMultiplayerGameLastPlayer);
+	Events.MultiplayerGameAbandoned.Add(OnMultiplayerGameAbandoned);
+	Events.MatchEndTurnComplete.Add(OnMatchEndTurnComplete);
+	Events.UnitSelectionChanged.Add( OnUnitSelectionChanged );
+	Events.UnitCommandStarted.Add( OnUnitCommandStarted );
+
+	LuaEvents.Tutorial_ConstrainMovement.Add( OnTutorial_ConstrainMovement );
+	LuaEvents.Tutorial_DisableMapDrag.Add( OnTutorial_DisableMapDrag );
+	LuaEvents.Tutorial_DisableMapSelect.Add( OnTutorial_DisableMapSelect );
+	LuaEvents.Tutorial_DisableMapCancel.Add( OnTutorial_DisableMapCancel );
+	
+	LuaEvents.Tutorial_AddUnitHexRestriction.Add( OnTutorial_AddUnitHexRestriction );	
+	LuaEvents.Tutorial_RemoveUnitHexRestriction.Add( OnTutorial_RemoveUnitHexRestriction );
+	LuaEvents.Tutorial_ClearAllHexMoveRestrictions.Add( OnTutorial_ClearAllUnitHexRestrictions );
+	
+	LuaEvents.Tutorial_AddUnitMoveRestriction.Add( OnTutorial_AddUnitMoveRestriction );
+	LuaEvents.Tutorial_RemoveUnitMoveRestrictions.Add( OnTutorial_RemoveUnitMoveRestrictions );
+end
+
+-- ===========================================================================
+function Unsubscribe()
+	Events.UserRequestClose.Remove( OnUserRequestClose );
+	Events.LocalPlayerChanged.Remove( OnLocalPlayerChanged );
+	Events.PopupActivated.Remove( OnPopupActivated );
+
+	Events.CityMadePurchase.Remove( OnCityMadePurchase_StrategicView_MapPlacement );
+	Events.CycleUnitSelectionRequest.Remove( OnCycleUnitSelectionRequest );
+	Events.InputActionTriggered.Remove( OnInputActionTriggered );
+	Events.InputActionStarted.Remove( OnInputActionStarted );
+	Events.InputActionFinished.Remove( OnInputActionFinished );
+	Events.InterfaceModeChanged.Remove(OnInterfaceModeChanged);
+	Events.MultiplayerGameLastPlayer.Remove(OnMultiplayerGameLastPlayer);
+	Events.MultiplayerGameAbandoned.Remove(OnMultiplayerGameAbandoned);
+	Events.MatchEndTurnComplete.Remove(OnMatchEndTurnComplete);
+	Events.UnitSelectionChanged.Remove( OnUnitSelectionChanged );
+	Events.UnitCommandStarted.Remove( OnUnitCommandStarted );
+
+	LuaEvents.Tutorial_ConstrainMovement.Remove( OnTutorial_ConstrainMovement );
+	LuaEvents.Tutorial_DisableMapDrag.Remove( OnTutorial_DisableMapDrag );
+	LuaEvents.Tutorial_DisableMapSelect.Remove( OnTutorial_DisableMapSelect );
+	LuaEvents.Tutorial_DisableMapCancel.Remove( OnTutorial_DisableMapCancel );
+	
+	LuaEvents.Tutorial_AddUnitHexRestriction.Remove( OnTutorial_AddUnitHexRestriction );	
+	LuaEvents.Tutorial_RemoveUnitHexRestriction.Remove( OnTutorial_RemoveUnitHexRestriction );
+	LuaEvents.Tutorial_ClearAllHexMoveRestrictions.Remove( OnTutorial_ClearAllUnitHexRestrictions );
+	
+	LuaEvents.Tutorial_AddUnitMoveRestriction.Remove( OnTutorial_AddUnitMoveRestriction );
+	LuaEvents.Tutorial_RemoveUnitMoveRestrictions.Remove( OnTutorial_RemoveUnitMoveRestrictions );
+end
 
 -- ===========================================================================
 --	Assign callbacks
@@ -3938,8 +3974,6 @@ function Initialize()
 	ContextPtr:SetRefreshHandler( OnRefresh );
 	ContextPtr:SetAppRegainedFocusHandler( OnAppRegainedFocusHandler );
 	ContextPtr:SetAppLostFocusHandler( OnAppLostFocusHandler );
-    Events.UserRequestClose.Add( OnUserRequestClose );
-	Events.LocalPlayerChanged.Add( OnLocalPlayerChanged );
 		
 	Controls.DebugStuff:SetHide(not m_isDebuging);
 	-- Popup setup

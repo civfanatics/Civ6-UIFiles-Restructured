@@ -495,66 +495,15 @@ Tests["HostGame"].Run = function()
 		return;
 	end
 
-	-- Start a game
-	GameConfiguration.SetToDefaults();
-
-	-- Did they want to load a configuration?
-	local configurationFile = Automation.GetSetParameter("CurrentTest", "LoadConfiguration");
-	if (configurationFile ~= nil) then
-
-		local loadParams = {};
-
-		loadParams.Location = SaveLocations.LOCAL_STORAGE;
-		loadParams.Type = SaveTypes.NETWORK_MULTIPLAYER;
-		loadParams.FileType = SaveFileTypes.GAME_CONFIGURATION;
-		loadParams.IsAutosave = false;
-		loadParams.IsQuicksave = false;
-		loadParams.Directory = SaveDirectories.DEFAULT;
-
-		loadParams.Name = configurationFile;
-		
-		local configDirectory = Automation.GetSetParameter("CurrentTest", "ConfigurationDirectory");
-		if (configDirectory ~= nil) then
-			loadParams.Directory = configDirectory;
-		end
-		local bResult = Network.LoadGame(loadParams, GetTestServerType());
-		if (bResult == false) then
-			Automation.SendTestComplete();
-			return
-		end
+	if(GetTestServerType() == ServerType.SERVER_TYPE_CROSSPLAY) then
+		-- When using crossplay, we need to login to EOS before we can host our game.
+		Events.CrossPlayLoginStateUpdated.Add(HostGame_OnCrossPlayLoginStateUpdated);
+		Network.AttemptConnectionToCrossPlayLobbyService();
+		return;
 	end
 
-	ApplyCommonNewGameParametersToConfiguration();
-
-	local gameName = Automation.GetSetParameter("CurrentTest", "GameName");
-	if(gameName == nil) then
-		-- KWG: If they loaded a configuration, and they didn't specify a name, we might want to not overwriate the game name automatically if a valid one is there.
-		gameName = "autoplay";
-	end
-	GameConfiguration.SetValue("GAME_NAME", gameName);
-	
-	ReadUserConfigOptions();
-
-	local saveFileName = Automation.GetSetParameter("CurrentTest", "SaveFile");
-	if(saveFileName ~= nil) then
-		local saveFileTable = {};
-		saveFileTable.Name = saveFileName;
-		saveFileTable.Type = SaveTypes.NETWORK_MULTIPLAYER;
-		saveFileTable.Directory = SaveDirectories.DEFAULT;
-
-		local saveDirectory = Automation.GetSetParameter("CurrentTest", "SaveDirectory");
-		if (saveDirectory ~= nil) then
-			saveFileTable.Directory = saveDirectory;
-		end
-
-		Automation.Log("Loading save file " .. saveFileName);
-		Network.LoadGame(saveFileTable, GetTestServerType());
-	else
-		Automation.Log("Hosting new lan game.");
-		Network.HostGame(GetTestServerType());
-	end
-
-	Events.MultiplayerGameLastPlayer.Add( HostGame_OnMultiplayerGameLastPlayer );
+	-- Start hosting now!
+	HostAutoplayGame();
 end
 
 -----------------------------------------------------------------
@@ -614,8 +563,11 @@ Tests["HostGame"].Stop = function()
 
 	Events.SaveComplete.Remove( SharedGame_OnSaveComplete );
 	Events.MultiplayerGameLastPlayer.Remove( HostGame_OnMultiplayerGameLastPlayer );
+	Events.CrossPlayLoginStateUpdated.Remove(HostGame_OnCrossPlayLoginStateUpdated);
 
-	AutoplayManager.SetActive(false);		-- Make sure this is off
+	if(AutoplayManager ~= nil) then -- AutoplayManager will not exist if the script didn't get to gameplay.
+		AutoplayManager.SetActive(false);		-- Make sure this is off
+	end
 
 	RestoreUserConfigOptions();
 
@@ -629,6 +581,77 @@ function HostGame_OnMultiplayerGameLastPlayer()
 		-- Signal that the test is complete.  Do not call LuaEvents.AutomationTestComplete() directly.  The Automation system will do that at a safe time.
 		Automation.SendTestComplete();
 	end
+end
+
+function HostGame_OnCrossPlayLoginStateUpdated()
+	Events.CrossPlayLoginStateUpdated.Remove(HostGame_OnCrossPlayLoginStateUpdated);
+
+	HostAutoplayGame();
+end
+
+-----------------------------------------------------------------
+function HostAutoplayGame()
+	-- Start a game
+	GameConfiguration.SetToDefaults();
+
+	-- Did they want to load a configuration?
+	local configurationFile = Automation.GetSetParameter("CurrentTest", "LoadConfiguration");
+	if (configurationFile ~= nil) then
+
+		local loadParams = {};
+
+		loadParams.Location = SaveLocations.LOCAL_STORAGE;
+		loadParams.Type = SaveTypes.NETWORK_MULTIPLAYER;
+		loadParams.FileType = SaveFileTypes.GAME_CONFIGURATION;
+		loadParams.IsAutosave = false;
+		loadParams.IsQuicksave = false;
+		loadParams.Directory = SaveDirectories.DEFAULT;
+
+		loadParams.Name = configurationFile;
+		
+		local configDirectory = Automation.GetSetParameter("CurrentTest", "ConfigurationDirectory");
+		if (configDirectory ~= nil) then
+			loadParams.Directory = configDirectory;
+		end
+		local bResult = Network.LoadGame(loadParams, GetTestServerType());
+		if (bResult == false) then
+			Automation.Log("Completing HostGame test due to LoadGame failure.");
+			Automation.SendTestComplete();
+			return
+		end
+	end
+
+	ApplyCommonNewGameParametersToConfiguration();
+
+	local gameName = Automation.GetSetParameter("CurrentTest", "GameName");
+	if(gameName == nil) then
+		-- KWG: If they loaded a configuration, and they didn't specify a name, we might want to not overwriate the game name automatically if a valid one is there.
+		gameName = "autoplay";
+	end
+	GameConfiguration.SetValue("GAME_NAME", gameName);
+	
+	ReadUserConfigOptions();
+
+	local saveFileName = Automation.GetSetParameter("CurrentTest", "SaveFile");
+	if(saveFileName ~= nil) then
+		local saveFileTable = {};
+		saveFileTable.Name = saveFileName;
+		saveFileTable.Type = SaveTypes.NETWORK_MULTIPLAYER;
+		saveFileTable.Directory = SaveDirectories.DEFAULT;
+
+		local saveDirectory = Automation.GetSetParameter("CurrentTest", "SaveDirectory");
+		if (saveDirectory ~= nil) then
+			saveFileTable.Directory = saveDirectory;
+		end
+
+		Automation.Log("Loading save file " .. saveFileName);
+		Network.LoadGame(saveFileTable, GetTestServerType());
+	else
+		Automation.Log("Hosting new lan game.");
+		Network.HostGame(GetTestServerType());
+	end
+
+	Events.MultiplayerGameLastPlayer.Add( HostGame_OnMultiplayerGameLastPlayer );
 end
 
 -----------------------------------------------------------------
@@ -647,22 +670,15 @@ Tests["JoinGame"].Run = function()
 		Events.ExitToMainMenu();
 		return;
 	end
+
+	if(GetTestServerType() == ServerType.SERVER_TYPE_CROSSPLAY) then
+		-- When using crossplay, we need to login to EOS before we can join our game.
+		Events.CrossPlayLoginStateUpdated.Add(JoinGame_OnCrossPlayLoginStateUpdated);
+		Network.AttemptConnectionToCrossPlayLobbyService();
+		return;
+	end
 	
-	ReadUserConfigOptions();
-
-	-- Cache the remaining turns of automation.  We need to remember this in case the client had to reload due to resyncs.
-	local turnCount = Automation.GetSetParameter("CurrentTest", "Turns", DEFAULT_AUTOMATION_TURNS);
-	Automation.SetSetParameter("CurrentTest", "RemainingTurns", turnCount);
-
-	Events.MultiplayerGameListUpdated.Add( JoinGame_OnGameListUpdated );
-	Events.MultiplayerGameListComplete.Add( JoinGame_OnGameListComplete );
-	Events.MultiplayerHostMigrated.Add(JoinGame_MultiplayerHostMigrated);
-
-	-- initialize and refresh lan games list.
-	Matchmaking.InitLobby(GetTestLobbyType());
-	Matchmaking.RefreshGameList();
-
-	-- Next step is in JoinGame_OnGameListComplete() or JoinGame_OnGameListUpdated()
+	JoinAutoplayGame();
 end
 
 -----------------------------------------------------------------
@@ -719,7 +735,9 @@ Tests["JoinGame"].Stop = function()
 	Events.TurnEnd.Remove(JoinGame_OnTurnEnd);
 	Events.MultiplayerHostMigrated.Remove(JoinGame_MultiplayerHostMigrated);
 
-	AutoplayManager.SetActive(false);		-- Make sure this is off
+	if(AutoplayManager ~= nil) then -- AutoplayManager will not exist if the script didn't get to gameplay.
+		AutoplayManager.SetActive(false);		-- Make sure this is off
+	end
 
 	RestoreUserConfigOptions();
 
@@ -791,6 +809,33 @@ function JoinGame_MultiplayerHostMigrated( newHostID )
 		Automation.SendTestComplete();
 	end
 end
+
+-----------------------------------------------------------------
+function JoinGame_OnCrossPlayLoginStateUpdated()
+	Events.CrossPlayLoginStateUpdated.Remove(JoinGame_OnCrossPlayLoginStateUpdated);
+
+	JoinAutoplayGame();
+end
+
+-----------------------------------------------------------------
+function JoinAutoplayGame()
+	ReadUserConfigOptions();
+
+	-- Cache the remaining turns of automation.  We need to remember this in case the client had to reload due to resyncs.
+	local turnCount = Automation.GetSetParameter("CurrentTest", "Turns", DEFAULT_AUTOMATION_TURNS);
+	Automation.SetSetParameter("CurrentTest", "RemainingTurns", turnCount);
+
+	Events.MultiplayerGameListUpdated.Add( JoinGame_OnGameListUpdated );
+	Events.MultiplayerGameListComplete.Add( JoinGame_OnGameListComplete );
+	Events.MultiplayerHostMigrated.Add(JoinGame_MultiplayerHostMigrated);
+
+	-- initialize and refresh lan games list.
+	Matchmaking.InitLobby(GetTestLobbyType());
+	Matchmaking.RefreshGameList();
+
+	-- Next step is in JoinGame_OnGameListComplete() or JoinGame_OnGameListUpdated()
+end
+
 
 -----------------------------------------------------------------
 -- Include the common support code.

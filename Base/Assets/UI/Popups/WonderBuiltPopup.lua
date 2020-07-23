@@ -102,8 +102,7 @@ function ShowPopup( kData:table )
 
 	UI.LookAtPlot(locX, locY);
 
-	Controls.ReplayButton:SetEnabled(UI.GetWorldRenderView() == WorldRenderView.VIEW_3D);
-	Controls.ReplayButton:SetHide(not UI.IsWorldRenderViewAvailable(WorldRenderView.VIEW_3D));
+	Controls.ReplayButton:SetHide(UI.GetWorldRenderView() ~= WorldRenderView.VIEW_3D);
 end
 
 
@@ -161,6 +160,11 @@ end
 function OnRestartMovie()    
     StopSound()		-- stop the music before beginning another go-round
 	Events.RestartWonderMovie();
+
+	local buildingIndex			:number = m_kCurrentPopup.buildingIndex;
+	if(GameInfo.Buildings[buildingIndex].QuoteAudio ~= nil) then
+		UI.PlaySound(GameInfo.Buildings[buildingIndex].QuoteAudio);
+	end
 end
 
 -- ===========================================================================
@@ -185,13 +189,18 @@ end
 -- ===========================================================================
 function OnInputHandler( pInputStruct:table )
 	local uiMsg = pInputStruct:GetMessageType();
+	if pInputStruct:IsRButtonDown() then
+		Close();
+		return true;
+	end
+
 	if (uiMsg == KeyEvents.KeyUp) then return KeyHandler( pInputStruct:GetKey() ); end;
 	return false;
 end
 
 -- ===========================================================================
 function OnWorldRenderViewChanged()
-	Controls.ReplayButton:SetEnabled(UI.GetWorldRenderView() == WorldRenderView.VIEW_3D);
+	Controls.ReplayButton:SetHide(UI.GetWorldRenderView() ~= WorldRenderView.VIEW_3D);
 end
 
 -- ===========================================================================

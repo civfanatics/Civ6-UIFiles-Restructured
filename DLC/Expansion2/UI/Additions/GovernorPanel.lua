@@ -1,4 +1,4 @@
--- Copyright 2017-2018, Firaxis Games
+-- Copyright 2017-2020, Firaxis Games
 -- UI for managing and appointing Governors	
 
 include("InstanceManager");
@@ -17,6 +17,7 @@ local RELOAD_CACHE_ID:string = "GovernorPanel"; -- Must be unique (usually the s
 m_GovernorApptAvailableHash = DB.MakeHash("NOTIFICATION_GOVERNOR_APPOINTMENT_AVAILABLE");
 m_GovernorOpportunityAvailableHash = DB.MakeHash("NOTIFICATION_GOVERNOR_OPPORTUNITY_AVAILABLE");
 m_GovernorPromotionAvailableHash = DB.MakeHash("NOTIFICATION_GOVERNOR_PROMOTION_AVAILABLE");
+m_SecretSocietyLevelUpHash = DB.MakeHash("NOTIFICATION_SECRETSOCIETY_LEVEL_UP");
 
 local PANEL_MAX_WIDTH = 1890;
 local m_TopPanelConsideredHeight:number = 0;
@@ -25,6 +26,7 @@ local m_TopPanelConsideredHeight:number = 0;
 --	VARIABLES
 -- ===========================================================================
 local m_governorIM			:table = InstanceManager:new("GovernorInstance",	"Content",	Controls.GovernorInstanceStack);
+local m_societyGovernorIM	:table = InstanceManager:new("SocietyGovernorInstance",	"Content",	Controls.GovernorInstanceStack);
 local m_governorPromotionIM :table = InstanceManager:new("PromotionInstance",	"Button");
 local m_TopPanelConsideredHeight:number = 0;
 
@@ -46,12 +48,12 @@ function Refresh()
 	-- display a list of governor candidates
 	--
 	m_governorIM:ResetInstances();
+	m_societyGovernorIM:ResetInstances();
 
 	local playerGovernors = pPlayer:GetGovernors();
 	local governorPointsObtained = playerGovernors:GetGovernorPoints();
 	local governorPointsSpent = playerGovernors:GetGovernorPointsSpent();
 	local bCanAppoint = playerGovernors:CanAppoint();
-	local bCanPromote = playerGovernors:CanPromote();
 	local bHasGovernors, tGovernorList = playerGovernors:GetGovernorList();
 
 	Controls.GovernorTitlesAvailable:SetText(Locale.Lookup("LOC_GOVERNOR_GOVERNOR_TITLES_AVAILABLE", governorPointsObtained - governorPointsSpent));
@@ -61,16 +63,25 @@ function Refresh()
 	for i,appointedGovernor in ipairs(tGovernorList) do
 		local eGovernorType = appointedGovernor:GetType();
 		local governorDef = GameInfo.Governors[eGovernorType];
+		local bCanPromoteGovernor = playerGovernors:CanPromoteGovernor(governorDef.Hash);
 
-		AddGovernorAppointed(playerGovernors, appointedGovernor, governorDef, bCanPromote);
+		if (IsCannotAssign(governorDef)) then
+			AddSecretGovernorAppointed(playerGovernors, appointedGovernor, governorDef, bCanPromoteGovernor);
+		else
+			AddGovernorAppointed(playerGovernors, appointedGovernor, governorDef, bCanPromoteGovernor);
+		end
 	end
 
 	-- Add appointable governors
 	for governorDef in GameInfo.Governors() do
 		local governorHash = governorDef.Hash;
 		if (not playerGovernors:HasGovernor(governorHash)) then
-			if (playerGovernors:CanEverAppointGovernor(governorHash)) then		--XP2+ only
-				AddGovernorCandidate(governorDef, bCanAppoint);
+			if (playerGovernors:CanEverAppointGovernor(governorHash)) then
+				if (IsCannotAssign(governorDef)) then
+					AddSecretGovernorCandidate(governorDef, bCanAppoint);
+				else
+					AddGovernorCandidate(governorDef, bCanAppoint);
+				end
 			end
 		end
 	end
@@ -136,16 +147,19 @@ function AddPromotionInstance( governorInstance:table, governorDefinition:table,
 	end
 	local sName:string = Locale.Lookup(promotion.Name);
 	sDescription = sName .. ": " .. sDescription .. Locale.Lookup(promotion.Description);
+	if (IsPromotionHidden(promotion.Hash, Game.GetLocalPlayer(), governorDefinition.Index)) then
+		sName = GetPromotionHiddenName(promotion.Hash);
+		sDescription = GetPromotionHiddenDescription(promotion.Hash);
+	end
 
 	promotionInstance.PromotionName:SetText(sName);
 	promotionInstance.Button:SetToolTipString(sDescription);
 	promotionInstance.Button:SetDisabled(true);
 
 	-- If this is our base ability use our governor specific promotion icon
-	if promotion.BaseAbility then
-		local iconName:string = "ICON_" .. governorDefinition.GovernorType .. "_PROMOTION";
-		promotionInstance.PromotionIcon:SetIcon(iconName);
-	else
+	local iconName:string = "ICON_" .. governorDefinition.GovernorType .. "_PROMOTION";
+	if not promotion.BaseAbility or not promotionInstance.PromotionIcon:SetIcon(iconName) then
+		-- Fallback icon
 		promotionInstance.PromotionIcon:SetIcon("ICON_GOVERNOR_GENERIC_PROMOTION");
 	end
 
@@ -155,6 +169,8 @@ function AddPromotionInstance( governorInstance:table, governorDefinition:table,
 	else
 		promotionInstance.Button:SetAlpha(0.5);
 	end
+
+	return promotionInstance;
 end
 
 -- ===========================================================================
@@ -204,6 +220,114 @@ function AddGovernorCandidate(governorDef:table, canAppoint:boolean)
 end
 
 -- ===========================================================================
+function AddSecretGovernorShared(governor:table)
+
+	governorInstance = m_societyGovernorIM:GetInstance();
+
+	-- Update name, title, and portrait
+	governorInstance.GovernorName:SetText(Locale.ToUpper(governor.Name));
+	governorInstance.GovernorTitle:SetText(Locale.Lookup(governor.Title));
+	governorInstance.GovernorPortrait:SetTexture(governor.PortraitImage);
+
+	-- Find the secret society for this governor to grab the society icon
+	local kSecretSocietyDef:table = nil;
+	for i, societyDef in ipairs(governor.SecretSocietyCollection) do
+		if societyDef ~= nil then
+			kSecretSocietyDef = societyDef;
+			break;
+		end
+	end
+
+	if kSecretSocietyDef then
+		governorInstance.SocietyIcon:SetTexture(kSecretSocietyDef.SmallIcon);
+	end
+
+	-- Return the governor instance
+	return governorInstance;
+end
+
+-- ===========================================================================
+function AddSecretGovernorCandidate(governorDef:table, canAppoint:boolean)
+	
+	local governorInstance:table = AddSecretGovernorShared(governorDef);
+
+	-- Add all promotions this governor has
+	for promotion in GameInfo.GovernorPromotionSets() do
+		if promotion.GovernorType == governorDef.GovernorType then
+			local promotionDef = GameInfo.GovernorPromotions[promotion.GovernorPromotion];
+			local pPromotionInst:table = AddPromotionInstance(governorInstance, governorDef, promotionDef, promotion.BaseAbility);
+			pPromotionInst.Button:SetTexture("Secret_DataFrame");
+		end
+	end
+
+	-- Always use unassigned column/background for governor candidates
+	governorInstance.GovernorColumns:SetTexture("Governors_Column_Off");
+
+	governorInstance.AppointButton:SetHide(false);
+
+	if (canAppoint and not IsReadOnly()) then
+		governorInstance.AppointButton:SetVoid1( governorDef.Index );
+		governorInstance.AppointButton:RegisterCallback( Mouse.eLClick, OnAppointGovernor );
+		governorInstance.AppointButton:SetDisabled(false);
+		governorInstance.AppointButton:SetToolTipString("");
+	else
+		governorInstance.AppointButton:SetDisabled(true);
+		if(IsReadOnly()) then
+			governorInstance.AppointButton:SetToolTipString(Locale.Lookup(""));
+		else
+			governorInstance.AppointButton:SetToolTipString(Locale.Lookup("LOC_NO_GOVERNORS_TITLE_AVAILABLE"));
+		end
+	end
+
+	-- Setup details button
+	governorInstance.GovernorDetailsButton:SetVoid1(governorDef.Index);
+	governorInstance.GovernorDetailsButton:RegisterCallback(Mouse.eLClick, OnNameButton);
+	governorInstance.GovernorDetailsButton:SetText(Locale.Lookup("LOC_GOVERNORS_SCREEN_VIEW_PROMOTIONS"));
+	SetButtonTexture(governorInstance.GovernorDetailsButton, "Controls_Button");
+
+	governorInstance.FadeOutOverlay:SetHide(false);
+end
+
+-- ===========================================================================
+function AddSecretGovernorAppointed(playerGovernors:table, governor:table, governorDefinition:table, canPromote:boolean)
+
+	local governorInstance:table = AddSecretGovernorShared(governorDefinition);
+
+	-- Add all promotions this governor has
+	local hasAllPromotions:boolean = true;
+	for promotion in GameInfo.GovernorPromotionSets() do
+		if promotion.GovernorType == governorDefinition.GovernorType then
+			local promotionDef = GameInfo.GovernorPromotions[promotion.GovernorPromotion];
+			local hasPromotion:boolean = governor:HasPromotion(DB.MakeHash(promotion.GovernorPromotion));
+			local pPromotionInst:table = AddPromotionInstance(governorInstance, governorDefinition, promotionDef, hasPromotion);
+			pPromotionInst.Button:SetTexture("Secret_DataFrame");
+
+			if not hasPromotion then
+				hasAllPromotions = false;
+			end
+		end
+	end
+
+	governorInstance.AppointButton:SetHide(true);
+
+	governorInstance.GovernorColumns:SetTexture("Governors_Column_On");
+
+	-- Setup button to open governor details
+	if canPromote and not hasAllPromotions then
+		SetButtonTexture(governorInstance.GovernorDetailsButton, "Controls_Confirm");
+		governorInstance.GovernorDetailsButton:SetText(Locale.Lookup("LOC_GOVERNORS_SCREEN_PROMOTE"));
+	else
+		SetButtonTexture(governorInstance.GovernorDetailsButton, "Controls_Button");
+		governorInstance.GovernorDetailsButton:SetText(Locale.Lookup("LOC_GOVERNORS_SCREEN_VIEW_PROMOTIONS"));
+	end
+
+	governorInstance.GovernorDetailsButton:SetVoid1(governorDefinition.Index);
+	governorInstance.GovernorDetailsButton:RegisterCallback(Mouse.eLClick, OnNameButton);
+
+	governorInstance.FadeOutOverlay:SetHide(true);
+end
+
+-- ===========================================================================
 function SetGovernorStatus(governorInstance:table, governorDef:table, governor:table)
 	local status, statusDetails = GetGovernorStatus(governorDef, governor);
 	governorInstance.GovernorStatus:SetText(status);
@@ -229,7 +353,7 @@ function AddGovernorAppointed(playerGovernors:table, governor:table, governorDef
 		end
 	end
 
-	governorInstance.AssignButton:SetHide(false);
+	governorInstance.AssignButton:SetHide(IsCannotAssign(governorDefinition));
 	governorInstance.AppointButton:SetHide(true);
 
 	-- Update assignment button
@@ -370,8 +494,11 @@ end
 function OnGovernorAppointed(playerID, governorID)
 	if ContextPtr:IsVisible() and playerID == Game.GetLocalPlayer() then
 		Refresh();
-		LuaEvents.GovernorAssignmentChooser_RequestAssignment( governorID );
-		Close();
+		local governorDefinition:table = GameInfo.Governors[governorID];
+		if (governorDefinition ~= nil and not IsCannotAssign(governorDefinition)) then
+			LuaEvents.GovernorAssignmentChooser_RequestAssignment( governorID );
+			Close();
+		end
 	end
 end
 
@@ -426,7 +553,8 @@ function OnProcessNotification(playerID:number, notificationID:number, activated
 		if (pNotification) then
 			if (pNotification:GetType() == m_GovernorApptAvailableHash or
 				pNotification:GetType() == m_GovernorOpportunityAvailableHash or
-				pNotification:GetType() == m_GovernorPromotionAvailableHash) then
+				pNotification:GetType() == m_GovernorPromotionAvailableHash or
+				pNotification:GetType() == m_SecretSocietyLevelUpHash) then
 				-- Open/refresh Governor Panel when we catch a governor notification
 				Open();
 			end

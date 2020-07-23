@@ -110,7 +110,7 @@ function Initialize()
 
 	-- Does a main menu exist?
 	if Controls.MainMenu ~= nil then	
-		UIManager:QueuePopup( Controls.MainMenu, PopupPriority.Normal );
+		UIManager:QueuePopup( Controls.MainMenu, PopupPriority.Low );
 	else
 		-- No main menu; there better be a test file being shown.
 		if Controls.Test == nil then

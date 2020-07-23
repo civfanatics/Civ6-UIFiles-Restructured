@@ -525,7 +525,7 @@
 
 	<Instance		Name="HeaderInstance">
 		<Grid     ID="Top" Style="DivHeader" Anchor="C,T">
-			<Label  ID="Header"    Style="FontFlair18" FontStyle="glow" ColorSet="ShellHeader" SmallCaps="22" SmallCapsLeading="0" SmallCapsType="EveryWord" Anchor="C,C" Align="Center" Offset="0,1"/>
+			<Label  ID="Header"    Style="FontFlair18" FontStyle="glow" ColorSet="ShellHeader" SmallCaps="22" SmallCapsLeading="0" SmallCapsType="EveryWord" Anchor="C,C" Align="Center" Offset="0,1" WrapWidth="parent-40"/>
 		</Grid>
 	</Instance>
 

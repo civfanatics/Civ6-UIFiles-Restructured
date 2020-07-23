@@ -1,3 +1,5 @@
+-- Copyright 2020, Firaxis Games
+
 -- ===========================================================================
 --	UI for managing and appointing Governors	
 -- ===========================================================================
@@ -26,11 +28,15 @@ local PROMOTION_NAME_TRUNCATE_WIDTH = 195;
 --	VARIABLES
 -- ===========================================================================
 
-local m_PromotionIM:table = InstanceManager:new("PromotionInstance", "PromotionButton", Controls.PromotionContainer);
+local m_PromotionTreeIM:table = InstanceManager:new("PromotionTreeInstance", "TopGrid", Controls.PromotionAnchor);
+local m_SecretPromotionTreeIM:table = InstanceManager:new("SecretSocietyPromotionTreeInstance", "TopGrid", Controls.PromotionAnchor);
 
-local m_ReqLinesLeftIM:table = InstanceManager:new("ReqLinesLeft", "Top", Controls.PromotionLinesContainer);
-local m_ReqLinesRightIM:table = InstanceManager:new("ReqLinesRight", "Top", Controls.PromotionLinesContainer);
-local m_ReqLinesDownIM:table = InstanceManager:new("ReqLinesDown", "Top", Controls.PromotionLinesContainer);
+local m_PromotionIM:table = InstanceManager:new("PromotionInstance", "PromotionButton");
+local m_SecretPromotionIM:table = InstanceManager:new("SecretSocietyPromotionInstance", "PromotionButton");
+
+local m_ReqLinesLeftIM:table = InstanceManager:new("ReqLinesLeft", "Top");
+local m_ReqLinesRightIM:table = InstanceManager:new("ReqLinesRight", "Top");
+local m_ReqLinesDownIM:table = InstanceManager:new("ReqLinesDown", "Top");
 
 local m_GovernorIndex:number = -1;
 
@@ -43,59 +49,110 @@ local m_CityBannerCityID:number = -1;
 local m_TopPanelConsideredHeight:number = 0;
 -- ===========================================================================
 function Refresh()
-	if m_GovernorIndex == -1 then
-		-- Invalid governor index
+	local localPlayerID:number = Game.GetLocalPlayer();
+	if m_GovernorIndex == -1 or localPlayerID == PlayerTypes.NONE or localPlayerID == PlayerTypes.OBSERVER then
 		return;
 	end
 
 	local pGovernorDef:table = GameInfo.Governors[m_GovernorIndex];
-	local localPlayerID:number = Game.GetLocalPlayer();
 	local pGovernor:table = GetAppointedGovernor(localPlayerID, m_GovernorIndex);
 	local pLocalPlayer:table = Players[localPlayerID];
 	local pPlayerGovernors:table = pLocalPlayer:GetGovernors();
+	local bIsSecretGovernor:boolean = IsCannotAssign(pGovernorDef);
 
 	-- Update governor name and title
 	Controls.GovernorNameLabel:SetText(Locale.ToUpper(pGovernorDef.Name));
 	Controls.GovernorTitleLabel:SetText(Locale.Lookup(pGovernorDef.Title));
 	Controls.GovernorBioLabel:SetText(Locale.Lookup(pGovernorDef.Description));
 
+	-- Show/hide elements based on if this is a secret, non-assignable governor
+	if not bIsSecretGovernor then
+		Controls.GovernorNamePlaque:SetTexture("Governors_NamePlaque");
+
+		-- Update governor transition strength and identity pressure
+		Controls.TransitionStrengthLabel:SetText(pPlayerGovernors:GetTurnsToEstablish(pGovernorDef.Hash));
+		Controls.IdentityPressureLabel:SetText(pGovernorDef.IdentityPressure);
+		Controls.GovernorStatsContainer:SetHide(false);
+
+		SetGovernorStatus(pGovernorDef, pGovernor);
+		Controls.GovernorStatusContainer:SetHide(false);
+
+		Controls.SecretSocietyIcon:SetHide(true);
+
+		-- Update assign button
+		if pGovernor then
+			local pAssignedCity:table = pGovernor:GetAssignedCity();
+			if pAssignedCity then
+				Controls.AssignButtonLabel:SetText(Locale.Lookup("LOC_GOVERNORS_SCREEN_BUTTON_REASSIGN_GOVERNOR"));
+			else
+				Controls.AssignButtonLabel:SetText(Locale.Lookup("LOC_GOVERNORS_SCREEN_BUTTON_ASSIGN_GOVERNOR"));
+			end
+			Controls.AssignButton:SetVoid1(pGovernorDef.Index);
+			Controls.AssignButton:RegisterCallback( Mouse.eLClick, OnAssignGovernor );
+			local bCanAssign:boolean = pPlayerGovernors:HasGovernor(pGovernorDef.Hash) and pGovernor:GetNeutralizedTurns() == 0;
+			Controls.AssignButton:SetDisabled(not bCanAssign);
+		else
+			Controls.AssignButtonLabel:SetText(Locale.Lookup("LOC_GOVERNORS_SCREEN_BUTTON_APPOINT_GOVERNOR"));
+			Controls.AssignButton:SetVoid1(pGovernorDef.Index);
+			Controls.AssignButton:RegisterCallback( Mouse.eLClick, OnAppointGovernor );
+			local bCanAppoint:boolean = pPlayerGovernors:CanAppoint();
+			Controls.AssignButton:SetDisabled(not bCanAppoint);
+		end
+
+		Controls.AssignButton:SetHide(false);
+		
+		Controls.MainContainer:SetTexture("Governors_BackgroundTile_ColumnOff");
+	else
+		Controls.GovernorNamePlaque:SetTexture("Secret_NamePlaque");
+
+		-- The first, and only, element in SecretSocietyCollection should be the
+		-- associated secret society. Safetly looping through it here just as precaution
+		local kSecretSocietyDef:table = nil;
+		for i, societyDef in ipairs(pGovernorDef.SecretSocietyCollection) do
+			if societyDef ~= nil then
+				kSecretSocietyDef = societyDef;
+				break;
+			end
+		end
+
+		if kSecretSocietyDef then
+			Controls.SecretSocietyIcon:SetTexture(kSecretSocietyDef.SmallIcon);
+		end
+
+		Controls.SecretSocietyIcon:SetHide(false);
+
+		Controls.GovernorStatsContainer:SetHide(true);
+		Controls.GovernorStatusContainer:SetHide(true);
+		Controls.AssignButton:SetHide(true);
+
+		Controls.MainContainer:SetTexture("Secret_Column_BackgroundTile");
+	end
+
 	-- Update governor portrait
 	Controls.GovernorPortrait:SetTexture(pGovernorDef.PortraitImageSelected);
 
-	-- Update governor transition strength and identity pressure
-	Controls.TransitionStrengthLabel:SetText(pPlayerGovernors:GetTurnsToEstablish(pGovernorDef.Hash));
-	Controls.IdentityPressureLabel:SetText(pGovernorDef.IdentityPressure);
+	m_PromotionTreeIM:ResetInstances();
+	m_SecretPromotionTreeIM:ResetInstances();
 
-	if pGovernor then
-		local pAssignedCity:table = pGovernor:GetAssignedCity();
-		if pAssignedCity then
-			Controls.AssignButtonLabel:SetText(Locale.Lookup("LOC_GOVERNORS_SCREEN_BUTTON_REASSIGN_GOVERNOR"));
-		
-			SetButtonTexture(Controls.AssignButton, "Controls_Button");
-		else
-			Controls.AssignButtonLabel:SetText(Locale.Lookup("LOC_GOVERNORS_SCREEN_BUTTON_ASSIGN_GOVERNOR"));
-
-			-- If we have cities without any governors highlight the Assign buttons
-			if AnyCitiesWithoutAGovernor() then
-				SetButtonTexture(Controls.AssignButton, "Controls_Confirm");
-			else
-				SetButtonTexture(Controls.AssignButton, "Controls_Button");
-			end
-		end
-		
-		Controls.AssignButton:RegisterCallback( Mouse.eLClick, function() OnAssignGovernor(pGovernorDef.Index, m_CityBannerPlayerID, m_CityBannerCityID); end );
-		local bCanAssign:boolean = pPlayerGovernors:HasGovernor(pGovernorDef.Hash) and pGovernor:GetNeutralizedTurns() == 0;
-		Controls.AssignButton:SetDisabled(not bCanAssign);
+	if not bIsSecretGovernor then
+		CreatePromotionTree(localPlayerID, pGovernor, pGovernorDef, pPlayerGovernors);
 	else
-		Controls.AssignButtonLabel:SetText(Locale.Lookup("LOC_GOVERNORS_SCREEN_BUTTON_APPOINT_GOVERNOR"));
-		SetButtonTexture(Controls.AssignButton, "Controls_Confirm");
-		Controls.AssignButton:SetVoid1(pGovernorDef.Index);
-		Controls.AssignButton:RegisterCallback( Mouse.eLClick, OnAppointGovernor );
-		local bCanAppoint:boolean = pPlayerGovernors:CanAppoint();
-		Controls.AssignButton:SetDisabled(not bCanAppoint);
+		CreateSecretPromotionTree(localPlayerID, pGovernor, pGovernorDef, pPlayerGovernors);
 	end
 
-	SetGovernorStatus(pGovernorDef, pGovernor);
+	if m_SelectedPromotion ~= -1 then
+		Controls.ConfirmButton:SetHide(false);
+		Controls.BackButton:SetHide(true);		
+	else
+		Controls.ConfirmButton:SetHide(true);
+		Controls.BackButton:SetHide(false);
+	end
+end
+
+-- ===========================================================================
+function CreatePromotionTree(localPlayerID:number, pGovernor:table, pGovernorDef:table, pPlayerGovernors:table)
+	
+	local pPromotionTreeInst:table = m_PromotionTreeIM:GetInstance();
 
 	-- Define promotion tree matrix used to determine promotion requirement lines
 	local promotionTreeMatrix:table = {{}, {}, {}};
@@ -104,56 +161,64 @@ function Refresh()
 	m_PromotionIM:ResetInstances();
 	for promotionSet in GameInfo.GovernorPromotionSets() do
 		if promotionSet.GovernorType == pGovernorDef.GovernorType then
-			local promotion = GameInfo.GovernorPromotions[promotionSet.GovernorPromotion];
-			if promotion.BaseAbility then
+			local kPromotion:table = GameInfo.GovernorPromotions[promotionSet.GovernorPromotion];
+			
+			local sName:string = Locale.ToUpper(kPromotion.Name);
+			local sDescription:string = Locale.Lookup(kPromotion.Description);
+			if (IsPromotionHidden(kPromotion.Hash, localPlayerID, pGovernorDef.Index)) then
+				sName = GetPromotionHiddenName(kPromotion.Hash);
+				sDescription = GetPromotionHiddenDescription(kPromotion.Hash);
+			end
+			
+			if kPromotion.BaseAbility then
 				local iconName:string = "ICON_" .. pGovernorDef.GovernorType .. "_PROMOTION";
-				Controls.BaseAbilityIcon:SetIcon(iconName);
-				Controls.BaseAbilityLabel:SetText(Locale.Lookup(promotion.Description));
+				pPromotionTreeInst.BaseAbilityIcon:SetIcon(iconName);
+				pPromotionTreeInst.BaseAbilityLabel:SetText(sDescription);
 			else
-				if promotion.Level ~= 0 then
-					local promotionInst:table = m_PromotionIM:GetInstance();
-					TruncateStringWithTooltip(promotionInst.PromotionName, PROMOTION_NAME_TRUNCATE_WIDTH, Locale.ToUpper(promotion.Name));
-					promotionInst.PromotionDesc:SetText(Locale.Lookup(promotion.Description));
+				if kPromotion.Level ~= 0 then
+					local pPromotionInst:table = m_PromotionIM:GetInstance(pPromotionTreeInst.PromotionContainer);
+					TruncateStringWithTooltip(pPromotionInst.PromotionName, PROMOTION_NAME_TRUNCATE_WIDTH, sName);
+					pPromotionInst.PromotionDesc:SetText(sDescription);
 
-					local xOffset = PROMOTION_X_OFFSET * (promotion.Column);
+					local xOffset:number = PROMOTION_X_OFFSET * (kPromotion.Column);
 					-- Subtract 1 from level to discount the BaseAbility which is the only level 0 promotion
-					local yOffset = PROMOTION_Y_OFFSET * (promotion.Level - 1);
-					promotionInst.PromotionButton:SetOffsetVal(xOffset, yOffset);
+					local yOffset:number = PROMOTION_Y_OFFSET * (kPromotion.Level - 1);
+					pPromotionInst.PromotionButton:SetOffsetVal(xOffset, yOffset);
 
 					-- Determine if this promotion can currently be earn by this governor due to requirements, etc
-					local canEarnPromotion = pPlayerGovernors:CanEarnPromotion(pGovernorDef.Hash, promotion.Hash);
+					local canEarnPromotion:boolean = pPlayerGovernors:CanEarnPromotion(pGovernorDef.Hash, kPromotion.Hash);
 
 					-- Update button state and callback depending on the promotion state
-					if pGovernor and pGovernor:HasPromotion(promotion.Hash) then
-						promotionInst.PromotionButton:SetDisabled(true);
-						promotionInst.PromotionButton:SetVisState(4);
-						promotionInst.PromotionButton:ClearCallback( Mouse.eLClick );
-					elseif m_SelectedPromotion == promotion.Index then
-						promotionInst.PromotionButton:SetDisabled(false);
-						promotionInst.PromotionButton:SetSelected(true);
-						promotionInst.PromotionButton:SetVisState(5);
-						promotionInst.PromotionButton:SetVoid1(m_GovernorIndex);
-						promotionInst.PromotionButton:SetVoid2(promotion.Index);
-						promotionInst.PromotionButton:RegisterCallback( Mouse.eLClick, OnPromoteGovernor );
+					if (pGovernor and pGovernor:HasPromotion(kPromotion.Hash)) then
+						pPromotionInst.PromotionButton:SetDisabled(true);
+						pPromotionInst.PromotionButton:SetVisState(4);
+						pPromotionInst.PromotionButton:ClearCallback( Mouse.eLClick );
+					elseif m_SelectedPromotion == kPromotion.Index then
+						pPromotionInst.PromotionButton:SetDisabled(false);
+						pPromotionInst.PromotionButton:SetSelected(true);
+						pPromotionInst.PromotionButton:SetVisState(5);
+						pPromotionInst.PromotionButton:SetVoid1(m_GovernorIndex);
+						pPromotionInst.PromotionButton:SetVoid2(kPromotion.Index);
+						pPromotionInst.PromotionButton:RegisterCallback( Mouse.eLClick, OnPromoteGovernor );
 					elseif not canEarnPromotion then
-						promotionInst.PromotionButton:SetDisabled(true);
-						promotionInst.PromotionButton:SetSelected(false);
-						promotionInst.PromotionButton:SetVisState(3);
-						promotionInst.PromotionButton:ClearCallback( Mouse.eLClick );
+						pPromotionInst.PromotionButton:SetDisabled(true);
+						pPromotionInst.PromotionButton:SetSelected(false);
+						pPromotionInst.PromotionButton:SetVisState(3);
+						pPromotionInst.PromotionButton:ClearCallback( Mouse.eLClick );
 					else
-						promotionInst.PromotionButton:SetDisabled(false);
-						promotionInst.PromotionButton:SetSelected(false);
-						promotionInst.PromotionButton:SetVisState(0);
-						promotionInst.PromotionButton:SetVoid1(m_GovernorIndex);
-						promotionInst.PromotionButton:SetVoid2(promotion.Index);
-						promotionInst.PromotionButton:RegisterCallback( Mouse.eLClick, OnPromoteGovernor );
+						pPromotionInst.PromotionButton:SetDisabled(m_isReadOnly);
+						pPromotionInst.PromotionButton:SetSelected(false);
+						pPromotionInst.PromotionButton:SetVisState(0);
+						pPromotionInst.PromotionButton:SetVoid1(m_GovernorIndex);
+						pPromotionInst.PromotionButton:SetVoid2(kPromotion.Index);
+						pPromotionInst.PromotionButton:RegisterCallback( Mouse.eLClick, OnPromoteGovernor );
 					end
 
 					-- Insert this promotion into the matrix
-					local matrixX = promotion.Column + 1;
-					local matrixY = promotion.Level;
+					local matrixX:number = kPromotion.Column + 1;
+					local matrixY:number = kPromotion.Level;
 					if matrixX >= 1 and matrixX <= 3 and matrixY >= 1 and matrixY <= 3 then
-						promotionTreeMatrix[matrixX][matrixY] = promotion;
+						promotionTreeMatrix[matrixX][matrixY] = kPromotion;
 					end
 				end
 			end
@@ -167,49 +232,101 @@ function Refresh()
 	-- Loop through the matrix to determine where we have to display requirement lines
 	for x=1,3,1 do
 		for y=1,2,1 do
-			local promotion = promotionTreeMatrix[x][y];
-			if promotion then
+			local kPromotion:table = promotionTreeMatrix[x][y];
+			if kPromotion then
 				
-				local xOffset = PROMOTION_X_OFFSET * (x - 1);
-				local yOffset = (PROMOTION_Y_OFFSET * (y - 1)) + PROMOTION_LINE_Y_OFFSET;
+				local xOffset:number = PROMOTION_X_OFFSET * (x - 1);
+				local yOffset:number = (PROMOTION_Y_OFFSET * (y - 1)) + PROMOTION_LINE_Y_OFFSET;
 
 				-- Check if we unlock the promotion below us
-				local promotionBelow = promotionTreeMatrix[x][y+1]
-				if promotionBelow then
-					local inst = m_ReqLinesDownIM:GetInstance();
-					inst.Top:SetOffsetVal(xOffset, yOffset);
+				local kPromotionBelow = promotionTreeMatrix[x][y+1]
+				if kPromotionBelow then
+					local pLineInst:table = m_ReqLinesDownIM:GetInstance(pPromotionTreeInst.PromotionLinesContainer);
+					pLineInst.Top:SetOffsetVal(xOffset, yOffset);
 				end
 
 				-- Check if we unlock the promotion to the right of us
 				if x < 3 then
-					local promotionToRight = promotionTreeMatrix[x+1][y+1];
-					if promotionToRight then
-						local inst = m_ReqLinesRightIM:GetInstance();
-						local adjustedXOffset = x ~= 2 and xOffset or xOffset + EXTRA_MIDDLE_PROMOTION_LINE_X_OFFSET;
-						inst.Top:SetOffsetVal(adjustedXOffset, yOffset);
+					local kPromotionToRight:table = promotionTreeMatrix[x+1][y+1];
+					if kPromotionToRight then
+						local pLineInst:table = m_ReqLinesRightIM:GetInstance(pPromotionTreeInst.PromotionLinesContainer);
+						local adjustedXOffset:number = x ~= 2 and xOffset or xOffset + EXTRA_MIDDLE_PROMOTION_LINE_X_OFFSET;
+						pLineInst.Top:SetOffsetVal(adjustedXOffset, yOffset);
 					end
 				end
 
 				-- Check if we unlock the promotion to the left of us
 				if x > 1 then
-					local promotionToLeft = promotionTreeMatrix[x-1][y+1];
-					if promotionToLeft then
-						local inst = m_ReqLinesLeftIM:GetInstance();
-						local adjustedXOffset = x ~= 2 and xOffset or xOffset - EXTRA_MIDDLE_PROMOTION_LINE_X_OFFSET;
-						inst.Top:SetOffsetVal(adjustedXOffset, yOffset);
+					local kPromotionToLeft:table = promotionTreeMatrix[x-1][y+1];
+					if kPromotionToLeft then
+						local pLineInst:table = m_ReqLinesLeftIM:GetInstance(pPromotionTreeInst.PromotionLinesContainer);
+						local adjustedXOffset:number = x ~= 2 and xOffset or xOffset - EXTRA_MIDDLE_PROMOTION_LINE_X_OFFSET;
+						pLineInst.Top:SetOffsetVal(adjustedXOffset, yOffset);
 					end
 				end
 			end
 		end
 	end
+end
 
-	if m_SelectedPromotion ~= -1 then
-		Controls.ConfirmButton:SetHide(false);
-		Controls.BackButton:SetHide(false);		
-	else
-		Controls.ConfirmButton:SetHide(true);
-		Controls.BackButton:SetHide(false);
+-- ===========================================================================
+function CreateSecretPromotionTree(localPlayerID:number, pGovernor:table, pGovernorDef:table, pPlayerGovernors:table)
+	
+	local pSecretPromotionTreeInst:table = m_SecretPromotionTreeIM:GetInstance();
+
+	m_SecretPromotionIM:ResetInstances();
+	for promotionSet in GameInfo.GovernorPromotionSets() do
+		if promotionSet.GovernorType == pGovernorDef.GovernorType then
+			local kPromotion:table = GameInfo.GovernorPromotions[promotionSet.GovernorPromotion];
+			
+			local sName:string = Locale.ToUpper(kPromotion.Name);
+			local sDescription:string = Locale.Lookup(kPromotion.Description);
+			local isHidden:boolean = IsPromotionHidden(kPromotion.Hash, localPlayerID, pGovernorDef.Index);
+			if isHidden then
+				sName = GetPromotionHiddenName(kPromotion.Hash);
+				sDescription = GetPromotionHiddenDescription(kPromotion.Hash);
+			end
+			
+			local promotionInst:table = m_SecretPromotionIM:GetInstance(pSecretPromotionTreeInst.PromotionContainer);
+			TruncateStringWithTooltip(promotionInst.PromotionName, PROMOTION_NAME_TRUNCATE_WIDTH, sName);
+			promotionInst.PromotionDesc:SetText(sDescription);
+
+			-- Determine if this promotion can currently be earn by this governor due to requirements, etc
+			local canEarnPromotion:boolean = pPlayerGovernors:CanEarnPromotion(pGovernorDef.Hash, kPromotion.Hash);
+
+			-- Update button state and callback depending on the promotion state
+			if (pGovernor and pGovernor:HasPromotion(kPromotion.Hash)) then
+				promotionInst.PromotionButton:SetDisabled(true);
+				promotionInst.PromotionButton:SetVisState(4);
+				promotionInst.PromotionButton:ClearCallback( Mouse.eLClick );
+			elseif m_SelectedPromotion == kPromotion.Index then
+				promotionInst.PromotionButton:SetDisabled(false);
+				promotionInst.PromotionButton:SetSelected(true);
+				promotionInst.PromotionButton:SetVisState(5);
+				promotionInst.PromotionButton:SetVoid1(m_GovernorIndex);
+				promotionInst.PromotionButton:SetVoid2(kPromotion.Index);
+				promotionInst.PromotionButton:RegisterCallback( Mouse.eLClick, OnPromoteGovernor );
+			elseif not canEarnPromotion then
+				promotionInst.PromotionButton:SetDisabled(true);
+				promotionInst.PromotionButton:SetSelected(false);
+				promotionInst.PromotionButton:SetVisState(3);
+				promotionInst.PromotionButton:ClearCallback( Mouse.eLClick );
+			else
+				promotionInst.PromotionButton:SetDisabled(m_isReadOnly);
+				promotionInst.PromotionButton:SetSelected(false);
+				promotionInst.PromotionButton:SetVisState(0);
+				promotionInst.PromotionButton:SetVoid1(m_GovernorIndex);
+				promotionInst.PromotionButton:SetVoid2(kPromotion.Index);
+				promotionInst.PromotionButton:RegisterCallback( Mouse.eLClick, OnPromoteGovernor );
+			end
+
+			-- Add secret promotions to list so we can play effects on them
+			promotionInst.NeedsSmokeEffect = isHidden;
+		end
 	end
+
+	pSecretPromotionTreeInst.PromotionContainer:CalculateSize();
+    RefreshSmokeEffects();
 end
 
 -- ===========================================================================
@@ -313,6 +430,20 @@ end
 function OnShutdown()
 	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "isVisible", ContextPtr:IsVisible());
 	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "governorIndex", m_GovernorIndex);
+
+	Unsubscribe();
+end
+
+-- ===========================================================================
+function RefreshSmokeEffects()
+	for i=1, m_SecretPromotionIM.m_iCount, 1 do
+		local pPromotionInstance:table = m_SecretPromotionIM:GetAllocatedInstance(i);
+		if pPromotionInstance.NeedsSmokeEffect then
+			EffectsManager:PlayEffect(pPromotionInstance.PromotionButton, "FireFX_SecretSocietySmoke");
+		else
+			EffectsManager:StopEffect(pPromotionInstance.PromotionButton);
+		end
+	end
 end
 
 -- ===========================================================================s
@@ -360,15 +491,7 @@ function OnLocalPlayerTurnEnd()
 end
 
 -- ===========================================================================
--- ===========================================================================
-function Initialize()
-
-	-- Start off hidden
-	ContextPtr:SetHide(true);
-	ContextPtr:SetInitHandler( OnInit );
-	ContextPtr:SetShutdown( OnShutdown );
-	ContextPtr:SetInputHandler( OnInputHandler, true );
-
+function Subscribe()
 	-- Lua Events
 	LuaEvents.GameDebug_Return.Add( OnGameDebugReturn );
 
@@ -383,11 +506,41 @@ function Initialize()
 	Events.GovernorPromoted.Add( Refresh );
 	Events.LocalPlayerTurnBegin.Add( Refresh );	
 	Events.LocalPlayerTurnEnd.Add( OnLocalPlayerTurnEnd );
+end
+
+-- ===========================================================================
+function Unsubscribe()
+	-- Lua Events
+	LuaEvents.GameDebug_Return.Remove( OnGameDebugReturn );
+
+	-- Context Events
+	LuaEvents.GovernorDetailsPanel_OpenDetails.Remove( OnOpenDetails );
+
+	-- Game Events
+	Events.GovernorAppointed.Remove( Refresh );
+	Events.GovernorAssigned.Remove( Refresh );
+	Events.GovernorChanged.Remove( Refresh );
+	Events.GovernorPointsChanged.Remove( Refresh );
+	Events.GovernorPromoted.Remove( Refresh );
+	Events.LocalPlayerTurnBegin.Remove( Refresh );	
+	Events.LocalPlayerTurnEnd.Remove( OnLocalPlayerTurnEnd );
+end
+
+-- ===========================================================================
+-- ===========================================================================
+function Initialize()
+
+	-- Start off hidden
+	ContextPtr:SetHide(true);
+	ContextPtr:SetInitHandler( OnInit );
+	ContextPtr:SetShutdown( OnShutdown );
+	ContextPtr:SetInputHandler( OnInputHandler, true );
 
 	-- Control Events
 	Controls.ConfirmButton:RegisterCallback( Mouse.eLClick, OnConfirm );
 	Controls.BackButton:RegisterCallback( Mouse.eLClick, OnBack );
-	Controls.CloseButton:RegisterCallback( Mouse.eLClick, OnBack );
+
+	Subscribe();
 
 	m_TopPanelConsideredHeight = Controls.Vignette:GetSizeY() - TOP_PANEL_OFFSET;
 end

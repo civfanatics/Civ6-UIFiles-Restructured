@@ -156,6 +156,12 @@ LuaEvents.StartCrossPlay.Add( OnStartCrossPlay );
 
 -- ===========================================================================
 function OnCrossPlayLoginStateUpdated(bLoggedIn)
+	-- Automation triggers a crossplay login manually before starting multiplayer scripts.  
+	-- Let them do their own thing.
+	if(Automation.IsActive()) then
+		return;
+	end
+
 	if( bLoggedIn ) then
 		GoToCrossPlayLobby();
 	else

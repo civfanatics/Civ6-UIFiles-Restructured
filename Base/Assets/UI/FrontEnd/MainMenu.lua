@@ -1313,21 +1313,31 @@ function UpdateCheckCloudNotify()
 	end
 end
 
-function UpdateMenuLogo()
-	local logos = DB.ConfigurationQuery("SELECT LogoTexture, LogoMovie from Logos ORDER BY Priority DESC LIMIT 1");
+-- ===========================================================================
+--	Realize the design of the "Civilization" logo and the background movie
+--	to play, based on the (lack of) expansion loaded.
+-- ===========================================================================
+function RealizeLogoAndMovie()
+	local logos :table = DB.ConfigurationQuery("SELECT LogoTexture, LogoMovie from Logos ORDER BY Priority DESC LIMIT 1");
 	if(logos and #logos > 0) then
-		local logo = logos[1];
+		local logo:table = logos[1];
 		if(logo and g_LogoTexture ~= logo.LogoTexture and g_LogoMovie ~= logo.LogoMovie) then
 			g_LogoTexture = logo.LogoTexture
 			g_LogoMovie = logo.LogoMovie
 
 			-- change texture
-			Controls.Logo:SetTexture(g_LogoTexture);
+			Controls.Logo:SetTexture(g_LogoTexture);				
 
 			-- change movie
 			local movieControl:table = ContextPtr:LookUpControl("/FrontEnd/BackgroundMovie");
 			if(movieControl ~= nil) then
 				movieControl:SetMovie(g_LogoMovie, true);
+
+				-- Save some bandwidth if playing via remote desktop.
+				local iMovieDisabled: boolean = (Options.GetAppOption("UI", "EnablePausedShellMovies") == 1);
+				if iMovieDisabled then
+					movieControl:Pause();
+				end
 			end
 		end
 	end
@@ -1343,7 +1353,7 @@ end
 -- ===========================================================================
 function OnGameplayContentChanged( kEvent )
 	if(kEvent.Success and kEvent.ConfigurationChanged) then
-		UpdateMenuLogo();
+		RealizeLogoAndMovie();
 	end
 end
 
@@ -1404,6 +1414,6 @@ function Initialize()
 
 	BuildAllMenus();
 	UpdateMotD();
-	UpdateMenuLogo();
+	RealizeLogoAndMovie();
 end
 Initialize();

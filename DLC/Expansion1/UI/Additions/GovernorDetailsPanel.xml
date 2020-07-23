@@ -13,11 +13,13 @@
         <Stack StackPadding="6">
           <!-- Governor Portrait and Name -->
           <Image ID="GovernorPortrait" Anchor="C,T" Size="326,339">
-            <Grid Anchor="C,B" Offset="0,10" Size="220,58" Texture="Governors_NamePlaque" SliceCorner="20,25" SliceSize="17,7">
+            <Grid ID="GovernorNamePlaque" Anchor="C,B" Offset="0,10" Size="260,58" Texture="Governors_NamePlaque" SliceCorner="20,25" SliceSize="17,7">
               <Label ID="GovernorNameLabel" Anchor="C,T" Offset="0,14" Align="Center" Style="FontFlair20" SmallCaps="24" SmallCapsType="EveryWord" FontStyle="Shadow"	Color0="235,235,235,255" Color1="0,0,0,50"/>
               <Label ID="GovernorTitleLabel" Anchor="C,B" Offset="0,7" Align="Center" Style="FontNormal14" FontStyle="Shadow"	Color0="240,240,240,255" Color1="0,0,0,50" />
             </Grid>
           </Image>
+
+          <Image ID="SecretSocietyIcon" Anchor="C,T" Texture="Society_HermeticOrder59" Size="59,59"/>
 
           <!-- Bio -->
           <ScrollPanel Anchor="C,T" Vertical="1" Size="parent-40,80" AutoScrollBar="1">
@@ -26,7 +28,7 @@
           </ScrollPanel>
 
           <!--Transition Strength and Identity Pressure-->
-          <Container Anchor="C,T" Size="parent-40,70">
+          <Container ID="GovernorStatsContainer" Anchor="C,T" Size="parent-40,70">
             <Box Anchor="C,T" Size="parent,2" Color="150,150,150,150"/>
               
             <Container Anchor="L,C" Size="auto,auto" Offset="15,0" ToolTip="LOC_GOVERNOR_TRANSITION_STRENGTH_TOOLTIP">
@@ -48,7 +50,7 @@
           </Container>
 
           <!-- Status -->
-          <Container Anchor="C,T" Size="parent,50">
+          <Container ID="GovernorStatusContainer" Anchor="C,T" Size="parent,50">
             <Stack Anchor="C,C" StackGrowth="Down" StackPadding="2">
               <Label ID="GovernorStatus" Anchor="C,T" Align="Center" Style="FontNormal14" WrapWidth="198"/>
               <Label ID="GovernorStatusDetails" Anchor="C,T" Align="Center" Style="FontNormal14" WrapWidth="198" Color="200,200,200,255"/>
@@ -64,25 +66,7 @@
     </Box>
 
     <!-- Promotions -->
-    <Grid Anchor="R,T" Offset="30,16" Size="480,620" Texture="Governors_PromotionBox" SliceCorner="70,70" SliceSize="10,10">
-      <Stack Anchor="C,T" Offset="0,32" StackGrowth="Down" StackPadding="8">
-        <Label Anchor="C,T" Offset="0,0"Style="FontFlair20" SmallCaps="26" SmallCapsType="EveryWord" String="LOC_GOVERNORS_SCREEN_GOVERNOR_ABILITIES" Color="230,230,230,255"/>
-        <Label Anchor="C,T" Style="FontNormal14" Color="200,200,200,255" String="LOC_GOVERNORS_SCREEN_GOVERNOR_ABILITIES_SUBTEXT"/>
-        <Box Anchor="C,T" Size="330,2" Color="150,150,150,70"/>
-      </Stack>
-      
-      <!-- Base Ability -->
-      <Grid Anchor="C,T" Offset="0,100" Size="428,57" Texture="Governors_BaseAbilityBox" SliceTextureSize="57,57" SliceCorner="28,28" SliceSize="1,1">
-        <Image ID="BaseAbilityIcon" Anchor="L,C" Offset="14,0" Size="24,24" Icon="ICON_GOVERNOR_GENERIC_PROMOTION" IconSize="24"/>
-        <Label ID="BaseAbilityLabel" Anchor="L,C" Offset="44,0" Style="FontNormal12" FontStyle="shadow"	Color0="240,240,240,255"	Color1="0,0,0,150" WrapWidth="310"/>
-      </Grid>
-
-      <!-- Promotion Requirement Indicator Lines -->
-      <Container ID="PromotionLinesContainer" Anchor="C,T" Offset="0,180" Size="auto,parent"/>
-
-      <!-- Promotion Tree -->
-      <Container ID="PromotionContainer" Anchor="C,T" Offset="0,174" Size="auto,parent"/>
-    </Grid>
+    <Container ID="PromotionAnchor" Anchor="R,T" Offset="30,16" Size="480,620"/>
 
     <!-- Back Button -->
     <Image Anchor="C,B" Size="parent,52" Texture="Governors_DetailsFooterTile" StretchMode="TileX">
@@ -97,9 +81,55 @@
         <Image Texture="Governors_PromotionScreen_DecoRight" Size="184,42" Color="0,0,0,50"/>
       </Stack>
     </Image>
-
-    <Button	ID="CloseButton" Anchor="R,T" Style="CloseButtonLarge" Offset="-8,-5"/>
   </Image>
+
+  <!-- ==================================================================	-->
+  <!--	Instances														-->
+  <!-- ==================================================================	-->
+
+  <Instance Name="PromotionTreeInstance">
+    <Grid ID="TopGrid" Anchor="C,T" Size="480,620" Texture="Governors_PromotionBox" SliceCorner="70,70" SliceSize="10,10">
+      <Stack Anchor="C,T" Offset="0,32" StackGrowth="Down" StackPadding="8">
+        <Label Anchor="C,T" Offset="0,0" Style="FontFlair20" SmallCaps="26" SmallCapsType="EveryWord" String="LOC_GOVERNORS_SCREEN_GOVERNOR_ABILITIES" Color="230,230,230,255"/>
+        <Label Anchor="C,T" Style="FontNormal14" Color="200,200,200,255" String="LOC_GOVERNORS_SCREEN_GOVERNOR_ABILITIES_SUBTEXT"/>
+        <Box Anchor="C,T" Size="330,2" Color="150,150,150,70"/>
+      </Stack>
+
+      <!-- Base Ability -->
+      <Grid Anchor="C,T" Offset="0,100" Size="428,57" Texture="Governors_BaseAbilityBox" SliceTextureSize="57,57" SliceCorner="28,28" SliceSize="1,1">
+        <Image ID="BaseAbilityIcon" Anchor="L,C" Offset="14,0" Size="24,24" Icon="ICON_GOVERNOR_GENERIC_PROMOTION" IconSize="24"/>
+        <Label ID="BaseAbilityLabel" Anchor="L,C" Offset="44,0" Style="FontNormal12" FontStyle="shadow"	Color0="240,240,240,255"	Color1="0,0,0,150" WrapWidth="310"/>
+      </Grid>
+
+      <!-- Promotion Requirement Indicator Lines -->
+      <Container ID="PromotionLinesContainer" Anchor="C,T" Offset="0,180" Size="auto,parent"/>
+
+      <!-- Promotion Tree -->
+      <Container ID="PromotionContainer" Anchor="C,T" Offset="0,174" Size="auto,parent"/>
+    </Grid>
+  </Instance>
+
+  <Instance Name="SecretSocietyPromotionTreeInstance">
+    <Grid ID="TopGrid" Anchor="C,T" Size="480,620" Texture="Governors_PromotionBox" SliceCorner="70,70" SliceSize="10,10">
+      <Stack Anchor="C,T" Offset="0,32" StackGrowth="Down" StackPadding="8">
+        <Label Anchor="C,T" Offset="0,0" Style="FontFlair20" SmallCaps="26" SmallCapsType="EveryWord" String="LOC_GOVERNORS_SCREEN_GOVERNOR_ABILITIES" Color="230,230,230,255"/>
+        <Label Anchor="C,T" Style="FontNormal14" Color="200,200,200,255" String="LOC_GOVERNORS_SCREEN_GOVERNOR_ABILITIES_SUBTEXT"/>
+        <Box Anchor="C,T" Size="330,2" Color="150,150,150,70"/>
+      </Stack>
+
+      <Stack ID="PromotionContainer" Anchor="C,T" StackPadding="10" Offset="0,100"/>
+    </Grid>
+  </Instance>
+
+  <Instance Name="SecretSocietyPromotionInstance">
+    <GridButton ID="PromotionButton" Size="300,110" Texture="Secret_Promotion_Button" Padding="0,0" StateOffsetIncrement="0,121" SliceCorner="90,42" SliceTextureSize="174,121">
+      <Label ID="PromotionName" Offset="10,10" Style="FontFlair14" SmallCaps="16" SmallCapsType="FirstWord" FontStyle="Shadow"	Color0="245,245,245,255" Color1="0,0,0,70"/>
+      <ScrollPanel Size="parent-20,parent-42" Offset="10,32" Vertical="1" AutoScrollBar="1">
+        <ScrollBar Anchor="R,C" AnchorSide="O,I" Offset="0,0" Style="ScrollVerticalBarHighContrast" Size="8,parent"/>
+        <Label ID="PromotionDesc" Offset="0,3" WrapWidth="parent" Style="FontNormal12"	FontStyle="shadow"	Color0="240,240,240,255"	Color1="0,0,0,150"/>
+      </ScrollPanel>
+    </GridButton>
+  </Instance>
 
   <Instance Name="PromotionInstance">
     <GridButton ID="PromotionButton" Size="204,121" Texture="Governors_Promotion_Button" Padding="0,0" StateOffsetIncrement="0,121" SliceCorner="90,42" SliceTextureSize="174,121">
@@ -109,8 +139,7 @@
 				<Label ID="PromotionDesc" Offset="0,3" WrapWidth="parent" Style="FontNormal12"	FontStyle="shadow"	Color0="240,240,240,255"	Color1="0,0,0,150"/>
 			</ScrollPanel>
     </GridButton>
-  
-</Instance>
+  </Instance>
 
   <Instance Name="ReqLinesRight">
     <Container ID="Top" Size="174,100">

@@ -108,6 +108,44 @@
 		</Image>
 	</Instance>
 
+  <Instance	Name="SocietyGovernorInstance">
+    <Image ID="Content" Size="234,680" Texture="Secret_Column_BackgroundTile" StretchMode="Tile">
+      <Grid ID="GovernorColumns" Anchor="C,T" Size="parent,parent" Texture="Governors_Column_Off" SliceTextureSize="234,222" SliceCorner="99,75" SliceSize="1,1">
+      </Grid>
+      <Stack Anchor="C,T" Offset="0,4" StackPadding="6">
+        <Container Anchor="C,T" Size="parent,auto">
+          <Image Anchor="C,T" Offset="0,10" Size="188,201" Texture="Governors_PortraitFrame">
+            <Image ID="GovernorPortrait" Anchor="C,T" Offset="0,0" Texture="GovernorNormal_Ambassador" Size="206,208"/>
+          </Image>
+
+          <!--Governor Name and Title-->
+          <Grid ID="NameButton" Anchor="C,T" Size="parent-28,58" Offset="0,201" Texture="Secret_NamePlaque" SliceCorner="20,25" SliceSize="17,7">
+            <Label ID="GovernorName"  Anchor="C,T" Offset="0,14" Style="FontFlair16" SmallCaps="20" SmallCapsType="EveryWord" FontStyle="Shadow"	Color0="225,225,225,255" Color1="0,0,0,50"/>
+            <Label ID="GovernorTitle" Anchor="C,B" Offset="0,9" Style="FontNormal14" FontStyle="Shadow"	Color0="240,240,240,255" Color1="0,0,0,50" />
+          </Grid>
+        </Container>
+
+        <Image ID="SocietyIcon" Anchor="C,T" Texture="Society_HermeticOrder59" Size="59,59"/>
+
+        <!-- Promotions -->
+        <Stack Anchor="C,T" StackGrowth="Down" StackPadding="5">
+          <Label Anchor="C,T" Style="FontFlair14" SmallCaps="18" SmallCapsType="EveryWord" Color="235,235,235,255" String="LOC_GOVERNORS_SCREEN_ABILITIES"/>
+          <Stack ID="EarnedPromotionsStack" Anchor="C,T" Offset="0,0" StackPadding="5" StackGrowth="Down"/>
+          <Stack ID="AvailablePromotionsStack" Anchor="C,T" Offset="0,0" StackPadding="5" StackGrowth="Down"/>
+        </Stack>
+      </Stack>
+
+      <!-- Decorative Column Borders -->
+      <Box ID="FadeOutOverlay" Size="parent,parent" Color="0,0,0,100"/>
+      <Grid Size="parent-2,auto" AutoSizePadding="0,4" Anchor="C,B" Offset="0,0" Texture="Governors_DetailsFooterTile" SliceCorner="15,15" SliceSize="22,22">
+        <Stack Anchor="C,C" StackGrowth="Down" StackPadding="0">
+          <GridButton ID="GovernorDetailsButton" Size="parent-20,41" Style="FontNormal14" String="LOC_GOVERNORS_SCREEN_DETAILS" Texture="Controls_Button" SliceCorner="41,20" SliceTextureSize="80,41" StateOffsetIncrement="0,41"/>
+          <GridButton ID="AppointButton" Size="parent-20,41" Style="FontNormal14" String="LOC_GOVERNORS_SCREEN_BUTTON_APPOINT_GOVERNOR" Texture="Controls_Confirm" SliceCorner="41,20" SliceTextureSize="80,41" StateOffsetIncrement="0,41"/>
+        </Stack>
+      </Grid>
+    </Image>
+  </Instance>
+
 	<!-- ==================================================================	-->
 	<Instance Name="PromotionInstance">
 		<Grid ID="Button" Size="parent-40,28" Texture="Governors_DataFrame" SliceCorner="10,10" SliceSize="8,8">

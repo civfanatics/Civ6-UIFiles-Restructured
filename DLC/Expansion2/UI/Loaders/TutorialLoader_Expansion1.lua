@@ -39,12 +39,15 @@ function TutorialLoader:Initialize(TutorialCheck:ifunction)
 		if (pPlayer == nil) then
 			return;
 		end
-		if (iDelta > 0) then
-			local playerGovernors = pPlayer:GetGovernors();
-			if playerGovernors:CanPromote() then
-				TutorialCheck("SecondGovernorAppointment");
-			else
-				TutorialCheck("FirstGovernorAppointment");
+		local localPlayerID = Game.GetLocalPlayer();
+		if (player == localPlayerID) then
+			if (iDelta > 0) then
+				local playerGovernors = pPlayer:GetGovernors();
+				if playerGovernors:CanPromote() then
+					TutorialCheck("SecondGovernorAppointment");
+				else
+					TutorialCheck("FirstGovernorAppointment");
+				end
 			end
 		end
 	end);

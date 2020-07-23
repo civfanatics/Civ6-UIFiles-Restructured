@@ -281,12 +281,6 @@
 				<LuaReplace>UI/Replacements/NewTurnPanel_Expansion1.lua</LuaReplace>
 			</Properties>
 		</ReplaceUIScript>
-		<ReplaceUIScript id="Expansion1_NotificationPanel" criteria="Expansion1">
-			<Properties>
-				<LuaContext>NotificationPanel</LuaContext>
-				<LuaReplace>UI/Replacements/NotificationPanel_Expansion1.lua</LuaReplace>
-			</Properties>
-		</ReplaceUIScript>
 		<ReplaceUIScript id="Expansion1_DeclareWarPopup" criteria="Expansion1">
 			<Properties>
 				<LuaContext>DeclareWarPopup</LuaContext>

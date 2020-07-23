@@ -2333,10 +2333,11 @@ function OnLeaderLoaded()
 	if (ms_ActiveSessionID == nil) then
         bDoAudio = true;
 		local ePlayerMood = DiplomacySupport_GetPlayerMood(ms_SelectedPlayer, ms_LocalPlayerID);
-		-- What do they think of us?
+		-- What do they think of us?		
+		ePlayerMood = GetModifiedMood(ePlayerMood)
 		if (ePlayerMood == DiplomacyMoodTypes.HAPPY) then 
 			LeaderSupport_QueueAnimationSequence( ms_SelectedPlayerLeaderTypeName, "HAPPY_IDLE" );
-		elseif (ePlayerMood == DiplomacyMoodTypes.NEUTRAL) then
+		elseif (ePlayerMood == DiplomacyMoodTypes.NEUTRAL) then	
 			LeaderSupport_QueueAnimationSequence( ms_SelectedPlayerLeaderTypeName, "NEUTRAL_IDLE" );
 		elseif (ePlayerMood == DiplomacyMoodTypes.UNHAPPY) then
 			LeaderSupport_QueueAnimationSequence( ms_SelectedPlayerLeaderTypeName, "UNHAPPY_IDLE" );
@@ -2393,7 +2394,25 @@ function OnLeaderLoaded()
         end
     end
 end
+-- ===========================================================================
+-- This is a little injection point to add additional logic when picking the
+-- visual mood for a leader when loading them up
+-- ===========================================================================
+function GetModifiedMood( inMood  )
 
+	-- TODO: Replace this with a proper solution for function overriding in DLCs
+	-- Make Alt-Catherine look happy when you're playing as her
+	if (ms_LocalPlayerID == ms_SelectedPlayerID) then
+		local localPlayer = Game.GetLocalPlayer()
+		local playerConfig:table = PlayerConfigurations[localPlayer]
+		local leaderTypeName:string = playerConfig:GetLeaderTypeName()	
+		if (leaderTypeName == "LEADER_CATHERINE_DE_MEDICI_ALT" ) then 
+			inMood = DiplomacyMoodTypes.HAPPY
+		end
+	end
+
+	return inMood
+end
 -- ===========================================================================
 function GetStatementHandler(statementTypeName : string)
 	local handler = StatementHandlers[statementTypeName];

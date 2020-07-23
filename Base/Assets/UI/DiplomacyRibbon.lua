@@ -211,7 +211,7 @@ function UpdateLeaders()
 
 	local localPlayerID:number = Game.GetLocalPlayer();
 	local pPlayer : table = PlayerConfigurations[localPlayerID];
-	if localPlayerID ~= -1 and pPlayer:IsAlive() then
+	if localPlayerID ~= -1 then
 		local localPlayer	:table = Players[localPlayerID];
 		local localDiplomacy:table = localPlayer:GetDiplomacy();
 		table.sort(kPlayers, function(a:table,b:table) return localDiplomacy:GetMetTurn(a:GetID()) < localDiplomacy:GetMetTurn(b:GetID()) end);

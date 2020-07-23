@@ -515,9 +515,11 @@ function SetSelected( index )
 		if (g_MenuType == LOAD_GAME) then
 			Controls.ActionButton:SetDisabled( true );
 			Controls.ActionButton:SetToolTipString(nil);
+			g_FilenameIsValid = false;
 		end
 
 		UpdateActionButtonText(false);
+		UpdateActionButtonState();
 
 		Controls.Delete:SetHide( true );
     end
@@ -949,7 +951,7 @@ function UpdateActionButtonState()
 			Controls.ActionButton:SetToolTipString(Locale.Lookup("LOC_SAVE_WAITING_FOR_CLOUD_SAVE_LIST_TOOLTIP"));
 		elseif (bAtMaximumSaves) then
 			Controls.ActionButton:SetToolTipString(Locale.Lookup("LOC_SAVE_AT_MAXIMUM_CLOUD_SAVES_TOOLTIP"));
-		elseif (not g_FilenameIsValid) then
+		elseif ((not g_FilenameIsValid) and (g_MenuType == SAVE_GAME)) then
 			Controls.ActionButton:SetToolTipString(Locale.Lookup("LOC_SAVE_INVALID_FILE_NAME_TOOLTIP"));
 		else
 			Controls.ActionButton:SetToolTipString(nil);
@@ -993,6 +995,7 @@ function SetupFileList()
 		UpdateActionButtonText(false);
 	else
 		SetSelected( -1 );
+		UpdateActionButtonText(false);
 	end
     -- build a table of all save file names that we found
     g_FileList = {};

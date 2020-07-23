@@ -539,13 +539,13 @@ function SetUniqueCivLeaderData(info:table, tooltipControls:table)
 		end
 	
 		tooltipControls.DummyImage:SetTexture(leaderPortrait);
+		tooltipControls.LeaderImage:SetTexture(leaderPortrait);
 		local imageRatio = tooltipControls.DummyImage:GetSizeX()/tooltipControls.DummyImage:GetSizeY();
 		if(imageRatio > .51) then
  			tooltipControls.LeaderImage:SetTextureOffsetVal(30,10)
 		else
 			tooltipControls.LeaderImage:SetTextureOffsetVal(10,50)
 		end
-		tooltipControls.LeaderImage:SetTexture(leaderPortrait);
 
 		local leaderBGImage:string;
 		if info.PortraitBackground then

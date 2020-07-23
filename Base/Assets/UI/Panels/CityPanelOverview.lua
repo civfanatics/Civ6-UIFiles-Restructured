@@ -56,14 +56,15 @@ g_kAmenitiesIM			= InstanceManager:new( "AmenityInstance",			"Top", Controls.Ame
 --	MEMBERS
 -- ===========================================================================
 
-local m_kBuildingsIM		= InstanceManager:new( "BuildingInstance",			"Top");
-local m_kDistrictsIM		= InstanceManager:new( "DistrictInstance",			"Top", Controls.BuildingAndDistrictsStack );
-local m_kHousingIM			= InstanceManager:new( "HousingInstance",			"Top", Controls.HousingStack );
-local m_kOtherReligionsIM	= InstanceManager:new( "OtherReligionInstance",		"Top", Controls.OtherReligions );
-local m_kProductionIM		= InstanceManager:new( "ProductionInstance",		"Top", Controls.ProductionQueueStack );
-local m_kReligionsBeliefsIM	= InstanceManager:new( "ReligionBeliefsInstance",	"Top", Controls.ReligionBeliefsStack );
-local m_kTradingPostsIM		= InstanceManager:new( "TradingPostInstance",		"Top", Controls.TradingPostsStack );
-local m_kWondersIM			= InstanceManager:new( "WonderInstance",			"Top", Controls.WondersStack );
+local m_kBuildingsIM		:table = InstanceManager:new( "BuildingInstance",			"Top");
+local m_kDistrictsIM		:table = InstanceManager:new( "DistrictInstance",			"Top", Controls.BuildingAndDistrictsStack );
+local m_kHousingIM			:table = InstanceManager:new( "HousingInstance",			"Top", Controls.HousingStack );
+local m_kOtherReligionsIM	:table = InstanceManager:new( "OtherReligionInstance",		"Top", Controls.OtherReligions );
+local m_kProductionIM		:table = InstanceManager:new( "ProductionInstance",			"Top", Controls.ProductionQueueStack );
+local m_kReligionsBeliefsIM	:table = InstanceManager:new( "ReligionBeliefsInstance",	"Top", Controls.ReligionBeliefsStack );
+local m_kTradingPostsIM		:table = InstanceManager:new( "TradingPostInstance",		"Top", Controls.TradingPostsStack );
+local m_kWondersIM			:table = InstanceManager:new( "WonderInstance",				"Top", Controls.WondersStack );
+local m_kKeyStackIM			:table = InstanceManager:new( "KeyEntry",					"KeyColorImage", Controls.KeyStack );
 
 local m_isInitializing	:boolean = false;		
 local m_kData			:table = nil;
@@ -333,6 +334,31 @@ function ViewPanelReligion( data:table )
 				end
 			end
 		end
+	end
+
+	--Add religions to the religion key
+	m_kKeyStackIM:ResetInstances();
+	local visibleTypesCount:number = 0;
+
+	local numFoundedReligions	:number = 0;
+	local pAllReligions			:table = Game.GetReligion():GetReligions();
+
+	for _, religionInfo in ipairs(pAllReligions) do
+		local religionType:number = religionInfo.Religion;
+		religionData = GameInfo.Religions[religionType];
+		if(religionData.Pantheon == false and Game.GetReligion():HasBeenFounded(religionType)) then
+			-- Add key entry
+			AddKeyEntry(Game.GetReligion():GetName(religionType), UI.GetColorValue(religionData.Color));
+			visibleTypesCount = visibleTypesCount + 1;
+			
+		end
+	end
+
+	if visibleTypesCount > 0 then
+		Controls.KeyPanel:SetHide(false);
+		Controls.KeyScrollPanel:CalculateSize();
+	else
+		Controls.KeyPanel:SetHide(true);
 	end
 	
 	if Controls.PanelReligion:IsVisible() then
@@ -979,6 +1005,17 @@ end
 
 function OnToggleReligionTab()
 	ToggleOverviewTab( Controls.ReligionButton );
+end
+
+-- ===========================================================================
+function AddKeyEntry(textString:string, colorValue:number)
+	local keyEntryInstance:table = m_kKeyStackIM:GetInstance();
+
+	-- Update key text
+	keyEntryInstance.KeyLabel:SetText(Locale.Lookup(textString));
+
+	-- Update key color
+	keyEntryInstance.KeyColorImage:SetColor(colorValue);
 end
 
 -- ===========================================================================

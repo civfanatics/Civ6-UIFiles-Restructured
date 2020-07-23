@@ -107,6 +107,81 @@ function AnyCitiesWithoutAGovernor()
 end
 
 -- ===========================================================================
+function IsCannotAssign(governorDef:table)
+	if (governorDef ~= nil) then
+		if (GameInfo.GovernorsCannotAssign ~= nil) then
+			for row in GameInfo.GovernorsCannotAssign() do
+				if (row ~= nil) then
+					if (row.GovernorType == governorDef.GovernorType) then
+						return row.CannotAssign;
+					end
+				end
+			end
+		end
+	end
+
+	return false;
+end
+
+-- ===========================================================================
+function IsPromotionHidden(governorPromotionHash:number, playerID:number, governorTypeIndex:number)
+	local promotionDef:table = GameInfo.GovernorPromotions[governorPromotionHash];
+	if (playerID ~= -1 and promotionDef ~= nil) then
+		local hiddenWithoutPrereq:boolean = false;
+		if (GameInfo.GovernorPromotionConditions ~= nil) then
+			for row in GameInfo.GovernorPromotionConditions() do
+				if (row.GovernorPromotionType == promotionDef.GovernorPromotionType) then
+					hiddenWithoutPrereq = row.HiddenWithoutPrereqs;
+				end
+			end
+		end
+
+		if (hiddenWithoutPrereq) then
+			if (not HasPromotionPrerequisites(governorPromotionHash, playerID, governorTypeIndex)) then
+				return true;
+			end
+		end
+	end
+	return false;
+end
+
+-- ===========================================================================
+function GetPromotionHiddenName(governorPromotionHash:number)
+	local s:string = Locale.Lookup("LOC_GOVERNOR_PROMOTION_UNKNOWN_NAME");
+	if (s == "LOC_GOVERNOR_PROMOTION_UNKNOWN_NAME") then
+		s = "?";
+	end
+	return s;
+end
+
+-- ===========================================================================
+function GetPromotionHiddenDescription(governorPromotionHash:number)
+	local s:string = Locale.Lookup("LOC_GOVERNOR_PROMOTION_UNKNOWN_DESCRIPTION");
+	if (s == "LOC_GOVERNOR_PROMOTION_UNKNOWN_DESCRIPTION") then
+		s = "?";
+	end
+	return s;
+end
+
+-- ===========================================================================
+function HasPromotionPrerequisites(governorPromotionHash:number, playerID:number, governorTypeIndex:number)
+	local promotionDef:table = GameInfo.GovernorPromotions[governorPromotionHash];
+	local governorInstance:table = GetAppointedGovernor(playerID, governorTypeIndex);
+	if (promotionDef ~= nil and governorInstance ~= nil) then
+		for row in GameInfo.GovernorPromotionPrereqs() do
+			if (row.GovernorPromotionType == promotionDef.GovernorPromotionType) then
+				local prereqPromotionDef:table = GameInfo.GovernorPromotions[row.PrereqGovernorPromotion];
+				if (prereqPromotionDef ~= nil and not governorInstance:HasPromotion(prereqPromotionDef.Hash)) then
+					return false;
+				end
+			end
+		end
+		return true;
+	end
+	return false;
+end
+
+-- ===========================================================================
 function SetButtonTexture(control:table, texture:string)
 	control:SetTexture(texture);
 	control:SetVisState(0); -- Workaround for VisState breaking when switching textures

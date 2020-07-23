@@ -21,6 +21,7 @@ local m_currentPopupState:number = -1;
 
 local m_spy				:table = nil;
 local m_city			:table = nil;
+local m_pTargetPlot		:table = nil;
 local m_operation		:table = nil;
 local m_missionHistory	:table = nil;
 
@@ -276,7 +277,7 @@ function RefreshPossibleOutcomes()
 	end
 
 	local cityPlot:table = Map.GetPlot(m_city:GetX(), m_city:GetY());
-    local resultProbability:table = UnitManager.GetResultProbability(m_operation.Index, m_spy, cityPlot);
+	local resultProbability:table = UnitManager.GetResultProbability(m_operation.Index, m_spy, m_pTargetPlot);
 	if resultProbability["ESPIONAGE_SUCCESS_UNDETECTED"] then
 		local successProbability:number = resultProbability["ESPIONAGE_SUCCESS_UNDETECTED"];
 
@@ -346,7 +347,7 @@ function AddOutcomeLabel(labelString:string)
 end
 
 -- ===========================================================================
-function OnShowMissionBriefing(operationHash:number, spyID:number)
+function OnShowMissionBriefing(operationHash:number, spyID:number, targetPlot:table)
 	if Game.GetLocalPlayer() == -1 then
 		return;
 	end
@@ -362,6 +363,8 @@ function OnShowMissionBriefing(operationHash:number, spyID:number)
 	-- Find target city
 	local spyPlot:table = Map.GetPlot(m_spy:GetX(), m_spy:GetY());
 	m_city = Cities.GetPlotPurchaseCity(spyPlot);
+
+	m_pTargetPlot = targetPlot;
 
 	m_currentPopupState = EspionagePopupStates.MISSION_BRIEFING;
 
@@ -390,6 +393,9 @@ function ShowMissionCompletedPopup(playerID:number, missionID:number)
 	
 	-- Clear city reference since not needed for mission completed popup
 	m_city = nil;
+
+    -- Clear target plot reference since not needed for mission completed popup
+    m_pTargetPlot = nil;
 
 	-- Cache mission history
 	m_missionHistory = mission;
@@ -449,8 +455,11 @@ function OnShowMissionAbort(spyID:number)
 		return;
 	end
 
+	-- Clear target plot reference since not needed for mission abort popup
+    local spyPlot:table = Map.GetPlot(m_spy:GetX(), m_spy:GetY());
+    m_pTargetPlot = spyPlot;
+
 	-- Find target city
-	local spyPlot:table = Map.GetPlot(m_spy:GetX(), m_spy:GetY());
 	m_city = Cities.GetPlotPurchaseCity(spyPlot);
 
 	m_currentPopupState = EspionagePopupStates.ABORT_MISSION;
@@ -543,6 +552,7 @@ function OnShutdown()
     LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "isHidden", ContextPtr:IsHidden());
 	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "spy", m_spy);
 	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "city", m_city);
+	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "targetPlot", m_pTargetPlot);
 	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "operation", m_operation);
 	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "popupState", m_currentPopupState);
 	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "missionHistory", m_missionHistory);
@@ -565,6 +575,9 @@ function OnGameDebugReturn(context:string, contextTable:table)
 		end
 		if contextTable["city"] ~= nil then			
 			m_city = contextTable["city"];
+		end
+		if contextTable["targetPlot"] ~= nil then			
+			m_pTargetPlot = contextTable["targetPlot"];
 		end
 		if contextTable["operation"] ~= nil then			
 			m_operation = contextTable["operation"];

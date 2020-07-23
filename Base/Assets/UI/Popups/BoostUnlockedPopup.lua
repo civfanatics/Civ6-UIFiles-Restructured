@@ -365,7 +365,7 @@ end
 -- ===========================================================================
 function OnUIIdle()
 	-- The UI is idle, are we waiting to show a popup?
-	if UI.CanShowPopup(PopupPriority.Normal) then
+	if UI.CanShowPopup(PopupPriority.Low) then
 		ShowNextQueuedPopup();
 	end
 end

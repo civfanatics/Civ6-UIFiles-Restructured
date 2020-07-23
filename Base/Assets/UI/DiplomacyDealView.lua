@@ -3045,6 +3045,12 @@ function Initialize()
 	m_MinDragResizeY = m_MinDragResizeY - m_InvStartSizeY;
 
 	Controls.DragSizer:RegisterCallback(Drag.eDrag, function() OnDragResizer(); end);
+
+	--This option requires a restart after changing, so we only need to check it at initialize
+	local replaceDragWithClick : number = Options.GetUserOption("Interface", "ReplaceDragWithClick");
+	if(replaceDragWithClick == 1)then
+		Controls.DragButton:LocalizeAndSetToolTip("LOC_DIPLOMACY_DRAG_BUTTON_CLICK_TOOLTIP");
+	end
 end
 
 Initialize();

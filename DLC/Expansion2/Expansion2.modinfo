@@ -471,12 +471,6 @@
 				<LuaReplace>UI/Replacements/MapSearchPanel_Expansion2.lua</LuaReplace>
 			</Properties>
 		</ReplaceUIScript>
-		<ReplaceUIScript id="Expansion2_NotificationPanel" criteria="Expansion2">
-			<Properties>
-				<LuaContext>NotificationPanel</LuaContext>
-				<LuaReplace>UI/Replacements/NotificationPanel_Expansion2.lua</LuaReplace>
-			</Properties>
-		</ReplaceUIScript>
 		<ReplaceUIScript id="Expansion2_PartialScreenHooks" criteria="Expansion2">
 			<Properties>
 				<LuaContext>PartialScreenHooks</LuaContext>

@@ -123,6 +123,7 @@ function InitSubjectData()
 		DisasterCharges				= 0,
 		SpreadCharges				= 0,
 		HealCharges					= 0,
+		ActionCharges				= 0,
 		GreatPersonActionCharges	= 0,
 		GreatPersonPassiveName		= "",
 		GreatPersonPassiveText		= "",
@@ -171,6 +172,7 @@ function InitTargetData()
 		DisasterCharges				= 0,
 		SpreadCharges				= 0,
 		HealCharges					= 0,
+		ActionCharges				= 0,
 		ReligiousStrength			= 0,
 		GreatPersonActionCharges	= 0,
 		Moves						= 0,
@@ -905,9 +907,12 @@ function View(data)
 	ResizeUnitPanelToFitActionButtons();
 
 	---=======[ STATS ]=======---
-	ReadTargetData();
-	ShowSubjectUnitStats(m_combatResults ~= nil);
+	-- if there's no valid target to attack, invalidate the combat preview
+	if not ReadTargetData() then
+		m_combatResults = nil;
+	end
 
+	ShowSubjectUnitStats(m_combatResults ~= nil);
 	RealizeSpecializedViews(data);
 	
 	-- Unit Name
@@ -1406,6 +1411,9 @@ function FilterUnitStatsFromUnitData( unitData:table, ignoreStatType:number )
 	end 
 	if (unitData.HealCharges > 0) then
 		table.insert(data, {Value = unitData.HealCharges, Type = "HealCharges",		Label = "LOC_HUD_UNIT_PANEL_HEALS",				FontIcon="[ICON_ReligionStat_Large]",		IconName="ICON_RELIGION"});
+	end
+	if (unitData.ActionCharges > 0) then
+		table.insert(data, {Value = unitData.ActionCharges, Type = "ActionCharges",		Label = "LOC_HUD_UNIT_PANEL_CHARGES",				FontIcon="[ICON_ReligionStat_Large]",		IconName="ICON_RELIGION"});
 	end
 	if (unitData.GreatPersonActionCharges > 0) then
 		table.insert(data, {Value = unitData.GreatPersonActionCharges, Type = "ActionCharges",		Label = "LOC_HUD_UNIT_PANEL_GREAT_PERSON_ACTIONS",				FontIcon="[ICON_Charges_Large]",		IconName="ICON_GREAT_PERSON"});
@@ -2173,6 +2181,7 @@ function ReadUnitData( unit:table )
 	kSubjectData.DisasterCharges			= unit:GetDisasterCharges();
 	kSubjectData.SpreadCharges				= unit:GetSpreadCharges();
 	kSubjectData.HealCharges				= unit:GetReligiousHealCharges();
+	kSubjectData.ActionCharges				= unit:GetActionCharges();
 	kSubjectData.ReligiousStrength			= unit:GetReligiousStrength();
 	kSubjectData.HasMovedIntoZOC			= unit:HasMovedIntoZOC();
 	kSubjectData.MilitaryFormation			= unit:GetMilitaryFormation();
@@ -3357,6 +3366,7 @@ function ReadTargetData_Unit( pkDefender:table )
 	g_targetData.DisasterCharges			= pkDefender:GetDisasterCharges();
 	g_targetData.SpreadCharges				= pkDefender:GetSpreadCharges();
 	g_targetData.HealCharges				= pkDefender:GetReligiousHealCharges();
+	g_targetData.ActionCharges				= pkDefender:GetActionCharges();
 	g_targetData.ReligiousStrength			= pkDefender:GetReligiousStrength();
 	g_targetData.GreatPersonActionCharges	= unitGreatPerson:GetActionCharges();
 	g_targetData.Moves						= pkDefender:GetMovesRemaining();

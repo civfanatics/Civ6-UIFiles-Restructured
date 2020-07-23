@@ -1522,13 +1522,67 @@ end
 -------------------------------------------------------------------------------
 -- Returns true if a parameter meets its criteria.
 -------------------------------------------------------------------------------
+
+function Exists(entry, set)
+	
+	if(entry == nil) then
+		return false
+	end
+
+	if(type(set) ~= "string") then
+		print("Invalid type for 'set', expected string.");
+		return false;
+	end
+
+	--Split up set into a comma delimited list of values.
+	local values;
+	if(string.find(set, ",") == nil) then
+		values = {set};
+	else
+		values = {};
+		
+		-- Split using pattern matching.  
+		local lastPos = 1;
+		local pat = "(.-),()";
+		for part, pos in string.gmatch(set, pat) do
+			table.insert(values, part);
+			lastPos = pos;
+		end
+
+		-- Handle the last field
+		table.insert(values, string.sub(set, lastPos));
+    end
+
+	-- Trim whitespace from each value.
+	for i,v in ipairs(values) do
+		values[i] = string.gsub(v, "^%s*(.-)%s*$", "%1");
+	end
+
+	if(#values == 0) then
+		return true;
+	else
+		-- Trim whitespace from 'entry'
+		entry = string.gsub(entry, "^%s*(.-)%s*$", "%1");
+
+		for i,v in ipairs(values) do
+			if(entry == v) then
+				return true;
+			end
+		end
+
+		return false;
+	end
+end
+
 local CriteriaOperators = {
 	["Equals"] = function(a,b) return a == b; end,
 	["NotEquals"] = function(a,b) return a ~= b; end,
 	["LessThan"] = function(a, b) return a < b; end,
 	["LessThanEquals"] = function(a,b) return a <= b; end,
 	["GreaterThan"] = function(a,b) return a > b; end,
-	["GreaterThanEquals"] = function(a,b) return a >= b; end
+	["GreaterThanEquals"] = function(a,b) return a >= b; end,
+	["Exists"] = function(a,b) return Exists(a,b); end,
+	["NotExists"] = function(a,b) return not Exists(a,b); end
 };
 
 function SetupParameters:Parameter_MeetsCriteria(criteria)
@@ -1727,6 +1781,7 @@ function SetupParameters:Parameter_SyncConfigurationValues(parameter)
 					}
 				end
 				return self:Parameter_SyncAuxConfigurationValues(parameter);
+
 			else
 				-- Does config_value exist in Values?
 				for i, v in ipairs(parameter.Values) do

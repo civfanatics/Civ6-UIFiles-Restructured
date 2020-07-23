@@ -47,7 +47,7 @@
       <SlideAnim          ID="FlagAnim" Begin="-300,0"	End="-10,0"		Size="300,32" Speed="4" Cycle="Bounce" Function="OutQuad" Stopped="1" FunctionPower="1">
         <GridButton       ID="OptionButton" Style="ShellFlag" Size="300,32">
           <AlphaAnim      ID="LabelAlphaAnim" Pause="2.0" AlphaBegin="0" AlphaEnd="1" Cycle="Once" Function="Root" Speed="1" Size="parent,parent">
-            <Label        ID="ButtonLabel" Style="ShellFlagButtonFont" Anchor="L,C" Offset="30,0" String="Button Text"/>
+            <Label        ID="ButtonLabel" Style="ShellFlagButtonFont" Anchor="L,C" Offset="30,0" String="Button Text" TruncateWidth="240"/>
           </AlphaAnim>
         </GridButton>
       </SlideAnim>

@@ -22,7 +22,6 @@ local DETAILS_OFFSET_DEFAULT:number = -26;
 local DETAILS_OFFSET_WRITING:number = -90;
 local DETAILS_OFFSET_MUSIC:number = -277;
 local NUM_ARIFACT_TEXTURES:number = 25;
-local NUM_RELIC_TEXTURES:number = 24;
 local SIZE_MAX_IMAGE_HEIGHT:number = 467;
 local SIZE_BANNER_MIN:number = 506;
 local PADDING_BANNER:number = 120;
@@ -164,9 +163,9 @@ function UpdateGreatWork()
 		elseif greatWorkObjectType == GREAT_WORK_RELIC_TYPE then
 			greatWorkType = greatWorkType:gsub("GREATWORK_RELIC_", "");
 			local greatWorkID:number = tonumber(greatWorkType);
-			greatWorkID =  ((greatWorkID - 1) % NUM_RELIC_TEXTURES) + 1;
+			local icon:string = "ICON_GREATWORK_RELIC_" .. greatWorkID;
 			Controls.GreatWorkImage:SetOffsetY(0);
-			Controls.GreatWorkImage:SetTexture("RELIC_" .. greatWorkID);
+			Controls.GreatWorkImage:SetIcon(icon, 256);
 		end
 		Controls.GreatWorkName:SetText(Locale.ToUpper(Locale.Lookup(greatWorkInfo.Name)));
 		local nameSize:number = Controls.GreatWorkName:GetSizeX() + PADDING_BANNER;

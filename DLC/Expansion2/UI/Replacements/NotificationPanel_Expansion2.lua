@@ -1,6 +1,9 @@
--- Copyright 2018, Firaxis Games
+-- Copyright 2018-2020, Firaxis Games
 
-include("NotificationPanel_Expansion1");
+-- This file is being included into the base NotificationPanel file using the wildcard include setup in NotificationPanel.lua
+-- Refer to the bottom of NotificationPanel.lua to see how that's happening
+-- DO NOT include any NotificationPanel files here or it will cause problems
+--include("NotificationPanel_Expansion1");
 
 -- ===========================================================================
 -- LOCALS
@@ -8,9 +11,9 @@ include("NotificationPanel_Expansion1");
 local m_pSpecialSessionNotification = nil;
 
 -- ===========================================================================
--- GLOBALS
+-- CACHE BASE FUNCTIONS
 -- ===========================================================================
-XP1_RegisterHandlers = RegisterHandlers;
+local BASE_RegisterHandlers = RegisterHandlers;
 
 -- ===========================================================================
 function OnSpecialSessionWorldCongress( notificationEntry )
@@ -90,7 +93,7 @@ end
 -- ===========================================================================
 function RegisterHandlers()	
 	
-	XP1_RegisterHandlers();
+	BASE_RegisterHandlers();
 
 	LuaEvents.WorldCongressPopup_DismissSpecialSessionNotification.Add(OnDismissSpecialSessionNotification);
 	
