@@ -281,7 +281,7 @@ function SetupParameters:UpdateParameters(parameters)
 			local should_write = self:Parameter_SyncConfigurationValues(p);  
 
 			local value = p.Value;
-			if(type(value) == "table") then
+			if(type(value) == "table" and value.Value ~= nil) then
 				value = value.Value;
 			end
 
@@ -603,7 +603,7 @@ function SetupParameters:Config_ReadParameterValues(parameter)
 	local value = self:Config_Read(parameter.ConfigurationGroup, parameter.ConfigurationId);
 
 	-- The value may be a hash value.  Attempt to translate.
-	if(value ~= nil and parameter.Values ~= nil) then
+	if(value ~= nil and parameter.Values ~= nil and type(value) == "number" ) then
 		for i, v in ipairs(parameter.Values) do
 			local hash = v.Hash;
 			if(hash == nil) then
@@ -660,13 +660,31 @@ function SetupParameters:Config_WriteParameterValues(parameter)
 	if (self:Config_CanWriteParameter(parameter)) then
 		local value = parameter.Value;
 
-		-- If this comes from a multi-value, obtain the inner value.
-		if(type(value) == "table") then
-			value = value.Value;
-		end
+		if(parameter.Array) then
+			if(value) then
+				-- Transform parameter value to a configuration value.
+				local values = {};
+				if(parameter.Hash) then
+					for i,v in ipairs(value) do
+						values[i] = v.Hash or DB.MakeHash(v.Value);
+					end
+				else
+					for i,v in ipairs(value) do
+						values[i] = v.Value;
+					end
+				end
+
+				value = values;
+			end
+		else
+			-- If this comes from a multi-value, obtain the inner value.
+			if(type(value) == "table") then
+				value = value.Value;
+			end
 		
-		if(parameter.Hash and value ~= nil) then
-			value = DB.MakeHash(value);
+			if(parameter.Hash and value ~= nil) then
+				value = DB.MakeHash(value);
+			end
 		end
 
 		local result = self:Config_Write(parameter.ConfigurationGroup, parameter.ConfigurationId, value);
@@ -947,6 +965,7 @@ function SetupParameters:Data_DiscoverParameters()
 						Description = Locale.Lookup(row[pq.DescriptionField] or ""),
 						Domain = row[pq.DomainField],
 						Hash = self.Utility_ToBool(row[pq.HashField]),
+						Array = self.Utility_ToBool(row[pq.ArrayField]),
 						DefaultValue = row[pq.DefaultValueField],
 						ConfigurationGroup = row[pq.ConfigurationGroupField],
 						ConfigurationId = row[pq.ConfigurationIdField],								
@@ -965,6 +984,7 @@ function SetupParameters:Data_DiscoverParameters()
 						SupportsPlayByCloud = self.Utility_ToBool(row[pq.SupportsPlayByCloudField]),
 						ChangeableAfterGameStart = self.Utility_ToBool(row[pq.ChangeableAfterGameStartField]),
 						ChangeableAfterPlayByCloudMatchCreate = self.Utility_ToBool(row[pq.ChangeableAfterPlayByCloudMatchCreateField]),
+						UxHint = row[pq.UxHintField],
 						SortIndex = row[pq.SortIndexField],
 						Criteria = parameter_criteria[row[pq.ParameterIdField]]
 					};	
@@ -1050,6 +1070,7 @@ function SetupParameters:Data_DiscoverParameters()
 					RawName  = row[dvq.NameField]  or "",
 					RawDescription = row[dvq.DescriptionField] or "",
 					Name = Locale.Lookup(row[dvq.NameField]  or ""),
+					Icon = row[dvq.IconField],
 					SortIndex = row[dvq.SortIndexField],
 				};
 					
@@ -1769,71 +1790,139 @@ function SetupParameters:Parameter_SyncConfigurationValues(parameter)
 			return false;
 		end
 	elseif(parameter.Values) then
-		if(config_value) then
-			-- Does the current Value match config_value?
-			if(parameter.Value and parameter.Value.Value == config_value) then
-				
-				if(parameter.Value.Value.Invalid) then
+		if(parameter.Array) then
+			-- An array! Parameter can contain 0-N values from 'Values'.
+			if(config_value) then
+				-- Generate parameter value and mark as needed sync.
+				local new_values = {};
+				for i,cv in ipairs(config_value) do
+					local v;
+					-- Find parameter value that matches config value.					
+					for _,pv in ipairs(parameter.Values) do
+						if(cv == pv.Value) then
+							v = pv;
+							break;
+						end
+					end
 
-					parameter.Error = {
-						Id = "InvalidDomainValue",
-						Reason = v.InvalidReason
-					}
-				end
-				return self:Parameter_SyncAuxConfigurationValues(parameter);
+					if(v) then
+						table.insert(new_values, v);
 
-			else
-				-- Does config_value exist in Values?
-				for i, v in ipairs(parameter.Values) do
-					if(v.Value == config_value) then
-						parameter.Value = v;
-
+						-- Check if this value has been marked as 'Invalid'. If so, flag the parameter as Error.
 						if(v.Invalid) then
 							parameter.Error = {
 								Id = "InvalidDomainValue",
 								Reason = v.InvalidReason
 							}
 						end
-						return self:Parameter_SyncAuxConfigurationValues(parameter);
+
+					else
+						SetupParameters_Log("Cannot find config_value in domain - " .. parameter.ConfigurationId .. " - " .. tostring(cv));
 					end
 				end
 
-				SetupParameters_Log("Cannot find config_value in domain - " .. parameter.ConfigurationId .. " - " .. tostring(config_value));
-			end
-		end
+				parameter.Value = new_values;
+				-- Only worry about auxiliary values if we can actually write them.
+				if(self:Config_CanWriteParameter(parameter)) then
+					return self:Parameter_SyncAuxConfigurationValues(parameter); 
+				else
+					return false;
+				end
+			else
+				-- No config value!
+				-- Check Default value!
+				if(parameter.DefaultValue == "*") then
+					local values = {};
+					for i,v in ipairs(parameter.Values) do
+						values[i] = v;
+					end
 
-		if(self:Config_CanWriteParameter(parameter)) then
-			-- Try default value.
-			local default_value = parameter.DefaultValue;
-			for i, v in ipairs(parameter.Values) do
-				if(v.Value == default_value) then
-					parameter.Value = v;
+					parameter.Value = values;
 					return true;
+				else
+					if(parameter.DefaultValue ~= nil) then
+						SetupParameters_Log("Only '*' is supported for array parameter default values. - " .. parameter.ParameterId);
+					end
+
+					-- Wipe the parameter value.
+					parameter.Value = nil;
+					-- Only worry about auxiliary values if we can actually write them.
+					if(self:Config_CanWriteParameter(parameter)) then
+						return self:Parameter_SyncAuxConfigurationValues(parameter); 
+					else
+						return false;
+					end
+				end				
+			end
+
+		else
+			-- Not an array, parameter must contain a value from 'Values'.
+			if(config_value) then
+				-- Does the current Value match config_value?
+				if(parameter.Value and parameter.Value.Value == config_value) then
+				
+					if(parameter.Value.Value.Invalid) then
+
+						parameter.Error = {
+							Id = "InvalidDomainValue",
+							Reason = v.InvalidReason
+						}
+					end
+					return self:Parameter_SyncAuxConfigurationValues(parameter);
+
+				else
+					-- Does config_value exist in Values?
+					for i, v in ipairs(parameter.Values) do
+						if(v.Value == config_value) then
+							parameter.Value = v;
+
+							if(v.Invalid) then
+								parameter.Error = {
+									Id = "InvalidDomainValue",
+									Reason = v.InvalidReason
+								}
+							end
+							return self:Parameter_SyncAuxConfigurationValues(parameter);
+						end
+					end
+
+					SetupParameters_Log("Cannot find config_value in domain - " .. parameter.ConfigurationId .. " - " .. tostring(config_value));
 				end
 			end
 
-			-- blech! get the first valid value.
-			local first_value;
-			for i,v in ipairs(parameter.Values) do
-				if(v.Invalid ~= true) then
-					first_value = v;
-					break;
+			if(self:Config_CanWriteParameter(parameter)) then
+				-- Try default value.
+				local default_value = parameter.DefaultValue;
+				for i, v in ipairs(parameter.Values) do
+					if(v.Value == default_value) then
+						parameter.Value = v;
+						return true;
+					end
 				end
-			end
 
-			if(first_value) then
-				SetupParameters_Log("Defaulting to first value - " .. parameter.ConfigurationId);
-				parameter.Value = first_value;
-				return true;
+				-- blech! get the first valid value.
+				local first_value;
+				for i,v in ipairs(parameter.Values) do
+					if(v.Invalid ~= true) then
+						first_value = v;
+						break;
+					end
+				end
+
+				if(first_value) then
+					SetupParameters_Log("Defaulting to first value - " .. parameter.ConfigurationId);
+					parameter.Value = first_value;
+					return true;
+				else
+					-- We're in an error state :(
+					parameter.Error = {Id = "MissingDomainValue"};
+					return false;
+				end
 			else
 				-- We're in an error state :(
 				parameter.Error = {Id = "MissingDomainValue"};
 				return false;
 			end
-		else
-			-- We're in an error state :(
-			parameter.Error = {Id = "MissingDomainValue"};
-			return false;
 		end
 	else
 		-- Start with either the configuration value or the default value.

@@ -169,7 +169,9 @@ function OnChat( fromPlayer, toPlayer, text, eTargetType, playSounds :boolean )
 	-- Ensure text parsed properly
 	text = ParseChatText(text);
 
-	chatString			= chatString .. ": [ENDCOLOR]" .. chatColor .. text .. "[ENDCOLOR]"; 
+	-- If the user ends a message with \, that enables "escape mode" in the text control which ignores adjacent tags.
+	-- Putting a space between the user text and the [ENDCOLOR] tag prevents anything bad from happening.
+	chatString			= chatString .. ": [ENDCOLOR]" .. chatColor .. text .. " [ENDCOLOR]";
 
 	AddChatEntry( chatString, Controls.ChatEntryStack, m_ChatInstances, Controls.ChatLogPanel);
 	AddChatEntry( chatString, Controls.ExpandedChatEntryStack, m_expandedChatInstances, Controls.ExpandedChatLogPanel);

@@ -1,0 +1,92 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Context xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="..\..\..\..\..\..\CivTech\Libs\ForgeUI\ForgeUI_Assets\Controls.xsd"
+		Style="FontNormal14">
+
+	<!--Multi Selection Window-->
+	<Container Size="1024,parent" Anchor="C,C">
+
+		<Box Size="parent,parent" Color="7,28,50,255"></Box>
+
+		<Container Style="ShellHeaderContainer">
+			<Grid Style="ShellHeaderButtonGrid">
+				<GridButton ID="CloseButton" Style="ShellButtonOrnateFlat" Size="133,36"  Anchor="R,C" Offset="1,0" String="LOC_MULTIPLAYER_BACK"/>
+			</Grid>
+			<Label ID="WindowTitle" Style="ShellHeader" Anchor="C,C" String=""/>
+		</Container>
+
+		<Grid Style="SubContainer4"  Size="parent-10,parent-104" Anchor="C,C" Color="45,75,110,255" Offset="0,5" InnerPadding="10,10">
+
+			<!-- Screen description -->
+			<Container Anchor="L,T" Size="620,38">
+				<Label ID="TopDescription" Anchor="C,T" Style="BlueGlow" WrapWidth="620"/>
+			</Container>
+
+			<!-- Selection Grid (Left Side Panel)-->
+			<Grid ID="ItemsSection" Style="DecoGrid" Offset="0,38" Size="640,parent-38" Anchor="L,C" Color="30,66,96,255">
+				<Stack Anchor="C,T" StackGrowth="Bottom" Padding ="5">
+
+					<Line Start="10,1"			End="630,1"		Color="30,66,96,255" Width="2" />
+
+					<!--Item Selection Scroll Panel-->
+					<ScrollPanel Anchor="L,T" ID="ItemsScrollPanel" Offset="0,10" Vertical="1" Size="Parent-8,Parent-38">
+						<Stack ID="ItemsPanel" Anchor="C,T" Offset="0,0" Padding="7" StackGrowth="Bottom"/>
+						<ScrollBar Style="Slider_Blue"  Anchor="R,C" Offset="5,0"/>
+					</ScrollPanel>
+				</Stack>
+			</Grid>
+
+			<!--Selected Item Info (Right Side Panel)-->
+			<Grid ID="ItemInfoPanel" Style="DecoGrid" Size="360,parent" Anchor="R,C" Color="30,66,96,255" StackGrowth="Bottom">
+				<Container ID="InfoContainer" Anchor ="C,T" Size ="340,280" Offset="0,25">
+					<Image ID="FocusedItemIcon" Anchor ="C,T" Size ="256,256" Texture="Map_4LeafClover" TextureOffset="0,0"/>
+					<Grid ID ="NameContainer" Anchor="C,B" Size="355,40" Offset="0,-10" Texture="Controls_DecoFrame" SliceCorner="19,18" SliceSize="1,1" SliceTextureSize="40,38" Color="41,74,108,255">
+						<Label ID="FocusedItemName" Anchor="C,C" Style="BlueGlow" TruncateWidth="228" TruncatedTooltip="1" Offset="0,0" String=" "/>
+					</Grid>
+					<Grid ID ="DescriptionGrid" Anchor ="C,B" Style="DecoFrame" Size = "355,400" Offset="0,-420">
+						<Label ID="DescriptionHeader" Anchor="C,T" Offset="0,5" Style="BlueGlow" FontSize="14" String="LOC_MODS_DETAILS_DESCRIPTION"/>
+						<Grid Style="Divider6Grid" Size="parent,2" Color="41,74,108,255" Offset="0,20"/>
+						<ScrollPanel ID="DescriptionScroll" Anchor="L,T" Offset="10,28" Size="parent-20,parent-32" Vertical="1" AutoScrollBar="1">
+							<Label ID="FocusedItemDescription" Anchor="L,T" WrapWidth="parent" String=""/>
+							<ScrollBar Style="Slider_Blue"		Anchor="R,C" AnchorSide="O,I" Offset="-2,-11" />
+						</ScrollPanel>
+					</Grid>
+				</Container>
+			</Grid>
+		</Grid>
+
+		<Stack ID="ButtonStack" Anchor="C,B" Padding="20" StackGrowth="Right">
+			<GridButton ID="SelectAllButton" Size="320,45"  Style="ButtonControl" Anchor="C,B" String="LOC_SELECT_ALL" />
+			<GridButton ID="SelectNoneButton" Size="320,45" Style="ButtonControl" Anchor="C,B" String="LOC_SELECT_NONE" />
+			<GridButton ID="ConfirmButton" Size="320,45" Style="ButtonConfirm" Anchor="C,B" String="LOC_OK_BUTTON" />
+		</Stack>
+	</Container>
+
+
+	<!-- INSTANCES -->
+	<Instance Name="ItemInstance">
+		<GridButton ID="Button" Anchor="C,T" Size="600,40" Texture="Controls_ButtonControl.dds" SliceCorner="10,10" SliceSize="1,1" SliceTextureSize="24,24" StateOffsetIncrement="0,24">
+			<Grid ID ="NameContainer" Anchor="C,B" Size="590,21" Texture="Shell_SectionHeader" SliceCorner="0,10" Color="20,55,190,100" Offset="0,5">
+				<CheckBox ID="Selected" Style="MainMenuCheck" Anchor="L,T" Offset="15,0" TextOffset="-5,0" IsChecked="0"/>
+				<Label ID ="Name" Anchor="C,C" TruncateWidth="560" TruncatedTooltip="1"/>
+				<Image ID ="Icon" Anchor="R,C" Size="48,48" Offset="0,-4"/>
+			</Grid>
+		</GridButton>
+	</Instance>
+
+	<Instance Name="ItemInfoInstance">
+		<Container ID="InfoContainer" Anchor ="C,T" Size ="340,280" Offset="0,25">
+			<Image ID="Image" Anchor ="C,T" Size ="256,256" Texture="Map_4LeafClover" TextureOffset="0,0"/>
+			<Grid ID ="NameContainer" Anchor="C,B" Size="355,40" Offset="0,-10" Texture="Controls_DecoFrame" SliceCorner="19,18" SliceSize="1,1" SliceTextureSize="40,38" Color="41,74,108,255">
+				<Label ID="Name" Anchor="C,C" Style="BlueGlow" TruncateWidth="228" TruncatedTooltip="1" Offset="0,0" String=" "/>
+			</Grid>
+			<Grid ID ="DescriptionGrid" Anchor ="C,B" Style="DecoFrame" Size = "355,400" Offset="0,-420">
+				<Label ID="DescriptionHeader" Anchor="C,T" Offset="0,5" Style="BlueGlow" FontSize="14" String="LOC_MODS_DETAILS_DESCRIPTION"/>
+				<Grid Style="Divider6Grid" Size="parent,2" Color="41,74,108,255" Offset="0,20"/>
+				<ScrollPanel ID="DescriptionScroll" Anchor="L,T" Offset="10,28" Size="parent-20,parent-32" Vertical="1" AutoScrollBar="1">
+					<Label ID="Description" Anchor="L,T" WrapWidth="parent" String=""/>
+					<ScrollBar Style="Slider_Blue"		Anchor="R,C" AnchorSide="O,I" Offset="-2,-11" />
+				</ScrollPanel>
+			</Grid>
+		</Container>
+	</Instance>
+</Context>

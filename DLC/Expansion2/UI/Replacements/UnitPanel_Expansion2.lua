@@ -16,7 +16,7 @@ local BASE_GetBuildImprovementParameters = GetBuildImprovementParameters;
 local BASE_ReadCustomUnitStats = ReadCustomUnitStats;
 local Base_RealizeSpecializedViews = RealizeSpecializedViews;
 local BASE_FilterUnitStatsFromUnitData = FilterUnitStatsFromUnitData;
-
+local BASE_LateCheckOperationBeforeAdd = LateCheckOperationBeforeAdd;
 
 -- ===========================================================================
 --	OVERRIDE
@@ -142,4 +142,17 @@ end
 function RealizeSpecializedViews( kData:table )
 	Base_RealizeSpecializedViews(kData);
 	RockbandView(kData);
+end
+
+-- ===========================================================================
+-- Override the unit operation icon for XP2 railroads.
+-- ===========================================================================
+function LateCheckOperationBeforeAdd( tResults: table, kActionsTable: table, actionHash:number, isDisabled:boolean, tooltipString:string, overrideIcon:string )
+	if (tResults[UnitOperationResults.ROUTE_TYPE] ~= nil and tResults[UnitOperationResults.ROUTE_TYPE] == "ROUTE_RAILROAD") then
+		overrideIcon = "ICON_ROUTE_RAILROAD";
+		return isDisabled, tooltipString, overrideIcon;
+	end
+
+	-- Not a railroad, fall through to the base version.
+	return BASE_LateCheckOperationBeforeAdd( tResults, kActionsTable, actionHash, isDisabled, tooltipString, overrideIcon );
 end

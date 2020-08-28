@@ -311,6 +311,8 @@ function OnNextPlayer()
 		and pLocalPlayer:IsTurnActive() == true) then
 		UI.RequestAction(ActionTypes.ACTION_ENDTURN);
 	end
+	--Reset waiting for show so next player to be defeated/win can view the end game screen
+	m_waitingForShow = false;
 
 	Close();
 end
@@ -1099,7 +1101,8 @@ function OnChat( fromPlayer:number, toPlayer:number, text:string, eTargetType:nu
 	text = ParseChatText(text);
 
 	chatString			= chatString .. ": [ENDCOLOR]" .. chatColor;
-	chatString			= chatString .. text .. "[ENDCOLOR]";
+		-- Add a space before the [ENDCOLOR] tag to prevent the user from accidentally escaping it
+	chatString			= chatString .. text .. " [ENDCOLOR]";
 
 	AddChatEntry( chatString, Controls.ChatStack, m_ChatInstances, Controls.ChatScroll);
 end

@@ -27,6 +27,7 @@ local MAX_BEFORE_TRUNC_TITLE			:number = 225;
 local LAUNCH_BAR_PADDING				:number = 50;
 local STARTING_TRACKER_OPTIONS_OFFSET	:number = 75;
 local WORLD_TRACKER_PANEL_WIDTH			:number = 300;
+local MINIMAP_PADDING					:number = 40;
 
 
 -- ===========================================================================
@@ -59,6 +60,7 @@ local m_isTrackerAlwaysCollapsed:boolean = false;	-- Once the launch bar extends
 local m_isDirty					:boolean = false;	-- Note: renamed from "refresh" which is a built in Forge mechanism; this is based on a gamecore event to check not frame update
 local m_isMinimapCollapsed		:boolean = false;
 local m_isChatExpanded			:boolean = false;
+local m_startingChatSize		:number = 0;
 
 -- ===========================================================================
 --	FUNCTIONS
@@ -621,17 +623,16 @@ function ResizeExpandedChatPanel()
 	Controls.ChatPanel:SetHide(true);							-- Hide so it's not part of stack computation.
 	RealizeStack();
 
-	local uiMinimap			:table  = ContextPtr:LookUpControl("/InGame/MinimapPanel/MinimapContainer");	
-	local minimapPadding	:number	= 120;
+	local uiMinimap			:table  = ContextPtr:LookUpControl("/InGame/MinimapPanel/MinimapContainer");
 	local defaultMinimapSize:number = 376;						-- Size of the minimap when the height > width (ex. Nubia/BlackDeath scenarios).
-	local stackSize			:number	= 30;						-- Not using Controls.PanelStack:GetSizeY() b/c it returns different values for the same stack based on scenario.
 	local stackSection		:number = 96;
 	local crisisSize		:number = 50;
 	local chatSize			:number = 199;	
-	width, height					= UIManager:GetScreenSizeVal();
+	local stackSize			:number	= Controls.PanelStack:GetSizeY() - m_startingChatSize;
+	local width, height				= UIManager:GetScreenSizeVal();
 	
 	if uiMinimap then
-		m_minimapSize = uiMinimap:GetSizeY() + minimapPadding;
+		m_minimapSize = uiMinimap:GetSizeY() + GetMinimapPadding();
 	else
 		m_minimapSize = defaultMinimapSize;
 	end
@@ -707,6 +708,13 @@ end
 function OnStartObserverMode()
 	UpdateResearchPanel();
 	UpdateCivicsPanel();
+end
+
+-- ===========================================================================
+-- FOR OVERRIDE
+-- ===========================================================================
+function GetMinimapPadding()
+	return MINIMAP_PADDING;
 end
 
 -- ===========================================================================
@@ -838,5 +846,7 @@ function Initialize()
 	Controls.ToggleAllButton:RegisterCheckHandler(					function() ToggleAll(not Controls.ToggleAllButton:IsChecked()) end);
 	Controls.ToggleDropdownButton:RegisterCallback(	Mouse.eLClick, ToggleDropdown);
 	Controls.WorldTrackerAlpha:RegisterEndCallback( OnWorldTrackerAnimationFinished );
+
+	m_startingChatSize = Controls.ChatPanel:GetSizeY();
 end
 Initialize();

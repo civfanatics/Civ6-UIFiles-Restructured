@@ -660,7 +660,7 @@ function AddSettlementRecommendations()
 	end
 	local pLocalPlayer:table = Players[localPlayerID];
 	if pLocalPlayer == nil then
-		UI.DataAssert("Could not obtain a player object to make settler recommendations for player id: ",localPlayerID);
+		UI.DataError("Could not obtain a player object to make settler recommendations for player id: ",localPlayerID);
 		return;
 	end
 	

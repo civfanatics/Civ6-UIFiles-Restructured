@@ -30,6 +30,139 @@ local m_shellTabIM:table = InstanceManager:new("ShellTab", "TopControl", Control
 local m_kPopupDialog:table;
 
 
+function OnSetParameterValues(pid: string, values: table)
+	local indexed_values = {};
+	if(values) then
+		for i,v in ipairs(values) do
+			indexed_values[v] = true;
+		end
+	end
+
+	if(g_GameParameters) then
+		local parameter = g_GameParameters.Parameters and g_GameParameters.Parameters[pid] or nil;
+		if(parameter and parameter.Values ~= nil) then
+			local resolved_values = {};
+			for i,v in ipairs(parameter.Values) do
+				if(indexed_values[v.Value]) then
+					table.insert(resolved_values, v);
+				end
+			end		
+			g_GameParameters:SetParameterValue(parameter, resolved_values);
+			Network.BroadcastGameConfig();	
+		end
+	end	
+end
+
+-- ===========================================================================
+-- This driver is for launching a multi-select option in a separate window.
+-- ===========================================================================
+function CreateMultiSelectWindowDriver(o, parameter, parent)
+
+	if(parent == nil) then
+		parent = GetControlStack(parameter.GroupId);
+	end
+			
+	-- Get the UI instance
+	local c :object = g_ButtonParameterManager:GetInstance();	
+
+	local parameterId = parameter.ParameterId;
+	local button = c.Button;
+	button:RegisterCallback( Mouse.eLClick, function()
+		LuaEvents.MultiSelectWindow_Initialize(o.Parameters[parameterId]);
+		Controls.MultiSelectWindow:SetHide(false);
+	end);
+
+	-- Store the root control, NOT the instance table.
+	g_SortingMap[tostring(c.ButtonRoot)] = parameter;
+
+	c.ButtonRoot:ChangeParent(parent);
+	if c.StringName ~= nil then
+		c.StringName:SetText(parameter.Name);
+	end
+
+	local cache = {};
+
+	local kDriver :table = {
+		Control = c,
+		Cache = cache,
+		UpdateValue = function(value, p)
+			local valueText = value and value.Name or nil;
+			local valueAmount :number = 0;
+		
+			if(valueText == nil) then
+				if(value == nil) then
+					valueText = "LOC_SELECTION_NOTHING";
+				elseif(type(value) == "table") then
+					local count = #value;
+					if (parameter.UxHint ~= nil and parameter.UxHint == "InvertSelection") then
+						if(count == 0) then
+							valueText = "LOC_SELECTION_EVERYTHING";
+						elseif(count == #p.Values) then
+							valueText = "LOC_SELECTION_NOTHING";
+						else
+							valueText = "LOC_SELECTION_CUSTOM";
+							valueAmount = #p.Values - count;
+						end
+					else
+						if(count == 0) then
+							valueText = "LOC_SELECTION_NOTHING";
+						elseif(count == #p.Values) then
+							valueText = "LOC_SELECTION_EVERYTHING";
+						else
+							valueText = "LOC_SELECTION_CUSTOM";
+							valueAmount = count;
+						end
+					end
+				end
+			end				
+
+			if(cache.ValueText ~= valueText) or (cache.ValueAmount ~= valueAmount) then
+				local button = c.Button;			
+				button:LocalizeAndSetText(valueText, valueAmount);
+				cache.ValueText = valueText;
+				cache.ValueAmount = valueAmount;
+			end
+		end,
+		UpdateValues = function(values, p) 
+			-- Values are refreshed when the window is open.
+		end,
+		SetEnabled = function(enabled, p)
+			c.Button:SetDisabled(not enabled or #p.Values <= 1);
+		end,
+		SetVisible = function(visible)
+			c.ButtonRoot:SetHide(not visible);
+		end,
+		Destroy = function()
+			g_ButtonParameterManager:ReleaseInstance(c);
+		end,
+	};	
+
+	return kDriver;
+end
+
+function GameParameters_UI_CreateParameterDriver(o, parameter, parent, ...)
+	if(parameter.Array) then
+		return CreateMultiSelectWindowDriver(o, parameter);
+	else
+		return GameParameters_UI_DefaultCreateParameterDriver(o, parameter, parent, ...);
+	end
+end
+
+-- The method used to create a UI control associated with the parameter.
+-- Returns either a control or table that will be used in other parameter view related hooks.
+function GameParameters_UI_CreateParameter(o, parameter)
+	local func = g_ParameterFactories[parameter.ParameterId];
+
+	local control;
+	if(func)  then
+		control = func(o, parameter);
+	else
+		control = GameParameters_UI_CreateParameterDriver(o, parameter);
+	end
+
+	o.Controls[parameter.ParameterId] = control;
+end
+
 
 -- ===========================================================================
 -- Perform validation on setup parameters.
@@ -330,6 +463,7 @@ end
 function OnShutdown()
 	-- Cache values for hotloading...
 	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "isHidden", ContextPtr:IsHidden());
+	LuaEvents.MultiSelectWindow_SetParameterValues.Remove(OnSetParameterValues);
 end
 
 -- ===========================================================================
@@ -415,6 +549,8 @@ function Initialize()
 	LuaEvents.Multiplayer_ExitShell.Add( HandleExitRequest );
 	LuaEvents.StagingRoom_EnsureHostGame.Add( OnEnsureHostGame );
 	LuaEvents.Mods_UpdateHostGameSettings.Add(GameSetup_RefreshParameters);		-- TODO: Remove when mods are managed by this screen
+
+	LuaEvents.MultiSelectWindow_SetParameterValues.Add(OnSetParameterValues);
 
 	Controls.BackButton:RegisterCallback( Mouse.eLClick, OnExitGameAskAreYouSure);
 	Controls.LoadButton:RegisterCallback( Mouse.eLClick, LoadButtonClick );

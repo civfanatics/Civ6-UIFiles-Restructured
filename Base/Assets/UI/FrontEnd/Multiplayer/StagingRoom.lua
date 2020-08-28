@@ -549,7 +549,8 @@ function OnChat( fromPlayer, toPlayer, text, eTargetType, playSounds :boolean )
 		text = ParseChatText(text);
 
 		chatString			= chatString .. ": [ENDCOLOR]" .. chatColor;
-		chatString			= chatString .. text .. "[ENDCOLOR]";
+		-- Add a space before the [ENDCOLOR] tag to prevent the user from accidentally escaping it
+		chatString			= chatString .. text .. " [ENDCOLOR]";
 
 		AddChatEntry( chatString, Controls.ChatStack, m_ChatInstances, Controls.ChatScroll);
 
@@ -1998,21 +1999,33 @@ function UpdatePlayerEntry_Hotseat(playerID)
 	end
 end
 
+-- ===========================================================================
 function UpdateAllDefaultPlayerNames()
-	local humanDefaultPlayerNameConfigs = {};
-	local humanDefaultPlayerNameEntries = {};
-	local numHumanPlayers = 0;
-	local player_ids = GameConfiguration.GetMultiplayerPlayerIDs();
-	for i, iPlayer in ipairs(player_ids) do
-		local curPlayerConfig = PlayerConfigurations[iPlayer];
-		local curPlayerEntry = g_PlayerEntries[iPlayer];
-		if(curPlayerConfig:GetSlotStatus() == SlotStatus.SS_TAKEN) then
+	local humanDefaultPlayerNameConfigs :table = {};
+	local humanDefaultPlayerNameEntries :table = {};
+	local numHumanPlayers :number = 0;
+	local kPlayerIDs :table = GameConfiguration.GetMultiplayerPlayerIDs();
+
+	for i, iPlayer in ipairs(kPlayerIDs) do
+		local pCurPlayerConfig	:object = PlayerConfigurations[iPlayer];
+		local pCurPlayerEntry	:object = g_PlayerEntries[iPlayer];
+		local slotStatus		:number = pCurPlayerConfig:GetSlotStatus();
+		
+		-- Case where multiple times on one machine it appeared a config could exist
+		-- for a taken player but no player object?
+		local isSafeToReferencePlayer:boolean = true;
+		if pCurPlayerEntry==nil and (slotStatus == SlotStatus.SS_TAKEN) then
+			isSafeToReferencePlayer = false;
+			UI.DataError("Mismatch player config/entry for player #"..tostring(iPlayer)..". SlotStatus: "..tostring(slotStatus));
+		end
+		
+		if isSafeToReferencePlayer and (slotStatus == SlotStatus.SS_TAKEN) then
 			local strRegEx = "^" .. DefaultHotseatPlayerName .. " %d+$"
-			print(strRegEx .. " " .. curPlayerConfig:GetNickName());
-			local isDefaultPlayerName = string.match(curPlayerConfig:GetNickName(), strRegEx);
+			print(strRegEx .. " " .. pCurPlayerConfig:GetNickName());
+			local isDefaultPlayerName = string.match(pCurPlayerConfig:GetNickName(), strRegEx);
 			if(isDefaultPlayerName ~= nil) then
-				humanDefaultPlayerNameConfigs[#humanDefaultPlayerNameConfigs+1] = curPlayerConfig;
-				humanDefaultPlayerNameEntries[#humanDefaultPlayerNameEntries+1] = curPlayerEntry;
+				humanDefaultPlayerNameConfigs[#humanDefaultPlayerNameConfigs+1] = pCurPlayerConfig;
+				humanDefaultPlayerNameEntries[#humanDefaultPlayerNameEntries+1] = pCurPlayerEntry;
 			end
 		end
 	end
@@ -2863,15 +2876,40 @@ function BuildGameSetupParameter(o, parameter)
 
 	control = {
 		Control = c,
-		UpdateValue = function(value)
-			local type:string = type(value);
-			if type == "table" then
-				c.Value:SetText(value.Name);
-			elseif type == "boolean" then
-				c.Value:SetText(Locale.Lookup(value and "LOC_MULTIPLAYER_TRUE" or "LOC_MULTIPLAYER_FALSE"));
+		UpdateValue = function(value, p)
+			local t:string = type(value);
+			if(p.Array) then
+				local valueText = Locale.Lookup("LOC_SELECTION_NOTHING");
+				if(t == "table") then
+					local count = #value;
+					if (parameter.UxHint ~= nil and parameter.UxHint == "InvertSelection") then
+						if(count == 0) then
+							valueText = Locale.Lookup("LOC_SELECTION_EVERYTHING");
+						elseif(count == #p.Values) then
+							valueText = Locale.Lookup("LOC_SELECTION_NOTHING");
+						else
+							valueText = Locale.Lookup("LOC_SELECTION_CUSTOM", #p.Values-count);
+						end
+					else
+						if(count == 0) then
+							valueText = Locale.Lookup("LOC_SELECTION_NOTHING");
+						elseif(count == #p.Values) then
+							valueText = Locale.Lookup("LOC_SELECTION_EVERYTHING");
+						else
+							valueText = Locale.Lookup("LOC_SELECTION_CUSTOM", count);
+						end
+					end
+				end
+				c.Value:SetText(valueText);
 			else
-				c.Value:SetText(tostring(value));
-			end
+				if t == "table" then
+					c.Value:SetText(value.Name);
+				elseif t == "boolean" then
+					c.Value:SetText(Locale.Lookup(value and "LOC_MULTIPLAYER_TRUE" or "LOC_MULTIPLAYER_FALSE"));
+				else
+					c.Value:SetText(tostring(value));
+				end
+			end			
 		end,
 		SetVisible = function(visible)
 			c.Root:SetHide(not visible);

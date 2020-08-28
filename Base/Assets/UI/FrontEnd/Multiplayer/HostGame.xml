@@ -79,6 +79,7 @@
 	<LuaContext FileName="UI/FrontEnd/Mods"			ID="ModsMenu"		Hidden="1" />
 	<LuaContext FileName="UI/FrontEnd/LoadGameMenu" ID="LoadGameMenu"	Hidden="1" />
 	<LuaContext FileName="UI/FrontEnd/SaveGameMenu" ID="SaveGameMenu"	Hidden="1" />
+	<LuaContext FileName="MultiSelectWindow" ID="MultiSelectWindow"  Hidden="1"/>
 
 	<Instance Name="ShellTab">
 		<Container ID="TopControl"  Size="auto,auto">
@@ -92,7 +93,7 @@
 
 	<!-- Instance for a boolean parameters -->
 	<Instance Name="BooleanParameterInstance">
-		<GridButton ID="CheckBox" Offset="-15,0" Anchor="C,T" Style="CheckBoxControl"  Size="330,24" States="8"/>
+		<GridButton ID="CheckBox" Offset="0,0" Anchor="C,T" Style="CheckBoxControl"  Size="300,24" States="8"/>
 	</Instance>
 
 	<!-- Slider with number display -->
@@ -123,7 +124,7 @@
 
 	<!-- Instance for a parameter that has multiple choices for the value, displayed as a dropdown -->
 	<Instance Name="PullDownParameterInstance">
-		<Container ID="Root" Anchor="C,T" Size="330,24" Offset="0,0">
+		<Container ID="Root" Anchor="L,T" Size="parent,24" Offset="0,0">
 			<PullDown Anchor="C,T" ID="PullDown" Style="PullDownBlue" Size="300,24" Offset="0,0">
 				<Label Style="ShellOptionText" ID="StringName" AnchorSide="O,I" Anchor="L,C" String=""/>
 			</PullDown>
@@ -132,8 +133,8 @@
 
 	<!-- Instance for a parameter that has a button to launch a popup (e.g., map-select) -->
 	<Instance Name="ButtonParameterInstance">
-		<Container		ID="ButtonRoot" Anchor="L,T" Size="parent,32" Offset="0,0">
-			<GridButton ID="Button"			Anchor="R,T" Style="ButtonControl" Size="300,24" Offset="40,0">
+		<Container		ID="ButtonRoot" Anchor="L,T" Size="parent,24" Offset="0,0">
+			<GridButton ID="Button"			Anchor="C,T" Style="ButtonControl" Size="300,24" Offset="0,0">
 				<Label		ID="StringName"	Anchor="L,C" Style="ShellOptionText" AnchorSide="O,I" String="$Name$"/>
 			</GridButton>
 		</Container>

@@ -1,4 +1,4 @@
--- Copyright 2016-2018, Firaxis Games
+-- Copyright 2016-2020, Firaxis Games
 
 -- ===========================================================================
 --	NOTES:
@@ -95,6 +95,10 @@ g_kItemDefaults			= {};				-- Static data about items
 g_uiNodes				= {};
 g_uiConnectorSets		= {};
 
+
+-- Add to item status table. Instead of enum use hash of "UNREVEALED"; special case.
+ITEM_STATUS["UNREVEALED"] = 0xB87BE593;
+STATUS_ART[ITEM_STATUS.UNREVEALED]	= { Name="UNREVEALED",	TextColor0=UI.GetColorValueFromHexLiteral(0xff202726), TextColor1=UI.GetColorValueFromHexLiteral(0x00000000), FillTexture="TechTree_GearButtonTile_Disabled.dds",BGU=0,BGV=(SIZE_NODE_Y*3),	IsButton=false,	BoltOn=false,	IconBacking=PIC_METER_BACK  };
 
 -- ===========================================================================
 --	CONSTANTS
@@ -765,43 +769,52 @@ function OnScroll( control:table, percent:number )
 end
 
 -- ===========================================================================
+function UpdateAllianceIcon(node)
+end
+
+-- ===========================================================================
 --	Now its own function so Mods / Expansions can modify the nodes
 -- ===========================================================================
 function PopulateNode(uiNode, playerTechData)
 	local item		:table = g_kItemDefaults[uiNode.Type];						-- static item data
 	local live		:table = playerTechData[DATA_FIELD_LIVEDATA][uiNode.Type];	-- live (changing) data
-	local artInfo	:table = STATUS_ART[live.Status];							-- art/styles for this state
+	local status	:number = live.IsRevealed and live.Status or ITEM_STATUS.UNREVEALED;
+	local artInfo	:table = STATUS_ART[status];							-- art/styles for this state
 
-	if(live.Status == ITEM_STATUS.RESEARCHED) then
+	if(status == ITEM_STATUS.RESEARCHED) then
 		for _,prereqId in pairs(item.Prereqs) do
 			if(prereqId ~= PREREQ_ID_TREE_START) then
 				local prereq		:table = g_kItemDefaults[prereqId];
-				local previousRow	:number = prereq.UITreeRow;
-				local previousColumn:number = g_kEras[prereq.EraType].PriorColumns;
+				if prereq ~= nil then
+					local previousRow	:number = prereq.UITreeRow;
+					local previousColumn:number = g_kEras[prereq.EraType].PriorColumns;
 
-				for lineNum,line in pairs(g_uiConnectorSets[item.Type..","..prereqId]) do
-					if(lineNum == 1 or lineNum == 5) then
-						line:SetTexture("Controls_TreePathEW");
-					end
-					if( lineNum == 3) then
-						line:SetTexture("Controls_TreePathNS");
-					end
+					for lineNum,line in pairs(g_uiConnectorSets[item.Type..","..prereqId]) do
+						if(lineNum == 1 or lineNum == 5) then
+							line:SetTexture("Controls_TreePathEW");
+						end
+						if( lineNum == 3) then
+							line:SetTexture("Controls_TreePathNS");
+						end
 
-					if(lineNum==2)then
-						if previousRow < item.UITreeRow  then
-							line:SetTexture("Controls_TreePathSE");
-						else
-							line:SetTexture("Controls_TreePathNE");
+						if(lineNum == 2)then
+							if previousRow < item.UITreeRow  then
+								line:SetTexture("Controls_TreePathSE");
+							else
+								line:SetTexture("Controls_TreePathNE");
+							end
+						end
+
+						if(lineNum == 4)then
+							if previousRow < item.UITreeRow  then
+								line:SetTexture("Controls_TreePathES");
+							else
+								line:SetTexture("Controls_TreePathEN");
+							end
 						end
 					end
-
-					if(lineNum==4)then
-						if previousRow < item.UITreeRow  then
-							line:SetTexture("Controls_TreePathES");
-						else
-							line:SetTexture("Controls_TreePathEN");
-						end
-					end
+				else
+					print("Unresolved prereq "..prereqId);
 				end
 			end
 		end
@@ -809,13 +822,17 @@ function PopulateNode(uiNode, playerTechData)
 
 	uiNode.NodeName:SetColor( artInfo.TextColor0, 0 );
 	uiNode.NodeName:SetColor( artInfo.TextColor1, 1 );
+
+	uiNode.UnlockStack:SetHide( status==ITEM_STATUS.UNREVEALED );	-- Show/hide unlockables based on revealed status.
+
+	local nodeName :string = (status==ITEM_STATUS.UNREVEALED) and Locale.Lookup("LOC_TECH_TREE_NOT_REVEALED_TECH") or Locale.Lookup(item.Name);
 	if debugShowIDWithName then
-		uiNode.NodeName:SetText( tostring(item.Index).."  "..Locale.Lookup(item.Name) );	-- Debug output
+		uiNode.NodeName:SetText( tostring(item.Index).."  ".. nodeName);	-- Debug output
 	else
-		uiNode.NodeName:SetText( Locale.ToUpper( Locale.Lookup(item.Name) ));				-- Normal output
+		uiNode.NodeName:SetText( Locale.ToUpper( nodeName ));				-- Normal output
 	end
 
-	if live.Turns > 0 then 
+	if live.Turns > 0 then
 		uiNode.Turns:SetHide( false );
 		uiNode.Turns:SetColor( artInfo.TextColor0, 0 );
 		uiNode.Turns:SetColor( artInfo.TextColor1, 1 );
@@ -824,7 +841,7 @@ function PopulateNode(uiNode, playerTechData)
 		uiNode.Turns:SetHide( true );
 	end
 
-	if item.IsBoostable and live.Status ~= ITEM_STATUS.RESEARCHED then			
+	if item.IsBoostable and status ~= ITEM_STATUS.RESEARCHED and status ~= ITEM_STATUS.UNREVEALED then
 		uiNode.BoostIcon:SetHide( false );
 		uiNode.BoostText:SetHide( false );
 		uiNode.BoostText:SetColor( artInfo.TextColor0, 0 );
@@ -844,25 +861,25 @@ function PopulateNode(uiNode, playerTechData)
 			local boostAmount = (item.BoostAmount*.01) + (live.Progress/ live.Cost);
 			uiNode.BoostMeter:SetPercent( boostAmount );
 		end
-		TruncateStringWithTooltip(uiNode.BoostText, MAX_BEFORE_TRUNC_TO_BOOST, boostText); 
+		TruncateStringWithTooltip(uiNode.BoostText, MAX_BEFORE_TRUNC_TO_BOOST, boostText);
 	else
 		uiNode.BoostIcon:SetHide( true );
 		uiNode.BoostText:SetHide( true );
 		uiNode.BoostedBack:SetHide( true );
 		uiNode.BoostMeter:SetHide( true );
 	end
-	
-	if live.Status == ITEM_STATUS.CURRENT then
+
+	if status == ITEM_STATUS.CURRENT then
 		uiNode.GearAnim:SetHide( false );
-	else 
+	else
 		uiNode.GearAnim:SetHide( true );
 	end
 
 	if live.Progress > 0 then
-		uiNode.ProgressMeter:SetHide( false );			
+		uiNode.ProgressMeter:SetHide( false );
 		uiNode.ProgressMeter:SetPercent(live.Progress / live.Cost);
 	else
-		uiNode.ProgressMeter:SetHide( true );			
+		uiNode.ProgressMeter:SetHide( true );
 	end
 
 	-- Show/Hide Recommended Icon
@@ -873,26 +890,37 @@ function PopulateNode(uiNode, playerTechData)
 		uiNode.RecommendedIcon:SetHide(true);
 	end
 
-	-- Set art for icon area
-	if(uiNode.Type ~= nil) then
-		local iconName :string = DATA_ICON_PREFIX .. uiNode.Type;
-		if (artInfo.Name == "BLOCKED") then
-			uiNode.IconBacking:SetHide(true);
-			iconName = iconName .. "_FOW";
-			uiNode.BoostMeter:SetColor(UI.GetColorValueFromHexLiteral(0x66ffffff));
-			uiNode.BoostIcon:SetColor(UI.GetColorValueFromHexLiteral(0x66000000));
-		else
-			uiNode.IconBacking:SetHide(false);
-			iconName = iconName;
-			uiNode.BoostMeter:SetColor(UI.GetColorValue("COLOR_WHITE"));
-			uiNode.BoostIcon:SetColor(UI.GetColorValue("COLOR_WHITE"));
-		end
-		local textureOffsetX, textureOffsetY, textureSheet = IconManager:FindIconAtlas(iconName, 42);	
-		if (textureOffsetX ~= nil) then
-			uiNode.Icon:SetTexture( textureOffsetX, textureOffsetY, textureSheet );
+	-- Set art and tool tip for icon area
+	if status == ITEM_STATUS.UNREVEALED then
+		uiNode.NodeButton:SetToolTipString(Locale.Lookup("LOC_TECH_TREE_NOT_REVEALED_TOOLTIP"));
+		uiNode.Icon:SetIcon("ICON_TECH_UNREVEALED");
+		uiNode.IconBacking:SetHide(true);
+		uiNode.BoostMeter:SetColor(UI.GetColorValueFromHexLiteral(0x66ffffff));
+		uiNode.BoostIcon:SetColor(UI.GetColorValueFromHexLiteral(0x66000000));
+	else
+
+		uiNode.NodeButton:SetToolTipString(ToolTipHelper.GetToolTip(item.Type, Game.GetLocalPlayer()));
+
+		if(uiNode.Type ~= nil) then
+			local iconName :string = DATA_ICON_PREFIX .. uiNode.Type;
+			if (artInfo.Name == "BLOCKED") then
+				uiNode.IconBacking:SetHide(true);
+				iconName = iconName .. "_FOW";
+				uiNode.BoostMeter:SetColor(UI.GetColorValueFromHexLiteral(0x66ffffff));
+				uiNode.BoostIcon:SetColor(UI.GetColorValueFromHexLiteral(0x66000000));
+			else
+				uiNode.IconBacking:SetHide(false);
+				iconName = iconName;
+				uiNode.BoostMeter:SetColor(UI.GetColorValue("COLOR_WHITE"));
+				uiNode.BoostIcon:SetColor(UI.GetColorValue("COLOR_WHITE"));
+			end
+			local textureOffsetX, textureOffsetY, textureSheet = IconManager:FindIconAtlas(iconName, 42);
+			if (textureOffsetX ~= nil) then
+				uiNode.Icon:SetTexture( textureOffsetX, textureOffsetY, textureSheet );
+			end
 		end
 	end
-	
+
 	if artInfo.IsButton then
 		uiNode.OtherStates:SetHide( true );
 		uiNode.NodeButton:SetTextureOffsetVal( artInfo.BGU, artInfo.BGV );
@@ -914,7 +942,6 @@ function PopulateNode(uiNode, playerTechData)
 		uiNode.Bolt:SetTexture(PIC_BOLT_OFF);
 	end
 
-	uiNode.NodeButton:SetToolTipString(ToolTipHelper.GetToolTip(item.Type, Game.GetLocalPlayer()));
 	uiNode.IconBacking:SetTexture(artInfo.IconBacking);
 
 	-- Darken items not making it past filter.
@@ -925,15 +952,18 @@ function PopulateNode(uiNode, playerTechData)
 		uiNode.FilteredOut:SetHide( false );
 	end
 
-	-- Civilopedia: Only wire up handlers if not in an on-rails tutorial; as clicking it can take a player off the rails...
-	function OpenPedia()				
-		LuaEvents.OpenCivilopedia(uiNode.Type); 
-	end	
+	-- Civilopedia: Only show if revealed tech; only wire up handlers if not in an on-rails tutorial.
+	function OpenPedia()
+		if live.IsRevealed then
+			LuaEvents.OpenCivilopedia(uiNode.Type);
+		end
+	end
 	if IsTutorialRunning()==false then
 		uiNode.NodeButton:RegisterCallback( Mouse.eRClick, OpenPedia);
 		uiNode.OtherStates:RegisterCallback( Mouse.eRClick,OpenPedia);
 	end
 
+	UpdateAllianceIcon(uiNode);
 end
 
 -- ===========================================================================
@@ -1211,6 +1241,16 @@ function GetCurrentData( ePlayer:number, eCompletedTech:number )
 		end
 	end
 	
+	-- Loop through all items and add an IsRevealed field.
+	local playerTechs:table = Players[ePlayer]:GetTechs();
+	for type,item in pairs(g_kItemDefaults) do
+		if (playerTechs ~= nil and playerTechs.IsTechRevealed ~= nil) then
+			data[DATA_FIELD_LIVEDATA][type]["IsRevealed"] = playerTechs:IsTechRevealed(item.Index);
+		else
+			data[DATA_FIELD_LIVEDATA][type]["IsRevealed"] = true;
+		end
+	end
+
 	return data;
 end
 

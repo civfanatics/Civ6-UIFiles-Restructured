@@ -8,6 +8,8 @@ include("CityStates_Expansion1");
 -- CACHE BASE FUNCTIONS
 -- ===========================================================================
 BASE_GetSuzerainBonusText = GetSuzerainBonusText;
+XP1_GetGovernorIcon = GetGovernorIcon;
+XP1_AddGovernorData = AddGovernorData;
 
 -- ===========================================================================
 function GetSuzerainBonusText(playerID:number)
@@ -71,3 +73,39 @@ function GetSuzerainBonusText(playerID:number)
 
 	return text;
 end
+
+-- ===========================================================================
+function InitGovernorData()
+	local governorData:table =
+	{
+		Ambassadors = {},
+		AssignedGovernors = {},
+		HasAnyAmbassador = false,
+	};
+	return governorData;
+end
+
+-- ===========================================================================
+function AddGovernorData(kGovernorData:table, pAssignedGovernor:table, PlayerID:number)
+	XP1_AddGovernorData(kGovernorData, pAssignedGovernor, PlayerID);
+
+	if pAssignedGovernor ~= nil and kGovernorData ~= nil then
+		local eGovernorType:number = pAssignedGovernor:GetType();
+		local governorDef:table = GameInfo.Governors[eGovernorType];
+		kGovernorData.AssignedGovernors[PlayerID] = governorDef;
+	end
+end
+
+-- ===========================================================================
+function GetGovernorIcon(governorInfo:table)
+	if governorInfo ~= nil then
+		if governorInfo.Image ~= nil then
+			return "ICON_"..governorInfo.Image;
+		end
+
+		UI.AssertMsg(false, "A governor's Image field in the DB was nil");
+	end
+
+	return XP1_GetGovernorIcon(cityStateID, playerID);
+end
+

@@ -203,7 +203,7 @@ end
 --	map selection screen.
 --
 --	To send maps:		LuaEvents.MapSelect_PopulatedMaps( g_kMapData );
---	To receive choice:	LuaEvents.AdvancedSetup_SetMapByHash( Hash );
+--	To receive choice:	LuaEvents.MapSelect_SetMapByValue( value );
 -- ===========================================================================
 function BuildMapSelectData( kMapParameters:table )
 	-- Sanity checks
@@ -257,16 +257,16 @@ end
 
 -- ===========================================================================
 --	LuaEvent
---	Called from the MapSelect popup for what map hash was selected.
---	hash	the map hash to set for the game.
+--	Called from the MapSelect popup for what map was selected.
+--	value	the map to set for the game.
 -- ===========================================================================
-function OnSetMapByHash( hash:number )
+function OnSetMapByValue( value: string )
 	local kParameters	:table = g_GameParameters["Parameters"];
 	local kMapParameters:table = kParameters["Map"];
 	local kMapCollection:table = kMapParameters.Values;
 	local isFound		:boolean = false;
 	for i,kMapData in ipairs( kMapCollection ) do
-		if kMapData.Hash == hash then
+		if kMapData.Value == value then
 			g_GameParameters:SetParameterValue(kMapParameters, kMapData);
 			Network.BroadcastGameConfig();			
 			isFound = true;
@@ -274,8 +274,31 @@ function OnSetMapByHash( hash:number )
 		end
 	end
 	if (not isFound) then
-		UI.DataError("Unable to set the game's map to a map with the hash '"..tostring(hash).."'");
+		UI.DataError("Unable to set the game's map to a map with the value '"..tostring(value).."'");
 	end
+end
+
+function OnSetParameterValues(pid: string, values: table)
+	local indexed_values = {};
+	if(values) then
+		for i,v in ipairs(values) do
+			indexed_values[v] = true;
+		end
+	end
+
+	if(g_GameParameters) then
+		local kParameter: table = g_GameParameters.Parameters and g_GameParameters.Parameters[pid] or nil;
+		if(kParameter and kParameter.Values ~= nil) then
+			local resolved_values = {};
+			for i,v in ipairs(kParameter.Values) do
+				if(indexed_values[v.Value]) then
+					table.insert(resolved_values, v);
+				end
+			end		
+			g_GameParameters:SetParameterValue(kParameter, resolved_values);
+			Network.BroadcastGameConfig();	
+		end
+	end	
 end
 
 -- ===========================================================================
@@ -443,6 +466,98 @@ function CreateButtonPopupDriver(o, parameter, activateFunc, parent )
 end
 
 -- ===========================================================================
+-- This driver is for launching a multi-select option in a separate window.
+-- ===========================================================================
+function CreateMultiSelectWindowDriver(o, parameter, parent)
+
+	if(parent == nil) then
+		parent = GetControlStack(parameter.GroupId);
+	end
+			
+	-- Get the UI instance
+	local c :object = g_ButtonParameterManager:GetInstance();	
+
+	local parameterId = parameter.ParameterId;
+	local button = c.Button;
+	button:RegisterCallback( Mouse.eLClick, function()
+		LuaEvents.MultiSelectWindow_Initialize(o.Parameters[parameterId]);
+		Controls.MultiSelectWindow:SetHide(false);
+	end);
+	button:SetToolTipString(parameter.Description);
+
+	-- Store the root control, NOT the instance table.
+	g_SortingMap[tostring(c.ButtonRoot)] = parameter;
+
+	c.ButtonRoot:ChangeParent(parent);
+	if c.StringName ~= nil then
+		c.StringName:SetText(parameter.Name);
+	end
+
+	local cache = {};
+
+	local kDriver :table = {
+		Control = c,
+		Cache = cache,
+		UpdateValue = function(value, p)
+			local valueText = value and value.Name or nil;
+			local valueAmount :number = 0;
+		
+			if(valueText == nil) then
+				if(value == nil) then
+					if (parameter.UxHint ~= nil and parameter.UxHint == "InvertSelection") then
+						valueText = "LOC_SELECTION_EVERYTHING";
+					else
+						valueText = "LOC_SELECTION_NOTHING";
+					end
+				elseif(type(value) == "table") then
+					local count = #value;
+					if (parameter.UxHint ~= nil and parameter.UxHint == "InvertSelection") then
+						if(count == 0) then
+							valueText = "LOC_SELECTION_EVERYTHING";
+						elseif(count == #p.Values) then
+							valueText = "LOC_SELECTION_NOTHING";
+						else
+							valueText = "LOC_SELECTION_CUSTOM";
+							valueAmount = #p.Values - count;
+						end
+					else
+						if(count == 0) then
+							valueText = "LOC_SELECTION_NOTHING";
+						elseif(count == #p.Values) then
+							valueText = "LOC_SELECTION_EVERYTHING";
+						else
+							valueText = "LOC_SELECTION_CUSTOM";
+							valueAmount = count;
+						end
+					end
+				end
+			end				
+
+			if(cache.ValueText ~= valueText) or (cache.ValueAmount ~= valueAmount) then
+				local button = c.Button;			
+				button:LocalizeAndSetText(valueText, valueAmount);
+				cache.ValueText = valueText;
+				cache.ValueAmount = valueAmount;
+			end
+		end,
+		UpdateValues = function(values, p) 
+			-- Values are refreshed when the window is open.
+		end,
+		SetEnabled = function(enabled, p)
+			c.Button:SetDisabled(not enabled or #p.Values <= 1);
+		end,
+		SetVisible = function(visible)
+			c.ButtonRoot:SetHide(not visible);
+		end,
+		Destroy = function()
+			g_ButtonParameterManager:ReleaseInstance(c);
+		end,
+	};	
+
+	return kDriver;
+end
+
+-- ===========================================================================
 -- Override parameter behavior for basic setup screen.
 g_ParameterFactories["Ruleset"] = function(o, parameter)
 	
@@ -453,7 +568,7 @@ g_ParameterFactories["Ruleset"] = function(o, parameter)
 
 	-- Advanced setup version.
 	-- Create the parameter dynamically like we normally would...
-	table.insert(drivers, GameParameters_UI_DefaultCreateParameterDriver(o, parameter));
+	table.insert(drivers, GameParameters_UI_CreateParameterDriver(o, parameter));
 
 	return drivers;
 end
@@ -466,7 +581,7 @@ g_ParameterFactories["GameDifficulty"] = function(o, parameter)
 
 	-- Advanced setup version.
 	-- Create the parameter dynamically like we normally would...
-	table.insert(drivers, GameParameters_UI_DefaultCreateParameterDriver(o, parameter));
+	table.insert(drivers, GameParameters_UI_CreateParameterDriver(o, parameter));
 
 	return drivers;
 end
@@ -481,7 +596,7 @@ g_ParameterFactories["GameSpeeds"] = function(o, parameter)
 
 	-- Advanced setup version.
 	-- Create the parameter dynamically like we normally would...
-	table.insert(drivers, GameParameters_UI_DefaultCreateParameterDriver(o, parameter));
+	table.insert(drivers, GameParameters_UI_CreateParameterDriver(o, parameter));
 
 	return drivers;
 end
@@ -519,7 +634,7 @@ g_ParameterFactories["MapSize"] = function(o, parameter)
 
 	-- Advanced setup version.
 	-- Create the parameter dynamically like we normally would...
-	table.insert(drivers, GameParameters_UI_DefaultCreateParameterDriver(o, parameter));
+	table.insert(drivers, GameParameters_UI_CreateParameterDriver(o, parameter));
 
 	return drivers;
 end
@@ -779,6 +894,15 @@ function CreateSimpleParameterDriver(o, parameter, parent)
 	return control;
 end
 
+function GameParameters_UI_CreateParameterDriver(o, parameter, ...)
+
+	if(parameter.Array) then
+		return CreateMultiSelectWindowDriver(o, parameter);
+	else
+		return GameParameters_UI_DefaultCreateParameterDriver(o, parameter, ...);
+	end
+end
+
 -- The method used to create a UI control associated with the parameter.
 -- Returns either a control or table that will be used in other parameter view related hooks.
 function GameParameters_UI_CreateParameter(o, parameter)
@@ -790,16 +914,15 @@ function GameParameters_UI_CreateParameter(o, parameter)
 	elseif(parameter.GroupId == "BasicGameOptions" or parameter.GroupId == "BasicMapOptions") then	
 		control = {
 			CreateSimpleParameterDriver(o, parameter, Controls.CreateGame_ExtraParametersStack),
-			GameParameters_UI_DefaultCreateParameterDriver(o, parameter)
+			GameParameters_UI_CreateParameterDriver(o, parameter)
 		};
 	elseif(parameter.GroupId == "GameModes") then	
 		control = {
 			CreateSimpleParameterDriver(o, parameter, Controls.CreateGame_GameModeParametersStack),
-			GameParameters_UI_DefaultCreateParameterDriver(o, parameter)
+			GameParameters_UI_CreateParameterDriver(o, parameter)
 		};	
 	else
-	
-		control = GameParameters_UI_DefaultCreateParameterDriver(o, parameter);
+		control = GameParameters_UI_CreateParameterDriver(o, parameter);
 	end
 
 	o.Controls[parameter.ParameterId] = control;
@@ -1239,7 +1362,7 @@ end
 
 -- ===========================================================================
 function OnBeforeMultiplayerInviteProcessing()
-	-- We're about to process a game invite.  Get off the popup stack before we accidently break the invite!
+	-- We're about to process a game invite.  Get off the popup stack before we accidentally break the invite!
 	UIManager:DequeuePopup( ContextPtr );
 end
 
@@ -1249,7 +1372,8 @@ function OnShutdown()
 	Events.SystemUpdateUI.Remove( OnUpdateUI );
 	Events.BeforeMultiplayerInviteProcessing.Remove( OnBeforeMultiplayerInviteProcessing );
 
-	LuaEvents.AdvancedSetup_SetMapByHash.Remove( OnSetMapByHash );
+	LuaEvents.MapSelect_SetMapByValue.Remove( OnSetMapByValue );
+	LuaEvents.MultiSelectWindow_SetParameterValues.Remove(OnSetParameterValues);
 end
 
 -- ===========================================================================
@@ -1283,7 +1407,8 @@ function Initialize()
 	Events.SystemUpdateUI.Add( OnUpdateUI );
 	Events.BeforeMultiplayerInviteProcessing.Add( OnBeforeMultiplayerInviteProcessing );
 
-	LuaEvents.AdvancedSetup_SetMapByHash.Add( OnSetMapByHash );
+	LuaEvents.MapSelect_SetMapByValue.Add( OnSetMapByValue );
+	LuaEvents.MultiSelectWindow_SetParameterValues.Add(OnSetParameterValues);
 
 	Resize();
 end

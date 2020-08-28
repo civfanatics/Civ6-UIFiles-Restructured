@@ -46,10 +46,15 @@ local sectionId = page.SectionId;
 	if(citizenSlots ~= 0) then
 		table.insert(stats, Locale.Lookup("LOC_TYPE_TRAIT_CITIZENSLOTS", citizenSlots));
 	end
-
+	
 	local weaponSlots = improvement.WeaponSlots or 0;
 	if(weaponSlots ~= 0) then
 		table.insert(stats, Locale.Lookup("LOC_TYPE_TRAIT_WEAPONSLOTS", weaponSlots));
+	end
+	
+	local appeal = tonumber(improvement.Appeal) or 0;
+	if(appeal ~= 0) then
+		table.insert(stats, Locale.Lookup("LOC_TYPE_TRAIT_APPEAL", appeal));
 	end
 
 	for row in GameInfo.Improvement_BonusYieldChanges() do

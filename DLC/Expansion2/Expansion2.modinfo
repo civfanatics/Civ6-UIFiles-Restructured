@@ -686,9 +686,7 @@
 			<File>UI/CityBanners/CityBannerInstances.xml</File>
 			<File>UI/CityBanners/CityLoyaltyInstances.xml</File>
 			<File>UI/CityBanners/CityReligionInstances.xml</File>
-			<File>UI/Civilopedia/CivilopediaPage_Civic.lua</File>
 			<File>UI/Civilopedia/CivilopediaPage_Feature.lua</File>
-			<File>UI/Civilopedia/CivilopediaPage_Technology.lua</File>
 			<File>UI/Civilopedia/CivilopediaPage_Route.lua</File>
 			<File>UI/Loaders/TechAndCivicUnlockables_Expansion2.lua</File>
 			<File>UI/Loaders/ToolTipLoader_Expansion2.lua</File>
@@ -1204,9 +1202,7 @@
 		<File>UI/CityBanners/CityBannerInstances.xml</File>
 		<File>UI/CityBanners/CityLoyaltyInstances.xml</File>
 		<File>UI/CityBanners/CityReligionInstances.xml</File>
-		<File>UI/Civilopedia/CivilopediaPage_Civic.lua</File>
 		<File>UI/Civilopedia/CivilopediaPage_Feature.lua</File>
-		<File>UI/Civilopedia/CivilopediaPage_Technology.lua</File>
 		<File>UI/Civilopedia/CivilopediaPage_Route.lua</File>
 		<File>UI/Loaders/PopupPriorityLoader_Expansion2.lua</File>
 		<File>UI/Loaders/TechAndCivicUnlockables_Expansion2.lua</File>

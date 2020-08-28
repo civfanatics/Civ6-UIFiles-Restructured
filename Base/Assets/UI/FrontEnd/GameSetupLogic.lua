@@ -301,6 +301,68 @@ function GameParameters_UI_DefaultCreateParameterDriver(o, parameter, parent)
 				g_SliderParameterManager:ReleaseInstance(c);
 			end,
 		};	
+	elseif (parameter.Values and parameter.Array) then -- MultiValue Array
+		
+		-- NOTE: This is a limited fall-back implementation of the multi-select parameters.
+
+		-- Get the UI instance
+		local c = g_PullDownParameterManager:GetInstance();	
+
+		-- Store the root control, NOT the instance table.
+		g_SortingMap[tostring(c.Root)] = parameter;
+
+		c.Root:ChangeParent(parent);
+		if c.StringName ~= nil then
+			c.StringName:SetText(parameter.Name);
+		end
+
+		local cache = {};
+
+		control = {
+			Control = c,
+			Cache = cache,
+			UpdateValue = function(value, p)
+				local valueText = Locale.Lookup("LOC_SELECTION_NOTHING");
+				if(type(value) == "table") then
+					local count = #value;
+					if (parameter.UxHint ~= nil and parameter.UxHint == "InvertSelection") then
+						if(count == 0) then
+							valueText = Locale.Lookup("LOC_SELECTION_EVERYTHING");
+						elseif(count == #p.Values) then
+							valueText = Locale.Lookup("LOC_SELECTION_NOTHING");
+						else
+							valueText = Locale.Lookup("LOC_SELECTION_CUSTOM", #p.Values-count);
+						end
+					else
+						if(count == 0) then
+							valueText = Locale.Lookup("LOC_SELECTION_NOTHING");
+						elseif(count == #p.Values) then
+							valueText = Locale.Lookup("LOC_SELECTION_EVERYTHING");
+						else
+							valueText = Locale.Lookup("LOC_SELECTION_CUSTOM", count);
+						end
+					end
+				end
+
+				if(cache.ValueText ~= valueText) then
+					local button = c.PullDown:GetButton();
+					button:SetText(valueText);
+					cache.ValueText = valueText;
+				end
+			end,
+			UpdateValues = function(values)
+				-- Do nothing.
+			end,
+			SetEnabled = function(enabled, parameter)
+				c.PullDown:SetDisabled(true);
+			end,
+			SetVisible = function(visible)
+				c.Root:SetHide(not visible);
+			end,
+			Destroy = function()
+				g_PullDownParameterManager:ReleaseInstance(c);
+			end,
+		};
 	elseif (parameter.Values) then -- MultiValue
 		
 		-- Get the UI instance

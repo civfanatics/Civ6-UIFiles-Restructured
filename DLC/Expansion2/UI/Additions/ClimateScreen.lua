@@ -280,7 +280,7 @@ function RefreshCurrentEvent()
 			if kCurrentEventDef.Global then
 				Controls.WeatherLocation:SetText(Locale.Lookup("LOC_CLIMATE_SCREEN_LOCATION", Locale.Lookup("LOC_CLIMATE_SCREEN_GLOBAL")));
 			elseif not bIsEventVisible then
-				Controls.WeatherLocation:SetText(Locale.Lookup("LOC_CLIMATE_SCREEN_LOCATION", Locale.Lookup("LOC_CIVICS_TREE_UNREVEALED_CIVIC")));
+				Controls.WeatherLocation:SetText(Locale.Lookup("LOC_CLIMATE_SCREEN_LOCATION", Locale.Lookup("LOC_CIVICS_TREE_NOT_REVEALED_CIVIC")));
 			elseif location ~= "" and direction ~= "" then
 				Controls.WeatherLocation:SetText(Locale.Lookup("LOC_CLIMATE_SCREEN_LOCATION_DIRECTION", location, direction));
 			elseif location ~= "" then

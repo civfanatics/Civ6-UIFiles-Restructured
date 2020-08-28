@@ -18,7 +18,7 @@ local ANIMATION_SPEED				:number = 2;
 local SECONDARY_ACTIONS_ART_PADDING	:number = -4;
 local MAX_BEFORE_TRUNC_STAT_NAME	:number = 170;
 local MIN_UNIT_PANEL_WIDTH			:number = 340;
-
+local BUILD_ACTIONS_OFFSET			:number = 162;
 
 -- ===========================================================================
 --	GLOBALS
@@ -355,6 +355,19 @@ function GetBuildImprovementCallback( actionHash:number, isDisabled:boolean )
 	return callbackFn, isDisabled;
 end
 
+-- ===========================================================================
+-- MODDING: Override this in MODS to do any last minute changes for unit actions.
+-- ===========================================================================
+function LateCheckActionBeforeAdd( kActionsTable: table, actionHash:number, isDisabled:boolean, tooltipString:string, overrideIcon:string )
+	return isDisabled, tooltipString, overrideIcon;
+end
+
+-- ===========================================================================
+-- MODDING: Override this in MODS to do any last minute changes for unit operations.
+-- ===========================================================================
+function LateCheckOperationBeforeAdd( tResults: table, kActionsTable: table, actionHash:number, isDisabled:boolean, tooltipString:string, overrideIcon:string )
+	return isDisabled, tooltipString, overrideIcon;
+end
 
 -- ===========================================================================
 --	Refresh unit actions
@@ -506,7 +519,10 @@ function GetUnitActionsTable( pUnit )
 						end
 					end
 					isDisabled = bDisabled or isDisabled;	-- Mix in tutorial disabledness
-					AddActionToTable( actionsTable, commandRow, isDisabled, toolTipString, actionHash, OnUnitActionClicked, UnitCommandTypes.TYPE, actionHash  );
+					local overrideIcon:string = nil;
+
+					isDisabled, tooltipString, overrideIcon = LateCheckActionBeforeAdd( kActionsTable, actionHash, isDisabled, tooltipString, overrideIcon );
+					AddActionToTable( actionsTable, commandRow, isDisabled, toolTipString, actionHash, OnUnitActionClicked, UnitCommandTypes.TYPE, actionHash, overrideIcon  );
 				end
 			end
 		end
@@ -644,7 +660,7 @@ function GetUnitActionsTable( pUnit )
 				-- Is this operation visible in the UI?
 				-- The UI check of an operation is a loose check where it only fails if the unit could never do the operation.
 				if ( operationRow.VisibleInUI ) then
-					local bCanStart, tResults = UnitManager.CanStartOperation( pUnit, actionHash, nil, true );
+					local bCanStart:boolean, tResults:table = UnitManager.CanStartOperation( pUnit, actionHash, nil, true );
 
 					if (bCanStart) then
 						-- Check again if the operation can occur, this time for real.
@@ -679,8 +695,12 @@ function GetUnitActionsTable( pUnit )
 							end
 						end
 						isDisabled = bDisabled or isDisabled;
+
 						if(not IsActionLimited(operationRow.PrimaryKey, pUnit))then
-							AddActionToTable( actionsTable, operationRow, isDisabled, toolTipString, actionHash, OnUnitActionClicked, UnitOperationTypes.TYPE, actionHash  );
+							local overrideIcon:string = nil;
+
+							isDisabled, toolTipString, overrideIcon = LateCheckOperationBeforeAdd( tResults, actionsTable, actionHash, isDisabled, toolTipString, overrideIcon );
+							AddActionToTable( actionsTable, operationRow, isDisabled, toolTipString, actionHash, OnUnitActionClicked, UnitOperationTypes.TYPE, actionHash, overrideIcon  );
 						end
 					end
 				end
@@ -774,6 +794,22 @@ function RealizeSpecializedViews( kData:table )
 end
 
 -- ===========================================================================
+function DoesSubjectHaveBuildActions()
+	if m_subjectData ~= nil then
+		if m_subjectData.Actions["BUILD"] ~= nil and #m_subjectData.Actions["BUILD"] > 0 then
+			return true;
+		end
+	end
+
+	return false;
+end
+
+-- ===========================================================================
+function UpdateBuildActionsPanelOffset()
+	Controls.BuildActionsPanel:SetOffsetX(Controls.UnitPanelBaseContainer:GetSizeX() + BUILD_ACTIONS_OFFSET);
+end
+
+-- ===========================================================================
 -- View(data)
 -- Update the layout based on the view model
 -- ===========================================================================
@@ -836,7 +872,7 @@ function View(data)
 	end
 
 	-- Build panel options (if any)
-	if ( data.Actions["BUILD"] ~= nil and #data.Actions["BUILD"] > 0 ) then
+	if DoesSubjectHaveBuildActions() then
 		
 		Controls.BuildActionsPanel:SetHide(false);
 
@@ -1750,6 +1786,13 @@ function OnShowCombat( showCombat )
 		end
 	end
 	Controls.PromotionBanner:SetHide(m_showPromotionBanner);
+
+	-- Hide build actions while showing combat preview if we have build actions
+	if DoesSubjectHaveBuildActions() then
+		Controls.BuildActionsPanel:SetHide(showCombat);
+	else
+		Controls.BuildActionsPanel:SetHide(true);
+	end
 end
 
 -- Show/Hide Espionage Unit Elements
@@ -2060,6 +2103,8 @@ function ResizeUnitPanelToFitActionButtons()
 
 	-- Update unit stat size and anchoring 
 	Controls.SubjectStatStack:CalculateSize();
+
+	UpdateBuildActionsPanelOffset();
 end
 
 -- ===========================================================================

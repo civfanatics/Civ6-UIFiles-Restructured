@@ -9,8 +9,8 @@ m_mapInfoIM =		InstanceManager:new("MapInfoInstance", "MapContainer", Controls.M
 
 local m_uiMapInfo		:table = {};
 local m_kAllMaps		:table;
-local m_selectedMapHash :number;
-local m_lastSetMapHash	:number;
+local m_selectedMapValue :string;
+local m_lastSetMapValue	:string;
 local m_selectedMap		:table;
 
 local m_sortType :number = 0;
@@ -30,8 +30,8 @@ end
 
 -- ===========================================================================
 function OnSelectMapButton()
-	m_lastSetMapHash = m_selectedMapHash;
-	LuaEvents.AdvancedSetup_SetMapByHash( m_selectedMapHash );
+	m_lastSetMapValue = m_selectedMapValue;
+	LuaEvents.MapSelect_SetMapByValue( m_selectedMapValue );
 	Close();
 end
 
@@ -52,7 +52,7 @@ function OnMapButton(kMapData :table, c :table)
 	m_uiMapInfo.MapName:SetText(Locale.Lookup(kMapData.RawName));
 	m_uiMapInfo.MapDescription:SetText(Locale.Lookup(kMapData.RawDescription));
 	m_uiMapInfo.MapImagePreview:SetTexture(kMapData.Texture);
-	m_selectedMapHash = kMapData.Hash;	
+	m_selectedMapValue = kMapData.Value;	
 
 	c:SetSelected(true);
 
@@ -68,7 +68,7 @@ end
 function LoadMaps(k:table)
 	m_kAllMaps = k;
 	m_selectedMap = nil;
-	m_selectedMapHash = nil;
+	m_selectedMapValue = nil;
 	PopulateMapSelectPanel();
 end
 
@@ -101,16 +101,16 @@ function PopulateMapButton(kMapData:table)
 	uiMap.MapName:SetText(Locale.Lookup(kMapData.RawName));
 	uiMap.MapButton:SetToolTipString(Locale.Lookup(kMapData.RawDescription));
 	uiMap.MapButton:RegisterCallback( Mouse.eLClick, function() OnMapButton(kMapData, uiMap.MapButton); end );
-	uiMap.MapButton:RegisterCallback( Mouse.eLDblClick,function() m_selectedMapHash = kMapData.Hash; OnSelectMapButton(); end);
+	uiMap.MapButton:RegisterCallback( Mouse.eLDblClick,function() m_selectedMapValue = kMapData.Value; OnSelectMapButton(); end);
 	uiMap.MapButton:SetSelected(false);
 
-	if(m_selectedMapHash == kMapData.Hash)then
+	if(m_selectedMapValue == kMapData.Value)then
 		OnMapButton(kMapData, uiMap.MapButton);
-	elseif(m_lastSetMapHash == kMapData.Hash and m_selectedMapHash == nil) then
+	elseif(m_lastSetMapValue == kMapData.Value and m_selectedMapValue == nil) then
 		OnMapButton(kMapData, uiMap.MapButton);
 
 	--This will only hit true the first time the screen is opened
-	elseif(m_selectedMap == nil and m_lastSetMapHash == nil) then
+	elseif(m_selectedMap == nil and m_lastSetMapValue == nil) then
 		if(kMapData.RawName == DEFAULT_MAP_RAWNAME) then
 			OnMapButton(kMapData, uiMap.MapButton);
 		end
@@ -119,7 +119,7 @@ end
 
 -- ===========================================================================
 function ClearMapData()
-	m_lastSetMapHash = nil;
+	m_lastSetMapValue = nil;
 end
 
 -- ===========================================================================

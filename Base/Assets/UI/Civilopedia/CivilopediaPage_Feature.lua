@@ -56,6 +56,10 @@ PageLayouts["Feature" ] = function(page)
 		table.insert(traits, Locale.Lookup("LOC_TOOLTIP_DEFENSE_MODIFIER", tonumber(feature.DefenseModifier)));
 	end
 	
+	if(tonumber(feature.Appeal)~= 0) then
+		table.insert(traits, Locale.Lookup("LOC_TYPE_TRAIT_APPEAL", tonumber(feature.Appeal)));
+	end
+	
 	table.sort(traits, function(a,b) return Locale.Compare(a,b) == -1; end);
 
 	-- Right column, first!

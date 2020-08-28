@@ -37,7 +37,7 @@ function GetAffectedPlots_NaturalWonder(plotx:number, ploty:number)
 		local pFeature = pPlot:GetFeature();
 		return pFeature:GetPlots();
 	else
-		UI.DataAssert("No plot("..tostring(plotx)..","..tostring(ploty)..") was affected by a natural wonder (disaster).");
+		UI.DataError("No plot("..tostring(plotx)..","..tostring(ploty)..") was affected by a natural wonder (disaster).");
 		return nil;
 	end
 end
@@ -50,7 +50,7 @@ function GetAffectedPlots_Flood(plotx:number, ploty:number)
 	if (eRiver >= 0) then
 		return RiverManager.GetFloodplainPlots(eRiver);
 	else
-		UI.DataAssert("No plot("..tostring(plotx)..","..tostring(ploty)..") was affected by a flood.");
+		UI.DataError("No plot("..tostring(plotx)..","..tostring(ploty)..") was affected by a flood.");
 		return nil;
 	end
 end

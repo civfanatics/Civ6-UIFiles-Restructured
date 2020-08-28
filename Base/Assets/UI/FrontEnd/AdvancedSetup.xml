@@ -321,8 +321,9 @@
 				<GridButton ID="StartButton" Size="340,45" Style="ButtonConfirm" Anchor="C,B" String="LOC_START_GAME" />
 			</Stack>
 
-			<!--Map Selection Window-->
+			<!-- Selection Windows -->
 			<LuaContext ID="MapSelectWindow" FileName="MapSelect" Hidden="1"/>
+			<LuaContext ID="MultiSelectWindow" FileName="MultiSelectWindow" Hidden="1"/>
 
 		</Container><!-- Main Window -->
 

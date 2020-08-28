@@ -14,7 +14,7 @@ LuaClass = {}
 -- ===========================================================================
 function LuaClass:new( metaTableObject:table, optionalExistingObject:table )
 	if metaTableObject == nil then 
-		UI.DataAssert("NIL metaTableObject when creating a new LuaClass.");
+		UI.DataError("NIL metaTableObject when creating a new LuaClass.");
 		metaTableObject = {}; 
 	end
 

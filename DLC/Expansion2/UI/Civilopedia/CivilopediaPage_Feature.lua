@@ -63,6 +63,10 @@ PageLayouts["Feature" ] = function(page)
 		table.insert(traits, Locale.Lookup("LOC_TOOLTIP_DEFENSE_MODIFIER", tonumber(feature.DefenseModifier)));
 	end
 	
+	if(tonumber(feature.Appeal)~= 0) then
+		table.insert(traits, Locale.Lookup("LOC_TYPE_TRAIT_APPEAL", tonumber(feature.Appeal)));
+	end
+	
 	if(GameInfo.RandomEvent_Yields) then
 		for row in GameInfo.RandomEvent_Yields() do
 			if(row.FeatureType == featureType and row.FeatureType ~= GameInfo.Features["FEATURE_ICE"].FeatureType) then

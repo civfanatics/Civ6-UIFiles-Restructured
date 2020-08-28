@@ -167,5 +167,7 @@
     <Row Name="ICON_TECH_NUCLEAR_FUSION_FOW" Index="3" Atlas="ICON_ATLAS_TECH_FOW_2"/>
     <Row Name="ICON_TECH_ROBOTICS" Index="4" Atlas="ICON_ATLAS_TECH_2"/>
     <Row Name="ICON_TECH_ROBOTICS_FOW" Index="4" Atlas="ICON_ATLAS_TECH_FOW_2"/>
+    <Row Name="ICON_TECH_UNREVEALED" Index="6" Atlas="ICON_ATLAS_TECH_2"/>
+    <Row Name="ICON_TECH_UNREVEALED_FOW" Index="6" Atlas="ICON_ATLAS_TECH_FOW_2"/>
   </IconDefinitions>
 </GameInfo>

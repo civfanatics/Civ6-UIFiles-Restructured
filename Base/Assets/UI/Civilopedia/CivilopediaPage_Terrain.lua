@@ -27,7 +27,7 @@ PageLayouts["Terrain" ] = function(page)
 	for row in GameInfo.Yields() do
 		local change = yield_changes[row.YieldType];
 		if(change ~= nil) then
-			table.insert(yield_changes, {change, row.IconString, Locale.Lookup(row.Name)}); 
+			table.insert(yield_changes, {change, row.IconString, Locale.Lookup(row.Name)});
 		end
 	end
 	
@@ -66,6 +66,10 @@ PageLayouts["Terrain" ] = function(page)
 	
 	if(tonumber(terrain.DefenseModifier)~= 0) then
 		table.insert(traits, Locale.Lookup("LOC_TOOLTIP_DEFENSE_MODIFIER", tonumber(terrain.DefenseModifier)));
+	end
+	
+	if(tonumber(terrain.Appeal)~= 0) then
+		table.insert(traits, Locale.Lookup("LOC_TYPE_TRAIT_APPEAL", tonumber(terrain.Appeal)));
 	end
 	
 	table.sort(traits, function(a,b) return Locale.Compare(a,b) == -1; end);

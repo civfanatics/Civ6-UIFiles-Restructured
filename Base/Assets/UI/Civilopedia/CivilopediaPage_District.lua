@@ -393,6 +393,11 @@ PageLayouts["District" ] = function(page)
 		table.insert(stats, Locale.Lookup("LOC_TYPE_TRAIT_AIRSLOTS", airSlots));
 	end
 	
+	local appeal = tonumber(district.Appeal) or 0;
+	if(appeal ~= 0) then
+		table.insert(stats, Locale.Lookup("LOC_TYPE_TRAIT_APPEAL", appeal));
+	end
+	
 	local pillageAwards = district.PlunderType or NO_PLUNDER;
 	if(pillageAwards ~= nil and  pillageAwards ~= "NO_PLUNDER") then
 		if(pillageAwards == "PLUNDER_CULTURE") then

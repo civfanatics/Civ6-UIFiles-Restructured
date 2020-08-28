@@ -76,13 +76,20 @@ STATUS_ART[ITEM_STATUS.BLOCKED]			= { Name="BLOCKED",			TextColor0=UI.GetColorVa
 STATUS_ART[ITEM_STATUS.READY]			= { Name="READY",			TextColor0=UI.GetColorValueFromHexLiteral(0xaaffffff), TextColor1=UI.GetColorValueFromHexLiteral(0x88000000), FillTexture=nil,											BGU=0,BGV=0,					HideIcon=true,  IsButton=true,	BoltOn=false,	IconBacking=PIC_METER_BACK };
 STATUS_ART[ITEM_STATUS.CURRENT]			= { Name="CURRENT",			TextColor0=UI.GetColorValueFromHexLiteral(0xaaffffff), TextColor1=UI.GetColorValueFromHexLiteral(0x88000000), FillTexture=nil,											BGU=0,BGV=(SIZE_NODE_Y*4),		HideIcon=false, IsButton=false,	BoltOn=true,	IconBacking=PIC_METER_BACK };
 STATUS_ART[ITEM_STATUS.RESEARCHED]		= { Name="RESEARCHED",		TextColor0=UI.GetColorValueFromHexLiteral(0xaaffffff), TextColor1=UI.GetColorValueFromHexLiteral(0x88000000), FillTexture="CivicsTree_GearButtonTile_Done.dds",			BGU=0,BGV=(SIZE_NODE_Y*5),		HideIcon=false, IsButton=false,	BoltOn=true,	IconBacking=PIC_METER_BACK_DONE  };
+
 STATUS_ART_LARGE[ITEM_STATUS.BLOCKED]	= { Name="LARGEBLOCKED",	TextColor0=UI.GetColorValueFromHexLiteral(0xff202726), TextColor1=UI.GetColorValueFromHexLiteral(0x00000000), FillTexture="CivicsTree_GearButton2Tile_Disabled.dds",	BGU=0,BGV=(SIZE_NODE_LARGE_Y*3),HideIcon=true,  IsButton=false,	BoltOn=false,	IconBacking=PIC_METER_BACK };
 STATUS_ART_LARGE[ITEM_STATUS.READY]		= { Name="LARGEREADY",		TextColor0=UI.GetColorValueFromHexLiteral(0xaaffffff), TextColor1=UI.GetColorValueFromHexLiteral(0x88000000), FillTexture=nil,											BGU=0,BGV=0,					HideIcon=true,  IsButton=true,	BoltOn=false,	IconBacking=PIC_METER_BACK };
 STATUS_ART_LARGE[ITEM_STATUS.CURRENT]	= { Name="LARGECURRENT",	TextColor0=UI.GetColorValueFromHexLiteral(0xaaffffff), TextColor1=UI.GetColorValueFromHexLiteral(0x88000000), FillTexture=nil,											BGU=0,BGV=(SIZE_NODE_LARGE_Y*4),HideIcon=false, IsButton=false,	BoltOn=true,	IconBacking=PIC_METER_BACK };
 STATUS_ART_LARGE[ITEM_STATUS.RESEARCHED]= { Name="LARGERESEARCHED",	TextColor0=UI.GetColorValueFromHexLiteral(0xaaffffff), TextColor1=UI.GetColorValueFromHexLiteral(0x88000000), FillTexture="CivicsTree_GearButton2Tile_Completed.dds",	BGU=0,BGV=(SIZE_NODE_LARGE_Y*5),HideIcon=false, IsButton=false,	BoltOn=true,	IconBacking=PIC_METER_BACK_DONE  };
+
 TXT_BOOSTED				= Locale.Lookup("LOC_BOOST_BOOSTED");
 TXT_TO_BOOST			= Locale.Lookup("LOC_BOOST_TO_BOOST");
 MAX_BEFORE_TRUNC_TO_BOOST = 335;
+
+-- Add to item status table. Instead of enum use hash of "UNREVEALED"; special case.
+ITEM_STATUS["UNREVEALED"] = 0xB87BE593;
+STATUS_ART[ITEM_STATUS.UNREVEALED]		= { Name="UNREVEALED",	TextColor0=UI.GetColorValueFromHexLiteral(0xff202726), TextColor1=UI.GetColorValueFromHexLiteral(0x00000000), FillTexture="CivicsTree_GearButtonTile_Disabled.dds",		BGU=0,BGV=(SIZE_NODE_Y*3),		HideIcon=true,  IsButton=false,	BoltOn=false,	IconBacking=PIC_METER_BACK  };
+STATUS_ART_LARGE[ITEM_STATUS.UNREVEALED]= { Name="UNREVEALED",	TextColor0=UI.GetColorValueFromHexLiteral(0xff202726), TextColor1=UI.GetColorValueFromHexLiteral(0x00000000), FillTexture="CivicsTree_GearButton2Tile_Disabled.dds",	BGU=0,BGV=(SIZE_NODE_LARGE_Y*3),HideIcon=true,  IsButton=false,	BoltOn=false,	IconBacking=PIC_METER_BACK  };
 
 g_kEras					= {};		-- type to costs
 g_kItemDefaults			= {};		-- Static data about items
@@ -168,6 +175,7 @@ local m_kCurrentData		:table = {};		-- Current set of data.
 local m_kFilters			:table = {};
 local m_kGovernments		:table = {};
 local m_kPolicyCatalogData	:table;
+local m_isTreeRandomized	:boolean = false;	-- Is the tree in a randomized mode
 
 local m_shiftDown			:boolean = false;
 
@@ -277,7 +285,6 @@ end
 --	Does the era randomize layout?
 -- ===========================================================================
 function IsEraRandomizingLayout( eraType:string )
-	-- TODO: Remove ERA_FUTURE check and instead look for TreeLayoutMethod (RandomCost) or (RandomPrereq);
 	local isFutureEra		:boolean = eraType=="ERA_FUTURE";
 	return isFutureEra;
 end
@@ -343,102 +350,6 @@ function LayoutNodeGrid()
 		-- For first placement, ignore row and place everything in the middle (row 0)
 		local pos:number = table.count(eraGrids[item.EraType].sortRow.columns) + 1;
 		eraGrids[item.EraType].sortRow.columns[pos] = item.Type;
-	end
-
-	-- Manually sort based on prereqs, 2(N log N)
-	for eraType,grid in pairs(eraGrids) do		
-		local numEraItems:number = table.count(grid.sortRow.columns);
-		if numEraItems > 1 then			
-			for pass=1,2,1 do					-- Make 2 passes so the first swapped item is checked.
-				for a=1,numEraItems do
-					for b=a,numEraItems do
-						if a ~= b then
-							for _,prereq in ipairs(g_kItemDefaults[grid.sortRow.columns[a] ].Prereqs) do
-								if prereq == grid.sortRow.columns[b] then
-									grid.sortRow.columns[a], grid.sortRow.columns[b] = grid.sortRow.columns[b], grid.sortRow.columns[a];	-- swap LUA style
-								end
-							end					
-						end
-					end
-				end
-			end
-		end
-	end
-	
-	-- Unflatten single, traversing each era grid from left to right, pushing the item to the right if it hits a prereq
-	for eraType,grid in pairs(eraGrids) do
-		local maxColumns:number = table.count(grid.sortRow.columns);	-- Worst case, straight line
-		while ( table.count(grid.sortRow.columns) > 0 ) do
-
-			local typeName	:string = table.remove( grid.sortRow.columns, 1);				-- Rip off first item in sort row (next item to place)
-			local item		:table	= g_kItemDefaults[typeName];
-			local pos		:number = 1;
-			
-			-- No prereqs? Just put at start, otherwise push forward past them all.
-			if item.Prereqs ~= nil then
-				for _,prereq in ipairs(item.Prereqs) do							-- For every prereq					
-					local isPrereqMatched :boolean = false;					
-					for x=pos,maxColumns,1 do									-- For every column (from last highest found start position)
-						for y=ROW_MIN, ROW_MAX,1 do								-- For every row in the column
-							if grid.rows[y].columns[x] ~= nil then				-- Is a prereq in that position of the grid?
-								if prereq == grid.rows[y].columns[x] then		-- And is it a prereq for this item?
-									pos = x + 1;								-- If so, this item can only exist at least 1 column further over from the prereq
-									isPrereqMatched = true;
-									break;
-								end
-							end
-						end
-						if isPrereqMatched then 							
-							-- Ensuring this node wasn't just placed on top of another:
-							while( grid.rows[item.UITreeRow].columns[pos] ~= nil ) do
-								pos = pos + 1;
-							end
-							break;
-						end
-					end
-				end
-			end
-						
-			grid.rows[item.UITreeRow].columns[pos] = typeName;	-- Set for future lookups.
-			item.Column = pos;									-- Set which column within era item exists.
-
-			if pos > g_kEras[item.EraType].NumColumns then
-				g_kEras[item.EraType].NumColumns = pos;
-			end
-		end	
-	end
-
-	-- Determine total # of columns prior to a given era, and max columns overall.
-	local index = 0;
-	local priorColumns:number = 0;
-	m_maxColumns = 0;
-	for row:table in GameInfo.Eras() do
-		for era,eraData in pairs(g_kEras) do
-			if eraData.Index == index then									-- Ensure indexed order
-				eraData.PriorColumns = priorColumns;
-				eraData.MiddleColumn = priorColumns + ((eraData.NumColumns + 1) / 2);
-				priorColumns = priorColumns + eraData.NumColumns + 1;	-- Add one for era art between
-				m_FirstEraIndex = m_FirstEraIndex < 0 and index or math.min(m_FirstEraIndex, index);
-				break;
-			end
-		end
-		index = index + 1;
-	end
-	m_maxColumns = priorColumns;
-	
-
-	-- Temp grid used to try and avoid large node collisions with other nodes
-	local kNodeCollGrid: table = {};
-
-	-- Create grid used to route lines, determine maximum number of columns.
-	kNodeGrid	 = {};
-	for i = ROW_MIN,ROW_MAX,1 do
-		kNodeGrid[i] = {};
-		kNodeCollGrid[i] = {};
-	end
-	for _,item in pairs(g_kItemDefaults) do	
-		local era		:table  = g_kEras[item.EraType];
-		local columnNum :number = era.PriorColumns + item.Column;
 
 		-- determine if this is a large node
 		local playerId = Game.GetLocalPlayer();
@@ -477,44 +388,124 @@ function LayoutNodeGrid()
 				item.IsLarge = true;
 			end
 		end
+	end
+
+	-- Manually sort based on prereqs, 2(N log N)
+	for eraType,grid in pairs(eraGrids) do		
+		local numEraItems:number = table.count(grid.sortRow.columns);
+		if numEraItems > 1 then			
+			for pass=1,2,1 do					-- Make 2 passes so the first swapped item is checked.
+				for a=1,numEraItems do
+					for b=a,numEraItems do
+						if a ~= b then
+							for _,prereq in ipairs(g_kItemDefaults[grid.sortRow.columns[a] ].Prereqs) do
+								if prereq == grid.sortRow.columns[b] then
+									grid.sortRow.columns[a], grid.sortRow.columns[b] = grid.sortRow.columns[b], grid.sortRow.columns[a];	-- swap LUA style
+								end
+							end					
+						end
+					end
+				end
+			end
+		end
+	end
+	
+	-- Unflatten single, traversing each era grid from left to right, pushing the item to the right if it hits a prereq
+	for eraType,grid in pairs(eraGrids) do
+		local maxColumns:number = table.count(grid.sortRow.columns);	-- Worst case, straight line
+		while ( table.count(grid.sortRow.columns) > 0 ) do
+
+			local typeName	:string = table.remove( grid.sortRow.columns, 1);				-- Rip off first item in sort row (next item to place)
+			local item		:table	= g_kItemDefaults[typeName];
+			local pos		:number = 1;
+
+			-- No prereqs? Just put at start, otherwise push forward past them all.
+			if item.Prereqs ~= nil then
+				for _,prereq in ipairs(item.Prereqs) do							-- For every prereq					
+					local isPrereqMatched :boolean = false;					
+					for x=pos,maxColumns,1 do									-- For every column (from last highest found start position)
+						for y=ROW_MIN, ROW_MAX,1 do								-- For every row in the column
+							if grid.rows[y].columns[x] ~= nil then				-- Is a prereq in that position of the grid?
+								if prereq == grid.rows[y].columns[x] then		-- And is it a prereq for this item?
+									pos = x + 1;								-- If so, this item can only exist at least 1 column further over from the prereq
+									isPrereqMatched = true;
+									break;
+								end
+							end
+						end
+						if isPrereqMatched then 							
+							-- Ensuring this node wasn't just placed on top of another:
+							while( grid.rows[item.UITreeRow].columns[pos] ~= nil ) do
+								pos = pos + 1;
+							end
+							break;
+						end
+					end
+				end
+			end
+
+			-- The Lua side in "by prereq" mode horizontally compacts the columns
+			-- into as few as possible.  This is normally good and it makes for a
+			-- nicer-looking tree, but sometimes it moves something underneath a
+			-- large node when the C++ didn't want that, so we'll check for that
+			-- happening and move the small node forward a column.
+			if item.IsLarge and item.UITreeRow < (ROW_MAX - 1) then
+				if grid.rows[item.UITreeRow + 1].columns[pos] ~= nil then
+					-- move the small node forward; moving the large one can cause an incorrect graph.
+					grid.rows[item.UITreeRow + 1].columns[pos + 1] = grid.rows[item.UITreeRow + 1].columns[pos];
+					grid.rows[item.UITreeRow + 1].columns[pos] = nil;
+					g_kItemDefaults[grid.rows[item.UITreeRow + 1].columns[pos + 1]].Column = pos + 1;
+				end
+			end
+
+			-- if the large node got placed first and we're being put underneath it, move forward
+			if item.UITreeRow > ROW_MIN then
+				if grid.rows[item.UITreeRow - 1].columns[pos] ~= nil then
+					if g_kItemDefaults[grid.rows[item.UITreeRow - 1].columns[pos]] ~= nil and g_kItemDefaults[grid.rows[item.UITreeRow - 1].columns[pos]].IsLarge then
+						pos = pos + 1;
+					end
+				end
+			end
+
+			grid.rows[item.UITreeRow].columns[pos] = typeName;	-- Set for future lookups.
+			item.Column = pos;									-- Set which column within era item exists.
+
+			if pos > g_kEras[item.EraType].NumColumns then
+				g_kEras[item.EraType].NumColumns = pos;
+			end
+		end	
+	end
+
+	-- Determine total # of columns prior to a given era, and max columns overall.
+	local index = 0;
+	local priorColumns:number = 0;
+	m_maxColumns = 0;
+	for row:table in GameInfo.Eras() do
+		for era,eraData in pairs(g_kEras) do
+			if eraData.Index == index then									-- Ensure indexed order
+				eraData.PriorColumns = priorColumns;
+				eraData.MiddleColumn = priorColumns + ((eraData.NumColumns + 1) / 2);
+				priorColumns = priorColumns + eraData.NumColumns + 1;	-- Add one for era art between
+				m_FirstEraIndex = m_FirstEraIndex < 0 and index or math.min(m_FirstEraIndex, index);
+				break;
+			end
+		end
+		index = index + 1;
+	end
+	m_maxColumns = priorColumns;
+	
+	-- Create grid used to route lines, determine maximum number of columns.
+	kNodeGrid	 = {};
+	for i = ROW_MIN,ROW_MAX,1 do
+		kNodeGrid[i] = {};
+	end
+	for _,item in pairs(g_kItemDefaults) do	
+		local era		:table  = g_kEras[item.EraType];
+		local columnNum :number = era.PriorColumns + item.Column;
 
 		-- Randomize UI tree row (if this game & era does that sort of thing.)
 		if IsEraRandomizingLayout(item.EraType) then
 			item.UITreeRow = GetRandomizedTreeRow(item.UITreeRow);
-		end
-
-		kNodeCollGrid[item.UITreeRow][columnNum] = item;
-	end
-
-	-- pass 2: fix large node collisions if possible (if we fail, it looks ugly, but will still work)
-	for _,item in pairs(g_kItemDefaults) do
-		local era		:table  = g_kEras[item.EraType];
-		local columnNum :number = era.PriorColumns + item.Column;
-
-		-- is this a large item with a node beneath it?
-		if item.IsLarge and item.UITreeRow < (ROW_MAX - 1) and kNodeCollGrid[item.UITreeRow + 1][columnNum] ~= nil then
-			-- first, see if we can move the large node up
-			if item.UITreeRow > (ROW_MIN + 1) then
-				for i = (item.UITreeRow - 1),ROW_MIN,-1 do
-					-- if there's a 2-high space available, let's use it
-					if kNodeCollGrid[i][columnNum] == nil and (kNodeCollGrid[i][columnNum] == nil or kNodeCollGrid[i][columnNum] == kNodeCollGrid[item.UITreeRow][columnNum]) then
-						kNodeCollGrid[i][columnNum] = kNodeCollGrid[item.UITreeRow][columnNum];
-						kNodeCollGrid[i][columnNum].UITreeRow = item.UITreeRow - 1;
-						kNodeCollGrid[item.UITreeRow][columnNum] = nil;
-						break;
-					end
-				end
-			elseif item.UITreeRow < (ROW_MAX - 3) then
-				-- couldn't move the large node up, try moving the other node down
-				for i = (item.UITreeRow + 2),ROW_MAX,1 do
-					if kNodeCollGrid[i][columnNum] == nil then
-						kNodeCollGrid[i][columnNum] = kNodeCollGrid[item.UITreeRow + 1][columnNum];
-						kNodeCollGrid[i][columnNum].UITreeRow = item.UITreeRow + 2;
-						kNodeCollGrid[item.UITreeRow + 1][columnNum] = nil;
-						break;
-					end
-				end
-			end
 		end
 	end
 
@@ -575,8 +566,9 @@ function AllocateUI( kNodeGrid:table, kPaths:table )
 		end	
 	end
 	
-	local playerId = Game.GetLocalPlayer();
-	if (playerId == -1) then
+	-- Early out if not a real player.
+	local playerId :number = Game.GetLocalPlayer();
+	if playerId == PlayerTypes.OBSERVER or playerId == PlayerTypes.NONE then 
 		return;
 	end
 
@@ -586,88 +578,21 @@ function AllocateUI( kNodeGrid:table, kPaths:table )
 	end
 
 	-- Actually build UI nodes
-	for _,item in pairs(g_kItemDefaults) do
-		local civic:table		= GameInfo.Civics[item.Type];
-		local civicType:string	= civic and civic.CivicType;
+	local isForcedSmall	:boolean = (m_isTreeRandomized==true);
+	for _,item in pairs(g_kItemDefaults) do		
 
-		local unlockableTypes	= GetUnlockablesForCivic_Cached(civicType, playerId);
-		local node				:table;
-		local numUnlocks		:number = 0;
-		local extraUnlocks		:table = {};
-		local hideDescriptionIcon:boolean = false;
+		local uiNode		:table	= AllocateNode( item, isForcedSmall );
 
-		if unlockableTypes ~= nil then
-			for _, unlockItem in ipairs(unlockableTypes) do
-				local typeInfo = GameInfo.Types[unlockItem[1]];
-
-				if typeInfo.Kind == "KIND_GOVERNMENT" then
-					numUnlocks = numUnlocks + 4;				-- 4 types of policy slots
-				else
-					numUnlocks = numUnlocks + 1;
-				end
-			end
-		end
-
-		-- Include extra icons in total unlocks
-		if ( item.ModifierList ) then
-			for _,tModifier in ipairs(item.ModifierList) do
-				local tIconData :table = g_ExtraIconData[tModifier.ModifierType];
-				if ( tIconData ) then
-					numUnlocks = numUnlocks + 1;
-					hideDescriptionIcon = hideDescriptionIcon or tIconData.HideDescriptionIcon;
-					table.insert(extraUnlocks, {IconData=tIconData, ModifierTable=tModifier});
-				end
-			end
-		end
-
-		local era:table = g_kEras[item.EraType];
-
-		-- Create node based on # of unlocks for this civic.	
-		if numUnlocks <= 8 then
-			node = m_kNodeIM:GetInstance();
-		else
-			node = m_kLargeNodeIM:GetInstance();
-			node.IsLarge = true;
-		end
-		node.Top:SetTag( item.Hash );	-- Set the hash of the civic to the tag of the node (for tutorial to be able to callout)
-		
-
+		-- Get position
 		-- Horizontal # = All prior nodes across all previous eras + node position in current era (based on cost vs. other nodes in that era)
+		local era:table = g_kEras[item.EraType];
 		local horizontal, vertical = ColumnRowToPixelXY(era.PriorColumns + item.Column, item.UITreeRow );
 
-		-- Add data fields to UI component
-		node.Type	= civicType;	-- Dynamically add "Type" field to UI node for quick look ups in item data table.
-		node.x		= horizontal;	-- Granted x,y can be looked up via GetOffset() but caching the values here for
-		node.y		= vertical - VERTICAL_CENTER;		-- other LUA functions to use removes the necessity of a slow C++ roundtrip.
-
-		if node["unlockIM"] == nil then
-			node["unlockIM"] = InstanceManager:new( "UnlockInstance", "UnlockIcon", node.UnlockStack );
-		else
-			node["unlockIM"]:ResetInstances();
-		end
-		
-		if node["unlockGOV"] == nil then
-			node["unlockGOV"] = InstanceManager:new( "GovernmentIcon", "GovernmentInstanceGrid", node.UnlockStack );
-		else
-			node["unlockGOV"]:ResetInstances();
-		end
-
-		item.Callback = function()
-			SetCurrentNode(item.Hash);
-		end
-		PopulateUnlockablesForCivic(playerId, civic.Index, node["unlockIM"], node["unlockGOV"], item.Callback, hideDescriptionIcon);
-
-		-- Initialize extra icons
-		for _,tUnlock in pairs(extraUnlocks) do
-			tUnlock.IconData:Initialize(node.UnlockStack, tUnlock.ModifierTable);
-		end
-
-		node.NodeButton:RegisterCallback( Mouse.eLClick, item.Callback);
-		node.OtherStates:RegisterCallback( Mouse.eLClick, item.Callback);
-
 		-- Set position and save.
-		node.Top:SetOffsetVal( horizontal, vertical);
-		g_uiNodes[item.Type] = node;
+		uiNode.x	= horizontal;					
+		uiNode.y	= vertical - VERTICAL_CENTER;
+		uiNode.Top:SetOffsetVal( horizontal, vertical);
+		g_uiNodes[item.Type] = uiNode;
 	end
 
 	if Controls.TreeStart ~= nil then
@@ -799,6 +724,104 @@ function AllocateUI( kNodeGrid:table, kPaths:table )
 end
 
 -- ===========================================================================
+--	Obtain three pieces of information for a given logical tree node item:
+--	RETURNS:	number of unlockable items from reseraching
+--				Whether or not a description should be hidden for an icon.
+--				Extra unlocks table.
+-- ===========================================================================
+function GetCountHideDescriptionAndExtraUnlocks( item:table )
+	local playerId			:number = Game.GetLocalPlayer();
+	local numUnlocks		:number = 0;
+	local kUnlockableTypes	:table = GetUnlockablesForCivic_Cached(item.Type, playerId);
+	local extraUnlocks		:table = {};
+
+	if kUnlockableTypes ~= nil then
+		for _, unlockItem in ipairs(kUnlockableTypes) do
+			local typeInfo = GameInfo.Types[unlockItem[1]];
+
+			if typeInfo.Kind == "KIND_GOVERNMENT" then
+				numUnlocks = numUnlocks + 4;				-- 4 types of policy slots
+			else
+				numUnlocks = numUnlocks + 1;
+			end
+		end
+	end
+
+	-- Include extra icons in total unlocks
+	if ( item.ModifierList ) then
+		for _,tModifier in ipairs(item.ModifierList) do
+			local tIconData :table = g_ExtraIconData[tModifier.ModifierType];
+			if ( tIconData ) then
+				numUnlocks = numUnlocks + 1;
+				hideDescriptionIcon = hideDescriptionIcon or tIconData.HideDescriptionIcon;
+				table.insert(extraUnlocks, {IconData=tIconData, ModifierTable=tModifier});
+			end
+		end
+	end
+	return numUnlocks, hideDescriptionIcon, extraUnlocks;
+end
+
+
+-- ===========================================================================
+--	Allocate a single node for the tree
+--	item			logical data to use when allocating
+--	isForcedSmall	used to force a smaller node even if there are many
+--					unlocks to show (used in tree randomization to hide
+--					the type of node to be researched.)
+-- ===========================================================================
+function AllocateNode( item:table, isForcedSmall:boolean )
+	-- Create node based on # of unlocks for this civic.	
+	numUnlocks, hideDescriptionIcon, extraUnlocks = GetCountHideDescriptionAndExtraUnlocks( item );		
+
+	local uiNode:table = nil;
+	if numUnlocks <= 8 or isForcedSmall then
+		uiNode = m_kNodeIM:GetInstance();
+		if (numUnlocks > 8) then
+			item.wasForcedSmall = true;	-- Small, but shouldn't be (won't be later!)
+		end
+	else
+		uiNode = m_kLargeNodeIM:GetInstance();
+		uiNode.IsLarge = true;
+	end
+	
+	uiNode.Top:SetTag( item.Hash );	-- Set the hash of the civic to the tag of the node (for tutorial to be able to callout)
+
+	-- Add data fields to UI component		
+	uiNode.Type	= item.Type;	-- Dynamically add "Type" field to UI node for quick look ups in item data table.
+
+	if uiNode["unlockIM"] == nil then
+		uiNode["unlockIM"] = InstanceManager:new( "UnlockInstance", "UnlockIcon", uiNode.UnlockStack );
+	else
+		uiNode["unlockIM"]:ResetInstances();
+	end
+		
+	if uiNode["unlockGOV"] == nil then
+		uiNode["unlockGOV"] = InstanceManager:new( "GovernmentIcon", "GovernmentInstanceGrid", uiNode.UnlockStack );
+	else
+		uiNode["unlockGOV"]:ResetInstances();
+	end
+
+	item.Callback = function()
+		SetCurrentNode(item.Hash);
+	end
+			
+	local playerId	:number = Game.GetLocalPlayer();
+	local civic		:table = GameInfo.Civics[item.Type];
+	PopulateUnlockablesForCivic( playerId, civic.Index, uiNode["unlockIM"], uiNode["unlockGOV"], item.Callback, hideDescriptionIcon);
+
+	-- Initialize extra icons
+	for _,tUnlock in pairs(extraUnlocks) do
+		tUnlock.IconData:Initialize(uiNode.UnlockStack, tUnlock.ModifierTable);
+	end
+
+	uiNode.NodeButton:RegisterCallback( Mouse.eLClick, item.Callback);
+	uiNode.OtherStates:RegisterCallback( Mouse.eLClick, item.Callback);
+
+	return uiNode;
+end
+
+
+-- ===========================================================================
 --	UI Event
 --	Callback when the main scroll panel is scrolled.
 -- ===========================================================================
@@ -822,6 +845,19 @@ function OnScroll( control:table, percent:number )
     m_lastPercent = percent; 
 end
 
+-- ===========================================================================
+function GetLargeNodeFromSmall( item:table, uiNode:table )
+	item.wasForcedSmall = false;		
+	local isForcedSmall:boolean = false;
+	local uiLargeNode :table = AllocateNode( item, isForcedSmall );
+	uiLargeNode.x = uiNode.x;
+	uiLargeNode.y = uiNode.y;		
+	uiLargeNode.Top:SetOffsetVal( uiLargeNode.x, uiLargeNode.y + VERTICAL_CENTER);	-- Add back vertical center.
+	g_uiNodes[item.Type] = uiLargeNode;		
+	m_kNodeIM:ReleaseInstance( uiNode );	-- Clear old instances
+	
+	return uiLargeNode;
+end
 
 -- ===========================================================================
 --	Now its own function so Mods / Expansions can modify the nodes
@@ -830,9 +866,16 @@ function PopulateNode(uiNode, playerTechData)
 
 	local item		:table = g_kItemDefaults[uiNode.Type];						-- static item data
 	local live		:table = playerTechData[DATA_FIELD_LIVEDATA][uiNode.Type];	-- live (changing) data
-	local artInfo	:table = (uiNode.IsLarge) and STATUS_ART_LARGE[live.Status] or STATUS_ART[live.Status];
+	local status	:number = live.IsRevealed and live.Status or ITEM_STATUS.UNREVEALED;
 
-	if(live.Status == ITEM_STATUS.RESEARCHED) then
+	-- Check if a node just changed status to reveled and needs to be reallocated to a different shape.	
+	if (status ~= ITEM_STATUS.UNREVEALED) and item.wasForcedSmall then		
+		uiNode = GetLargeNodeFromSmall( item, uiNode );
+	end
+
+	local artInfo	:table = (uiNode.IsLarge) and STATUS_ART_LARGE[status] or STATUS_ART[status];
+
+	if(status == ITEM_STATUS.RESEARCHED) then
 		for _,prereqId in pairs(item.Prereqs) do
 			if(prereqId ~= PREREQ_ID_TREE_START) then
 				local prereq		:table = g_kItemDefaults[prereqId];
@@ -869,13 +912,17 @@ function PopulateNode(uiNode, playerTechData)
 
 	uiNode.NodeName:SetColor( artInfo.TextColor0, 0 );
 	uiNode.NodeName:SetColor( artInfo.TextColor1, 1 );
+
+	uiNode.UnlockStack:SetHide( status==ITEM_STATUS.UNREVEALED );	-- Show/hide unlockables based on revealed status.
+
+	local techName :string = (status==ITEM_STATUS.UNREVEALED) and Locale.Lookup("LOC_CIVICS_TREE_NOT_REVEALED_CIVIC") or Locale.Lookup(item.Name);
 	if debugShowIDWithName then
-		uiNode.NodeName:SetText( tostring(item.Index).."  "..Locale.Lookup(item.Name) );	-- Debug output
+		uiNode.NodeName:SetText( tostring(item.Index).."  ".. techName);	-- Debug output
 	else
-		uiNode.NodeName:SetText( Locale.ToUpper( Locale.Lookup(item.Name) ));				-- Normal output
+		uiNode.NodeName:SetText( Locale.ToUpper( techName ));				-- Normal output
 	end
-				
-	if live.Turns > 0 then 
+
+	if live.Turns > 0 then
 		uiNode.Turns:SetHide( false );
 		uiNode.Turns:SetColor( artInfo.TextColor0, 0 );
 		uiNode.Turns:SetColor( artInfo.TextColor1, 1 );
@@ -884,7 +931,7 @@ function PopulateNode(uiNode, playerTechData)
 		uiNode.Turns:SetHide( true );
 	end
 
-	if item.IsBoostable and live.Status ~= ITEM_STATUS.RESEARCHED then			
+	if item.IsBoostable and status ~= ITEM_STATUS.RESEARCHED and status ~= ITEM_STATUS.UNREVEALED then
 		uiNode.BoostIcon:SetHide( false );
 		uiNode.BoostText:SetHide( false );
 		uiNode.BoostText:SetColor( artInfo.TextColor0, 0 );
@@ -904,44 +951,55 @@ function PopulateNode(uiNode, playerTechData)
 			local boostAmount = (item.BoostAmount*.01) + (live.Progress/ live.Cost);
 			uiNode.BoostMeter:SetPercent( boostAmount );
 		end
-		TruncateStringWithTooltip(uiNode.BoostText, MAX_BEFORE_TRUNC_TO_BOOST, boostText); 
+		TruncateStringWithTooltip(uiNode.BoostText, MAX_BEFORE_TRUNC_TO_BOOST, boostText);
 	else
 		uiNode.BoostIcon:SetHide( true );
 		uiNode.BoostText:SetHide( true );
 		uiNode.BoostedBack:SetHide( true );
 		uiNode.BoostMeter:SetHide( true );
 	end
-		
-	if live.Status == ITEM_STATUS.CURRENT then
+
+	if status == ITEM_STATUS.CURRENT then
 		uiNode.GearAnim:SetHide( false );
 	else
 		uiNode.GearAnim:SetHide( true );
 	end
 
 	if live.Progress > 0 then
-		uiNode.ProgressMeter:SetHide( false );			
+		uiNode.ProgressMeter:SetHide( false );
 		uiNode.ProgressMeter:SetPercent(live.Progress / live.Cost);
 	else
-		uiNode.ProgressMeter:SetHide( true );			
+		uiNode.ProgressMeter:SetHide( true );
 	end
 
 	-- Set art for icon area
-	if(item.Type ~= nil) then
-		local iconName :string = DATA_ICON_PREFIX .. item.Type;
-		if (artInfo.Name == "BLOCKED" or artInfo.Name == "LARGEBLOCKED") then
-			uiNode.IconBacking:SetHide(true);
-			iconName = iconName .. "_FOW";
-			uiNode.BoostMeter:SetColor(UI.GetColorValueFromHexLiteral(0x66ffffff));
-			uiNode.BoostIcon:SetColor(UI.GetColorValueFromHexLiteral(0x66000000));
-		else
-			uiNode.IconBacking:SetHide(false);
-			iconName = iconName;
-			uiNode.BoostMeter:SetColor(UI.GetColorValue("COLOR_WHITE"));
-			uiNode.BoostIcon:SetColor(UI.GetColorValue("COLOR_WHITE"));
-		end
-		local textureOffsetX, textureOffsetY, textureSheet = IconManager:FindIconAtlas(iconName,42);
-		if (textureOffsetX ~= nil) then
-			uiNode.Icon:SetTexture( textureOffsetX, textureOffsetY, textureSheet );
+	-- Set art and tool tip for icon area
+	if status == ITEM_STATUS.UNREVEALED then
+		uiNode.NodeButton:SetToolTipString(Locale.Lookup("LOC_CIVICS_TREE_NOT_REVEALED_TOOLTIP"));
+		uiNode.Icon:SetIcon("ICON_TECH_UNREVEALED");
+		uiNode.IconBacking:SetHide(true);
+		uiNode.BoostMeter:SetColor(UI.GetColorValueFromHexLiteral(0x66ffffff));
+		uiNode.BoostIcon:SetColor(UI.GetColorValueFromHexLiteral(0x66000000));
+	else
+		uiNode.NodeButton:SetToolTipString(ToolTipHelper.GetToolTip(item.Type, Game.GetLocalPlayer()));
+
+		if(item.Type ~= nil) then
+			local iconName :string = DATA_ICON_PREFIX .. item.Type;
+			if (artInfo.Name == "BLOCKED" or artInfo.Name == "LARGEBLOCKED") then
+				uiNode.IconBacking:SetHide(true);
+				iconName = iconName .. "_FOW";
+				uiNode.BoostMeter:SetColor(UI.GetColorValueFromHexLiteral(0x66ffffff));
+				uiNode.BoostIcon:SetColor(UI.GetColorValueFromHexLiteral(0x66000000));
+			else
+				uiNode.IconBacking:SetHide(false);
+				iconName = iconName;
+				uiNode.BoostMeter:SetColor(UI.GetColorValue("COLOR_WHITE"));
+				uiNode.BoostIcon:SetColor(UI.GetColorValue("COLOR_WHITE"));
+			end
+			local textureOffsetX, textureOffsetY, textureSheet = IconManager:FindIconAtlas(iconName,42);
+			if (textureOffsetX ~= nil) then
+				uiNode.Icon:SetTexture( textureOffsetX, textureOffsetY, textureSheet );
+			end
 		end
 	end
 
@@ -966,7 +1024,6 @@ function PopulateNode(uiNode, playerTechData)
 		uiNode.Bolt:SetTexture(PIC_BOLT_OFF);
 	end
 
-	uiNode.NodeButton:SetToolTipString(ToolTipHelper.GetToolTip(item.Type, Game.GetLocalPlayer()));
 	uiNode.IconBacking:SetTexture(artInfo.IconBacking);
 
 	-- Darken items not making it past filter.
@@ -977,6 +1034,17 @@ function PopulateNode(uiNode, playerTechData)
 		uiNode.FilteredOut:SetHide( false );
 	end
 
+	-- Civilopedia: Only show if revealed civic; only wire up handlers if not in an on-rails tutorial.
+	function OpenPedia()
+		if live.IsRevealed then
+			LuaEvents.OpenCivilopedia(uiNode.Type);
+		end
+	end
+	if IsTutorialRunning()==false then
+		uiNode.NodeButton:RegisterCallback( Mouse.eRClick, OpenPedia);
+		uiNode.OtherStates:RegisterCallback( Mouse.eRClick,OpenPedia);
+	end
+
 	-- Show/Hide Recommended Icon
 	if live.IsRecommended and live.AdvisorType ~= nil then
 		uiNode.RecommendedIcon:SetIcon(live.AdvisorType);
@@ -984,17 +1052,6 @@ function PopulateNode(uiNode, playerTechData)
 	else
 		uiNode.RecommendedIcon:SetHide(true);
 	end
-
-	-- Only wire up Civilopedia handlers if not in a on-rails tutorial.
-	if not IsTutorialRunning() then
-		-- What happens when clicked
-		local OpenPedia = function()	
-			LuaEvents.OpenCivilopedia(uiNode.Type); 
-		end
-		uiNode.NodeButton:RegisterCallback( Mouse.eRClick, OpenPedia);
-		uiNode.OtherStates:RegisterCallback( Mouse.eRClick, OpenPedia);
-	end
-
 end
 
 -- ===========================================================================
@@ -1333,6 +1390,18 @@ function GetCurrentData( ePlayer:number )
 
 	data[DATA_FIELD_GOVERNMENT]	= GetPlayerGovernment(ePlayer);
 	
+	-- Loop through all items and add an IsRevealed field.
+	local pPlayerCultureManager:table = Players[ePlayer]:GetCulture();
+	if (pPlayerCultureManager ~= nil) then
+		for type,item in pairs(g_kItemDefaults) do
+			if pPlayerCultureManager.IsCivicRevealed ~= nil then
+				data[DATA_FIELD_LIVEDATA][type]["IsRevealed"] = pPlayerCultureManager:IsCivicRevealed(item.Index);
+			else
+				data[DATA_FIELD_LIVEDATA][type]["IsRevealed"] = true;
+			end
+		end
+	end
+
 	return data;
 end
 
@@ -1468,9 +1537,10 @@ end
 --	Base costs and relationships (prerequisites)
 --	RETURN: A table of node data (techs/civics/etc...) with a prereq for each entry.
 -- ===========================================================================
-function PopulateItemData( tableName:string, tableColumn:string, prereqTableName:string, itemColumn:string, prereqColumn:string)	
-	-- Build main item table.
-	local kItemDefaults = {};
+function PopulateItemData() -- Note that we are overriding this function without calling its base version. This version requires no parameters.
+
+	local kItemDefaults :table = {};		-- Table to return
+
 	function GetHash(t)
 		local r = GameInfo.Types[t];
 		if(r) then
@@ -1480,36 +1550,39 @@ function PopulateItemData( tableName:string, tableColumn:string, prereqTableName
 		end
 	end
 
-	local tCivicModCache :table = TechAndCivicSupport_BuildCivicModifierCache();
+	local tCivicModCache:table = TechAndCivicSupport_BuildCivicModifierCache();
 
-	for row:table in GameInfo[tableName]() do
+	local civicNodes:table = UITree.GetAvailableCivics();
+	for _,civicNode in ipairs(civicNodes) do
+
+		local row:table		= GameInfo.Civics[civicNode.CivicType];
 
 		local kEntry:table	= {};
-		kEntry.Type			= row[tableColumn];
+		kEntry.Type			= row.CivicType;
 		kEntry.Name			= row.Name;
-		kEntry.BoostText		= "";
-		kEntry.Column		= -1;				-- Dynamically computed during UI layout
-		kEntry.Cost			= row.Cost;
+		kEntry.BoostText	= "";
+		kEntry.Column		= -1;
+		kEntry.Cost			= civicNode.Cost;
 		kEntry.Description	= row.Description and Locale.Lookup( row.Description );
 		kEntry.EraType		= row.EraType;
 		kEntry.Hash			= GetHash(kEntry.Type);
-		kEntry.Index			= row.Index;
+		kEntry.Index		= civicNode.CivicType;
 		kEntry.IsBoostable	= false;
-		kEntry.Prereqs		= {};
-		kEntry.UITreeRow		= row.UITreeRow;	
+		kEntry.IsRevealed	= false;
+		kEntry.Prereqs		= {};				-- IDs for prerequisite item(s)
+		kEntry.UITreeRow	= civicNode.TreeRow;
 		kEntry.Unlocks		= {};				-- Each unlock has: unlockType, iconUnavail, iconAvail, tooltip
 
 		-- Only add if not debugging or in debug range.
-		if	(table.count(debugExplicitList) == 0 and debugFilterEraMaxIndex ==-1 ) or 
-			(table.count(debugExplicitList) == 0 and kEntry.Index < debugFilterEraMaxIndex) or 
+		if	(table.count(debugExplicitList) == 0 and debugFilterEraMaxIndex ==-1 ) or
+			(table.count(debugExplicitList) == 0 and kEntry.Index < debugFilterEraMaxIndex) or
 			(table.count(debugExplicitList) ~= 0 and debugExplicitList[kEntry.Index] ~= nil)  then
 
-			-- Look up and cache any civic modifiers we reward like envoys awarded
 			kEntry.ModifierList = tCivicModCache[kEntry.Type];
 
 			-- Boost?
 			for boostRow in GameInfo.Boosts() do
-				if boostRow.CivicType == kEntry.Type then				
+				if boostRow.CivicType == kEntry.Type then
 					kEntry.BoostText = Locale.Lookup( boostRow.TriggerDescription );
 					kEntry.IsBoostable = true;
 					kEntry.BoostAmount = boostRow.Boost;
@@ -1517,9 +1590,12 @@ function PopulateItemData( tableName:string, tableColumn:string, prereqTableName
 				end
 			end
 
-			for prereqRow in GameInfo[prereqTableName]() do
-				if prereqRow[itemColumn] == kEntry.Type then
-					table.insert( kEntry.Prereqs, prereqRow[prereqColumn] );
+			if (table.count(civicNode.PrereqCivicTypes) > 0) then
+				for __,prereqCivicType in ipairs(civicNode.PrereqCivicTypes) do
+					local prereqRow:table = GameInfo.Civics[prereqCivicType];
+					if prereqRow ~= nil then
+						table.insert( kEntry.Prereqs, prereqRow.CivicType );
+					end
 				end
 			end
 			-- If no prereqs were found, set item to special tree start value
@@ -2089,6 +2165,7 @@ function OnShutdown()
 	Events.CityInitialized.Remove( OnCityInitialized );
 	Events.CityWorkerChanged.Remove( OnUpdateDueToCity );
 	Events.CivicChanged.Remove( OnCivicChanged );
+	Events.CivicQueueChanged.Remove( OnCivicChanged );
 	Events.CivicCompleted.Remove( OnCivicComplete );
 	Events.GovernmentChanged.Remove( OnGovernmentChanged );
 	Events.GovernmentPolicyChanged.Remove( OnGovernmentPolicyChanged );
@@ -2256,6 +2333,7 @@ end
 --				place to do it.
 -- ===========================================================================
 function LateInitialize()
+	
 	PopulateStaticData();
 	g_kItemDefaults = PopulateItemData("Civics","CivicType","CivicPrereqs","Civic","PrereqCivic");
 	PopulateEraData();
@@ -2298,8 +2376,10 @@ function Initialize()
 		end
 		debugExplicitList = temp;
 	end
-
-
+	
+	-- Is the randomized tree game mode (a delicious topping) active?
+	m_isTreeRandomized = GameCapabilities.HasCapability("CAPABILITY_TREE_RANDOMIZER");	
+	
 	-- UI Events
 	ContextPtr:SetInitHandler( OnInit );
 	ContextPtr:SetInputHandler( OnInputHandler, true );
@@ -2325,6 +2405,7 @@ function Initialize()
 	Events.CityInitialized.Add( OnCityInitialized );
 	Events.CityWorkerChanged.Add( OnUpdateDueToCity );
 	Events.CivicChanged.Add( OnCivicChanged );
+	Events.CivicQueueChanged.Add( OnCivicChanged );
 	Events.CivicCompleted.Add( OnCivicComplete );
 	Events.GovernmentChanged.Add( OnGovernmentChanged );
 	Events.GovernmentPolicyChanged.Add( OnGovernmentPolicyChanged );
