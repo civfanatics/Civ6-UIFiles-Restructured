@@ -8,6 +8,7 @@ include("SupportFunctions");
 include("CivilizationIcon");
 include("TeamSupport");
 include("EraSupport");
+include("GameCapabilities");
 
 -- ===========================================================================
 --	CONSTANTS
@@ -131,16 +132,22 @@ function GetData()
 		m_EraData.NextEraType = ERA_TYPE_DARK_AGE;
 	end
 
+	local loyalty : number = 0;
+	if (m_EraData.PlayerID ~= PlayerTypes.NONE) then
+		local localPlayer	: table = Players[m_EraData.PlayerID];
+		loyalty = localPlayer:GetCivilianLoyalty();
+	end
+
 	if pGameEras:HasHeroicGoldenAge(m_EraData.PlayerID) then
 		-- Heroic
 		m_EraData.CurrentEraType = ERA_TYPE_HEROIC_AGE;
 		m_EraData.CurrentEraIcon = "[ICON_GLORY_SUPER_GOLDEN_AGE]";
 		m_EraData.NextEraThreshold = m_EraData.GoldenAgeThreshold
 		m_EraData.EraRibbonTexture = "Controls_AgesBanner_Heroic";
-		m_EraData.EraRibbonText = Locale.Lookup("LOC_ERA_REVIEW_HAVE_HEROIC_AGE");
+		m_EraData.EraRibbonText = Locale.Lookup("LOC_ERA_REVIEW_HAVE_HEROIC_AGE_PARAM", {Name = "Amount", Value=loyalty});
 		m_EraData.AgeName = Locale.Lookup("LOC_ERA_PROGRESS_HEROIC_AGE");
 		m_EraData.ShortAgeName = Locale.Lookup("LOC_ERAS_HEROIC");
-		m_EraData.AgeEffects = Locale.Lookup("LOC_ERA_TT_HAVE_HEROIC_AGE_EFFECT");
+		m_EraData.AgeEffects = Locale.Lookup("LOC_ERA_TT_HAVE_HEROIC_AGE_EFFECT_PARAM", {Name = "Amount", Value=loyalty});
 		m_EraData.NextGoldenAgeName = Locale.Lookup("LOC_ERA_REVIEW_HAVE_GOLDEN_AGE_LABEL");
 	elseif pGameEras:HasGoldenAge(m_EraData.PlayerID) then
 		-- Golden
@@ -148,10 +155,10 @@ function GetData()
 		m_EraData.CurrentEraIcon = "[ICON_GLORY_GOLDEN_AGE]";
 		m_EraData.NextEraThreshold = m_EraData.GoldenAgeThreshold
 		m_EraData.EraRibbonTexture = "Controls_AgesBanner_Golden";
-		m_EraData.EraRibbonText = Locale.Lookup("LOC_ERA_REVIEW_HAVE_GOLDEN_AGE");
+		m_EraData.EraRibbonText = Locale.Lookup("LOC_ERA_REVIEW_HAVE_GOLDEN_AGE_PARAM", {Name = "Amount", Value=loyalty});
 		m_EraData.AgeName = Locale.Lookup("LOC_ERA_PROGRESS_GOLDEN_AGE");
 		m_EraData.ShortAgeName = Locale.Lookup("LOC_ERAS_GOLDEN");
-		m_EraData.AgeEffects = Locale.Lookup("LOC_ERA_TT_HAVE_GOLDEN_AGE_EFFECT");
+		m_EraData.AgeEffects = Locale.Lookup("LOC_ERA_TT_HAVE_GOLDEN_AGE_EFFECT_PARAM", {Name = "Amount", Value=loyalty});
 		m_EraData.NextGoldenAgeName = Locale.Lookup("LOC_ERA_REVIEW_HAVE_GOLDEN_AGE_LABEL");
 	elseif pGameEras:HasDarkAge(m_EraData.PlayerID) then
 		-- Dark
@@ -159,10 +166,10 @@ function GetData()
 		m_EraData.CurrentEraIcon = "[ICON_GLORY_DARK_AGE]";
 		m_EraData.NextEraThreshold = m_EraData.DarkAgeThreshold
 		m_EraData.EraRibbonTexture = "Controls_AgesBanner_Dark";
-		m_EraData.EraRibbonText = Locale.Lookup("LOC_ERA_REVIEW_HAVE_DARK_AGE");
+		m_EraData.EraRibbonText = Locale.Lookup("LOC_ERA_REVIEW_HAVE_DARK_AGE_PARAM", {Name = "Amount", Value=loyalty});
 		m_EraData.AgeName = Locale.Lookup("LOC_ERA_PROGRESS_DARK_AGE");
 		m_EraData.ShortAgeName = Locale.Lookup("LOC_ERAS_DARK");
-		m_EraData.AgeEffects = Locale.Lookup("LOC_ERA_TT_HAVE_DARK_AGE_EFFECT");
+		m_EraData.AgeEffects = Locale.Lookup("LOC_ERA_TT_HAVE_DARK_AGE_EFFECT_PARAM", {Name = "Amount", Value=loyalty});
 		m_EraData.NextGoldenAgeName = Locale.Lookup("LOC_ERA_REVIEW_HAVE_HEROIC_AGE_LABEL");
 	else
 		-- Normal
@@ -170,10 +177,10 @@ function GetData()
 		m_EraData.CurrentEraIcon = "[ICON_GLORY_NORMAL_AGE]";
 		m_EraData.NextEraThreshold = m_EraData.GoldenAgeThreshold
 		m_EraData.EraRibbonTexture = "Controls_AgesBanner_Normal";
-		m_EraData.EraRibbonText = Locale.Lookup("LOC_ERA_REVIEW_HAVE_NORMAL_AGE");
+		m_EraData.EraRibbonText = Locale.Lookup("LOC_ERA_REVIEW_HAVE_NORMAL_AGE_PARAM", {Name = "Amount", Value=loyalty});
 		m_EraData.AgeName = Locale.Lookup("LOC_ERA_PROGRESS_NORMAL_AGE");
 		m_EraData.ShortAgeName = Locale.Lookup("LOC_ERAS_NORMAL");
-		m_EraData.AgeEffects = Locale.Lookup("LOC_ERA_TT_HAVE_NORMAL_AGE_EFFECT");
+		m_EraData.AgeEffects = Locale.Lookup("LOC_ERA_TT_HAVE_NORMAL_AGE_EFFECT_PARAM", {Name = "Amount", Value=loyalty});
 		m_EraData.NextGoldenAgeName = Locale.Lookup("LOC_ERA_REVIEW_HAVE_GOLDEN_AGE_LABEL");
 	end
 
@@ -255,6 +262,9 @@ function Refresh()
 		Controls.GoldenThreshold:SetToolTipString(m_EraData.GoldenAgeThresholdTooltip);
 		Controls.ThresholdStack:SetHide(false);
 	end
+
+	-- hide the normal age text if we're in Dramatic Ages
+	Controls.NormalAgeThreshold:SetHide(HasCapability("CAPABILITY_DRAMATICAGES"));
 
 	Controls.EraEffects:SetText(m_EraData.AgeEffects);
 end

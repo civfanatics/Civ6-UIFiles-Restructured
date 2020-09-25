@@ -1,5 +1,6 @@
 -- Copyright 2017-2018, Firaxis Games
 include("ActionPanel");
+include("GameCapabilities");
 
 BASE_OnRefresh = OnRefresh;
 BASE_LateInitialize = LateInitialize;
@@ -41,6 +42,7 @@ function OnRefresh()
 	local score : number	= gameEras:GetPlayerCurrentScore(localPlayerID); 
 	local detailsString : string = Locale.Lookup("LOC_ERA_SCORE_HEADER") .. " " .. score;
 	local isFinalEra:boolean = gameEras:GetCurrentEra() == gameEras:GetFinalEra();
+	local localPlayer	: table = Players[localPlayerID];
 
 	if not isFinalEra then
 		detailsString = detailsString .. Locale.Lookup("LOC_DARK_AGE_THRESHOLD_TEXT", gameEras:GetPlayerDarkAgeThreshold(localPlayerID));
@@ -55,28 +57,28 @@ function OnRefresh()
 		Controls.GoldenAgeAnimation:SetHide(false);
 		Controls.DarkAgeShadow:SetHide(true);
 		--Tooltip setup
-		detailsString = detailsString .. Locale.Lookup("LOC_ERA_TT_HAVE_HEROIC_AGE_EFFECT");
+		detailsString = detailsString .. Locale.Lookup("LOC_ERA_TT_HAVE_HEROIC_AGE_EFFECT_PARAM", {Name = "Amount", Value=localPlayer:GetCivilianLoyalty()});
 	elseif gameEras:HasGoldenAge(localPlayerID) then
 		Controls.TurnAgeAnimation:SetTexture("ActionPanel_TurnProcessing_Golden");
 		Controls.EndTurnButtonLabel:SetTexture("ActionPanel_TurnBlocker_Golden");
 		Controls.GoldenAgeAnimation:SetHide(false);
 		Controls.DarkAgeShadow:SetHide(true);
 		--Tooltip setup
-		detailsString = detailsString .. Locale.Lookup("LOC_ERA_TT_HAVE_GOLDEN_AGE_EFFECT");
+		detailsString = detailsString .. Locale.Lookup("LOC_ERA_TT_HAVE_GOLDEN_AGE_EFFECT_PARAM", {Name = "Amount", Value=localPlayer:GetCivilianLoyalty()});
 	elseif gameEras:HasDarkAge(localPlayerID) then
 		Controls.TurnAgeAnimation:SetTexture("ActionPanel_TurnProcessing_Dark");
 		Controls.EndTurnButtonLabel:SetTexture("ActionPanel_TurnBlocker_Dark");
 		Controls.DarkAgeShadow:SetHide(false);
 		Controls.GoldenAgeAnimation:SetHide(true);
 		--Tooltip setup
-		detailsString = detailsString .. Locale.Lookup("LOC_ERA_TT_HAVE_DARK_AGE_EFFECT");
+		detailsString = detailsString .. Locale.Lookup("LOC_ERA_TT_HAVE_DARK_AGE_EFFECT_PARAM", {Name = "Amount", Value=localPlayer:GetCivilianLoyalty()});
 	else
 		Controls.TurnAgeAnimation:SetTexture("ActionPanel_TurnProcessing");
 		Controls.EndTurnButtonLabel:SetTexture("ActionPanel_TurnBlocker");
 		Controls.DarkAgeShadow:SetHide(true);
 		Controls.GoldenAgeAnimation:SetHide(true);
 		--Tooltip setup
-		detailsString = detailsString ..Locale.Lookup("LOC_ERA_TT_HAVE_NORMAL_AGE_EFFECT");
+		detailsString = detailsString ..Locale.Lookup("LOC_ERA_TT_HAVE_NORMAL_AGE_EFFECT_PARAM", {Name = "Amount", Value=localPlayer:GetCivilianLoyalty()});
 	end
 	
 	--Set our bar state
@@ -112,8 +114,13 @@ function OnRefresh()
 	end
 	Controls.TurnTimerMeterNormal:SetPercent(normalPercent);
 	local goldenPercent = 1;
-	if ((goldenAgeThreshold - darkAgeThreshold) ~= 0) then
-		goldenPercent = (score - darkAgeThreshold) / (goldenAgeThreshold - darkAgeThreshold);
+	-- in Dramatic Ages, goldenAgeThreshold is equal to darkAgeThreshold so the math gets simpler
+	if HasCapability("CAPABILITY_DRAMATICAGES") then
+		goldenPercent = score / goldenAgeThreshold;
+	else
+		if ((goldenAgeThreshold - darkAgeThreshold) ~= 0) then
+			goldenPercent = (score - darkAgeThreshold) / (goldenAgeThreshold - darkAgeThreshold);
+		end
 	end
 	Controls.TurnTimerMeterGolden:SetPercent(goldenPercent);
 

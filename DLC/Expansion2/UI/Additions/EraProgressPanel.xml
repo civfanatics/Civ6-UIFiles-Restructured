@@ -76,7 +76,7 @@
 							<Label ID="DarkCheckmark" Anchor="R,C" Offset="4,2" String="[ICON_CheckSuccess]"/>
 						</Container>
 						<!-- Normal Age Threshold -->
-						<Container Anchor="C,T" Size="parent-50,auto">
+						<Container ID="NormalAgeThreshold" Anchor="C,T" Size="parent-50,auto">
 							<Label Anchor="L,C" Size="parent,40" String="LOC_ERA_REVIEW_HAVE_NORMAL_AGE_LABEL" Style="HalfScreenHeader"/>
 							<Label ID="NormalThreshold" Anchor="R,C" Size="parent,40" Offset="30,0" String="99-999" Style="FontBoldFlair21" Align="Right"/>
 							<Label ID="NormalCheckmark" Anchor="R,C" Offset="4,2" String="[ICON_CheckSuccess]"/>

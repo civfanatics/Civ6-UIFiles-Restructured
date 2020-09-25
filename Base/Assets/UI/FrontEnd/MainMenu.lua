@@ -1336,7 +1336,14 @@ function RealizeLogoAndMovie()
 				-- Save some bandwidth if playing via remote desktop.
 				local iMovieDisabled: boolean = (Options.GetAppOption("UI", "EnablePausedShellMovies") == 1);
 				if iMovieDisabled then
-					movieControl:Pause();
+					-- Pause needs to occur one frame later so create lambda via refresh handler.
+					ContextPtr:SetRefreshHandler( 
+						function()
+							movieControl:Pause();
+							ContextPtr:ClearRefreshHandler();
+						end
+					);			
+					ContextPtr:RequestRefresh();	
 				end
 			end
 		end

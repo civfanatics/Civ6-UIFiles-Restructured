@@ -1648,6 +1648,7 @@ function OnValueEditButton(itemID)
 				g_ValueEditDealItemControlTable.AmountText:SetHide(false);
 			end
 			UpdateDealStatus();
+			UpdateDealPanel(g_LocalPlayer);
 		end
 	end
 
@@ -2306,7 +2307,13 @@ function PopulateDealAgreements(player : table, iconList : table)
 					local subTypeDisplayName : string = pDealItem:GetSubTypeNameID();
 					if (subTypeDisplayName ~= nil) then
 						uiIcon.IconText:LocalizeAndSetText(subTypeDisplayName);
-						uiMinimizedIcon.SelectButton:SetToolTipString(Locale.Lookup(subTypeDisplayName));
+						-- For alliances, it's useful to show the alliance type in the tooltip for the minimized version
+						if pDealItem:GetSubType() == DealAgreementTypes.ALLIANCE and pDealItem:GetValueTypeNameID() ~= nil then
+							local toolTip : string = Locale.Lookup(subTypeDisplayName).."[NEWLINE]"..Locale.Lookup(pDealItem:GetValueTypeNameID());
+							uiMinimizedIcon.SelectButton:SetToolTipString(toolTip);
+						else
+							uiMinimizedIcon.SelectButton:SetToolTipString(Locale.Lookup(subTypeDisplayName));
+						end
 					end
 					uiIcon.SelectButton:SetToolTipString(nil);		-- We recycle the entries, so make sure this is clear.
 

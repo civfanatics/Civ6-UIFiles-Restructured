@@ -421,7 +421,7 @@ function LayoutNodeGrid()
 
 			-- No prereqs? Just put at start, otherwise push forward past them all.
 			if item.Prereqs ~= nil then
-				for _,prereq in ipairs(item.Prereqs) do							-- For every prereq					
+				for _,prereq in ipairs(item.Prereqs) do							-- For every prereq
 					local isPrereqMatched :boolean = false;					
 					for x=pos,maxColumns,1 do									-- For every column (from last highest found start position)
 						for y=ROW_MIN, ROW_MAX,1 do								-- For every row in the column
@@ -458,11 +458,35 @@ function LayoutNodeGrid()
 				end
 			end
 
-			-- if the large node got placed first and we're being put underneath it, move forward
+  		-- if the large node got placed first and we're being put underneath it, move forward
 			if item.UITreeRow > ROW_MIN then
 				if grid.rows[item.UITreeRow - 1].columns[pos] ~= nil then
 					if g_kItemDefaults[grid.rows[item.UITreeRow - 1].columns[pos]] ~= nil and g_kItemDefaults[grid.rows[item.UITreeRow - 1].columns[pos]].IsLarge then
 						pos = pos + 1;
+					end
+				end
+			end
+
+			-- We can accidentally compact two items into the same row, causing orphaned prereqs for
+			-- later nodes.  (Tech Tree uses a smarter algorithm for this, something to keep in mind).
+			-- Find the closest open spot in the current column.  GameCore is guaranteed to leave at least one open.
+			local newPos:number = item.UITreeRow;
+			local newDistance:number = ROW_MAX+1;
+			if grid.rows[item.UITreeRow] ~= nil then
+				if grid.rows[item.UITreeRow].columns[pos] ~= nil then
+					for y=ROW_MIN, ROW_MAX,1 do								-- For every row in the column
+						local tmpDistance:number = ROW_MAX+1;
+						if grid.rows[y].columns[pos] == nil then
+							if y > item.UITreeRow then
+								 tmpDistance = y - item.UITreeRow;
+							else
+								 tmpDistance = item.UITreeRow - y;
+							end
+							if tmpDistance < newDistance then
+								item.UITreeRow = y;
+								newDistance = tmpDistance;
+							end
+						end
 					end
 				end
 			end
@@ -879,30 +903,32 @@ function PopulateNode(uiNode, playerTechData)
 		for _,prereqId in pairs(item.Prereqs) do
 			if(prereqId ~= PREREQ_ID_TREE_START) then
 				local prereq		:table = g_kItemDefaults[prereqId];
-				local previousRow	:number = prereq.UITreeRow;
-				local previousColumn:number = g_kEras[prereq.EraType].PriorColumns;
+				if prereq ~= nil then
+					local previousRow	:number = prereq.UITreeRow;
+					local previousColumn:number = g_kEras[prereq.EraType].PriorColumns;
 
-				for lineNum,line in pairs(g_uiConnectorSets[item.Type..","..prereqId]) do
-					if(lineNum == 1 or lineNum == 5) then
-						line:SetTexture("Controls_TreePathEW");
-					end
-					if( lineNum == 3) then
-						line:SetTexture("Controls_TreePathNS");
-					end
-
-					if(lineNum==2)then
-						if previousRow < item.UITreeRow  then
-							line:SetTexture("Controls_TreePathSE");
-						else
-							line:SetTexture("Controls_TreePathNE");
+					for lineNum,line in pairs(g_uiConnectorSets[item.Type..","..prereqId]) do
+						if(lineNum == 1 or lineNum == 5) then
+							line:SetTexture("Controls_TreePathEW");
 						end
-					end
+						if( lineNum == 3) then
+							line:SetTexture("Controls_TreePathNS");
+						end
+	
+						if(lineNum==2)then
+							if previousRow < item.UITreeRow  then
+								line:SetTexture("Controls_TreePathSE");
+							else
+								line:SetTexture("Controls_TreePathNE");
+							end
+						end
 
-					if(lineNum==4)then
-						if previousRow < item.UITreeRow  then
-							line:SetTexture("Controls_TreePathES");
-						else
-							line:SetTexture("Controls_TreePathEN");
+						if(lineNum==4)then
+							if previousRow < item.UITreeRow  then
+								line:SetTexture("Controls_TreePathES");
+							else
+								line:SetTexture("Controls_TreePathEN");
+							end
 						end
 					end
 				end

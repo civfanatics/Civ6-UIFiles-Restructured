@@ -181,21 +181,10 @@ local sectionId = page.SectionId;
 
         if(#uu > 0) then
             s:AddHeader("LOC_UI_PEDIA_SPECIAL_UNITS");
-            local icons = {};
             for _, item in ipairs(uu) do
-                table.insert(icons, {"ICON_" .. item[1], item[2],  item[1]});	
-
-                if(#icons == 4) then
-                    s:AddIconList(icons[1], icons[2], icons[3], icons[4]);
-                    icons = {};
-                end
+				s:AddIconLabel("ICON_" .. item[1], item[2]);
             end
-
-            if(#icons > 0) then
-                s:AddIconList(icons[1], icons[2], icons[3], icons[4]);
-            end
-
-            s:AddSeparator();
+			s:AddSeparator();
         end
 
         if(#ub > 0) then
@@ -203,18 +192,9 @@ local sectionId = page.SectionId;
         
             local icons = {};
             for _, item in ipairs(ub) do
-                table.insert(icons, {"ICON_" .. item[1], item[2],  item[1]});	
-
-                if(#icons == 4) then
-                    s:AddIconList(icons[1], icons[2], icons[3], icons[4]);
-                    icons = {};
-                end
+				s:AddIconLabel("ICON_" .. item[1], item[2]);
             end
-
-            if(#icons > 0) then
-                s:AddIconList(icons[1], icons[2], icons[3], icons[4]);
-            end
-            s:AddSeparator();
+			s:AddSeparator();
         end
     end);
 

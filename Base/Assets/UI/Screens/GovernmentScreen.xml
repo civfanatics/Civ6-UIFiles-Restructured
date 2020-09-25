@@ -213,9 +213,15 @@
                 </PullDown>
 
                 <!--Filters are added dynamically through AddFilterTabButtons-->
-                <ScrollPanel Anchor="C,T" Offset="6,6" Size="parent,parent" Vertical="0" AutoScrollBar="1">
+				<GridButton ID="BackButton"	Size="36,38" Offset="0,0" ToolTip="LOC_GOVT_FILTER_BACK_HELP">
+					<Image ID="BackIcon" Anchor="C,C" Texture="Controls_ArrowButtonLeft" Size="19,23" StateOffsetIncrement="0,23"/>
+				</GridButton>
+                <ScrollPanel ID="FilterScroll" Anchor="C,T" Offset="6,6" Size="parent-80,parent" Vertical="0" AutoScrollBar="0">
                   <Stack ID="FilterStack" Anchor="C,T" StackGrowth="Right"/>
                 </ScrollPanel>
+				<GridButton ID="ForwardButton"	Size="36,38" Offset="0,0" ToolTip="LOC_GOVT_FILTER_FORWARD_HELP">
+					<Image ID="ForwardIcon" Anchor="C,C" Texture="Controls_ArrowButtonRight" Size="19,23" StateOffsetIncrement="0,23"/>
+				</GridButton>
                 
                 <Box ID="CatalogInputShield" Offset="0,0" Size="parent,parent" ConsumeMouseButton="1" Color="0,0,0,150"/>
 

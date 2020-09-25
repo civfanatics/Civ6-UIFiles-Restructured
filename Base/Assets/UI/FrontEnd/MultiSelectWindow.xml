@@ -55,8 +55,8 @@
 		</Grid>
 
 		<Stack ID="ButtonStack" Anchor="C,B" Padding="20" StackGrowth="Right">
-			<GridButton ID="SelectAllButton" Size="320,45"  Style="ButtonControl" Anchor="C,B" String="LOC_SELECT_ALL" />
-			<GridButton ID="SelectNoneButton" Size="320,45" Style="ButtonControl" Anchor="C,B" String="LOC_SELECT_NONE" />
+			<GridButton ID="SelectAllButton" Size="320,45"  Style="MainButton" Anchor="C,B" String="LOC_SELECT_ALL" />
+			<GridButton ID="SelectNoneButton" Size="320,45" Style="MainButton" Anchor="C,B" String="LOC_SELECT_NONE" />
 			<GridButton ID="ConfirmButton" Size="320,45" Style="ButtonConfirm" Anchor="C,B" String="LOC_OK_BUTTON" />
 		</Stack>
 	</Container>

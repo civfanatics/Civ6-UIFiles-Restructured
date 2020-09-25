@@ -417,7 +417,7 @@
 			<Alt1PrimaryColor>COLOR_STANDARD_RED_MD</Alt1PrimaryColor>
 			<Alt1SecondaryColor>COLOR_STANDARD_YELLOW_MD</Alt1SecondaryColor>
 			<Alt2PrimaryColor>COLOR_STANDARD_GREEN_LT</Alt2PrimaryColor>
-			<Alt2SecondaryColor>COLOR_STANDARD_ORANGE_MD</Alt2SecondaryColor>
+			<Alt2SecondaryColor>COLOR_STANDARD_ORANGE_DK</Alt2SecondaryColor>
 			<Alt3PrimaryColor>COLOR_STANDARD_ORANGE_DK</Alt3PrimaryColor>
 			<Alt3SecondaryColor>COLOR_STANDARD_GREEN_LT</Alt3SecondaryColor>
 		</Row>

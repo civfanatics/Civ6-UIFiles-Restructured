@@ -69,11 +69,6 @@ m_LinkOffsets = {};
 	m_LinkOffsets[2] = {0,-20};
 	m_LinkOffsets[3] = {16,22};
 
-m_UnitFlagHeightOverrides = {
-	["UNIT_GIANT_DEATH_ROBOT"] = 20,
-};
-
-
 
 -- ===========================================================================
 --	VARIABLES
@@ -1001,13 +996,15 @@ function UnitFlag.SetPosition( self, worldX : number, worldY : number, worldZ : 
 			self.m_Instance.Anchor:SetZoomOffsetNearVal( 0, 0, 0 );
 			if (cityBannerZOffset == 0) then
 				local pUnitType = GameInfo.Units[pUnit:GetUnitType()].UnitType;
-				local pHeightOverride = m_UnitFlagHeightOverrides[pUnitType];
-				if (pHeightOverride ~= nil) then
-					-- Only offset when fully zoomed in, when zoomed out the flag will move down onto the hex
-					self.m_Instance.Anchor:SetZoomOffsetNearVal( 0, 0, pHeightOverride );
+				local kUnitPresentationDef:table = GameInfo.Units_Presentation[pUnitType];
+				if kUnitPresentationDef ~= nil then
+					local flagOffset:number = kUnitPresentationDef.UIFlagOffset;
+					if flagOffset ~= 0 then
+						-- Only offset when fully zoomed in, when zoomed out the flag will move down onto the hex
+						self.m_Instance.Anchor:SetZoomOffsetNearVal( 0, 0, flagOffset );
+					end
 				end
 			end
-
 		end
 	end
 

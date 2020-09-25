@@ -488,6 +488,18 @@ function OnGovernorAppointed(playerID, governorID)
 		Refresh();
 		local governorDefinition:table = GameInfo.Governors[governorID];
 		if (governorDefinition ~= nil and not IsCannotAssign(governorDefinition)) then
+			local pPlayer:object = Players[playerID];
+			if (pPlayer == nil) then
+				return;
+			end
+			local playerGovernors:object = pPlayer:GetGovernors();
+			if (playerGovernors == nil) then
+				return;
+			end
+			local appointedGovernor:object = playerGovernors:GetGovernor(governorDefinition.Hash);
+			if (appointedGovernor ~= nil and appointedGovernor:GetNeutralizedTurns() > 0) then
+				return;
+			end
 			LuaEvents.GovernorAssignmentChooser_RequestAssignment( governorID );
 			Close();
 		end

@@ -76,7 +76,12 @@ InterfaceModeMessageHandler =
 	[InterfaceModeTypes.VIEW_MODAL_LENS]	= {},
 	[InterfaceModeTypes.FULLSCREEN_MAP]	= {},
 	[InterfaceModeTypes.CITY_SELECTION]	= {},
-	[InterfaceModeTypes.SACRIFICE_SELECTION] = {}
+	[InterfaceModeTypes.SACRIFICE_SELECTION] = {},
+	[InterfaceModeTypes.KILL_WEAKER_UNIT] = {},
+	[InterfaceModeTypes.TRANSFORM_UNIT] = {},
+	[InterfaceModeTypes.RESTORE_UNIT_MOVES] = {},
+	[InterfaceModeTypes.NAVAL_GOLD_RAID] = {},
+	[InterfaceModeTypes.RESOURCE_INSPIRE] = {}
 }
 
 -- ===========================================================================
@@ -3133,7 +3138,303 @@ function OnInterfaceModeLeave_Sacrifice( eNewMode:number )
 	UILens.ClearLayerHexes( g_HexColoringMovement );
 end
 
+------------------------------------------------------------------------------------------------
+-- Interface mode and input handlers for Hero Unit Command 'Kill Weaker Unit'
+------------------------------------------------------------------------------------------------
+function PerformKillWeakerUnit(pInputStruct)
+	local plotID = UI.GetCursorPlotID();
+	if Map.IsPlot(plotID) then
+		local plot = Map.GetPlotByIndex(plotID);
+			
+		local tParameters = {};
+		tParameters[UnitCommandTypes.PARAM_X] = plot:GetX();
+		tParameters[UnitCommandTypes.PARAM_Y] = plot:GetY();
 
+		local pSelectedUnit = UI.GetHeadSelectedUnit();
+		if (UnitManager.CanStartCommand(pSelectedUnit, UnitCommandTypes.KILL_WEAKER_UNIT, tParameters)) then
+			UnitManager.RequestCommand(pSelectedUnit, UnitCommandTypes.KILL_WEAKER_UNIT, tParameters);
+			UI.SetInterfaceMode(InterfaceModeTypes.SELECTION);
+			--UI.PlaySound("Unit_HeroAbility"); TODO
+		end
+	end
+	return true;
+end
+------------------------------------------------------------------------------------------------
+function OnMouseEnd_KillWeakerUnit(pInputStruct)
+	-- If a drag was occurring, end it; otherwise raise event.
+	if g_isMouseDragging then
+		g_isMouseDragging = false;
+	elseif IsSelectionAllowedAt(UI.GetCursorPlotID()) then		
+		PerformKillWeakerUnit(pInputStruct);
+	end
+	EndDragMap();
+	g_isMouseDownInWorld = false;
+	return true;
+end
+------------------------------------------------------------------------------------------------
+function OnInterfaceModeChange_KillWeakerUnit(eNewMode)
+	UIManager:SetUICursor(CursorTypes.RANGE_ATTACK);
+	local pSelectedUnit = UI.GetHeadSelectedUnit();
+	local tResults = UnitManager.GetCommandTargets(pSelectedUnit, UnitCommandTypes.KILL_WEAKER_UNIT);
+	local allPlots = tResults[CityCommandResults.PLOTS];
+	if allPlots then
+		g_targetPlots = {};
+		for i,modifier in ipairs(tResults[CityCommandResults.PLOTS]) do
+			table.insert(g_targetPlots, allPlots[i]);
+		end 
+
+		-- Highlight the plots available to airdrop to
+		if (table.count(g_targetPlots) ~= 0) then
+			UILens.ToggleLayerOn(g_HexColoringMovement);
+			UILens.SetLayerHexesArea(g_HexColoringMovement, Game.GetLocalPlayer(), g_targetPlots);
+		end
+	end
+end
+--------------------------------------------------------------------------------------------------
+function OnInterfaceModeLeave_KillWeakerUnit(eNewMode:number)
+	UIManager:SetUICursor(CursorTypes.NORMAL);
+	UILens.ToggleLayerOff(g_HexColoringMovement);
+	UILens.ClearLayerHexes(g_HexColoringMovement);
+end
+
+
+------------------------------------------------------------------------------------------------
+-- Interface mode and input handlers for Hero Unit Command 'Transform Unit'
+------------------------------------------------------------------------------------------------
+function PerformTransformUnit(pInputStruct)
+	local plotID = UI.GetCursorPlotID();
+	if Map.IsPlot(plotID) then
+		local plot = Map.GetPlotByIndex(plotID);
+			
+		local tParameters = {};
+		tParameters[UnitCommandTypes.PARAM_X] = plot:GetX();
+		tParameters[UnitCommandTypes.PARAM_Y] = plot:GetY();
+
+		local pSelectedUnit = UI.GetHeadSelectedUnit();
+		if (UnitManager.CanStartCommand(pSelectedUnit, UnitCommandTypes.TRANSFORM_UNIT, tParameters)) then
+			UnitManager.RequestCommand(pSelectedUnit, UnitCommandTypes.TRANSFORM_UNIT, tParameters);
+			UI.SetInterfaceMode(InterfaceModeTypes.SELECTION);
+			--UI.PlaySound("Unit_HeroAbility"); TODO
+		end
+	end
+	return true;
+end
+------------------------------------------------------------------------------------------------
+function OnMouseEnd_TransformUnit(pInputStruct)
+	-- If a drag was occurring, end it; otherwise raise event.
+	if g_isMouseDragging then
+		g_isMouseDragging = false;
+	elseif IsSelectionAllowedAt(UI.GetCursorPlotID()) then		
+		PerformTransformUnit(pInputStruct);
+	end
+	EndDragMap();
+	g_isMouseDownInWorld = false;
+	return true;
+end
+------------------------------------------------------------------------------------------------
+function OnInterfaceModeChange_TransformUnit(eNewMode)
+	UIManager:SetUICursor(CursorTypes.RANGE_ATTACK);
+	local pSelectedUnit = UI.GetHeadSelectedUnit();
+	local tResults = UnitManager.GetCommandTargets(pSelectedUnit, UnitCommandTypes.TRANSFORM_UNIT);
+	local allPlots = tResults[CityCommandResults.PLOTS];
+	if allPlots then
+		g_targetPlots = {};
+		for i,modifier in ipairs(tResults[CityCommandResults.PLOTS]) do
+			table.insert(g_targetPlots, allPlots[i]);
+		end 
+
+		-- Highlight the plots available to airdrop to
+		if (table.count(g_targetPlots) ~= 0) then
+			UILens.ToggleLayerOn(g_HexColoringMovement);
+			UILens.SetLayerHexesArea(g_HexColoringMovement, Game.GetLocalPlayer(), g_targetPlots);
+		end
+	end
+end
+--------------------------------------------------------------------------------------------------
+function OnInterfaceModeLeave_TransformUnit(eNewMode:number)
+	UIManager:SetUICursor(CursorTypes.NORMAL);
+	UILens.ToggleLayerOff(g_HexColoringMovement);
+	UILens.ClearLayerHexes(g_HexColoringMovement);
+end
+
+------------------------------------------------------------------------------------------------
+-- Interface mode and input handlers for Hero Unit Command 'Restore Unit Moves'
+------------------------------------------------------------------------------------------------
+function PerformRestoreUnitMoves(pInputStruct)
+	local plotID = UI.GetCursorPlotID();
+	if Map.IsPlot(plotID) then
+		local plot = Map.GetPlotByIndex(plotID);
+			
+		local tParameters = {};
+		tParameters[UnitCommandTypes.PARAM_X] = plot:GetX();
+		tParameters[UnitCommandTypes.PARAM_Y] = plot:GetY();
+
+		local pSelectedUnit = UI.GetHeadSelectedUnit();
+		if (UnitManager.CanStartCommand(pSelectedUnit, UnitCommandTypes.RESTORE_UNIT_MOVES, tParameters)) then
+			UnitManager.RequestCommand(pSelectedUnit, UnitCommandTypes.RESTORE_UNIT_MOVES, tParameters);
+			UI.SetInterfaceMode(InterfaceModeTypes.SELECTION);
+			--UI.PlaySound("Unit_HeroAbility"); TODO
+		end
+	end
+	return true;
+end
+------------------------------------------------------------------------------------------------
+function OnMouseEnd_RestoreUnitMoves(pInputStruct)
+	-- If a drag was occurring, end it; otherwise raise event.
+	if g_isMouseDragging then
+		g_isMouseDragging = false;
+	elseif IsSelectionAllowedAt(UI.GetCursorPlotID()) then		
+		PerformRestoreUnitMoves(pInputStruct);
+	end
+	EndDragMap();
+	g_isMouseDownInWorld = false;
+	return true;
+end
+------------------------------------------------------------------------------------------------
+function OnInterfaceModeChange_RestoreUnitMoves(eNewMode)
+	UIManager:SetUICursor(CursorTypes.RANGE_ATTACK);
+	local pSelectedUnit = UI.GetHeadSelectedUnit();
+	local tResults = UnitManager.GetCommandTargets(pSelectedUnit, UnitCommandTypes.RESTORE_UNIT_MOVES);
+	local allPlots = tResults[CityCommandResults.PLOTS];
+	if allPlots then
+		g_targetPlots = {};
+		for i,modifier in ipairs(tResults[CityCommandResults.PLOTS]) do
+			table.insert(g_targetPlots, allPlots[i]);
+		end 
+
+		-- Highlight the plots available to airdrop to
+		if (table.count(g_targetPlots) ~= 0) then
+			UILens.ToggleLayerOn(g_HexColoringMovement);
+			UILens.SetLayerHexesArea(g_HexColoringMovement, Game.GetLocalPlayer(), g_targetPlots);
+		end
+	end
+end
+--------------------------------------------------------------------------------------------------
+function OnInterfaceModeLeave_RestoreUnitMoves(eNewMode:number)
+	UIManager:SetUICursor(CursorTypes.NORMAL);
+	UILens.ToggleLayerOff(g_HexColoringMovement);
+	UILens.ClearLayerHexes(g_HexColoringMovement);
+end
+
+
+------------------------------------------------------------------------------------------------
+-- Interface mode and input handlers for Hero Unit Command 'Naval Gold Raid'
+------------------------------------------------------------------------------------------------
+function PerformNavalGoldRaid(pInputStruct)
+	local plotID = UI.GetCursorPlotID();
+	if Map.IsPlot(plotID) then
+		local plot = Map.GetPlotByIndex(plotID);
+			
+		local tParameters = {};
+		tParameters[UnitCommandTypes.PARAM_X] = plot:GetX();
+		tParameters[UnitCommandTypes.PARAM_Y] = plot:GetY();
+
+		local pSelectedUnit = UI.GetHeadSelectedUnit();
+		if (UnitManager.CanStartCommand(pSelectedUnit, UnitCommandTypes.NAVAL_GOLD_RAID, tParameters)) then
+			UnitManager.RequestCommand(pSelectedUnit, UnitCommandTypes.NAVAL_GOLD_RAID, tParameters);
+			UI.SetInterfaceMode(InterfaceModeTypes.SELECTION);
+			--UI.PlaySound("Unit_HeroAbility"); TODO
+		end
+	end
+	return true;
+end
+------------------------------------------------------------------------------------------------
+function OnMouseEnd_NavalGoldRaid(pInputStruct)
+	-- If a drag was occurring, end it; otherwise raise event.
+	if g_isMouseDragging then
+		g_isMouseDragging = false;
+	elseif IsSelectionAllowedAt(UI.GetCursorPlotID()) then		
+		PerformNavalGoldRaid(pInputStruct);
+	end
+	EndDragMap();
+	g_isMouseDownInWorld = false;
+	return true;
+end
+------------------------------------------------------------------------------------------------
+function OnInterfaceModeChange_NavalGoldRaid(eNewMode)
+	UIManager:SetUICursor(CursorTypes.RANGE_ATTACK);
+	local pSelectedUnit = UI.GetHeadSelectedUnit();
+	local tResults = UnitManager.GetCommandTargets(pSelectedUnit, UnitCommandTypes.NAVAL_GOLD_RAID);
+	local allPlots = tResults[CityCommandResults.PLOTS];
+	if allPlots then
+		g_targetPlots = {};
+		for i,modifier in ipairs(tResults[CityCommandResults.PLOTS]) do
+			table.insert(g_targetPlots, allPlots[i]);
+		end 
+
+		-- Highlight the plots available to airdrop to
+		if (table.count(g_targetPlots) ~= 0) then
+			UILens.ToggleLayerOn(g_HexColoringMovement);
+			UILens.SetLayerHexesArea(g_HexColoringMovement, Game.GetLocalPlayer(), g_targetPlots);
+		end
+	end
+end
+--------------------------------------------------------------------------------------------------
+function OnInterfaceModeLeave_NavalGoldRaid(eNewMode:number)
+	UIManager:SetUICursor(CursorTypes.NORMAL);
+	UILens.ToggleLayerOff(g_HexColoringMovement);
+	UILens.ClearLayerHexes(g_HexColoringMovement);
+end
+
+
+------------------------------------------------------------------------------------------------
+-- Interface mode and input handlers for Hero Unit Command 'Resource Inspire'
+------------------------------------------------------------------------------------------------
+function PerformResourceInspire(pInputStruct)
+	local plotID = UI.GetCursorPlotID();
+	if Map.IsPlot(plotID) then
+		local plot = Map.GetPlotByIndex(plotID);
+			
+		local tParameters = {};
+		tParameters[UnitCommandTypes.PARAM_X] = plot:GetX();
+		tParameters[UnitCommandTypes.PARAM_Y] = plot:GetY();
+
+		local pSelectedUnit = UI.GetHeadSelectedUnit();
+		if (UnitManager.CanStartCommand(pSelectedUnit, UnitCommandTypes.RESOURCE_INSPIRE, tParameters)) then
+			UnitManager.RequestCommand(pSelectedUnit, UnitCommandTypes.RESOURCE_INSPIRE, tParameters);
+			UI.SetInterfaceMode(InterfaceModeTypes.SELECTION);
+			--UI.PlaySound("Unit_HeroAbility"); TODO
+		end
+	end
+	return true;
+end
+------------------------------------------------------------------------------------------------
+function OnMouseEnd_ResourceInspire(pInputStruct)
+	-- If a drag was occurring, end it; otherwise raise event.
+	if g_isMouseDragging then
+		g_isMouseDragging = false;
+	elseif IsSelectionAllowedAt(UI.GetCursorPlotID()) then		
+		PerformResourceInspire(pInputStruct);
+	end
+	EndDragMap();
+	g_isMouseDownInWorld = false;
+	return true;
+end
+------------------------------------------------------------------------------------------------
+function OnInterfaceModeChange_ResourceInspire(eNewMode)
+	UIManager:SetUICursor(CursorTypes.RANGE_ATTACK);
+	local pSelectedUnit = UI.GetHeadSelectedUnit();
+	local tResults = UnitManager.GetCommandTargets(pSelectedUnit, UnitCommandTypes.RESOURCE_INSPIRE);
+	local allPlots = tResults[CityCommandResults.PLOTS];
+	if allPlots then
+		g_targetPlots = {};
+		for i,modifier in ipairs(tResults[CityCommandResults.PLOTS]) do
+			table.insert(g_targetPlots, allPlots[i]);
+		end 
+
+		-- Highlight the plots available to airdrop to
+		if (table.count(g_targetPlots) ~= 0) then
+			UILens.ToggleLayerOn(g_HexColoringMovement);
+			UILens.SetLayerHexesArea(g_HexColoringMovement, Game.GetLocalPlayer(), g_targetPlots);
+		end
+	end
+end
+--------------------------------------------------------------------------------------------------
+function OnInterfaceModeLeave_ResourceInspire(eNewMode:number)
+	UIManager:SetUICursor(CursorTypes.NORMAL);
+	UILens.ToggleLayerOff(g_HexColoringMovement);
+	UILens.ClearLayerHexes(g_HexColoringMovement);
+end
 
 
 -- .,;/^`'^\:,.,;/^`'^\:,.,;/^`'^\:,.,;/^`'^\:,.,;/^`'^\:,.,;/^`'^\:,.,;/^`'^\:,.,;/^`'^\:,
@@ -3595,6 +3896,11 @@ function LateInitialize()
 	InterfaceModeMessageHandler[InterfaceModeTypes.FULLSCREEN_MAP]		[INTERFACEMODE_ENTER]		= OnInterfaceModeChange_FullscreenMap;
 	InterfaceModeMessageHandler[InterfaceModeTypes.CITY_SELECTION]		[INTERFACEMODE_ENTER]		= OnInterfaceModeChange_CitySelection;
 	InterfaceModeMessageHandler[InterfaceModeTypes.SACRIFICE_SELECTION]		[INTERFACEMODE_ENTER]		= OnInterfaceModeChange_Sacrifice;
+	InterfaceModeMessageHandler[InterfaceModeTypes.KILL_WEAKER_UNIT]	[INTERFACEMODE_ENTER]		= OnInterfaceModeChange_KillWeakerUnit;
+	InterfaceModeMessageHandler[InterfaceModeTypes.TRANSFORM_UNIT]		[INTERFACEMODE_ENTER]		= OnInterfaceModeChange_TransformUnit;
+	InterfaceModeMessageHandler[InterfaceModeTypes.RESTORE_UNIT_MOVES]	[INTERFACEMODE_ENTER]		= OnInterfaceModeChange_RestoreUnitMoves;
+	InterfaceModeMessageHandler[InterfaceModeTypes.NAVAL_GOLD_RAID]		[INTERFACEMODE_ENTER]		= OnInterfaceModeChange_NavalGoldRaid;
+	InterfaceModeMessageHandler[InterfaceModeTypes.RESOURCE_INSPIRE]	[INTERFACEMODE_ENTER]		= OnInterfaceModeChange_ResourceInspire;
 
 	
 	
@@ -3618,7 +3924,12 @@ function LateInitialize()
 	InterfaceModeMessageHandler[InterfaceModeTypes.FORM_CORPS]				[INTERFACEMODE_LEAVE]		= OnInterfaceModeLeave_UnitFormCorps;
 	InterfaceModeMessageHandler[InterfaceModeTypes.FORM_ARMY]				[INTERFACEMODE_LEAVE]		= OnInterfaceModeLeave_UnitFormArmy;
 	InterfaceModeMessageHandler[InterfaceModeTypes.AIRLIFT]					[INTERFACEMODE_LEAVE]		= OnInterfaceModeLeave_UnitAirlift;
-	InterfaceModeMessageHandler[InterfaceModeTypes.SACRIFICE_SELECTION]					[INTERFACEMODE_LEAVE]		= OnInterfaceModeLeave_Sacrifice;
+	InterfaceModeMessageHandler[InterfaceModeTypes.SACRIFICE_SELECTION]		[INTERFACEMODE_LEAVE]		= OnInterfaceModeLeave_Sacrifice;
+	InterfaceModeMessageHandler[InterfaceModeTypes.KILL_WEAKER_UNIT]		[INTERFACEMODE_LEAVE]		= OnInterfaceModeLeave_KillWeakerUnit;
+	InterfaceModeMessageHandler[InterfaceModeTypes.TRANSFORM_UNIT]			[INTERFACEMODE_LEAVE]		= OnInterfaceModeLeave_TransformUnit;
+	InterfaceModeMessageHandler[InterfaceModeTypes.RESTORE_UNIT_MOVES]		[INTERFACEMODE_LEAVE]		= OnInterfaceModeLeave_RestoreUnitMoves;
+	InterfaceModeMessageHandler[InterfaceModeTypes.NAVAL_GOLD_RAID]			[INTERFACEMODE_LEAVE]		= OnInterfaceModeLeave_NavalGoldRaid;
+	InterfaceModeMessageHandler[InterfaceModeTypes.RESOURCE_INSPIRE]		[INTERFACEMODE_LEAVE]		= OnInterfaceModeLeave_ResourceInspire;
 
 	-- Keyboard Events (all happen on up!)
 	InterfaceModeMessageHandler[InterfaceModeTypes.BUILDING_PLACEMENT]		[KeyEvents.KeyUp]		= OnPlacementKeyUp;
@@ -3640,6 +3951,11 @@ function LateInitialize()
 	InterfaceModeMessageHandler[InterfaceModeTypes.FORM_CORPS]				[KeyEvents.KeyUp]		= OnPlacementKeyUp;
 	InterfaceModeMessageHandler[InterfaceModeTypes.FORM_ARMY]				[KeyEvents.KeyUp]		= OnPlacementKeyUp;
 	InterfaceModeMessageHandler[InterfaceModeTypes.AIRLIFT]					[KeyEvents.KeyUp]		= OnPlacementKeyUp;
+	InterfaceModeMessageHandler[InterfaceModeTypes.KILL_WEAKER_UNIT]		[KeyEvents.KeyUp]		= OnPlacementKeyUp;
+	InterfaceModeMessageHandler[InterfaceModeTypes.TRANSFORM_UNIT]			[KeyEvents.KeyUp]		= OnPlacementKeyUp;
+	InterfaceModeMessageHandler[InterfaceModeTypes.RESTORE_UNIT_MOVES]		[KeyEvents.KeyUp]		= OnPlacementKeyUp;
+	InterfaceModeMessageHandler[InterfaceModeTypes.NAVAL_GOLD_RAID]			[KeyEvents.KeyUp]		= OnPlacementKeyUp;
+	InterfaceModeMessageHandler[InterfaceModeTypes.RESOURCE_INSPIRE]		[KeyEvents.KeyUp]		= OnPlacementKeyUp;
 
 
 	-- Mouse Events
@@ -3688,7 +4004,12 @@ function LateInitialize()
 	InterfaceModeMessageHandler[InterfaceModeTypes.WB_SELECT_PLOT]		[MouseEvents.RButtonUp]  	= OnRButtonUp_WBSelectPlot;
 	InterfaceModeMessageHandler[InterfaceModeTypes.WB_SELECT_PLOT]		[MouseEvents.RButtonDown]  	= OnRButtonDown_WBSelectPlot;
 	InterfaceModeMessageHandler[InterfaceModeTypes.WB_SELECT_PLOT]		[MouseEvents.MouseMove]		= OnMouseMove_WBSelectPlot;
-	InterfaceModeMessageHandler[InterfaceModeTypes.SACRIFICE_SELECTION]				[MouseEvents.LButtonUp]		= OnMouseSacrificeEnd;
+	InterfaceModeMessageHandler[InterfaceModeTypes.SACRIFICE_SELECTION]		[MouseEvents.LButtonUp]		= OnMouseSacrificeEnd;
+	InterfaceModeMessageHandler[InterfaceModeTypes.KILL_WEAKER_UNIT]	[MouseEvents.LButtonUp]		= OnMouseEnd_KillWeakerUnit;
+	InterfaceModeMessageHandler[InterfaceModeTypes.TRANSFORM_UNIT]		[MouseEvents.LButtonUp]		= OnMouseEnd_TransformUnit;
+	InterfaceModeMessageHandler[InterfaceModeTypes.RESTORE_UNIT_MOVES]	[MouseEvents.LButtonUp]		= OnMouseEnd_RestoreUnitMoves;
+	InterfaceModeMessageHandler[InterfaceModeTypes.NAVAL_GOLD_RAID]		[MouseEvents.LButtonUp]		= OnMouseEnd_NavalGoldRaid;
+	InterfaceModeMessageHandler[InterfaceModeTypes.RESOURCE_INSPIRE]	[MouseEvents.LButtonUp]		= OnMouseEnd_ResourceInspire;
 
 	-- Touch Events (if a touch system)
 	if g_isTouchEnabled then
@@ -3727,7 +4048,12 @@ function LateInitialize()
 		InterfaceModeMessageHandler[InterfaceModeTypes.COASTAL_RAID]		[MouseEvents.PointerUp]		= CoastalRaid;
 		InterfaceModeMessageHandler[InterfaceModeTypes.PLACE_MAP_PIN]		[MouseEvents.PointerUp]		= PlaceMapPin;
 		InterfaceModeMessageHandler[InterfaceModeTypes.CITY_MANAGEMENT]		[MouseEvents.PointerUp]		= OnDoNothing;
-		InterfaceModeMessageHandler[InterfaceModeTypes.SACRIFICE_SELECTION]				[MouseEvents.PointerUp]		= DOSacrificeSelection;
+		InterfaceModeMessageHandler[InterfaceModeTypes.SACRIFICE_SELECTION]			[MouseEvents.PointerUp]		= DOSacrificeSelection;
+		InterfaceModeMessageHandler[InterfaceModeTypes.KILL_WEAKER_UNIT]	[MouseEvents.PointerUp]		= PerformKillWeakerUnit;
+		InterfaceModeMessageHandler[InterfaceModeTypes.TRANSFORM_UNIT]		[MouseEvents.PointerUp]		= PerformTransformUnit;
+		InterfaceModeMessageHandler[InterfaceModeTypes.RESTORE_UNIT_MOVES]	[MouseEvents.PointerUp]		= PerformRestoreUnitMoves;
+		InterfaceModeMessageHandler[InterfaceModeTypes.NAVAL_GOLD_RAID]		[MouseEvents.PointerUp]		= PerformNavalGoldRaid;
+		InterfaceModeMessageHandler[InterfaceModeTypes.RESOURCE_INSPIRE]	[MouseEvents.PointerUp]		= PerformResourceInspire;
 	end
 
 	Subscribe();
@@ -3891,6 +4217,15 @@ function OnPopupActivated()
 end
 
 -- ===========================================================================
+function OnLoadScreenClose()
+	-- Insure there's no ranged attack arrow if we save with one visible (TTP#50386).
+	-- Because the arrow is saved by the lens manager on the C++ side, m_focusedTargetPlot will always
+	-- be -1 at startup, but we can pass in any valid hex to get the arrow to stop (the lens manager doesn't care).
+	UILens.UnFocusHex(g_AttackRange, 0);
+	m_focusedTargetPlot = -1;
+end
+
+-- ===========================================================================
 --	INCLUDES
 --	Other handlers & helpers that may utilze functionality defined above.
 -- ===========================================================================
@@ -3915,6 +4250,7 @@ function Subscribe()
 	Events.MatchEndTurnComplete.Add(OnMatchEndTurnComplete);
 	Events.UnitSelectionChanged.Add( OnUnitSelectionChanged );
 	Events.UnitCommandStarted.Add( OnUnitCommandStarted );
+	Events.LoadScreenClose.Add( OnLoadScreenClose );
 
 	LuaEvents.Tutorial_ConstrainMovement.Add( OnTutorial_ConstrainMovement );
 	LuaEvents.Tutorial_DisableMapDrag.Add( OnTutorial_DisableMapDrag );
@@ -3946,6 +4282,7 @@ function Unsubscribe()
 	Events.MatchEndTurnComplete.Remove(OnMatchEndTurnComplete);
 	Events.UnitSelectionChanged.Remove( OnUnitSelectionChanged );
 	Events.UnitCommandStarted.Remove( OnUnitCommandStarted );
+	Events.LoadScreenClose.Remove( OnLoadScreenClose );
 
 	LuaEvents.Tutorial_ConstrainMovement.Remove( OnTutorial_ConstrainMovement );
 	LuaEvents.Tutorial_DisableMapDrag.Remove( OnTutorial_DisableMapDrag );

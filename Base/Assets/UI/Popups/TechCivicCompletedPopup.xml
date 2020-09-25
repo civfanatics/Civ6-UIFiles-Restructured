@@ -18,12 +18,12 @@
         </Container>
 
         <!-- Research Symbol -->
-        <Container Size="353, 180" Anchor="C,T" Offset="0,120">
+        <Container ID="ResearchIconContainer" Size="353, 180" Anchor="C,T" Offset="0,120">
           <Image ID="ResearchIconFrame" Texture="CompletedPopup_TechFrame" Anchor="C,C" Offset="0,0">
             <Image ID="ResearchIcon" Size="160,160" Anchor="C,C" Icon="ICON_TECH_SAILING" IconSize="160,160"/>
           </Image>
-          <Image Texture="CompletedPopup_Pattern" Anchor="L,C" Offset="15,-5"/>
-          <Image Texture="CompletedPopup_Pattern" Anchor="R,C" Offset="15,-5" FlipX="1"/>s
+          <Image ID="LeftPattern" Texture="CompletedPopup_Pattern" Anchor="L,C" Offset="15,-5"/>
+          <Image ID="RightPattern" Texture="CompletedPopup_Pattern" Anchor="R,C" Offset="15,-5" FlipX="1"/>s
         </Container>
 
         <!-- Research Name Banner -->

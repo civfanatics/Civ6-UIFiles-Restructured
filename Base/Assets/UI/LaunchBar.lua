@@ -506,8 +506,7 @@ function RealizeBacking()
 	-- If the stack is less than a pip (at this writing 7) then there is nothing in it... hide the launchbar
 	if stackWidth < 10 then
 		stackWidth = 0;
-		ContextPtr:SetHide(true);		
-		Unsubscribe();
+		ContextPtr:SetHide(true);
 	else
 		if ContextPtr:IsHidden() then
 			ContextPtr:SetHide(false);
@@ -615,6 +614,26 @@ end
 --	EVENT
 function OnCivicChanged()
 	RefreshView();
+end
+
+-- ===========================================================================
+--	EVENT
+function OnCivicsUnlocked()
+	local ePlayer:number = Game.GetLocalPlayer();
+	if ePlayer == -1 then
+		return;
+	end
+
+	-- Check to see if we now have policies to slot.
+	-- We do this for scenarios that unlock civics by script.  
+	-- Script granted civics do not trigger a CivicCompleted event.
+	if(not m_isGovernmentUnlocked) then
+		local playerCulture:table = Players[ePlayer]:GetCulture();
+		if (playerCulture:GetNumPoliciesUnlocked() > 0) then
+			m_isGovernmentUnlocked = true;
+			RealizeHookVisibility();
+		end
+	end
 end
 
 -- ===========================================================================
@@ -743,6 +762,7 @@ function Unsubscribe()
 	Events.CityOccupationChanged.Remove( OnCityCaptured );		-- HACK: Detect GreatWorks acquired via city capture, by hooking this event
 	Events.CivicCompleted.Remove( OnCivicCompleted );			-- To capture when we complete Code of Laws
 	Events.CivicChanged.Remove( OnCivicChanged );
+	Events.CivicsUnlocked.Remove( OnCivicsUnlocked );
 	Events.DiplomacyDealEnacted.Remove( OnDiplomacyDealEnacted );
 	Events.FaithChanged.Remove( OnFaithChanged );
 	Events.GovernmentChanged.Remove( OnGovernmentRefresh );
@@ -794,6 +814,7 @@ function Subscribe()
 	Events.CityOccupationChanged.Add( OnCityCaptured );		-- HACK: Detect GreatWorks acquired via city capture, by hooking this event
 	Events.CivicCompleted.Add( OnCivicCompleted );			-- To capture when we complete Code of Laws
 	Events.CivicChanged.Add( OnCivicChanged );
+	Events.CivicsUnlocked.Add( OnCivicsUnlocked );
 	Events.DiplomacyDealEnacted.Add( OnDiplomacyDealEnacted );
 	Events.FaithChanged.Add( OnFaithChanged );
 	Events.GovernmentChanged.Add( OnGovernmentRefresh );

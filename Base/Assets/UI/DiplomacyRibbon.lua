@@ -760,6 +760,13 @@ function SetRibbonOption( option : number )
 end
 
 -- ===========================================================================
+--	For use in scenarios/mods
+-- ===========================================================================
+function GetLeaderInstanceByID(playerID : number)
+	return m_uiLeadersByID[playerID];
+end
+
+-- ===========================================================================
 function StopRibbonAnimation(playerID)
 	local uiLeader		:table = m_uiLeadersByID[playerID];
 	if(uiLeader ~= nil) then

@@ -193,7 +193,7 @@ end
 function AddCompletedPopup( player:number, civic:number, tech:number, isByUser:boolean )
 	local isNotBlockedByTutorial:boolean = (not m_isDisabledByTutorial);
 	
-	if player == Game.GetLocalPlayer() and isNotBlockedByTutorial and (not GameConfiguration.IsNetworkMultiplayer()) then
+	if player == Game.GetLocalPlayer() and isNotBlockedByTutorial then
 
 		local results	:table;
 		local civicType	:string;
@@ -383,6 +383,7 @@ function OnInit( isReload:boolean )
 	if isReload then		
 		LuaEvents.GameDebug_GetValues(RELOAD_CACHE_ID);		
 	end
+	LateInitialize();
 end
 
 -- ===========================================================================
@@ -446,6 +447,13 @@ end
 -- ===========================================================================
 function OnNotificationPanel_ShowCivicDiscovered(ePlayer, civicIndex, isByUser:boolean)
 	AddCompletedPopup( ePlayer, civicIndex, nil, isByUser  );
+end
+
+-- ===========================================================================
+-- FOR OVERRIDE
+-- ===========================================================================
+function LateInitialize()
+
 end
 
 -- ===========================================================================

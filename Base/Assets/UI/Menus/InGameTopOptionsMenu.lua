@@ -705,6 +705,7 @@ function Initialize()
 
 	LuaEvents.EndGameMenu_Shown.Add( function() m_isEndGameOpen = true; end );
 	LuaEvents.EndGameMenu_OneMoreTurn.Add( function() m_isEndGameOpen = false; end );
+	LuaEvents.EndGameMenu_Closed.Add( function() m_isEndGameOpen = false; end);	
 
 	Events.PlayerTurnActivated.Add( EventRefreshButtons );
 	Events.PlayerTurnDeactivated.Add( EventRefreshButtons );

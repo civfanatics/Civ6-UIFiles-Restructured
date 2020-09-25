@@ -3561,6 +3561,7 @@ function OnContextInitialize( isHotload : boolean )
 		LuaEvents.GameDebug_GetValues( "CityBannerManager" );
 		Reload();
 	end
+	LateInitialize();
 end
 
 -- ===========================================================================
@@ -3714,6 +3715,12 @@ function OnGovernorEjected( cityOwner: number, cityID: number, playerID: number,
 		cityBanner:UpdateStats();
 		cityBanner:UpdateLoyalty();
 	end
+end
+
+-- ===========================================================================
+-- For Override in mods and scenarios
+-- ===========================================================================
+function LateInitialize()
 end
 
 -- ===========================================================================

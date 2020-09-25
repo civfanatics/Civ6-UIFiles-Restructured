@@ -65,6 +65,7 @@ function OnShowEraReviewPopup()
 	local gameEras:table = Game.GetEras();
 	local score	= gameEras:GetPlayerCurrentScore(m_LocalPlayerID);
 	local prevGoldenAgeThreshold = gameEras:GetPlayerPreviousGoldenAgeThreshold(m_LocalPlayerID);
+	local localPlayer	: table = Players[m_LocalPlayerID];
 
 	if gameEras:HasHeroicGoldenAge(m_LocalPlayerID) then
 		Controls.EraRibbon:SetTexture("Ages_BannerLongHeroic");
@@ -74,7 +75,7 @@ function OnShowEraReviewPopup()
 		Controls.EraRibbonValue:SetColorByName("Black");
 		Controls.HeroicFlare:SetHide(false);
 		Controls.EraRibbonValue:SetText(Locale.Lookup("LOC_ERAS_HEROIC") .. " [ICON_GLORY_SUPER_GOLDEN_AGE]");
-		Controls.EraEffects:SetText(Locale.Lookup("LOC_ERA_REVIEW_HAVE_HEROIC_AGE_EFFECT"));
+		Controls.EraEffects:SetText(Locale.Lookup("LOC_ERA_REVIEW_HAVE_HEROIC_AGE_EFFECT_PARAM", {Name = "Amount", Value=localPlayer:GetCivilianLoyalty()}));
 	elseif gameEras:HasGoldenAge(m_LocalPlayerID) then
 		Controls.EraRibbon:SetTexture("Ages_BannerLongGolden");
 		Controls.Background:SetTexture("Ages_ParchmentGolden");
@@ -83,7 +84,7 @@ function OnShowEraReviewPopup()
 		Controls.EraRibbonValue:SetColorByName("White_Black");
 		Controls.HeroicFlare:SetHide(true);
 		Controls.EraRibbonValue:SetText(Locale.Lookup("LOC_ERAS_GOLDEN") .. " [ICON_GLORY_GOLDEN_AGE]");
-		Controls.EraEffects:SetText(Locale.Lookup("LOC_ERA_REVIEW_HAVE_GOLDEN_AGE_EFFECT"));
+		Controls.EraEffects:SetText(Locale.Lookup("LOC_ERA_REVIEW_HAVE_GOLDEN_AGE_EFFECT_PARAM", {Name = "Amount", Value=localPlayer:GetCivilianLoyalty()}));
 	elseif gameEras:HasDarkAge(m_LocalPlayerID) then
 		Controls.EraRibbon:SetTexture("Ages_BannerLongDark");
 		Controls.Background:SetTexture("Ages_ParchmentDark");
@@ -92,7 +93,7 @@ function OnShowEraReviewPopup()
 		Controls.EraRibbonValue:SetColorByName("White_Black");
 		Controls.HeroicFlare:SetHide(true);
 		Controls.EraRibbonValue:SetText(Locale.Lookup("LOC_ERAS_DARK") .. " [ICON_GLORY_DARK_AGE]");
-		Controls.EraEffects:SetText(Locale.Lookup("LOC_ERA_REVIEW_HAVE_DARK_AGE_EFFECT"));
+		Controls.EraEffects:SetText(Locale.Lookup("LOC_ERA_REVIEW_HAVE_DARK_AGE_EFFECT_PARAM", {Name = "Amount", Value=localPlayer:GetCivilianLoyalty()}));
 	else
 		Controls.EraRibbon:SetTexture("Ages_BannerLongNormal");
 		Controls.Background:SetTexture("Ages_ParchmentNormal");
@@ -101,7 +102,7 @@ function OnShowEraReviewPopup()
 		Controls.EraRibbonValue:SetColorByName("White_Black");
 		Controls.HeroicFlare:SetHide(true);
 		Controls.EraRibbonValue:SetText(Locale.Lookup("LOC_ERAS_NORMAL") .. " [ICON_GLORY_NORMAL_AGE]");
-		Controls.EraEffects:SetText(Locale.Lookup("LOC_ERA_REVIEW_HAVE_NORMAL_AGE_EFFECT"));
+		Controls.EraEffects:SetText(Locale.Lookup("LOC_ERA_REVIEW_HAVE_NORMAL_AGE_EFFECT_PARAM", {Name = "Amount", Value=localPlayer:GetCivilianLoyalty()}));
 	end
 
 	PopulateLocalPlayerIcon();

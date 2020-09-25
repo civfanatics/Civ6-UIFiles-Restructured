@@ -209,22 +209,24 @@ function TutorialLoader:Initialize(TutorialCheck:ifunction)
 	end);
 
 	------------------
-	Events.PlayerAgeChanged.Add(function( playerID )
-		local localPlayerID = Game.GetLocalPlayer();
-		if (playerID == localPlayerID) then
-			TutorialCheck("EraChanged");
+	if (not GameCapabilities.HasCapability("CAPABILITY_DRAMATICAGES")) then
+		Events.PlayerAgeChanged.Add(function( playerID )
+			local localPlayerID = Game.GetLocalPlayer();
+			if (playerID == localPlayerID) then
+				TutorialCheck("EraChanged");
 			
-			local gameEras = Game.GetEras();
-			local currentEra = Game.GetEras():GetCurrentEra();
-			if currentEra > 0 then
-				if (gameEras:HasGoldenAge(localPlayerID)) then
-					TutorialCheck("GoldenAgeStarted");
-				elseif (gameEras:HasDarkAge(localPlayerID)) then
-					TutorialCheck("DarkAgeStarted");
+				local gameEras = Game.GetEras();
+				local currentEra = Game.GetEras():GetCurrentEra();
+				if currentEra > 0 then
+					if (gameEras:HasGoldenAge(localPlayerID)) then
+						TutorialCheck("GoldenAgeStarted");
+					elseif (gameEras:HasDarkAge(localPlayerID)) then
+						TutorialCheck("DarkAgeStarted");
+					end
 				end
 			end
-		end
-	end);
+		end);
+	end
 
 	------------------
 	Events.PlayerDarkAgeChanged.Add(function( playerID )

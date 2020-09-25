@@ -118,6 +118,7 @@ function RegisterHandlers()
 	g_notificationHandlers[NotificationTypes.EMERGENCY_SUCCEEDED]								= MakeDefaultHandlers();
 	g_notificationHandlers[NotificationTypes.EMERGENCY_NEEDS_ATTENTION]							= MakeDefaultHandlers();
 	g_notificationHandlers[NotificationTypes.COMMEMORATION_AVAILABLE]							= MakeDefaultHandlers();
+	g_notificationHandlers[NotificationTypes.COMMEMORATION_WITHOUT_CHOICE]						= MakeDefaultHandlers();
 	g_notificationHandlers[NotificationTypes.QUEST_RECORDED]									= MakeDefaultHandlers();
 	g_notificationHandlers[NotificationTypes.PRIDE_MOMENT_RECORDED]								= MakeDefaultHandlers();
 	g_notificationHandlers[NotificationTypes.FOREIGN_CITY_BECAME_FREE_CITY]						= MakeDefaultHandlers();
@@ -129,6 +130,7 @@ function RegisterHandlers()
 	g_notificationHandlers[NotificationTypes.EMERGENCY_SUCCEEDED].Activate						= OnConsiderEmergency;
 	g_notificationHandlers[NotificationTypes.EMERGENCY_NEEDS_ATTENTION].Activate				= OnConsiderEmergency;
 	g_notificationHandlers[NotificationTypes.COMMEMORATION_AVAILABLE].Activate					= OnCommemorate;
+	g_notificationHandlers[NotificationTypes.COMMEMORATION_WITHOUT_CHOICE].Activate				= OnCommemorate;
 	g_notificationHandlers[NotificationTypes.QUEST_RECORDED].Activate							= OnDedicate;
 	g_notificationHandlers[NotificationTypes.PRIDE_MOMENT_RECORDED].Activate					= OnPrideMomentActivate;
 	g_notificationHandlers[NotificationTypes.FOREIGN_CITY_BECAME_FREE_CITY].Activate			= OnForeignCityBecameFreeCityNotification;

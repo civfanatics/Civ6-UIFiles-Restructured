@@ -3054,7 +3054,7 @@ function UpdateFriendsList()
 	m_friendsIM:ResetInstances();
 	Controls.InfoContainer:SetHide(false);
 	local friends:table = GetFriendsList();
-	local bCanInvite:boolean = CanInviteFriends(false);
+	local bCanInvite:boolean = CanInviteFriends(false) and Network.HasSingleFriendInvite();
 
 	-- DEBUG
 	--for i = 1, 19 do

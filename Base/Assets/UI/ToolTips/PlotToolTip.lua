@@ -756,7 +756,11 @@ function FetchAdditionalData( pPlot:table, kPlotData:table )
 			for _, type in ipairs(buildingTypes) do
 				local building = GameInfo.Buildings[type];
 				table.insert(kPlotData.BuildingTypes, type);
-				local name = GameInfo.Buildings[building.BuildingType].Name;
+				local name = building.Name;
+				if (cityBuildings.GetBuildingNameOverride ~= nil) then
+					local overrideName = cityBuildings:GetBuildingNameOverride(building.Index)
+					name = overrideName or name;
+				end
 				table.insert(kPlotData.BuildingNames, name);
 				local bPillaged = cityBuildings:IsPillaged(type);
 				table.insert(kPlotData.BuildingsPillaged, bPillaged);

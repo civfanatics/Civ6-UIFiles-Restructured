@@ -2799,6 +2799,7 @@ function OnInit( isHotload : boolean )
 		Reload();
 		LuaEvents.GameDebug_GetValues( "CityBannerManager" );
 	end
+	LateInitialize();
 end
 
 -- ===========================================================================
@@ -2874,6 +2875,13 @@ function OnSelectionChanged(owner, ID, i, j, k, bSelected, bEditable)
 		banner.m_IsSelected = bSelected;
 		banner:SetColor();
 	end
+end
+
+-- ===========================================================================
+-- For Override in mods and scenarios
+-- ===========================================================================
+function LateInitialize()
+
 end
 
 -- ===========================================================================

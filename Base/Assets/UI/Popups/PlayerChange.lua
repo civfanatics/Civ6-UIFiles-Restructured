@@ -281,6 +281,12 @@ function OnPlayerDestroyed(playerID)
 	end
 end
 
+-- ===========================================================================
+function OnRequestClose()
+	--InGameOptionsMenu handles force close requests
+	LuaEvents.PlayerChange_OpenInGameOptionsMenu();
+end
+
 
 -- ===========================================================================
 function OnEndGameMenu_OneMoreTurn()
@@ -319,6 +325,7 @@ function Initialize()
 	Events.LoadScreenClose.Add(OnLoadScreenClose);
 	Events.TeamVictory.Add(OnTeamVictory);
 	Events.PlayerDestroyed.Add(OnPlayerDestroyed);
+	Events.UserRequestClose.Add( OnRequestClose );
 
 	LuaEvents.EndGameMenu_OneMoreTurn.Add(OnEndGameMenu_OneMoreTurn);
 	LuaEvents.EndGameMenu_ViewingPlayerDefeat.Add(OnEndGameMenu_ViewingPlayerDefeat);

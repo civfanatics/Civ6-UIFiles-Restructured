@@ -25,12 +25,17 @@ local m_isAllowAnythingInWildcardSlot	:boolean = true;	-- Currently engine doesn
 local m_isAllowWildcardsAnywhere		:boolean = false;	-- ...
 local m_isLocalPlayerTurn				:boolean = true;
 
+local m_FilterScrollPos				:number = 0;
+local m_FilterStep					:number = 0;
+
 local COLOR_GOVT_UNSELECTED			:number = UI.GetColorValueFromHexLiteral(0xffe9dfc7); -- Background for unselected background (or forground text color on non-selected).
 local COLOR_GOVT_SELECTED			:number = UI.GetColorValueFromHexLiteral(0xff261407); -- Background for selected background (or forground text color on non-selected).
 local COLOR_GOVT_LOCKED				:number = UI.GetColorValueFromHexLiteral(0xffAAAAAA);
 local DATA_FIELD_CURRENT_FILTER		:string = "_CURRENT_FILTER";
 local DATA_FIELD_TOTAL_SLOTS		:string = "_TOTAL_SLOTS";			-- Total slots for a government item in the "tree-like" view
 
+
+local FILTER_BUTTON_WIDTH			:number = 100;	-- Width of PolicyTabButtonInstance in the XML
 
 local ROW_INDEX :table = {
 	MILITARY = 1,
@@ -314,6 +319,42 @@ function Resize()
 		RealizeGovernmentsPage();
 		RealizePoliciesPage();
 	end
+
+	-- handle the left and right arrow setup - must be done after the data's been set up above
+	Controls.ForwardButton:SetOffsetX(nPolicyCatalogWidth-40);
+
+	-- init the scroll region
+	m_FilterScrollPos = 0;
+	m_FilterStep = 0;
+	Controls.FilterScroll:SetScrollValue(0);
+
+	Controls.FilterStack:CalculateSize();
+	-- width of the entire list of buttons
+	local iStackWidth:number = Controls.FilterStack:GetSizeX();
+	-- width of the visible area for the buttons
+	local iScrollWidth:number = Controls.FilterScroll:GetSizeX();
+	local iButtonsTotal:number = (iStackWidth / FILTER_BUTTON_WIDTH);
+	local iButtonsVis:number = (iScrollWidth / FILTER_BUTTON_WIDTH);
+
+	-- if there are more buttons than can be displayed, enable the scroll arrows
+	if iButtonsTotal > iButtonsVis then
+		-- we're starting at zero so hide the backward button
+		Controls.BackButton:SetHide(true);
+		Controls.ForwardButton:SetHide(false);
+
+		-- calculate how far we're stepping for each button click
+		m_FilterStep = (((FILTER_BUTTON_WIDTH * 100) / (iStackWidth * 100)) * 100) * iButtonsVis;
+
+		-- if the step is more than 50% then the number of buttons is such that there
+		-- will be overlap at both ends and we can just move once.
+		if m_FilterStep > 50 then
+			m_FilterStep = 100;
+		end
+	else
+		Controls.BackButton:SetHide(true);
+		Controls.ForwardButton:SetHide(true);
+	end
+
 end
 
 
@@ -1053,7 +1094,7 @@ function RealizePolicyCatalog()
 
 				-- Reset values that may have been changed by the 'padding' instances
 				cardInstance.Content:SetAlpha(1);
-				cardInstance.Content:SetSizeX(SIZE_POLICY_CARD_X);
+				cardInstance.Content:SetSizeX(GetPolicyCardSizeX());
 
 				-- Give policy cards feedback when hovered, but only if editable
 				if isAbleToChangePolicies then
@@ -1356,10 +1397,10 @@ function RealizeActivePoliciesRows()
 		
 		if(not m_isPoliciesChanged or bAnySlotsFree) then
 			Controls.ConfirmPolicies:SetDisabled(true);
-			Controls.ConfirmPolicies:SetText(TXT_GOV_ASSIGN_POLICIES);
+			Controls.ConfirmPolicies:SetText(GetAssignAllPoliciesText());
 		else
 			Controls.ConfirmPolicies:SetDisabled(false);
-			Controls.ConfirmPolicies:SetText(TXT_GOV_CONFIRM_POLICIES);
+			Controls.ConfirmPolicies:SetText(GetConfirmPoliciesText());
 		end
 	elseif (not bUnlockByFaith and iGoldBalance < iPolicyUnlockCost) then
 		Controls.ConfirmPolicies:SetHide(true);
@@ -1408,15 +1449,15 @@ function EnsureRowContentsFit( nRowIndex:number, tStack:table )
 
 	local width:number = tStack:GetSizeX();
 	local itemPadding:number = (nSlots - 1) * PADDING_POLICY_ROW_ITEM;
-	local totalSize:number = (SIZE_POLICY_CARD_X * nSlots) + itemPadding;
+	local totalSize:number = (GetPolicyCardSizeX() * nSlots) + itemPadding;
 	local nextX:number = (width / 2) - (totalSize / 2);
-	local step:number = SIZE_POLICY_CARD_X + PADDING_POLICY_ROW_ITEM;
+	local step:number = GetPolicyCardSizeX() + PADDING_POLICY_ROW_ITEM;
 	
 	-- Make items overlap if they don't fit in the stack
 	if(totalSize > width) then
 		nextX = 0;
 		local itemOverlap:number = (totalSize - itemPadding - width) / (nSlots - 1);
-		step = SIZE_POLICY_CARD_X - itemOverlap;
+		step = GetPolicyCardSizeX() - itemOverlap;
 	end
 
 	for _,tSlotData in ipairs(tSlotArray) do
@@ -1555,6 +1596,49 @@ function OnUnlockGovernments()
 	RefreshAllData();
 	Controls.ButtonPolicies:SetText( Locale.Lookup("LOC_GOVT_CHANGE_POLICIES") );
 	UI.PlaySound("UI_Unlock_Government");
+end
+
+-- ===========================================================================
+--	UI Button Callback
+--	Clicked the left button for the filter area
+-- ===========================================================================
+function OnFilterBack()
+	if m_FilterScrollPos > 0 then
+		if m_FilterScrollPos >= m_FilterStep then
+			m_FilterScrollPos = m_FilterScrollPos - m_FilterStep;
+		else
+			m_FilterScrollPos = 0;
+		end
+
+		Controls.FilterScroll:SetScrollValue(m_FilterScrollPos);
+
+		if m_FilterScrollPos == 0 then
+			Controls.BackButton:SetHide(true);
+
+		end
+		Controls.ForwardButton:SetHide(false);
+	end
+end
+
+-- ===========================================================================
+--	UI Button Callback
+--	Clicked the right button for the filter area
+-- ===========================================================================
+function OnFilterForward()
+	if m_FilterScrollPos < 100 then
+		if m_FilterScrollPos <= (100 - m_FilterStep) then
+			m_FilterScrollPos = m_FilterScrollPos + m_FilterStep;
+		else
+			m_FilterScrollPos = 100;
+		end
+
+		if m_FilterScrollPos >= 100 then
+			Controls.ForwardButton:SetHide(true);
+		end
+		Controls.BackButton:SetHide(false);
+
+		Controls.FilterScroll:SetScrollValue(m_FilterScrollPos);
+	end
 end
 
 -- ===========================================================================
@@ -2430,6 +2514,20 @@ function GetGovernmentStatsTooltip(governmentType:string)
 end
 
 -- ===========================================================================
+-- For OVERRIDE
+-- ===========================================================================
+function GetAssignAllPoliciesText()
+	return TXT_GOV_ASSIGN_POLICIES;
+end
+
+-- ===========================================================================
+-- For OVERRIDE
+-- ===========================================================================
+function GetConfirmPoliciesText()
+	return TXT_GOV_CONFIRM_POLICIES;
+end
+
+-- ===========================================================================
 --	Fill filters used for policies
 -- ===========================================================================
 function militaryFilter(policy)		return policy.SlotType == "SLOT_MILITARY";	end
@@ -2536,7 +2634,24 @@ function IsReadOnly()
 end
 
 -- ===========================================================================
-function LateInitialization()
+function GetPolicyFromCatalog(policyType : string)
+	return m_kPolicyCatalogData[policyType];
+end
+
+-- ===========================================================================
+-- FOR OVERRIDE in scenarios/mods that leverage the policy cards with different sizing
+-- ===========================================================================
+function GetPolicyCardSizeX()
+	return SIZE_POLICY_CARD_X;
+end
+
+-- ===========================================================================
+function GetHavePoliciesChanged()
+	return m_isPoliciesChanged;
+end
+
+-- ===========================================================================
+function LateInitialize()
 	m_TopPanelConsideredHeight = Controls.Vignette:GetSizeY() - TOP_PANEL_OFFSET;
 	
 	PopulateStaticData();			-- Obtain unchanging, static data from game core
@@ -2551,7 +2666,7 @@ end
 --	UI Event
 -- ===========================================================================
 function OnInit( isReload:boolean )
-	LateInitialization();
+	LateInitialize();
 	if isReload then
 		LuaEvents.GameDebug_GetValues( "GovernmentScreen" );		
 	end	
@@ -2642,6 +2757,10 @@ function Initialize()
     Controls.ButtonPolicies:RegisterCallback(		Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
     Controls.ButtonGovernments:RegisterCallback(	Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 	
+	Controls.BackButton:RegisterCallback(Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
+	Controls.BackButton:RegisterCallback(Mouse.eLClick, OnFilterBack);
+	Controls.ForwardButton:RegisterCallback(Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
+	Controls.ForwardButton:RegisterCallback(Mouse.eLClick, OnFilterForward);
 
 	Controls.ConfirmPolicies:RegisterCallback(		Mouse.eLClick,	OnConfirmPolicies);
 	Controls.ConfirmPolicies:RegisterCallback(		Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);

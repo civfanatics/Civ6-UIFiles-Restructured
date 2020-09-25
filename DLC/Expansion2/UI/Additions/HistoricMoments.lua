@@ -46,7 +46,8 @@ local DATA_TYPE_MAP:table = {
 	[MomentDataTypes.MOMENT_DATA_TARGET_PLAYER_ERA]			= function(i) return GameInfo.Eras[i].EraType end,
 	[MomentDataTypes.MOMENT_DATA_TECHNOLOGY]				= function(i) return GameInfo.Technologies[i].TechnologyType end,
 	[MomentDataTypes.MOMENT_DATA_UNIT]						= function(i) return GameInfo.Units[i].UnitType end,
-	[MomentDataTypes.MOMENT_DATA_WAR]						= function(i) return WarTypes[i] end
+	[MomentDataTypes.MOMENT_DATA_WAR]						= function(i) return WarTypes[i] end,
+	[MomentDataTypes.MOMENT_DATA_HERO_CLASS]				= function(i) return GameInfo.HeroClasses[i].HeroClassType end
 };
 
 local DATA_ILLUSTRATIONS_MAP:table = {

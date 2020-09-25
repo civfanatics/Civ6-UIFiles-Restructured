@@ -1,4 +1,4 @@
-----------------------------------------------------------------  
+﻿----------------------------------------------------------------  
 -- Ingame Chat Panel
 ----------------------------------------------------------------  
 include( "SupportFunctions"  );		--TruncateString
@@ -79,18 +79,20 @@ end
 -------------------------------------------------
 -------------------------------------------------
 function IsFriendRequestValidPull(iPlayerID :number)
-	local pFriends = Network.GetFriends(Network.GetTransportType());
-	if(pFriends and iPlayerID ~= Game.GetLocalPlayer()) then
-		local playerNetworkID = PlayerConfigurations[iPlayerID]:GetNetworkIdentifer();
-		if(playerNetworkID ~= nil) then
-			local numFriends:number = pFriends:GetFriendCount();
-			for i:number = 0, numFriends - 1 do
-				local friend:table = pFriends:GetFriendByIndex(i);
-				if friend.ID == playerNetworkID then
-					return false;
+	if(CanMakeFriends()) then
+		local pFriends = Network.GetFriends(Network.GetTransportType());
+		if(pFriends and iPlayerID ~= Game.GetLocalPlayer()) then
+			local playerNetworkID = PlayerConfigurations[iPlayerID]:GetNetworkIdentifer();
+			if(playerNetworkID ~= nil) then
+				local numFriends:number = pFriends:GetFriendCount();
+				for i:number = 0, numFriends - 1 do
+					local friend:table = pFriends:GetFriendByIndex(i);
+					if friend.ID == playerNetworkID then
+						return false;
+					end
 				end
+				return true;
 			end
-			return true;
 		end
 	end
 	return false;
@@ -98,21 +100,11 @@ end
 
 -------------------------------------------------
 -------------------------------------------------
-local g_playerListPullData = {}
-
-if( Network.GetNetworkPlatform() == NetworkPlatform.NETWORK_PLATFORM_EOS ) then
-	g_playerListPullData = {
-		{ name = "PLAYERACTION_KICKPLAYER",		tooltip = "PLAYERACTION_KICKPLAYER_TOOLTIP",	playerAction = "PLAYERACTION_KICKPLAYER",		isValidFunction=IsKickPlayerValidPull},
-		{ name = "LOC_PLAYERACTION_STARTKICKVOTE", tooltip = "LOC_PLAYERACTION_STARTKICKVOTE_TOOLTIP", playerAction = "PLAYERACTION_STARTKICKVOTE",		isValidFunction=IsStartKickVoteValidPull},
-	};
-else
-	g_playerListPullData = {
-		{ name = "PLAYERACTION_KICKPLAYER",		tooltip = "PLAYERACTION_KICKPLAYER_TOOLTIP",	playerAction = "PLAYERACTION_KICKPLAYER",		isValidFunction=IsKickPlayerValidPull},
-		{ name = "PLAYERACTION_FRIENDREQUEST",	tooltip = "PLAYERACTION_FRIENDREQUEST_TOOLTIP",	playerAction = "PLAYERACTION_FRIENDREQUEST",	isValidFunction=IsFriendRequestValidPull},	
-		{ name = "LOC_PLAYERACTION_STARTKICKVOTE", tooltip = "LOC_PLAYERACTION_STARTKICKVOTE_TOOLTIP", playerAction = "PLAYERACTION_STARTKICKVOTE",		isValidFunction=IsStartKickVoteValidPull},
-	};
-end
-
+local g_playerListPullData = {
+	{ name = "PLAYERACTION_KICKPLAYER",		tooltip = "PLAYERACTION_KICKPLAYER_TOOLTIP",	playerAction = "PLAYERACTION_KICKPLAYER",		isValidFunction=IsKickPlayerValidPull},
+	{ name = "PLAYERACTION_FRIENDREQUEST",	tooltip = "PLAYERACTION_FRIENDREQUEST_TOOLTIP",	playerAction = "PLAYERACTION_FRIENDREQUEST",	isValidFunction=IsFriendRequestValidPull},	
+	{ name = "LOC_PLAYERACTION_STARTKICKVOTE", tooltip = "LOC_PLAYERACTION_STARTKICKVOTE_TOOLTIP", playerAction = "PLAYERACTION_STARTKICKVOTE",		isValidFunction=IsStartKickVoteValidPull},
+};
 
 -------------------------------------------------
 -- OnChat

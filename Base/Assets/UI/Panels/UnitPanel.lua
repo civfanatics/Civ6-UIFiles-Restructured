@@ -124,6 +124,7 @@ function InitSubjectData()
 		SpreadCharges				= 0,
 		HealCharges					= 0,
 		ActionCharges				= 0,
+		Lifespan					= -1,
 		GreatPersonActionCharges	= 0,
 		GreatPersonPassiveName		= "",
 		GreatPersonPassiveText		= "",
@@ -173,6 +174,7 @@ function InitTargetData()
 		SpreadCharges				= 0,
 		HealCharges					= 0,
 		ActionCharges				= 0,
+		Lifespan					= -1,
 		ReligiousStrength			= 0,
 		GreatPersonActionCharges	= 0,
 		Moves						= 0,
@@ -503,8 +505,15 @@ function GetUnitActionsTable( pUnit )
 						end
 
 						if (tResults[UnitOperationResults.ADDITIONAL_DESCRIPTION] ~= nil) then
+							toolTipString = toolTipString .. "[NEWLINE]"; -- Line break before add'l desc block
 							for i,v in ipairs(tResults[UnitOperationResults.ADDITIONAL_DESCRIPTION]) do
 								toolTipString = toolTipString .. "[NEWLINE]" .. Locale.Lookup(v);
+							end
+							
+							if (tResults[UnitOperationResults.FAILURE_REASONS] ~= nil) then
+								if (table.count(tResults[UnitOperationResults.FAILURE_REASONS]) > 0) then
+									toolTipString = toolTipString .. "[NEWLINE]"; -- Line break after add'l desc block if there are failure reasons to report
+								end
 							end
 						end
 
@@ -1455,6 +1464,11 @@ function FilterUnitStatsFromUnitData( unitData:table, ignoreStatType:number )
 		table.insert(data, {Value = unitData.GreatPersonActionCharges, Type = "ActionCharges",		Label = "LOC_HUD_UNIT_PANEL_GREAT_PERSON_ACTIONS",				FontIcon="[ICON_Charges_Large]",		IconName="ICON_GREAT_PERSON"});
 	end
 
+	-- Other
+	if (unitData.Lifespan >= 0) then
+		table.insert(data, {Value = unitData.Lifespan, Type = "Lifespan", Label = "LOC_HUD_UNIT_PANEL_LIFESPAN", FontIcon="[ICON_Charges_Large]", IconName="ICON_BUILD_CHARGES"});
+	end
+
 	-- If we have more than 4 stats then try to remove melee strength
 	if (table.count(data) > 4) then
 		for i,stat in ipairs(data) do
@@ -2227,6 +2241,7 @@ function ReadUnitData( unit:table )
 	kSubjectData.SpreadCharges				= unit:GetSpreadCharges();
 	kSubjectData.HealCharges				= unit:GetReligiousHealCharges();
 	kSubjectData.ActionCharges				= unit:GetActionCharges();
+	kSubjectData.Lifespan					= unit:GetLifespan();
 	kSubjectData.ReligiousStrength			= unit:GetReligiousStrength();
 	kSubjectData.HasMovedIntoZOC			= unit:HasMovedIntoZOC();
 	kSubjectData.MilitaryFormation			= unit:GetMilitaryFormation();
@@ -3747,6 +3762,41 @@ function OnInterfaceModeChanged( eOldMode:number, eNewMode:number )
 		SetTheSelectedButton("UNITOPERATION_WMD_STRIKE", true);
 	elseif (eOldMode == InterfaceModeTypes.WMD_STRIKE) then
 		SetTheSelectedButton("UNITOPERATION_WMD_STRIKE", false);
+	end
+
+	-- Set Hero Kill Weaker Unit Selected
+	if (eNewMode == InterfaceModeTypes.KILL_WEAKER_UNIT) then
+		SetTheSelectedButton("UNITCOMMAND_KILL_WEAKER_UNIT", true);
+	elseif (eOldMode == InterfaceModeTypes.KILL_WEAKER_UNIT) then
+		SetTheSelectedButton("UNITCOMMAND_KILL_WEAKER_UNIT", false);
+	end
+
+	-- Set Hero Transform Unit Selected
+	if (eNewMode == InterfaceModeTypes.TRANSFORM_UNIT) then
+		SetTheSelectedButton("UNITCOMMAND_TRANSFORM_UNIT", true);
+	elseif (eOldMode == InterfaceModeTypes.TRANSFORM_UNIT) then
+		SetTheSelectedButton("UNITCOMMAND_TRANSFORM_UNIT", false);
+	end
+
+	-- Set Hero Restore Unit Moves Selected
+	if (eNewMode == InterfaceModeTypes.RESTORE_UNIT_MOVES) then
+		SetTheSelectedButton("UNITCOMMAND_RESTORE_UNIT_MOVES", true);
+	elseif (eOldMode == InterfaceModeTypes.RESTORE_UNIT_MOVES) then
+		SetTheSelectedButton("UNITCOMMAND_RESTORE_UNIT_MOVES", false);
+	end
+
+	-- Set Hero Naval Gold Raid Selected
+	if (eNewMode == InterfaceModeTypes.NAVAL_GOLD_RAID) then
+		SetTheSelectedButton("UNITCOMMAND_NAVAL_GOLD_RAID", true);
+	elseif (eOldMode == InterfaceModeTypes.NAVAL_GOLD_RAID) then
+		SetTheSelectedButton("UNITCOMMAND_NAVAL_GOLD_RAID", false);
+	end
+
+	-- Set Hero Resource Inspire Selected
+	if (eNewMode == InterfaceModeTypes.RESOURCE_INSPIRE) then
+		SetTheSelectedButton("UNITCOMMAND_RESOURCE_INSPIRE", true);
+	elseif (eOldMode == InterfaceModeTypes.RESOURCE_INSPIRE) then
+		SetTheSelectedButton("UNITCOMMAND_RESOURCE_INSPIRE", false);
 	end
 
 	-- Set AIR_ATTACK Selected

@@ -522,6 +522,10 @@ end
 function OnShow()
 	print("Showing EndGame Menu");
 
+	-- Under really broken circumstances we can get here with the menu music/Dawn of Man VO still playing.  Stop it.
+	UI.PlaySound("STOP_SPEECH_DAWNOFMAN");
+	UI.StartStopMenuMusic(false);
+
 	m_waitingForShow = false;
 
 	LuaEvents.EndGameMenu_Shown();	-- Add ingame bulk hide counter
