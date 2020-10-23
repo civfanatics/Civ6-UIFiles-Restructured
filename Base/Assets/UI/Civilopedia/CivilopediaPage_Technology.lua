@@ -41,25 +41,27 @@ PageLayouts["Technology" ] = function(page)
 		end
 	end
 
-	if(show_prereqs) then
-		for __,prereqTechIndex in ipairs(pLiveTech.PrereqTechTypes) do
-			local pPreReqLive :table = techNodes[prereqTechIndex];
-			local kPreReqData :table = GameInfo.Technologies[prereqTechIndex];
-			if pPlayerTechManager:IsTechRevealed(pPreReqLive) then
-				table.insert(required_techs, {"ICON_" .. kPreReqData.TechnologyType, kPreReqData.Name, kPreReqData.TechnologyType});
+	if pPlayerTechManager:IsTechRevealed(tech.Index) then
+		if(show_prereqs) then
+			for __,prereqTechIndex in ipairs(pLiveTech.PrereqTechTypes) do
+				local pPreReqLive :table = techNodes[prereqTechIndex];
+				local kPreReqData :table = GameInfo.Technologies[prereqTechIndex];
+				if pPlayerTechManager:IsTechRevealed(pPreReqLive) then
+					table.insert(required_techs, {"ICON_" .. kPreReqData.TechnologyType, kPreReqData.Name, kPreReqData.TechnologyType});
+				end
 			end
 		end
-	end
 
-	-- Build list of what more advanced technologies require this to be unlocked.
-	for _,v in ipairs(techNodes) do
-		for _,prereqTechIndex in ipairs(v.PrereqTechTypes) do
-			if prereqTechIndex == pLiveTech.TechType then		
-				if pPlayerTechManager:IsTechRevealed(v.TechType) then		
-					local kFutureTech :table = GameInfo.Technologies[v.TechType];
-					table.insert(leadsto, {"ICON_" .. kFutureTech.TechnologyType, kFutureTech.Name, kFutureTech.TechnologyType});
+		-- Build list of what more advanced technologies require this to be unlocked.
+		for _,v in ipairs(techNodes) do
+			for _,prereqTechIndex in ipairs(v.PrereqTechTypes) do
+				if prereqTechIndex == pLiveTech.TechType then
+					if pPlayerTechManager:IsTechRevealed(v.TechType) then
+						local kFutureTech :table = GameInfo.Technologies[v.TechType];
+						table.insert(leadsto, {"ICON_" .. kFutureTech.TechnologyType, kFutureTech.Name, kFutureTech.TechnologyType});
+					end
+					break
 				end
-				break
 			end
 		end
 	end

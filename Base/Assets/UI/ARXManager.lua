@@ -354,8 +354,6 @@ end
 -- ===========================================================================
 function RefreshARX()
     if UI.HasARX() then
-        local strDate = Calendar.MakeYearStr(Game.GetCurrentGameTurn());
-
         m_bIsPortrait = UI.IsARXDisplayPortrait();
 		
         if (Game.GetLocalPlayer() ~= -1) then
@@ -389,11 +387,23 @@ function RefreshARX()
 			playerName = Locale.Lookup("LOC_MULTIPLAYER_UNKNOWN");
 		end
 
+		local endTurn:number = Game.GetGameEndTurn();
+		local turn:number = Game.GetCurrentGameTurn();
+
+		if GameCapabilities.HasCapability("CAPABILITY_DISPLAY_NORMALIZED_TURN") then
+			turn = (turn - GameConfiguration.GetStartTurn()) + 1;
+			if endTurn > 0 then
+				endTurn = endTurn - GameConfiguration.GetStartTurn();
+			end
+		end
+
         fullStr = "<span class=title>".. playerName .."</span>";
         -- and turn and date
-		fullStr = fullStr.."<br><span class=content>" .. Locale.Lookup("LOC_TOP_PANEL_CURRENT_TURN").." "..tostring(Game.GetCurrentGameTurn());
+		fullStr = fullStr.."<br><span class=content>" .. Locale.Lookup("LOC_TOP_PANEL_CURRENT_TURN").." "..tostring(turn);
 
-        if m_bIsPortrait then
+        local strDate:string = Calendar.MakeYearStr(turn);
+
+		if m_bIsPortrait then
             fullStr = fullStr..", "..strDate;
         else
             fullStr = fullStr..", "..strDate;
@@ -403,14 +413,14 @@ function RefreshARX()
 		if(m_LocalPlayer) then
 			local eraIndex = m_LocalPlayer:GetEra() + 1;
 			local era = m_kEras[eraIndex];
-			if(era) then 
+			if(era) then
 				eraName = Locale.Lookup("LOC_GAME_ERA_DESC", era.Name);
 			end
 		end
 
 		if(eraName == nil) then
 			eraName = Locale.Lookup("LOC_MULTIPLAYER_UNKNOWN");
-		end    
+		end
 
 		fullStr = fullStr..", ".. eraName .."</span>";
 

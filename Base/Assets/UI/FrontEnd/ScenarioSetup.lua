@@ -12,6 +12,8 @@ include("SupportFunctions");
 local PULLDOWN_TRUNCATE_OFFSET:number = 40;
 local MIN_SCREEN_Y            :number = 768;
 
+local MAX_SIDEBAR_Y			:number = 960;
+
 -- ===========================================================================
 -- ===========================================================================
 
@@ -540,7 +542,14 @@ function RefreshPlayerSlots()
 	Controls.BasicPlacardContainer:DestroyAllChildren();
 	Controls.AdvancedTooltipContainer:DestroyAllChildren();
 
-	local basicTooltip	:table = {};	
+	local iSidebarSize = Controls.CreateGameWindow:GetSizeY();
+	if iSidebarSize > MAX_SIDEBAR_Y then
+		iSidebarSize = MAX_SIDEBAR_Y;
+	end
+	Controls.LeftPanel:SetSizeY(iSidebarSize);
+	Controls.RightPanel:SetSizeY(iSidebarSize);
+
+    local basicTooltip	:table = {};
 	ContextPtr:BuildInstanceForControl( "CivToolTip", basicTooltip, Controls.BasicTooltipContainer );
 	local basicPlacard	:table = {};
 	ContextPtr:BuildInstanceForControl( "LeaderPlacard", basicPlacard, Controls.BasicPlacardContainer );
@@ -579,8 +588,8 @@ function RefreshPlayerSlots()
 
 	for i, player_id in ipairs(player_ids) do	
 		if(m_singlePlayerID == player_id) then
-			SetupLeaderPulldown(player_id, Controls, "Basic_LocalPlayerPulldown", "Basic_LocalPlayerCivIcon", "Basic_LocalPlayerCivIconBG", "Basic_LocalPlayerLeaderIcon", basicTooltipData);
-			SetupLeaderPulldown(player_id, Controls, "Advanced_LocalPlayerPulldown", "Advanced_LocalPlayerCivIcon", "Advanced_LocalPlayerCivIconBG", "Advanced_LocalPlayerLeaderIcon", advancedTooltipData);
+			SetupLeaderPulldown(player_id, Controls, "Basic_LocalPlayerPulldown", "Basic_LocalPlayerCivIcon", "Basic_LocalPlayerCivIconBG", "Basic_LocalPlayerLeaderIcon", "Basic_LocalPlayerScrollText", basicTooltipData);
+			SetupLeaderPulldown(player_id, Controls, "Advanced_LocalPlayerPulldown", "Advanced_LocalPlayerCivIcon", "Advanced_LocalPlayerCivIconBG", "Advanced_LocalPlayerLeaderIcon", "Advanced_LocalPlayerScrollText", advancedTooltipData);
 		else
 			local ui_instance = m_NonLocalPlayerSlotManager:GetInstance();
 			
@@ -591,7 +600,7 @@ function RefreshPlayerSlots()
 			end
 			ui_instance.RemoveButton:SetHide(not can_remove);
 			
-			SetupLeaderPulldown(player_id, ui_instance,"PlayerPullDown",nil,nil,nil,advancedTooltipData);
+			SetupLeaderPulldown(player_id, ui_instance,"PlayerPullDown",nil,nil,nil,nil,advancedTooltipData);
 		end
 	end
 
@@ -760,6 +769,13 @@ function Resize()
 		Controls.MainWindow:SetSizeY(screenY);
 	end
 	Controls.LogoContainer:SetHide(hideLogo);	
+
+	local iSidebarSize = Controls.CreateGameWindow:GetSizeY();
+	if iSidebarSize > MAX_SIDEBAR_Y then
+		iSidebarSize = MAX_SIDEBAR_Y;
+	end
+	Controls.BasicPlacardContainer:SetSizeY(iSidebarSize);
+	Controls.BasicTooltipContainer:SetSizeY(iSidebarSize);
 end
 
 -- ===========================================================================

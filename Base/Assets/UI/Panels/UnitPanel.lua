@@ -1,8 +1,9 @@
--- ===========================================================================
+﻿-- ===========================================================================
 --	Unit Panel Screen 
 -- ===========================================================================
 include( "InstanceManager" );
 include( "SupportFunctions" );
+include( "UnitSupport" );
 include( "Colors" );
 include( "CombatInfo" );
 include( "PopupDialog" );
@@ -1063,11 +1064,9 @@ function View(data)
 		if (unitAbilitiesList ~= nil and table.count(unitAbilitiesList) > 0) then
 			local abilityText:string = "[NEWLINE]" .. Locale.Lookup("LOC_UNIT_PANEL_ABILITIES_HEADER");
 			for i,ability in ipairs (unitAbilitiesList) do
-				local abilityDef = GameInfo.UnitAbilities[ability];
-				if (abilityDef ~= nil) then
-					if (abilityDef.Description ~= nil) then
-						abilityText = abilityText .. "[NEWLINE][ICON_Bullet] " .. Locale.Lookup(abilityDef.Description);
-					end
+				local sDesc:string = GetUnitAbilityDescription(ability);
+				if (sDesc ~= nil and sDesc ~= "") then
+					abilityText = abilityText .. "[NEWLINE][ICON_Bullet] " .. Locale.Lookup(sDesc);
 				end
 			end
 			tooltip = tooltip .. abilityText;
@@ -1418,54 +1417,54 @@ function FilterUnitStatsFromUnitData( unitData:table, ignoreStatType:number )
 	local data:table = {};
 
 	-- Strength
-	if ( unitData.Combat > 0 and (ignoreStatType == nil or ignoreStatType ~= CombatTypes.MELEE)) then
+	if ( unitData.Combat ~= nil and unitData.Combat > 0 and (ignoreStatType == nil or ignoreStatType ~= CombatTypes.MELEE)) then
 		table.insert(data, {Value = unitData.Combat, Type = "Combat", Label = "LOC_HUD_UNIT_PANEL_STRENGTH",				FontIcon="[ICON_Strength_Large]",		IconName="ICON_STRENGTH"});
 	end
-	if ( unitData.RangedCombat > 0 and (ignoreStatType == nil or ignoreStatType ~= CombatTypes.RANGED)) then
+	if ( unitData.RangedCombat ~= nil and unitData.RangedCombat > 0 and (ignoreStatType == nil or ignoreStatType ~= CombatTypes.RANGED)) then
 		table.insert(data, {Value = unitData.RangedCombat,		Label = "LOC_HUD_UNIT_PANEL_RANGED_STRENGTH",		FontIcon="[ICON_RangedStrength_Large]",	IconName="ICON_RANGED_STRENGTH"});
 	end
-	if (unitData.BombardCombat > 0 and (ignoreStatType == nil or ignoreStatType ~= CombatTypes.BOMBARD)) then
+	if (unitData.BombardCombat ~= nil and unitData.BombardCombat > 0 and (ignoreStatType == nil or ignoreStatType ~= CombatTypes.BOMBARD)) then
 		table.insert(data, {Value = unitData.BombardCombat,	Label = "LOC_HUD_UNIT_PANEL_BOMBARD_STRENGTH",		FontIcon="[ICON_Bombard_Large]",		IconName="ICON_BOMBARD"});
 	end
-	if (unitData.ReligiousStrength > 0 and (ignoreStatType == nil or ignoreStatType ~= CombatTypes.RELIGIOUS)) then
+	if (unitData.ReligiousStrength ~= nil and unitData.ReligiousStrength > 0 and (ignoreStatType == nil or ignoreStatType ~= CombatTypes.RELIGIOUS)) then
 		table.insert(data, {Value = unitData.ReligiousStrength,	Label = "LOC_HUD_UNIT_PANEL_RELIGIOUS_STRENGTH",	FontIcon="[ICON_ReligionStat_Large]",	IconName="ICON_RELIGION"});
 	end
-	if (unitData.AntiAirCombat > 0 and (ignoreStatType == nil or ignoreStatType ~= CombatTypes.AIR)) then
+	if (unitData.AntiAirCombat ~= nil and unitData.AntiAirCombat > 0 and (ignoreStatType == nil or ignoreStatType ~= CombatTypes.AIR)) then
 		table.insert(data, {Value = unitData.AntiAirCombat,	Label = "LOC_HUD_UNIT_PANEL_ANTI_AIR_STRENGTH",		FontIcon="[ICON_AntiAir_Large]",		IconName="ICON_STATS_ANTIAIR"});
 	end
 
 	-- Movement
-	if(unitData.MaxMoves > 0) then
+	if(unitData.MaxMoves ~= nil and unitData.MaxMoves > 0) then
 		table.insert(data, {Value = unitData.MaxMoves, Type = "BaseMoves",		Label = "LOC_HUD_UNIT_PANEL_MOVEMENT",				FontIcon="[ICON_Movement_Large]",		IconName="ICON_MOVES"});
 	end
 
 	-- Range
-	if (unitData.Range > 0) then
+	if (unitData.Range ~= nil and unitData.Range > 0) then
 		table.insert(data, {Value = unitData.Range;			Label = "LOC_HUD_UNIT_PANEL_ATTACK_RANGE",			FontIcon="[ICON_Range_Large]",			IconName="ICON_RANGE"});
 	end
 
 	-- Charges
-	if (unitData.SpreadCharges > 0) then
+	if (unitData.SpreadCharges ~= nil and unitData.SpreadCharges > 0) then
 		table.insert(data, {Value = unitData.SpreadCharges,	Type = "SpreadCharges", Label = "LOC_HUD_UNIT_PANEL_SPREADS",				FontIcon="[ICON_ReligionStat_Large]",	IconName="ICON_RELIGION"});
 	end
-	if (unitData.BuildCharges > 0) then
+	if (unitData.BuildCharges ~= nil and unitData.BuildCharges > 0) then
 		table.insert(data, {Value = unitData.BuildCharges, Type = "BuildCharges",		Label = "LOC_HUD_UNIT_PANEL_BUILDS",				FontIcon="[ICON_Charges_Large]",		IconName="ICON_BUILD_CHARGES"});
 	end
-	if (unitData.DisasterCharges > 0) then
+	if (unitData.DisasterCharges ~= nil and unitData.DisasterCharges > 0) then
 		table.insert(data, {Value = unitData.DisasterCharges, Type = "DisasterCharges",		Label = "LOC_HUD_UNIT_PANEL_CHARGES",				FontIcon="[ICON_Charges_Large]",		IconName="ICON_BUILD_CHARGES"});
 	end 
-	if (unitData.HealCharges > 0) then
+	if (unitData.HealCharges ~= nil and unitData.HealCharges > 0) then
 		table.insert(data, {Value = unitData.HealCharges, Type = "HealCharges",		Label = "LOC_HUD_UNIT_PANEL_HEALS",				FontIcon="[ICON_ReligionStat_Large]",		IconName="ICON_RELIGION"});
 	end
-	if (unitData.ActionCharges > 0) then
+	if (unitData.ActionCharges ~= nil and unitData.ActionCharges > 0) then
 		table.insert(data, {Value = unitData.ActionCharges, Type = "ActionCharges",		Label = "LOC_HUD_UNIT_PANEL_CHARGES",				FontIcon="[ICON_ReligionStat_Large]",		IconName="ICON_RELIGION"});
 	end
-	if (unitData.GreatPersonActionCharges > 0) then
+	if (unitData.GreatPersonActionCharges ~= nil and unitData.GreatPersonActionCharges > 0) then
 		table.insert(data, {Value = unitData.GreatPersonActionCharges, Type = "ActionCharges",		Label = "LOC_HUD_UNIT_PANEL_GREAT_PERSON_ACTIONS",				FontIcon="[ICON_Charges_Large]",		IconName="ICON_GREAT_PERSON"});
 	end
 
 	-- Other
-	if (unitData.Lifespan >= 0) then
+	if (unitData.Lifespan ~= nil and unitData.Lifespan >= 0) then
 		table.insert(data, {Value = unitData.Lifespan, Type = "Lifespan", Label = "LOC_HUD_UNIT_PANEL_LIFESPAN", FontIcon="[ICON_Charges_Large]", IconName="ICON_BUILD_CHARGES"});
 	end
 
@@ -2241,7 +2240,6 @@ function ReadUnitData( unit:table )
 	kSubjectData.SpreadCharges				= unit:GetSpreadCharges();
 	kSubjectData.HealCharges				= unit:GetReligiousHealCharges();
 	kSubjectData.ActionCharges				= unit:GetActionCharges();
-	kSubjectData.Lifespan					= unit:GetLifespan();
 	kSubjectData.ReligiousStrength			= unit:GetReligiousStrength();
 	kSubjectData.HasMovedIntoZOC			= unit:HasMovedIntoZOC();
 	kSubjectData.MilitaryFormation			= unit:GetMilitaryFormation();
@@ -2253,6 +2251,8 @@ function ReadUnitData( unit:table )
 	kSubjectData.CurrentPromotions			= {};
 	kSubjectData.Actions					= GetUnitActionsTable( unit );
 	kSubjectData.Ability					= unitAbility:GetAbilities();
+	-- Property-based values
+	kSubjectData.Lifespan					= unit:GetProperty(UnitPropertyKeys.LifespanRemaining);
 	
 	-- Great person data
 	-- Must be done before filtering unit stats because they look for some of the promotion information.
@@ -3826,6 +3826,16 @@ function OnInterfaceModeChanged( eOldMode:number, eNewMode:number )
 end
 
 -- ===========================================================================
+function OnLocalPlayerTurnEnd()
+	local pSelectedUnit :table = UI.GetHeadSelectedUnit();
+	if pSelectedUnit ~= nil then
+		m_selectedPlayerId				= pSelectedUnit:GetOwner();
+		m_UnitId						= pSelectedUnit:GetID();
+		Refresh( m_selectedPlayerId, m_UnitId );
+	end
+end
+
+-- ===========================================================================
 function SetTheSelectedButtonByInterfaceMode( interfaceModeString:string, isSelected:boolean )
 	for i=1,m_standardActionsIM.m_iCount,1 do
 		local instance:table = m_standardActionsIM:GetAllocatedInstance(i);
@@ -4224,6 +4234,7 @@ function Initialize()
 	Events.GreatWorkMoved.Add( OnGreatWorkMoved );
 	Events.InputActionTriggered.Add( OnInputActionTriggered );
 	Events.InterfaceModeChanged.Add( OnInterfaceModeChanged );
+	Events.LocalPlayerTurnEnd.Add( OnLocalPlayerTurnEnd );
 	Events.PantheonFounded.Add( OnPantheonFounded );
 	Events.PhaseBegin.Add( OnPhaseBegin );		
 	Events.PlayerTurnActivated.Add( OnPlayerTurnActivated );

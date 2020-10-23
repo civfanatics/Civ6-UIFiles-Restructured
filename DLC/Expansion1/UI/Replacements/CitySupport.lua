@@ -313,22 +313,22 @@ end
 --	Update the yield data for a city.
 -- ===========================================================================
 function UpdateYieldData( pCity:table, data:table )
-	data.CulturePerTurn				= Round( pCity:GetYield( YieldTypes.CULTURE ), 1);
+	data.CulturePerTurn				= math.floor( pCity:GetYield( YieldTypes.CULTURE )*10) / 10;
 	data.CulturePerTurnToolTip		= pCity:GetYieldToolTip(YieldTypes.CULTURE);
 
-	data.FaithPerTurn				= Round( pCity:GetYield( YieldTypes.FAITH ), 1);
+	data.FaithPerTurn				= math.floor( pCity:GetYield( YieldTypes.FAITH )*10) / 10;
 	data.FaithPerTurnToolTip		= pCity:GetYieldToolTip(YieldTypes.FAITH);
 
-	data.FoodPerTurn				= Round( pCity:GetYield( YieldTypes.FOOD ), 1);
+	data.FoodPerTurn				= math.floor( pCity:GetYield( YieldTypes.FOOD )*10) / 10;
 	data.FoodPerTurnToolTip			= pCity:GetYieldToolTip(YieldTypes.FOOD);
 
-	data.GoldPerTurn				= Round( pCity:GetYield( YieldTypes.GOLD ), 1);
+	data.GoldPerTurn				= math.floor( pCity:GetYield( YieldTypes.GOLD )*10) / 10;
 	data.GoldPerTurnToolTip			= pCity:GetYieldToolTip(YieldTypes.GOLD);
 
-	data.ProductionPerTurn			= Round( pCity:GetYield( YieldTypes.PRODUCTION ),1);
+	data.ProductionPerTurn			= math.floor( pCity:GetYield( YieldTypes.PRODUCTION )*10) / 10;
 	data.ProductionPerTurnToolTip	= pCity:GetYieldToolTip(YieldTypes.PRODUCTION);
 
-	data.SciencePerTurn				= Round( pCity:GetYield( YieldTypes.SCIENCE ), 1);
+	data.SciencePerTurn				= math.floor( pCity:GetYield( YieldTypes.SCIENCE )*10) / 10;
 	data.SciencePerTurnToolTip		= pCity:GetYieldToolTip(YieldTypes.SCIENCE);
 
 	return data;

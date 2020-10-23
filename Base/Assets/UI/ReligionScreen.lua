@@ -444,6 +444,7 @@ function SetBeliefSlotDisabled(beliefInst:table, bDisable:boolean)
 end
 
 function PopulateAvailableBeliefs(beliefType:string)
+	local Beliefs : table = {};
 
 	m_Beliefs.IM:ResetInstances();
 
@@ -463,14 +464,22 @@ function PopulateAvailableBeliefs(beliefType:string)
 			not m_pGameReligion:IsTooManyForReligion(row.Index, m_PlayerReligionType) and
 			((beliefType ~= nil and row.BeliefClassType == beliefType) or
 			 (beliefType == nil and row.BeliefClassType ~= "BELIEF_CLASS_PANTHEON"))) then
-			local beliefInst:table = m_Beliefs.IM:GetInstance();
-			beliefInst.BeliefLabel:LocalizeAndSetText(Locale.ToUpper(row.Name));
-			beliefInst.BeliefDescription:LocalizeAndSetText(row.Description);
-            beliefInst.BeliefButton:RegisterCallback(Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
-			beliefInst.BeliefButton:RegisterCallback(Mouse.eLClick, function() OnBeliefSelected(row.Index, beliefInst) end);
-			SetBeliefIcon(beliefInst.BeliefIcon, row.BeliefType, SIZE_BELIEF_ICON_LARGE);
-			SetBeliefSlotDisabled(beliefInst, false);
+			table.insert(Beliefs, row);
 		end
+	end
+
+	table.sort(Beliefs, function(a, b)
+		return a.BeliefClassType < b.BeliefClassType;
+		end );
+
+	for _, row in ipairs(Beliefs) do
+		local beliefInst:table = m_Beliefs.IM:GetInstance();
+		beliefInst.BeliefLabel:LocalizeAndSetText(Locale.ToUpper(row.Name));
+		beliefInst.BeliefDescription:LocalizeAndSetText(row.Description);
+		beliefInst.BeliefButton:RegisterCallback(Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
+		beliefInst.BeliefButton:RegisterCallback(Mouse.eLClick, function() OnBeliefSelected(row.Index, beliefInst) end);
+		SetBeliefIcon(beliefInst.BeliefIcon, row.BeliefType, SIZE_BELIEF_ICON_LARGE);
+		SetBeliefSlotDisabled(beliefInst, false);
 	end
 
 	RealizeStack(m_Beliefs.Stack, m_Beliefs.Scrollbar);

@@ -176,7 +176,7 @@ end
 -- ===========================================================================
 function Initialize()
 
-	if GameConfiguration.IsNetworkMultiplayer() then
+	if (GameConfiguration.IsNetworkMultiplayer() or GameCapabilities.HasCapability("CAPABILITY_ERAS") == false) then
 		return;
 	end
 

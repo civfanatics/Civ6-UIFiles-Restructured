@@ -35,13 +35,17 @@ function RefreshYields()
 	local YIELD_PADDING_Y:number	= 12;
 
 	---- SCIENCE ----
-	local playerTechnology		:table	= localPlayer:GetTechs();
-	local currentScienceYield	:number = playerTechnology:GetScienceYield();
-	Controls.SciencePerTurn:SetText( FormatValuePerTurn(currentScienceYield) );	
+	if(GameInfo.GameCapabilities["CAPABILITY_SCIENCE"] ~= nil)then
+		local playerTechnology		:table	= localPlayer:GetTechs();
+		local currentScienceYield	:number = playerTechnology:GetScienceYield();
+		Controls.SciencePerTurn:SetText( FormatValuePerTurn(currentScienceYield) );	
 
-	Controls.ScienceBacking:SetToolTipString( GetScienceTooltip() );
-	Controls.ScienceStack:CalculateSize();
-	Controls.ScienceBacking:SetSizeX(Controls.ScienceStack:GetSizeX() + YIELD_PADDING_Y);
+		Controls.ScienceBacking:SetToolTipString( GetScienceTooltip() );
+		Controls.ScienceStack:CalculateSize();
+		Controls.ScienceBacking:SetSizeX(Controls.ScienceStack:GetSizeX() + YIELD_PADDING_Y);
+	else
+		Controls.ScienceBacking:SetHide(true);
+	end
 
 	---- GOLD ----
 	local playerTreasury:table	= localPlayer:GetTreasury();
@@ -65,25 +69,33 @@ function RefreshYields()
 	end
 	
 	---- CULTURE----
-	local playerCulture			:table	= localPlayer:GetCulture();
-	local currentCultureYield	:number = playerCulture:GetCultureYield();
-	Controls.CulturePerTurn:SetText( FormatValuePerTurn(currentCultureYield) );	
+	if(GameInfo.GameCapabilities["CAPABILITY_CULTURE"] ~= nil)then
+		local playerCulture			:table	= localPlayer:GetCulture();
+		local currentCultureYield	:number = playerCulture:GetCultureYield();
+		Controls.CulturePerTurn:SetText( FormatValuePerTurn(currentCultureYield) );	
 
-	Controls.CultureBacking:SetToolTipString( GetCultureTooltip() );
-	Controls.CultureStack:CalculateSize();
-	Controls.CultureBacking:SetSizeX(Controls.CultureStack:GetSizeX() + YIELD_PADDING_Y);
+		Controls.CultureBacking:SetToolTipString( GetCultureTooltip() );
+		Controls.CultureStack:CalculateSize();
+		Controls.CultureBacking:SetSizeX(Controls.CultureStack:GetSizeX() + YIELD_PADDING_Y);
+	else
+		Controls.CultureBacking:SetHide(true);
+	end
 
 	---- FAITH ----
-	local playerReligion		:table	= localPlayer:GetReligion();
-	local faithYield			:number = playerReligion:GetFaithYield();
-	local faithBalance			:number = playerReligion:GetFaithBalance();
-	Controls.FaithBalance:SetText( Locale.ToNumber(faithBalance, "#,###.#") );	
-	Controls.FaithPerTurn:SetText( FormatValuePerTurn(faithYield) );
+	if(GameInfo.GameCapabilities["CAPABILITY_FAITH"] ~= nil)then
+		local playerReligion		:table	= localPlayer:GetReligion();
+		local faithYield			:number = playerReligion:GetFaithYield();
+		local faithBalance			:number = playerReligion:GetFaithBalance();
+		Controls.FaithBalance:SetText( Locale.ToNumber(faithBalance, "#,###.#") );	
+		Controls.FaithPerTurn:SetText( FormatValuePerTurn(faithYield) );
 
-	Controls.FaithBacking:SetToolTipString( GetFaithTooltip() );
+		Controls.FaithBacking:SetToolTipString( GetFaithTooltip() );
 
-	Controls.FaithStack:CalculateSize();	
-	Controls.FaithBacking:SetSizeX(Controls.FaithStack:GetSizeX() + YIELD_PADDING_Y);
+		Controls.FaithStack:CalculateSize();	
+		Controls.FaithBacking:SetSizeX(Controls.FaithStack:GetSizeX() + YIELD_PADDING_Y);
+	else
+		Controls.FaithBacking:SetHide(true);
+	end
 
 	-- Size yields in second column to match largest
 	if Controls.FaithBacking:GetSizeX() > Controls.CultureBacking:GetSizeX() then

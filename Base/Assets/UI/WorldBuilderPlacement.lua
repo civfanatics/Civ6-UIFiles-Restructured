@@ -50,6 +50,7 @@ local m_bLastMouseWasDown	   : boolean = false;
 local m_bDragInProgress		   : boolean = false;
 local m_RefreshResDelay		   : number = 0;
 local m_FeatureRotation		   : number = DirectionTypes.NO_DIRECTION;
+local m_LastPlotID			   : number = -1;
 
 -- 19-hex large brush assist table
 local m_19HexTable			   : table = 
@@ -440,62 +441,72 @@ function OnPlotSelected(plotID, edge, lbutton, rbutton)
 			OnPlotSelected(m_MouseDownHex, m_MouseDownEdge, true);
 		end
 
-		local mode = Controls.PlacementPullDown:GetSelectedEntry();
-		local kPlot : table = Map.GetPlotByIndex(plotID);
-		if m_BrushEnabled and m_BrushSize > 1 then
-			mode.PlacementFunc(plotID, edge, lbutton, false);
-			m_ExcludePlots = {};
-			table.insert(m_ExcludePlots, kPlot);
-		else
-			m_ExcludePlots = {};
-			mode.PlacementFunc(plotID, edge, lbutton, true);
+		local bDoPlacement : boolean = true;
+
+		if m_UndoItemCount > 0 and plotID == m_LastPlotID then
+			bDoPlacement = false;
 		end
 
-		m_UndoItemCount = m_UndoItemCount + 1;
+		m_LastPlotID = plotID;
 
-		-- update the cursor status
-		OnPlotMouseOver(plotID);
-
-		if m_BrushEnabled and m_BrushSize == 7 then
-			local adjPlots : table = Map.GetAdjacentPlots(kPlot:GetX(), kPlot:GetY());
-
-			for i = 1, 6, 1 do
-				if adjPlots[i] ~= nil and PlacementValid(adjPlots[i]:GetIndex(), mode) then
-					mode.PlacementFunc(adjPlots[i]:GetIndex(), edge, lbutton, true);
-					table.insert(m_ExcludePlots, adjPlots[i]);
-					m_UndoItemCount = m_UndoItemCount + 1;
-				end
-			end
-		elseif m_BrushEnabled and m_BrushSize == 19 then
-			local adjPlots : table = Map.GetAdjacentPlots(kPlot:GetX(), kPlot:GetY());
-
-			for i = 1, 6, 1 do
-				if adjPlots[i] ~= nil and PlacementValid(adjPlots[i]:GetIndex(), mode) then
-					mode.PlacementFunc(adjPlots[i]:GetIndex(), edge, lbutton, false);
-					table.insert(m_ExcludePlots, adjPlots[i]);
-					m_UndoItemCount = m_UndoItemCount + 1;
-				end
+		if bDoPlacement then
+			local mode = Controls.PlacementPullDown:GetSelectedEntry();
+			local kPlot : table = Map.GetPlotByIndex(plotID);
+			if m_BrushEnabled and m_BrushSize > 1 then
+				mode.PlacementFunc(plotID, edge, lbutton, false);
+				m_ExcludePlots = {};
+				table.insert(m_ExcludePlots, kPlot);
+			else
+				m_ExcludePlots = {};
+				mode.PlacementFunc(plotID, edge, lbutton, true);
 			end
 
-			local outerPlots : table = {};
-			for _,direction in pairs(DirectionTypes) do
-				if adjPlots[direction] ~= nil then
-					local adjPlot1 :table = Map.GetAdjacentPlot(adjPlots[direction]:GetX(), adjPlots[direction]:GetY(), m_19HexTable[direction].Dir1);
-					local adjPlot2 :table = Map.GetAdjacentPlot(adjPlots[direction]:GetX(), adjPlots[direction]:GetY(), m_19HexTable[direction].Dir2);
+			m_UndoItemCount = m_UndoItemCount + 1;
 
-					if adjPlot1 ~= nil then
-						table.insert(outerPlots, adjPlot1);
-					end
-					if adjPlot2 ~= nil then
-						table.insert(outerPlots, adjPlot2);
+			-- update the cursor status
+			OnPlotMouseOver(plotID);
+
+			if m_BrushEnabled and m_BrushSize == 7 then
+				local adjPlots : table = Map.GetAdjacentPlots(kPlot:GetX(), kPlot:GetY());
+
+				for i = 1, 6, 1 do
+					if adjPlots[i] ~= nil and PlacementValid(adjPlots[i]:GetIndex(), mode) then
+						mode.PlacementFunc(adjPlots[i]:GetIndex(), edge, lbutton, true);
+						table.insert(m_ExcludePlots, adjPlots[i]);
+						m_UndoItemCount = m_UndoItemCount + 1;
 					end
 				end
-			end
+			elseif m_BrushEnabled and m_BrushSize == 19 then
+				local adjPlots : table = Map.GetAdjacentPlots(kPlot:GetX(), kPlot:GetY());
 
-			for _, plot in pairs(outerPlots) do
-				mode.PlacementFunc(plot:GetIndex(), edge, lbutton, true);
-				table.insert(m_ExcludePlots, plot);
-				m_UndoItemCount = m_UndoItemCount + 1;
+				for i = 1, 6, 1 do
+					if adjPlots[i] ~= nil and PlacementValid(adjPlots[i]:GetIndex(), mode) then
+						mode.PlacementFunc(adjPlots[i]:GetIndex(), edge, lbutton, false);
+						table.insert(m_ExcludePlots, adjPlots[i]);
+						m_UndoItemCount = m_UndoItemCount + 1;
+					end
+				end
+
+				local outerPlots : table = {};
+				for _,direction in pairs(DirectionTypes) do
+					if adjPlots[direction] ~= nil then
+						local adjPlot1 :table = Map.GetAdjacentPlot(adjPlots[direction]:GetX(), adjPlots[direction]:GetY(), m_19HexTable[direction].Dir1);
+						local adjPlot2 :table = Map.GetAdjacentPlot(adjPlots[direction]:GetX(), adjPlots[direction]:GetY(), m_19HexTable[direction].Dir2);
+
+						if adjPlot1 ~= nil then
+							table.insert(outerPlots, adjPlot1);
+						end
+						if adjPlot2 ~= nil then
+							table.insert(outerPlots, adjPlot2);
+						end
+					end
+				end
+
+				for _, plot in pairs(outerPlots) do
+					mode.PlacementFunc(plot:GetIndex(), edge, lbutton, true);
+					table.insert(m_ExcludePlots, plot);
+					m_UndoItemCount = m_UndoItemCount + 1;
+				end
 			end
 		end
 	end
@@ -2216,6 +2227,8 @@ function OnInit()
 	UpdateRotation();
 
 	ContextPtr:SetUpdate(OnUpdate);
+
+	m_LastPlotID = -1;
 end
 
 ContextPtr:SetInitHandler( OnInit );

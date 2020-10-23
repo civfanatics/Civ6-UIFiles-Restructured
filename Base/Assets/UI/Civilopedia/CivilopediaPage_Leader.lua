@@ -171,7 +171,7 @@ local sectionId = page.SectionId;
         if(#civilizations > 0) then
             s:AddHeader("LOC_UI_PEDIA_CIVILIZATIONS");
             for _, civ in ipairs(civilizations) do
-				local icon = {"ICON_" .. civ.CivilizationType, civ.Name, civ.CivilizationType};
+				local icon : table = {"ICON_" .. civ.CivilizationType, civ.Name, civ.CivilizationType};
 
                 s:AddIconLabel(icon, civ.Name);
 				
@@ -182,7 +182,9 @@ local sectionId = page.SectionId;
         if(#uu > 0) then
             s:AddHeader("LOC_UI_PEDIA_SPECIAL_UNITS");
             for _, item in ipairs(uu) do
-				s:AddIconLabel("ICON_" .. item[1], item[2]);
+				local icon : table = {"ICON_" .. item[1], item[2], item[1]};
+
+				s:AddIconLabel(icon, item[2]);
             end
 			s:AddSeparator();
         end
@@ -192,7 +194,9 @@ local sectionId = page.SectionId;
         
             local icons = {};
             for _, item in ipairs(ub) do
-				s:AddIconLabel("ICON_" .. item[1], item[2]);
+				local icon : table = {"ICON_" .. item[1], item[2], item[1]};
+
+				s:AddIconLabel(icon, item[2]);
             end
 			s:AddSeparator();
         end
@@ -204,7 +208,7 @@ local sectionId = page.SectionId;
 		if(#agendas > 0) then
 			s:AddHeader("LOC_UI_PEDIA_AGENDAS");
 			for i, v in ipairs(agendas) do
-				local icon = {"ICON_" .. v.AgendaType, v.Name, v.AgendaType};
+				local icon : table = {"ICON_" .. v.AgendaType, v.Name, v.AgendaType};
 				s:AddLabel(v.Name);
 				s:AddLabel(v.Description);
 			end

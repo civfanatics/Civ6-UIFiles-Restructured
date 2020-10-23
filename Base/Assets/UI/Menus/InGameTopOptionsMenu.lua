@@ -1,4 +1,4 @@
--- ===========================================================================
+﻿-- ===========================================================================
 --	InGameTopOptionsMenu
 -- ===========================================================================
 
@@ -235,6 +235,8 @@ function Close()
 	end
 	
 	m_isClosing = true;
+	
+	EffectsManager:ResumeAllEffects();	-- Resume any continous particle effects.
 
 	if(Controls.AlphaIn:IsStopped()) then
 		-- Animation is good for a nice clean animation out..
@@ -295,9 +297,6 @@ function OnSimpleInGameMenu( isSimpleMenu )
 
 	if isSimpleMenu == nil then isSimpleMenu = true; end
 	m_isSimpleMenu = isSimpleMenu;
-
-	SetupButtons();
-
 end
 
 -- ===========================================================================
@@ -378,7 +377,9 @@ function SetupButtons()
 
 	Controls.ExitGameButton:SetHide(false);	
 
-	RefreshModsInUse();
+	if (m_isSimpleMenu==false) then
+		RefreshModsInUse();
+	end
 	RefreshIconData();
 
 	Controls.MainStack:CalculateSize();
@@ -502,19 +503,35 @@ end
 
 -- ===========================================================================
 function RefreshModsInUse()
-	local mods = Modding.GetActiveMods();
+	local mods : table = Modding.GetActiveMods();
 	
 	g_ModListingsManager:ResetInstances();
 
-	local modNames = {};
+	local modNames : table = {};
 	for i,v in ipairs(mods) do
 		modNames[i] = Locale.Lookup(v.Name);
 	end
 
-	table.sort(modNames, function(a,b) return Locale.Compare(a,b) == -1 end);
+	table.sort(modNames, function(a,b) return Locale.Compare(a,b) == -1 end);	
+
+	if (GameConfiguration.GetEnabledGameModesMetaString ~= nil) then
+		local enabledModesMetaData : string = GameConfiguration.GetEnabledGameModesMetaString();
+		if (enabledModesMetaData ~= nil) then
+			-- Use the modding system to break up the string
+			local enabledGameModeNames : table = Modding.GetGameModesFromConfigurationString(enabledModesMetaData);
+			table.sort(enabledGameModeNames, function(a,b) return Locale.Compare(a.Name,b.Name) == -1 end);
+			for k,v in ipairs(enabledGameModeNames)do
+				local instance : table = g_ModListingsManager:GetInstance();
+		
+				instance.ModTitle:SetText(v.Name);
+			end
+			local spacerInstance : table = g_ModListingsManager:GetInstance();
+			spacerInstance.ModTitle:SetText(" ");
+		end
+	end
 	
 	for i,v in ipairs(modNames) do
-		local instance = g_ModListingsManager:GetInstance();
+		local instance : table = g_ModListingsManager:GetInstance();
 		
 		instance.ModTitle:SetText(v);	
 	end
@@ -543,6 +560,9 @@ function OnShow()
 		print("Show was requested on menu that is in the midst of closing.");
 		return;
 	end
+
+	-- Stop any particle effects from drawing on top of the menu.
+	EffectsManager:PauseAllEffects();	
 
 	-- do not re-push the context if we're already in the GameOptions context
 	-- (e.g. returning from a sub-screen)
@@ -715,9 +735,17 @@ function Initialize()
 	Events.CloudGameKilled.Add(OnCloudGameKilled);
 	Events.CloudGameQuit.Add(OnCloudGameQuit);
 
+	local gameSeed : string = "";
+	local mapSeed : string = "";
+
 	-- Convert to string so formatting isn't performed by locale when added to tooltip:
-	local gameSeed		:string	= tostring( GameConfiguration.GetValue("GAME_SYNC_RANDOM_SEED") );
-	local mapSeed		:string	= tostring( MapConfiguration.GetValue("RANDOM_SEED") );	
+	if(GameConfiguration.GetValue("GAME_SYNC_RANDOM_SEED") ~= nil)then
+		gameSeed = tostring( GameConfiguration.GetValue("GAME_SYNC_RANDOM_SEED") );
+	end
+	if(MapConfiguration.GetValue("RANDOM_SEED") ~= nil)then
+		mapSeed	= tostring( MapConfiguration.GetValue("RANDOM_SEED") );	
+	end
+
 	local version		:string = UI.GetAppVersion();
 	local tooltipInfo	:string= --Locale.Lookup("LOC_PAUSEMENU_INFO_OVERVIEW_TOOLTIP");
 		Locale.Lookup("LOC_PAUSEMENU_INFO_OVERVIEW_TOOLTIP") .. "[NEWLINE]" ..

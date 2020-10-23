@@ -422,6 +422,13 @@
 									<Slider ID="ScrollSpeedSlider" Style="SliderControl"   Anchor="R,C" Size="350,13" />
 								</Container>
 							</Stack>
+                            <Stack Anchor="R,T" StackGrowth="Right" Padding="5">
+                                <Label  Style="ShellOptionText" Anchor="C,C" String="LOC_OPTIONS_SCROLL_TEXT_SPEED"/>
+                                <Container Size="400,24">
+                                    <Label  ID="ScrollTextSpeedValue"  Style="ShellOptionText" WrapWidth="350" Anchor="L,C" String="UNSET" />
+                                    <Slider ID="ScrollTextSpeedSlider" Style="SliderControl"   Anchor="R,C" Size="350,13" />
+                                </Container>
+                            </Stack>
 							<Stack ID="TouchInputStack" Anchor="R,T" StackGrowth="Left" Padding="5">
 								<GridButton ID="TouchInputCheckbox" Anchor="L,C" Offset="0,0" Size="400,24" Style="CheckBoxControl" String="LOC_OPTIONS_TOUCH_ENABLED" />
 							</Stack>

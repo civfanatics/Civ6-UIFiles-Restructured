@@ -353,12 +353,6 @@
 				<LuaReplace>UI/Replacements/GovernmentScreen_Expansion1.lua</LuaReplace>
 			</Properties>
 		</ReplaceUIScript>
-		<ReplaceUIScript id="Expansion1_GreatPeoplePopup" criteria="Expansion1">
-			<Properties>
-				<LuaContext>GreatPeoplePopup</LuaContext>
-				<LuaReplace>UI/Replacements/GreatPeoplePopup_Expansion1.lua</LuaReplace>
-			</Properties>
-		</ReplaceUIScript>
 		<ReplaceUIScript id="Expansion1_InGameTopOptionsMenu" criteria="Expansion1">
 			<Properties>
 				<LuaContext>InGameTopOptionsMenu</LuaContext>

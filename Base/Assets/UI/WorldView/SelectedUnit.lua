@@ -377,6 +377,30 @@ function OnUnitTeleported(playerID: number, unitID : number, x : number, y : num
 end
 
 -- ===========================================================================
+--	Game Engine Event
+-- ===========================================================================
+function OnUnitMovementPointsChanged(playerID :number, unitID :number)
+	if(playerID == Game.GetLocalPlayer())then
+		local pUnit : table = UI.GetHeadSelectedUnit();
+		if(pUnit ~= nil and pUnit:GetID() == unitID)then
+			RealizeMoveRadius( pUnit );
+			RealizeGreatPersonLens( pUnit );
+		end
+	end
+end
+
+-- ===========================================================================
+--	Game Engine Event
+-- ===========================================================================
+function OnUnitRemovedFromMap()
+	local pUnit : table = UI.GetHeadSelectedUnit();
+	if(pUnit ~= nil)then
+		RealizeMoveRadius( pUnit );
+		RealizeGreatPersonLens( pUnit );
+	end
+end
+
+-- ===========================================================================
 --	Engine EVENT
 --	Local player changed; likely a hotseat game
 -- ===========================================================================
@@ -437,6 +461,8 @@ end
 --	Handle the UI shutting down.
 function OnShutdown()
 	Events.LocalPlayerTurnBegin.Remove( OnLocalPlayerTurnBegin );
+	Events.UnitMovementPointsChanged.Remove( OnUnitMovementPointsChanged );
+	Events.UnitRemovedFromMap.Remove( OnUnitRemovedFromMap );
 	Events.UnitSelectionChanged.Remove( OnUnitSelectionChanged );
 	Events.UnitSimPositionChanged.Remove( UnitSimPositionChanged );
 	Events.UnitVisibilityChanged.Remove( OnUnitVisibilityChanged );
@@ -458,6 +484,8 @@ function Initialize()
 	Events.LensLayerOn.Add( OnLensLayerOn );
 	Events.LocalPlayerTurnBegin.Add( OnLocalPlayerTurnBegin );
 	Events.PlayerTurnActivated.Add( OnPlayerTurnActivated );
+	Events.UnitMovementPointsChanged.Add( OnUnitMovementPointsChanged );
+	Events.UnitRemovedFromMap.Add( OnUnitRemovedFromMap );
 	Events.UnitTeleported.Add( OnUnitTeleported );
 	Events.UnitPromoted.Add( OnUnitPromotionChanged );
 	Events.UnitSelectionChanged.Add( OnUnitSelectionChanged );

@@ -4054,6 +4054,9 @@ function LateInitialize()
 		InterfaceModeMessageHandler[InterfaceModeTypes.RESTORE_UNIT_MOVES]	[MouseEvents.PointerUp]		= PerformRestoreUnitMoves;
 		InterfaceModeMessageHandler[InterfaceModeTypes.NAVAL_GOLD_RAID]		[MouseEvents.PointerUp]		= PerformNavalGoldRaid;
 		InterfaceModeMessageHandler[InterfaceModeTypes.RESOURCE_INSPIRE]	[MouseEvents.PointerUp]		= PerformResourceInspire;
+		InterfaceModeMessageHandler[InterfaceModeTypes.WB_SELECT_PLOT]		[MouseEvents.PointerUp]  	= OnRButtonUp_WBSelectPlot;
+		InterfaceModeMessageHandler[InterfaceModeTypes.WB_SELECT_PLOT]		[MouseEvents.PointerDown]  	= OnRButtonDown_WBSelectPlot;
+		InterfaceModeMessageHandler[InterfaceModeTypes.WB_SELECT_PLOT]		[MouseEvents.PointerUpdate] = OnRButtonDown_WBSelectPlot;
 	end
 
 	Subscribe();

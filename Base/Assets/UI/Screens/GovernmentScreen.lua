@@ -966,6 +966,7 @@ function RealizePoliciesList()
 				local listInstance:table = {};
 				ContextPtr:BuildInstanceForControl( "PolicyListItem", listInstance, Controls.PoliciesListStack );
 				listInstance.Title:SetText( tPolicy.Name );
+				listInstance.Title:SetToolTipString( tPolicy.Name );
 				listInstance.Description:SetText( tPolicy.Description );
 			
 				listInstance.TypeIcon:SetTexture( GetPolicyBGTexture(tSlotData.GC_PolicyType)..PIC_CARD_SUFFIX_SMALL );
@@ -1002,7 +1003,7 @@ function RealizePolicyCard( cardInstance:table, policyType:string )
 	local cardName:string = m_debugShowPolicyIDs and tostring(policy.UniqueID).." " or "";
 	cardName = cardName .. policy.Name;
 	cardInstance.Title:SetText( cardName );
-	
+	cardInstance.Title:SetToolTipString( cardName );
 	 -- Offset to below the card title, sans the shadow padding
 	local nMinOffsetY = cardInstance.TitleContainer:GetSizeY() - 5;
 
@@ -1011,11 +1012,7 @@ function RealizePolicyCard( cardInstance:table, policyType:string )
 	cardInstance.DescriptionContainer:SetOffsetY(nMinOffsetY);
 	cardInstance.Description:SetText(policy.Description);
 	cardInstance.Background:SetTexture(GetPolicyBGTexture(policyType));
-	if ( cardInstance.Description:IsTextTruncated() ) then
-		cardInstance.Draggable:SetToolTipString(cardName .. "[NEWLINE][NEWLINE]" .. policy.Description);
-	else
-		cardInstance.Draggable:SetToolTipString(cardName);
-	end
+	cardInstance.Draggable:SetToolTipString(cardName .. "[NEWLINE][NEWLINE]" .. policy.Description);
 end
 
 
@@ -1319,7 +1316,7 @@ function RealizeActivePoliciesRows()
 				-- No policy is in this slot, show empty card
 				ContextPtr:BuildInstanceForControl("EmptyCard", cardInst, stackControl);
 				cardInst.DragPolicyLabel:SetHide(m_tabs.selectedControl == Controls.ButtonMyGovernment);
-				cardInst.TypeIcon:SetTexture(IMG_POLICYCARD_BY_ROWIDX[nRowIndex] .. "_Empty");
+				cardInst.TypeIcon:SetTexture(GetEmptyPolicySlotTexture(nRowIndex));
 				cardInst[KEY_DRAG_TARGET_CONTROL]	= cardInst.Content;
 				cardInst[KEY_LIFTABLE_CONTROL]		= cardInst.LiftableContainer;
 			end
@@ -1474,6 +1471,13 @@ function EnsureRowContentsOverlapProperly( nRowIndex:number, tStack:table )
 end
 
 -- ===========================================================================
+--	FOR OVERRIDE
+-- ===========================================================================
+function GetEmptyPolicySlotTexture(typeIndex : number)
+	return IMG_POLICYCARD_BY_ROWIDX[typeIndex] .. "_Empty";
+end
+
+-- ===========================================================================
 --	Main close function all exit points should call.
 -- ===========================================================================
 function Close()
@@ -1568,8 +1572,12 @@ function OnConfirmPolicies()
 		Close();
 	end
 
-	local popup:table = PopupDialogInGame:new( "ConfirmPolicies" );
-	popup:ShowYesNoDialog(TXT_GOV_POPUP_PROMPT_POLICIES_CONFIRM, OnConfirmPolicies_Yes);
+	if(ShouldConfirmChanges())then
+		local popup:table = PopupDialogInGame:new( "ConfirmPolicies" );
+		popup:ShowYesNoDialog(TXT_GOV_POPUP_PROMPT_POLICIES_CONFIRM, OnConfirmPolicies_Yes);
+	else
+		OnConfirmPolicies_Yes();
+	end
 end
 
 -- ===========================================================================
@@ -2648,6 +2656,13 @@ end
 -- ===========================================================================
 function GetHavePoliciesChanged()
 	return m_isPoliciesChanged;
+end
+
+-- ===========================================================================
+-- FOR OVERRIDE in scenarios/mods where we don't need the confirm policy change dialogue
+-- ===========================================================================
+function ShouldConfirmChanges()
+	return true;
 end
 
 -- ===========================================================================

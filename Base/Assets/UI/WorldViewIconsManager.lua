@@ -289,7 +289,7 @@ function GetNonEmptyAt(plotIndex, state)
 		-- Have a Resource?
 		local eResource = pLocalPlayerVis:GetLayerValue(VisibilityLayerTypes.RESOURCES, plotIndex);
 		local bHideResource = ( pPlot ~= nil and ( pPlot:GetDistrictType() > 0 or pPlot:IsCity() ) );
-		if (eResource ~= nil and eResource ~= -1 and not bHideResource ) then
+		if (eResource ~= nil and eResource ~= -1 and not bHideResource and GameCapabilities.HasCapability("CAPABILITY_DISPLAY_MINIMAP_RESOURCES")) then
 			pInstance = GetInstanceAt(plotIndex);
 			SetResourceIcon(pInstance, pPlot, eResource, state);
 		else

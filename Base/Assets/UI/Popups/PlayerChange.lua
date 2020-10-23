@@ -52,6 +52,7 @@ end
 
 -- ===========================================================================
 function OnOk()
+	EffectsManager:ResumeAllEffects();
 	if(GameConfiguration.IsHotseat()) then
 		SetPause(false);
 	end
@@ -163,6 +164,7 @@ end
 
 -- ===========================================================================
 function ShowTurnControls()
+	EffectsManager:PauseAllEffects();
 	LuaEvents.PlayerChange_Show();
 	if(not bPlayerChanging) then
 		local localPlayerID = Game.GetLocalPlayer();

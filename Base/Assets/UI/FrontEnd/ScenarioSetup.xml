@@ -70,7 +70,7 @@
 										<Label Anchor="C,T" Style="ShellSubHeaderText" String="{LOC_SETUP_CIVILIZATION:upper}" AnchorSide="I,O"/>
 										<PullDown ID="Basic_LocalPlayerPulldown" Anchor="C,C" Offset="0,0" Size="325,50"  AutoSizePopup="1" ScrollThreshold="520" SpaceForScroll="15">
 											<ButtonData>
-												<GridButton  Size="325,45" Style="TabFont" TextAnchor="L,C" TextOffset="100" WrapWidth="200">
+												<GridButton  Size="325,45" Style="TabFont">
 													<GridData Texture="Controls_DropDownControlLarge" StateOffsetIncrement="0,45"	SliceCorner="10,15" SliceTextureSize="45,45" />
 													<Container Size="44,44" Anchor="L,T" Offset="3,3">
 														<Image	ID="Basic_LocalPlayerCivIconBG" Texture="CircleBacking44" Size="44,44"/>
@@ -82,6 +82,7 @@
 														<Image Texture="Controls_CircleBacking45" Size="51,51" Anchor="L,T" Offset="-3,-3"/>
 														<Image ID="Basic_LocalPlayerLeaderIcon" Texture="Leaders45" Size="45,45" Anchor="C,C"/>
 													</Container>
+                                                    <ScrollTextField ID="Basic_LocalPlayerScrollText" Size="200,50" Offset="100,0" Anchor="L,C" Style="TabFont"/>
 												</GridButton>
 											</ButtonData>
 											<GridData Offset="0,45" Texture="Controls_DropdownPanel" InnerPadding="0,6" SliceCorner="10,10" SliceTextureSize="22,22"/>
@@ -90,7 +91,7 @@
 											</ScrollPanelData>
 											<StackData StackGrowth="Bottom" Anchor="C,T"/>
 											<InstanceData Name="InstanceOne">
-												<GridButton ID="Button" Style="ButtonControl" Anchor="L,T"	Size="315,50" TextAnchor="L,C" TextOffset="100" WrapWidth="200">
+												<GridButton ID="Button" Style="ButtonControl" Anchor="L,T"	Size="315,50">
 													<Container Size="44,44" Anchor="L,T" Offset="3,3">
 														<Image	ID="CivIconBG"						Texture="CircleBacking44"		Size="44,44"/>
 														<Image	ID="Basic_IconShadows"		Texture="Circle44_Darker"		Size="44,44" Color="0,0,0,50" />
@@ -100,6 +101,7 @@
 													<Container Size="62,62" Offset="44,-1" Anchor="L,C">
 														<Image ID="LeaderIcon" Texture="Leaders45" Size="45,45" Anchor="C,C"/>
 													</Container>
+                                                    <ScrollTextField ID="ScrollText" Size="200,50" Offset="100,0" Anchor="L,C" Style="TabFont"/>
 												</GridButton>
 											</InstanceData>
 										</PullDown>
@@ -178,7 +180,7 @@
 											<Grid ID="LocalPlayerAdvancedOptions" Style="YouIndicator" Anchor="C,C" Size="345,60">
 												<PullDown ID="Advanced_LocalPlayerPulldown" Anchor="C,C" Offset="0,0" Size="325,50"  AutoSizePopup="1" ScrollThreshold="350" SpaceForScroll="15">
 													<ButtonData>
-														<GridButton  Size="325,45" Style="TabFont" TextAnchor="L,C" TextOffset="100" WrapWidth="200">
+														<GridButton  Size="325,45" Style="TabFont">
 															<GridData Texture="Controls_DropDownControlLarge" StateOffsetIncrement="0,45"	SliceCorner="10,15" SliceTextureSize="45,45" />
 															<Container Size="44,44" Anchor="L,T" Offset="3,3">
 																<Image	ID="Advanced_LocalPlayerCivIconBG"	Size="44,44" Texture="CircleBacking44" />
@@ -190,6 +192,7 @@
 																<Image Texture="Controls_CircleBacking45" Size="51,51" Anchor="L,T" Offset="-3,-3"/>
 																<Image ID="Advanced_LocalPlayerLeaderIcon" Texture="Leaders45" Size="45,45" Anchor="C,C"/>
 															</Container>
+                                                            <ScrollTextField ID="ScrollText" Size="200,50" Offset="100,0" Anchor="L,C" Style="TabFont"/>
 														</GridButton>
 													</ButtonData>
 													<GridData Offset="0,45" Texture="Controls_DropdownPanel" InnerPadding="0,6" SliceCorner="10,10" SliceTextureSize="22,22"/>
@@ -198,7 +201,7 @@
 													</ScrollPanelData>
 													<StackData StackGrowth="Bottom" Anchor="C,T"/>
 													<InstanceData Name="InstanceOne">
-														<GridButton ID="Button" Style="ButtonControl" Anchor="L,T"	Size="315,50" TextAnchor="L,C" TextOffset="100" WrapWidth="200">
+														<GridButton ID="Button" Style="ButtonControl" Anchor="L,T"	Size="315,50">
 															<Container Size="44,44" Anchor="L,T" Offset="3,3">
 																<Image ID="CivIconBG"				Size="44,44"	Texture="CircleBacking44" />
 																<Image ID="IconShadows"			Size="44,44"	Texture="Circle44_Darker"  Color="0,0,0,50" />
@@ -208,6 +211,7 @@
 															<Container Size="62,62" Offset="44,-1" Anchor="L,C">
 																<Image ID="LeaderIcon" Texture="Leaders45" Size="45,45" Anchor="C,C"/>
 															</Container>
+                                                            <ScrollTextField ID="ScrollText" Size="200,50" Offset="100,0" Anchor="L,C" Style="TabFont"/>
 														</GridButton>
 													</InstanceData>
 												</PullDown>

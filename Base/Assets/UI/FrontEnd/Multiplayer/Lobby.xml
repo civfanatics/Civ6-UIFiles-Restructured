@@ -75,12 +75,12 @@
 
 					<Container ID="GridContainer" Size="1024,parent">
 						<!-- Vertical Grid Lines, Horizontal lines are generated in Lua -->
-						<Line ID="GridLine_1" Start="280,0" End="280,parent" Width="2" Color="35,66,92,150" />
-						<Line ID="GridLine_2" Start="455,0" End="455,parent" Width="2" Color="35,66,92,150" />
-						<Line ID="GridLine_3" Start="630,0" End="630,parent" Width="2" Color="35,66,92,150" />
-						<Line ID="GridLine_4" Start="805,0" End="805,parent" Width="2" Color="35,66,92,150" />
-						<Line ID="GridLine_5" Start="855,0" End="855,parent" Width="2" Color="35,66,92,150" />
-						<Line ID="GridLine_6" Start="905,0" End="905,parent" Width="2" Color="35,66,92,150" />
+						<Line ID="GridLine_1" Start="280,0" End="280,parent" Width="2" Color="35,66,92,150" IgnorePixelScaleForClipRender="true"/>
+						<Line ID="GridLine_2" Start="455,0" End="455,parent" Width="2" Color="35,66,92,150" IgnorePixelScaleForClipRender="true"/>
+						<Line ID="GridLine_3" Start="630,0" End="630,parent" Width="2" Color="35,66,92,150" IgnorePixelScaleForClipRender="true"/>
+						<Line ID="GridLine_4" Start="805,0" End="805,parent" Width="2" Color="35,66,92,150" IgnorePixelScaleForClipRender="true"/>
+						<Line ID="GridLine_5" Start="855,0" End="855,parent" Width="2" Color="35,66,92,150" IgnorePixelScaleForClipRender="true"/>
+						<Line ID="GridLine_6" Start="905,0" End="905,parent" Width="2" Color="35,66,92,150" IgnorePixelScaleForClipRender="true"/>
 					</Container>
 				</ScrollPanel>
 			</Container>
@@ -156,7 +156,7 @@
 	<!-- Listing Button Instance -->
 	<Instance Name="HorizontalGridLine">
 
-		<Line ID="Control" Start="5,-1" End="1000,-1" Width="2" Color="35,66,92,150" />
+		<Line ID="Control" Start="5,-1" End="1000,-1" Width="2" Color="35,66,92,150" IgnorePixelScaleForClipRender="true"/>
 
 	</Instance>
 

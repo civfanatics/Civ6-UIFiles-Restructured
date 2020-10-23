@@ -58,7 +58,13 @@ function OnInputHandler( pInputStruct:table )
 		local key:number = pInputStruct:GetKey();
 		-- "T"urbo mode... for debugging.
 		if key == Keys.T and pInputStruct:IsShiftDown() and pInputStruct:IsAltDown() then
-			Controls.SlideAnim:SetSpeed(0.1);
+			m_TurboMode = true;
+			Controls.SlideAnim:SetSpeed(0.05);
+		end
+
+		-- "R"everse (fast)... more debugging.
+		if key == Keys.R and pInputStruct:IsShiftDown() and pInputStruct:IsAltDown() then
+			Controls.SlideAnim:SetSpeed( -0.004 );
 		end
 	end
 	
@@ -79,11 +85,8 @@ function OnInputHandler( pInputStruct:table )
 
 		if key == Keys.T then
             if m_TurboMode then
-                Controls.SlideAnim:SetSpeed(0.001);
+                Controls.SlideAnim:SetSpeed(0.0015);
                 m_TurboMode = false;
-            else
-                Controls.SlideAnim:SetSpeed(0.004);
-                m_TurboMode = true;
             end
 		end
 

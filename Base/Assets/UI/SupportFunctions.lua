@@ -110,6 +110,53 @@ function TruncateStringByLength( textString, textLen )
 end
 
 -- ===========================================================================
+--	Given a table of strings, format it as a single string separated by spaces.
+-- ===========================================================================
+function FormatTableAsString( tStringTable:table)
+	if tStringTable == nil or #tStringTable == 0 then
+		return "";
+	end
+	local sFormattedString:string = "";
+	for i,line in ipairs(tStringTable) do
+		if (line ~= nil and line ~= "") then
+			if (sFormattedString ~= "") then
+				sFormattedString = sFormattedString .. " ";
+			end
+			sFormattedString = sFormattedString .. Locale.Lookup(line);
+		end
+	end
+	
+	return sFormattedString;
+end
+
+-- ===========================================================================
+--	Given a table of strings, format it as a single string separated by 
+--	line breaks. Optional bool uses two-line breaks.
+-- ===========================================================================
+function FormatTableAsNewLineString( tStringTable:table, bDoubleLines:boolean )
+	if tStringTable == nil or #tStringTable == 0 then
+		return "";
+	end
+	bDoubleLines = bDoubleLines or false;
+
+	local sFormattedString:string = "";
+	for i,line in ipairs(tStringTable) do
+		if (line ~= nil and line ~= "") then
+			if (sFormattedString ~= "") then
+				if bDoubleLines == true then
+					sFormattedString = sFormattedString .. "[NEWLINE][NEWLINE]";
+				else
+					sFormattedString = sFormattedString .. "[NEWLINE]";
+				end
+			end
+			sFormattedString = sFormattedString .. Locale.Lookup(line);
+		end
+	end
+	
+	return sFormattedString;
+end
+
+-- ===========================================================================
 -- Support for shifts
 -- ===========================================================================
 local g_supportFunctions_shiftTable = {};

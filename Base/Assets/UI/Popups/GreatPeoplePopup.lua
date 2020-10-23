@@ -16,6 +16,8 @@ local MAX_BIOGRAPHY_PARAGRAPHS	: number = 9;						-- maximum # of paragraphs for
 local RELOAD_CACHE_ID			: string = "GreatPeoplePopup";		-- hotloading
 local SIZE_ACTION_ICON			: number = 38;
 
+local TAB_SIZE					: number = 170;
+local TAB_PADDING				: number = 10;
 
 -- ===========================================================================
 --	MEMBERS
@@ -23,6 +25,7 @@ local SIZE_ACTION_ICON			: number = 38;
 local m_TopPanelConsideredHeight:number = 0;
 local m_greatPersonPanelIM	:table	= InstanceManager:new("PanelInstance",				"Content",	Controls.PeopleStack);
 local m_greatPersonRowIM	:table	= InstanceManager:new("PastRecruitmentInstance",	"Content",	Controls.RecruitedStack);
+local m_tabButtonIM			:table	= InstanceManager:new("TabButtonInstance",			"Button",	Controls.TabContainer);
 local m_kGreatPeople		:table;
 local m_kData				:table;
 local m_activeBiographyID	:number	= -1;	-- Only allow one open at a time (or very quick exceed font allocation)
@@ -31,6 +34,11 @@ local m_tabs				:table;
 local m_defaultPastRowHeight		:number = -1;	-- Default/mix height (from XML) for a previously recruited row 
 local m_displayPlayerID		:number = -1; -- What player are we displaying.  Used for looking at different players in autoplay
 local m_screenWidth			:number = -1;
+
+local m_numTabs				:number = 0;
+
+-- Dynamic refresh call member used to override the refresh functionality
+local m_RefreshFunc			:ifunction = nil;
 
 -- ===========================================================================
 function ChangeDisplayPlayerID(bBackward)
@@ -353,6 +361,12 @@ function AddRecruit( kData:table, kPerson:table )
 end
 
 -- ===========================================================================
+function ResetGreatPeopleInstances()
+	m_greatPersonPanelIM:ResetInstances();
+	m_greatPersonRowIM:ResetInstances();
+end
+
+-- ===========================================================================
 --	View the great people currently available (to be purchased)
 -- ===========================================================================
 function ViewCurrent( data:table )
@@ -362,7 +376,7 @@ function ViewCurrent( data:table )
 	end
 
 	m_kGreatPeople = {};
-	m_greatPersonPanelIM:ResetInstances();	
+	ResetGreatPeopleInstances();
 	Controls.PeopleScroller:SetHide(false);
 	Controls.RecruitedArea:SetHide(true);		
 
@@ -442,7 +456,7 @@ function ViewPast( data:table )
 		return;
 	end
 	
-	m_greatPersonRowIM:ResetInstances();	
+	ResetGreatPeopleInstances();	
 	Controls.PeopleScroller:SetHide(true);
 	Controls.RecruitedArea:SetHide(false);	
 
@@ -471,6 +485,7 @@ function ViewPast( data:table )
 			UI.DataError("GreatPeople previous recruited as unable to find the class text for #"..tostring(i));
 		end
 		instance.ClassName:SetText( Locale.ToUpper(classText) );
+        instance.ClassName:SetHide(false);
 		instance.GreatPersonInfo:SetText( kPerson.Name )
 		DifferentiateCiv(kPerson.ClaimantID, instance.CivIcon, instance.CivIcon, instance.CivIndicator, nil, nil, localPlayerID);
 		instance.RecruitedImage:SetHide(true);
@@ -964,48 +979,61 @@ function OnGreatPeoplePointsChanged( playerID:number )
 	end
 end
 
+-- ===========================================================================
+function Refresh( newRefreshFunc:ifunction )
+	-- Update the refresh function if passed in a new one
+	if newRefreshFunc ~= nil then
+		m_RefreshFunc = newRefreshFunc;
+	end
+
+	-- Call current refresh function
+	if m_RefreshFunc ~= nil then
+		m_RefreshFunc();
+	end
+end
 
 -- ===========================================================================
---	
--- ===========================================================================
-function Refresh()
+function RefreshCurrentGreatPeople()
 	local kData :table	= {
 		Timeline		= {},
 		PointsByClass	= {},
-	};	
-	if m_tabs.selectedControl == Controls.ButtonPreviouslyRecruited then
-		PopulateData(kData, true);	-- use past data
-		ViewPast(kData);
-	else
-		PopulateData(kData, false);	-- do not use past data
-		ViewCurrent(kData);
-	end
+	};
+
+	PopulateData(kData, false);	-- do not use past data
+	ViewCurrent(kData);
 
 	m_kData = kData;
 end
 
-
-
 -- ===========================================================================
---	Tab callback
--- ===========================================================================
-function OnGreatPeopleClick()
-	Controls.SelectGreatPeople:SetHide( false );
-	Controls.ButtonGreatPeople:SetSelected( true );
-	Controls.SelectPreviouslyRecruited:SetHide( true );
-	Controls.ButtonPreviouslyRecruited:SetSelected( false );
-	Refresh();
+function RefreshPreviousGreatPeople()
+	local kData :table	= {
+		Timeline		= {},
+		PointsByClass	= {},
+	};
+
+	PopulateData(kData, true);	-- use past data
+	ViewPast(kData);
+
+	m_kData = kData;
 end
 
 -- ===========================================================================
 --	Tab callback
 -- ===========================================================================
-function OnPreviousRecruitedClick()
-	Controls.SelectGreatPeople:SetHide( true );
-	Controls.ButtonGreatPeople:SetSelected( false );
-	Controls.SelectPreviouslyRecruited:SetHide( false );
-	Controls.ButtonPreviouslyRecruited:SetSelected( true );
-	Refresh();
+function OnGreatPeopleClick( uiSelectedButton:table )
+	ResetTabButtons();
+	SelectTabButton(uiSelectedButton);
+	Refresh(RefreshCurrentGreatPeople);
+end
+
+-- ===========================================================================
+--	Tab callback
+-- ===========================================================================
+function OnPreviousRecruitedClick( uiSelectedButton:table )
+	ResetTabButtons();
+	SelectTabButton(uiSelectedButton);
+	Refresh(RefreshPreviousGreatPeople);
 end
 
 -- ===========================================================================
@@ -1049,6 +1077,8 @@ function OnShutdown()
 	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "isHidden",		ContextPtr:IsHidden() );
 	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "isPreviousTab",	(m_tabs.selectedControl == Controls.ButtonPreviouslyRecruited) );
 
+	m_tabButtonIM:ResetInstances();
+
 	-- Game engine Events	
 	Events.LocalPlayerChanged.Remove( OnLocalPlayerChanged );	
 	Events.LocalPlayerTurnBegin.Remove( OnLocalPlayerTurnBegin );	
@@ -1081,6 +1111,53 @@ function OnGameDebugReturn( context:string, contextTable:table )
 end
 
 -- =======================================================================================
+function AddTabInstance( buttonText:string, callbackFunc:ifunction )
+	local kInstance:object = m_tabButtonIM:GetInstance();
+	kInstance.Button:SetText(Locale.Lookup(buttonText));
+	kInstance.Button:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
+	m_tabs.AddTab( kInstance.Button, callbackFunc );
+	m_numTabs = m_numTabs + 1;
+	return kInstance;
+end
+
+-- =======================================================================================
+function SelectTabButton( buttonControl:table )
+	for i=1, m_tabButtonIM.m_iCount, 1 do
+		local buttonInstance:table = m_tabButtonIM:GetAllocatedInstance(i);
+		if buttonInstance and buttonInstance.Button == buttonControl then
+			buttonInstance.Button:SetSelected(true);
+			buttonInstance.SelectButton:SetHide(false);
+		end
+	end
+end
+
+-- =======================================================================================
+function ResetTabButtons()
+	for i=1, m_tabButtonIM.m_iCount, 1 do
+		local buttonInstance:table = m_tabButtonIM:GetAllocatedInstance(i);
+		if buttonInstance then
+			buttonInstance.Button:SetSelected(false);
+			buttonInstance.SelectButton:SetHide(true);
+		end
+	end
+end
+
+-- =======================================================================================
+function ResizeTabContainer()
+	if m_numTabs > 0 then
+		local desiredSize = (TAB_SIZE * m_numTabs) + (TAB_PADDING * (m_numTabs - 1));
+		Controls.TabContainer:SetSizeX(desiredSize);
+	end
+end
+
+-- =======================================================================================
+-- This function should be overridden in mods/dlc to add new tabs to this screen
+-- =======================================================================================
+function AddCustomTabs()
+	-- No custom tabs in base games
+end
+
+-- =======================================================================================
 --
 -- =======================================================================================
 function Initialize()
@@ -1090,12 +1167,20 @@ function Initialize()
 		return;
 	end
 
+	m_numTabs = 0;
+
 	-- Tab setup and setting of default tab.
 	m_tabs = CreateTabs( Controls.TabContainer, 42, 34, UI.GetColorValueFromHexLiteral(0xFF331D05) );
-	m_tabs.AddTab( Controls.ButtonGreatPeople,			OnGreatPeopleClick );
-	m_tabs.AddTab( Controls.ButtonPreviouslyRecruited,	OnPreviousRecruitedClick );
+
+	local pTabInst:table = AddTabInstance("LOC_GREAT_PEOPLE_TAB_GREAT_PEOPLE", OnGreatPeopleClick);
+	AddTabInstance("LOC_GREAT_PEOPLE_TAB_PREVIOUSLY_RECRUITED", OnPreviousRecruitedClick);
+
+	AddCustomTabs()
+
+	ResizeTabContainer();
+
 	m_tabs.CenterAlignTabs(-10);
-	m_tabs.SelectTab( Controls.ButtonGreatPeople );
+	m_tabs.SelectTab( pTabInst.Button );
 
 	-- UI Events
 	ContextPtr:SetInitHandler( OnInit );
@@ -1121,10 +1206,12 @@ function Initialize()
 	LuaEvents.NotificationPanel_OpenGreatPeoplePopup.Add(	OnOpenViaNotification );
 	LuaEvents.LaunchBar_CloseGreatPeoplePopup.Add(			OnClose );
 	
-    -- Audio Events
-	Controls.ButtonGreatPeople:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
-	Controls.ButtonPreviouslyRecruited:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
-
 	m_TopPanelConsideredHeight = Controls.Vignette:GetSizeY() - TOP_PANEL_OFFSET;
 end
+
+-- This wildcard include will include all loaded files beginning with "GreatPeoplePopup_"
+-- This method replaces the uses of include("GreatPeoplePopup") in files that want to override 
+-- functions from this file. If you're implementing a new "GreatPeoplePopup_" file DO NOT include this file.
+include("GreatPeoplePopup_", true);
+
 Initialize();

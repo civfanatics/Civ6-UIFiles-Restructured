@@ -213,7 +213,7 @@
 			</Container>
 			<Container  Size="auto,auto" Offset="145,0">
 				<Box Size="160,10" Color="0,0,0,0"/>
-				<Label ID="Description" Anchor="L,T" Offset="0,0" Style="FontNormal14" ColorSet="BodyTextCool" FontStyle="stroke" WrapWidth="160"  String="Pangaea"/>
+				<ScrollTextField ID="Description" Anchor="L,T" Offset="0,0" Style="FontNormal14" ColorSet="BodyTextCool" FontStyle="stroke" Size="160,14"  String="Pangaea"/>
 			</Container>
 		</Container>
 	</Instance>

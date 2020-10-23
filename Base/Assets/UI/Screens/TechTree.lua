@@ -875,7 +875,7 @@ function PopulateNode(uiNode, playerTechData)
 		uiNode.GearAnim:SetHide( true );
 	end
 
-	if live.Progress > 0 then
+	if live.Progress > 0 and status ~= ITEM_STATUS.RESEARCHED then
 		uiNode.ProgressMeter:SetHide( false );
 		uiNode.ProgressMeter:SetPercent(live.Progress / live.Cost);
 	else

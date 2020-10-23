@@ -91,7 +91,11 @@ function CreateMultiSelectWindowDriver(o, parameter, parent)
 		
 			if(valueText == nil) then
 				if(value == nil) then
-					valueText = "LOC_SELECTION_NOTHING";
+					if (parameter.UxHint ~= nil and parameter.UxHint == "InvertSelection") then
+						valueText = "LOC_SELECTION_EVERYTHING";
+					else
+						valueText = "LOC_SELECTION_NOTHING";
+					end
 				elseif(type(value) == "table") then
 					local count = #value;
 					if (parameter.UxHint ~= nil and parameter.UxHint == "InvertSelection") then
@@ -115,6 +119,8 @@ function CreateMultiSelectWindowDriver(o, parameter, parent)
 					end
 				end
 			end				
+
+			c.Button:SetToolTipString(parameter.Description);
 
 			if(cache.ValueText ~= valueText) or (cache.ValueAmount ~= valueAmount) then
 				local button = c.Button;			

@@ -58,16 +58,6 @@ local YIELD_FONT_ICONS:table = {
 	TourismYield			= "[ICON_TourismLarge]"
 };
 
-local DEFAULT_GREAT_WORKS_ICONS:table = {
-	GREATWORKSLOT_WRITING	= "ICON_GREATWORKOBJECT_WRITING",
-	GREATWORKSLOT_PALACE	= "ICON_GREATWORKOBJECT_SCULPTURE",
-	GREATWORKSLOT_ART		= "ICON_GREATWORKOBJECT_PORTRAIT",
-	GREATWORKSLOT_CATHEDRAL	= "ICON_GREATWORKOBJECT_RELIGIOUS",
-	GREATWORKSLOT_ARTIFACT	= "ICON_GREATWORKOBJECT_ARTIFACT_ERA_ANCIENT",
-	GREATWORKSLOT_MUSIC		= "ICON_GREATWORKOBJECT_MUSIC",
-	GREATWORKSLOT_RELIC		= "ICON_GREATWORKOBJECT_RELIC"
-};
-
 local m_during_move:boolean = false;
 local m_dest_building:number = 0;
 local m_dest_city;
@@ -160,20 +150,22 @@ function PopulateGreatWorkSlot(instance:table, pCity:table, pCityBldgs:table, pB
 			local instance:table = greatWorkIM:GetInstance();
 			local greatWorkIndex:number = pCityBldgs:GetGreatWorkInSlot(buildingIndex, index);
 			local greatWorkSlotType:number = pCityBldgs:GetGreatWorkSlotType(buildingIndex, index);
-			local greatWorkSlotString:string = GameInfo.GreatWorkSlotTypes[greatWorkSlotType].GreatWorkSlotType;
+			if greatWorkSlotType >= 0 then
+				local greatWorkSlotString:string = GameInfo.GreatWorkSlotTypes[greatWorkSlotType].GreatWorkSlotType;
 
-			PopulateGreatWork(instance, pCityBldgs, pBuildingInfo, index, greatWorkIndex, greatWorkSlotString);
-			index = index + 1;
-			instanceCache[index] = instance;
-			if greatWorkIndex ~= -1 then
-				numGreatWorks = numGreatWorks + 1;
-				local greatWorkType:number = pCityBldgs:GetGreatWorkTypeFromIndex(greatWorkIndex);
-				local greatWorkInfo:table = GameInfo.GreatWorks[greatWorkType];
-				if firstGreatWork == nil then
-					firstGreatWork = greatWorkInfo;
-				end
-				if greatWorkInfo ~= nil and GreatWorkFitsTheme(pCityBldgs, pBuildingInfo, greatWorkIndex, greatWorkInfo) then
-					numThemedGreatWorks = numThemedGreatWorks + 1;
+				PopulateGreatWork(instance, pCityBldgs, pBuildingInfo, index, greatWorkIndex, greatWorkSlotString);
+				index = index + 1;
+				instanceCache[index] = instance;
+				if greatWorkIndex ~= -1 then
+					numGreatWorks = numGreatWorks + 1;
+					local greatWorkType:number = pCityBldgs:GetGreatWorkTypeFromIndex(greatWorkIndex);
+					local greatWorkInfo:table = GameInfo.GreatWorks[greatWorkType];
+					if firstGreatWork == nil then
+						firstGreatWork = greatWorkInfo;
+					end
+					if greatWorkInfo ~= nil and GreatWorkFitsTheme(pCityBldgs, pBuildingInfo, greatWorkIndex, greatWorkInfo) then
+						numThemedGreatWorks = numThemedGreatWorks + 1;
+					end
 				end
 			end
 		end                            

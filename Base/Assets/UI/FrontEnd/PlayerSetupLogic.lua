@@ -915,7 +915,8 @@ function SetupLeaderPulldown(
 	pulldownControlName:string, 
 	civIconControlName, 
 	civIconBGControlName, 
-	leaderIconControlName, 
+	leaderIconControlName,
+	scrollTextControlName, 
 	tooltipControls:table,
 	colorPullDownName,
 	colorWarnName	
@@ -943,11 +944,16 @@ function SetupLeaderPulldown(
 	if(leaderIconControlName == nil) then
 		leaderIconControlName = "LeaderIcon";
 	end
+
+	if(scrollTextControlName == nil) then
+		scrollTextControlName = "ScrollText";
+	end
 		
 	local control = instance[pulldownControlName];
 	local civIcon = instance[civIconControlName];
 	local civIconBG = instance[civIconBGControlName];
 	local leaderIcon = instance[leaderIconControlName];
+	local scrollText = instance[scrollTextControlName];
 	local instanceManager = control["InstanceManager"];
 	
 	-- Jersey support
@@ -1145,7 +1151,11 @@ function SetupLeaderPulldown(
 						caption = caption .. "[NEWLINE][COLOR_RED](" .. Locale.Lookup(err) .. ")[ENDCOLOR]";
 					end
 
-					button:SetText(caption);
+					if scrollText then 
+						scrollText:SetText(caption);
+					else
+						button:SetText(caption);
+					end
 			
 					local icons = GetPlayerIcons(v.Domain, v.Value);
 
@@ -1235,8 +1245,11 @@ function SetupLeaderPulldown(
         				entry.CivIcon:SetColor(UI.GetColorValue(1,1,1,1));
 						entry.CivIconBG:SetHide(true);
 					end
-
-					entry.Button:SetText(caption);
+					if(entry.ScrollText ~= nil) then
+						entry.ScrollText:SetText(caption);
+					else
+						entry.Button:SetText(caption);
+					end
 					entry.LeaderIcon:SetIcon(icons.LeaderIcon);
 
 					local domain = v.Domain;

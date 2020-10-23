@@ -248,7 +248,7 @@
             <Grid Style="DiplomacyWordBubbleRightGrid" Size="parent-20,88" AnchorSide="I,O" Anchor="C,T">
 							<Stack Anchor="L,T" AnchorSide="I,O" Offset="-15,-40" StackGrowth="Right" StackPadding="8">
 								<MakeInstance Name="CivilizationIcon22" ID="OtherPlayerBubbleIcon"/>
-								<Label ID="OtherPlayerBubbleName" Anchor="L,C" Style="HeaderSmallCaps" Color0="GoldMetalDark"/>
+								<ScrollTextField ID="OtherPlayerBubbleName" Size="420,20" Anchor="L,C" Style="HeaderSmallCaps" Color0="GoldMetalDark"/>
 							</Stack>
 							<AlphaAnim ID="LeaderDialogFade" AlphaBegin="0" AlphaEnd="1" Cycle="Once" Size="parent,parent" Pause=".7" Speed="2">
                 <SlideAnim ID="LeaderDialogSlide" Start="0,20" End="0,0" Cycle="Once" Size="parent,parent" Pause=".7" Speed="2">

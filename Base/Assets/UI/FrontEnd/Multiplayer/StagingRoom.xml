@@ -370,12 +370,13 @@
 				<!-- This is just a cut/paste of the PlayerSelectPullDown except for the addition of DisabledMouseMoveCallbacks="1".  
 					We need the DisabledMouseMoveCallbacks so we can display the leader tooltip for remote clients (who have disabled pulldowns)-->
 				<ButtonData>
-					<GridButton  Size="325,45" Style="TabFont" TextAnchor="L,C" TextOffset="60" WrapWidth="200" DisabledMouseMoveCallbacks="1">
+					<GridButton  Size="325,45" Style="TabFont" DisabledMouseMoveCallbacks="1">
 						<GridData Texture="Controls_DropDownControlLarge" StateOffsetIncrement="0,45"	SliceCorner="10,15" SliceTextureSize="45,45" />
 						<Container Size="62,62" Offset="-3,0" Anchor="L,C">
 							<Image Texture="Controls_CircleBacking45" Size="51,51" Anchor="C,C" Offset="0,1"/>
 							<Image ID="LeaderIcon" Texture="Leaders45" Size="45,45" Anchor="C,C"/>
 						</Container>
+                        <ScrollTextField ID="ScrollText" Size="170,50" Offset="60,0" Style="TabFont"  Anchor="L,C"/>
 					</GridButton>
 				</ButtonData>
 			</PullDown>
@@ -473,8 +474,8 @@
 				<Image		ID="Icon"					Size="38,38" Anchor="C,C" />
 			</Image>
 			<Stack		ID="TextStack"		StackGrowth="Bottom" StackPadding="4" Offset="55,0">
-				<Label	ID="Header"				WrapWidth="340" SmallCapsType="EveryWord" SmallCaps="20" Style="FontFlair14"		String="$Header$" ColorSet="ShellHeader"/>
-				<Label	ID="Description"	WrapWidth="340"	Style="DawnText"	String="$Description$"/>
+				<Label	ID="Header"				WrapWidth="330" SmallCapsType="EveryWord" SmallCaps="20" Style="FontFlair14"		String="$Header$" ColorSet="ShellHeader"/>
+				<Label	ID="Description"	WrapWidth="330"	Style="DawnText"	String="$Description$"/>
 			</Stack>
 		</Container>
 	</Instance>
@@ -491,8 +492,8 @@
 				<Image		ID="Icon"					Size="45,45" Anchor="C,C" Offset="0,-1" />
 			</Image>
 			<Stack		ID="TextStack"		StackGrowth="Bottom" StackPadding="4" Offset="55,0">
-				<Label	ID="Header"				WrapWidth="340" SmallCapsType="EveryWord" SmallCaps="20" Style="FontFlair14"		String="$Header$" ColorSet="ShellHeader"/>
-				<Label	ID="Description"	WrapWidth="340"	Style="DawnText"	String="$Description$"/>
+				<Label	ID="Header"				WrapWidth="330" SmallCapsType="EveryWord" SmallCaps="20" Style="FontFlair14"		String="$Header$" ColorSet="ShellHeader"/>
+				<Label	ID="Description"	WrapWidth="330"	Style="DawnText"	String="$Description$"/>
 			</Stack>
 		</Container>
 	</Instance>
@@ -505,8 +506,8 @@
 				<Image	ID="Icon"						Size="44,44" Anchor="C,C" />
 			</Image>
 			<Stack		ID="TextStack"		StackGrowth="Bottom" StackPadding="4" Offset="55,0">
-				<Label	ID="Header"				WrapWidth="340" SmallCapsType="EveryWord" SmallCaps="20" Style="FontFlair14"		String="$Header$" ColorSet="ShellHeader"/>
-				<Label	ID="Description"	WrapWidth="340"	Style="DawnText"	String="$Description$"/>
+				<Label	ID="Header"				WrapWidth="330" SmallCapsType="EveryWord" SmallCaps="20" Style="FontFlair14"		String="$Header$" ColorSet="ShellHeader"/>
+				<Label	ID="Description"	WrapWidth="330"	Style="DawnText"	String="$Description$"/>
 			</Stack>
 		</Container>
 	</Instance>

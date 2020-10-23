@@ -2630,6 +2630,7 @@ function SetupSplitLeaderPulldown(playerId:number, instance:table, pulldownContr
 	local civIcon = instance["CivIcon"];
 	local civIconBG = instance["IconBG"];
 	local civWarnIcon = instance["WarnIcon"];
+    local scrollText = instance["ScrollText"];
 	local instanceManager = control["InstanceManager"];
 	if not instanceManager then
 		instanceManager = PullDownInstanceManager:new( "InstanceOne", "Button", control );
@@ -2675,7 +2676,11 @@ function SetupSplitLeaderPulldown(playerId:number, instance:table, pulldownContr
 					caption = caption .. "[NEWLINE][COLOR_RED](" .. Locale.Lookup(err) .. ")[ENDCOLOR]";
 				end
 
-				button:SetText(caption);
+				if(scrollText ~= nil) then
+					scrollText:SetText(caption);
+				else
+					button:SetText(caption);
+				end
 				
 				local icons = GetPlayerIcons(v.Domain, v.Value);
 				local playerColor = icons.PlayerColor or "";
@@ -2760,7 +2765,11 @@ function SetupSplitLeaderPulldown(playerId:number, instance:table, pulldownContr
 					caption = caption .. "[NEWLINE][COLOR_RED](" .. Locale.Lookup(err) .. ")[ENDCOLOR]";
 				end
 
-				entry.Button:SetText(caption);
+				if(entry.ScrollText ~= nil) then
+					entry.ScrollText:SetText(caption);
+				else
+					entry.Button:SetText(caption);
+				end
 				entry.LeaderIcon:SetIcon(icons.LeaderIcon);
 				
 				-- Upvalues
@@ -2879,7 +2888,14 @@ function BuildGameSetupParameter(o, parameter)
 		UpdateValue = function(value, p)
 			local t:string = type(value);
 			if(p.Array) then
-				local valueText = Locale.Lookup("LOC_SELECTION_NOTHING");
+				local valueText;
+
+				if (parameter.UxHint ~= nil and parameter.UxHint == "InvertSelection") then
+					valueText = Locale.Lookup("LOC_SELECTION_EVERYTHING");
+				else
+					valueText = Locale.Lookup("LOC_SELECTION_NOTHING");
+				end
+
 				if(t == "table") then
 					local count = #value;
 					if (parameter.UxHint ~= nil and parameter.UxHint == "InvertSelection") then
@@ -2901,6 +2917,7 @@ function BuildGameSetupParameter(o, parameter)
 					end
 				end
 				c.Value:SetText(valueText);
+				c.Value:SetToolTipString(parameter.Description);
 			else
 				if t == "table" then
 					c.Value:SetText(value.Name);

@@ -48,7 +48,7 @@ local YIELD_FONT_ICONS:table = {
 	TourismYield			= "[ICON_TourismLarge]"
 };
 
-local DEFAULT_GREAT_WORKS_ICONS:table = {
+g_DEFAULT_GREAT_WORKS_ICONS = {
 	GREATWORKSLOT_WRITING	= "ICON_GREATWORKOBJECT_WRITING",
 	GREATWORKSLOT_PALACE	= "ICON_GREATWORKOBJECT_SCULPTURE",
 	GREATWORKSLOT_ART		= "ICON_GREATWORKOBJECT_PORTRAIT",
@@ -416,7 +416,7 @@ end
 function PopulateGreatWork(instance:table, pCityBldgs:table, pBuildingInfo:table, slotIndex:number, greatWorkIndex:number, slotType:string)
 	
 	local buildingIndex:number = pBuildingInfo.Index;
-	local slotTypeIcon:string = DEFAULT_GREAT_WORKS_ICONS[slotType];
+	local slotTypeIcon:string = g_DEFAULT_GREAT_WORKS_ICONS[slotType];
 
 	local textureOffsetX:number, textureOffsetY:number, textureSheet:string = IconManager:FindIconAtlas(slotTypeIcon, SIZE_SLOT_TYPE_ICON);
 	if(textureSheet == nil or textureSheet == "") then

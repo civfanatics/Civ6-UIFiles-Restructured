@@ -384,7 +384,9 @@ function ReplayInitialize()
 	for player_num = 0, 63 do -- GameDefines.MAX_CIV_PLAYERS - 1 do
 		local player = Players[player_num];
 		local playerConfig = PlayerConfigurations[player_num];
-		if(player and playerConfig and playerConfig:IsParticipant() and player:WasEverAlive() and not player:IsBarbarian()) then
+		local localObserverID = Game.GetLocalObserver();
+
+		if(player and playerConfig and (playerConfig:IsParticipant() or localObserverID == PlayerTypes.OBSERVER) and player:WasEverAlive() and not player:IsBarbarian()) then
 
 			local primary, secondary = UI.GetPlayerColors(player:GetID());
 		

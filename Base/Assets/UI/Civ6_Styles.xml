@@ -1067,10 +1067,11 @@
     </ScrollPanelData>
     <StackData StackGrowth="Bottom" Anchor="C,T"/>
     <InstanceData Name="InstanceOne">
-      <GridButton ID="Button" Style="ButtonControl" Anchor="L,T"	Size="325,50" TextAnchor="L,C" TextOffset="60" WrapWidth="200">
+      <GridButton ID="Button" Style="ButtonControl" Anchor="L,T"	Size="325,50">
         <Container Size="62,62" Offset="-3,0" Anchor="L,C">
           <Image ID="LeaderIcon" Texture="Leaders45" Size="45,45" Anchor="C,C"/>
         </Container>
+          <ScrollTextField ID="ScrollText" Size="180,50"   Offset="60,0" Style="TabFont" Anchor="L,C"/>
       </GridButton>
     </InstanceData>
   </PlayerSelectPullDownMP>

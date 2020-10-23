@@ -226,7 +226,7 @@
 	
 	<Instance Name="ReportHeaderInstance">
 		<Container ID="Root" Offset="1,0" Size="136,parent">
-			<Label ID="Name" Style="ReportHeaderSmallText" String="$Header$" />
+			<Label ID="Name" WrapWidth="136" Style="ReportHeaderSmallText" String="$Header$" />
 		</Container>
 	</Instance>
 	

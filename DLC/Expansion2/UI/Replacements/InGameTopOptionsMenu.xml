@@ -93,7 +93,7 @@
   <MakeInstance Name="PopupDialog" />
 
 	<Instance Name="ModInstance">
-		<Label ID="ModTitle" Style="FontNormal14"	Color="102,122,145" Anchor="L,T" Offset="5,0" WrapWidth="225" String="Mod Title" />
+        <ScrollTextField ID="ModTitle" Style="FontNormal14"	Color="102,122,145" Anchor="L,T" Offset="5,0" Size="225,14" String="Mod Title" />
 	</Instance>
 
 	<LuaContext FileName="LoadGameMenu" ID="LoadGameMenu" Hidden="1" />

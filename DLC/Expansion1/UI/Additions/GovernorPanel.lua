@@ -59,28 +59,48 @@ function Refresh()
 	Controls.GovernorTitlesAvailable:SetText(Locale.Lookup("LOC_GOVERNOR_GOVERNOR_TITLES_AVAILABLE", governorPointsObtained - governorPointsSpent));
 	Controls.GovernorTitlesSpent:SetText(Locale.Lookup("LOC_GOVERNOR_GOVERNOR_TITLES_SPENT", governorPointsSpent));
 
-	-- Add apointed governors
-	for i,appointedGovernor in ipairs(tGovernorList) do
-		local eGovernorType = appointedGovernor:GetType();
-		local governorDef = GameInfo.Governors[eGovernorType];
-		local bCanPromoteGovernor = playerGovernors:CanPromoteGovernor(governorDef.Hash);
+	-- Add all secret societies (discovered or joined) before adding governors
+	for _, pAppointedGovernor:table in ipairs(tGovernorList) do
+		local eGovernorType:number = pAppointedGovernor:GetType();
+		local kGovernorDef:table = GameInfo.Governors[eGovernorType];
+		local bCanPromoteGovernor:boolean = playerGovernors:CanPromoteGovernor(kGovernorDef.Hash);
+		if (IsCannotAssign(kGovernorDef)) then
+			AddSecretGovernorAppointed(playerGovernors, pAppointedGovernor, kGovernorDef, bCanPromoteGovernor);
+		end
+	end
 
-		if (IsCannotAssign(governorDef)) then
-			AddSecretGovernorAppointed(playerGovernors, appointedGovernor, governorDef, bCanPromoteGovernor);
-		else
-			AddGovernorAppointed(playerGovernors, appointedGovernor, governorDef, bCanPromoteGovernor);
+	for kGovernorDef:table in GameInfo.Governors() do
+		local governorHash:number = kGovernorDef.Hash;
+		if (not playerGovernors:HasGovernor(governorHash)) then
+			if (playerGovernors:CanEverAppointGovernor(governorHash)) then
+				if (IsCannotAssign(kGovernorDef)) then
+					AddSecretGovernorCandidate(kGovernorDef, bCanAppoint);
+				end
+			end
+		end
+	end
+
+	-- Add apointed governors
+	for i, pAppointedGovernor:table in ipairs(tGovernorList) do
+		local eGovernorType:number = pAppointedGovernor:GetType();
+		local kGovernorDef:table = GameInfo.Governors[eGovernorType];
+		local bCanPromoteGovernor:boolean = playerGovernors:CanPromoteGovernor(kGovernorDef.Hash);
+
+		-- Check that we're not adding secret societies again
+		if (not IsCannotAssign(kGovernorDef)) then
+			AddGovernorAppointed(playerGovernors, pAppointedGovernor, kGovernorDef, bCanPromoteGovernor);
 		end
 	end
 
 	-- Add appointable governors
-	for governorDef in GameInfo.Governors() do
-		local governorHash = governorDef.Hash;
+	for kGovernorDef in GameInfo.Governors() do
+		local governorHash:number = kGovernorDef.Hash;
 		if (not playerGovernors:HasGovernor(governorHash)) then
 			if (playerGovernors:CanEverAppointGovernor(governorHash)) then
-				if (IsCannotAssign(governorDef)) then
-					AddSecretGovernorCandidate(governorDef, bCanAppoint);
-				else
-					AddGovernorCandidate(governorDef, bCanAppoint);
+
+				-- Check that we're not adding secret societies again
+				if (not IsCannotAssign(kGovernorDef)) then
+					AddGovernorCandidate(kGovernorDef, bCanAppoint);
 				end
 			end
 		end

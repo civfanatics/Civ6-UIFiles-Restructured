@@ -59,16 +59,16 @@ function Refresh(selectedPlayerID:number)
 	end
 
     if(localPlayerDiplomacy:IsPromiseMade(selectedPlayer:GetID(), PromiseTypes.DONT_SETTLE_NEAR_ME)) then
-        relationshipString = relationshipString .. "[NEWLINE]" .. Locale.Lookup("LOC_DIPLOACTION_KEEP_PROMISE_DONT_SETTLE_TOO_NEAR_NAME");
+        relationshipString = relationshipString .. " " .. Locale.Lookup("LOC_DIPLOACTION_KEEP_PROMISE_DONT_SETTLE_TOO_NEAR_NAME");
     end
     if(localPlayerDiplomacy:IsPromiseMade(selectedPlayer:GetID(), PromiseTypes.DONT_SPY_ON_ME)) then
-        relationshipString = relationshipString .. ",[NEWLINE]" .. Locale.Lookup("LOC_DIPLOACTION_KEEP_PROMISE_DONT_SPY_NAME") .. " ";
+        relationshipString = relationshipString .. ", " .. Locale.Lookup("LOC_DIPLOACTION_KEEP_PROMISE_DONT_SPY_NAME") .. " ";
     end
     if(localPlayerDiplomacy:IsPromiseMade(selectedPlayer:GetID(), PromiseTypes.DONT_DIG_UP_MY_ARTIFACTS)) then
-        relationshipString = relationshipString .. ",[NEWLINE]" .. Locale.Lookup("LOC_DIPLOACTION_KEEP_PROMISE_DONT_DIG_ARTIFACTS_NAME") .. " ";
+        relationshipString = relationshipString .. ", " .. Locale.Lookup("LOC_DIPLOACTION_KEEP_PROMISE_DONT_DIG_ARTIFACTS_NAME") .. " ";
     end
     if(localPlayerDiplomacy:IsPromiseMade(selectedPlayer:GetID(), PromiseTypes.DONT_CONVERT_MY_CITIES)) then
-        relationshipString = relationshipString .. ",[NEWLINE]" .. Locale.Lookup("LOC_DIPLOACTION_KEEP_PROMISE_DONT_CONVERT_NAME") .. " ";
+        relationshipString = relationshipString .. ", " .. Locale.Lookup("LOC_DIPLOACTION_KEEP_PROMISE_DONT_CONVERT_NAME") .. " ";
     end
 
 	Controls.RelationshipText:SetText( relationshipString );

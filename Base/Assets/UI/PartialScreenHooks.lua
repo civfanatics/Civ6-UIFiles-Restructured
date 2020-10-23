@@ -396,7 +396,7 @@ end
 -- ===========================================================================
 function OnInputActionTriggered( actionId:number )
 
-	if actionId == m_ToggleRankingsId and HasCapability("CAPABILITY_WORLD_RANKINGS_VIEW") then
+	if actionId == m_ToggleRankingsId and HasCapability("CAPABILITY_DISPLAY_HUD_WORLD_RANKINGS") then
         OnToggleWorldRankings();
         UI.PlaySound("Play_UI_Click");
 	end

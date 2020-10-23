@@ -43,27 +43,30 @@ PageLayouts["Civic" ] = function(page)
 		end
 	end
 
-	if(show_prereqs) then
-		for __,prereqCivicIndex in ipairs(pLiveCivic.PrereqCivicTypes) do
-			local pPreReqLive = civicNodes[prereqCivicIndex];
-			local kPreReqData = GameInfo.Civics[prereqCivicIndex];
-			if pPlayerCultureManager:IsCivicRevealed(pPreReqLive) then
-				table.insert(required_civics, {"ICON_" .. kPreReqData.CivicType, kPreReqData.Name, kPreReqData.CivicType});
+	-- don't show any dependancy related info if this civic isn't revealed; prevents leaking data in tree randomizer mode
+	if pPlayerCultureManager:IsCivicRevealed(civic.Index) then
+		if(show_prereqs) then
+			for __,prereqCivicIndex in ipairs(pLiveCivic.PrereqCivicTypes) do
+				local pPreReqLive = civicNodes[prereqCivicIndex];
+				local kPreReqData = GameInfo.Civics[prereqCivicIndex];
+				if pPlayerCultureManager:IsCivicRevealed(pPreReqLive) then
+					table.insert(required_civics, {"ICON_" .. kPreReqData.CivicType, kPreReqData.Name, kPreReqData.CivicType});
+				end
 			end
 		end
-	end
 
-	-- Build list of what more advanced civics require this to be unlocked.
-	for _,v in ipairs(civicNodes) do
-		for _,prereqCivicIndex in ipairs(v.PrereqCivicTypes) do
-			if prereqCivicIndex == pLiveCivic.CivicType then		
-				if pPlayerCultureManager:IsCivicRevealed(v.CivicType) then		
-					local kFutureCivic = GameInfo.Civics[v.CivicType];
-					if(kFutureCivic) then
-						table.insert(leadsto_civics, {"ICON_" .. kFutureCivic.CivicType, kFutureCivic.Name, kFutureCivic.CivicType});
+		-- Build list of what more advanced civics require this to be unlocked.
+		for _,v in ipairs(civicNodes) do
+			for _,prereqCivicIndex in ipairs(v.PrereqCivicTypes) do
+				if prereqCivicIndex == pLiveCivic.CivicType then
+					if pPlayerCultureManager:IsCivicRevealed(v.CivicType) then
+						local kFutureCivic = GameInfo.Civics[v.CivicType];
+						if(kFutureCivic) then
+							table.insert(leadsto_civics, {"ICON_" .. kFutureCivic.CivicType, kFutureCivic.Name, kFutureCivic.CivicType});
+						end
 					end
+					break
 				end
-				break
 			end
 		end
 	end

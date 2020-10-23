@@ -52,6 +52,8 @@ local MIN_CHAT_TEXT_SIZE = 12;
 local MAX_CHAT_TEXT_SIZE = 18;
 local MIN_SCROLL_SPEED = 0;
 local MAX_SCROLL_SPEED = 1.0;
+local MIN_SCROLL_TEXT_SPEED = 0;
+local MAX_SCROLL_TEXT_SPEED = 1.0;
 local MIN_SCREEN_Y = 768;
 local SCREEN_OFFSET_Y = 63;
 local MIN_SCREEN_OFFSET_Y = -53;
@@ -245,6 +247,7 @@ function OnConfirm()
 		UserConfiguration.SetValue("PlotTooltipDelay",	Options.GetUserOption("Interface", "PlotTooltipDelay"));
 		UserConfiguration.SetValue("ChatTextValue",		Options.GetUserOption("Interface", "ChatTextValue"));
 		UserConfiguration.SetValue("ScrollSpeed",		Options.GetUserOption("Interface", "ScrollSpeed"));
+		UserConfiguration.SetValue("ScrollTextSpeed",	Options.GetUserOption("Interface", "ScrollTextSpeed"));
 
 
         -- Apply the graphics options (modifies in-memory values and modifies the engine, but does not save to disk)
@@ -1713,6 +1716,17 @@ function TemporaryHardCodedGoodness()
 		Controls.ScrollSpeedValue:LocalizeAndSetText("LOC_OPTIONS_SCROLL_SPEED_VALUE", adjustedValue*100);
 	end);
 	
+	local scrollTextSpeed : number = Options.GetUserOption("Interface", "ScrollTextSpeed") or 1.0;
+	Controls.ScrollTextSpeedSlider:SetValue((scrollTextSpeed - MIN_SCROLL_TEXT_SPEED) / MAX_SCROLL_TEXT_SPEED);
+	Controls.ScrollTextSpeedValue:LocalizeAndSetText("LOC_OPTIONS_SCROLL_TEXT_SPEED_VALUE", scrollTextSpeed*100);
+	Controls.ScrollTextSpeedSlider:RegisterSliderCallback(function(value)
+		local adjustedValue : number = MIN_SCROLL_TEXT_SPEED + (MAX_SCROLL_SPEED * value);
+		adjustedValue = math.clamp(adjustedValue, MIN_SCROLL_TEXT_SPEED, MAX_SCROLL_TEXT_SPEED);
+		Options.SetUserOption("Interface", "ScrollTextSpeed", adjustedValue);
+		Controls.ConfirmButton:SetDisabled(false);
+		Controls.ScrollTextSpeedValue:LocalizeAndSetText("LOC_OPTIONS_SCROLL_TEXT_SPEED_VALUE", adjustedValue*100);
+	end);
+
     -- Application
     PopulateComboBox(Controls.ShowIntroPullDown, boolean_options, Options.GetAppOption("Video", "PlayIntroVideo"), function(option)
         Options.SetAppOption("Video", "PlayIntroVideo", option);

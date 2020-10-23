@@ -639,10 +639,18 @@ function CityBanner.CreateEncampmentBanner( self : CityBanner )
 
 	self.m_IsImprovementBanner = false;
 
+	-- set default icon
+	self.m_Instance.EncampmentFontIcon:SetText("[Icon_DISTRICT_ENCAMPMENT]");
+
 	local pDistrict = self:GetDistrict();
 	if (pDistrict ~= nil) then
 		self.m_PlotX = pDistrict:GetX();
 		self.m_PlotY = pDistrict:GetY();
+
+		local kDistrictDef:table = GameInfo.Districts[pDistrict:GetType()];
+		if kDistrictDef ~= nil and kDistrictDef.DistrictType == "DISTRICT_OPPIDUM" then
+			self.m_Instance.EncampmentFontIcon:SetText("[Icon_DISTRICT_OPPIDUM]")
+		end
 
 		-- Update district strength
 		local districtDefense:number = math.floor(pDistrict:GetDefenseStrength() + 0.5);

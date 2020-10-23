@@ -911,6 +911,8 @@ end
 function NavigateToPageTrailIndex(index, bUpdateScroll)
 	local SectionId:string = m_kPageTrail.pageTable[index].lastSection;
 	local PageId:string = m_kPageTrail.pageTable[index].lastPage;
+	local prevSectionId = _CurrentSectionId;
+	local prevPageId = _CurrentPageId;
 
 	m_kPageTrail.pageIndex = index;
 
@@ -919,6 +921,9 @@ function NavigateToPageTrailIndex(index, bUpdateScroll)
 
 	if(SectionId ~= prevSectionId or PageId ~= prevPageId) then
 		local pages = GetPages(SectionId);
+
+		_CurrentSectionId = SectionId;
+		_CurrentPageId = PageId;
 
 		for i, page in ipairs(pages) do
 			local id = page.PageId;

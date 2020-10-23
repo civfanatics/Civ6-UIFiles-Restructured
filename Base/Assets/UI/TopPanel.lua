@@ -391,7 +391,11 @@ function RefreshTurnsRemaining()
 
 	if endTurn > 0 then
 		-- We have a hard turn limit
-		Controls.Turns:SetText(tostring(turn) .. "/" .. tostring(endTurn - 1));
+		if(GameCapabilities.HasCapability("CAPABILITY_DISPLAY_NORMALIZED_TURN"))then
+			Controls.Turns:SetText(tostring(turn) .. "/" .. tostring(endTurn));
+		else
+			Controls.Turns:SetText(tostring(turn) .. "/" .. tostring(endTurn - 1));
+		end
 	else
 		Controls.Turns:SetText(tostring(turn));
 	end

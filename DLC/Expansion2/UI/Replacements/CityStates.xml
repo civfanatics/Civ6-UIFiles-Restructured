@@ -107,7 +107,7 @@
                 <Label															Anchor="R,T"	Offset="230,10"															Style="CityStateTextLabel"	String="LOC_CITY_STATES_TYPE" />
                 <Label			ID="TypeValue"					Anchor="L,T"	Offset="230,10"															Style="CityStateTextValue"	String="$TypeValue$" />
                 <Label															Anchor="R,T"	Offset="230,31"															Style="CityStateTextLabel"	String="LOC_CITY_STATES_SUZERAIN_LIST" />
-                <Label			ID="PatronValue"				Anchor="L,T"	Offset="230,31"															Style="CityStateTextValue"	String="$PatronValue$" />
+                <ScrollTextField			ID="PatronValue"				Anchor="L,T"	Offset="230,31"			Size="195,16"												Style="CityStateTextValue"	String="$PatronValue$" />
 
                 <GridButton	ID="EnvoysSentButton"		  Anchor="R,T"	Offset="224,50"	Size="170,21"								Style="CityStateTinyButton" String="LOC_CITY_STATES_ENVOYS_SENT" />
                 <Label			ID="EnvoysSentValue"		  Anchor="L,T"	Offset="230,52"															Style="CityStateTextValue"	String="$EnvoysSentValue$" />
