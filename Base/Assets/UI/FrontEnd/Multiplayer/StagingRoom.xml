@@ -450,8 +450,8 @@
 
 	<Instance Name="GameSetupParameter">
 		<Container ID="Root" Size="1,17">
-			<Label ID="Label" Anchor="R,T" Offset="5,0" Style="FontNormal12" ColorSet="ShellOptionText" FontStyle="stroke" String="UNKNOWN_EDIT_BOX"/>
-			<Label ID="Value" Anchor="L,T" Offset="5,0" Style="WhiteSemiBold12" ColorSet="ShellControl" FontStyle="stroke" String="UNKNOWN_EDIT_BOX" TruncateWidth="200" />
+			<Label ID="Label" Anchor="R,T" Offset="5,0" Style="FontNormal12" ColorSet="ShellOptionText" FontStyle="stroke" String="UNKNOWN_EDIT_BOX" TruncateWidth="210" TruncatedTooltip="1"/>
+			<Label ID="Value" Anchor="L,T" Offset="5,0" Style="WhiteSemiBold12" ColorSet="ShellControl" FontStyle="stroke" String="UNKNOWN_EDIT_BOX" TruncateWidth="210" TruncatedTooltip="1"/>
 		</Container>
 	</Instance>
 

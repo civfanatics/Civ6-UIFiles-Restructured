@@ -39,6 +39,9 @@ function OnOpen()
 	    szExplanationString = "LOC_CHOOSE_ARTIFACT_EXPLANATION_BATTLE_FOUGHT";
 	elseif (kObject.Type == 4) then
 	    szExplanationString = "LOC_CHOOSE_ARTIFACT_EXPLANATION_SHIP_SUNK";
+	elseif (kObject.Type == 5) then
+	    szExplanationString = "LOC_CHOOSE_ARTIFACT_EXPLANATION_HEROIC_RELIC";
+		bNoChoice = true;
 	end
 
 	local szEraName = GameInfo.Eras[kObject.ActingPlayerEra].Name;
@@ -46,7 +49,6 @@ function OnOpen()
 
 	if (bNoChoice == true) then
 		local pActingPlayerConfig :table = PlayerConfigurations[kObject.ActingPlayerID];
-		local pTargetPlayerConfig = PlayerConfigurations[kObject.TargetPlayerID];
 		Controls.Button1:LocalizeAndSetText("LOC_CHOOSE_ARTIFACT_OK_BUTTON");
 		Controls.Button2:SetHide(true);
 		Controls.Explanation:LocalizeAndSetText(szExplanationString, pkArchaeologist:GetName(), pActingPlayerConfig:GetPlayerName());

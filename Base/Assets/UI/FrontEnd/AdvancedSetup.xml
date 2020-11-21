@@ -131,7 +131,7 @@
 								</Stack>
 
 								<!-- Scroll Controls -->
-								<ScrollBar Style="Slider_Blue" Length="516" Anchor="R,T" Offset="12,0" AnchorSide="O,I"/>
+								<ScrollBar Style="Slider_Blue" Length="516" Anchor="R,T" Offset="4,0" AnchorSide="O,I"/>
 							</ScrollPanel>
 
 
@@ -150,7 +150,7 @@
 				        <SlideAnim				ID="GameModeToolTipSlide" Start="20,0" End="0,0" Speed="4" Function="Root" Cycle="Once" Size="parent,parent">
 					        <Grid																	Style="EnhancedToolTip" Size="parent,parent">
 						        <ScrollPanel  ID="GameModeScrollPanel" Vertical="1" Size="parent-12,parent-25" AutoScrollBar="1" Anchor="C,T" Offset="0,9">
-							        <Stack			ID="GameModeInfoStack" StackGrowth="Down" Padding="8"  Anchor="C,T" Offset="10,25"/>
+							        <Stack			ID="GameModeInfoStack" StackGrowth="Down" Padding="8"  Anchor="C,T" Offset="-3,25"/>
 							        <ScrollBar Style="Slider_Light" Anchor="R,C" Offset="2,0" />
 						        </ScrollPanel>
 					        </Grid>

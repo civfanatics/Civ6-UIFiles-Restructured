@@ -831,7 +831,7 @@ function PopulateWonders(data:table, listMode:number, listIM:table)
 
 			if not m_isTutorialRunning then
 				wonderListing.Button:RegisterCallback( Mouse.eRClick, function()
-					LuaEvents.OpenCivilopedia(item.Type);
+					RightClickProductionItem(item.Type);
 				end);
 			else
 				wonderListing.Button:SetTag(UITutorialManager:GetHash(item.Type));
@@ -893,7 +893,7 @@ function PopulateProjects(data:table, listMode:number, listIM:table)
 
 			if not m_isTutorialRunning then
 				projectListing.Button:RegisterCallback( Mouse.eRClick, function()
-					LuaEvents.OpenCivilopedia(item.Type);
+					RightClickProductionItem(item.Type);
 				end);
 			else
 				projectListing.Button:SetTag(UITutorialManager:GetHash(item.Type));
@@ -1004,7 +1004,7 @@ function PopulateDistrictsWithNestedBuildings(data:table, listMode:number, listI
 
 		if not m_isTutorialRunning then
 			districtListing.Button:RegisterCallback( Mouse.eRClick, function()
-				LuaEvents.OpenCivilopedia(item.Type);
+				RightClickProductionItem(item.Type);
 			end);
 		else
 			districtListing.Root:SetTag(UITutorialManager:GetHash(item.Type));
@@ -1062,7 +1062,7 @@ function PopulateDistrictsWithNestedBuildings(data:table, listMode:number, listI
 
 				if not m_isTutorialRunning then
 					buildingListing.Button:RegisterCallback( Mouse.eRClick, function()
-						LuaEvents.OpenCivilopedia(buildingItem.Type);
+						RightClickProductionItem(buildingItem.Type);
 					end);
 				else
 					buildingListing.Button:SetTag(UITutorialManager:GetHash(buildingItem.Type));
@@ -1168,7 +1168,7 @@ function PopulateDistrictsWithoutNestedBuildings(data:table, listMode:number, li
 
 			if not m_isTutorialRunning then
 				buildingListing.Button:RegisterCallback( Mouse.eRClick, function()
-					LuaEvents.OpenCivilopedia(item.Type);
+					RightClickProductionItem(item.Type);
 				end);
 			end
 
@@ -1345,7 +1345,7 @@ function PopulateUnits(data:table, listMode:number, listIM:table)
 
 			if not m_isTutorialRunning then
 				unitListing.Button:RegisterCallback( Mouse.eRClick, function()
-					LuaEvents.OpenCivilopedia(item.Type);
+					RightClickProductionItem(item.Type);
 				end);
 			else
 				unitListing.Button:SetTag(UITutorialManager:GetHash(item.Type));
@@ -2245,6 +2245,12 @@ end
 function ShowHideDisabled()
 	m_showDisabled = not m_showDisabled;
 	Refresh();
+end
+
+-- ===========================================================================
+-- Handle r-click on any entry: default behavior is to view the pedia for that item
+function RightClickProductionItem(sItemType:string)
+	LuaEvents.OpenCivilopedia(sItemType);
 end
 
 -- ===========================================================================

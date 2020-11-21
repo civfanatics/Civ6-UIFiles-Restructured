@@ -114,6 +114,8 @@ local SIZE_HEADER_MIN_Y:number = 46;
 local SIZE_HEADER_ICON:number = 80;
 local SIZE_LEADER_ICON:number = 55;
 local SIZE_CIV_ICON:number = 36;
+local SIZE_DETAILS_SPACING:number = 10;
+local SIZE_DEFAULT_CIVNAME:number = 150;
 
 local TEAM_RIBBON_PREFIX:string = "ICON_TEAM_RIBBON_";
 local TEAM_RIBBON_SIZE_TOP_TEAM:number = 53;
@@ -2289,6 +2291,16 @@ function PopulateGenericInstance(instance:table, playerData:table, victoryType:s
 	else
 		instance.Details:SetText("");
 	end
+	if instance.Details and instance.CivilizationIcon.CivName then
+		local detailWidth:number = instance.Details:GetSizeX();
+		local parentWidth:number = instance.ButtonBG:GetSizeX();
+		local textOffset:number   = instance.CivilizationIcon.CivName:GetOffsetX();
+		local detailOffset:number = instance.Details:GetOffsetX();
+		instance.CivilizationIcon.CivName:SetSizeX(parentWidth - detailWidth - textOffset - detailOffset - SIZE_DETAILS_SPACING);
+	elseif instance.CivilizationIcon.CivName then
+		instance.CivilizationIcon.CivName:SetSizeX(SIZE_DEFAULT_CIVNAME);
+	end
+
 
 	local itemSize:number = instance.Details:GetSizeY() + PADDING_GENERIC_ITEM_BG;
 	if itemSize < SIZE_GENERIC_ITEM_MIN_Y then

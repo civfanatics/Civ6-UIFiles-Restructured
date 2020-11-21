@@ -263,7 +263,7 @@
 		
 		<Container>
 			<Grid ID="LocalPlayer" Offset="-7,-5" Size="parent+14,parent+9" Texture="Controls_YouIndicatorLine" SliceCorner="28,42" SliceSize="2,1" SliceTextureSize="60,60"/>
-			<Label ID="CivName" Offset="55,18" String="CivName" Style="FontNormal18" FontStyle="shadow" Color="206,218,225,255" EffectColor="0,0,0,191"/>
+			<ScrollTextField ID="CivName" Size="150,18" Offset="55,18" String="CivName" Style="FontNormal18" FontStyle="shadow" Color="206,218,225,255" EffectColor="0,0,0,191"/>
 			<Container Offset="10,8">
 				<MakeInstance Name="CivilizationIcon36"/>
 			</Container>

@@ -574,6 +574,7 @@ ToolTipHelper.GetUnitToolTip = function(unitType, formationType, pBuildQueue)
 	local baseMoves = unitReference.BaseMoves;
 	local description = unitReference.Description;
 	local cost = unitReference.Cost or 0;
+	local baseLifespan = UnitManager.GetUnitTypeBaseLifespan(unitReference.Index);
 
 	--If this is a specific military formation we need build queue to get correct production costs.
 	--The rest of this logic is copied from Unit_Instance:GetCombat functions because it is not exposed to the lua. 
@@ -627,7 +628,9 @@ ToolTipHelper.GetUnitToolTip = function(unitType, formationType, pBuildQueue)
 	end
 
 	if(not Locale.IsNilOrWhitespace(promotionClass)) then
-		table.insert(toolTipLines, Locale.Lookup("LOC_UNIT_PROMOTION_CLASS", promotionClass));
+		if (unitReference.UnitType == nil or string.find(unitReference.UnitType, "UNIT_HERO") == nil) then
+			table.insert(toolTipLines, Locale.Lookup("LOC_UNIT_PROMOTION_CLASS", promotionClass));
+		end
 	end
 	
 	if(not Locale.IsNilOrWhitespace(description)) then
@@ -645,6 +648,10 @@ ToolTipHelper.GetUnitToolTip = function(unitType, formationType, pBuildQueue)
 	end
 	if(baseBombard ~= nil and baseBombard > 0 and baseRange ~= nil and baseRange > 0) then
 		table.insert(statLines, Locale.Lookup("LOC_UNIT_BOMBARD_STRENGTH", baseBombard, baseRange));
+	end
+
+	if(baseLifespan ~= nil and baseLifespan > 0) then
+		table.insert(statLines, Locale.Lookup("LOC_UNIT_LIFESPAN", baseLifespan));
 	end
 
 	if(baseMoves ~= nil and baseMoves > 0) then

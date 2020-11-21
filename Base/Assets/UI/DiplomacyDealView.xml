@@ -34,7 +34,7 @@
 				<Container Size="parent-44, parent">
 					<Stack StackGrowth="Bottom" Anchor="L,C">
 						<Label ID="IconText" Size="parent, 0" Style="FontNormalBold12" FontStyle="Stroke"/>
-						<Label ID="ValueText" Size="parent, 0" Style="FontNormalBold12" FontStyle="Stroke"/>
+						<ScrollTextField ID="ValueText" Size="125, 0" Style="FontNormalBold12" FontStyle="Stroke"/>
 					</Stack>
 				</Container>
 			</Stack>
@@ -57,7 +57,7 @@
           <Container Size="parent-44, parent">
             <Stack StackGrowth="Bottom" Anchor="L,C">
               <Label ID="IconText" Size="parent, 0" Style="FontNormalBold12" FontStyle="Stroke"/>
-              <Label ID="ValueText" Size="parent, 0" Style="FontNormalBold12" FontStyle="Stroke"/>
+              <ScrollTextField ID="ValueText" Size="125, 0" Style="FontNormalBold12" FontStyle="Stroke"/>
             </Stack>
           </Container>
         </Stack>
@@ -80,7 +80,7 @@
     <GridButton ID="AgreementOptionButton" Style="ButtonDraggableGrid" Size="280,56" Anchor="C,T">
       <Stack Anchor="L,C" StackGrowth="Right">
         <Image ID="AgreementOptionIcon" Anchor="L,C" Size="38,38" Texture="Tech38"/>
-        <Label ID="AgreementOptionLabel" Anchor="L,C" Offset="4,0" Style="FontNormal16" WrapWidth="220"/>
+				<Label ID="AgreementOptionLabel" Anchor="L,C" Offset="4,0" Style="FontNormal16" WrapWidth="220"/>
       </Stack>
     </GridButton>
   </Instance>

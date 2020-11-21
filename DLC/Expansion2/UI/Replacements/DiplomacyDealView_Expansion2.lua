@@ -150,7 +150,7 @@ function PopulateDealResources(player: table, iconList: table)
 						SetIconToSize(uiIcon.Icon, "ICON_YIELD_FAVOR");
 						uiIcon.AmountText:SetText(tostring(pDealItem:GetAmount()));
 						uiIcon.AmountText:SetHide(false);
-						uiIcon.Icon:SetColor(1, 1, 1);
+						uiIcon.Icon:SetColor(1,1,1);
 
 						-- Show/hide unacceptable item notification
 						uiIcon.UnacceptableIcon:SetHide(not pDealItem:IsUnacceptable());
@@ -208,15 +208,15 @@ function PopulateAvailableFavor(player: table, iconList: table)
 			local favorBalance:number	= player:GetFavor();
 
 			if (not ms_bIsDemand) then
-				local uiIcon = g_IconOnlyIM:GetInstance(iconList.ListStack);
+				local uiIcon : table = g_IconOnlyIM:GetInstance(iconList.ListStack);
 				uiIcon.AmountText:SetHide(false);
 				uiIcon.AmountText:SetText(favorBalance);
 				uiIcon.SelectButton:SetToolTipString(Locale.Lookup("LOC_DIPLOMATIC_FAVOR_NAME"));		-- We recycle the entries, so make sure this is clear.
 				SetIconToSize(uiIcon.Icon, "ICON_YIELD_FAVOR");
 				uiIcon.SelectButton:RegisterCallback( Mouse.eLClick, function() OnClickAvailableOneTimeFavor(player, ms_DefaultOneTimeFavorAmount); end );
 				uiIcon.SelectButton:RegisterCallback( Mouse.eLClick, function() OnClickAvailableOneTimeFavor(player, ms_DefaultOneTimeFavorAmount); end );
-				uiIcon.Icon:SetColor(1, 1, 1);
 				uiIcon.SelectButton:SetDisabled(false);
+				uiIcon.Icon:SetColor(1,1,1);
 
 				iAvailableItemCount = iAvailableItemCount + 1;
 			end

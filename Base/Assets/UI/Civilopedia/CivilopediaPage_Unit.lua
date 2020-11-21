@@ -351,6 +351,11 @@ PageLayouts["Unit" ] = function(page)
 			s:AddIconNumberLabel({"ICON_RANGE", nil,"COMBAT_5"}, unit.Range, "LOC_UI_PEDIA_RANGE");
 		end
 
+		local iLifespan:number = UnitManager.GetUnitTypeBaseLifespan(unit.Index);
+		if (iLifespan > 0) then
+			s:AddIconNumberLabel({"ICON_LIFESPAN", nil,"HEROES"}, iLifespan, "LOC_HUD_UNIT_PANEL_LIFESPAN");
+		end
+
 		if(unit.SpreadCharges ~= 0) then
 			s:AddIconNumberLabel({"ICON_RELIGION", nil,"FAITH_6"}, unit.SpreadCharges, "LOC_UI_PEDIA_SPREAD_CHARGES");
 		end
@@ -366,6 +371,12 @@ PageLayouts["Unit" ] = function(page)
 		local airSlots = unit.AirSlots or 0;
 		if(airSlots ~= 0) then
 			s:AddLabel(Locale.Lookup("LOC_TYPE_TRAIT_AIRSLOTS", airSlots));
+		end
+
+		if (unit.CanEarnExperience ~= nil) then
+			if (unit.CanEarnExperience == false) then
+				s:AddLabel(Locale.Lookup("LOC_TYPE_TRAIT_CANNOT_EARN_EXPERIENCE"));
+			end
 		end
 
 		s:AddSeparator();

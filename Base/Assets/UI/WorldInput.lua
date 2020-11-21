@@ -80,8 +80,7 @@ InterfaceModeMessageHandler =
 	[InterfaceModeTypes.KILL_WEAKER_UNIT] = {},
 	[InterfaceModeTypes.TRANSFORM_UNIT] = {},
 	[InterfaceModeTypes.RESTORE_UNIT_MOVES] = {},
-	[InterfaceModeTypes.NAVAL_GOLD_RAID] = {},
-	[InterfaceModeTypes.RESOURCE_INSPIRE] = {}
+	[InterfaceModeTypes.NAVAL_GOLD_RAID] = {}
 }
 
 -- ===========================================================================
@@ -3376,67 +3375,6 @@ function OnInterfaceModeLeave_NavalGoldRaid(eNewMode:number)
 	UILens.ClearLayerHexes(g_HexColoringMovement);
 end
 
-
-------------------------------------------------------------------------------------------------
--- Interface mode and input handlers for Hero Unit Command 'Resource Inspire'
-------------------------------------------------------------------------------------------------
-function PerformResourceInspire(pInputStruct)
-	local plotID = UI.GetCursorPlotID();
-	if Map.IsPlot(plotID) then
-		local plot = Map.GetPlotByIndex(plotID);
-			
-		local tParameters = {};
-		tParameters[UnitCommandTypes.PARAM_X] = plot:GetX();
-		tParameters[UnitCommandTypes.PARAM_Y] = plot:GetY();
-
-		local pSelectedUnit = UI.GetHeadSelectedUnit();
-		if (UnitManager.CanStartCommand(pSelectedUnit, UnitCommandTypes.RESOURCE_INSPIRE, tParameters)) then
-			UnitManager.RequestCommand(pSelectedUnit, UnitCommandTypes.RESOURCE_INSPIRE, tParameters);
-			UI.SetInterfaceMode(InterfaceModeTypes.SELECTION);
-			--UI.PlaySound("Unit_HeroAbility"); TODO
-		end
-	end
-	return true;
-end
-------------------------------------------------------------------------------------------------
-function OnMouseEnd_ResourceInspire(pInputStruct)
-	-- If a drag was occurring, end it; otherwise raise event.
-	if g_isMouseDragging then
-		g_isMouseDragging = false;
-	elseif IsSelectionAllowedAt(UI.GetCursorPlotID()) then		
-		PerformResourceInspire(pInputStruct);
-	end
-	EndDragMap();
-	g_isMouseDownInWorld = false;
-	return true;
-end
-------------------------------------------------------------------------------------------------
-function OnInterfaceModeChange_ResourceInspire(eNewMode)
-	UIManager:SetUICursor(CursorTypes.RANGE_ATTACK);
-	local pSelectedUnit = UI.GetHeadSelectedUnit();
-	local tResults = UnitManager.GetCommandTargets(pSelectedUnit, UnitCommandTypes.RESOURCE_INSPIRE);
-	local allPlots = tResults[CityCommandResults.PLOTS];
-	if allPlots then
-		g_targetPlots = {};
-		for i,modifier in ipairs(tResults[CityCommandResults.PLOTS]) do
-			table.insert(g_targetPlots, allPlots[i]);
-		end 
-
-		-- Highlight the plots available to airdrop to
-		if (table.count(g_targetPlots) ~= 0) then
-			UILens.ToggleLayerOn(g_HexColoringMovement);
-			UILens.SetLayerHexesArea(g_HexColoringMovement, Game.GetLocalPlayer(), g_targetPlots);
-		end
-	end
-end
---------------------------------------------------------------------------------------------------
-function OnInterfaceModeLeave_ResourceInspire(eNewMode:number)
-	UIManager:SetUICursor(CursorTypes.NORMAL);
-	UILens.ToggleLayerOff(g_HexColoringMovement);
-	UILens.ClearLayerHexes(g_HexColoringMovement);
-end
-
-
 -- .,;/^`'^\:,.,;/^`'^\:,.,;/^`'^\:,.,;/^`'^\:,.,;/^`'^\:,.,;/^`'^\:,.,;/^`'^\:,.,;/^`'^\:,
 --
 --						EVENT MAPPINGS, PRE-PROCESSING & HANDLING
@@ -3900,7 +3838,6 @@ function LateInitialize()
 	InterfaceModeMessageHandler[InterfaceModeTypes.TRANSFORM_UNIT]		[INTERFACEMODE_ENTER]		= OnInterfaceModeChange_TransformUnit;
 	InterfaceModeMessageHandler[InterfaceModeTypes.RESTORE_UNIT_MOVES]	[INTERFACEMODE_ENTER]		= OnInterfaceModeChange_RestoreUnitMoves;
 	InterfaceModeMessageHandler[InterfaceModeTypes.NAVAL_GOLD_RAID]		[INTERFACEMODE_ENTER]		= OnInterfaceModeChange_NavalGoldRaid;
-	InterfaceModeMessageHandler[InterfaceModeTypes.RESOURCE_INSPIRE]	[INTERFACEMODE_ENTER]		= OnInterfaceModeChange_ResourceInspire;
 
 	
 	
@@ -3929,7 +3866,6 @@ function LateInitialize()
 	InterfaceModeMessageHandler[InterfaceModeTypes.TRANSFORM_UNIT]			[INTERFACEMODE_LEAVE]		= OnInterfaceModeLeave_TransformUnit;
 	InterfaceModeMessageHandler[InterfaceModeTypes.RESTORE_UNIT_MOVES]		[INTERFACEMODE_LEAVE]		= OnInterfaceModeLeave_RestoreUnitMoves;
 	InterfaceModeMessageHandler[InterfaceModeTypes.NAVAL_GOLD_RAID]			[INTERFACEMODE_LEAVE]		= OnInterfaceModeLeave_NavalGoldRaid;
-	InterfaceModeMessageHandler[InterfaceModeTypes.RESOURCE_INSPIRE]		[INTERFACEMODE_LEAVE]		= OnInterfaceModeLeave_ResourceInspire;
 
 	-- Keyboard Events (all happen on up!)
 	InterfaceModeMessageHandler[InterfaceModeTypes.BUILDING_PLACEMENT]		[KeyEvents.KeyUp]		= OnPlacementKeyUp;
@@ -3955,7 +3891,6 @@ function LateInitialize()
 	InterfaceModeMessageHandler[InterfaceModeTypes.TRANSFORM_UNIT]			[KeyEvents.KeyUp]		= OnPlacementKeyUp;
 	InterfaceModeMessageHandler[InterfaceModeTypes.RESTORE_UNIT_MOVES]		[KeyEvents.KeyUp]		= OnPlacementKeyUp;
 	InterfaceModeMessageHandler[InterfaceModeTypes.NAVAL_GOLD_RAID]			[KeyEvents.KeyUp]		= OnPlacementKeyUp;
-	InterfaceModeMessageHandler[InterfaceModeTypes.RESOURCE_INSPIRE]		[KeyEvents.KeyUp]		= OnPlacementKeyUp;
 
 
 	-- Mouse Events
@@ -4009,7 +3944,6 @@ function LateInitialize()
 	InterfaceModeMessageHandler[InterfaceModeTypes.TRANSFORM_UNIT]		[MouseEvents.LButtonUp]		= OnMouseEnd_TransformUnit;
 	InterfaceModeMessageHandler[InterfaceModeTypes.RESTORE_UNIT_MOVES]	[MouseEvents.LButtonUp]		= OnMouseEnd_RestoreUnitMoves;
 	InterfaceModeMessageHandler[InterfaceModeTypes.NAVAL_GOLD_RAID]		[MouseEvents.LButtonUp]		= OnMouseEnd_NavalGoldRaid;
-	InterfaceModeMessageHandler[InterfaceModeTypes.RESOURCE_INSPIRE]	[MouseEvents.LButtonUp]		= OnMouseEnd_ResourceInspire;
 
 	-- Touch Events (if a touch system)
 	if g_isTouchEnabled then
@@ -4053,7 +3987,6 @@ function LateInitialize()
 		InterfaceModeMessageHandler[InterfaceModeTypes.TRANSFORM_UNIT]		[MouseEvents.PointerUp]		= PerformTransformUnit;
 		InterfaceModeMessageHandler[InterfaceModeTypes.RESTORE_UNIT_MOVES]	[MouseEvents.PointerUp]		= PerformRestoreUnitMoves;
 		InterfaceModeMessageHandler[InterfaceModeTypes.NAVAL_GOLD_RAID]		[MouseEvents.PointerUp]		= PerformNavalGoldRaid;
-		InterfaceModeMessageHandler[InterfaceModeTypes.RESOURCE_INSPIRE]	[MouseEvents.PointerUp]		= PerformResourceInspire;
 		InterfaceModeMessageHandler[InterfaceModeTypes.WB_SELECT_PLOT]		[MouseEvents.PointerUp]  	= OnRButtonUp_WBSelectPlot;
 		InterfaceModeMessageHandler[InterfaceModeTypes.WB_SELECT_PLOT]		[MouseEvents.PointerDown]  	= OnRButtonDown_WBSelectPlot;
 		InterfaceModeMessageHandler[InterfaceModeTypes.WB_SELECT_PLOT]		[MouseEvents.PointerUpdate] = OnRButtonDown_WBSelectPlot;

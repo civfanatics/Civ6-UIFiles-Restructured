@@ -610,9 +610,11 @@ function OnRefuseDeal(bForceClose)
 		bForceClose = false;
 	end
 
-	local bHasPendingDeal = DealManager.HasPendingDeal(ms_LocalPlayer:GetID(), ms_OtherPlayer:GetID());
+	local localPlayerID : number = ms_LocalPlayer:GetID();
+	local otherPlayerID : number = ms_OtherPlayer:GetID();
+	local bHasPendingDeal : boolean = DealManager.HasPendingDeal(localPlayerID, otherPlayerID);
 
-	local sessionID = DiplomacyManager.FindOpenSessionID(Game.GetLocalPlayer(), ms_OtherPlayer:GetID());
+	local sessionID : number = DiplomacyManager.FindOpenSessionID(Game.GetLocalPlayer(), otherPlayerID);
 	if (sessionID ~= nil) then
 		if (not ms_OtherPlayerIsHuman and not bHasPendingDeal) then
 			-- Refusing an AI's deal
@@ -622,7 +624,7 @@ function OnRefuseDeal(bForceClose)
 				-- AI started this, so tell them that we don't want the deal
 				if (bForceClose == true) then
 					-- Forcing the close, usually because the turn timer expired
-					DealManager.SendWorkingDeal(DealProposalAction.REJECTED, ms_LocalPlayer:GetID(), ms_OtherPlayer:GetID());
+					DealManager.SendWorkingDeal(DealProposalAction.REJECTED, localPlayerID, otherPlayerID);
 					DiplomacyManager.CloseSession(sessionID);
 					StartExitAnimation();
 				else
@@ -637,11 +639,11 @@ function OnRefuseDeal(bForceClose)
 			if (ms_OtherPlayerIsHuman) then
 				if (bHasPendingDeal) then
 					-- Canceling the deal with the other player.
-					DealManager.SendWorkingDeal(DealProposalAction.CLOSED, ms_LocalPlayer:GetID(), ms_OtherPlayer:GetID());
+					DealManager.SendWorkingDeal(DealProposalAction.CLOSED, localPlayerID, otherPlayerID);
 				else
 					if (ms_InitiatedByPlayerID ~= Game.GetLocalPlayer()) then
 						-- Refusing the deal with the other player.
-						DealManager.SendWorkingDeal(DealProposalAction.REJECTED, ms_LocalPlayer:GetID(), ms_OtherPlayer:GetID());
+						DealManager.SendWorkingDeal(DealProposalAction.REJECTED, localPlayerID, otherPlayerID);
 					end
 				end
 

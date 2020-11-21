@@ -116,7 +116,7 @@ function OnRefresh()
 	local goldenPercent = 1;
 	-- in Dramatic Ages, goldenAgeThreshold is equal to darkAgeThreshold because there are no normal ages
 	if HasCapability("CAPABILITY_DRAMATICAGES") then
-		goldenPercent = (score - baseline) / goldenAgeThreshold;
+		goldenPercent = (score - baseline) / (goldenAgeThreshold - baseline);
 		-- Dramatic Ages has no normal eras, so don't show that part of the meter
 		Controls.TurnTimerMeterNormal:SetPercent(0);
 	else

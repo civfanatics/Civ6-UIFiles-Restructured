@@ -97,8 +97,6 @@ end
 	
 -- ===========================================================================
 function CivilizationIcon:SetLeaderTooltip(playerID:number, details:string)
-	local pPlayer:table = Players[playerID];
-	local playerConfig:table = PlayerConfigurations[playerID];
 	local localPlayerID:number = Game.GetLocalPlayer();
 	local localPlayer:table = Players[localPlayerID];
 
@@ -109,12 +107,7 @@ function CivilizationIcon:SetLeaderTooltip(playerID:number, details:string)
 	if(playerID ~= localPlayerID and localPlayer ~= nil and not localPlayer:GetDiplomacy():HasMet(playerID)) then
 		self.Controls.CivIcon:SetToolTipType();
 		self.Controls.CivIcon:ClearToolTipCallback();
-		if GameConfiguration.IsAnyMultiplayer() and pPlayer:IsHuman() then
-			local name = Locale.Lookup(playerConfig:GetPlayerName());
-			self.Controls.CivIcon:SetToolTipString(Locale.Lookup("LOC_DIPLOPANEL_UNMET_PLAYER") .. " (" .. name .. ")");
-		else
-			self.Controls.CivIcon:SetToolTipString(Locale.Lookup("LOC_DIPLOPANEL_UNMET_PLAYER"));
-		end
+		self.Controls.CivIcon:SetToolTipString(Locale.Lookup("LOC_DIPLOPANEL_UNMET_PLAYER"));
 	else
 		self.Controls.CivIcon:SetToolTipType("CivTooltip");
 		self.Controls.CivIcon:SetToolTipCallback(function() self:UpdateLeaderTooltip(self.playerID, self.detailString); end);

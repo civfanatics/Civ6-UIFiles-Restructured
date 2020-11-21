@@ -55,7 +55,7 @@ g_DEFAULT_GREAT_WORKS_ICONS = {
 	GREATWORKSLOT_CATHEDRAL	= "ICON_GREATWORKOBJECT_RELIGIOUS",
 	GREATWORKSLOT_ARTIFACT	= "ICON_GREATWORKOBJECT_ARTIFACT_ERA_ANCIENT",
 	GREATWORKSLOT_MUSIC		= "ICON_GREATWORKOBJECT_MUSIC",
-	GREATWORKSLOT_RELIC		= "ICON_GREATWORKOBJECT_RELIC"
+	GREATWORKSLOT_RELIC		= "ICON_GREATWORKOBJECT_RELIC",
 };
 
 -- ===========================================================================
@@ -413,10 +413,15 @@ function GetThemeDescription(buildingType:string)
 	return nil;
 end
 
+-- Override this if you add more great works slot types
+function GetGreatWorkSlotTypeIcon(slotType:string)
+	return g_DEFAULT_GREAT_WORKS_ICONS[slotType];
+end
+
 function PopulateGreatWork(instance:table, pCityBldgs:table, pBuildingInfo:table, slotIndex:number, greatWorkIndex:number, slotType:string)
 	
 	local buildingIndex:number = pBuildingInfo.Index;
-	local slotTypeIcon:string = g_DEFAULT_GREAT_WORKS_ICONS[slotType];
+	local slotTypeIcon:string = GetGreatWorkSlotTypeIcon(slotType);
 
 	local textureOffsetX:number, textureOffsetY:number, textureSheet:string = IconManager:FindIconAtlas(slotTypeIcon, SIZE_SLOT_TYPE_ICON);
 	if(textureSheet == nil or textureSheet == "") then
@@ -594,14 +599,13 @@ function GetGreatWorkTooltip(pCityBldgs:table, greatWorkIndex:number, greatWorkT
 				end
 			elseif pBuildingInfo.BuildingType == "BUILDING_MUSEUM_ARTIFACT" then
 
-				local artifactEraName:string = Locale.Lookup("LOC_" .. greatWorkInfo.GreatWorkObjectType .. "_" .. greatWorkInfo.EraType);
 				if firstGreatWork == greatWorkIndex then
-					strThemeTooltip = Locale.Lookup("LOC_GREAT_WORKS_ART_THEME_SINGLE", artifactEraName);
+					strThemeTooltip = Locale.Lookup("LOC_GREAT_WORKS_ART_THEME_SINGLE", greatWorkTypeName);
 				else
 					local firstArtifactEraName:string = Locale.Lookup("LOC_" .. firstGreatWorkObjectType .. "_" .. GameInfo.GreatWorks[firstGreatWorkObjectTypeID].EraType .. "_PLURAL");
 
 					if greatWorkInfo.EraType ~= GameInfo.GreatWorks[firstGreatWorkObjectTypeID].EraType then
-						strThemeTooltip = Locale.Lookup("LOC_GREAT_WORKS_MISMATCHED_ERA",  artifactEraName, firstArtifactEraName);
+						strThemeTooltip = Locale.Lookup("LOC_GREAT_WORKS_MISMATCHED_ERA",  greatWorkTypeName, firstArtifactEraName);
 					else
 						local greatWorkPlayer:number = Game.GetGreatWorkPlayer(greatWorkIndex);
 						local greatWorks:table = GetGreatWorksInBuilding(pCityBldgs, pBuildingInfo);

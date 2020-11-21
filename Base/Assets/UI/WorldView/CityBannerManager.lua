@@ -1938,14 +1938,13 @@ function OnImprovementAddedToMap(locX, locY, eImprovementType, eOwner)
 	end
 
 	local improvementData:table = GameInfo.Improvements[eImprovementType];
-
 	if improvementData == nil then
 		UI.DataError("No database entry for eImprovementType #"..tostring(eImprovementType).." for ("..tostring(locX)..","..tostring(locY)..") and owner "..tostring(eOwner));
 		return;
 	end
 	
-	-- Right now we're only interested in the Airstrip improvement
-	if ( improvementData.AirSlots == 0 and improvementData.WeaponSlots == 0) then
+	-- Early out if the improvement isn't one that requires a banner
+	if ( improvementData.AirSlots == 0 and improvementData.WeaponSlots == 0 ) then
 		return;
 	end
 

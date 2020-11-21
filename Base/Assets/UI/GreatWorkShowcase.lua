@@ -173,18 +173,21 @@ function UpdateGreatWork()
 		Controls.GreatWorkBanner:SetSizeX(bannerSize);
 		Controls.GreatWorkBanner:SetHide(false);
 	else
-		local greatWorkTexture:string = greatWorkType:gsub("GREATWORK_", "");
-		Controls.GreatWorkImage:SetOffsetY(-40);
-		Controls.GreatWorkImage:SetTexture(greatWorkTexture);
-		Controls.GreatWorkName:SetText(Locale.ToUpper(Locale.Lookup(greatWorkInfo.Name)));
-		local nameSize:number = Controls.GreatWorkName:GetSizeX() + PADDING_BANNER;
-		local bannerSize:number = math.max(nameSize, SIZE_BANNER_MIN);
-		Controls.GreatWorkBanner:SetSizeX(bannerSize);
-		Controls.GreatWorkBanner:SetHide(false);
+		-- Allow DLCs and mods to handle custom great work types instead of forcing standard behavior
+		if not HandleCustomGreatWorkTypes(greatWorkType) then
+			local greatWorkTexture:string = greatWorkType:gsub("GREATWORK_", "");
+			Controls.GreatWorkImage:SetOffsetY(-40);
+			Controls.GreatWorkImage:SetTexture(greatWorkTexture);
+			Controls.GreatWorkName:SetText(Locale.ToUpper(Locale.Lookup(greatWorkInfo.Name)));
+			local nameSize:number = Controls.GreatWorkName:GetSizeX() + PADDING_BANNER;
+			local bannerSize:number = math.max(nameSize, SIZE_BANNER_MIN);
+			Controls.GreatWorkBanner:SetSizeX(bannerSize);
+			Controls.GreatWorkBanner:SetHide(false);
 
-		local imageHeight:number = Controls.GreatWorkImage:GetSizeY();
-		if imageHeight > SIZE_MAX_IMAGE_HEIGHT then
-			heightAdjustment = SIZE_MAX_IMAGE_HEIGHT - imageHeight;
+			local imageHeight:number = Controls.GreatWorkImage:GetSizeY();
+			if imageHeight > SIZE_MAX_IMAGE_HEIGHT then
+				heightAdjustment = SIZE_MAX_IMAGE_HEIGHT - imageHeight;
+			end
 		end
 	end
 
@@ -202,6 +205,14 @@ function UpdateGreatWork()
 	end
 
 	Controls.DetailsContainer:SetOffsetY(detailsOffset + heightAdjustment);
+end
+
+-- ===========================================================================
+--	To be overridden in DLCs and mods
+-- ===========================================================================
+function HandleCustomGreatWorkTypes( greatWorkType:string )
+	-- Return false to have GreatWorkShowcase use generic behavior
+	return false;
 end
 
 -- ===========================================================================
@@ -392,4 +403,10 @@ function Initialize()
 	Controls.ViewGreatWorks:RegisterCallback(Mouse.eLClick, OnViewGreatWorks);
 	Controls.ViewGreatWorks:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 end
+
+-- This wildcard include will include all loaded files beginning with "GreatWorkShowcase_"
+-- This method replaces the uses of include("GreatWorkShowcase") in files that want to override 
+-- functions from this file. If you're implementing a new "GreatWorkShowcase" file DO NOT include this file.
+include("GreatWorkShowcase_", true);
+
 Initialize();

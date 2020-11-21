@@ -469,7 +469,7 @@ function PopulateAvailableBeliefs(beliefType:string)
 	end
 
 	table.sort(Beliefs, function(a, b)
-		return a.BeliefClassType < b.BeliefClassType;
+		return a.BeliefClassType > b.BeliefClassType;
 		end );
 
 	for _, row in ipairs(Beliefs) do

@@ -113,7 +113,12 @@ function ShowTechBoost(techIndex, iTechProgress, eSource)
 		end
 	end
 	
-	boostAmt = (totalTechCost * boostAmt) / 100;
+	-- handle boosts larger than the total cost
+	if boostAmt >= totalTechCost then
+		boostAmt = totalTechCost;
+	else
+		boostAmt = (totalTechCost * boostAmt) / 100;
+	end
 
 	-- Show the player the amount of progress the boost has given
 	local currentPercent = iTechProgress / totalTechCost;

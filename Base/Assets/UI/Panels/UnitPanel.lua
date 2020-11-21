@@ -1440,7 +1440,7 @@ function FilterUnitStatsFromUnitData( unitData:table, ignoreStatType:number )
 
 	-- Range
 	if (unitData.Range ~= nil and unitData.Range > 0) then
-		table.insert(data, {Value = unitData.Range;			Label = "LOC_HUD_UNIT_PANEL_ATTACK_RANGE",			FontIcon="[ICON_Range_Large]",			IconName="ICON_RANGE"});
+		table.insert(data, {Value = unitData.Range, Type = "Range", Label = "LOC_HUD_UNIT_PANEL_ATTACK_RANGE", FontIcon="[ICON_Range_Large]", IconName="ICON_RANGE"});
 	end
 
 	-- Charges
@@ -1457,7 +1457,7 @@ function FilterUnitStatsFromUnitData( unitData:table, ignoreStatType:number )
 		table.insert(data, {Value = unitData.HealCharges, Type = "HealCharges",		Label = "LOC_HUD_UNIT_PANEL_HEALS",				FontIcon="[ICON_ReligionStat_Large]",		IconName="ICON_RELIGION"});
 	end
 	if (unitData.ActionCharges ~= nil and unitData.ActionCharges > 0) then
-		table.insert(data, {Value = unitData.ActionCharges, Type = "ActionCharges",		Label = "LOC_HUD_UNIT_PANEL_CHARGES",				FontIcon="[ICON_ReligionStat_Large]",		IconName="ICON_RELIGION"});
+		table.insert(data, {Value = unitData.ActionCharges, Type = "ActionCharges",		Label = "LOC_HUD_UNIT_PANEL_CHARGES",				FontIcon="[ICON_ReligionStat_Large]",		IconName="ICON_STATS_SPREADCHARGES"});
 	end
 	if (unitData.GreatPersonActionCharges ~= nil and unitData.GreatPersonActionCharges > 0) then
 		table.insert(data, {Value = unitData.GreatPersonActionCharges, Type = "ActionCharges",		Label = "LOC_HUD_UNIT_PANEL_GREAT_PERSON_ACTIONS",				FontIcon="[ICON_Charges_Large]",		IconName="ICON_GREAT_PERSON"});
@@ -1465,13 +1465,20 @@ function FilterUnitStatsFromUnitData( unitData:table, ignoreStatType:number )
 
 	-- Other
 	if (unitData.Lifespan ~= nil and unitData.Lifespan >= 0) then
-		table.insert(data, {Value = unitData.Lifespan, Type = "Lifespan", Label = "LOC_HUD_UNIT_PANEL_LIFESPAN", FontIcon="[ICON_Charges_Large]", IconName="ICON_BUILD_CHARGES"});
+		table.insert(data, {Value = unitData.Lifespan, Type = "Lifespan", Label = "LOC_HUD_UNIT_PANEL_LIFESPAN", FontIcon="[ICON_Lifespan]", IconName="ICON_LIFESPAN"});
 	end
 
-	-- If we have more than 4 stats then try to remove melee strength
+	-- More that 4 stats: try to remove melee strength then attack range
 	if (table.count(data) > 4) then
 		for i,stat in ipairs(data) do
 			if stat.Type == "Combat" then
+				table.remove(data, i);
+			end
+		end
+	end
+	if (table.count(data) > 4) then
+		for i,stat in ipairs(data) do
+			if stat.Type == "Range" then
 				table.remove(data, i);
 			end
 		end
@@ -3790,13 +3797,6 @@ function OnInterfaceModeChanged( eOldMode:number, eNewMode:number )
 		SetTheSelectedButton("UNITCOMMAND_NAVAL_GOLD_RAID", true);
 	elseif (eOldMode == InterfaceModeTypes.NAVAL_GOLD_RAID) then
 		SetTheSelectedButton("UNITCOMMAND_NAVAL_GOLD_RAID", false);
-	end
-
-	-- Set Hero Resource Inspire Selected
-	if (eNewMode == InterfaceModeTypes.RESOURCE_INSPIRE) then
-		SetTheSelectedButton("UNITCOMMAND_RESOURCE_INSPIRE", true);
-	elseif (eOldMode == InterfaceModeTypes.RESOURCE_INSPIRE) then
-		SetTheSelectedButton("UNITCOMMAND_RESOURCE_INSPIRE", false);
 	end
 
 	-- Set AIR_ATTACK Selected

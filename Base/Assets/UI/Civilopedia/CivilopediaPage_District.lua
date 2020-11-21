@@ -255,6 +255,8 @@ PageLayouts["District" ] = function(page)
 					object = "LOC_TOOLTIP_LUXURY_RESOURCE";
 				elseif(row.AdjacentResourceClass == "RESOURCECLASS_STRATEGIC") then
 					object = "LOC_TOOLTIP_BONUS_STRATEGIC";
+				elseif(row.AdjacentResourceClass == "RESOURCECLASS_LEY_LINE") then
+					object = "LOC_TOOLTIP_LEY_LINE_RESOURCE";
 				else
 					object = "LOC_TYPE_TRAIT_ADJACENT_OBJECT_RESOURCE_CLASS";
 				end

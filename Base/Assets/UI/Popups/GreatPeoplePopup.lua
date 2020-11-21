@@ -40,6 +40,9 @@ local m_numTabs				:number = 0;
 -- Dynamic refresh call member used to override the refresh functionality
 local m_RefreshFunc			:ifunction = nil;
 
+local m_pGreatPeopleTabInstance:table	= nil;
+local m_pPrevRecruitedTabInstance:table = nil;
+
 -- ===========================================================================
 function ChangeDisplayPlayerID(bBackward)
 	
@@ -867,7 +870,8 @@ end
 --	LUA Event
 -- =======================================================================================
 function OnOpenViaNotification()
-	Open();	
+	Open();
+	SelectTab( m_pGreatPeopleTabInstance.Button );
 end
 
 -- =======================================================================================
@@ -1023,7 +1027,7 @@ end
 -- ===========================================================================
 function OnGreatPeopleClick( uiSelectedButton:table )
 	ResetTabButtons();
-	SelectTabButton(uiSelectedButton);
+	SetTabButtonsSelected(uiSelectedButton);
 	Refresh(RefreshCurrentGreatPeople);
 end
 
@@ -1032,7 +1036,7 @@ end
 -- ===========================================================================
 function OnPreviousRecruitedClick( uiSelectedButton:table )
 	ResetTabButtons();
-	SelectTabButton(uiSelectedButton);
+	SetTabButtonsSelected(uiSelectedButton);
 	Refresh(RefreshPreviousGreatPeople);
 end
 
@@ -1047,6 +1051,7 @@ end
 --	UI Event
 -- =======================================================================================
 function OnInit( isHotload:boolean )
+	LateInitialize();
 	if isHotload then
 		LuaEvents.GameDebug_GetValues(RELOAD_CACHE_ID);
 	end
@@ -1121,7 +1126,12 @@ function AddTabInstance( buttonText:string, callbackFunc:ifunction )
 end
 
 -- =======================================================================================
-function SelectTabButton( buttonControl:table )
+function SelectTab( buttonControl:table )
+	m_tabs.SelectTab(buttonControl);
+end
+
+-- =======================================================================================
+function SetTabButtonsSelected( buttonControl:table )
 	for i=1, m_tabButtonIM.m_iCount, 1 do
 		local buttonInstance:table = m_tabButtonIM:GetAllocatedInstance(i);
 		if buttonInstance and buttonInstance.Button == buttonControl then
@@ -1158,6 +1168,11 @@ function AddCustomTabs()
 end
 
 -- =======================================================================================
+function LateInitialize()
+
+end
+
+-- =======================================================================================
 --
 -- =======================================================================================
 function Initialize()
@@ -1172,15 +1187,15 @@ function Initialize()
 	-- Tab setup and setting of default tab.
 	m_tabs = CreateTabs( Controls.TabContainer, 42, 34, UI.GetColorValueFromHexLiteral(0xFF331D05) );
 
-	local pTabInst:table = AddTabInstance("LOC_GREAT_PEOPLE_TAB_GREAT_PEOPLE", OnGreatPeopleClick);
-	AddTabInstance("LOC_GREAT_PEOPLE_TAB_PREVIOUSLY_RECRUITED", OnPreviousRecruitedClick);
+	m_pGreatPeopleTabInstance = AddTabInstance("LOC_GREAT_PEOPLE_TAB_GREAT_PEOPLE", OnGreatPeopleClick);
+	m_pPrevRecruitedTabInstance = AddTabInstance("LOC_GREAT_PEOPLE_TAB_PREVIOUSLY_RECRUITED", OnPreviousRecruitedClick);
 
 	AddCustomTabs()
 
 	ResizeTabContainer();
 
 	m_tabs.CenterAlignTabs(-10);
-	m_tabs.SelectTab( pTabInst.Button );
+	m_tabs.SelectTab( m_pGreatPeopleTabInstance.Button );
 
 	-- UI Events
 	ContextPtr:SetInitHandler( OnInit );
