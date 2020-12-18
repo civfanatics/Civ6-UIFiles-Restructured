@@ -610,6 +610,15 @@ function OnRefuseDeal(bForceClose)
 					DiplomacyManager.CloseSession(sessionID);
 					StartExitAnimation();
 				else
+					local pDeal : table = DealManager.GetWorkingDeal(DealDirection.OUTGOING, localPlayerID, otherPlayerID);
+					if(pDeal:HasUnacceptableItems())then
+						for pDealItem in pDeal:Items() do
+							if(pDealItem:IsUnacceptable() and pDealItem:GetFromPlayerID() == localPlayerID)then
+								DealManager.SendWorkingDeal(DealProposalAction.REJECTED_PERMANENT, localPlayerID, otherPlayerID);
+								return;
+							end
+						end
+					end
 					DiplomacyManager.AddResponse(sessionID, localPlayerID, "NEGATIVE");
 				end
 			else
@@ -1240,6 +1249,7 @@ function PopulateAvailableGold(player : table, iconList : table)
 					uiIcon.SelectButton:RegisterCallback( Mouse.eLClick, function() OnClickAvailableOneTimeGold(player, ms_DefaultOneTimeGoldAmount); end );
 					uiIcon.SelectButton:RegisterCallback( Mouse.eLClick, function() OnClickAvailableOneTimeGold(player, ms_DefaultOneTimeGoldAmount); end );
 					uiIcon.RemoveButton:SetHide(true);
+					uiIcon.StopAskingButton:SetHide(true);
 					uiIcon.Icon:SetColor(1,1,1);
 					availableItemCount = availableItemCount + 1;
 				end
@@ -1252,6 +1262,7 @@ function PopulateAvailableGold(player : table, iconList : table)
 				uiIcon.SelectButton:RegisterCallback( Mouse.eLClick, function() OnClickAvailableMultiTurnGold(player, ms_DefaultMultiTurnGoldAmount, ms_DefaultMultiTurnGoldDuration); end );
 				uiIcon.ValueText:SetHide(true);
 				uiIcon.RemoveButton:SetHide(true);
+				uiIcon.StopAskingButton:SetHide(true);
 				uiIcon.Icon:SetColor(1,1,1);
 
 				iconList.ListStack:CalculateSize();
@@ -1604,6 +1615,26 @@ function OnRemoveDealItem(player, itemID)
 end
 
 -- ===========================================================================
+function OnSetDealItemUnacceptable(itemID : number)
+	m_kPopupDialog:Close(); -- Close and reset the popup in case it's open
+
+	m_kPopupDialog:AddText(Locale.Lookup("LOC_DIPLO_DEAL_STOP_ASKING_POPUP_TEXT"));
+	m_kPopupDialog:AddTitle(Locale.ToUpper(Locale.Lookup("LOC_DIPLO_DEAL_STOP_ASKING_POPUP_TITLE")))
+	m_kPopupDialog:AddButton(Locale.Lookup("LOC_OK_BUTTON"), function() OnConfirmSetDealItemUnacceptable(itemID); end);
+	m_kPopupDialog:AddButton(Locale.Lookup("LOC_NO_BUTTON"), function() m_kPopupDialog:Close(); end);
+
+	m_kPopupDialog:Open();
+end
+
+-- ===========================================================================
+function OnConfirmSetDealItemUnacceptable(itemID : number)
+	local pDeal : table = DealManager.GetWorkingDeal(DealDirection.OUTGOING, g_LocalPlayer:GetID(), g_OtherPlayer:GetID());
+	pDeal:SetUnacceptableItemByID(itemID);
+	DealManager.SendWorkingDeal(DealProposalAction.INSPECT, g_LocalPlayer:GetID(), g_OtherPlayer:GetID());
+	UpdateDealPanel();
+end
+
+-- ===========================================================================
 function OnSelectValueDealItem(player, itemID, controlInstance)
 
 	if (ms_bIsDemand == true and ms_InitiatedByPlayerID == ms_OtherPlayerID) then
@@ -1675,6 +1706,7 @@ function PopulateAvailableResources(player : table, iconList : table, className 
 					uiIcon.AmountText:SetText(tostring(entry.MaxAmount));
 					uiIcon.AmountText:SetHide(false);
 					uiIcon.RemoveButton:SetHide(true);
+					uiIcon.StopAskingButton:SetHide(true);
 					uiIcon.Icon:SetColor(1,1,1);
 
 					local resourceType : number = entry.ForType;
@@ -1753,10 +1785,12 @@ function PopulateAvailableAgreements(player : table, iconList : table)
 			uiIcon.SelectButton:SetDisabled( not entry.IsValid and entry.ValidationResult ~= DealValidationResult.MISSING_DEPENDENCY );	-- Hide if invalid, unless it is just missing a dependency, the user will update that when it is added to the deal.
 			uiIcon.ValueText:SetHide(true);
 			uiIcon.RemoveButton:SetHide(true);
+			uiIcon.StopAskingButton:SetHide(true);
 
 			uiMinimizedIcon.AmountText:SetHide(true);
 			uiMinimizedIcon.SelectButton:SetDisabled( not entry.IsValid and entry.ValidationResult ~= DealValidationResult.MISSING_DEPENDENCY );	-- Hide if invalid, unless it is just missing a dependency, the user will update that when it is added to the deal.
 			uiMinimizedIcon.RemoveButton:SetHide(true);
+			uiMinimizedIcon.StopAskingButton:SetHide(true);
 			uiMinimizedIcon.Icon:SetColor(1,1,1);
 
 			-- What to do when double clicked/tapped.
@@ -1874,10 +1908,12 @@ function PopulateAvailableCities(player : table, iconList : table)
 			uiIcon.SelectButton:SetDisabled( not entry.IsValid and entry.ValidationResult ~= DealValidationResult.MISSING_DEPENDENCY );	-- Hide if invalid, unless it is just missing a dependency, the user will update that when it is added to the deal.
 			uiIcon.ValueText:SetHide(true);
 			uiIcon.RemoveButton:SetHide(true);
+			uiIcon.StopAskingButton:SetHide(true);
 
 			uiMinimizedIcon.AmountText:SetHide(true);
 			uiMinimizedIcon.SelectButton:SetDisabled( not entry.IsValid and entry.ValidationResult ~= DealValidationResult.MISSING_DEPENDENCY );	-- Hide if invalid, unless it is just missing a dependency, the user will update that when it is added to the deal.
 			uiMinimizedIcon.RemoveButton:SetHide(true);
+			uiMinimizedIcon.StopAskingButton:SetHide(true);
 			uiMinimizedIcon.Icon:SetColor(1,1,1);
 
 			-- What to do when double clicked/tapped.
@@ -1943,10 +1979,12 @@ function PopulateAvailableGreatWorks(player : table, iconList : table)
 				uiIcon.SelectButton:SetDisabled( not entry.IsValid and entry.ValidationResult ~= DealValidationResult.MISSING_DEPENDENCY );	-- Hide if invalid, unless it is just missing a dependency, the user will update that when it is added to the deal.
 				uiIcon.ValueText:SetHide(true);
 				uiIcon.RemoveButton:SetHide(true);
+				uiIcon.StopAskingButton:SetHide(true);
 
 				uiMinimizedIcon.AmountText:SetHide(true);
 				uiMinimizedIcon.SelectButton:SetDisabled( not entry.IsValid and entry.ValidationResult ~= DealValidationResult.MISSING_DEPENDENCY );	-- Hide if invalid, unless it is just missing a dependency, the user will update that when it is added to the deal.
 				uiMinimizedIcon.RemoveButton:SetHide(true);
+				uiMinimizedIcon.StopAskingButton:SetHide(true);
 				uiMinimizedIcon.Icon:SetColor(1,1,1);
 
 				-- What to do when double clicked/tapped.
@@ -2005,10 +2043,12 @@ function PopulateAvailableCaptives(player : table, iconList : table)
 			uiIcon.SelectButton:SetDisabled( not entry.IsValid and entry.ValidationResult ~= DealValidationResult.MISSING_DEPENDENCY );	-- Hide if invalid, unless it is just missing a dependency, the user will update that when it is added to the deal.
 			uiIcon.ValueText:SetHide(true);
 			uiIcon.RemoveButton:SetHide(true);
+			uiIcon.StopAskingButton:SetHide(true);
 
 			uiMinimizedIcon.AmountText:SetHide(true);
 			uiMinimizedIcon.SelectButton:SetDisabled( not entry.IsValid and entry.ValidationResult ~= DealValidationResult.MISSING_DEPENDENCY );	-- Hide if invalid, unless it is just missing a dependency, the user will update that when it is added to the deal.
 			uiMinimizedIcon.RemoveButton:SetHide(true);
+			uiMinimizedIcon.StopAskingButton:SetHide(true);
 			uiMinimizedIcon.Icon:SetColor(1,1,1);
 
 			-- What to do when double clicked/tapped.
@@ -2119,6 +2159,7 @@ function PopulateDealBasic(player : table, iconList : table, populateType : numb
 
 					uiIcon.SelectButton:SetToolTipString(nil);		-- We recycle the entries, so make sure this is clear.
 					uiIcon.SelectButton:SetDisabled(false);
+					uiIcon.StopAskingButton:SetHide(true);
 
 					uiMinimizedIcon.UnacceptableIcon:SetHide(not pDealItem:IsUnacceptable());
 					uiMinimizedIcon.RemoveButton:SetHide(false);
@@ -2129,6 +2170,7 @@ function PopulateDealBasic(player : table, iconList : table, populateType : numb
 
 					uiMinimizedIcon.SelectButton:SetToolTipString(Locale.Lookup(typeName));		-- We recycle the entries, so make sure this is clear.
 					uiMinimizedIcon.SelectButton:SetDisabled(false);
+					uiMinimizedIcon.StopAskingButton:SetHide(true);
 					uiMinimizedIcon.Icon:SetColor(1,1,1);
 				end
 			end
@@ -2197,6 +2239,7 @@ function PopulateDealResources(player : table, iconList : table)
 					SetIconToSize(uiIcon.Icon, "ICON_YIELD_GOLD_5");
 					uiIcon.AmountText:SetText(tostring(pDealItem:GetAmount()));
 					uiIcon.AmountText:SetHide(false);
+					uiIcon.StopAskingButton:SetHide(true);
 					uiIcon.Icon:SetColor(1,1,1);
 
 					-- Show/hide unacceptable item notification
@@ -2227,6 +2270,7 @@ function PopulateDealResources(player : table, iconList : table)
 						SetIconToSize(uiIcon.Icon, "ICON_" .. resourceDesc.ResourceType);
 						uiIcon.AmountText:SetText(tostring(pDealItem:GetAmount()));
 						uiIcon.AmountText:SetHide(false);
+						uiIcon.StopAskingButton:SetHide(true);
 						uiIcon.Icon:SetColor(1,1,1);
 
 						-- Show/hide unacceptable item notification
@@ -2358,6 +2402,17 @@ function PopulateDealAgreements(player : table, iconList : table)
 						uiMinimizedIcon.SelectButton:SetDisabled(false);
 						uiMinimizedIcon.SelectButton:RegisterCallback( Mouse.eLClick, function(void1, void2, self) OnSelectValueDealItem(player, dealItemID, self); end );
 					end
+
+					if(ms_InitiatedByPlayerID ~= g_LocalPlayer:GetID() and pDealItem:GetFromPlayerID() == Game.GetLocalPlayer() and not ms_OtherPlayerIsHuman and not pDealItem:IsUnacceptable())then
+						uiIcon.StopAskingButton:SetHide(false);
+						uiMinimizedIcon.StopAskingButton:SetHide(false);
+						
+						uiIcon.StopAskingButton:RegisterCallback(Mouse.eLClick, function() OnSetDealItemUnacceptable(dealItemID); end);
+						uiMinimizedIcon.StopAskingButton:RegisterCallback(Mouse.eLClick, function() OnSetDealItemUnacceptable(dealItemID); end);
+					else
+						uiIcon.StopAskingButton:SetHide(true);
+						uiMinimizedIcon.StopAskingButton:SetHide(true);
+					end
 				end
 			end
 		end
@@ -2449,6 +2504,17 @@ function PopulateDealGreatWorks(player : table, iconList : table)
 
 					uiIcon.SelectButton:SetToolTipString(strTooltip);
 					uiMinimizedIcon.SelectButton:SetToolTipString(strTooltip);
+
+					if(ms_InitiatedByPlayerID ~= g_LocalPlayer:GetID() and pDealItem:GetFromPlayerID() == Game.GetLocalPlayer() and not ms_OtherPlayerIsHuman and not pDealItem:IsUnacceptable())then
+						uiIcon.StopAskingButton:SetHide(false);
+						uiMinimizedIcon.StopAskingButton:SetHide(false);
+
+						uiIcon.StopAskingButton:RegisterCallback(Mouse.eLClick, function() OnSetDealItemUnacceptable(dealItemID); end);
+						uiMinimizedIcon.StopAskingButton:RegisterCallback(Mouse.eLClick, function() OnSetDealItemUnacceptable(dealItemID); end);
+					else
+						uiIcon.StopAskingButton:SetHide(true);
+						uiMinimizedIcon.StopAskingButton:SetHide(true);
+					end
 				end
 			end
 		end
@@ -2568,6 +2634,17 @@ function PopulateDealCities(player : table, iconList : table)
 					uiIcon.CollapseButton:SetHide(not hasChildDealItems);
 					if(m_kCollapsedCityDetails[typeName])then
 						uiIcon.CityDetails:SetHide(false);
+					end
+
+					if(ms_InitiatedByPlayerID ~= g_LocalPlayer:GetID() and pDealItem:GetFromPlayerID() == Game.GetLocalPlayer() and not ms_OtherPlayerIsHuman and not pDealItem:IsUnacceptable())then
+						uiIcon.StopAskingButton:SetHide(false);
+						uiMinimizedIcon.StopAskingButton:SetHide(false);
+						
+						uiIcon.StopAskingButton:RegisterCallback(Mouse.eLClick, function() OnSetDealItemUnacceptable(dealItemID); end);
+						uiMinimizedIcon.StopAskingButton:RegisterCallback(Mouse.eLClick, function() OnSetDealItemUnacceptable(dealItemID); end);
+					else
+						uiIcon.StopAskingButton:SetHide(true);
+						uiMinimizedIcon.StopAskingButton:SetHide(true);
 					end
 				end
 			end

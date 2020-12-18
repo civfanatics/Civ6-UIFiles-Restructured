@@ -20,6 +20,7 @@
 		  <Label ID="AmountText" Style="FontNormalBold16" Anchor="R,B" Offset="-5,-9" FontStyle="Stroke" />
       <Image ID="UnacceptableIcon" Anchor="R,T" Offset="-8,-8" Texture="Alert18" Size="18,18" ToolTip="LOC_DIPLO_DEAL_UNACCEPTABLE_ITEM_TOOLTIP" Hidden="1"/>
       <Button ID="RemoveButton" Anchor="L,B" Offset ="-10,-10" Texture="Controls_RemoveDealSmall" Size="16,16" ToolTip="LOC_DIPLO_DEAL_REMOVE_ITEM" Hidden="1"/>
+			<Button ID="StopAskingButton" Anchor="C,C" Offset ="0,0" Texture="Controls_DontAskAgainSmall" Size="16,16" ToolTip="LOC_DIPLO_DEAL_REMOVE_ITEM" Hidden="1"/>
     </GridButton>
 	</Instance>
 
@@ -40,6 +41,7 @@
 			</Stack>
       <Image ID="UnacceptableIcon" Anchor="R,T" Offset="-8,-8" Texture="Alert18" Size="18,18" ToolTip="LOC_DIPLO_DEAL_UNACCEPTABLE_ITEM_TOOLTIP" Hidden="1"/>
       <Button ID="RemoveButton" Anchor="R,B" Offset ="-4,-4" Texture="Controls_RemoveDeal" Size="22,22" ToolTip="LOC_DIPLO_DEAL_REMOVE_ITEM" Hidden="1"/>
+			<Button ID="StopAskingButton" Anchor="R,T" Offset ="-4,-4" Texture="Controls_DontAskAgainSmall" Size="16,16" ToolTip="LOC_DIPLO_DEAL_MARK_UNACCEPTABLE" Hidden="1"/>
 		</GridButton>
 	</Instance>
 
@@ -64,6 +66,7 @@
         <Image ID="UnacceptableIcon" Anchor="R,T" Offset="-8,-8" Texture="Alert18" Size="18,18" ToolTip="LOC_DIPLO_DEAL_UNACCEPTABLE_ITEM_TOOLTIP" Hidden="1"/>
         <Button ID="RemoveButton" Anchor="R,B" Offset ="-4,-4" Texture="Controls_RemoveDeal" Size="22,22" ToolTip="LOC_DIPLO_DEAL_REMOVE_ITEM" Hidden="1"/>
         <Button ID="CollapseButton" Anchor="C,B" AnchorSide="I,O" Offset="0,3"	Size="16,16"	Hidden="1" Texture="Controls_CityExpand" TextureOffset="0,0" ToolTip="LOC_DIPLO_DEAL_EXPAND_CITY_INFO" />
+				<Button ID="StopAskingButton" Anchor="R,T" Offset ="-4,-4" Texture="Controls_DontAskAgainSmall" Size="16,16" ToolTip="LOC_DIPLO_DEAL_MARK_UNACCEPTABLE" Hidden="1"/>
       </GridButton>
     </Container>
       

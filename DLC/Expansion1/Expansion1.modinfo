@@ -491,6 +491,7 @@
 		<UpdateIcons id="Expansion1FrontEndIcons">
 			<File>Data/Expansion1_Icons_Buildings.xml</File>
 			<File>Data/Expansion1_Icons_Civilizations.xml</File>
+      		<File>Data/Expansion1_Icons_CityStates.xml</File>
 			<File>Data/Expansion1_Icons_Features.xml</File>
 			<File>Data/Expansion1_Icons_FontIcons.xml</File>
 			<File>Data/Expansion1_Icons_Districts.xml</File>

@@ -1,47 +1,25 @@
+-- Copyright 2018-2020, Firaxis Games
 
---[[
--- Created by Samuel Batista
--- Copyright (c) Firaxis Games 2018
---]]
+-- This file is being included into the base GreatWorksOverview file using the wildcard include setup in GreatWorksOverview.lua
+-- Refer to the bottom of GreatWorksOverview.lua to see how that's happening
+-- DO NOT include any GreatWorksOverview files here or it will cause problems
+-- include("GreatWorksOverview");
 
--- ===========================================================================
--- INCLUDES
--- ===========================================================================
-include("GreatWorksOverview.lua");
-
--- ===========================================================================
--- OVERRIDE BASE FUNCTIONS
--- ===========================================================================
 include("InstanceManager");
 include("PopupDialog")
-include("GameCapabilities");
 include("GreatWorksSupport");
 
 -- ===========================================================================
 --	CONSTANTS Shoul probably switch the base game to just use globals.
 -- ===========================================================================
-local RELOAD_CACHE_ID:string = "GreatWorksOverview"; -- Must be unique (usually the same as the file name)
 
 local SIZE_SLOT_TYPE_ICON:number = 40;
-local SIZE_GREAT_WORK_ICON:number = 64;
-local PADDING_PROVIDING_LABEL:number = 10;
-local PADDING_PLACING_DETAILS:number = 5;
-local PADDING_PLACING_ICON:number = 10;
-local PADDING_BUTTON_EDGES:number = 20;
 local MIN_PADDING_SLOTS:number = 2;
 local MAX_PADDING_SLOTS:number = 30;
 local MAX_NUM_SLOTS:number = 6;
 
-local NUM_RELIC_TEXTURES:number = 24;
-local NUM_ARIFACT_TEXTURES:number = 25;
-local GREAT_WORK_RELIC_TYPE:string = "GREATWORKOBJECT_RELIC";
-local GREAT_WORK_ARTIFACT_TYPE:string = "GREATWORKOBJECT_ARTIFACT";
-
-local LOC_PLACING:string = Locale.Lookup("LOC_GREAT_WORKS_PLACING");
 local LOC_TOURISM:string = Locale.Lookup("LOC_GREAT_WORKS_TOURISM");
 local LOC_THEME_BONUS:string = Locale.Lookup("LOC_GREAT_WORKS_THEMED_BONUS");
-local LOC_SCREEN_TITLE:string = Locale.Lookup("LOC_GREAT_WORKS_SCREEN_TITLE");
-local LOC_ORGANIZE_GREAT_WORKS:string = Locale.Lookup("LOC_GREAT_WORKS_ORGANIZE_GREAT_WORKS");
 
 local DATA_FIELD_SLOT_CACHE:string = "SlotCache";
 local DATA_FIELD_GREAT_WORK_IM:string = "GreatWorkIM";
@@ -58,28 +36,7 @@ local YIELD_FONT_ICONS:table = {
 	TourismYield			= "[ICON_TourismLarge]"
 };
 
-local m_during_move:boolean = false;
-local m_dest_building:number = 0;
-local m_dest_city;
-local m_isLocalPlayerTurn:boolean = true;
-
 -- ===========================================================================
---	SCREEN VARIABLES
--- ===========================================================================
-local m_FirstGreatWork:table = nil;
-local m_GreatWorkYields:table = nil;
-local m_GreatWorkSelected:table = nil;
-local m_GreatWorkBuildings:table = nil;
-local m_GreatWorkSlotsIM:table = InstanceManager:new("GreatWorkSlot", "TopControl", Controls.GreatWorksStack);
-local m_TotalResourcesIM:table = InstanceManager:new("AgregateResource", "Resource", Controls.TotalResources);
-
-
--- ===========================================================================
---	PLAYER VARIABLES
--- ===========================================================================
-local m_LocalPlayer:table;
-local m_LocalPlayerID:number;
-
 function GetThemeDescription(buildingType:string)
 	local localPlayerID = Game.GetLocalPlayer();
 	local localPlayer = Players[localPlayerID];
@@ -107,6 +64,7 @@ function GetThemeDescription(buildingType:string)
 	return nil;
 end
 
+-- ===========================================================================
 function PopulateGreatWorkSlot(instance:table, pCity:table, pCityBldgs:table, pBuildingInfo:table)
 	
 	instance.DefaultBG:SetHide(false);
@@ -219,9 +177,9 @@ function PopulateGreatWorkSlot(instance:table, pCity:table, pCityBldgs:table, pB
 		instance.ThemingLabel:SetToolTipString("");
 		if pCityBldgs:IsBuildingThemedCorrectly(buildingIndex) then
 			instance.ThemingLabel:SetText(LOC_THEME_BONUS);
-			if m_during_move then
-				if buildingIndex == m_dest_building then
-                    if (m_dest_city == pCityBldgs:GetCity():GetID()) then
+			if IsDuringMove() then
+				if buildingIndex == GetDestBuilding() then
+                    if (GetDestCity() == pCityBldgs:GetCity():GetID()) then
                         UI.PlaySound("UI_GREAT_WORKS_BONUS_ACHIEVED");
                     end
 				end
@@ -236,9 +194,9 @@ function PopulateGreatWorkSlot(instance:table, pCity:table, pCityBldgs:table, pB
 						instance.ThemingLabel:SetText(Locale.Lookup("LOC_GREAT_WORKS_THEME_BONUS_PROGRESS", numThemedGreatWorks, numSlots));
 					end
 
-					if m_during_move then
-						if buildingIndex == m_dest_building then
-                            if (m_dest_city == pCityBldgs:GetCity():GetID()) then
+					if IsDuringMove() then
+						if buildingIndex == GetDestBuilding() then
+                            if (GetDestCity() == pCityBldgs:GetCity():GetID()) then
                                 if numThemedGreatWorks == 2 then
                                     UI.PlaySound("UI_GreatWorks_Bonus_Increased");
                                 end

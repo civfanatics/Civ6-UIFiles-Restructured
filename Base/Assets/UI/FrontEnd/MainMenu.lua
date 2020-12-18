@@ -99,13 +99,30 @@ function UpdateScenariosButton(button)
 end
 
 
-function OnPlayCiv6()
-	
+-- ===========================================================================
+--	Starting game
+--	Step 1 of 2: Stop extra clicks and signal to raise loading screen
+-- ===========================================================================
+function OnPlayCiv6()	
 	-- Avoid double clicks.
 	if(_ClickedPlayNow) then 
 		return;
 	end
 	_ClickedPlayNow = true;
+	
+	LuaEvents.Raise_State_Transition("MainMenu");	-- Will raise screen
+end
+
+-- ===========================================================================
+--	Starting game
+--	Step 2 of 2: State transition has raised a loading screen, kick off
+--	potentially expensive operations to start loading.
+--	It's the loadingscreen's responsibility to lower the state transition.
+-- ===========================================================================
+function OnStateTransition( who:string )
+	if (who ~= "MainMenu") then
+		return;	-- Meant for someone else
+	end
 	
 	local save = Options.GetAppOption("Debug", "PlayNowSave");
 	if(save ~= nil) then
@@ -1472,6 +1489,7 @@ function Initialize()
 	LuaEvents.MainMenu_ShowAdditionalContent.Add(OnMods);
 	LuaEvents.CivRoyaleIntro_StartMatchMaking.Add(StartRoyaleMatchMaking);
 	LuaEvents.PiratesIntro_StartMatchMaking.Add(StartPiratesMatchMaking);
+	LuaEvents.StateTransition_SignalRaised.Add( OnStateTransition );
 
 	BuildAllMenus();
 	UpdateMotD();

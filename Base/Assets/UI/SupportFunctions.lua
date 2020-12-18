@@ -482,7 +482,7 @@ end
 function RandRange(min:number, max:number, logString:string)
 	logString = logString or "Support: Rand Range";
 	if (Game.GetRandNum ~= nil) then
-		return Game.GetRandNum(max - min, logString) + min;
+		return Game.GetRandNum((max + 1) - min, logString) + min;
 	else
 		return min;
 	end

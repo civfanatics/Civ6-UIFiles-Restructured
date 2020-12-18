@@ -8,7 +8,7 @@
       <!-- Relationship Status -->
       <Container Size="200,auto">
         <Button ID="RelationshipIcon" Offset="0,0" Style="DiplomacyRelationshipPips" Disabled="1"/>
-        <ScrollTextField ID="RelationshipText" Offset="36,5" Style="FontNormal16" Size="230,16" String="RelationshipText"/>
+				<Label ID="RelationshipText" Offset="36,5" Style="FontNormal16" WrapWidth="230" String="RelationshipText"/>
       </Container>
       <!-- Alliance Type -->
       <Container ID="AllianceTypeContainer" Size="200,auto">

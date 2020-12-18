@@ -16,6 +16,9 @@ g_DescriptionTextManager	= InstanceManager:new("DescriptionText", "Root", Contro
 g_DescriptionHeaderManager	= InstanceManager:new("DetailsHeader", "Root", Controls.GameInfoStack );
 g_DescriptionItemManager	= InstanceManager:new("DetailsItem", "Root", Controls.GameInfoStack );
 
+local m_GameModeDetailsIM	:table = InstanceManager:new("GameModeDetails", "Root", Controls.GameInfoStack );
+local m_GameModeNameIM		:table = InstanceManager:new("GameModeName", "Root");
+
 -- Global Variables
 g_ShowCloudSaves = false;
 g_ShowAutoSaves = false;
@@ -678,6 +681,9 @@ function PopulateInspectorData(fileInfo, fileName, mod_errors)
 	g_DescriptionHeaderManager:ResetInstances();
 	g_DescriptionItemManager:ResetInstances();
 
+	m_GameModeNameIM:ResetInstances();
+	m_GameModeDetailsIM:ResetInstances();
+
 	optionsHeader = g_DescriptionHeaderManager:GetInstance();
 	optionsHeader.HeadingTitle:LocalizeAndSetText("LOC_LOADSAVE_GAME_OPTIONS_HEADER_TITLE");
 	
@@ -692,18 +698,12 @@ function PopulateInspectorData(fileInfo, fileName, mod_errors)
 
 	if(fileInfo.EnabledGameModes)then
 		local enabledGameModeNames = Modding.GetGameModesFromConfigurationString(fileInfo.EnabledGameModes);
-		local gameModesString : string = "";
-		local gameModeNamesNum : number = table.count(enabledGameModeNames);
-		for k, v in ipairs(enabledGameModeNames)do
-			gameModesString = gameModesString .. v.Name;
-			if(k < gameModeNamesNum)then
-				gameModesString = gameModesString .. ",[NEWLINE]";
+		if(#enabledGameModeNames > 0)then
+			local uiGameModeInfo : table = m_GameModeDetailsIM:GetInstance();
+			for k, v in ipairs(enabledGameModeNames)do
+				local uiGameModeName : table = m_GameModeNameIM:GetInstance(uiGameModeInfo.GameModeNamesStack);
+				uiGameModeName.Description:SetText(v.Name);
 			end
-		end
-		if(gameModesString ~= "")then
-			local item : table = g_DescriptionItemManager:GetInstance();
-			item.Title:LocalizeAndSetText("LOC_MULTIPLAYER_LOBBY_GAMEMODES_OFFICIAL");
-			item.Description:SetText(gameModesString);
 		end
 	end
 

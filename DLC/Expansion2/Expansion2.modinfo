@@ -435,12 +435,6 @@
 				<LuaReplace>UI/Replacements/GovernmentScreen_Expansion2.lua</LuaReplace>
 			</Properties>
 		</ReplaceUIScript>
-		<ReplaceUIScript id="Expansion2_GreatWorksOverview" criteria="Expansion2">
-			<Properties>
-				<LuaContext>GreatWorksOverview</LuaContext>
-				<LuaReplace>UI/Replacements/GreatWorksOverview_Expansion2.lua</LuaReplace>
-			</Properties>
-		</ReplaceUIScript>
 		<ReplaceUIScript id="Expansion2_LaunchBar" criteria="Expansion2">
 			<Properties>
 				<LuaContext>LaunchBar</LuaContext>

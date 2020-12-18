@@ -22,6 +22,8 @@ BANNERTYPE_MISSILE_SILO		= 3;
 BANNERTYPE_OTHER_DISTRICT	= 4;
 BANNERTYPE_MOUNTAIN_TUNNEL	= 5;
 BANNERTYPE_QHAPAQ_NAN		= 6;
+BANNERTYPE_INDUSTRY			= 7;
+BANNERTYPE_CORPORATION		= 8;
 
 
 -- ===========================================================================
@@ -111,6 +113,8 @@ local m_DistrictBannerIM	:table = InstanceManager:new( "DistrictBanner",		"Ancho
 local m_TunnelBannerIM		:table = InstanceManager:new( "TunnelBanner",		"Anchor", Controls.CityBanners );
 local m_QhapaqNanBannerIM	:table = InstanceManager:new( "QhapaqNanBanner",	"Anchor", Controls.CityBanners );
 local m_HolySiteIconsIM		:table = InstanceManager:new( "HolySiteIcon",		"Anchor", Controls.CityDistrictIcons );
+local m_IndustryBannerIM	:table	= InstanceManager:new( "IndustryBanner",	"Anchor", Controls.CityBanners );
+local m_CorporationBannerIM	:table	= InstanceManager:new( "CorporationBanner",	"Anchor", Controls.CityBanners );
 
 local m_HexColoringReligion		: number = UILens.CreateLensLayerHash("Hex_Coloring_Religion");
 local m_LoyaltyFreeCityWarning	: number = UILens.CreateLensLayerHash("Loyalty_FreeCity_Warning");
@@ -118,6 +122,12 @@ local m_CulturalIdentityLens	: number = UILens.CreateLensLayerHash("Cultural_Ide
 local m_CityDetailsLens			: number = UILens.CreateLensLayerHash("City_Details");
 local m_EmpireDetailsLens		: number = UILens.CreateLensLayerHash("Empire_Details");
 
+local ResourceTypeMap :table = {};
+do
+	for row in GameInfo.Resources() do
+		ResourceTypeMap[row.Index] = row.ResourceType;
+	end
+end
 
 -- ===========================================================================
 --	FUNCTIONS
@@ -323,6 +333,12 @@ function CityBanner:Initialize( playerID: number, cityID : number, districtID : 
 		self:CreateTunnelBanner();
 	elseif (bannerType == BANNERTYPE_QHAPAQ_NAN) then
 		self:CreateQhapaqNanBanner();
+	elseif (bannerType == BANNERTYPE_INDUSTRY) then
+		self:CreateIndustryBanner();
+		self:UpdateIndustryBanner();
+	elseif (bannerType == BANNERTYPE_CORPORATION) then
+		self:CreateCorporationBanner();
+		self:UpdateCorporationBanner();
 	end
 
 	self:UpdateName();
@@ -672,6 +688,48 @@ function CityBanner:CreateQhapaqNanBanner()
 end
 
 -- ===========================================================================
+function CityBanner:CreateIndustryBanner()
+	-- Set the appropriate instance factory (mini banner one) for this flag...
+	self.m_InstanceManager = m_IndustryBannerIM;
+	self.m_Instance = self.m_InstanceManager:GetInstance();
+
+	self.m_PlotX, self.m_PlotY = Map.GetPlotLocation(self.m_DistrictID);
+
+	local plot = Map.GetPlot( self.m_PlotX, self.m_PlotY );
+	local resName:string = ResourceTypeMap[plot:GetResourceType()];
+	self.m_Instance.Icon:SetIcon("ICON_"..resName);
+
+	self.m_IsImprovementBanner = true;
+end
+
+-- ===========================================================================
+function CityBanner:UpdateIndustryBanner()
+	self:SetFogState( self.m_FogState );
+	self:SetHide(false);
+end
+
+-- ===========================================================================
+function CityBanner:CreateCorporationBanner()
+	-- Set the appropriate instance factory (mini banner one) for this flag...
+	self.m_InstanceManager = m_CorporationBannerIM;
+	self.m_Instance = self.m_InstanceManager:GetInstance();
+
+	self.m_PlotX, self.m_PlotY = Map.GetPlotLocation(self.m_DistrictID);
+
+	local plot = Map.GetPlot( self.m_PlotX, self.m_PlotY );
+	local resName:string = ResourceTypeMap[plot:GetResourceType()];
+	self.m_Instance.Icon:SetIcon("ICON_"..resName);
+
+	self.m_IsImprovementBanner = true;
+end
+
+-- ===========================================================================
+function CityBanner:UpdateCorporationBanner()
+	self:SetFogState( self.m_FogState );
+	self:SetHide(false);
+end
+
+-- ===========================================================================
 function CityBanner:CreateEncampmentBanner()
 	-- Set the appropriate instance factory (mini banner one) for this flag...
 	self.m_InstanceManager = m_EncampmentBannerIM;
@@ -734,6 +792,7 @@ function CityBanner:UpdateEncampmentBanner()
 
 	self.m_Instance.EncampmentBannerContainer:SetToolTipString(healthTooltip);
 	self.m_Instance.DistrictDefenseGrid:SetToolTipString(defTooltip);
+	self.m_Instance.DistrictDefenseStrengthLabel:SetText(districtDefense);
 end
 
 -- ===========================================================================
@@ -844,6 +903,14 @@ function CityBanner:UpdateColor()
 			self.m_Instance.Banner_Base:SetColor( backColor );
 		end
 	elseif (self.m_Type == BANNERTYPE_QHAPAQ_NAN) then
+		if self.m_Instance.Banner_Base ~= nil then
+			self.m_Instance.Banner_Base:SetColor( backColor );
+		end
+	elseif (self.m_Type == BANNERTYPE_INDUSTRY) then
+		if self.m_Instance.Banner_Base ~= nil then
+			self.m_Instance.Banner_Base:SetColor( backColor );
+		end
+	elseif (self.m_Type == BANNERTYPE_CORPORATION) then
 		if self.m_Instance.Banner_Base ~= nil then
 			self.m_Instance.Banner_Base:SetColor( backColor );
 		end
@@ -1334,6 +1401,10 @@ function CityBanner:UpdateStats()
 					self:UpdateAerodromeBanner();
 				elseif (self.m_Type == BANNERTYPE_MISSILE_SILO) then
 					self:UpdateWMDBanner();
+				elseif (self.m_Type == BANNERTYPE_INDUSTRY) then
+					self:UpdateIndustryBanner();
+				elseif (self.m_Type == BANNERTYPE_CORPORATION) then
+					self:UpdateCorporationBanner();
 				end
 			end
 		end
@@ -2671,7 +2742,19 @@ function OnImprovementAddedToMap(locX, locY, eImprovementType, eOwner)
 		return;
 	end
 	
-	if ( improvementData.AirSlots == 0 and improvementData.WeaponSlots == 0 and improvementData.ImprovementType ~= "IMPROVEMENT_MOUNTAIN_TUNNEL" and improvementData.ImprovementType ~= "IMPROVEMENT_MOUNTAIN_ROAD" ) then
+	--Check if the improvement is an Industry or Corporation
+	local bIsIndustry:boolean = false;
+	local bIsCorporation:boolean = false;
+	local improvementDataMODE:table = GameInfo.Improvements_MODE[improvementData.Hash];
+	if (improvementDataMODE ~= nil) then
+		if (improvementDataMODE.Industry) then
+			bIsIndustry = true;
+		elseif (improvementDataMODE.Corporation) then
+			bIsCorporation = true;
+		end
+	end
+
+	if ( improvementData.AirSlots == 0 and improvementData.WeaponSlots == 0 and improvementData.ImprovementType ~= "IMPROVEMENT_MOUNTAIN_TUNNEL" and improvementData.ImprovementType ~= "IMPROVEMENT_MOUNTAIN_ROAD" and not bIsIndustry and not bIsCorporation ) then
 		return;
 	end
 
@@ -2694,6 +2777,16 @@ function OnImprovementAddedToMap(locX, locY, eImprovementType, eOwner)
 					AddMiniBannerToMap( eOwner, -1, plotID, BANNERTYPE_MOUNTAIN_TUNNEL );
 				elseif ( improvementData.ImprovementType == "IMPROVEMENT_MOUNTAIN_ROAD" ) then
 					AddMiniBannerToMap( eOwner, -1, plotID, BANNERTYPE_QHAPAQ_NAN);
+				elseif ( bIsIndustry ) then
+					local ownerCity = Cities.GetPlotPurchaseCity(locX, locY);
+					local cityID = ownerCity:GetID();
+					-- we're passing the plotID as the districtID argument because we need the location of the improvement
+					AddMiniBannerToMap( eOwner, cityID, plotID, BANNERTYPE_INDUSTRY );
+				elseif ( bIsCorporation ) then
+					local ownerCity = Cities.GetPlotPurchaseCity(locX, locY);
+					local cityID = ownerCity:GetID();
+					-- we're passing the plotID as the districtID argument because we need the location of the improvement
+					AddMiniBannerToMap( eOwner, cityID, plotID, BANNERTYPE_CORPORATION );
 				end
 			else
 				miniBanner:UpdateStats();

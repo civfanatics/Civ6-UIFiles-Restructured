@@ -2,7 +2,9 @@
 <Context xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="..\..\..\..\..\..\CivTech\Libs\ForgeUI\ForgeUI_Assets\Controls.xsd"
 		Style="FontNormal14">
 
-	<Box ID="MainGrid" Style="ShellBGBox">
+  <Include File="PopupDialog"/>
+
+  <Box ID="MainGrid" Style="ShellBGBox">
 
 		<Container ID="MainWindow" Size="1024,768" Anchor="C,B" >
 			<Grid ID="LogoContainer" Style="SubContainer4" Size="parent-10,116" Anchor="C,T" Color="7,28,50" AnchorSide="I,O" Offset="0,4">
@@ -328,6 +330,7 @@
 			<!-- Selection Windows -->
 			<LuaContext ID="MapSelectWindow" FileName="MapSelect" Hidden="1"/>
 			<LuaContext ID="MultiSelectWindow" FileName="MultiSelectWindow" Hidden="1"/>
+			<LuaContext ID="CityStatePicker" FileName="CityStatePicker" Hidden="1"/>
 
 		</Container><!-- Main Window -->
 
@@ -637,4 +640,7 @@
 		</Container>
 	</Instance>
 
+  <!-- Dialog Support -->
+  <MakeInstance Name="PopupDialog" />
+  
 </Context>

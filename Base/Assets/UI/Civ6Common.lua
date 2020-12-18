@@ -773,3 +773,19 @@ function IsExpansion2Active()
 	local isActive:boolean  = Modding.IsModActive("4873eb62-8ccc-4574-b784-dda455e74e68");
 	return isActive;
 end
+
+-- ===========================================================================
+--	If the official Civ6 Expansion "Rise and Fall" (XP1) is enabled.
+-- ===========================================================================
+function IsExpansion1Enabled()
+	local isActive:boolean  = Modding.IsModEnabled("1B28771A-C749-434B-9053-D1380C553DE9");
+	return isActive;
+end
+
+-- ===========================================================================
+--	If the official Civ6 Expansion "Gathering Storm" (XP2) is enabled.
+-- ===========================================================================
+function IsExpansion2Enabled()
+	local isActive:boolean  = Modding.IsModEnabled("4873eb62-8ccc-4574-b784-dda455e74e68");
+	return isActive;
+end

@@ -80,6 +80,12 @@
 									
 									<Stack ID="StatisticsStack" StackGrowth="Bottom" Anchor="C,T" Offset="0,8" StackPadding="10" />
 									
+									<Stack ID="GameModesStack" Anchor="C,T" Offset="0,8" StackPadding="7">
+										<Label Anchor="C,T" Style="FontNormal18" String="LOC_GAMESUMMARY_CATEGORY_ENABLED_GAMEMODES"/>
+										<Box Color="0,60,78,255" Anchor="C,T" Size="Parent-120,3"/>
+										<Stack ID="GameModeNamesStack" StackGrowth="Bottom" Offset="2,0" Anchor="C,T" Size="parent,default" Padding="5" />
+									</Stack>
+									
 									<!-- Spacer -->
 									<Container Size="100,10" />
 									
@@ -144,6 +150,18 @@
 
 	<!-- Dialog Support -->
 	<MakeInstance Name="PopupDialog" />
+
+	<Instance Name="GameModeNamesBlockInstnace">
+		<Stack ID="RootStack" Anchor="C,T" Offset="0,8" StackPadding="7">
+			<Label Anchor="C,T" Style="FontNormal18" String="LOC_GAMESUMMARY_CATEGORY_ENABLED_GAMEMODES"/>
+			<Box Color="0,60,78,255" Anchor="C,T" Size="Parent-120,3"/>
+			<Stack ID="GameModeNamesStack" StackGrowth="Bottom" Offset="2,0" Anchor="C,T" Size="parent,default" Padding="5" />
+		</Stack>
+	</Instance>
+
+	<Instance Name="GameModeNameInstance">
+		<Label ID="GameModeName" Style="FontNormal16" Anchor="C,C" String="$Game Mode Name$"/>
+	</Instance>
 
 	<Instance Name="StatBlockInstance">
 		<Stack ID="RootStack" Anchor="C,T" Offset="0,8" StackPadding="7">								

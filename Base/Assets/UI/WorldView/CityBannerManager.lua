@@ -694,6 +694,7 @@ function CityBanner.UpdateEncampmentBanner( self : CityBanner )
 
 	self.m_Instance.EncampmentBannerContainer:SetToolTipString(healthTooltip);
 	self.m_Instance.DistrictDefenseGrid:SetToolTipString(defTooltip);
+	self.m_Instance.DistrictDefenseStrengthLabel:SetText(districtDefense);
 end
 
 -- ===========================================================================

@@ -213,8 +213,25 @@
 			</Container>
 			<Container  Size="auto,auto" Offset="145,0">
 				<Box Size="160,10" Color="0,0,0,0"/>
-				<ScrollTextField ID="Description" Anchor="L,T" Offset="0,0" Style="FontNormal14" ColorSet="BodyTextCool" FontStyle="stroke" Size="160,14"  String="Pangaea"/>
+				<ScrollTextField ID="Description" Anchor="L,T" Offset="0,0" Style="FontNormal14" ColorSet="BodyTextCool" FontStyle="stroke" Size="160,14"  String="Pangea"/>
 			</Container>
+		</Container>
+	</Instance>
+
+	<Instance Name="GameModeDetails">
+		<Container Size="auto,auto" ID="Root">
+			<Container Size="auto,auto">
+				<Box Size="140,10" Color="0,0,0,0"/>
+				<Label ID="Title" Anchor="R,T" Style="FontNormal14" ColorSet="ShellOptionText" FontStyle="stroke" WrapWidth="140" String="LOC_MULTIPLAYER_LOBBY_GAMEMODES_OFFICIAL"/>
+			</Container>
+			<Stack ID="GameModeNamesStack" Size="auto,auto" StackGrowth="Bottom" Offset="145,0" Padding="1">
+			</Stack>
+		</Container>
+	</Instance>
+
+	<Instance Name="GameModeName">
+		<Container  Size="auto,auto" ID="Root">
+			<ScrollTextField ID="Description" Anchor="L,T" Offset="0,0" Style="FontNormal14" ColorSet="BodyTextCool" FontStyle="stroke" Size="160,14"  String="Game Mode Name"/>
 		</Container>
 	</Instance>
 

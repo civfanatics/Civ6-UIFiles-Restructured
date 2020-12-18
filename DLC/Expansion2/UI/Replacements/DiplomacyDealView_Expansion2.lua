@@ -155,6 +155,7 @@ function PopulateDealResources(player: table, iconList: table)
 						-- Show/hide unacceptable item notification
 						uiIcon.UnacceptableIcon:SetHide(not pDealItem:IsUnacceptable());
 						uiIcon.RemoveButton:SetHide(false);
+						uiIcon.StopAskingButton:SetHide(true);
 
 						uiIcon.RemoveButton:RegisterCallback(Mouse.eLClick, function(void1, void2, self) OnRemoveDealItem(player, dealItemID, self); end);
 						uiIcon.SelectButton:RegisterCallback(Mouse.eRClick, function(void1, void2, self) OnRemoveDealItem(player, dealItemID, self); end);
@@ -216,6 +217,7 @@ function PopulateAvailableFavor(player: table, iconList: table)
 				uiIcon.SelectButton:RegisterCallback( Mouse.eLClick, function() OnClickAvailableOneTimeFavor(player, ms_DefaultOneTimeFavorAmount); end );
 				uiIcon.SelectButton:RegisterCallback( Mouse.eLClick, function() OnClickAvailableOneTimeFavor(player, ms_DefaultOneTimeFavorAmount); end );
 				uiIcon.SelectButton:SetDisabled(false);
+				uiIcon.StopAskingButton:SetHide(true);
 				uiIcon.Icon:SetColor(1,1,1);
 
 				iAvailableItemCount = iAvailableItemCount + 1;

@@ -28,6 +28,12 @@ local LAUNCH_BAR_PADDING				:number = 50;
 local STARTING_TRACKER_OPTIONS_OFFSET	:number = 75;
 local WORLD_TRACKER_PANEL_WIDTH			:number = 300;
 local MINIMAP_PADDING					:number = 40;
+local COLLAPSED_MINIMAP_SIZE			:number = 30;
+
+local UNITS_PANEL_MAX_HEIGHT			:number = 200;
+local UNITS_PANEL_MIN_HEIGHT			:number = 96;
+local UNITS_PANEL_PADDING				:number = 55;
+local TOPBAR_PADDING					:number = 100;
 
 
 -- ===========================================================================
@@ -42,12 +48,17 @@ local m_hideAll					:boolean = false;
 local m_hideChat				:boolean = false;
 local m_hideCivics				:boolean = false;
 local m_hideResearch			:boolean = false;
+local m_hideUnitList			:boolean = true;
 
 local m_dropdownExpanded		:boolean = false;
 local m_unreadChatMsgs			:number  = 0;		-- number of chat messages unseen due to the chat panel being hidden.
 
 local m_researchInstance		:table	 = {};		-- Single instance wired up for the currently being researched tech
 local m_civicsInstance			:table	 = {};		-- Single instance wired up for the currently being researched civic
+local m_unitListInstance		:table	 = {};
+
+local m_unitEntryIM				:table	 = {};
+
 local m_CachedModifiers			:table	 = {};
 
 local m_currentResearchID		:number = -1;
@@ -62,6 +73,11 @@ local m_isMinimapCollapsed		:boolean = false;
 local m_isChatExpanded			:boolean = false;
 local m_startingChatSize		:number = 0;
 
+local m_unitSearchString		:string = "";
+local m_remainingRoom			:number = 0;
+
+local m_uiCheckBoxes			:table = {Controls.ChatCheck, Controls.CivicsCheck, Controls.ResearchCheck, Controls.UnitCheck};
+
 -- ===========================================================================
 --	FUNCTIONS
 -- ===========================================================================
@@ -73,6 +89,7 @@ local m_startingChatSize		:number = 0;
 function IsChatHidden()			return m_hideChat;		end
 function IsResearchHidden()		return m_hideResearch;	end
 function IsCivicsHidden()		return m_hideCivics;	end
+function IsUnitListHidden()		return m_hideUnitList;	end
 
 -- ===========================================================================
 --	Checks all panels, static and dynamic as to whether or not they are hidden.
@@ -92,7 +109,7 @@ end
 -- ===========================================================================
 function RealizeEmptyMessage()	
 	-- First a quick check if all native panels are hidden.
-	if m_hideChat and m_hideCivics and m_hideResearch then		
+	if m_hideChat and m_hideCivics and m_hideResearch and m_hideUnitList then		
 		local isAllPanelsHidden:boolean = IsAllPanelsHidden();	-- more expensive iteration
 		Controls.EmptyPanel:SetHide( isAllPanelsHidden==false );	
 	else
@@ -112,7 +129,51 @@ function ToggleDropdown()
 		m_dropdownExpanded = true;
 		Controls.DropdownAnim:SetToBeginning();
 		Controls.DropdownAnim:Play();
+		CheckEnoughRoom();
+		AutoSizeUnitsList();
 	end
+end
+
+-- ===========================================================================
+function CheckEnoughRoom()
+	local worldTrackerStackSize : number = Controls.WorldTrackerHeader:GetSizeY();
+	if (not m_researchInstance.MainPanel:IsHidden())then
+		worldTrackerStackSize = worldTrackerStackSize + m_researchInstance.MainPanel:GetSizeY();
+	end
+	if (not m_civicsInstance.MainPanel:IsHidden())then
+		worldTrackerStackSize = worldTrackerStackSize + m_civicsInstance.MainPanel:GetSizeY();
+	end
+	if (not m_unitListInstance.MainPanel:IsHidden())then
+		worldTrackerStackSize = worldTrackerStackSize + m_unitListInstance.MainPanel:GetSizeY();
+	end
+	if (not Controls.ChatPanel:IsHidden())then
+		worldTrackerStackSize = worldTrackerStackSize + Controls.ChatPanel:GetSizeY();
+	end
+	local _, screenY : number = UIManager:GetScreenSizeVal();
+	local uiMinimap : table  = ContextPtr:LookUpControl("/InGame/MinimapPanel/MinimapContainer");
+	local crisisSize : number = 50 * m_numEmergencies;
+
+	local occupiedSpace : number = worldTrackerStackSize + GetTopBarPadding() + crisisSize;
+	if(uiMinimap ~= nil and not m_isMinimapCollapsed)then
+		occupiedSpace = occupiedSpace + uiMinimap:GetSizeY() + GetMinimapPadding();
+	end
+
+	if(occupiedSpace + UNITS_PANEL_MIN_HEIGHT >= screenY)then
+		for k, v in ipairs(m_uiCheckBoxes)do
+			if(not v:IsChecked())then
+				v:SetDisabled(true);
+				v:LocalizeAndSetToolTip("LOC_WORLDTRACKER_NO_ROOM");
+			end
+		end
+	else
+		for k, v in ipairs(m_uiCheckBoxes)do
+			if(not v:IsChecked())then
+				v:SetDisabled(false);
+				v:LocalizeAndSetToolTip("");
+			end
+		end
+	end
+	m_remainingRoom = screenY - occupiedSpace;
 end
 
 -- ===========================================================================
@@ -243,6 +304,8 @@ function UpdateResearchPanel( isHideResearch:boolean )
 	if m_isChatExpanded then
 		ResizeExpandedChatPanel();
 	end
+	CheckEnoughRoom();
+	AutoSizeUnitsList();
 end
 
 -- ===========================================================================
@@ -304,6 +367,219 @@ function UpdateCivicsPanel(hideCivics:boolean)
 	if m_isChatExpanded then
 		ResizeExpandedChatPanel();
 	end
+
+	CheckEnoughRoom();
+	AutoSizeUnitsList();
+end
+
+-- ===========================================================================
+function UpdateUnitListPanel(hideUnitList:boolean)
+
+	-- If not an actual player (observer, tuner, etc...) then we're done here...
+	local ePlayer		:number = Game.GetLocalPlayer();
+	if (ePlayer == PlayerTypes.NONE or ePlayer == PlayerTypes.OBSERVER) then
+		return;
+	end
+	local pPlayerConfig : table = PlayerConfigurations[ePlayer];
+
+	if not HasCapability("CAPABILITY_UNIT_LIST") or (ePlayer ~= PlayerTypes.NONE and not pPlayerConfig:IsAlive()) then
+		hideUnitList = true;
+		Controls.CivicsCheck:SetHide(true);
+		m_unitListInstance.MainPanel:SetHide(true);
+		return;
+	end
+	if hideUnitList ~= nil and hideUnitList ~= m_hideUnitList then
+		LuaEvents.ChatPanel_OnResetDraggedChatPanel(); --Reset the chat panel so the mouse offset is correct for dragging
+	end
+
+	if(hideUnitList ~= nil) then m_hideUnitList = hideUnitList; end
+	
+	m_unitEntryIM:ResetInstances();
+
+	m_unitListInstance.MainPanel:SetHide(m_hideUnitList); 
+	Controls.UnitCheck:SetCheck(not m_hideUnitList);
+
+	local pPlayer : table = Players[ePlayer];
+	local pPlayerUnits : table = pPlayer:GetUnits();
+	local numUnits : number = pPlayerUnits:GetCount();
+
+	if(pPlayerUnits:GetCount() > 0)then
+		m_unitListInstance.NoUnitsLabel:SetHide(true);
+		m_unitListInstance.UnitsSearchBox:LocalizeAndSetToolTip("LOC_WORLDTRACKER_UNITS_SEARCH_TT");
+
+		local militaryUnits : table = {};
+		local navalUnits	: table = {};
+		local airUnits		: table = {};
+		local supportUnits	: table = {};
+		local civilianUnits : table = {};
+		local tradeUnits	: table = {};
+
+		for i, pUnit in pPlayerUnits:Members() do
+			if((m_unitSearchString ~= "" and string.find(Locale.ToUpper(pUnit:GetName()), m_unitSearchString) ~= nil) or m_unitSearchString == "")then
+				local pUnitInfo : table = GameInfo.Units[pUnit:GetUnitType()];
+
+				if pUnitInfo.MakeTradeRoute == true then
+					table.insert(tradeUnits, pUnit);
+				elseif pUnit:GetCombat() == 0 and pUnit:GetRangedCombat() == 0 then
+					-- if we have no attack strength we must be civilian
+					table.insert(civilianUnits, pUnit);
+				elseif pUnitInfo.Domain == "DOMAIN_LAND" then
+					table.insert(militaryUnits, pUnit);
+				elseif pUnitInfo.Domain == "DOMAIN_SEA" then
+					table.insert(navalUnits, pUnit);
+				elseif pUnitInfo.Domain == "DOMAIN_AIR" then
+					table.insert(airUnits, pUnit);
+				end
+			end
+		end
+
+		-- Alphabetize groups
+		local sortFunc = function(a, b) 
+			local aType:string = GameInfo.Units[a:GetUnitType()].UnitType;
+			local bType:string = GameInfo.Units[b:GetUnitType()].UnitType;
+			return aType < bType;
+		end
+		table.sort(militaryUnits, sortFunc);
+		table.sort(navalUnits, sortFunc);
+		table.sort(airUnits, sortFunc);
+		table.sort(civilianUnits, sortFunc);
+		table.sort(tradeUnits, sortFunc);
+
+		-- Add units by sorted groups
+		for _, pUnit in ipairs(militaryUnits) do	AddUnitToUnitList( pUnit );	end
+		for _, pUnit in ipairs(navalUnits) do 		AddUnitToUnitList( pUnit );	end
+		for _, pUnit in ipairs(airUnits) do			AddUnitToUnitList( pUnit );	end	
+		for _, pUnit in ipairs(supportUnits) do		AddUnitToUnitList( pUnit );	end
+		for _, pUnit in ipairs(civilianUnits) do	AddUnitToUnitList( pUnit );	end
+		for _, pUnit in ipairs(tradeUnits) do		AddUnitToUnitList( pUnit );	end
+	else
+		m_unitListInstance.NoUnitsLabel:SetHide(false);
+		m_unitListInstance.UnitsSearchBox:SetDisabled(true);
+		m_unitListInstance.UnitsSearchBox:LocalizeAndSetToolTip("LOC_WORLDTRACKER_NO_UNITS");
+	end
+
+	RealizeEmptyMessage();
+	RealizeStack();
+
+	if m_isChatExpanded then
+		ResizeExpandedChatPanel();
+	end
+end
+
+-- ===========================================================================
+function AutoSizeUnitsList()
+	local pPlayer : table = Players[Game.GetLocalPlayer()];
+	local pPlayerUnits : table = pPlayer:GetUnits();
+	
+	if(m_remainingRoom > UNITS_PANEL_MAX_HEIGHT)then
+		m_remainingRoom = UNITS_PANEL_MAX_HEIGHT;
+	elseif(m_remainingRoom < UNITS_PANEL_MIN_HEIGHT)then
+		m_remainingRoom = UNITS_PANEL_MIN_HEIGHT;
+	end
+
+	local desiredUnitsPanelSize : number = m_unitListInstance.UnitStack:GetSizeY() + UNITS_PANEL_PADDING;
+
+	if(desiredUnitsPanelSize > m_remainingRoom)then
+		desiredUnitsPanelSize = m_remainingRoom;
+	elseif(pPlayerUnits:GetCount() <= 0 or desiredUnitsPanelSize <= UNITS_PANEL_MIN_HEIGHT)then
+		desiredUnitsPanelSize = UNITS_PANEL_MIN_HEIGHT;
+	end
+
+	m_unitListInstance.MainPanel:SetSizeY(desiredUnitsPanelSize);
+end
+
+-- ===========================================================================
+function AddUnitToUnitList(pUnit:table)
+	local uiUnitEntry : table = m_unitEntryIM:GetInstance();
+
+	local formation : number = pUnit:GetMilitaryFormation();
+	local suffix : string = "";
+	local unitType = pUnit:GetUnitType();
+	local unitInfo : table = GameInfo.Units[unitType];
+	if (unitInfo.Domain == "DOMAIN_SEA") then
+		if (formation == MilitaryFormationTypes.CORPS_FORMATION) then
+			suffix = " " .. Locale.Lookup("LOC_HUD_UNIT_PANEL_FLEET_SUFFIX");
+		elseif (formation == MilitaryFormationTypes.ARMY_FORMATION) then
+			suffix = " " .. Locale.Lookup("LOC_HUD_UNIT_PANEL_ARMADA_SUFFIX");
+		end
+	else
+		if (formation == MilitaryFormationTypes.CORPS_FORMATION) then
+			suffix = " " .. Locale.Lookup("LOC_HUD_UNIT_PANEL_CORPS_SUFFIX");
+		elseif (formation == MilitaryFormationTypes.ARMY_FORMATION) then
+			suffix = " " .. Locale.Lookup("LOC_HUD_UNIT_PANEL_ARMY_SUFFIX");
+		end
+	end
+
+	local name : string = pUnit:GetName();
+	local uniqueName : string = Locale.Lookup( name ) .. suffix;
+
+	local tooltip : string = "";
+	local pUnitDef = GameInfo.Units[unitType];
+	if pUnitDef then
+		local unitTypeName:string = pUnitDef.Name;
+		if name ~= unitTypeName then
+			tooltip = uniqueName .. " " .. Locale.Lookup("LOC_UNIT_UNIT_TYPE_NAME_SUFFIX", unitTypeName);
+		end
+	end
+	uiUnitEntry.Button:SetToolTipString(tooltip);
+
+	uiUnitEntry.Button:SetText( Locale.ToUpper(uniqueName) );
+	uiUnitEntry.Button:RegisterCallback(Mouse.eLClick, function() OnUnitEntryClicked(pUnit:GetID()) end);
+
+	-- Update unit icon
+	local iconInfo:table, iconShadowInfo:table = GetUnitIcon(pUnit, 22, true);
+	if iconInfo.textureSheet then
+		uiUnitEntry.UnitTypeIcon:SetTexture( iconInfo.textureOffsetX, iconInfo.textureOffsetY, iconInfo.textureSheet );
+	end
+
+	-- Update status icon
+	local activityType:number = UnitManager.GetActivityType(pUnit);
+	if activityType == ActivityTypes.ACTIVITY_SLEEP then
+		SetUnitEntryStatusIcon(uiUnitEntry, "ICON_STATS_SLEEP");
+	elseif activityType == ActivityTypes.ACTIVITY_HOLD then
+		SetUnitEntryStatusIcon(uiUnitEntry, "ICON_STATS_SKIP");
+	elseif activityType ~= ActivityTypes.ACTIVITY_AWAKE and pUnit:GetFortifyTurns() > 0 then
+		SetUnitEntryStatusIcon(uiUnitEntry, "ICON_DEFENSE");
+	else
+		uiUnitEntry.UnitStatusIcon:SetHide(true);
+	end
+
+	-- Update entry color if unit cannot take any action
+	if pUnit:IsReadyToMove() then
+		uiUnitEntry.Button:GetTextControl():SetColorByName("UnitPanelTextCS");
+		uiUnitEntry.UnitTypeIcon:SetColorByName("UnitPanelTextCS");
+	else
+		uiUnitEntry.Button:GetTextControl():SetColorByName("UnitPanelTextDisabledCS");
+		uiUnitEntry.UnitTypeIcon:SetColorByName("UnitPanelTextDisabledCS");
+	end
+end
+
+-- ===========================================================================
+function SetUnitEntryStatusIcon(unitEntry:table, icon:string)
+	unitEntry.UnitStatusIcon:SetIcon(icon);
+end
+
+-- ===========================================================================
+function OnUnitEntryClicked(unitID:number)
+	local playerUnits:table = Players[Game.GetLocalPlayer()]:GetUnits();
+	if playerUnits then
+		local selectedUnit:table = playerUnits:FindID(unitID);
+		if selectedUnit then
+			UI.LookAtPlot(selectedUnit:GetX(), selectedUnit:GetY());
+			UI.SelectUnit( selectedUnit );
+		end
+	end
+end
+
+-- ===========================================================================
+function OnUnitListSearch()
+	local searchBoxString : string = m_unitListInstance.UnitsSearchBox:GetText();
+	if(searchBoxString == nil)then
+		m_unitSearchString = "";
+	else
+		m_unitSearchString = string.upper(searchBoxString);
+	end
+	UpdateUnitListPanel();
 end
 
 -- ===========================================================================
@@ -313,7 +589,8 @@ function UpdateChatPanel(hideChat:boolean)
 	Controls.ChatCheck:SetCheck(not m_hideChat);
 	RealizeEmptyMessage();
 	RealizeStack();
-
+	CheckEnoughRoom();
+	AutoSizeUnitsList();
 	CheckUnreadChatMessageCount();
 end
 
@@ -367,6 +644,8 @@ function Refresh()
 	end	
 
 	UpdateCivicsPanel();
+
+	UpdateUnitListPanel();
 
 	-- Hide world tracker by default if there are no tracker options enabled
 	if IsAllPanelsHidden() then
@@ -575,6 +854,7 @@ function OnGameDebugReturn(context:string, contextTable:table)
 		-- Don't call refresh, use cached data from last hotload.
 		UpdateResearchPanel();
 		UpdateCivicsPanel();
+		UpdateUnitListPanel();
 	end
 end
 
@@ -609,6 +889,8 @@ end
 function OnChatPanel_OpenExpandedPanels()	
 	m_isChatExpanded = true;
 	ResizeExpandedChatPanel();	
+	CheckEnoughRoom();
+	AutoSizeUnitsList();
 end
 
 -- ===========================================================================
@@ -616,6 +898,15 @@ function OnChatPanel_CloseExpandedPanels()
 	m_isChatExpanded = false;
 	Controls.ChatPanel:SetSizeY( CHAT_COLLAPSED_SIZE );	
 	RealizeStack();	
+	CheckEnoughRoom();
+	AutoSizeUnitsList();
+end
+
+-- ===========================================================================
+function OnChatResizeFinished(newChatPanelSize : number)
+	Controls.ChatPanel:SetSizeY(newChatPanelSize);
+	CheckEnoughRoom();
+	AutoSizeUnitsList();
 end
 
 -- ===========================================================================
@@ -665,11 +956,34 @@ function OnSetMinimapCollapsed(isMinimapCollapsed:boolean)
 	if m_isChatExpanded then
 		ResizeExpandedChatPanel();
 	end
+	CheckEnoughRoom();
+	AutoSizeUnitsList();
 end
 
 -- ===========================================================================
 function OnSetNumberOfEmergencies(numEmergencies:number)
 	m_numEmergencies = numEmergencies;
+end
+
+-- ===========================================================================
+function OnUnitAddedToMap(playerID:number, unitID:number)
+	if(playerID == Game.GetLocalPlayer())then
+		UpdateUnitListPanel();
+	end
+end
+
+-- ===========================================================================
+function OnUnitMovementPointsChanged(playerID:number, unitID:number)
+	if(playerID == Game.GetLocalPlayer())then
+		UpdateUnitListPanel();
+	end
+end
+
+-- ===========================================================================
+function OnUnitRemovedFromMap(playerID:number, unitID:number)
+	if(playerID == Game.GetLocalPlayer())then
+		UpdateUnitListPanel();
+	end
 end
 
 -- ===========================================================================
@@ -717,6 +1031,10 @@ function GetMinimapPadding()
 	return MINIMAP_PADDING;
 end
 
+function GetTopBarPadding()
+	return TOPBAR_PADDING;
+end
+
 -- ===========================================================================
 function Subscribe()
 	Events.CityInitialized.Add(OnCityInitialized);
@@ -733,6 +1051,9 @@ function Subscribe()
 	Events.GameCoreEventPublishComplete.Add( OnDirtyCheck ); --This event is raised directly after a series of gamecore events.
 	Events.CityWorkerChanged.Add( OnUpdateDueToCity );
 	Events.CityFocusChanged.Add( OnUpdateDueToCity );
+	Events.UnitAddedToMap.Add( OnUnitAddedToMap );
+	Events.UnitMovementPointsChanged.Add( OnUnitMovementPointsChanged );
+	Events.UnitRemovedFromMap.Add( OnUnitRemovedFromMap );
 
 	LuaEvents.LaunchBar_Resize.Add(OnLaunchBarResized);
 	
@@ -748,6 +1069,7 @@ function Subscribe()
 	LuaEvents.TutorialGoals_Hiding.Add(					OnTutorialGoalsHiding );
 	LuaEvents.ChatPanel_OpenExpandedPanels.Add(			OnChatPanel_OpenExpandedPanels);
 	LuaEvents.ChatPanel_CloseExpandedPanels.Add(		OnChatPanel_CloseExpandedPanels);
+	LuaEvents.WorldTracker_ChatResizeFinished.Add(		OnChatResizeFinished);
 	LuaEvents.WorldTracker_SetEmergencies.Add(			OnSetNumberOfEmergencies);
 	LuaEvents.WorldTracker_OnScreenResize.Add(			ResizeExpandedChatPanel );
 	LuaEvents.WorldTracker_OnSetMinimapCollapsed.Add(	OnSetMinimapCollapsed );
@@ -769,6 +1091,9 @@ function Unsubscribe()
 	Events.GameCoreEventPublishComplete.Remove( OnDirtyCheck ); --This event is raised directly after a series of gamecore events.
 	Events.CityWorkerChanged.Remove( OnUpdateDueToCity );
 	Events.CityFocusChanged.Remove( OnUpdateDueToCity );
+	Events.UnitAddedToMap.Remove( OnUnitAddedToMap );
+	Events.UnitMovementPointsChanged.Remove( OnUnitMovementPointsChanged );
+	Events.UnitRemovedFromMap.Remove( OnUnitRemovedFromMap );
 
 	LuaEvents.LaunchBar_Resize.Remove(OnLaunchBarResized);
 	
@@ -784,6 +1109,7 @@ function Unsubscribe()
 	LuaEvents.TutorialGoals_Hiding.Remove(					OnTutorialGoalsHiding );
 	LuaEvents.ChatPanel_OpenExpandedPanels.Remove(			OnChatPanel_OpenExpandedPanels);
 	LuaEvents.ChatPanel_CloseExpandedPanels.Remove(			OnChatPanel_CloseExpandedPanels);
+	LuaEvents.WorldTracker_ChatResizeFinished.Remove(		OnChatResizeFinished);
 	LuaEvents.WorldTracker_SetEmergencies.Remove(			OnSetNumberOfEmergencies);
 	LuaEvents.WorldTracker_OnScreenResize.Remove(			ResizeExpandedChatPanel );
 	LuaEvents.WorldTracker_OnSetMinimapCollapsed.Remove(	OnSetMinimapCollapsed );
@@ -820,8 +1146,11 @@ function Initialize()
 	-- Create semi-dynamic instances; hack: change parent back to self for ordering:
 	ContextPtr:BuildInstanceForControl( "ResearchInstance", m_researchInstance, Controls.PanelStack );
 	ContextPtr:BuildInstanceForControl( "CivicInstance",	m_civicsInstance,	Controls.PanelStack );	
+	ContextPtr:BuildInstanceForControl( "UnitListInstance", m_unitListInstance, Controls.PanelStack );
 	m_researchInstance.IconButton:RegisterCallback(	Mouse.eLClick,	function() LuaEvents.WorldTracker_OpenChooseResearch(); end);
 	m_civicsInstance.IconButton:RegisterCallback(	Mouse.eLClick,	function() LuaEvents.WorldTracker_OpenChooseCivic(); end);
+
+	m_unitEntryIM = InstanceManager:new( "UnitListEntry", "Button", m_unitListInstance.UnitStack);
 
 	Controls.ChatPanel:ChangeParent( Controls.PanelStack );
 	Controls.TutorialGoals:ChangeParent( Controls.PanelStack );	
@@ -840,12 +1169,14 @@ function Initialize()
 	Controls.ResearchCheck:SetCheck(true);
 	Controls.ToggleAllButton:SetCheck(true);
 
-	Controls.ChatCheck:RegisterCheckHandler(						function() UpdateChatPanel(not m_hideChat); end);
-	Controls.CivicsCheck:RegisterCheckHandler(						function() UpdateCivicsPanel(not m_hideCivics); end);
-	Controls.ResearchCheck:RegisterCheckHandler(					function() UpdateResearchPanel(not m_hideResearch); end);
+	Controls.ChatCheck:RegisterCheckHandler(						function() UpdateChatPanel(not m_hideChat);end);
+	Controls.CivicsCheck:RegisterCheckHandler(						function() UpdateCivicsPanel(not m_hideCivics);end);
+	Controls.ResearchCheck:RegisterCheckHandler(					function() UpdateResearchPanel(not m_hideResearch);end);
+	Controls.UnitCheck:RegisterCheckHandler(						function() UpdateUnitListPanel(not m_hideUnitList);end);
 	Controls.ToggleAllButton:RegisterCheckHandler(					function() ToggleAll(not Controls.ToggleAllButton:IsChecked()) end);
 	Controls.ToggleDropdownButton:RegisterCallback(	Mouse.eLClick, ToggleDropdown);
 	Controls.WorldTrackerAlpha:RegisterEndCallback( OnWorldTrackerAnimationFinished );
+	m_unitListInstance.UnitsSearchBox:RegisterStringChangedCallback( OnUnitListSearch );
 
 	m_startingChatSize = Controls.ChatPanel:GetSizeY();
 end

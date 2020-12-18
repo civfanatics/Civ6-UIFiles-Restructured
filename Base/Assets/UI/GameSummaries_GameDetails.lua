@@ -57,6 +57,7 @@ g_ReportRowManager = InstanceManager:new("ReportRowInstance", "Root", Controls.R
 g_ReportCellManagers ={}
 g_StatisticsManagers = {};
 
+local m_GameModeNamesIM	= InstanceManager:new("GameModeNameInstance", "GameModeName", Controls.GameModeNamesStack);
 
 g_GameId = nil;				-- Hall of Fame Game Id for getting details and graphs.
 g_GameData = nil;
@@ -1035,6 +1036,10 @@ function Overview_PopulateStatisticsForContext()
 	g_StatisticsBlockManager:ResetInstances();
 	g_StatisticsManagers = {};
 
+	-- Clear GameMode name instances.
+	m_GameModeNamesIM:ResetInstances();
+	local enabledGameModesMetaData : string = "";
+
 	-- Collect data points.
 	local indexed_datapoints = {};
 	local datapoints;
@@ -1045,6 +1050,9 @@ function Overview_PopulateStatisticsForContext()
 	end
 	for i,v in ipairs(datapoints) do
 		indexed_datapoints[v.DataPoint] = v;
+		if(v.DataPoint == "EnabledGameModes") then
+			enabledGameModesMetaData = v.ValueString;
+		end
 	end
 
 	-- Correlate Statistics with data points
@@ -1135,7 +1143,22 @@ function Overview_PopulateStatisticsForContext()
 			cat_instance.RootStack:ReprocessAnchoring();
 		end
 	end
-	
+
+	--Populate the enabled game modes section from our metadata
+	if(enabledGameModesMetaData ~= "" and enabledGameModesMetaData ~= nil)then
+		local enabledGameModesNames : table = Modding.GetGameModesFromConfigurationString(enabledGameModesMetaData);
+		if(enabledGameModesNames ~= nil and #enabledGameModesNames > 0)then
+			Controls.GameModesStack:SetHide(false);
+			table.sort(enabledGameModesNames, function(a,b) return Locale.Compare(a.Name,b.Name) == -1 end);
+			for i,enabledGameMode in ipairs(enabledGameModesNames)do
+				local uiGameModeName : table = m_GameModeNamesIM:GetInstance();
+				uiGameModeName.GameModeName:SetText(enabledGameMode.Name);
+			end
+		end
+	else
+		Controls.GameModesStack:SetHide(true);
+	end
+
 	Controls.StatisticsStack:CalculateSize();
 	Controls.StatisticsStack:ReprocessAnchoring();
 end

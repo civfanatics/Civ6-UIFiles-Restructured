@@ -1,4 +1,4 @@
--- Copyright 2018-2019, Firaxis Games
+-- Copyright 2018-2020, Firaxis Games
 
 include("InstanceManager");
 include("PopupDialog")
@@ -919,6 +919,16 @@ function MoveGreatWork( kSrcInstance:table, kDestInstance:table )
 end
 
 -- ===========================================================================
+function GetDestBuilding()
+	return m_dest_building;
+end
+
+-- ===========================================================================
+function GetDestCity()
+	return m_dest_city;
+end
+
+-- ===========================================================================
 function ClearGreatWorkTransfer()
 	m_GreatWorkSelected = nil;
 	m_kViableDropTargets = {};
@@ -1041,6 +1051,11 @@ function OnGreatWorkMoved(fromCityOwner, fromCityID, toCityOwner, toCityID, buil
 end
 
 -- ===========================================================================
+function IsDuringMove()
+	return m_during_move;
+end
+
+-- ===========================================================================
 --	Hot Reload Related Events
 -- ===========================================================================
 function OnInit(isReload:boolean)
@@ -1112,4 +1127,10 @@ function Initialize()
 	Events.LocalPlayerTurnEnd.Add(OnLocalPlayerTurnEnd);
 
 end
+
+-- This wildcard include will include all loaded files beginning with "GreatWorksOverview_"
+-- This method replaces the uses of include("GreatWorksOverview") in files that want to override 
+-- functions from this file. If you're implementing a new "GreatWorksOverview_" file DO NOT include this file.
+include("GreatWorksOverview_", true);
+
 Initialize();

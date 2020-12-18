@@ -542,7 +542,7 @@ function RefreshPlayerSlots()
 	Controls.BasicPlacardContainer:DestroyAllChildren();
 	Controls.AdvancedTooltipContainer:DestroyAllChildren();
 
-	local iSidebarSize = Controls.CreateGameWindow:GetSizeY();
+	local iSidebarSize = Controls.CreateGameWindow:GetSizeY() - 100;
 	if iSidebarSize > MAX_SIDEBAR_Y then
 		iSidebarSize = MAX_SIDEBAR_Y;
 	end

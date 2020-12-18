@@ -401,7 +401,6 @@ function OnDragResizer()
 		--How far has the mouse traveled while dragging?
 		local yDiff		: number = mouseY - m_StartingMouseY;
 		Controls.ResetChatButton:SetHide(false);
-		LuaEvents.WorldTracker_OnScreenResize();
 		yDiff = math.clamp(yDiff, 0, Controls.ExpandedChatPanel:GetSizeY()-(m_ChatStartSizeY));
 		Controls.ChatPanel:SetSizeY(m_ChatStartSizeY + yDiff);
 		Controls.ChatPanelBG:SetSizeY(m_ChatStartSizeY + yDiff);
@@ -421,7 +420,14 @@ function OnDragResizer()
 		else
 			m_isChatPanelFilled = false;
 		end
+		LuaEvents.WorldTracker_OnScreenResize();
 	end
+end
+
+-------------------------------------------------
+-------------------------------------------------
+function OnFinishResizing()
+	LuaEvents.WorldTracker_ChatResizeFinished(Controls.ChatPanel:GetSizeY());
 end
 
 -------------------------------------------------
@@ -474,6 +480,7 @@ function OnResetChatButton()
 	Controls.ChatEntryStack:CalculateSize();
 	m_StartingMouseX, m_StartingMouseY = Controls.DragButton:GetScreenOffset();
 	m_StartingMouseY = m_StartingMouseY + 24;
+	LuaEvents.WorldTracker_ChatResizeFinished(m_ChatStartSizeY);
 end
 
 -------------------------------------------------
@@ -1043,6 +1050,7 @@ function Initialize()
 			end
 		end);
 	Controls.DragSizer:RegisterCallback( Drag.eDrag, OnDragResizer);
+	Controls.DragSizer:RegisterCallback( Drag.eDrop, OnFinishResizing);
 	Controls.ResetChatButton:RegisterCallback( Mouse.eLClick, OnResetChatButton );
 
 	ContextPtr:SetInputHandler(InputHandler, true);

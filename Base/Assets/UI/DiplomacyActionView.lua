@@ -529,8 +529,12 @@ function OnSelectConversationDiplomacyStatement(key)
 					if (key == "CHOICE_IGNORE") then
 						DiplomacyManager.AddResponse(ms_ActiveSessionID, Game.GetLocalPlayer(), "RESPONSE_IGNORE");
 					else
+						if(key == "CHOICE_STOP_ASKING")then
+							DiplomacyManager.AddResponse(ms_ActiveSessionID, Game.GetLocalPlayer(), "REJECTED_PERMANENT");
+						else
 							-- Just pass the choice key through as a response string.
 							DiplomacyManager.AddResponse(ms_ActiveSessionID, Game.GetLocalPlayer(), key);
+						end
 					end
 				end
 			end

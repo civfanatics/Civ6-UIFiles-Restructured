@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Context Name="StateTransition">
+		<!-- Same layout placement to the fallback area of the loading screen -->
+		<Box					ID="Background"				Color="0,0,0,255"				Anchor="C,C" Size="parent,parent" ConsumeMouse="1">
+			<TextButton	ID="Message"	Anchor="C,C" Align="center" Style="FontFlair20"	SmallCapsType="EveryWord" SmallCaps="26" 	String="{LOC_LOADING_PLEASE_WAIT:upper}" Color="200,200,200,255"/>
+		</Box>
+</Context>

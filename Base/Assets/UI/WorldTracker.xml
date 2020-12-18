@@ -57,6 +57,9 @@
           <Container	ID="ChatCheckButton" Size="auto,auto" Anchor="R,T">
             <CheckBox	ID="ChatCheck"				Anchor="R,T"	Style="WorldTrackerCheckBox" TextOffset="-5" String="LOC_HIDE_CHAT_PANEL" WrapWidth="180" Align="Right"/>
           </Container>
+					<Container	ID="UnitCheckButton" Size="auto,auto" Anchor="R,T">
+						<CheckBox	ID="UnitCheck"				Anchor="R,T"	Style="WorldTrackerCheckBox" TextOffset="-5" String="LOC_WORLDTRACKER_UNIT_LIST" WrapWidth="180" Align="Right"/>
+					</Container>
         </Stack>
       </Grid>
     </SlideAnim>
@@ -70,5 +73,6 @@
 
 	<Include File="WorldTrackerCivic"/>
 	<Include File="WorldTrackerResearch"/>
+	<Include File="WorldTrackerUnits"/>
 
 </Context>

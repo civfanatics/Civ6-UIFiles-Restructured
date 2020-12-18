@@ -134,6 +134,9 @@ function OnShow()
 	
 	-- Clear button callbacks until loading is complete.
 	ClearButtonCallbacks();
+
+	-- Signal to a potentially raised state transition context that we're up (so it can hide).
+	LuaEvents.Lower_State_Transition("LoadScreen");
 end
 
 -- ===========================================================================

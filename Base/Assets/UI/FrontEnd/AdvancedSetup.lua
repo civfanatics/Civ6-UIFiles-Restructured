@@ -5,6 +5,7 @@ include("InstanceManager");
 include("PlayerSetupLogic");
 include("Civ6Common");
 include("SupportFunctions");
+include("PopupDialog");
 
 -- ===========================================================================
 -- ===========================================================================
@@ -39,6 +40,8 @@ local m_AdvancedMode				:boolean = false;
 local m_RulesetData					:table = {};
 local m_BasicTooltipData			:table = {};
 local m_WorldBuilderImport          :boolean = false;
+
+local m_pCityStateWarningPopup:table = PopupDialog:new("CityStateWarningPopup");
 
 -- ===========================================================================
 -- Override hiding game setup to release simplified instances.
@@ -560,6 +563,98 @@ function CreateMultiSelectWindowDriver(o, parameter, parent)
 end
 
 -- ===========================================================================
+-- This driver is for launching the city-state picker in a separate window.
+-- ===========================================================================
+function CreateCityStatePickerDriver(o, parameter, parent)
+
+	if(parent == nil) then
+		parent = GetControlStack(parameter.GroupId);
+	end
+			
+	-- Get the UI instance
+	local c :object = g_ButtonParameterManager:GetInstance();	
+
+	local parameterId = parameter.ParameterId;
+	local button = c.Button;
+	button:RegisterCallback( Mouse.eLClick, function()
+		LuaEvents.CityStatePicker_Initialize(o.Parameters[parameterId], g_GameParameters);
+		Controls.CityStatePicker:SetHide(false);
+	end);
+	button:SetToolTipString(parameter.Description);
+
+	-- Store the root control, NOT the instance table.
+	g_SortingMap[tostring(c.ButtonRoot)] = parameter;
+
+	c.ButtonRoot:ChangeParent(parent);
+	if c.StringName ~= nil then
+		c.StringName:SetText(parameter.Name);
+	end
+
+	local cache = {};
+
+	local kDriver :table = {
+		Control = c,
+		Cache = cache,
+		UpdateValue = function(value, p)
+			local valueText = value and value.Name or nil;
+			local valueAmount :number = 0;
+		
+			if(valueText == nil) then
+				if(value == nil) then
+					if (parameter.UxHint ~= nil and parameter.UxHint == "InvertSelection") then
+						valueText = "LOC_SELECTION_EVERYTHING";
+					else
+						valueText = "LOC_SELECTION_NOTHING";
+					end
+				elseif(type(value) == "table") then
+					local count = #value;
+					if (parameter.UxHint ~= nil and parameter.UxHint == "InvertSelection") then
+						if(count == 0) then
+							valueText = "LOC_SELECTION_EVERYTHING";
+						elseif(count == #p.Values) then
+							valueText = "LOC_SELECTION_NOTHING";
+						else
+							valueText = "LOC_SELECTION_CUSTOM";
+							valueAmount = #p.Values - count;
+						end
+					else
+						if(count == 0) then
+							valueText = "LOC_SELECTION_NOTHING";
+						elseif(count == #p.Values) then
+							valueText = "LOC_SELECTION_EVERYTHING";
+						else
+							valueText = "LOC_SELECTION_CUSTOM";
+							valueAmount = count;
+						end
+					end
+				end
+			end				
+
+			if(cache.ValueText ~= valueText) or (cache.ValueAmount ~= valueAmount) then
+				local button = c.Button;			
+				button:LocalizeAndSetText(valueText, valueAmount);
+				cache.ValueText = valueText;
+				cache.ValueAmount = valueAmount;
+			end
+		end,
+		UpdateValues = function(values, p) 
+			-- Values are refreshed when the window is open.
+		end,
+		SetEnabled = function(enabled, p)
+			c.Button:SetDisabled(not enabled or #p.Values <= 1);
+		end,
+		SetVisible = function(visible)
+			c.ButtonRoot:SetHide(not visible);
+		end,
+		Destroy = function()
+			g_ButtonParameterManager:ReleaseInstance(c);
+		end,
+	};	
+
+	return kDriver;
+end
+
+-- ===========================================================================
 -- Override parameter behavior for basic setup screen.
 g_ParameterFactories["Ruleset"] = function(o, parameter)
 	
@@ -898,7 +993,12 @@ end
 
 function GameParameters_UI_CreateParameterDriver(o, parameter, ...)
 
-	if(parameter.Array) then
+	if(parameter.ParameterId == "CityStates") then
+		if GameConfiguration.IsWorldBuilderEditor() then
+			return nil;
+		end
+		return CreateCityStatePickerDriver(o, parameter);
+	elseif(parameter.Array) then
 		return CreateMultiSelectWindowDriver(o, parameter);
 	else
 		return GameParameters_UI_DefaultCreateParameterDriver(o, parameter, ...);
@@ -1230,10 +1330,38 @@ function OnStartButton()
 			Network.HostGame(ServerType.SERVER_TYPE_NONE);
 		end
 	else
-		-- No, start a normal game
-		UI.PlaySound("Set_View_3D");
-		Network.HostGame(ServerType.SERVER_TYPE_NONE);
+		if AreAllCityStateSlotsUsed() then
+			HostGame();
+		else
+			m_pCityStateWarningPopup:ShowOkCancelDialog(Locale.Lookup("LOC_CITY_STATE_PICKER_TOO_FEW_WARNING"), HostGame);
+		end
 	end
+end
+
+-- ===========================================================================
+function HostGame()
+	-- Start a normal game
+	UI.PlaySound("Set_View_3D");
+	Network.HostGame(ServerType.SERVER_TYPE_NONE);
+end
+
+-- ===========================================================================
+function AreAllCityStateSlotsUsed()
+	local kParameters:table = g_GameParameters["Parameters"];
+
+	if kParameters["CityStates"] == nil then
+		return true;
+	end
+
+	local cityStateSlots:number = kParameters["CityStateCount"].Value;
+	local totalCityStates:number = #kParameters["CityStates"].AllValues;
+	local excludedCityStates:number = kParameters["CityStates"].Value ~= nil and #kParameters["CityStates"].Value or 0;
+
+	if (totalCityStates - excludedCityStates) < cityStateSlots then
+		return false;
+	end
+
+	return true;
 end
 
 ----------------------------------------------------------------    
@@ -1383,6 +1511,7 @@ function OnShutdown()
 
 	LuaEvents.MapSelect_SetMapByValue.Remove( OnSetMapByValue );
 	LuaEvents.MultiSelectWindow_SetParameterValues.Remove(OnSetParameterValues);
+	LuaEvents.CityStatePicker_SetParameterValues.Remove(OnSetParameterValues);
 end
 
 -- ===========================================================================
@@ -1418,6 +1547,7 @@ function Initialize()
 
 	LuaEvents.MapSelect_SetMapByValue.Add( OnSetMapByValue );
 	LuaEvents.MultiSelectWindow_SetParameterValues.Add(OnSetParameterValues);
+	LuaEvents.CityStatePicker_SetParameterValues.Add(OnSetParameterValues);
 
 	Resize();
 end
