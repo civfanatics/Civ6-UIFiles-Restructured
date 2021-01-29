@@ -251,6 +251,7 @@ function GetDetails(data)
 
 		local valid_feature = false;
 		local valid_terrain = false;
+		local valid_resources = false;
 
 		-- Are there any improvements that specifically require this resource?
 		for row in GameInfo.Improvement_ValidResources() do
@@ -279,6 +280,16 @@ function GetDetails(data)
 				end
 				valid_terrain = not has_terrain or valid_terrain;
 				
+				-- if we match the resource in Improvement_ValidResources it's a get-out-of-jail-free card for feature and terrain checks
+				for inner_row in GameInfo.Improvement_ValidResources() do
+					if(inner_row.ImprovementType == improvementType) then
+						if(inner_row.ResourceType == resourceType) then
+							valid_resources = true;
+							break;
+						end
+					end
+				end
+
 				if( terrainType ~= nil and GameInfo.Terrains[terrainType].TerrainType  == "TERRAIN_COAST") then
 					if ("DOMAIN_SEA" == GameInfo.Improvements[improvementType].Domain) then
 						valid_terrain = true;
@@ -293,7 +304,7 @@ function GetDetails(data)
 					end
 				end
 
-				if(valid_feature == true and valid_terrain == true) then
+				if ((valid_feature == true and valid_terrain == true) or valid_resources == true) then
 					resourceTechType = GameInfo.Improvements[improvementType].PrereqTech;
 					break;
 				end
@@ -303,7 +314,7 @@ function GetDetails(data)
 		if (localPlayer ~= nil) then
 			local playerResources = localPlayer:GetResources();
 			if(playerResources:IsResourceVisible(resourceHash)) then
-				if (resourceTechType ~= nil and valid_feature == true and valid_terrain == true) then
+				if (resourceTechType ~= nil and ((valid_feature == true and valid_terrain == true) or valid_resources == true)) then
 					local playerTechs	= localPlayer:GetTechs();
 					local techType = GameInfo.Technologies[resourceTechType];
 					if (techType ~= nil and not playerTechs:HasTech(techType.Index)) then
@@ -314,7 +325,7 @@ function GetDetails(data)
 				table.insert(details, resourceString);
 			end
 		elseif m_isWorldBuilder then
-			if (resourceTechType ~= nil and valid_feature == true and valid_terrain == true) then
+			if (resourceTechType ~= nil and ((valid_feature == true and valid_terrain == true) or valid_resources == true)) then
 				local techType = GameInfo.Technologies[resourceTechType];
 				if (techType ~= nil) then
 					resourceString = resourceString .. "( " .. Locale.Lookup("LOC_TOOLTIP_REQUIRES") .. " " .. Locale.Lookup(techType.Name) .. ")[ENDCOLOR]";

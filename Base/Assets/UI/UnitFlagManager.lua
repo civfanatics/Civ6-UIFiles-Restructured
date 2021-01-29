@@ -69,9 +69,6 @@ m_LinkOffsets = {};
 	m_LinkOffsets[2] = {0,-20};
 	m_LinkOffsets[3] = {16,22};
 
-local HERO_GLOW_ROTATE_SPEED			:number = 15;
-local HERO_GLOW_ROTATE_REVERSE_SPEED	:number = -10;
-
 -- ===========================================================================
 --	VARIABLES
 -- ===========================================================================
@@ -91,9 +88,6 @@ local m_HeroGlowIM					:table = InstanceManager:new( "HeroGlowInstance", "Root" 
 local m_DirtyComponents				:table  = nil;
 local m_UnitFlagInstances			:table  = {};
 local m_isMapDeselectDisabled		:boolean= false;
-
--- Cached list of Hero unit flags to efficently update their animations without transversing all unit flags
-local m_HeroUnitFlagInstances		:table = {};
 
 -- COMMENTING OUT hstructures.
 -- These structures remained defined for the entire lifetime of the application.
@@ -205,7 +199,7 @@ function UnitFlag.destroy( self )
 			end
 
 			if(self.m_Instance.HeroGlowInstance) then
-				self:DestroyHeroGlow();
+				m_HeroGlowIM:ReleaseInstance(self.m_Instance.HeroGlowInstance);
 			end
 
 			-- Release any attention markers
@@ -266,11 +260,24 @@ function UnitFlag.Initialize( self, playerID: number, unitID : number, flagType 
 		if( playerID == Game.GetLocalPlayer() ) then
 			self:UpdateReadyState();
 		end
-		self:UpdateDimmedState();
 		self:UpdateHeroGlow();
+		self:UpdateDimmedState();
 		self:SetColor(); -- Ensure this happens near the end in case we need to color addon instances like AirUnitInstance
 
 		self.m_IsInitialized = true;
+
+		local pUnit:table = self:GetUnit();
+		if pUnit ~= nil then
+			local unitType:string = GameInfo.Units[pUnit:GetUnitType()].UnitType;
+			if GameInfo.HeroClasses ~= nil then
+				for row in GameInfo.HeroClasses() do
+					if row.UnitType == unitType then
+						self.m_Instance.HeroGlowInstance = m_HeroGlowIM:GetInstance(self.m_Instance.HeroGlowAnchor);
+						return;
+					end
+				end
+			end
+		end
 	end
 end
 
@@ -681,8 +688,8 @@ function UnitFlag.UpdateHealth( self )
 	self.m_Instance.HealthBar:SetPercent( healthPercent );
 end
 
-------------------------------------------------------------------
--- Update the hero glow.
+------------------------------------------------------------------	 	 
+-- Update the hero glow.	 	 
 function UnitFlag.UpdateHeroGlow( self )
 	local pUnit:table = self:GetUnit();
 	if pUnit ~= nil then
@@ -691,32 +698,9 @@ function UnitFlag.UpdateHeroGlow( self )
 			for row in GameInfo.HeroClasses() do
 				if row.UnitType == unitType then
 					self.m_Instance.HeroGlowInstance = m_HeroGlowIM:GetInstance(self.m_Instance.HeroGlowAnchor);
-					table.insert(m_HeroUnitFlagInstances, self);
-					-- Only set the update handler if we have a Hero unit flag for performance concerns
-					-- If another feature needs to be handle OnUpdate this will have to be reworked
-					ContextPtr:SetUpdate( OnUpdate );
 					return;
 				end
 			end
-		end
-	end
-end
-
-------------------------------------------------------------------
--- Destroy the hero glow.
-function UnitFlag.DestroyHeroGlow( self )
-	m_HeroGlowIM:ReleaseInstanceByParent(self.m_Instance.HeroGlowAnchor);
-	self.m_Instance.HeroGlowInstance = nil;
-
-	for i, flag in ipairs(m_HeroUnitFlagInstances) do
-		if flag == self then
-			table.remove(m_HeroUnitFlagInstances, i);
-			-- If no more hero unit flags exist then remove the update handler
-			-- If another feature needs to be handle OnUpdate this will have to be reworked
-			if #m_HeroUnitFlagInstances == 0 then
-				ContextPtr:ClearUpdate();
-			end
-			return;
 		end
 	end
 end
@@ -2114,30 +2098,6 @@ function OnShutdown()
 	m_NavalInstanceManager:ResetInstances();
 	DirtyComponentsManager.Destroy( m_DirtyComponents );
 	m_DirtyComponents = nil;
-end
-
--- ===========================================================================
---	Update Callback
--- ===========================================================================
-function OnUpdate( delta:number )
-	-- Animate Hero glows on any flag that has one
-	for i, flag in ipairs(m_HeroUnitFlagInstances) do
-		if (flag ~= nil and flag.m_Instance.HeroGlowInstance) then
-			-- Clockwise Glow
-			if flag.GlowRotation == nil then
-				flag.GlowRotation = 0;
-			end
-			flag.GlowRotation = (flag.GlowRotation + (HERO_GLOW_ROTATE_SPEED * delta) % 360);
-			flag.m_Instance.HeroGlowInstance.HeroGlow:Rotate(flag.GlowRotation);
-
-			-- Counter Clockwise Glow
-			if flag.GlowRotationReverse == nil then
-				flag.GlowRotationReverse = 0;
-			end
-			flag.GlowRotationReverse = (flag.GlowRotationReverse + (HERO_GLOW_ROTATE_REVERSE_SPEED * delta) % 360);
-			flag.m_Instance.HeroGlowInstance.HeroGlowReverse:Rotate(flag.GlowRotationReverse);
-		end
-	end
 end
 
 -- ===========================================================================

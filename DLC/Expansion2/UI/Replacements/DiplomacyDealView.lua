@@ -1536,9 +1536,28 @@ function OnAgreementBackButton()
 end
 
 -- ===========================================================================
-function OnClickAvailableGreatWork(player, type)
+function OnClickAvailableGreatWork(player, valueType, greatWorkType)
+	if ((ms_bIsDemand == true or ms_bIsGift == true) and ms_InitiatedByPlayerID == ms_OtherPlayerID) then
+		-- Can't modifiy demand that is not ours
+		return;
+	end
 
-	OnClickAvailableBasic(DealItemTypes.GREATWORK, player, type);
+	local pDeal = DealManager.GetWorkingDeal(DealDirection.OUTGOING, g_LocalPlayer:GetID(), g_OtherPlayer:GetID());
+	if (pDeal ~= nil) then
+
+		-- Already there?
+		local pDealItem = pDeal:FindItemByValueType(DealItemTypes.GREATWORK, DealItemSubTypes.NONE, valueType, player:GetID());
+		if (pDealItem == nil) then
+			-- No
+			pDealItem = pDeal:AddItemOfType(DealItemTypes.GREATWORK, player:GetID());
+			if (pDealItem ~= nil) then
+				pDealItem:SetSubType(greatWorkType);
+				pDealItem:SetValueType(valueType);
+				UpdateDealPanel(player);
+				UpdateProposedWorkingDeal();
+			end
+		end
+	end
 	UI.PlaySound("UI_GreatWorks_Put_Down");
 
 end
@@ -1956,6 +1975,11 @@ function PopulateAvailableOtherPlayers(player : table, iconList : table)
 end
 
 -- ===========================================================================
+function GetGreatWorkIcon(GreatWorkDesc : table)
+	return "ICON_" .. GreatWorkDesc.GreatWorkType;
+end
+
+-- ===========================================================================
 function PopulateAvailableGreatWorks(player : table, iconList : table)
 
 	local availableItemCount : number = 0;
@@ -1970,9 +1994,10 @@ function PopulateAvailableGreatWorks(player : table, iconList : table)
 				local type : number = entry.ForType;
 				local uiIcon : table = g_IconAndTextIM:GetInstance(iconList.ListStack);
 				local uiMinimizedIcon : table = g_IconOnlyIM:GetInstance(uiMinimizedSection.MinimizedSectionStack);
+				local iconName : string = GetGreatWorkIcon(greatWorkDesc);
 
-				SetIconToSize(uiIcon.Icon, "ICON_" .. greatWorkDesc.GreatWorkType, 45);
-				SetIconToSize(uiMinimizedIcon.Icon, "ICON_" .. greatWorkDesc.GreatWorkType, 45);
+				SetIconToSize(uiIcon.Icon, iconName, 45);
+				SetIconToSize(uiMinimizedIcon.Icon, iconName, 45);
 
 				uiIcon.AmountText:SetHide(true);
 				uiIcon.IconText:LocalizeAndSetText(entry.ForTypeName);
@@ -1988,8 +2013,8 @@ function PopulateAvailableGreatWorks(player : table, iconList : table)
 				uiMinimizedIcon.Icon:SetColor(1,1,1);
 
 				-- What to do when double clicked/tapped.
-				uiIcon.SelectButton:RegisterCallback( Mouse.eLClick, function() OnClickAvailableGreatWork(player, type); end );
-				uiMinimizedIcon.SelectButton:RegisterCallback( Mouse.eLClick, function() OnClickAvailableGreatWork(player, type); end );
+				uiIcon.SelectButton:RegisterCallback( Mouse.eLClick, function() OnClickAvailableGreatWork(player, type, entry.ForTypeDescriptionID); end );
+				uiMinimizedIcon.SelectButton:RegisterCallback( Mouse.eLClick, function() OnClickAvailableGreatWork(player, type, entry.ForTypeDescriptionID); end );
 				-- Set a tool tip
 				
 				local greatWorkTooltip : string = GreatWorksSupport_GetBasicTooltip(entry.ForType, false);
@@ -2451,10 +2476,11 @@ function PopulateDealGreatWorks(player : table, iconList : table)
 				if (type == DealItemTypes.GREATWORK) then
 					local uiIcon : table = g_IconAndTextIM:GetInstance(iconList.GreatWorksDealsStack);
 					local uiMinimizedIcon : table = g_IconOnlyIM:GetInstance(iconList.MinimizedGreatWorksDealsStack);
+					local greatWorkDesc : table = GameInfo.GreatWorks[pDealItem:GetSubType()];
+					local iconName : string = GetGreatWorkIcon(greatWorkDesc);
 
-					local typeID : string = pDealItem:GetValueTypeID();
-					SetIconToSize(uiIcon.Icon, "ICON_" .. typeID, 45);
-					SetIconToSize(uiMinimizedIcon.Icon, "ICON_" .. typeID, 45);
+					SetIconToSize(uiIcon.Icon, iconName, 45);
+					SetIconToSize(uiMinimizedIcon.Icon, iconName, 45);
 
 					uiIcon.AmountText:SetHide(true);
 					uiMinimizedIcon.AmountText:SetHide(true);
@@ -3178,5 +3204,11 @@ function Initialize()
 		Controls.DragButton:LocalizeAndSetToolTip("LOC_DIPLOMACY_DRAG_BUTTON_CLICK_TOOLTIP");
 	end
 end
+
+-- This wildcard include will include all loaded files beginning with "DiplomacyDealView_"
+-- This method replaces the uses of include("DiplomacyDealView") in files that want to override
+-- functions from this file. If you're implementing a new "DiplomacyDealView_" file DO NOT include this file.
+include("DiplomacyDealView_", true);
+
 
 Initialize();

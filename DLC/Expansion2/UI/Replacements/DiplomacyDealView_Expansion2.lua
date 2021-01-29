@@ -4,11 +4,6 @@
 --]]
 
 -- ===========================================================================
--- INCLUDES
--- ===========================================================================
-include("DiplomacyDealView.lua");
-
--- ===========================================================================
 --	VARIABLES
 -- ===========================================================================
 local ms_DefaultOneTimeFavorAmount = 1;
@@ -16,12 +11,12 @@ local ms_DefaultOneTimeFavorAmount = 1;
 -- ===========================================================================
 -- CACHE BASE FUNCTIONS
 -- ===========================================================================
-BASE_GetItemTypeIcon = GetItemTypeIcon;
-BASE_CreateGroupTypes = CreateGroupTypes;
-BASE_IsItemValueEditable = IsItemValueEditable;
-BASE_PopulateDealResources = PopulateDealResources;
-BASE_CreatePlayerAvailablePanel = CreatePlayerAvailablePanel;
-BASE_PopulatePlayerAvailablePanel = PopulatePlayerAvailablePanel;
+local XP2_GetItemTypeIcon = GetItemTypeIcon;
+local XP2_CreateGroupTypes = CreateGroupTypes;
+local XP2_IsItemValueEditable = IsItemValueEditable;
+local XP2_PopulateDealResources = PopulateDealResources;
+local XP2_CreatePlayerAvailablePanel = CreatePlayerAvailablePanel;
+local XP2_PopulatePlayerAvailablePanel = PopulatePlayerAvailablePanel;
 
 -- ===========================================================================
 -- OVERRIDE BASE FUNCTIONS
@@ -114,25 +109,25 @@ function GetItemTypeIcon(pDealItem: table)
 	if (pDealItem:GetType() == DealItemTypes.FAVOR) then
 		return "ICON_YIELD_FAVOR";
 	end
-	return BASE_GetItemTypeIcon(pDealItem);
+	return XP2_GetItemTypeIcon(pDealItem);
 end
 
 -- ===========================================================================
 function CreateGroupTypes()
-	BASE_CreateGroupTypes();
+	XP2_CreateGroupTypes();
 	AvailableDealItemGroupTypes.FAVOR = table.count(AvailableDealItemGroupTypes) + 1;
 	DealItemGroupTypes.FAVOR = table.count(DealItemGroupTypes) + 1;
 end
 
 -- ===========================================================================
 function IsItemValueEditable(itemType: number)
-	return BASE_IsItemValueEditable(itemType) or itemType == DealItemTypes.FAVOR;
+	return XP2_IsItemValueEditable(itemType) or itemType == DealItemTypes.FAVOR;
 end
 
 -- ===========================================================================
 function PopulateDealResources(player: table, iconList: table)
 
-	BASE_PopulateDealResources(player, iconList);
+	XP2_PopulateDealResources(player, iconList);
 
 	local pDeal : table = DealManager.GetWorkingDeal(DealDirection.OUTGOING, g_LocalPlayer:GetID(), g_OtherPlayer:GetID());
 	if (pDeal ~= nil) then
@@ -182,7 +177,7 @@ end
 -- ===========================================================================
 function CreatePlayerAvailablePanel(playerType: number, rootControl: table)
 	g_AvailableGroups[AvailableDealItemGroupTypes.FAVOR][playerType] = CreateHorizontalGroup(rootControl);
-	return BASE_CreatePlayerAvailablePanel(playerType, rootControl);
+	return XP2_CreatePlayerAvailablePanel(playerType, rootControl);
 end
 
 -- ===========================================================================
@@ -190,7 +185,7 @@ function PopulatePlayerAvailablePanel(rootControl: table, player: table)
 	
 	local playerType = GetPlayerType(player);
 	local iAvailableItemCount = PopulateAvailableFavor(player, g_AvailableGroups[AvailableDealItemGroupTypes.FAVOR][playerType]);
-	iAvailableItemCount = iAvailableItemCount + BASE_PopulatePlayerAvailablePanel(rootControl, player);
+	iAvailableItemCount = iAvailableItemCount + XP2_PopulatePlayerAvailablePanel(rootControl, player);
 	return iAvailableItemCount; 
 end
 

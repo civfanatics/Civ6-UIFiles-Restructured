@@ -899,6 +899,7 @@ function OnShutdown()
 	Events.PlayerInfoChanged.Remove(UpdateLeaders);
 	Events.PlayerDefeat.Remove(UpdateLeaders);
 	Events.PlayerRestored.Remove(UpdateLeaders);
+	Events.PlayerIntroduced.Remove(UpdateLeaders);
 	Events.RemotePlayerTurnBegin.Remove( OnTurnBegin );
 	Events.RemotePlayerTurnEnd.Remove( OnTurnEnd );
 	Events.SystemUpdateUI.Remove( OnUpdateUI );
@@ -936,6 +937,7 @@ function LateInitialize()
 	Events.PlayerInfoChanged.Add(UpdateLeaders);
 	Events.PlayerDefeat.Add(UpdateLeaders);
 	Events.PlayerRestored.Add(UpdateLeaders);
+	Events.PlayerIntroduced.Add(UpdateLeaders);
 	Events.RemotePlayerTurnBegin.Add( OnTurnBegin );
 	Events.RemotePlayerTurnEnd.Add( OnTurnEnd );	
 	Events.SystemUpdateUI.Add( OnUpdateUI );

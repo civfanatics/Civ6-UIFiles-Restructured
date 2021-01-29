@@ -1949,6 +1949,7 @@ end
 
 -- ===========================================================================
 function OnCivicsUnlocked()
+	if ContextPtr:IsHidden() then return; end		-- Autoplay!
 	if (Controls.SelectPolicies:IsHidden()) then
 		m_tabs.SelectTab( Controls.ButtonGovernments );
 	else

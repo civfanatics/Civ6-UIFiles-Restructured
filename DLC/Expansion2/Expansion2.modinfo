@@ -411,12 +411,6 @@
 				<LuaReplace>UI/Replacements/DiplomacyActionView_Expansion2.lua</LuaReplace>
 			</Properties>
 		</ReplaceUIScript>
-		<ReplaceUIScript id="Expansion2_DiplomacyDealView" criteria="Expansion2">
-			<Properties>
-				<LuaContext>DiplomacyDealView</LuaContext>
-				<LuaReplace>UI/Replacements/DiplomacyDealView_Expansion2.lua</LuaReplace>
-			</Properties>
-		</ReplaceUIScript>
 		<ReplaceUIScript id="Expansion2_DiplomacyRibbon" criteria="Expansion2">
 			<Properties>
 				<LuaContext>DiplomacyRibbon</LuaContext>

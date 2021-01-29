@@ -131,32 +131,27 @@
 				</ScrollPanel>
 			</Container>
 
-			<Container ID="GraphPanel"  Anchor="C,C" Size="1024,parent" Hidden="1" Offset="0,32">
-        <Grid  Texture="Controls_SubContainer3" Offset="190,0" Size="824,452"  SliceCorner="20,20" SliceSize="0,0" Color="0,0,0,100">
+			<Container ID="GraphPanel"  Anchor="C,C" Size="parent,parent" Hidden="1" Offset="0,32">
+				<Grid  Texture="Controls_SubContainer3" Offset="190,0" Size="parent-400,parent-200"  SliceCorner="20,20" SliceSize="0,0" Color="0,0,0,100">
+					<Grid  Texture="Controls_SubContainerFill" Size="parent,parent"  SliceCorner="11,11" SliceSize="0,0" Color="0,0,0,50"/>
+					<Image Texture="Controls_Deco3" Size="27,18" Anchor="L,T" Offset="18,16" Color=" 255,255,255,25"/>
+					<Image Texture="Controls_Deco3" Size="27,18" Anchor="R,T" Offset="18,16" Color=" 255,255,255,25"/>
+					<Graph ID="ResultsGraph" Size="parent-40,parent-60" Anchor="L,B" Offset="10,10" FontStyle="ButtonText14" Domain="0,100" Range="0,100" TickInterval="5,10" NumberInterval="10,20" ShowTicks="1,1" ShowGridLines="0,0" ShowNumbers="1,1" ShowAxes="1,1" Background="0,0,0,100">
+						<Label Anchor="C,C" Style="ButtonText20" ID="NoGraphData" String="LOC_UI_ENDGAME_REPLAY_NOGRAPHDATA" Hidden="1"/>
 
-          <Grid  Texture="Controls_SubContainerFill" Size="parent,parent"  SliceCorner="11,11" SliceSize="0,0" Color="0,0,0,50"/>
-
-
-          
-          <Image Texture="Controls_Deco3" Size="27,18" Anchor="L,T" Offset="18,16" Color=" 255,255,255,25"/>
-          <Image Texture="Controls_Deco3" Size="27,18" Anchor="R,T" Offset="18,16" Color=" 255,255,255,25"/>
-        </Grid>
-        <Image Texture="Controls_Glow" Size="500,500" Anchor="C,T" Offset="30,-20" Color=" 255,255,255,25"/>
+					</Graph>
+					<PullDown  ID="GraphDataSetPulldown" Anchor="C,T" Style="PullDownBlue" Size="520,24" Offset="0,10" />
+				</Grid>
+				<Image Texture="Controls_Glow" Size="500,500" Anchor="C,T" Offset="30,-20" Color=" 255,255,255,25"/>
 
 				<ScrollPanel Anchor="L,T" AutoScrollBar="1" Size="180,parent-122" Vertical="1" ID="GraphLegendScrollPanel" >
 					<ScrollBar Style="Slider_Light" Anchor="L,C" Offset="2,0"/>
 					<Stack Anchor="L,T" Offset="2,0" StackGrowth="Bottom" Padding="2" ID="GraphLegendStack" />
 				</ScrollPanel>
-      
-				<Graph ID="ResultsGraph" Size="800,380" Anchor="L,T" Offset="198,54" FontStyle="ButtonText14" Domain="0,100" Range="0,100" TickInterval="5,10" NumberInterval="10,20" ShowTicks="1,1" ShowGridLines="0,0" ShowNumbers="1,1" ShowAxes="1,1" Background="0,0,0,100">
-					<Label Anchor="C,C" Style="ButtonText20" ID="NoGraphData" String="LOC_UI_ENDGAME_REPLAY_NOGRAPHDATA" Hidden="1"/>
-  
-				</Graph>
-
-				<PullDown  Anchor="C,T" Style="PullDownBlue" Size="720,24" Offset="90,12" ID="GraphDataSetPulldown" />
 			</Container>
-      
-      <!-- Chat Panel -->
+
+
+			<!-- Chat Panel -->
       <Container ID="ChatPanel" Offset="0,52" Anchor="C,T" Size="1000,parent-134" Hidden="1">
         <Container ID="ChatBackground" Anchor="R,B" Offset="0,20" Size="parent,parent">
           <Grid Style="SubContainer" Anchor="R,B" Offset="-2,0" Size="parent+4,parent"/>

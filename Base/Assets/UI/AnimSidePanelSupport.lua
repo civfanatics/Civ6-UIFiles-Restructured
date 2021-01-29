@@ -102,9 +102,13 @@ function CreateScreenAnimation( slideAnimControl:table, onCloseCallback:ifunctio
 	-- ===========================================================================
 	--	KEYBOARD INPUT UI EVENT
 	-- ===========================================================================
-	kAnim.OnInputHandler = function( input:table )
+	kAnim.OnInputHandler = function( input:table, closeCallback )
 		if (input:GetMessageType() == KeyEvents.KeyUp and input:GetKey() == Keys.VK_ESCAPE) then
-			kAnim.Hide();
+			if closeCallback ~= nil then
+				closeCallback();
+			else
+				kAnim.Hide();
+			end
 			return true;
 		end
 		return false;

@@ -28,18 +28,21 @@ local ASSETS			:table = {
 	}
 }
 
+-- ===========================================================================
+--	GLOBALS (for extensions to access)
+-- ===========================================================================
+g_kResourceLineIM			= {};
+g_kSpaceIM					= {};
+g_kLeaderInstanceIM			= {};
+g_isAddingSpaceForEmptyCivs = false;
 
 -- ===========================================================================
 --	MEMBERS
 -- ===========================================================================
 local m_kResourceGroupIM	:table = InstanceManager:new( "ResourceGroupStartLabel","Top",	Controls.ResourceStack);
-local m_kResourceLineIM		:table = InstanceManager:new( "ResourceLineItem",		"Top",	Controls.ResourceStack);
 local m_kEmptyMessageIM		:table = InstanceManager:new( "EmptyMessageInstance",	"Top",	Controls.ResourceStack);
-local m_kSpaceIM			:table = InstanceManager:new( "SpaceInstance",			"Space" );
-local m_kLeaderInstanceIM	:table = InstanceManager:new( "LeaderInstance",			"Top");
 local m_kNoLeaderInstanceIM	:table = InstanceManager:new( "NoLeaderMessageInstance","Top");
 local m_kData				:table = nil;
-local m_isAddingSpaceForEmptyCivs :boolean = false;
 
 
 -- ===========================================================================
@@ -219,7 +222,7 @@ end
 function RealizeRow( kResourceData:table, backgroundTexture:string )	
 
 	local kOwnerList	:table = kResourceData.kOwnerList;	
-	local uiResourceRow	:table = m_kResourceLineIM:GetInstance();	
+	local uiResourceRow	:table = g_kResourceLineIM:GetInstance();
 	uiResourceRow.ResourceIcon:SetIcon("ICON_" .. kResourceData.type);
 	uiResourceRow.Top:SetTexture( backgroundTexture );
 	uiResourceRow.ResourceName:SetText(Locale.Lookup(kResourceData.name));
@@ -227,7 +230,7 @@ function RealizeRow( kResourceData:table, backgroundTexture:string )
 	local kFullOwnerList:table = {};
 	
 
-	if m_isAddingSpaceForEmptyCivs then		
+	if g_isAddingSpaceForEmptyCivs then
 		local safe	:number = 0;	--safety
 		local lastID:number = -1;
 		for i,kPlayer in ipairs(kOwnerList) do
@@ -255,16 +258,16 @@ function RealizeRow( kResourceData:table, backgroundTexture:string )
 
 	-- Constants, including temporary instantion to figure out spacing.
 	local USE_UNIQUE_LEADER_ICON_STYLE	:boolean = false;
-	local uiLeaderInstance	:table = m_kLeaderInstanceIM:GetInstance(uiResourceRow.LeaderStack);
+	local uiLeaderInstance	:table = g_kLeaderInstanceIM:GetInstance(uiResourceRow.LeaderStack);
 	local emptyWidth		:number= uiLeaderInstance.Top:GetSizeX();
-	m_kLeaderInstanceIM:ReleaseInstance( uiLeaderInstance );
+	g_kLeaderInstanceIM:ReleaseInstance( uiLeaderInstance );
 
 	for _,kPlayerEntry in pairs(kFullOwnerList) do
-		if (kPlayerEntry.isEmpty and m_isAddingSpaceForEmptyCivs) then
-			local uiSpaceInstance	:table = m_kSpaceIM:GetInstance(uiResourceRow.LeaderStack);
+		if (kPlayerEntry.isEmpty and g_isAddingSpaceForEmptyCivs) then
+			local uiSpaceInstance	:table = g_kSpaceIM:GetInstance(uiResourceRow.LeaderStack);
 			uiSpaceInstance.Space:SetSizeX( emptyWidth );
 		elseif kPlayerEntry.isMet or kPlayerEntry.isSelf then
-			local uiLeaderInstance	:table = m_kLeaderInstanceIM:GetInstance(uiResourceRow.LeaderStack);
+			local uiLeaderInstance	:table = g_kLeaderInstanceIM:GetInstance(uiResourceRow.LeaderStack);
 			local leaderName		:string = PlayerConfigurations[kPlayerEntry.playerID]:GetLeaderTypeName();
 			local iconName			:string = "ICON_" .. leaderName;	
 			local oLeaderIcon		:object	= LeaderIcon:AttachInstance(uiLeaderInstance.Icon);
@@ -296,7 +299,7 @@ end
 --	Add spacing between rows (used between sections),
 -- ===========================================================================
 function AddRowSpace( pixels:number )
-	local uiSpace:table = m_kSpaceIM:GetInstance( Controls.ResourceStack );
+	local uiSpace:table = g_kSpaceIM:GetInstance( Controls.ResourceStack );
 	uiSpace.Space:SetSizeY( pixels );
 end
 
@@ -334,10 +337,10 @@ end
 function View( kData:table )
 
 	m_kResourceGroupIM:ResetInstances();
-	m_kSpaceIM:ResetInstances();
+	g_kSpaceIM:ResetInstances();
 	m_kEmptyMessageIM:ResetInstances();
-	m_kResourceLineIM:ResetInstances();
-	m_kLeaderInstanceIM:ResetInstances();	
+	g_kResourceLineIM:ResetInstances();
+	g_kLeaderInstanceIM:ResetInstances();
 	m_kNoLeaderInstanceIM:ResetInstances();	
 
 	RealizeSection("strategic", kData);
@@ -369,7 +372,7 @@ end
 
 -- ===========================================================================
 function RealizeOrder(name:string, sortFunc:ifunction)
-	m_isAddingSpaceForEmptyCivs = (name == "LOC_REPORTS_ORDER_PLAYER_SLOT");	--kluge :'(
+	g_isAddingSpaceForEmptyCivs = (name == "LOC_REPORTS_ORDER_PLAYER_SLOT");	--kluge :'(
 	Controls.OrderPulldown:GetButton():SetText( Locale.Lookup(name) );
 	for _,kResourceData in pairs(m_kData) do
 		local kOwnerList:table = kResourceData.kOwnerList;
@@ -467,6 +470,10 @@ end
 
 -- ===========================================================================
 function Initialize()
+	g_kResourceLineIM	= InstanceManager:new( "ResourceLineItem", "Top", Controls.ResourceStack);
+	g_kSpaceIM			= InstanceManager:new( "SpaceInstance", "Space");
+	g_kLeaderInstanceIM	= InstanceManager:new( "LeaderInstance", "Top");
+
 	-- UI Events
 	ContextPtr:SetInitHandler( OnInit );
 	ContextPtr:SetShutdown( OnShutdown );

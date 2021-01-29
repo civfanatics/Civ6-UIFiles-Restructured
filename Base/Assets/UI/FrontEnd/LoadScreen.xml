@@ -29,7 +29,7 @@
 						</Image>
 						<Stack				ID="MainStack"				Anchor="C,T" StackGrowth="Down" StackPadding="10">
 							<Line															Start="0,0"	 End="540,0"			Width="2"							Color="200,200,200,100" />
-							<Label			ID="CivName"					Anchor="C,T"									Style="FontFlair22"		String="$Civ" SmallCapsType="EveryWord" SmallCaps="30" />
+							<Label			ID="CivName"					Anchor="C,T"									WrapWidth="540" Style="FontFlair22"		String="$Civ" SmallCapsType="EveryWord" SmallCaps="30" />
 							<Label														Anchor="C,T"									Style="FontFlair14"		String="{LOC_LOADING_JOIN_THE_WORLD_STAGE:upper}" SmallCapsType="EveryWord" SmallCaps="20" />
 							<Line															Start="0,0"	 End="540,0"			Width="2"							Color="200,200,200,100" />
 							<Label			ID="EraInfo"					Anchor="L,T" Offset="0,0"		WrapWidth="540"				Style="DawnText" String="$EraInfo$"  />

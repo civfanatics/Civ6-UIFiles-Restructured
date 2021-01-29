@@ -15,15 +15,13 @@ include( "CitySupport" );
 -- ===========================================================================
 CityBanner = {};
 
-BANNERTYPE_CITY_CENTER		= 0;
-BANNERTYPE_ENCAMPMENT		= 1;
-BANNERTYPE_AERODROME		= 2;
-BANNERTYPE_MISSILE_SILO		= 3;
-BANNERTYPE_OTHER_DISTRICT	= 4;
-BANNERTYPE_MOUNTAIN_TUNNEL	= 5;
-BANNERTYPE_QHAPAQ_NAN		= 6;
-BANNERTYPE_INDUSTRY			= 7;
-BANNERTYPE_CORPORATION		= 8;
+BANNERTYPE_CITY_CENTER		= UIManager:GetHash("BANNERTYPE_CITY_CENTER");
+BANNERTYPE_ENCAMPMENT	    = UIManager:GetHash("BANNERTYPE_ENCAMPMENT");
+BANNERTYPE_AERODROME	    = UIManager:GetHash("BANNERTYPE_AERODROME");
+BANNERTYPE_MISSILE_SILO	    = UIManager:GetHash("BANNERTYPE_MISSILE_SILO");
+BANNERTYPE_OTHER_DISTRICT   = UIManager:GetHash("BANNERTYPE_OTHER_DISTRICT");
+BANNERTYPE_MOUNTAIN_TUNNEL	= UIManager:GetHash("BANNERTYPE_MOUNTAIN_TUNNEL");
+BANNERTYPE_QHAPAQ_NAN		= UIManager:GetHash("BANNERTYPE_QHAPAQ_NAN");
 
 
 -- ===========================================================================
@@ -113,21 +111,12 @@ local m_DistrictBannerIM	:table = InstanceManager:new( "DistrictBanner",		"Ancho
 local m_TunnelBannerIM		:table = InstanceManager:new( "TunnelBanner",		"Anchor", Controls.CityBanners );
 local m_QhapaqNanBannerIM	:table = InstanceManager:new( "QhapaqNanBanner",	"Anchor", Controls.CityBanners );
 local m_HolySiteIconsIM		:table = InstanceManager:new( "HolySiteIcon",		"Anchor", Controls.CityDistrictIcons );
-local m_IndustryBannerIM	:table	= InstanceManager:new( "IndustryBanner",	"Anchor", Controls.CityBanners );
-local m_CorporationBannerIM	:table	= InstanceManager:new( "CorporationBanner",	"Anchor", Controls.CityBanners );
 
 local m_HexColoringReligion		: number = UILens.CreateLensLayerHash("Hex_Coloring_Religion");
 local m_LoyaltyFreeCityWarning	: number = UILens.CreateLensLayerHash("Loyalty_FreeCity_Warning");
 local m_CulturalIdentityLens	: number = UILens.CreateLensLayerHash("Cultural_Identity_Lens");
 local m_CityDetailsLens			: number = UILens.CreateLensLayerHash("City_Details");
 local m_EmpireDetailsLens		: number = UILens.CreateLensLayerHash("Empire_Details");
-
-local ResourceTypeMap :table = {};
-do
-	for row in GameInfo.Resources() do
-		ResourceTypeMap[row.Index] = row.ResourceType;
-	end
-end
 
 -- ===========================================================================
 --	FUNCTIONS
@@ -157,7 +146,6 @@ end
 --	Constructor
 -- ===========================================================================
 function CityBanner:new( playerID: number, cityID : number, districtID : number, bannerType : number, bannerStyle : number )
-
 	if bannerStyle == nil then 
 		UI.DataError("Missing bannerStyle: "..tostring(playerID)..", "..tostring(cityID)..", "..tostring(districtID)..", "..tostring(bannerType) ); 
 	end
@@ -225,10 +213,12 @@ function CityBanner:Uninitialize()
 	end
 end
 
+-- ===========================================================================
+function CityBanner:InitializeOtherBannerTypes(bannerType : number)
+end
 
 -- ===========================================================================
 function CityBanner:Initialize( playerID: number, cityID : number, districtID : number, bannerType : number, bannerStyle : number)
-
 	self.m_Player = Players[playerID];
 	self.m_DistrictID = districtID;
 	self.m_CityID = cityID;
@@ -333,12 +323,8 @@ function CityBanner:Initialize( playerID: number, cityID : number, districtID : 
 		self:CreateTunnelBanner();
 	elseif (bannerType == BANNERTYPE_QHAPAQ_NAN) then
 		self:CreateQhapaqNanBanner();
-	elseif (bannerType == BANNERTYPE_INDUSTRY) then
-		self:CreateIndustryBanner();
-		self:UpdateIndustryBanner();
-	elseif (bannerType == BANNERTYPE_CORPORATION) then
-		self:CreateCorporationBanner();
-		self:UpdateCorporationBanner();
+	else	-- hook for extensions
+		self:InitializeOtherBannerTypes(bannerType);
 	end
 
 	self:UpdateName();
@@ -688,48 +674,6 @@ function CityBanner:CreateQhapaqNanBanner()
 end
 
 -- ===========================================================================
-function CityBanner:CreateIndustryBanner()
-	-- Set the appropriate instance factory (mini banner one) for this flag...
-	self.m_InstanceManager = m_IndustryBannerIM;
-	self.m_Instance = self.m_InstanceManager:GetInstance();
-
-	self.m_PlotX, self.m_PlotY = Map.GetPlotLocation(self.m_DistrictID);
-
-	local plot = Map.GetPlot( self.m_PlotX, self.m_PlotY );
-	local resName:string = ResourceTypeMap[plot:GetResourceType()];
-	self.m_Instance.Icon:SetIcon("ICON_"..resName);
-
-	self.m_IsImprovementBanner = true;
-end
-
--- ===========================================================================
-function CityBanner:UpdateIndustryBanner()
-	self:SetFogState( self.m_FogState );
-	self:SetHide(false);
-end
-
--- ===========================================================================
-function CityBanner:CreateCorporationBanner()
-	-- Set the appropriate instance factory (mini banner one) for this flag...
-	self.m_InstanceManager = m_CorporationBannerIM;
-	self.m_Instance = self.m_InstanceManager:GetInstance();
-
-	self.m_PlotX, self.m_PlotY = Map.GetPlotLocation(self.m_DistrictID);
-
-	local plot = Map.GetPlot( self.m_PlotX, self.m_PlotY );
-	local resName:string = ResourceTypeMap[plot:GetResourceType()];
-	self.m_Instance.Icon:SetIcon("ICON_"..resName);
-
-	self.m_IsImprovementBanner = true;
-end
-
--- ===========================================================================
-function CityBanner:UpdateCorporationBanner()
-	self:SetFogState( self.m_FogState );
-	self:SetHide(false);
-end
-
--- ===========================================================================
 function CityBanner:CreateEncampmentBanner()
 	-- Set the appropriate instance factory (mini banner one) for this flag...
 	self.m_InstanceManager = m_EncampmentBannerIM;
@@ -862,6 +806,11 @@ function CityBanner:Resize()
 end
 
 -- ===========================================================================
+function CityBanner:UpdateColorOtherBannerTypes( backColor:number )
+	self.m_Instance.MiniBannerBackground:SetColor( backColor );
+end
+
+-- ===========================================================================
 -- Assign player colors to the appropriate banner elements
 function CityBanner:UpdateColor()
 
@@ -906,16 +855,8 @@ function CityBanner:UpdateColor()
 		if self.m_Instance.Banner_Base ~= nil then
 			self.m_Instance.Banner_Base:SetColor( backColor );
 		end
-	elseif (self.m_Type == BANNERTYPE_INDUSTRY) then
-		if self.m_Instance.Banner_Base ~= nil then
-			self.m_Instance.Banner_Base:SetColor( backColor );
-		end
-	elseif (self.m_Type == BANNERTYPE_CORPORATION) then
-		if self.m_Instance.Banner_Base ~= nil then
-			self.m_Instance.Banner_Base:SetColor( backColor );
-		end
 	else
-		self.m_Instance.MiniBannerBackground:SetColor( backColor );
+		self:UpdateColorOtherBannerTypes( backColor );
 	end
 
 	self:SetHealthBarColor();
@@ -1306,6 +1247,10 @@ function CityBanner:UpdateGovernor(pCity:table)
 end
 
 -- ===========================================================================
+function CityBanner:UpdateOtherImprovementBannerTypes()
+end
+
+-- ===========================================================================
 function CityBanner:UpdateStats()
 	local pDistrict:table = self:GetDistrict();
 	local localPlayerID:number = Game.GetLocalPlayer();
@@ -1401,10 +1346,8 @@ function CityBanner:UpdateStats()
 					self:UpdateAerodromeBanner();
 				elseif (self.m_Type == BANNERTYPE_MISSILE_SILO) then
 					self:UpdateWMDBanner();
-				elseif (self.m_Type == BANNERTYPE_INDUSTRY) then
-					self:UpdateIndustryBanner();
-				elseif (self.m_Type == BANNERTYPE_CORPORATION) then
-					self:UpdateCorporationBanner();
+				else
+					self:UpdateOtherImprovementBannerTypes();
 				end
 			end
 		end
@@ -2742,19 +2685,7 @@ function OnImprovementAddedToMap(locX, locY, eImprovementType, eOwner)
 		return;
 	end
 	
-	--Check if the improvement is an Industry or Corporation
-	local bIsIndustry:boolean = false;
-	local bIsCorporation:boolean = false;
-	local improvementDataMODE:table = GameInfo.Improvements_MODE[improvementData.Hash];
-	if (improvementDataMODE ~= nil) then
-		if (improvementDataMODE.Industry) then
-			bIsIndustry = true;
-		elseif (improvementDataMODE.Corporation) then
-			bIsCorporation = true;
-		end
-	end
-
-	if ( improvementData.AirSlots == 0 and improvementData.WeaponSlots == 0 and improvementData.ImprovementType ~= "IMPROVEMENT_MOUNTAIN_TUNNEL" and improvementData.ImprovementType ~= "IMPROVEMENT_MOUNTAIN_ROAD" and not bIsIndustry and not bIsCorporation ) then
+	if ( improvementData.AirSlots == 0 and improvementData.WeaponSlots == 0 and improvementData.ImprovementType ~= "IMPROVEMENT_MOUNTAIN_TUNNEL" and improvementData.ImprovementType ~= "IMPROVEMENT_MOUNTAIN_ROAD" ) then
 		return;
 	end
 
@@ -2777,16 +2708,6 @@ function OnImprovementAddedToMap(locX, locY, eImprovementType, eOwner)
 					AddMiniBannerToMap( eOwner, -1, plotID, BANNERTYPE_MOUNTAIN_TUNNEL );
 				elseif ( improvementData.ImprovementType == "IMPROVEMENT_MOUNTAIN_ROAD" ) then
 					AddMiniBannerToMap( eOwner, -1, plotID, BANNERTYPE_QHAPAQ_NAN);
-				elseif ( bIsIndustry ) then
-					local ownerCity = Cities.GetPlotPurchaseCity(locX, locY);
-					local cityID = ownerCity:GetID();
-					-- we're passing the plotID as the districtID argument because we need the location of the improvement
-					AddMiniBannerToMap( eOwner, cityID, plotID, BANNERTYPE_INDUSTRY );
-				elseif ( bIsCorporation ) then
-					local ownerCity = Cities.GetPlotPurchaseCity(locX, locY);
-					local cityID = ownerCity:GetID();
-					-- we're passing the plotID as the districtID argument because we need the location of the improvement
-					AddMiniBannerToMap( eOwner, cityID, plotID, BANNERTYPE_CORPORATION );
 				end
 			else
 				miniBanner:UpdateStats();
@@ -3899,5 +3820,11 @@ function Initialize()
 
 	LuaEvents.GameDebug_Return.Add(OnGameDebugReturn);
 end
+
+-- This wildcard include will include all loaded files beginning with "CityBannerManager_"
+-- This method replaces the uses of include("CityBannerManager") in files that want to override
+-- functions from this file. If you're implementing a new "CityBannerManager_" file DO NOT include this file.
+include("CityBannerManager_", true);
+
 Initialize();
 

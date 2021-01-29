@@ -27,6 +27,8 @@ local BUILD_ACTIONS_OFFSET			:number = 162;
 -- ===========================================================================
 g_isOkayToProcess = true;	-- Global processing of unit commands/improvements
 g_targetData = {};
+g_selectedPlayerId = -1;
+g_UnitId		   = -1;
 
 
 -- ===========================================================================
@@ -54,10 +56,8 @@ local m_targetStatStackIM		:table	= InstanceManager:new( "TargetStatInstance",	"
 
 local m_combatResults			:table = nil;
 local m_currentIconGroup		:table = nil;				--	Tracks the current icon group as they are built.
-local m_selectedPlayerId		:number	= -1;
 local m_primaryColor			:number = UI.GetColorValueFromHexLiteral(0xdeadbeef);
 local m_secondaryColor			:number = UI.GetColorValueFromHexLiteral(0xbaadf00d);
-local m_UnitId					:number = -1;
 local m_numIconsInCurrentIconGroup :number = 0;
 local m_kHotkeyActions			:table = {};
 local m_kHotkeyCV1				:table = {};
@@ -820,6 +820,11 @@ function UpdateBuildActionsPanelOffset()
 end
 
 -- ===========================================================================
+-- Allow mods to alter the presentation of build actions
+function BuildActionModHook(instance:table, action:table)
+end
+
+-- ===========================================================================
 -- View(data)
 -- Update the layout based on the view model
 -- ===========================================================================
@@ -898,6 +903,8 @@ function View(data)
 					local action	= data.Actions["BUILD"][(i+iRow)-1];		
 					local instance	= {};
 					ContextPtr:BuildInstanceForControl( "BuildActionInstance", instance, buildColumnInstance[slotName]);				
+
+					BuildActionModHook(instance, action);
 
 					instance.UnitActionIcon:SetTexture( IconManager:FindIconAtlas(action.IconId, 38) );
 
@@ -2360,7 +2367,7 @@ end
 -- ===========================================================================
 function OnRefresh()
 	ContextPtr:ClearRequestRefresh();		-- Clear the refresh request, in case we got here from some other means.  This cuts down on redundant updates.
-	Refresh(m_selectedPlayerId, m_UnitId);
+	Refresh(g_selectedPlayerId, g_UnitId);
 	local pSelectedUnit :table= UI.GetHeadSelectedUnit();
 	if pSelectedUnit ~= nil then
 		if not ( pSelectedUnit:GetMovesRemaining() > 0 ) then
@@ -2379,19 +2386,19 @@ end
 function OnUnitSelectionChanged(player, unitId, locationX, locationY, locationZ, isSelected, isEditable)
 	--print("UnitPanel::OnUnitSelectionChanged(): ",player,unitId,isSelected);
 	if (isSelected) then
-		m_selectedPlayerId = player;
-		m_UnitId = unitId;
-		m_primaryColor, m_secondaryColor = UI.GetPlayerColors( m_selectedPlayerId );
+		g_selectedPlayerId = player;
+		g_UnitId = unitId;
+		m_primaryColor, m_secondaryColor = UI.GetPlayerColors( g_selectedPlayerId );
 		m_combatResults = nil;
 
-		Refresh(m_selectedPlayerId, m_UnitId)
+		Refresh(g_selectedPlayerId, g_UnitId)
 		Controls.UnitPanelAlpha:SetToBeginning();
 		Controls.UnitPanelAlpha:Play();
 		Controls.UnitPanelSlide:SetToBeginning();
 		Controls.UnitPanelSlide:Play();
 	else
-		m_selectedPlayerId	= -1;
-		m_UnitId			= nil;
+		g_selectedPlayerId	= -1;
+		g_UnitId			= nil;
 		m_primaryColor		= UI.GetColorValueFromHexLiteral(0xdeadbeef);
 		m_secondaryColor	= UI.GetColorValueFromHexLiteral(0xbaadf00d);
 
@@ -2407,7 +2414,7 @@ end
 -- ===========================================================================
 -- Additional events to listen to in order to invalidate the data.
 function OnUnitDamageChanged(player, unitId, damage)
-	if(player == m_selectedPlayerId and unitId == m_UnitId) then
+	if(player == g_selectedPlayerId and unitId == g_UnitId) then
 		Controls.UnitHealthMeter:SetAnimationSpeed( ANIMATION_SPEED );
 		ContextPtr:RequestRefresh();		-- Set a refresh request, the UI will update on the next frame.
 	end
@@ -2415,28 +2422,28 @@ end
 
 -- ===========================================================================
 function OnUnitMoveComplete(player, unitId, x, y)
-	if(player == m_selectedPlayerId and unitId == m_UnitId) then
+	if(player == g_selectedPlayerId and unitId == g_UnitId) then
 		ContextPtr:RequestRefresh();		-- Set a refresh request, the UI will update on the next frame.
 	end
 end
 
 -- ===========================================================================
 function OnUnitOperationDeactivated(player, unitId, hOperation, iData1)
-	if(player == m_selectedPlayerId and unitId == m_UnitId) then
+	if(player == g_selectedPlayerId and unitId == g_UnitId) then
 		ContextPtr:RequestRefresh();		-- Set a refresh request, the UI will update on the next frame.
 	end
 end
 
 -- ===========================================================================
 function OnUnitOperationsCleared(player, unitId, hOperation, iData1)
-	if(player == m_selectedPlayerId and unitId == m_UnitId) then
+	if(player == g_selectedPlayerId and unitId == g_UnitId) then
 		ContextPtr:RequestRefresh();		-- Set a refresh request, the UI will update on the next frame.
 	end
 end
 
 -- ===========================================================================
 function OnUnitOperationAdded(player, unitId, hOperation)
-	if(player == m_selectedPlayerId and unitId == m_UnitId) then
+	if(player == g_selectedPlayerId and unitId == g_UnitId) then
 		ContextPtr:RequestRefresh();		-- Set a refresh request, the UI will update on the next frame.
 	end
 end
@@ -2447,35 +2454,35 @@ function OnUnitCommandStarted(player, unitId, hCommand, iData1)
         UI.PlaySound("Unit_CondemnHeretic_2D");
     end
 
-	if(player == m_selectedPlayerId and unitId == m_UnitId) then
+	if(player == g_selectedPlayerId and unitId == g_UnitId) then
 		ContextPtr:RequestRefresh();		-- Set a refresh request, the UI will update on the next frame.
 	end
 end
 
 -- ===========================================================================
 function OnUnitChargesChanged(player, unitId)
-	if(player == m_selectedPlayerId and unitId == m_UnitId) then
+	if(player == g_selectedPlayerId and unitId == g_UnitId) then
 		ContextPtr:RequestRefresh();		-- Set a refresh request, the UI will update on the next frame.
 	end
 end
 
 -- ===========================================================================
 function OnUnitPromotionChanged(player, unitId)
-	if(player == m_selectedPlayerId and unitId == m_UnitId) then
+	if(player == g_selectedPlayerId and unitId == g_UnitId) then
 		ContextPtr:RequestRefresh();		-- Set a refresh request, the UI will update on the next frame.
 	end
 end
 
 -- ===========================================================================
 function OnUnitMovementPointsChanged(player, unitId)
-	if(player == m_selectedPlayerId and unitId == m_UnitId) then
+	if(player == g_selectedPlayerId and unitId == g_UnitId) then
 		ContextPtr:RequestRefresh();		-- Set a refresh request, the UI will update on the next frame.
 	end
 end
 
 -- ===========================================================================
 function OnUnitAbilityLost(player :number, unitId :number, eAbilityType :number)
-	if(player == m_selectedPlayerId and unitId == m_UnitId) then
+	if(player == g_selectedPlayerId and unitId == g_UnitId) then
 		ContextPtr:RequestRefresh();		-- Set a refresh request, the UI will update on the next frame.
 	end
 end
@@ -2856,10 +2863,10 @@ function ShowHideSelectedUnit()
 	g_isOkayToProcess = true;
 	local pSelectedUnit :table = UI.GetHeadSelectedUnit();
 	if pSelectedUnit ~= nil then
-		m_selectedPlayerId				= pSelectedUnit:GetOwner();
-		m_UnitId						= pSelectedUnit:GetID();
-		m_primaryColor, m_secondaryColor= UI.GetPlayerColors( m_selectedPlayerId );
-		Refresh( m_selectedPlayerId, m_UnitId );
+		g_selectedPlayerId				= pSelectedUnit:GetOwner();
+		g_UnitId						= pSelectedUnit:GetID();
+		m_primaryColor, m_secondaryColor= UI.GetPlayerColors( g_selectedPlayerId );
+		Refresh( g_selectedPlayerId, g_UnitId );
 	else
 		Hide();
 	end
@@ -2867,7 +2874,7 @@ end
 
 -- ===========================================================================
 function OnPantheonFounded( ePlayer:number )
-	if(ePlayer == m_selectedPlayerId) then
+	if(ePlayer == g_selectedPlayerId) then
 		ContextPtr:RequestRefresh();		-- Set a refresh request, the UI will update on the next frame.
 	end
 end
@@ -2904,7 +2911,7 @@ end
 --	is open when a policy changes, be sure to refresh.
 -- ===========================================================================
 function OnGovernmentPolicyChanged( player:number )
-	if player ~= m_selectedPlayerId then 
+	if player ~= g_selectedPlayerId then
 		return; 
 	end
 	ContextPtr:RequestRefresh();
@@ -2916,7 +2923,7 @@ end
 -- ===========================================================================
 function OnGreatWorkMoved(fromCityOwner, fromCityID, toCityOwner, toCityID, buildingID, greatWorkType)
 	if ContextPtr:IsHidden() then return; end
-	if(fromCityOwner == m_selectedPlayerId or toCityOwner == m_selectedPlayerId) then
+	if(fromCityOwner == g_selectedPlayerId or toCityOwner == g_selectedPlayerId) then
 		ContextPtr:RequestRefresh();		-- Set a refresh request, the UI will update on the next frame.
 	end
 end
@@ -2948,7 +2955,7 @@ end
 
 -- ===========================================================================
 function OnUnitRemovedFromMap( playerID: number, unitID : number )	
-	if(playerID == m_selectedPlayerId and unitID == m_UnitId) then
+	if(playerID == g_selectedPlayerId and unitID == g_UnitId) then
 		Hide();
 
 		-- If the water availability layer is on when a unit is selected
@@ -3829,9 +3836,9 @@ end
 function OnLocalPlayerTurnEnd()
 	local pSelectedUnit :table = UI.GetHeadSelectedUnit();
 	if pSelectedUnit ~= nil then
-		m_selectedPlayerId				= pSelectedUnit:GetOwner();
-		m_UnitId						= pSelectedUnit:GetID();
-		Refresh( m_selectedPlayerId, m_UnitId );
+		g_selectedPlayerId				= pSelectedUnit:GetOwner();
+		g_UnitId						= pSelectedUnit:GetID();
+		Refresh( g_selectedPlayerId, g_UnitId );
 	end
 end
 
@@ -4171,9 +4178,9 @@ end
 
 -- ===========================================================================
 function OnPortraitClick()
-	if m_selectedPlayerId ~= -1 then
-		local pUnits	:table = Players[m_selectedPlayerId]:GetUnits( );
-		local pUnit		:table = pUnits:FindID( m_UnitId );
+	if g_selectedPlayerId ~= -1 then
+		local pUnits	:table = Players[g_selectedPlayerId]:GetUnits( );
+		local pUnit		:table = pUnits:FindID( g_UnitId );
 		if pUnit ~= nil then
 			UI.LookAtPlot( pUnit:GetX( ), pUnit:GetY( ) );
 		end
@@ -4182,15 +4189,15 @@ end
 
 -- ===========================================================================
 function OnPortraitRightClick()	
-	if m_selectedPlayerId == -1 then
+	if g_selectedPlayerId == -1 then
 		UI.DataError("The unit panel received a right click ont he portrait but no player is selected.");
 		return;
 	end
 
 	-- Only show the Civilopedia if this game played has it enabled.
 	if GameCapabilities.HasCapability("CAPABILITY_DISPLAY_TOP_PANEL_CIVPEDIA") then
-		local pUnits	:table = Players[m_selectedPlayerId]:GetUnits( );
-		local pUnit		:table = pUnits:FindID( m_UnitId );
+		local pUnits	:table = Players[g_selectedPlayerId]:GetUnits( );
+		local pUnit		:table = pUnits:FindID( g_UnitId );
 		if (pUnit ~= nil) then
 			local unitType = GameInfo.Units[pUnit:GetUnitType()];
 			if(unitType) then

@@ -1615,7 +1615,7 @@ end
 -- ===========================================================================
 function OnInputHandler( input:table )
 	--if m_mode == MODE.EnvoySent or m_mode == MODE.InfluencedBy or m_mode == MODE.Quests then
-	return m_kScreenSlideAnim.OnInputHandler( input );	
+	return m_kScreenSlideAnim.OnInputHandler( input, OnClose );	
 end
 
 -- ===========================================================================

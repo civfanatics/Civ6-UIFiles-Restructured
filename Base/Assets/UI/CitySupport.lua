@@ -417,6 +417,7 @@ function GetCityData( pCity:table )
 		HappinessNonFoodYieldModifier	= 0,		-- Multiplier
 		Housing							= 0,
 		HousingMultiplier				= 0,
+		HousingFromGreatWorks			= 0,
 		IsCapital						= pCity:IsCapital(),
 		IsUnderSiege					= false,
 		OccupationMultiplier            = 0,
@@ -567,6 +568,7 @@ function GetCityData( pCity:table )
 	data.HousingFromGreatPeople			= pCityGrowth:GetHousingFromGreatPeople();
 	data.HousingFromStartingEra			= pCityGrowth:GetHousingFromStartingEra();
 	data.HousingMultiplier				= pCityGrowth:GetHousingGrowthModifier();
+	data.HousingFromGreatWorks			= pCityGrowth:GetHousingFromGreatWorks();
 	data.HousingAdvice					= pCity:GetHousingAdvice();
 	data.OccupationMultiplier			= pCityGrowth:GetOccupationGrowthModifier();
 	data.Occupied                       = pCity:IsOccupied();

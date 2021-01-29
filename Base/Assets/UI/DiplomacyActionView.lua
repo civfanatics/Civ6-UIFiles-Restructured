@@ -145,6 +145,8 @@ local m_currentSceneEffect	:string = "";
 
 local ms_OtherID;
 
+local m_bIsModPaused : boolean = false;
+
 m_LiteMode = false;
 
 -- ===========================================================================
@@ -530,7 +532,14 @@ function OnSelectConversationDiplomacyStatement(key)
 						DiplomacyManager.AddResponse(ms_ActiveSessionID, Game.GetLocalPlayer(), "RESPONSE_IGNORE");
 					else
 						if(key == "CHOICE_STOP_ASKING")then
-							DiplomacyManager.AddResponse(ms_ActiveSessionID, Game.GetLocalPlayer(), "REJECTED_PERMANENT");
+							local kPlayerConfig : table = PlayerConfigurations[ms_OtherPlayerID];
+							local otherCivName : string = Locale.Lookup(kPlayerConfig:GetCivilizationShortDescription());
+							m_PopupDialog:Reset();
+							m_PopupDialog:AddText(Locale.Lookup("LOC_STOP_ASKING_POPUP_BODY", otherCivName));
+							m_PopupDialog:AddButton(Locale.Lookup("LOC_CANCEL"), nil);
+							m_PopupDialog:AddButton(Locale.Lookup("LOC_UI_RELIGION_CONFIRM_RELIGION"), function() RejectFriendshipPermanent(); end, nil, nil, "PopupButtonInstanceRed");
+							m_PopupDialog:Open();
+							
 						else
 							-- Just pass the choice key through as a response string.
 							DiplomacyManager.AddResponse(ms_ActiveSessionID, Game.GetLocalPlayer(), key);
@@ -540,6 +549,10 @@ function OnSelectConversationDiplomacyStatement(key)
 			end
 		end
 	end
+end
+
+function RejectFriendshipPermanent()
+	DiplomacyManager.AddResponse(ms_ActiveSessionID, Game.GetLocalPlayer(), "REJECTED_PERMANENT");
 end
 
 -- ===========================================================================
@@ -2360,9 +2373,10 @@ function OnLeaderLoaded()
         UI.PlaySound("Stop_Speech_GreatWriting");
         UI.PlaySound("Stop_Speech_NaturalWonders");
 
-		-- if the local player civ is unknown, pause any music the mod may be supplying
-		if (UI.GetCivilizationSoundSwitchValueByLeader(ms_LocalPlayerLeaderID) == -1) then
+		-- always pause mod civ music here
+		if (not m_bIsModPaused) then
 			UI.PauseModCivMusic();
+			m_bIsModPaused = true;
 		end
 
 		-- if leader IDs don't match
@@ -2378,7 +2392,7 @@ function OnLeaderLoaded()
             UI.SetSoundStateValue("Game_Views", "Leader_Screen");
 
 			-- always restart modder music if the leader IDs don't match
-			if (UI.GetCivilizationSoundSwitchValueByLeader(ms_OtherLeaderID) == -1) then
+			if (UI.ShouldCivPlayModMusic(ms_OtherCivilizationID)) then
 				UI.PlaySound("Stop_Leader_Music");
 				UI.PlaySound("Pause_Game_Music");
 				UI.PlayModCivLeaderMusic(ms_OtherID);
@@ -2838,13 +2852,10 @@ function Close()
 		UI.PlaySound("Resume_Game_Music");
     end
 
-    -- if it's not an observer game...
-    if (ms_LocalPlayerLeaderID ~= -1) then
-        -- and the local player is not a known Wwise leader...
-        if (UI.GetCivilizationSoundSwitchValueByLeader(ms_LocalPlayerLeaderID) == -1) then
-            -- resume modder music, instead of Roland's
-            UI.ResumeModCivMusic();
-        end
+    if (m_bIsModPaused) then
+		-- resume modder music if it's what was playing (the C++ will make that determination for us)
+		UI.ResumeModCivMusic();
+		m_bIsModPaused = false;
 	end
 
     UI.PlaySound("Exit_Leader_Screen");
@@ -3065,6 +3076,8 @@ function LateInitialize()
 	Controls.LeaderReasonText:SetWrapWidth(leaderResponseX-40);
 
 	Controls.ScreenClickRegion:RegisterCallback( Mouse.eRClick, HandleRMB )
+
+	m_bIsModPaused = false;
 end
 
 -- ===========================================================================

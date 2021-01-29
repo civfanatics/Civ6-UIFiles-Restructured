@@ -1157,6 +1157,7 @@ function UI_PostRefreshParameters()
 		if(err) then
 			Controls.StartButton:SetDisabled(true);
 			Controls.StartButton:LocalizeAndSetToolTip("LOC_SETUP_PLAYER_PARAMETER_ERROR");
+			Controls.ConflictPopup:SetHide(false);
 		end
 	end
 
@@ -1540,6 +1541,8 @@ function Initialize()
 	Controls.SaveConfig:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 	Controls.MapSelectButton:RegisterCallback( Mouse.eLClick, OnMapSelect );
 	Controls.MapSelectButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
+	Controls.ConflictConfirmButton:RegisterCallback( Mouse.eLClick, function() Controls.ConflictPopup:SetHide(true); end);
+	Controls.ConflictConfirmButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 	
 	Events.FinishedGameplayContentConfigure.Add(OnFinishedGameplayContentConfigure);
 	Events.SystemUpdateUI.Add( OnUpdateUI );

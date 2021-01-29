@@ -9,6 +9,17 @@ include( "Colors" );
 include( "CitySupport" );
 
 -- ===========================================================================
+--	GLOBALS
+-- ===========================================================================
+CityBanner = {};
+
+BANNERTYPE_CITY_CENTER		= UIManager:GetHash("BANNERTYPE_CITY_CENTER");
+BANNERTYPE_ENCAMPMENT	    = UIManager:GetHash("BANNERTYPE_ENCAMPMENT");
+BANNERTYPE_AERODROME	    = UIManager:GetHash("BANNERTYPE_AERODROME");
+BANNERTYPE_MISSILE_SILO	    = UIManager:GetHash("BANNERTYPE_MISSILE_SILO");
+BANNERTYPE_OTHER_DISTRICT   = UIManager:GetHash("BANNERTYPE_OTHER_DISTRICT");
+
+-- ===========================================================================
 --	CONSTANTS
 -- ===========================================================================
 
@@ -64,70 +75,6 @@ local m_HexColoringReligion : number = UILens.CreateLensLayerHash("Hex_Coloring_
 local m_CityDetailsLens : number = UILens.CreateLensLayerHash("City_Details");
 local m_EmpireDetailsLens : number = UILens.CreateLensLayerHash("Empire_Details");
 
--- The meta table definition that holds the function pointers
-hstructure CityBannerMeta
-	-- Pointer back to itself.  Required.
-	__index							: CityBannerMeta
-
-	new								: ifunction;
-	destroy							: ifunction;
-	Initialize						: ifunction;
-	IsVisible						: ifunction;
-	IsTeam							: ifunction;
-	GetCity							: ifunction;
-	GetDistrict						: ifunction;
-	GetImprovementInfo				: ifunction;
-	SetColor						: ifunction;
-	SetFogState						: ifunction;
-	SetHide							: ifunction;
-	UpdateVisibility				: ifunction;
-	UpdateSelected					: ifunction;
-	UpdateName						: ifunction;
-	UpdatePosition					: ifunction;
-	UpdateProduction				: ifunction;
-	UpdateRangeStrike				: ifunction;
-	UpdateReligion					: ifunction;
-	UpdateStats						: ifunction;
-	Resize							: ifunction;
-	SetHealthBarColor				: ifunction;
-	CreateAerodromeBanner			: ifunction;
-	UpdateAerodromeBanner			: ifunction;
-	CreateWMDBanner					: ifunction;
-	UpdateWMDBanner					: ifunction;
-	CreateEncampmentBanner			: ifunction;
-	UpdateEncampmentBanner			: ifunction;
-	CreateDistrictBanner			: ifunction;
-	UpdateDistrictBanner			: ifunction;
-end
-
--- The structure that holds the banner instance data
-hstructure CityBanner
-	meta							: CityBannerMeta;
-
-	m_InstanceManager				: table;							-- The instance manager that made the control set.
-    m_Instance						: table;							-- The instanced control set.
-    
-    m_Type							: number;							-- Full, mini, etc...
-	m_Style							: number;							-- Team or other
-    m_IsSelected					: boolean;
-    m_IsCurrentlyVisible			: boolean;
-	m_IsForceHide					: boolean;
-    m_IsDimmed						: boolean;
-	m_OverrideDim					: boolean;
-	m_FogState						: number;
-    
-    m_Player						: table;
-    m_CityID						: number;		-- The city ID.  Keeping just the ID, rather than a reference because there will be times when we need the value, but the city instance will not exist.
-	m_DistrictID					: number;		-- The district ID.
-	m_PlotX							: number;		-- the X and Y location of the plot associated with the banner. We need this in cases where we need a banner not associated with a district (ex. Airstrip Improvement)
-	m_PlotY							: number; 
-	m_IsImprovementBanner			: boolean;
-	m_eMajorityReligion				: number;
-	m_UnitListEnabled				: boolean;		-- if this is an aerodome marks whether the unit dropdown is enabled when fully visible.
-end
-
-
-
 -- ===========================================================================
 --	MEMBERS
 -- ===========================================================================
@@ -142,21 +89,8 @@ local m_WMDBannerIM			:table	= InstanceManager:new( "WMDBanner",			"Anchor", Con
 local m_EncampmentBannerIM	:table	= InstanceManager:new( "EncampmentBanner",	"Anchor", Controls.CityBanners );
 local m_DistrictBannerIM	:table	= InstanceManager:new( "DistrictBanner",	"Anchor", Controls.CityBanners );
 
--- Create one instance of the meta object as a global variable with the same name as the data structure portion.  
--- This allows us to do a CityBanner:new, so the naming looks consistent.
-CityBanner = hmake CityBannerMeta {};
-
--- Link its __index to itself
-CityBanner.__index = CityBanner;
-
 local CityBannerInstances : table = {};
 local MiniBannerInstances : table = {};
-
-local BANNERTYPE_CITY_CENTER	= 0;
-local BANNERTYPE_ENCAMPMENT		= 1;
-local BANNERTYPE_AERODROME		= 2;
-local BANNERTYPE_MISSILE_SILO	= 3;
-local BANNERTYPE_OTHER_DISTRICT	= 4;
 
 local BANNERSTYLE_LOCAL_TEAM	= 0;
 local BANNERSTYLE_OTHER_TEAM	= 1;
@@ -196,43 +130,42 @@ end
 -- ===========================================================================
 -- constructor
 -- ===========================================================================
-function CityBanner.new( self : CityBannerMeta, playerID: number, cityID : number, districtID : number, bannerType : number, bannerStyle : number )
-    local o = hmake CityBanner { m_eMajorityReligion = -1 }; -- << Assign default values
-    setmetatable( o, self );
+function CityBanner:new( playerID: number, cityID : number, districtID : number, bannerType : number, bannerStyle : number )
 
-	if bannerStyle == nil then UI.DataError("Missing bannerStyle: "..tostring(playerID)..", "..tostring(cityID)..", "..tostring(districtID)..", "..tostring(bannerType) ); end
+	if bannerStyle == nil then
+		UI.DataError("Missing bannerStyle: "..tostring(playerID)..", "..tostring(cityID)..", "..tostring(districtID)..", "..tostring(bannerType) );
+	end
 
-	o:Initialize(playerID, cityID, districtID, bannerType, bannerStyle);
+	local oNewCityBanner:object = {};
+	setmetatable(oNewCityBanner, {__index = CityBanner });
+	oNewCityBanner:Initialize(playerID, cityID, districtID, bannerType, bannerStyle);
 
 	if (bannerType == BANNERTYPE_CITY_CENTER) then
 		if (CityBannerInstances[playerID] == nil) then
 			CityBannerInstances[playerID] = {};
 		end
-		CityBannerInstances[playerID][cityID] = o;
+		CityBannerInstances[playerID][cityID] = oNewCityBanner;
 	else
 		if (MiniBannerInstances[playerID] == nil) then
 			MiniBannerInstances[playerID] = {};
 		end
-		MiniBannerInstances[playerID][districtID] = o;
+		MiniBannerInstances[playerID][districtID] = oNewCityBanner;
 	end
 
-	return o;
+	return oNewCityBanner;
 end
 
 -- ===========================================================================
-function CityBanner.destroy( self : CityBanner )
-    if ( self.m_InstanceManager ~= nil ) then           
-        self:UpdateSelected( false );
-                        		    
-		if (self.m_Instance ~= nil) then
-			self.m_InstanceManager:ReleaseInstance( self.m_Instance );
-		end
-    end
+function CityBanner:destroy()
+	self:Uninitialize( self.m_Player:GetID(), self.m_CityID, self.m_DistrictID, self.m_Type , self.m_Style );
 end
 
+-- ===========================================================================
+function CityBanner:InitializeOtherBannerTypes(bannerType : number)
+end
 
 -- ===========================================================================
-function CityBanner.Initialize( self : CityBanner, playerID: number, cityID : number, districtID : number, bannerType : number, bannerStyle : number)
+function CityBanner:Initialize( playerID: number, cityID : number, districtID : number, bannerType : number, bannerStyle : number)
 
 	self.m_Player = Players[playerID];
 	self.m_CityID = cityID;
@@ -290,6 +223,8 @@ function CityBanner.Initialize( self : CityBanner, playerID: number, cityID : nu
 	elseif (bannerType == BANNERTYPE_OTHER_DISTRICT) then
 		self:CreateDistrictBanner();
 		self:UpdateDistrictBanner();
+	else	-- hook for extensions
+		self:InitializeOtherBannerTypes(bannerType);
 	end
 
 	self:UpdateName();
@@ -306,7 +241,7 @@ function CityBanner.Initialize( self : CityBanner, playerID: number, cityID : nu
 end
 
 -- ===========================================================================
-function CityBanner.CreateAerodromeBanner( self : CityBanner )
+function CityBanner:CreateAerodromeBanner()
 	-- Set the appropriate instance factory (mini banner one) for this flag...
 	self.m_InstanceManager = m_AerodromeBannerIM;
 	self.m_Instance = self.m_InstanceManager:GetInstance();
@@ -328,7 +263,7 @@ function CityBanner.CreateAerodromeBanner( self : CityBanner )
 end
 
 -- ===========================================================================
-function CityBanner.UpdateAerodromeBanner( self : CityBanner )
+function CityBanner:UpdateAerodromeBanner()
 	self.m_Instance.UnitListPopup:ClearEntries();
 	
 	local iAirCapacity = 0;
@@ -449,7 +384,7 @@ function CityBanner.UpdateAerodromeBanner( self : CityBanner )
 end
 
 -- ===========================================================================
-function CityBanner.CreateWMDBanner( self : CityBanner )
+function CityBanner:CreateWMDBanner()
 	-- Set the appropriate instance factory (mini banner one) for this flag...
 	self.m_InstanceManager = m_WMDBannerIM;
 	self.m_Instance = self.m_InstanceManager:GetInstance();
@@ -483,7 +418,7 @@ function CityBanner.CreateWMDBanner( self : CityBanner )
 end
 
 -- ===========================================================================
-function CityBanner.UpdateWMDBanner( self : CityBanner )
+function CityBanner:UpdateWMDBanner()
 	
 	local pCity:table = self:GetCity();
 
@@ -570,7 +505,7 @@ function CityBanner.UpdateWMDBanner( self : CityBanner )
 end
 
 -- ===========================================================================
-function CityBanner.CreateDistrictBanner( self : CityBanner )
+function CityBanner:CreateDistrictBanner()
 	-- Set the appropriate instance factory (mini banner one) for this flag...
 	self.m_InstanceManager = m_DistrictBannerIM;
 	self.m_Instance = self.m_InstanceManager:GetInstance();
@@ -580,7 +515,7 @@ function CityBanner.CreateDistrictBanner( self : CityBanner )
 end
 
 -- ===========================================================================
-function CityBanner.UpdateDistrictBanner( self : CityBanner )
+function CityBanner:UpdateDistrictBanner()
 	local pDistrict:table = self:GetDistrict();
 	if (pDistrict ~= nil) then
 		self.m_PlotX = pDistrict:GetX();
@@ -628,7 +563,7 @@ function CityBanner.UpdateDistrictBanner( self : CityBanner )
 end
 
 -- ===========================================================================
-function CityBanner.CreateEncampmentBanner( self : CityBanner )
+function CityBanner:CreateEncampmentBanner()
 	-- Set the appropriate instance factory (mini banner one) for this flag...
 	self.m_InstanceManager = m_EncampmentBannerIM;
 	self.m_Instance = self.m_InstanceManager:GetInstance();
@@ -664,7 +599,7 @@ function CityBanner.CreateEncampmentBanner( self : CityBanner )
 end
 
 -- ===========================================================================
-function CityBanner.UpdateEncampmentBanner( self : CityBanner )
+function CityBanner:UpdateEncampmentBanner()
 	-- Update wall/district health
 	local pDistrict:table = self:GetDistrict();
 
@@ -709,7 +644,7 @@ function OnUnitSelected( playerID:number, unitID:number )
 end
 
 -- ===========================================================================
-function CityBanner.IsVisible( self : CityBanner )
+function CityBanner:IsVisible( )
 	local pLocalPlayerVis:table = PlayersVisibility[Game.GetLocalPlayer()];
 	local city:table = self:GetCity();
 	local locX:number = city:GetX();
@@ -722,13 +657,13 @@ function CityBanner.IsVisible( self : CityBanner )
 	return false;
 end
 
-function CityBanner.IsTeam( self : CityBanner )
+function CityBanner:IsTeam()
 	return self.m_Style == BANNERSTYLE_LOCAL_TEAM;
 end
 
 -- ===========================================================================
 -- Resize and recenter city banner images to accomodate the city name
-function CityBanner.Resize( self : CityBanner )
+function CityBanner:Resize()
 	if (self.m_Type == BANNERTYPE_CITY_CENTER) then
 		local pCity : table = self:GetCity();
 		if (pCity ~= nil) then
@@ -765,8 +700,13 @@ function CityBanner.Resize( self : CityBanner )
 end
 
 -- ===========================================================================
+function CityBanner:UpdateColorOtherBannerTypes( backColor:number )
+	self.m_Instance.MiniBannerBackground:SetColor( backColor );
+end
+
+-- ===========================================================================
 -- Assign player colors to the appropriate banner elements
-function CityBanner.SetColor( self : CityBanner )
+function CityBanner:SetColor()
 
 	local backColor, frontColor = UI.GetPlayerColors( self.m_Player:GetID() );
 	local darkerBackColor = UI.DarkenLightenColor(backColor,(-85),238);
@@ -800,14 +740,14 @@ function CityBanner.SetColor( self : CityBanner )
 			self.m_Instance.Banner_Base:SetColor( backColor );
 		end
 	else
-		self.m_Instance.MiniBannerBackground:SetColor( backColor );
+		self:UpdateColorOtherBannerTypes( backColor );
 	end
 
 	self:SetHealthBarColor();
 end
 
 -- ===========================================================================
-function CityBanner.SetHealthBarColor( self : CityBanner )
+function CityBanner:SetHealthBarColor()
 	if self.m_Instance.CityHealthBar == nil then
 		-- This normal behaviour in the case of missile silo and aerodrome minibanners
 		return;
@@ -824,29 +764,11 @@ function CityBanner.SetHealthBarColor( self : CityBanner )
 end
 
 -- ===========================================================================
--- Non-instance function so it can be overwritten by mods
-function GetPopulationTooltip(self:CityBanner, turnsUntilGrowth:number, currentPopulation:number, foodSurplus:number)
-	--- POPULATION AND GROWTH INFO ---
-	local popTooltip:string = Locale.Lookup("LOC_CITY_BANNER_POPULATION") .. ": " .. currentPopulation;
-	if turnsUntilGrowth > 0 then
-		popTooltip = popTooltip .. "[NEWLINE]  " .. Locale.Lookup("LOC_CITY_BANNER_TURNS_GROWTH", turnsUntilGrowth);
-		popTooltip = popTooltip .. "[NEWLINE]  " .. Locale.Lookup("LOC_CITY_BANNER_FOOD_SURPLUS", toPlusMinusString(foodSurplus));
-	elseif turnsUntilGrowth == 0 then
-		popTooltip = popTooltip .. "[NEWLINE]  " .. Locale.Lookup("LOC_CITY_BANNER_STAGNATE");
-	elseif turnsUntilGrowth < 0 then
-		popTooltip = popTooltip .. "[NEWLINE]  " .. Locale.Lookup("LOC_CITY_BANNER_TURNS_STARVATION", -turnsUntilGrowth);
-	end
-	return popTooltip;
+function CityBanner:UpdateOtherImprovementBannerTypes()
 end
 
 -- ===========================================================================
--- Non-instance function so it can be overwritten by mods
-function GetCityPopulationText(self:CityBanner, currentPopulation:number)
-	return tostring(currentPopulation);
-end
-
--- ===========================================================================
-function CityBanner.UpdateStats( self : CityBanner)
+function CityBanner:UpdateStats()
 	local pDistrict:table = self:GetDistrict();
 	local localPlayerID:number = Game.GetLocalPlayer();
 
@@ -894,10 +816,20 @@ function CityBanner.UpdateStats( self : CityBanner)
 				self.m_Instance.CityPopTurnsLeft:SetColorByName("StatNormalCS");
 			end
 
-			self.m_Instance.CityPopulation:SetText(GetCityPopulationText(self, currentPopulation));
+			self.m_Instance.CityPopulation:SetText(tostring(currentPopulation));
 
 			if (self.m_Player == Players[localPlayerID]) then			--Only show growth data if the player is you
-				local popTooltip:string = GetPopulationTooltip(self, turnsUntilGrowth, currentPopulation, total);
+				--- POPULATION AND GROWTH INFO ---
+				local popTooltip:string = Locale.Lookup("LOC_CITY_BANNER_POPULATION") .. ": " .. currentPopulation;
+				if turnsUntilGrowth > 0 then
+					popTooltip = popTooltip .. "[NEWLINE]  " .. Locale.Lookup("LOC_CITY_BANNER_TURNS_GROWTH", turnsUntilGrowth);
+					popTooltip = popTooltip .. "[NEWLINE]  " .. Locale.Lookup("LOC_CITY_BANNER_FOOD_SURPLUS", toPlusMinusString(foodSurplus));
+				elseif turnsUntilGrowth == 0 then
+					popTooltip = popTooltip .. "[NEWLINE]  " .. Locale.Lookup("LOC_CITY_BANNER_STAGNATE");
+				elseif turnsUntilGrowth < 0 then
+					popTooltip = popTooltip .. "[NEWLINE]  " .. Locale.Lookup("LOC_CITY_BANNER_TURNS_STARVATION", -turnsUntilGrowth);
+				end
+
 				self.m_Instance.CityPopulation:SetToolTipString(popTooltip);
 				if turnsUntilGrowth ~= 0 then
 					self.m_Instance.CityPopTurnsLeft:SetText(turnsUntilGrowth);
@@ -1017,6 +949,8 @@ function CityBanner.UpdateStats( self : CityBanner)
 					self:UpdateAerodromeBanner();
 				elseif (self.m_Type == BANNERTYPE_MISSILE_SILO) then
 					self:UpdateWMDBanner();
+				else
+					self:UpdateOtherImprovementBannerTypes();
 				end
 			end
 		end
@@ -1122,19 +1056,19 @@ function OnProductionClick( playerID, cityID )
 end
 
 -- ===========================================================================
-function CityBanner.GetCity( self : CityBanner )
+function CityBanner:GetCity()
 	local pCity : table = self.m_Player:GetCities():FindID(self.m_CityID);
 	return pCity;
 end
 
 -- ===========================================================================
-function CityBanner.GetDistrict( self : CityBanner )
+function CityBanner:GetDistrict()
 	local pDistrict : table = self.m_Player:GetDistricts():FindID(self.m_DistrictID);
 	return pDistrict;
 end
 
 -- ===========================================================================
-function CityBanner.GetImprovementInfo( self : CityBanner )
+function CityBanner:GetImprovementInfo()
 	local locX = self.m_PlotX;
 	local locY = self.m_PlotY;
 
@@ -1149,7 +1083,7 @@ function CityBanner.GetImprovementInfo( self : CityBanner )
 end
 
 -- ===========================================================================
-function CityBanner.SetFogState( self : CityBanner, fogState : number )
+function CityBanner:SetFogState( fogState : number )
 
 	if( fogState == PLOT_HIDDEN ) then
         self:SetHide( true );
@@ -1174,13 +1108,13 @@ function CityBanner.SetFogState( self : CityBanner, fogState : number )
 end
 
 -- ===========================================================================
-function CityBanner.SetHide( self : CityBanner, bHide : boolean )
+function CityBanner:SetHide( bHide : boolean )
 	self.m_IsCurrentlyVisible = not bHide;
 	self:UpdateVisibility();
 end
 
 -- ===========================================================================
-function CityBanner.UpdateVisibility( self : CityBanner )
+function CityBanner:UpdateVisibility()
 
 	local bVisible = self.m_IsCurrentlyVisible and not self.m_IsForceHide;
 	self.m_Instance.Anchor:SetHide(not bVisible);
@@ -1188,7 +1122,7 @@ function CityBanner.UpdateVisibility( self : CityBanner )
 end
 
 -- ===========================================================================
-function CityBanner.UpdateName( self : CityBanner )
+function CityBanner:UpdateName()
 	if (self.m_Type == BANNERTYPE_CITY_CENTER) then
 		local pCity : table = self:GetCity();
 		if pCity ~= nil then
@@ -1231,7 +1165,7 @@ function CityBanner.UpdateName( self : CityBanner )
 end
 
 -- ===========================================================================
-function CityBanner.UpdateReligion( self : CityBanner )
+function CityBanner:UpdateReligion()
 
 	local cityInst			:table = self.m_Instance;
 	local pCity				:table = self:GetCity();
@@ -1535,7 +1469,7 @@ function SpawnHolySiteIconAtLocation( locX : number, locY:number, label:string )
 end
 
 -- ===========================================================================
-function CityBanner.UpdateSelected( self : CityBanner, state : boolean )
+function CityBanner:UpdateSelected( state : boolean )
 	local pCity : table = self:GetCity();
 	if (pCity ~= nil) then
 		UI.DeselectCity( pCity );
@@ -1543,10 +1477,10 @@ function CityBanner.UpdateSelected( self : CityBanner, state : boolean )
 end
 
 -- ===========================================================================
-function CityBanner.UpdatePosition( self : CityBanner )
+function CityBanner:UpdatePosition()
 	local yOffset = 0;	--offset for 2D strategic view
 	local zOffset = 0;	--offset for 3D world view
-	
+
 	if (UI.GetWorldRenderView() == WorldRenderView.VIEW_2D) then
 		yOffset = YOFFSET_2DVIEW;
 	else
@@ -1556,7 +1490,7 @@ function CityBanner.UpdatePosition( self : CityBanner )
 	if(m_isReligionLensActive and self.m_eMajorityReligion >= 0) then
 		yOffset = yOffset + OFFSET_RELIGION_BANNER;
 	end
-	
+
 	local worldX, worldY, worldZ = UI.GridToWorld( self.m_PlotX, self.m_PlotY );
 	self.m_Instance.Anchor:SetWorldPositionVal( worldX, worldY+yOffset, worldZ+zOffset );
 end
@@ -1619,7 +1553,7 @@ function CanRangeAttack(pCityOrDistrict : table)
 end
 
 -- ===========================================================================
-function CityBanner.UpdateProduction( self : CityBanner)
+function CityBanner:UpdateProduction()
 	local localPlayerID		:number = Game.GetLocalPlayer();
 	local pCity				:table = self:GetCity();
 	local pBuildQueue		:table  = pCity:GetBuildQueue();
@@ -1740,7 +1674,7 @@ function CityBanner.UpdateProduction( self : CityBanner)
 end
 
 -- ===========================================================================
-function CityBanner.UpdateRangeStrike( self : CityBanner)
+function CityBanner:UpdateRangeStrike()
 
 	local controls:table	= self.m_Instance;
 	if controls.CityAttackContainer == nil then
@@ -1852,11 +1786,11 @@ end
 
 -- ===========================================================================
 function DestroyCityBanner( playerID: number, cityID : number )
-	local bannerInstance = GetCityBanner( playerID, cityID );
-	if (bannerInstance ~= nil) then
-		bannerInstance:destroy();
+	local kCityBanner:table = GetCityBanner( playerID, cityID );
+	if (kCityBanner ~= nil) then
+		kCityBanner:destroy();
 		CityBannerInstances[ playerID ][ cityID ] = nil;
-	end	
+	end
 end
 
 -- ===========================================================================
@@ -2096,9 +2030,9 @@ end
 -- ===========================================================================
 function OnCityNameChange( playerID: number, cityID : number)
 	
-	local banner:CityBanner = GetCityBanner( playerID, cityID );
+	local banner:table = GetCityBanner( playerID, cityID );
 	if (banner ~= nil ) then
-		banner:UpdateName();   
+		banner:UpdateName();
     end
 
 end
@@ -2110,7 +2044,7 @@ function OnCapitalCityChanged( playerID: number, cityID : number )
 		return;
 	end
 
-    local banner:CityBanner = GetCityBanner( playerID, cityID );
+    local banner:table = GetCityBanner( playerID, cityID );
 	if (banner ~= nil ) then
 		banner:UpdateName();   
     end
@@ -2124,7 +2058,7 @@ function OnCityReligionChanged( playerID: number, cityID : number, eVisibility :
 		return;
 	end
 
-    local banner:CityBanner = GetCityBanner( playerID, cityID );
+    local banner:table = GetCityBanner( playerID, cityID );
 	if (banner ~= nil and banner.m_Instance.ReligionInfoAnchor ~= nil and banner:IsVisible()) then
 		banner:UpdateReligion();   -- For now religion is shown in name
     end
@@ -2994,5 +2928,10 @@ function Initialize()
 	LuaEvents.Tutorial_DisableMapSelect.Add( OnTutorial_DisableMapSelect );
 	LuaEvents.GameDebug_Return.Add(OnGameDebugReturn);	
 end
-Initialize();
 
+-- This wildcard include will include all loaded files beginning with "CityBannerManager_"
+-- This method replaces the uses of include("CityBannerManager") in files that want to override
+-- functions from this file. If you're implementing a new "CityBannerManager_" file DO NOT include this file.
+include("CityBannerManager_", true);
+
+Initialize();

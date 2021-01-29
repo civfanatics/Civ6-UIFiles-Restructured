@@ -339,6 +339,19 @@
 
 	</Box><!-- Main Box -->
 
+	<Container ID="ConflictPopup" Anchor="C,C" Size="680,400" Offset="0,0" Hidden="1">
+		<Image ID="ModalBG" Size="680,400" Offset="0,0" Texture="WorldBuilder_BG" StretchMode="Tile" ConsumeMouse="1"/>
+		<Grid	Size="parent,40" Texture="Controls_SubHeader2" ConsumeMouse="1" SliceCorner="20,2" SliceTextureSize="40,40">
+		  <Label ID="ModalScreenTitle" String="LOC_SETUP_PLAYER_PARAMETER_ERROR" Anchor="C,C" Style="FontFlair26" FontStyle="glow" ColorSet="ShellHeader" />
+		</Grid>
+		<Grid	Offset="-8,-8"	Size="parent+16,parent+16"	Style="ScreenFrame"/>
+
+		<Grid Size="648,280" Offset="20,50" Texture="Religion_OverviewFrame" SliceCorner="15,15" SliceTextureSize="34,33">
+				<Label Offset="20,20" WrapWidth="560" Style="FontNormal20" FontStyle="shadow" ColorSet="ShellHeader" String="LOC_SETUP_PLAYER_PARAMETER_ERROR_POPUP" />
+		</Grid>
+		<GridButton ID="ConflictConfirmButton" Size="200,48" Offset="17,8" String="LOC_CONTINUE" Style="ButtonConfirm" Anchor="C,B"/>
+	</Container>
+
 	<!-- INSTANCES -->
 	<!-- Non Local Player Slot Instance -->
 	<Instance Name="NonLocalPlayerSlotInstance" >

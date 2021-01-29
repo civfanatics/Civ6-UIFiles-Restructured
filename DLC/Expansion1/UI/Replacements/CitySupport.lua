@@ -568,6 +568,7 @@ function GetCityData( pCity:table )
 	data.HousingFromCivics				= pCityGrowth:GetHousingFromCivics();
 	data.HousingFromGreatPeople			= pCityGrowth:GetHousingFromGreatPeople();
 	data.HousingFromStartingEra			= pCityGrowth:GetHousingFromStartingEra();
+	data.HousingFromGreatWorks			= pCityGrowth:GetHousingFromGreatWorks();
 	data.HousingMultiplier				= pCityGrowth:GetHousingGrowthModifier();
 	data.HousingAdvice					= pCity:GetHousingAdvice();
 	data.OccupationMultiplier			= pCityGrowth:GetOccupationGrowthModifier();

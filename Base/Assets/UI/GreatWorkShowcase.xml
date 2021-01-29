@@ -12,9 +12,9 @@
 						</Grid>
 						<Grid Style="DecoGrid" Anchor="C,T" Offset="0,85" Size="280,80" Color="141,116,82,255">
 						<Container Anchor="C,C" Width="280" Offset="0,-45">
-							<Label ID="CreatedBy" Offset="0,15" Anchor="C,T" Align="center" Style="FontNormalMedium14"/>
-							<Label ID="CreatedDate" Offset="0,38" Anchor="C,T" Align="center" Style="FontNormalMedium14"/>
-							<Label ID="CreatedPlace" Offset="0,60" Anchor="C,T" Align="center" Style="FontNormalMedium14" WrapWidth="250"/>
+							<Label ID="CreatedBy" Offset="0,15" Anchor="C,T" Align="center" Style="FontNormalMedium14" WrapWidth="250"/>
+							<Label ID="CreatedDate" Offset="0,46" Anchor="C,T" Align="center" Style="FontNormalMedium14"/>
+							<Label ID="CreatedPlace" Offset="0,64" Anchor="C,T" Align="center" Style="FontNormalMedium14" WrapWidth="250"/>
 						</Container>
 					</Grid>
 				</Container>

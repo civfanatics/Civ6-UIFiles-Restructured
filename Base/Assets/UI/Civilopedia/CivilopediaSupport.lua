@@ -464,7 +464,8 @@ function PopulateSearchData()
 				end
 
 				
-				Search.AddData(searchContext, sectionId .. "|" .. pageId, page.Title, "", terms);
+				local titleStrip:string = Locale.StripTags(page.Title);
+				Search.AddData(searchContext, sectionId .. "|" .. pageId, titleStrip, "", terms);
 			end
 		end
 
@@ -1159,6 +1160,7 @@ function OnInputActionTriggered( actionId )
 end
 
 function OnSearchBarGainFocus()
+
 	Controls.SearchEditBox:ClearString();
 	Controls.SearchResultsPanelContainer:SetHide(true);
 end

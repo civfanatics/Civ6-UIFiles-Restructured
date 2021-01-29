@@ -395,7 +395,7 @@
 			<!-- Ready Button -->
 			<Button Anchor="L,C" Offset="755,0" Texture="Shell_ReadyCheckbox" Size="34,34" NoStateChange="1" StateOffsetIncrement="0,34" ID="ReadyImage"/>
 
-			<Label ID="StatusLabel" Anchor="L,C" Offset="793,0" Style="FontNormalMedium14" Color="36,100,105" String="LOC_NOT_READY"/>
+			<Label ID="StatusLabel" Anchor="L,C" Offset="793,0" Style="FontNormalMedium14" Color="36,100,105" String="LOC_NOT_READY" WrapWidth="120"/>
 
 			<!-- Kick Button -->
 			<Button Anchor="L,C" Offset="935,0" Texture="Shell_XButton" Size="37,37" ID="KickButton" ToolTip="LOC_MP_KICK_PLAYER"/>
@@ -474,8 +474,8 @@
 				<Image		ID="Icon"					Size="38,38" Anchor="C,C" />
 			</Image>
 			<Stack		ID="TextStack"		StackGrowth="Bottom" StackPadding="4" Offset="55,0">
-				<Label	ID="Header"				WrapWidth="330" SmallCapsType="EveryWord" SmallCaps="20" Style="FontFlair14"		String="$Header$" ColorSet="ShellHeader"/>
-				<Label	ID="Description"	WrapWidth="330"	Style="DawnText"	String="$Description$"/>
+				<Label	ID="Header"				WrapWidth="324" SmallCapsType="EveryWord" SmallCaps="20" Style="FontFlair14"		String="$Header$" ColorSet="ShellHeader"/>
+				<Label	ID="Description"	WrapWidth="324"	Style="DawnText"	String="$Description$"/>
 			</Stack>
 		</Container>
 	</Instance>
@@ -492,8 +492,8 @@
 				<Image		ID="Icon"					Size="45,45" Anchor="C,C" Offset="0,-1" />
 			</Image>
 			<Stack		ID="TextStack"		StackGrowth="Bottom" StackPadding="4" Offset="55,0">
-				<Label	ID="Header"				WrapWidth="330" SmallCapsType="EveryWord" SmallCaps="20" Style="FontFlair14"		String="$Header$" ColorSet="ShellHeader"/>
-				<Label	ID="Description"	WrapWidth="330"	Style="DawnText"	String="$Description$"/>
+				<Label	ID="Header"				WrapWidth="324" SmallCapsType="EveryWord" SmallCaps="20" Style="FontFlair14"		String="$Header$" ColorSet="ShellHeader"/>
+				<Label	ID="Description"	WrapWidth="324"	Style="DawnText"	String="$Description$"/>
 			</Stack>
 		</Container>
 	</Instance>
@@ -506,8 +506,8 @@
 				<Image	ID="Icon"						Size="44,44" Anchor="C,C" />
 			</Image>
 			<Stack		ID="TextStack"		StackGrowth="Bottom" StackPadding="4" Offset="55,0">
-				<Label	ID="Header"				WrapWidth="330" SmallCapsType="EveryWord" SmallCaps="20" Style="FontFlair14"		String="$Header$" ColorSet="ShellHeader"/>
-				<Label	ID="Description"	WrapWidth="330"	Style="DawnText"	String="$Description$"/>
+				<Label	ID="Header"				WrapWidth="324" SmallCapsType="EveryWord" SmallCaps="20" Style="FontFlair14"		String="$Header$" ColorSet="ShellHeader"/>
+				<Label	ID="Description"	WrapWidth="324"	Style="DawnText"	String="$Description$"/>
 			</Stack>
 		</Container>
 	</Instance>

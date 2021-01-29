@@ -23,7 +23,6 @@ function GreatWorksSupport_GetBasicTooltip( nGreatWorkIndex:number, bIsThemeable
 	for row in GameInfo.GreatWork_YieldChanges() do
 		if(row.GreatWorkType == tStaticInfo.GreatWorkType) then
 			strYields = YIELD_FONT_ICONS[row.YieldType] .. tostring(row.YieldChange) .. " " .. strYields;
-			break;
 		end
 	end
 	
