@@ -55,7 +55,7 @@
 		<Container ID="Root" Size="530,483" Anchor="C,C">
 			<Image ID="Frame" Anchor="C,C" Texture="Historian_NodeLarge"/>
 			<Container ID="Illustrations" Offset="0,-75" Size="530,483"/>
-			<Label ID="Description" Style="BodyText16" Anchor="C,B" Align="center" Offset="0,75" WrapWidth="500" Color="217,204,132,255"/>
+			<Label ID="Description" Style="BodyText16" Anchor="C,B" Align="center" Offset="0,65" WrapWidth="500" Color="217,204,132,255"/>
 			<Label ID="Effect" Style="BodyText16" Anchor="C,B" Align="center" Offset="0,40" WrapWidth="500" Color="217,204,132,255"/>
 		</Container>
 	</Instance>
@@ -73,7 +73,7 @@
 		<Movie ID="Root" Size="530,483" Anchor="C,C" Movie="Brush.bk2" StretchMode="Fill" MaskChildren="1">
 			<Image ID="Frame" Anchor="C,C" Texture="Historian_NodeLarge"/>
 			<Container ID="Illustrations" Offset="0,-75" Size="530,483"/>
-			<Label ID="Description" Style="BodyText16" Anchor="C,B" Align="center" Offset="0,75" WrapWidth="500" Color="217,204,132,255"/>
+			<Label ID="Description" Style="BodyText16" Anchor="C,B" Align="center" Offset="0,65" WrapWidth="500" Color="217,204,132,255"/>
 			<Label ID="Effect" Style="BodyText16" Anchor="C,B" Align="center" Offset="0,40" WrapWidth="500" Color="217,204,132,255"/>
 		</Movie>
 	</Instance>

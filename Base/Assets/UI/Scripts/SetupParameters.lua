@@ -1320,7 +1320,7 @@ end
 -- GameSetupLogic or PlayerSetupLogic.
 -------------------------------------------------------------------------------
 function GetPlayerCivilization(domain, leader_type)
-	if(leader_type ~= "RANDOM") then
+	if(leader_type ~= "RANDOM" and leader_type ~= "RANDOM_POOL1" and leader_type ~= "RANDOM_POOL2") then
 		local info_query = "SELECT CivilizationType from Players where Domain = ? and LeaderType = ? LIMIT 1";
 		local info_results = CachedQuery(info_query, domain, leader_type);
 		

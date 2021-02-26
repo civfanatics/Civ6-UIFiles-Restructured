@@ -2412,7 +2412,7 @@
 
   <Civilopedia_LeftColumnChapterHeader Texture="Civilopedia_TopicHeader" SliceCorner="64,21" SliceTextureSize="128,42" />
   <Civilopedia_LeftColumnChapterHeaderCaption Anchor="C,C" Style="FontBoldFlair18" SmallCaps="16" SmallCapsLeading="0" SmallCapsType="EveryWord" Color="27,27,27,255" FontStyle="glow" />
-  <Civilopedia_LeftColumnChapterParagraph Style="FontNormalMedium16" Size="16" Color="27,27,27,255" />
+  <Civilopedia_LeftColumnChapterParagraph Style="FontNormalMedium17" Size="16" Color="27,27,27,255" />
 
   <Civilopedia_RightColumnQuotePanel Anchor="C,T" Texture="Civilopedia_QuoteButton" SliceCorner="53,43" SliceTextureSize="102,84" Size="260,100" />
   <Civilopedia_RightColumnQuoteText Anchor="C,C" WrapWidth="190" Style="FontNormalMedium16" FontStyle="shadow" Size="16" Color0="201,193,188,255" Color1="0,0,0,128" />
@@ -2423,7 +2423,7 @@
 
   <Civilopedia_ChapterHeader Texture="Civilopedia_TopicHeader" SliceCorner="64,21" SliceTextureSize="128,42" />
   <Civilopedia_ChapterHeaderCaption Anchor="C,C" Style="FontBoldFlair18" SmallCaps="16" SmallCapsLeading="0" SmallCapsType="EveryWord" Color="27,27,27,255" FontStyle="glow"/>
-  <Civilopedia_ChapterParagraph Style="FontNormalMedium16" Size="16" Color="0,0,0,255" />
+  <Civilopedia_ChapterParagraph Style="FontNormalMedium17" Size="16" Color="0,0,0,255" />
 
 	<!-- World Builder -->
 	<WorldBuilderPropertyLabel Style="FontNormal14" Anchor="L,C" TruncatedTooltip="1" TruncateWidth="270" />

@@ -94,6 +94,9 @@ function ShowTechBoost(techIndex, iTechProgress, eSource)
 	elseif eSource == BoostSources.BOOST_SOURCE_TRADING_POST then
 		msgString = Locale.Lookup("LOC_TECH_BOOST_TRADING_POST");
 
+	elseif eSource == BoostSources.BOOST_SOURCE_BARBARIAN_CLAN_STEAL then
+		msgString = Locale.Lookup("LOC_TECH_BOOST_BARBARIAN_CLAN_STEAL");
+
 	elseif currentTech ~= nil then
 		for row in GameInfo.Boosts() do
 			if(row.TechnologyType == currentTech.TechnologyType) then
@@ -205,6 +208,9 @@ function ShowCivicBoost(civicIndex, iCivicProgress, eSource)
 
 	elseif eSource == BoostSources.BOOST_SOURCE_TRADING_POST then
 		msgString = Locale.Lookup("LOC_CIVIC_BOOST_TRADING_POST");
+
+	elseif eSource == BoostSources.BOOST_SOURCE_BARBARIAN_CLAN_STEAL then
+		msgString = Locale.Lookup("LOC_TECH_BOOST_BARBARIAN_CLAN_STEAL");
 		 
 	elseif currentCivic ~= nil then
 		

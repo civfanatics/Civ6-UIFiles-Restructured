@@ -123,12 +123,15 @@ function ShowGovernmentLensKey()
 				local culture = player:GetCulture();
 				local governmentIndex = culture:GetCurrentGovernment();
 				local government = GameInfo.Governments[governmentIndex];
-				if government and visibleTypes[governmentIndex] ~= true then
+				if (government or governmentIndex == -1) and visibleTypes[governmentIndex] ~= true then
 					-- Get government color
-					local colorString:string = "COLOR_" .. government.GovernmentType;
-
-					-- Add key entry
-					AddKeyEntry(government.Name, UI.GetColorValue(colorString));
+					local colorString:string = "";
+					if(governmentIndex == -1)then
+						AddKeyEntry("LOC_CITY_STATES_TITLE", UI.GetColorValue("COLOR_GOVERNMENT_CITYSTATE"));
+					else
+						AddKeyEntry(government.Name, UI.GetColorValue("COLOR_" .. government.GovernmentType));
+					end
+					
 
 					visibleTypes[governmentIndex] = true;
 					visibleTypesCount = visibleTypesCount + 1;

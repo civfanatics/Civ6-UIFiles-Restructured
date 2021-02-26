@@ -457,7 +457,7 @@
 
 	<Instance Name="AdditionalContentInstance">
 		<Container ID="Root" Size="1,17">
-			<Label ID="ModTitle" Anchor="C,T" Offset="5,0" Style="WhiteSemiBold12" ColorSet="ShellControl" FontStyle="stroke" String="UNKNOWN_EDIT_BOX" TruncateWidth="230" />
+			<Label ID="ModTitle" Anchor="C,T" Offset="5,0" Style="WhiteSemiBold12" ColorSet="ShellControl" FontStyle="stroke" String="UNKNOWN_EDIT_BOX" TruncateWidth="375" TruncatedTooltip="1"/>
 		</Container>
 	</Instance>
 

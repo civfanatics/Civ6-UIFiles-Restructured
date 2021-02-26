@@ -250,17 +250,15 @@ end
 
 -- ===========================================================================
 --	UI Callback
---  Wait one frame via RequestRefresh() to avoid conflicts with other screens.
 -- ===========================================================================
 function OnShow()
-	ContextPtr:RequestRefresh();
+	RealizeNextPopup();
 end
 
 
 -- ===========================================================================
-function OnRefresh()
-	ContextPtr:ClearRequestRefresh();
-	RealizeNextPopup();
+function OnHide()
+	StopSound();
 end
 
 
@@ -394,8 +392,6 @@ function OnShutdown()
 	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "isHidden",			ContextPtr:IsHidden() );
 	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "m_kPopupData",		m_kPopupData );
 	LuaEvents.GameDebug_AddValue(RELOAD_CACHE_ID, "m_kCurrentData",m_kCurrentData );	
-
-	ContextPtr:ClearRefreshHandler();
 end
 
 -- ===========================================================================
@@ -463,7 +459,7 @@ function Initialize()
 	ContextPtr:SetInputHandler( OnInputHandler, true );
 	ContextPtr:SetShutdown( OnShutdown );
     ContextPtr:SetShowHandler( OnShow );
-	ContextPtr:SetRefreshHandler( OnRefresh );
+	ContextPtr:SetHideHandler( OnHide );
 
 	Controls.CloseButton:RegisterCallback( Mouse.eLClick, OnClose );
 	Controls.CloseButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);

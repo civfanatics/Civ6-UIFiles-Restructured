@@ -57,6 +57,7 @@ local DATA_ILLUSTRATIONS_MAP:table = {
 -- ===========================================================================
 --	VARIABLES
 -- ===========================================================================
+local m_debugSuppressPopups	:boolean = (Options.GetAppOption("Debug", "SuppressInfoPopups") == 1);	-- Set in AppOptions.txt, to suppress popups including historical moments
 local m_CurrentEra:number = -1;
 local m_CurrentMoment:number = -1;
 local m_ScreenWidth:number = -1;
@@ -137,7 +138,7 @@ end
 function OnProcessNotification(playerID:number, notificationID:number, activatedByUser:boolean)
 	if playerID == Game.GetLocalPlayer() then -- Was it for us?
 		local pNotification = NotificationManager.Find(playerID, notificationID);
-		if pNotification and pNotification:GetType() == HISTORIC_MOMENT_HASH then
+		if pNotification and pNotification:GetType() == HISTORIC_MOMENT_HASH and (not m_debugSuppressPopups) then
 			local momentID = pNotification:GetValue("MomentID");
 			if momentID then
 				local popupData = {};

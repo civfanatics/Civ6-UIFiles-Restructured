@@ -61,6 +61,8 @@
 	<FontNormalMedium13	Font="NotoSansCJKtc-Regular.otf;NotoSans-Regular.ttf" FontSize="13"/>
 	<FontNormalMedium14	Font="NotoSansCJKtc-Regular.otf;NotoSans-Regular.ttf" FontSize="14"/>
 	<FontNormalMedium16	Font="NotoSansCJKtc-Regular.otf;NotoSans-Regular.ttf" FontSize="16"/>
+	<!-- Due to issues with Chinese font rendering in some sizes, we have this "17" size that's 17 in Chinese and 16 everywhere else -->
+	<FontNormalMedium17	Font="NotoSansCJKtc-Regular.otf;NotoSans-Regular.ttf" FontSize="17"/>
 	<FontNormalMedium18	Font="NotoSansCJKtc-Regular.otf;NotoSans-Regular.ttf" FontSize="18"/>
 	<FontNormalMedium20	Font="NotoSansCJKtc-Regular.otf;NotoSans-Regular.ttf" FontSize="20"/>
 

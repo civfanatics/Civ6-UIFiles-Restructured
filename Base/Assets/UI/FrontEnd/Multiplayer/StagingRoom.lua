@@ -1831,7 +1831,7 @@ function UpdatePlayerEntry(playerID)
 
 				civIconBG:SetHide(true);
                 civIcon:SetHide(true);
-                if (parameter.Value.Value ~= "RANDOM") then
+                if (parameter.Value.Value ~= "RANDOM" and parameter.Value.Value ~= "RANDOM_POOL1" and parameter.Value.Value ~= "RANDOM_POOL2") then
                     local colorAlternate = parameters.Parameters["PlayerColorAlternate"] or 0;
         			local backColor, frontColor = UI.GetPlayerColorValues(playerColor, colorAlternate.Value);
 					
@@ -2705,7 +2705,7 @@ function SetupSplitLeaderPulldown(playerId:number, instance:table, pulldownContr
 				end
 
 				local primaryColor, secondaryColor = UI.GetPlayerColorValues(playerColor, 0);
-				if v.Value == "RANDOM" or primaryColor == nil then
+				if v.Value == "RANDOM" or v.Value == "RANDOM_POOL1" or v.Value == "RANDOM_POOL2" or primaryColor == nil then
 					civIconBG:SetHide(true);
 					civIcon:SetHide(true);
 					civWarnIcon:SetHide(true);

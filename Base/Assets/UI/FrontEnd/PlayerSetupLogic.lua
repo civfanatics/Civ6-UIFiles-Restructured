@@ -31,9 +31,15 @@ function Player_ReadParameterValues(o, parameter)
 			if(value ~= -1) then
 				value = playerConfig:GetLeaderTypeName();
 			else
-				value = "RANDOM";
+				local pool_id:number = playerConfig:GetLeaderRandomPoolID();
+				if pool_id == LeaderRandomPoolTypes.LEADER_RANDOM_POOL_1 then
+					value = "RANDOM_POOL1";
+				elseif pool_id == LeaderRandomPoolTypes.LEADER_RANDOM_POOL_2 then
+					value = "RANDOM_POOL2";
+				else
+					value = "RANDOM";
+				end
 			end
-
 
 			return value;
 		end
@@ -55,6 +61,15 @@ function Player_WriteParameterValues(o, parameter)
 				if(value == -1 or value == "RANDOM") then
 					playerConfig:SetLeaderName(nil);
 					playerConfig:SetLeaderTypeName(nil);
+					playerConfig:SetLeaderRandomPoolID(LeaderRandomPoolTypes.LEADER_RANDOM_POOL_DEFAULT);
+				elseif(value == "RANDOM_POOL1") then
+					playerConfig:SetLeaderName(nil);
+					playerConfig:SetLeaderTypeName(nil);
+					playerConfig:SetLeaderRandomPoolID(LeaderRandomPoolTypes.LEADER_RANDOM_POOL_1);
+				elseif(value == "RANDOM_POOL2") then
+					playerConfig:SetLeaderName(nil);
+					playerConfig:SetLeaderTypeName(nil);
+					playerConfig:SetLeaderRandomPoolID(LeaderRandomPoolTypes.LEADER_RANDOM_POOL_2);
 				else
 					local leaderType:string = parameter.Value.Value;
 
@@ -479,7 +494,7 @@ function GetPlayerIcons(domain, leader_type)
 	-- be just another row in the players entry.
 	-- This can't happen until GameCore supports 
 	-- multiple 'random' pools.
-	if(leader_type ~= "RANDOM") then
+	if (leader_type ~= "RANDOM" and leader_type ~= "RANDOM_POOL1" and leader_type ~= "RANDOM_POOL2") then
 
 		-- Does the cache need to be invalidated?
 		local changes = DB.ConfigurationChanges();
@@ -523,7 +538,7 @@ function GetPlayerInfo(domain, leader_type)
 	-- be just another row in the players entry.
 	-- This can't happen until GameCore supports 
 	-- multiple 'random' pools.
-	if(leader_type ~= "RANDOM") then
+	if(leader_type ~= "RANDOM" and leader_type ~= "RANDOM_POOL1" and leader_type ~= "RANDOM_POOL2") then
 		local info_query = "SELECT CivilizationIcon, LeaderIcon, LeaderName, CivilizationName, LeaderAbilityName, LeaderAbilityDescription, LeaderAbilityIcon, CivilizationAbilityName, CivilizationAbilityDescription, CivilizationAbilityIcon, Portrait, PortraitBackground, PlayerColor from Players where Domain = ? and LeaderType = ? LIMIT 1";
 		local item_query = "SELECT Type, Name, Description, Icon, SortIndex from PlayerItems where Domain = ? and LeaderType = ?";
 		local info_results = CachedQuery(info_query, domain, leader_type);
@@ -648,6 +663,7 @@ function GetPlayerInfo(domain, leader_type)
 		LeaderIcon = "ICON_LEADER_DEFAULT",
 		CivilizationName = "LOC_RANDOM_CIVILIZATION",
 		LeaderName = "LOC_RANDOM_LEADER",
+		LeaderType = leader_type,
 	};
 end
 
@@ -834,14 +850,16 @@ function SetUniqueCivLeaderData(info:table, tooltipControls:table)
 	end
 
 	-- Set Civ unique units data
-	for _, item in ipairs(info.Uniques) do
-		local instance:table = {};
-		instance = tooltipControls.UniqueIconIM:GetInstance();
-		instance.Icon:SetIcon(item.Icon);
-		local headerText:string = Locale.ToUpper(Locale.Lookup( item.Name ));
-		instance.Header:SetText( headerText );
-		instance.Description:SetText(Locale.Lookup(item.Description));
-		hasTooltipInfo = true;
+	if (info.Uniques) then
+		for _, item in ipairs(info.Uniques) do
+			local instance:table = {};
+			instance = tooltipControls.UniqueIconIM:GetInstance();
+			instance.Icon:SetIcon(item.Icon);
+			local headerText:string = Locale.ToUpper(Locale.Lookup( item.Name ));
+			instance.Header:SetText( headerText );
+			instance.Description:SetText(Locale.Lookup(item.Description));
+			hasTooltipInfo = true;
+		end
 	end
 
 	tooltipControls.InfoStack:CalculateSize();

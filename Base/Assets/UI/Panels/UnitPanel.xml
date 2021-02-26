@@ -443,7 +443,7 @@
 					</Meter>
 
 					<Stack ID="EspionageStack" Offset="59,30" StackGrowth="Down" StackPadding="4">
-						<Label ID="EspionageUnitStatusLabel" Anchor="L,T" Style="FontNormal12"/>
+						<Label ID="EspionageUnitStatusLabel" Anchor="L,T" Style="FontNormal12" WrapWidth="140"/>
 						<Label ID="EspionageTurnsRemaining" Anchor="L,T" Style="FontNormal12"/>
 					</Stack>
 				</Container>

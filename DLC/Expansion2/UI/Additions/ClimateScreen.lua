@@ -812,7 +812,7 @@ function TabCO2ByCiviliation()
 
 	local pLocalPlayer			:table = Players[m_playerID];
 	local pPlayerDiplomacy		:table = pLocalPlayer:GetDiplomacy();
-	local pPlayers				:table = PlayerManager.GetAliveMajors();	
+	local pPlayers				:table = PlayerManager.GetWasEverAliveMajors();	
 	local total					:number = 0;
 	local kFootprints			:table = {};		-- hold raw CO2 usage amounts by each resource	
 	local kColors				:table = {};

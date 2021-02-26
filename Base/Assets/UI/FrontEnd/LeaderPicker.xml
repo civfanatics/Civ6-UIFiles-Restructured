@@ -1,0 +1,115 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Context xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="..\..\..\..\..\..\CivTech\Libs\ForgeUI\ForgeUI_Assets\Controls.xsd"
+		Style="FontNormal14">
+
+	<!--City-State Picker-->
+	<Container Size="1024,parent" Anchor="C,C">
+
+		<Box Size="parent,parent" Color="7,28,50,255"></Box>
+
+		<Container Style="ShellHeaderContainer">
+			<Grid Style="ShellHeaderButtonGrid">
+				<GridButton ID="CloseButton" Style="ShellButtonOrnateFlat" Size="133,36"  Anchor="R,C" Offset="1,0" String="LOC_MULTIPLAYER_BACK"/>
+			</Grid>
+			<Label ID="WindowTitle" Style="ShellHeader" Anchor="C,C" String=""/>
+		</Container>
+
+		<Grid Style="SubContainer4"  Size="parent-10,parent-104" Anchor="C,C" Color="45,75,110,255" Offset="0,5" InnerPadding="10,10">
+
+			<!-- Screen description -->
+			<Stack Anchor="C,T" Offset="0,5" StackGrowth="Down" StackPadding="15">
+				<Label ID="TopDescription" Anchor="C,T" Style="BlueGlow" Align="Center" WrapWidth="parent"/>
+        <Stack StackGrowth="Right" Anchor="C,C">
+          <Label Style="ShellOptionText" ID="StringName" Anchor="L,C" String="LOC_LEADER_POOL_PRESETS"/>
+          <PullDown ID="PresetPulldown" Anchor="C,C" Style="PullDownBlue" Size="300,24"/>
+        </Stack>
+        <Label ID="CountWarning" Anchor="C,T" WrapWidth="parent"/>
+			</Stack>
+
+			<!-- Selection Grid (Left Side Panel)-->
+			<Grid ID="ItemsSection" Style="DecoGrid" Offset="0,100" Size="640,parent-100" Anchor="L,T" Color="30,66,96,255">
+				<Stack Anchor="C,T" StackGrowth="Bottom" Padding ="5">
+
+					<Line Start="10,1"			End="630,1"		Color="30,66,96,255" Width="2" debug="*"/>
+
+					<!--Item Selection Scroll Panel-->
+					<ScrollPanel Anchor="L,T" ID="ItemsScrollPanel" Offset="-4,10" Vertical="1" Size="Parent,Parent-38">
+						<Stack ID="ItemsPanel" Anchor="C,T" Offset="0,0" Padding="7" StackGrowth="Right" WrapWidth="700" WrapGrowth="Down"/>
+						<ScrollBar Style="Slider_Blue"  Anchor="R,C" Offset="5,0"/>
+					</ScrollPanel>
+				</Stack>
+			</Grid>
+
+			<!--Selected Item Info (Right Side Panel)-->
+			<Grid ID="ItemInfoPanel" Style="DecoGrid" Offset="0,100" Size="360,parent-100" Anchor="R,T" Color="30,66,96,255" StackGrowth="Bottom">
+				<Stack Anchor ="C,T" StackGrowth="Down" StackPadding="10">
+          <Stack Anchor="C,T" Offset="0,10" StackGrowth="Right">
+            <Image ID="FocusedCivIconBacking" Texture="Circle80_Base" Size="80,80" Anchor="L,C">
+              <Image Texture="Circle80_Lighter"  Size="80,80" Color="0,0,0,50" Anchor="C,C"/>
+              <Image Texture="Circle80_Darker"   Size="80,80" Color="255,255,255,100" Anchor="C,C"/>
+              <Image ID="FocusedCivIcon" Texture="CivSymbols64" Size="64,64" Anchor="C,C"/>
+            </Image>
+            <Image		ID="FocusedLeaderIcon"					Size="80,80" Anchor="L,C"/>
+          </Stack>
+					<Grid ID ="DescriptionGrid" Anchor ="C,T" Style="DecoFrame" Size="355,465">
+						<ScrollPanel ID="DescriptionScroll" Anchor="C,T" Offset="0,20" Size="parent-30,parent-40" Vertical="1" AutoScrollBar="1">
+              <Stack ID="DescriptionStack" Anchor="C,T" StackGrowth="Down" StackPadding="10">
+                <!-- Focused Leader Info -->
+                <Grid Style="DivHeader" Size="parent,auto" Anchor="C,T">
+                  <Label  ID="FocusedLeaderName"    Style="FontFlair18" FontStyle="glow" ColorSet="ShellHeader" SmallCaps="22" SmallCapsLeading="0" SmallCapsType="EveryWord" Anchor="C,C" Align="Center" Offset="-7,1" WrapWidth="parent-45"/>
+                </Grid>
+                <Container	Size="auto,auto">
+                  <Stack		StackGrowth="Bottom" StackPadding="5">
+                    <Label	ID="FocusedLeaderAbilityName"	WrapWidth="parent-10" SmallCapsType="EveryWord" SmallCaps="20" Style="FontFlair14" ColorSet="ShellHeader"/>
+                    <Label	ID="FocusedLeaderAbilityDesc"	WrapWidth="parent-10"	Style="DawnText"/>
+                  </Stack>
+                </Container>
+                <!-- Focused Civ Info -->
+                <Grid Style="DivHeader" Size="parent,auto" Anchor="C,T">
+                  <Label  ID="FocusedCivName"    Style="FontFlair18" FontStyle="glow" ColorSet="ShellHeader" SmallCaps="22" SmallCapsLeading="0" SmallCapsType="EveryWord" Anchor="C,C" Align="Center" Offset="-7,1" WrapWidth="parent-45"/>
+                </Grid>
+                <Container	Size="auto,auto">
+                  <Stack		StackGrowth="Bottom" StackPadding="5">
+                    <Label	ID="FocusedCivAbilityName"	WrapWidth="parent-10" SmallCapsType="EveryWord" SmallCaps="20" Style="FontFlair14" ColorSet="ShellHeader"/>
+                    <Label	ID="FocusedCivAbilityDesc"	WrapWidth="parent-10"	Style="DawnText"/>
+                  </Stack>
+                </Container>
+                <Stack ID="UniqueAbilityStack" StackGrowth="Down" StackPadding="10"/>
+              </Stack>
+							<ScrollBar Style="Slider_Blue"		Anchor="R,C" AnchorSide="O,I" Offset="-2,0" />
+						</ScrollPanel>
+					</Grid>
+				</Stack>
+			</Grid>
+		</Grid>
+
+		<Stack ID="ButtonStack" Anchor="C,B" Padding="20" StackGrowth="Right">
+			<GridButton ID="ConfirmButton" Size="320,45" Style="ButtonConfirm" Anchor="C,B" String="LOC_OK_BUTTON" />
+		</Stack>
+	</Container>
+
+
+	<!-- INSTANCES -->
+	<Instance Name="ItemInstance">
+		<GridButton ID="Button" Anchor="C,T" Size="300,60" Texture="Controls_ButtonControl.dds" SliceCorner="10,10" SliceSize="1,1" SliceTextureSize="24,24" StateOffsetIncrement="0,24">
+			<CheckBox ID="Selected" Style="MainMenuCheck" Anchor="L,C" Offset="15,0" TextOffset="-5,0" IsChecked="0"/>
+      <Image    Texture="Controls_CircleBacking45" Size="51,51" Anchor="L,C" Offset="40,0">
+        <Image		ID="LeaderIcon"					Size="45,45" Anchor="C,C" Offset="0,-1" />
+      </Image>
+      <Label ID="Name" Anchor="C,C" Offset="40,0" Style="FontNormal14" TruncateWidth="200" TruncatedTooltip="1"/>
+		</GridButton>
+	</Instance>
+
+  <Instance			Name="UniqueAbilityInstance">
+    <Container	ID="Top"				 Size="parent,auto">
+      <Image    Texture="Controls_CircleCompass" Size="52,53" Offset="0,-2" Color="34,58,80,150">
+        <Image	ID="Icon"					Size="38,38" Anchor="C,C" />
+      </Image>
+      <Stack		StackGrowth="Bottom" StackPadding="4" Offset="55,0">
+        <Label	ID="Name"				  WrapWidth="parent-65" SmallCapsType="EveryWord" SmallCaps="20" Style="FontFlair14"		String="$Header$" ColorSet="ShellHeader"/>
+        <Label	ID="Description"	WrapWidth="parent-65"	Style="DawnText"	String="$Description$"/>
+      </Stack>
+    </Container>
+  </Instance>
+
+</Context>

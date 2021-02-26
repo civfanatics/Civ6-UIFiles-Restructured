@@ -133,7 +133,8 @@ local m_bCloseSessionOnFadeComplete = false;
 local m_eventID:number = 0;
 local m_firstOpened = true;
 local m_LeaderCoordinates		:table = {};
-local m_lastLeaderPlayedMusicFor = -1;
+local m_lastLeaderPlayedMusicFor : number = -1;
+local m_curModderMusic : number = -1;
 local m_bCurrentMusicIsModder : boolean = false;
 local ms_LastDealResponseAnimation = nil;
 
@@ -532,14 +533,15 @@ function OnSelectConversationDiplomacyStatement(key)
 						DiplomacyManager.AddResponse(ms_ActiveSessionID, Game.GetLocalPlayer(), "RESPONSE_IGNORE");
 					else
 						if(key == "CHOICE_STOP_ASKING")then
-							local kPlayerConfig : table = PlayerConfigurations[ms_OtherPlayerID];
-							local otherCivName : string = Locale.Lookup(kPlayerConfig:GetCivilizationShortDescription());
-							m_PopupDialog:Reset();
-							m_PopupDialog:AddText(Locale.Lookup("LOC_STOP_ASKING_POPUP_BODY", otherCivName));
-							m_PopupDialog:AddButton(Locale.Lookup("LOC_CANCEL"), nil);
-							m_PopupDialog:AddButton(Locale.Lookup("LOC_UI_RELIGION_CONFIRM_RELIGION"), function() RejectFriendshipPermanent(); end, nil, nil, "PopupButtonInstanceRed");
-							m_PopupDialog:Open();
-							
+							if(not Players[ms_OtherPlayerID]:IsHuman())then
+								local kPlayerConfig : table = PlayerConfigurations[ms_OtherPlayerID];
+								local otherCivName : string = Locale.Lookup(kPlayerConfig:GetCivilizationShortDescription());
+								m_PopupDialog:Reset();
+								m_PopupDialog:AddText(Locale.Lookup("LOC_STOP_ASKING_POPUP_BODY", otherCivName));
+								m_PopupDialog:AddButton(Locale.Lookup("LOC_CANCEL"), nil);
+								m_PopupDialog:AddButton(Locale.Lookup("LOC_UI_RELIGION_CONFIRM_RELIGION"), function() RejectFriendshipPermanent(); end, nil, nil, "PopupButtonInstanceRed");
+								m_PopupDialog:Open();
+							end
 						else
 							-- Just pass the choice key through as a response string.
 							DiplomacyManager.AddResponse(ms_ActiveSessionID, Game.GetLocalPlayer(), key);
@@ -2343,6 +2345,7 @@ function OnLeaderLoaded()
 		ContextPtr:SetHide(false);
         bDoAudio = true;
         m_lastLeaderPlayedMusicFor = -1;
+		m_curModderMusic = -1;
 		m_bCurrentMusicIsModder = false;
 	end
 	Controls.FallbackLeaderImage:SetHide(false);
@@ -2384,8 +2387,7 @@ function OnLeaderLoaded()
 
 			-- stop modder civ's leader music if necessary
 			if m_bCurrentMusicIsModder then
-				UI.StopModCivLeaderMusic(m_lastLeaderPlayedMusicFor);
-				UI.PlaySound("Resume_Game_Music");
+				UI.StopModCivLeaderMusic(m_curModderMusic);
 			end
 
             -- always duck ambience here
@@ -2394,9 +2396,9 @@ function OnLeaderLoaded()
 			-- always restart modder music if the leader IDs don't match
 			if (UI.ShouldCivPlayModMusic(ms_OtherCivilizationID)) then
 				UI.PlaySound("Stop_Leader_Music");
-				UI.PlaySound("Pause_Game_Music");
 				UI.PlayModCivLeaderMusic(ms_OtherID);
-				m_lastLeaderPlayedMusicFor = ms_OtherID;
+				m_lastLeaderPlayedMusicFor = ms_OtherLeaderID;
+				m_curModderMusic = ms_OtherID;
 				m_bCurrentMusicIsModder = true;
 			else
 				-- and Wwise IDs don't match
@@ -2848,8 +2850,7 @@ function Close()
 
     -- check if we need to also stop modder civ music
     if m_bCurrentMusicIsModder then
-		UI.StopModCivLeaderMusic(m_lastLeaderPlayedMusicFor);
-		UI.PlaySound("Resume_Game_Music");
+		UI.StopModCivLeaderMusic(m_curModderMusic);
     end
 
     if (m_bIsModPaused) then

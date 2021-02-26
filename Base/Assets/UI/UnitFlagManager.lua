@@ -265,19 +265,6 @@ function UnitFlag.Initialize( self, playerID: number, unitID : number, flagType 
 		self:SetColor(); -- Ensure this happens near the end in case we need to color addon instances like AirUnitInstance
 
 		self.m_IsInitialized = true;
-
-		local pUnit:table = self:GetUnit();
-		if pUnit ~= nil then
-			local unitType:string = GameInfo.Units[pUnit:GetUnitType()].UnitType;
-			if GameInfo.HeroClasses ~= nil then
-				for row in GameInfo.HeroClasses() do
-					if row.UnitType == unitType then
-						self.m_Instance.HeroGlowInstance = m_HeroGlowIM:GetInstance(self.m_Instance.HeroGlowAnchor);
-						return;
-					end
-				end
-			end
-		end
 	end
 end
 

@@ -526,20 +526,19 @@ function AddUnitToUnitList(pUnit:table)
 	uiUnitEntry.Button:SetText( Locale.ToUpper(uniqueName) );
 	uiUnitEntry.Button:RegisterCallback(Mouse.eLClick, function() OnUnitEntryClicked(pUnit:GetID()) end);
 
-	-- Update unit icon
-	local iconInfo:table, iconShadowInfo:table = GetUnitIcon(pUnit, 22, true);
-	if iconInfo.textureSheet then
-		uiUnitEntry.UnitTypeIcon:SetTexture( iconInfo.textureOffsetX, iconInfo.textureOffsetY, iconInfo.textureSheet );
-	end
+	UpdateUnitIcon(pUnit, uiUnitEntry);
 
 	-- Update status icon
 	local activityType:number = UnitManager.GetActivityType(pUnit);
 	if activityType == ActivityTypes.ACTIVITY_SLEEP then
 		SetUnitEntryStatusIcon(uiUnitEntry, "ICON_STATS_SLEEP");
+		uiUnitEntry.UnitStatusIcon:SetHide(false);
 	elseif activityType == ActivityTypes.ACTIVITY_HOLD then
 		SetUnitEntryStatusIcon(uiUnitEntry, "ICON_STATS_SKIP");
+		uiUnitEntry.UnitStatusIcon:SetHide(false);
 	elseif activityType ~= ActivityTypes.ACTIVITY_AWAKE and pUnit:GetFortifyTurns() > 0 then
 		SetUnitEntryStatusIcon(uiUnitEntry, "ICON_DEFENSE");
+		uiUnitEntry.UnitStatusIcon:SetHide(false);
 	else
 		uiUnitEntry.UnitStatusIcon:SetHide(true);
 	end
@@ -557,6 +556,14 @@ end
 -- ===========================================================================
 function SetUnitEntryStatusIcon(unitEntry:table, icon:string)
 	unitEntry.UnitStatusIcon:SetIcon(icon);
+end
+
+-- ===========================================================================
+function UpdateUnitIcon(pUnit:table, uiUnitEntry:table)
+	local iconInfo:table, iconShadowInfo:table = GetUnitIcon(pUnit, 22, true);
+	if iconInfo.textureSheet then
+		uiUnitEntry.UnitTypeIcon:SetTexture( iconInfo.textureOffsetX, iconInfo.textureOffsetY, iconInfo.textureSheet );
+	end
 end
 
 -- ===========================================================================
@@ -987,6 +994,27 @@ function OnUnitRemovedFromMap(playerID:number, unitID:number)
 end
 
 -- ===========================================================================
+function OnUnitOperationDeactivated(playerID:number)
+	--Update UnitList in case we put one of our units to sleep
+	if(playerID == Game.GetLocalPlayer()) then
+		UpdateUnitListPanel();
+	end
+end
+
+function OnUnitOperationStarted(ownerID : number, unitID : number, operationID : number)
+	if(ownerID == Game.GetLocalPlayer() and (operationID == UnitOperationTypes.FORTIFY or operationID == UnitOperationTypes.ALERT))then
+		UpdateUnitListPanel();
+	end
+end
+
+-- ===========================================================================
+function OnUnitCommandStarted(playerID:number, unitID:number, hCommand:number)
+    if (hCommand == UnitCommandTypes.WAKE and playerID == Game.GetLocalPlayer()) then
+        UpdateUnitListPanel();
+	end
+end
+
+-- ===========================================================================
 --	Add any UI from tracked items that are loaded.
 --	Items are expected to be tables with the following fields:
 --		Name			localization key for the title name of panel
@@ -1052,7 +1080,10 @@ function Subscribe()
 	Events.CityWorkerChanged.Add( OnUpdateDueToCity );
 	Events.CityFocusChanged.Add( OnUpdateDueToCity );
 	Events.UnitAddedToMap.Add( OnUnitAddedToMap );
+	Events.UnitCommandStarted.Add( OnUnitCommandStarted );
 	Events.UnitMovementPointsChanged.Add( OnUnitMovementPointsChanged );
+	Events.UnitOperationDeactivated.Add( OnUnitOperationDeactivated );
+	Events.UnitOperationStarted.Add( OnUnitOperationStarted );
 	Events.UnitRemovedFromMap.Add( OnUnitRemovedFromMap );
 
 	LuaEvents.LaunchBar_Resize.Add(OnLaunchBarResized);
@@ -1092,7 +1123,10 @@ function Unsubscribe()
 	Events.CityWorkerChanged.Remove( OnUpdateDueToCity );
 	Events.CityFocusChanged.Remove( OnUpdateDueToCity );
 	Events.UnitAddedToMap.Remove( OnUnitAddedToMap );
+	Events.UnitCommandStarted.Remove( OnUnitCommandStarted );
 	Events.UnitMovementPointsChanged.Remove( OnUnitMovementPointsChanged );
+	Events.UnitOperationDeactivated.Remove( OnUnitOperationDeactivated );
+	Events.UnitOperationStarted.Remove( OnUnitOperationStarted );
 	Events.UnitRemovedFromMap.Remove( OnUnitRemovedFromMap );
 
 	LuaEvents.LaunchBar_Resize.Remove(OnLaunchBarResized);

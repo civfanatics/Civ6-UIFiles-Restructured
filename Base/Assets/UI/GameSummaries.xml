@@ -142,8 +142,8 @@
 			<Stack ID="ValueStack" StackGrowth="Right" Size="auto,parent" Anchor="L,C" Offset="214,0" Padding="5">
 				<Image ID="ValueIcon" Size="32,32" Icon="ICON_LEADER_CLEOPATRA"/>
 				<Stack ID="AnnotationStack" Size="parent,auto" StackGrowth="Bottom" Anchor="L,C">
-					<Label ID="ValueCaption" Style="FontNormal16" Anchor="L,T" WrapWidth="240" String="$Cleopatra$"/>
-					<Label ID="Annotation" Style="FontNormal14" Anchor="L,T" WrapWidth="240" String="$(12 wars won)$"/>
+					<Label ID="ValueCaption" Style="FontNormal16" Anchor="L,T" WrapWidth="270" String="$Cleopatra$"/>
+					<Label ID="Annotation" Style="FontNormal14" Anchor="L,T" WrapWidth="270" String="$(12 wars won)$"/>
 				</Stack>
 				
 			</Stack>

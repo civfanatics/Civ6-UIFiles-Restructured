@@ -128,7 +128,7 @@
   <Instance Name="HeroGlowInstance">
     <Container ID="Root" Anchor="C,C" Size="auto,auto">
       <AlphaAnim Anchor="C,C"	Size="auto,auto" Cycle="Bounce" AlphaStart="0.9" AlphaEnd="0.4" Speed="3" Power="4">
-				<SpinAnim ID="HeroGlow" Anchor="C,C" Texture="UnitFlagGoldenGlow" Size="100,100" StretchMode="Fill" Speed="1.5"/>
+				<SpinAnim ID="HeroGlow" Anchor="C,C" Texture="UnitFlagGoldenGlow" Size="100,100" StretchMode="Fill" Speed="0.8"/>
       </AlphaAnim>
       <AlphaAnim Anchor="C,C"	Size="auto,auto" Cycle="Bounce" AlphaStart="0.2" AlphaEnd="0.7" Speed="5">
 				<SpinAnim ID="HeroGlowReverse" Anchor="C,C" Texture="UnitFlagGoldenGlow" Size="100,100" StretchMode="Fill" Speed="-0.5"/>

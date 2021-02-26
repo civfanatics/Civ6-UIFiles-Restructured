@@ -205,7 +205,7 @@
 										<Container Offset="25,5" Size="parent-50,50">
 											<!-- Local Player Civ -->
 											<!-- Color Scheme -->
-											<PullDown ID="Advanced_LocalColorPullDown" ScrollThreshold="350" Size="65,50" AutoSizePopUp="0" SpaceForScroll="1">
+											<PullDown ID="Advanced_LocalColorPullDown" ScrollThreshold="350" Size="65,50" AutoSizePopUp="1" SpaceForScroll="1">
 												<ButtonData>
 													<GridButton  Size="65,45" Style="TabFont" TextAnchor="L,T" DisabledMouseMoveCallbacks="1">
 														<GridData Texture="Controls_DropDownControlLarge" StateOffsetIncrement="0,45"	SliceCorner="10,15" SliceTextureSize="45,45" />
@@ -216,12 +216,12 @@
 													</GridButton>
 												</ButtonData>
 												<GridData Offset="0,45" Texture="Controls_DropdownPanel" InnerPadding="0,6" SliceCorner="10,10" SliceTextureSize="22,22"/>
-												<ScrollPanelData Anchor="C,C" Vertical="1" Size="parent,parent" AutoScrollBar="1" >
+												<ScrollPanelData Anchor="C,C" Vertical="1" Size="65,parent" AutoScrollBar="1" >
 													<ScrollBar Style="Slider_Blue" Anchor="R,C" AnchorSide="O,I"   />
 												</ScrollPanelData>
 												<StackData StackGrowth="Bottom" Anchor="C,T"/>
 												<InstanceData Name="InstanceOne">
-													<GridButton ID="Button" Style="ButtonControl" Anchor="L,T"	Size="75,45" Offset="10,0" TextAnchor="L,C" TextOffset="60" WrapWidth="200">
+													<GridButton ID="Button" Style="ButtonControl" Anchor="C,T"	Size="65,50" Offset="5,0" TextAnchor="L,C" TextOffset="60" WrapWidth="200">
 														<Container Size="30,30" Offset="0,0" Anchor="C,C">
 															<Image ID="CivIconBG" Texture="CircleBacking30" Size="30,30" Anchor="C,C" Offset="0,0"/>
 															<Image ID="CivIcon" Texture="CivSymbols30" Size="30,30" Anchor="C,C"/>
@@ -331,6 +331,7 @@
 			<LuaContext ID="MapSelectWindow" FileName="MapSelect" Hidden="1"/>
 			<LuaContext ID="MultiSelectWindow" FileName="MultiSelectWindow" Hidden="1"/>
 			<LuaContext ID="CityStatePicker" FileName="CityStatePicker" Hidden="1"/>
+      <LuaContext ID="LeaderPicker" FileName="LeaderPicker" Hidden="1"/>
 
 		</Container><!-- Main Window -->
 
@@ -357,7 +358,7 @@
 	<Instance Name="NonLocalPlayerSlotInstance" >
 		<Container ID="Root"  Size="parent,auto">
 			<!-- Color Scheme -->
-			<PullDown ID="ColorPullDown" ScrollThreshold="350" Size="65,50" AutoSizePopUp="0" AutoFlip="1" SpaceForScroll="1">
+			<PullDown ID="ColorPullDown" ScrollThreshold="350" Size="65,50" AutoSizePopUp="1" AutoFlip="1" SpaceForScroll="1">
 				<ButtonData>
 					<GridButton  Size="65,45" Style="TabFont" TextAnchor="L,T" DisabledMouseMoveCallbacks="1">
 						<GridData Texture="Controls_DropDownControlLarge" StateOffsetIncrement="0,45"	SliceCorner="10,15" SliceTextureSize="45,45" />
@@ -369,12 +370,12 @@
 					</GridButton>
 				</ButtonData>
 				<GridData Offset="0,45" Texture="Controls_DropdownPanel" InnerPadding="0,6" SliceCorner="10,10" SliceTextureSize="22,22"/>
-				<ScrollPanelData Anchor="C,C" Vertical="1" Size="parent,parent" AutoScrollBar="1" >
+				<ScrollPanelData Anchor="C,C" Vertical="1" Size="65,parent" AutoScrollBar="1" >
 					<ScrollBar Style="Slider_Blue" Anchor="R,C" AnchorSide="O,I"   />
 				</ScrollPanelData>
 				<StackData StackGrowth="Bottom" Anchor="C,T"/>
 				<InstanceData Name="InstanceOne">
-					<GridButton ID="Button" Style="ButtonControl" Anchor="L,T"	Size="75,45" Offset="10,0" TextAnchor="L,C" TextOffset="60" WrapWidth="200">
+					<GridButton ID="Button" Style="ButtonControl" Anchor="C,T"	Size="65,50" Offset="5,0" TextAnchor="L,C" TextOffset="60" WrapWidth="200">
 						<Container Size="30,30" Offset="0,0" Anchor="C,C">
 							<Image ID="CivIconBG" Texture="CircleBacking30" Size="30,30" Anchor="C,C" Offset="0,0"/>
 							<Image ID="CivIcon" Texture="CivSymbols30" Size="30,30" Anchor="C,C"/>

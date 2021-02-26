@@ -7,9 +7,9 @@ include( "InstanceManager" );
 -- ===========================================================================
 --	DEBUG
 -- ===========================================================================
-local m_debugStrictRemoval	:boolean = true;	-- (false) Give a warning if a removal occurs and the notification doesn't exist.
-local m_debugNotificationNum:number = 0;		-- (0) The # of fake notifications to fill the panel with; great for testing.
-
+m_debugStrictRemoval	= true;		-- (false) Give a warning if a removal occurs and the notification doesn't exist.
+m_debugNotificationNum	= 0;		-- (0) The # of fake notifications to fill the panel with; great for testing.
+m_debugSuppressPopups	= (Options.GetAppOption("Debug", "SuppressInfoPopups") == 1);	-- Set in AppOptions.txt, to suppress popups that just require clicking "ok"
 
 -- ===========================================================================
 --	CONSTANTS
@@ -1427,7 +1427,7 @@ function OnTechBoostActivateNotification( notificationEntry : NotificationType, 
 			local techIndex = pNotification:GetValue("TechIndex");
 			local techProgress = pNotification:GetValue("TechProgress");
 			local techSource = pNotification:GetValue("TechSource"); 
-			if(techIndex ~= nil and techProgress ~= nil and techSource ~= nil) then
+			if(techIndex ~= nil and techProgress ~= nil and techSource ~= nil and (not m_debugSuppressPopups)) then
 				LuaEvents.NotificationPanel_ShowTechBoost(notificationEntry.m_PlayerID, techIndex, techProgress, techSource);
 			end
 		end
@@ -1444,7 +1444,7 @@ function OnCivicBoostActivateNotification( notificationEntry : NotificationType,
 			local civicIndex = pNotification:GetValue("CivicIndex");
 			local civicProgress = pNotification:GetValue("CivicProgress");
 			local civicSource = pNotification:GetValue("CivicSource"); 
-			if(civicIndex ~= nil and civicProgress ~= nil and civicSource ~= nil) then
+			if(civicIndex ~= nil and civicProgress ~= nil and civicSource ~= nil and (not m_debugSuppressPopups)) then
 				LuaEvents.NotificationPanel_ShowCivicBoost(notificationEntry.m_PlayerID, civicIndex, civicProgress, civicSource);
 			end
 		end
@@ -1459,7 +1459,7 @@ function OnTechDiscoveredActivateNotification( notificationEntry : NotificationT
 		local pNotification :table = GetActiveNotificationFromEntry(notificationEntry, notificationID);
 		if pNotification ~= nil then
 			local techIndex = pNotification:GetValue("TechIndex");
-			if(techIndex ~= nil) then
+			if(techIndex ~= nil and (not m_debugSuppressPopups)) then
 				LuaEvents.NotificationPanel_ShowTechDiscovered(notificationEntry.m_PlayerID, techIndex, isByUser);
 			end
 		end
@@ -1474,7 +1474,7 @@ function OnCivicDiscoveredActivateNotification( notificationEntry : Notification
 		local pNotification :table = GetActiveNotificationFromEntry(notificationEntry, notificationID);
 		if pNotification ~= nil then
 			local civicIndex = pNotification:GetValue("CivicIndex");
-			if(civicIndex ~= nil) then
+			if(civicIndex ~= nil and (not m_debugSuppressPopups)) then
 				LuaEvents.NotificationPanel_ShowCivicDiscovered(notificationEntry.m_PlayerID, civicIndex, isByUser);
 			end
 		end
@@ -1885,8 +1885,9 @@ function Initialize()
 	ContextPtr:SetShutdown( OnShutdown );
 
 	Controls.ScrollStack:RegisterSizeChanged( OnStackSizeChanged );
-
-	m_isLoadComplete = false;
+	
+	if (m_debugSuppressPopups == nil) then m_debugSuppressPopup = false; end
+	m_isLoadComplete = false;	
 end
 
 -- This wildcard include will include all loaded files beginning with "NotificationPanel_"

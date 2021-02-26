@@ -395,7 +395,7 @@ function UpdatePlayerEntry(playerEntry)
 	playerEntry.playerInstance.Button:RegisterCallback( Mouse.eLClick, function() OnPlayerSelected(playerEntry); end);
 
 	-- Update icon if we're a specific civ
-	if playerEntry.Civ ~= "UNDEFINED" and playerEntry.Civ ~= "RANDOM" then
+	if playerEntry.Civ ~= "UNDEFINED" and playerEntry.Civ ~= "RANDOM" and playerEntry.Civ ~= "RANDOM_POOL1" and playerEntry.Civ ~= "RANDOM_POOL2" then
 		playerEntry.playerInstance.CivIcon:SetIcon("ICON_" .. playerConfig.Civ);
 
 		local colorLeader : string = nil;
@@ -543,7 +543,7 @@ function InitGeneralTab()
 
 		-- We never want the user to manually select the random leader entry
 		for i, leaderEntry in ipairs(m_LeaderEntries) do
-			if leaderEntry.Type == "RANDOM" then
+			if leaderEntry.Type == "RANDOM" or leaderEntry.Type == "RANDOM_POOL1" or leaderEntry.Type == "RANDOM_POOL2" then
 				m_LeaderEntries[i].Button:SetDisabled(true);
 				break;
 			end

@@ -1691,13 +1691,15 @@ function HasEspionageView( ownerID:number, cityID:number )
 		if pLocalPlayerDiplo then
 			eVisibility = pLocalPlayerDiplo:GetVisibilityOn(ownerID);
 			local kVisDef:table = GameInfo.Visibilities_XP2[eVisibility];
-			if kVisDef.EspionageViewAll == true then
-				-- We can view all of this players cities
-				return true;
-			end
+			if kVisDef ~= nil then
+				if kVisDef.EspionageViewAll == true then
+					-- We can view all of this players cities
+					return true;
+				end
 
-			if kVisDef.EspionageViewCapital == true then
-				canViewCapital = true;
+				if kVisDef.EspionageViewCapital == true then
+					canViewCapital = true;
+				end
 			end
 		end
 	end

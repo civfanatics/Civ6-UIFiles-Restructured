@@ -4,7 +4,7 @@
   <Container ID="Top" Size="auto,auto" AutoSizePadding="0,2">
     <Image Offset="20,10" Size="22,22" IconSize="22" Icon="ICON_RELATIONSHIP"/>
     <Label Offset="60,10" Style="FontNormal16" String="LOC_DIPLOMACY_OVERVIEW_OUR_RELATIONSHIP"/>
-    <Stack ID="AllianceStack" Offset="218,6" StackGrowth="Down" StackPadding="0">
+    <Stack ID="AllianceStack" Offset="218,6" StackGrowth="Down" StackPadding="32">
       <!-- Relationship Status -->
       <Container Size="200,auto">
         <Button ID="RelationshipIcon" Offset="0,0" Style="DiplomacyRelationshipPips" Disabled="1"/>

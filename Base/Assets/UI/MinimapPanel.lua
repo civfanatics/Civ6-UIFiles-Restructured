@@ -49,6 +49,7 @@ local m_isMouseDragEnabled		:boolean = true; -- Can the camera be moved by dragg
 local m_isMouseDragging			:boolean = false; -- Was LMB clicked inside the minimap, and has not been released yet?
 local m_hasMouseDragged			:boolean = false; -- Has there been any movements since m_isMouseDragging became true?
 local m_wasMouseInMinimap		:boolean = false; -- Was the mouse over the minimap the last time we checked?
+local m_WaterAvailabilityLensOn :boolean = false; -- Is the water availability (settler) lens on?
 
 local m_HexColoringReligion		: number = UILens.CreateLensLayerHash("Hex_Coloring_Religion");
 local m_HexColoringAppeal		: number = UILens.CreateLensLayerHash("Hex_Coloring_Appeal_Level");
@@ -462,6 +463,7 @@ function OnLensLayerOn( layerNum:number )
 		SetContinentHexes();
         UI.PlaySound("UI_Lens_Overlay_On");
 	elseif layerNum == m_HexColoringWaterAvail then
+		m_WaterAvailabilityLensOn = true;
 		SetWaterHexes();
         UI.PlaySound("UI_Lens_Overlay_On");	
 	elseif layerNum == m_TouristTokens then
@@ -471,6 +473,10 @@ end
 
 -- ===========================================================================
 function OnLensLayerOff( layerNum:number )
+	if(layerNum == m_HexColoringWaterAvail)then
+		m_WaterAvailabilityLensOn = false;
+	end
+
 	if (layerNum == m_HexColoringReligion		or
 			layerNum == g_HexColoringContinent		or
 			layerNum == m_HexColoringAppeal	or
@@ -520,6 +526,13 @@ function OnUserOptionsActivated()
 	
 	RestoreYieldIcons();
 
+end
+
+-- ===========================================================================
+function OnPlotVisibilityChanged()
+	if(m_WaterAvailabilityLensOn)then
+		SetWaterHexes();
+	end
 end
 
 -- ===========================================================================
@@ -934,7 +947,8 @@ function OnShutdown()
 	Events.LensLayerOn.Remove( OnLensLayerOn );
 	Events.LensLayerOff.Remove( OnLensLayerOff );	
 	Events.LocalPlayerChanged.Remove( OnLocalPlayerChanged );
-	Events.UserOptionsActivated.Remove( OnUserOptionsActivated );    
+	Events.PlotVisibilityChanged.Remove(OnPlotVisibilityChanged);
+	Events.UserOptionsActivated.Remove( OnUserOptionsActivated );  
 
 	LuaEvents.MinimapPanel_CloseAllLenses.Remove( CloseAllLenses );  
     LuaEvents.MinimapPanel_RefreshMinimapOptions.Remove( RefreshMinimapOptions );
@@ -1072,7 +1086,8 @@ function LateInitialize( isReload:boolean )
 	Events.LensLayerOn.Add( OnLensLayerOn );
 	Events.LensLayerOff.Add( OnLensLayerOff );	
 	Events.LocalPlayerChanged.Add( OnLocalPlayerChanged );
-	Events.UserOptionsActivated.Add( OnUserOptionsActivated );    
+	Events.PlotVisibilityChanged.Add( OnPlotVisibilityChanged );
+	Events.UserOptionsActivated.Add( OnUserOptionsActivated );
 
 end
 

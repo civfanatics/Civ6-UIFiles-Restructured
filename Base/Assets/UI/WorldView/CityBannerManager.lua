@@ -157,7 +157,13 @@ end
 
 -- ===========================================================================
 function CityBanner:destroy()
-	self:Uninitialize( self.m_Player:GetID(), self.m_CityID, self.m_DistrictID, self.m_Type , self.m_Style );
+    if ( self.m_InstanceManager ~= nil ) then           
+        self:UpdateSelected( false );
+                        		    
+		if (self.m_Instance ~= nil) then
+			self.m_InstanceManager:ReleaseInstance( self.m_Instance );
+		end
+    end
 end
 
 -- ===========================================================================
@@ -203,9 +209,9 @@ function CityBanner:Initialize( playerID: number, cityID : number, districtID : 
 
 		if (bannerStyle == BANNERSTYLE_LOCAL_TEAM) then
 			if (playerID == Game.GetLocalPlayer()) then
-				self.m_Instance.CityRangeStrikeButton:RegisterCallback( Mouse.eLClick, OnCityRangeStrikeButtonClick );
-				self.m_Instance.CityRangeStrikeButton:SetVoid1(playerID);
-				self.m_Instance.CityRangeStrikeButton:SetVoid2(cityID);
+				self.m_Instance.CityStrikeButton:RegisterCallback( Mouse.eLClick, OnCityRangeStrikeButtonClick );
+				self.m_Instance.CityStrikeButton:SetVoid1(playerID);
+				self.m_Instance.CityStrikeButton:SetVoid2(cityID);
 				self.m_Instance.CityProduction:RegisterCallback( Mouse.eLClick, OnProductionClick );
 				self.m_Instance.CityProduction:SetVoid1(playerID);
 				self.m_Instance.CityProduction:SetVoid2(cityID);
@@ -231,12 +237,12 @@ function CityBanner:Initialize( playerID: number, cityID : number, districtID : 
 	self:UpdatePosition();
 	self:UpdateVisibility();
 
-	if(self.m_Instance.CityAttackContainer ~= nil) then self:UpdateRangeStrike(); end
+	if(self.m_Instance.CityStrike ~= nil) then self:UpdateRangeStrike(); end
 
 	-- Only call UpdateReligion if we have a religion meter (if we're not a MiniBanner)
 	if(self.m_Instance.ReligionInfoAnchor ~= nil) then self:UpdateReligion(); end
 	self:UpdateStats();
-	self:SetColor();
+	self:UpdateColor();
 	self:Resize();
 end
 
@@ -592,9 +598,9 @@ function CityBanner:CreateEncampmentBanner()
 		self.m_Instance.DistrictDefenseStrengthLabel:SetText(districtDefense);
 
 		-- Setup strike button callback
-		self.m_Instance.CityRangeStrikeButton:RegisterCallback( Mouse.eLClick, OnDistrictRangeStrikeButtonClick );
-		self.m_Instance.CityRangeStrikeButton:SetVoid1(self.m_Player:GetID());
-		self.m_Instance.CityRangeStrikeButton:SetVoid2(self.m_DistrictID);
+		self.m_Instance.CityStrikeButton:RegisterCallback( Mouse.eLClick, OnDistrictRangeStrikeButtonClick );
+		self.m_Instance.CityStrikeButton:SetVoid1(self.m_Player:GetID());
+		self.m_Instance.CityStrikeButton:SetVoid2(self.m_DistrictID);
 	end
 end
 
@@ -706,7 +712,7 @@ end
 
 -- ===========================================================================
 -- Assign player colors to the appropriate banner elements
-function CityBanner:SetColor()
+function CityBanner:UpdateColor()
 
 	local backColor, frontColor = UI.GetPlayerColors( self.m_Player:GetID() );
 	local darkerBackColor = UI.DarkenLightenColor(backColor,(-85),238);
@@ -1677,7 +1683,7 @@ end
 function CityBanner:UpdateRangeStrike()
 
 	local controls:table	= self.m_Instance;
-	if controls.CityAttackContainer == nil then
+	if controls.CityStrike == nil then
 		-- This normal behaviour in the case of missile silo and aerodrome minibanners
 		return; 
 	end
@@ -1685,9 +1691,9 @@ function CityBanner:UpdateRangeStrike()
 	local pDistrict:table = self:GetDistrict();
 	if pDistrict ~= nil and self:IsTeam() then
 		if (self.m_Player:GetID() == Game.GetLocalPlayer() and CanRangeAttack(pDistrict) ) then
-			controls.CityAttackContainer:SetHide(false);				
+			controls.CityStrike:SetHide(false);				
 		else
-			controls.CityAttackContainer:SetHide(true);
+			controls.CityStrike:SetHide(true);
 		end
 
 		-- Notify other systems if the local players button changed
@@ -1699,7 +1705,7 @@ function CityBanner:UpdateRangeStrike()
 	else
 		-- are we looking at an Improvement miniBanner (Airstrip)?
 		-- if so, just hide the attack container
-		controls.CityAttackContainer:SetHide(true);
+		controls.CityStrike:SetHide(true);
 	end
 end
 
@@ -1837,7 +1843,7 @@ function OnDistrictAddedToMap( playerID: number, districtID : number, cityID :nu
 						cityBanner.m_DistrictID = districtID;
 						cityBanner:UpdateRangeStrike();
 						cityBanner:UpdateStats();
-						cityBanner:SetColor();
+						cityBanner:UpdateColor();
 					end
 				else
 					-- Create a banner for a district that is not the city-center
@@ -2815,7 +2821,7 @@ function OnSelectionChanged(owner, ID, i, j, k, bSelected, bEditable)
 	-- OnSelectionChanged event can only change one banner at a time
 	if (banner ~= nil and owner == Game.GetLocalPlayer()) then
 		banner.m_IsSelected = bSelected;
-		banner:SetColor();
+		banner:UpdateColor();
 	end
 end
 
