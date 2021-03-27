@@ -2678,6 +2678,7 @@ function SetupSplitLeaderPulldown(playerId:number, instance:table, pulldownContr
 
 				if(scrollText ~= nil) then
 					scrollText:SetText(caption);
+					button:LocalizeAndSetText("");
 				else
 					button:SetText(caption);
 				end
@@ -2894,6 +2895,14 @@ function BuildGameSetupParameter(o, parameter)
 					valueText = Locale.Lookup("LOC_SELECTION_EVERYTHING");
 				else
 					valueText = Locale.Lookup("LOC_SELECTION_NOTHING");
+				end
+
+				-- Remove random leaders from the Values table that is used to determine number of leaders selected
+				for i = #p.Values, 1, -1 do
+					local kItem:table = p.Values[i];
+					if kItem.Value == "RANDOM" or kItem.Value == "RANDOM_POOL1" or kItem.Value == "RANDOM_POOL2" then
+						table.remove(p.Values, i);
+					end
 				end
 
 				if(t == "table") then

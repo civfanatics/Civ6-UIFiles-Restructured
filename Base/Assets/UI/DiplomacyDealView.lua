@@ -1542,7 +1542,7 @@ function OnClickAvailableGreatWork(player, valueType, greatWorkType)
 		return;
 	end
 
-	local pDeal = DealManager.GetWorkingDeal(DealDirection.OUTGOING, g_LocalPlayer:GetID(), g_OtherPlayer:GetID());
+	local pDeal = DealManager.GetWorkingDeal(DealDirection.OUTGOING, ms_LocalPlayer:GetID(), ms_OtherPlayer:GetID());
 	if (pDeal ~= nil) then
 
 		-- Already there?
@@ -1963,6 +1963,11 @@ function GetGreatWorkIcon(GreatWorkDesc : table)
 end
 
 -- ===========================================================================
+function GetGreatWorkTooltip(GreatWorkDesc : table, defaultToolTip : string)
+	return defaultToolTip;
+end
+
+-- ===========================================================================
 function PopulateAvailableGreatWorks(player : table, iconList : table)
 
 	local iAvailableItemCount : number = 0;
@@ -1999,7 +2004,7 @@ function PopulateAvailableGreatWorks(player : table, iconList : table)
 				uiMinimizedIcon.SelectButton:RegisterCallback( Mouse.eLClick, function() OnClickAvailableGreatWork(player, type, entry.ForTypeDescriptionID); end );
 
 				-- Set a tool tip
-				local greatWorkTooltip : string = GreatWorksSupport_GetBasicTooltip(entry.ForType, false);
+				local greatWorkTooltip : string = GetGreatWorkTooltip(greatWorkDesc, GreatWorksSupport_GetBasicTooltip(entry.ForType, false));
 				uiIcon.SelectButton:SetToolTipString(greatWorkTooltip);
 
 				local minimizedTooltip : string = Locale.Lookup(entry.ForTypeName) .. "[NEWLINE]"..greatWorkTooltip;

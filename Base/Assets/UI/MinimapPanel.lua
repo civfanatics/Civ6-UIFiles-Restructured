@@ -413,7 +413,6 @@ function OnCollapseToggle()
 	end
 	m_isCollapsed = not m_isCollapsed;
 	LuaEvents.WorldTracker_OnSetMinimapCollapsed(m_isCollapsed);
-	LuaEvents.ChatPanel_OnChatPanelRefresh();
 end
 
 -- ===========================================================================
@@ -1088,7 +1087,6 @@ function LateInitialize( isReload:boolean )
 	Events.LocalPlayerChanged.Add( OnLocalPlayerChanged );
 	Events.PlotVisibilityChanged.Add( OnPlotVisibilityChanged );
 	Events.UserOptionsActivated.Add( OnUserOptionsActivated );
-
 end
 
 -- ===========================================================================

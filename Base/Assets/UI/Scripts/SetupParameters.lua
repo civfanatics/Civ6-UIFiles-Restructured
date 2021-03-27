@@ -344,7 +344,12 @@ function SetupParameters:UpdateParameters(parameters)
 					local update_value = v.Hash and DB.MakeHash(v.TargetValue) or v.TargetValue;
 					local current_value = self:Config_Read(v.TargetGroup, v.TargetId);
 
-					if(current_value ~= update_value) then
+					-- If this is a boolean type convert to a 0 or 1 numeric type.
+					if(type(current_value) == "boolean") then
+						current_value = current_value and 1 or 0;
+					end
+
+					if(	current_value ~= update_value ) then
 						table.insert(updates, {
 							v.TargetGroup,
 							v.TargetId,

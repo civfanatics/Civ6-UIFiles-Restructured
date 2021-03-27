@@ -361,7 +361,7 @@ end
 -------------------------------------------------------------------------------
 function Rebuild()
 
-	if m_isFirstRefresh then
+	if m_isFirstRefresh and GameConfiguration.IsWorldBuilderEditor() then
 		m_isFirstRefresh = false;
 		return;
 	end
@@ -389,28 +389,36 @@ function Rebuild()
 	end
 end
 
+-- ===========================================================================
+--	If research completed matches any techs that reveal icons, rebuild.
+-- ===========================================================================
 function OnResearchCompleted( player:number, tech:number, isCanceled:boolean)
 	if player == Game.GetLocalPlayer() then
 		for i, techType in ipairs(m_techsThatUnlockResources) do
 			if (techType == GameInfo.Technologies[tech].TechnologyType) then
 				Rebuild();
+				return;
 			end
 		end
 
 		for i, techType in ipairs(m_techsThatUnlockImprovements) do
 			if (techType == GameInfo.Technologies[tech].TechnologyType) then
 				Rebuild();
-				break;
+				return;
 			end
 		end
 	end
 end
 
+-- ===========================================================================
+--	If a civic completed matches any civics that reveal icons, rebuild.
+-- ===========================================================================
 function OnCivicCompleted( player:number, civic:number, isCanceled:boolean)
 	if player == Game.GetLocalPlayer() then
 		for i, civicType in ipairs(m_civicsThatUnlockResources) do
 			if (civicType == GameInfo.Civics[civic].CivicType) then
 				Rebuild();
+				return;
 			end
 		end
 	end
@@ -654,6 +662,7 @@ function ClearSettlementRecommendations()
 	for i,plotIndex in ipairs(m_RecommendedSettlementPlots) do
 		local pRecommendedPlotInstance = GetInstanceAt(plotIndex);
 		pRecommendedPlotInstance.ImprovementRecommendationBackground:SetHide(true);
+		pRecommendedPlotInstance.ImprovementRecommendationIcon:SetToolTipType(nil);
 	end
 
 	-- Clear table
@@ -854,4 +863,3 @@ function Initialize()
 
 end
 Initialize();
-

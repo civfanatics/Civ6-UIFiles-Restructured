@@ -120,7 +120,7 @@
       <GridButton ID="NextButton" Style="MainButton" Size="200,41" String="LOC_WORLD_CONGRESS_NEXT"/>
       <GridButton ID="PassButton" Style="ButtonConfirm" Size="200,41" String="LOC_WORLD_CONGRESS_PASS"/>
       <GridButton ID="AcceptButton" Style="ButtonConfirm" Size="200,41" String="LOC_WORLD_CONGRESS_SUBMIT"/>
-      <GridButton ID="ReturnButton" Style="ButtonConfirm" Size="200,41" String="LOC_WORLD_CONGRESS_RETURN"/>
+      <GridButton ID="ReturnButton" Style="ButtonConfirm" Size="220,41" String="LOC_WORLD_CONGRESS_RETURN"/>
     </Stack>
 
     <!-- Title -->

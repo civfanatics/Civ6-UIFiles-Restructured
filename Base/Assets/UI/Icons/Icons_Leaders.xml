@@ -47,5 +47,7 @@
     <Row Name="ICON_LEADER_MINOR_CIV_INDUSTRIAL"           Atlas="ICON_ATLAS_LEADERS" Index="0"/>
     <Row Name="ICON_LEADER_BARBARIAN"                      Atlas="ICON_ATLAS_LEADERS" Index="0"/>
     <Row Name="ICON_LEADER_MONTEZUMA"                      Atlas="ICON_ATLAS_MONTEZUMA" Index="0"/>
+    <Row Name="ICON_LEADER_RANDOM_POOL_1"                  Atlas="ICON_ATLAS_LEADERS" Index="20"/>
+    <Row Name="ICON_LEADER_RANDOM_POOL_2"                  Atlas="ICON_ATLAS_LEADERS" Index="21"/>
   </IconDefinitions>
 </GameInfo>

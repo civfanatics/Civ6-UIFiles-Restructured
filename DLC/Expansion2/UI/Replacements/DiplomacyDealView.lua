@@ -1980,6 +1980,11 @@ function GetGreatWorkIcon(GreatWorkDesc : table)
 end
 
 -- ===========================================================================
+function GetGreatWorkTooltip(GreatWorkDesc : table, defaultToolTip : string)
+	return defaultToolTip;
+end
+
+-- ===========================================================================
 function PopulateAvailableGreatWorks(player : table, iconList : table)
 
 	local availableItemCount : number = 0;
@@ -2017,7 +2022,7 @@ function PopulateAvailableGreatWorks(player : table, iconList : table)
 				uiMinimizedIcon.SelectButton:RegisterCallback( Mouse.eLClick, function() OnClickAvailableGreatWork(player, type, entry.ForTypeDescriptionID); end );
 				-- Set a tool tip
 				
-				local greatWorkTooltip : string = GreatWorksSupport_GetBasicTooltip(entry.ForType, false);
+				local greatWorkTooltip : string = GetGreatWorkTooltip(greatWorkDesc, GreatWorksSupport_GetBasicTooltip(entry.ForType, false));
 				uiIcon.SelectButton:SetToolTipString(greatWorkTooltip);
 
 				local minimizedTooltip : string = Locale.Lookup(entry.ForTypeName) .. "[NEWLINE]"..greatWorkTooltip;
@@ -2314,6 +2319,17 @@ function PopulateDealResources(player : table, iconList : table)
 							uiIcon.SelectButton:RegisterCallback( Mouse.eLClick, function(void1, void2, self) OnSelectValueDealItem(player, dealItemID, self); end );
 							uiIcon.SelectButton:SetDisabled(false);
 						else
+							-- indicate number is per turn in the tooltip (TTP #44289)
+							if (iDuration == 0) then
+								local resourceTypeName : string = pDealItem:GetValueTypeID();
+								local kConsumption : table = GameInfo.Resource_Consumption[resourceTypeName];
+								if kConsumption ~= nil then
+									if kConsumption.Accumulate then
+										szToolTip = szToolTip.."[NEWLINE]"..Locale.Lookup("LOC_HUD_REPORTS_PER_TURN", kConsumption.ImprovedExtractionRate);
+									end
+								end
+							end
+
 							uiIcon.SelectButton:ClearCallback( Mouse.eRClick );		-- Clear, we are re-using control instances
 							uiIcon.SelectButton:ClearCallback( Mouse.eLClick );
 
@@ -2528,8 +2544,10 @@ function PopulateDealGreatWorks(player : table, iconList : table)
 						strTooltip = strTooltip .. GetParentItemTransferToolTip(parentDealItem);
 					end
 
-					uiIcon.SelectButton:SetToolTipString(strTooltip);
-					uiMinimizedIcon.SelectButton:SetToolTipString(strTooltip);
+					local itemTooltip : string = GetGreatWorkTooltip(greatWorkDesc, strTooltip);
+
+					uiIcon.SelectButton:SetToolTipString(itemTooltip);
+					uiMinimizedIcon.SelectButton:SetToolTipString(itemTooltip);
 
 					if(ms_InitiatedByPlayerID ~= g_LocalPlayer:GetID() and pDealItem:GetFromPlayerID() == Game.GetLocalPlayer() and not ms_OtherPlayerIsHuman and not pDealItem:IsUnacceptable())then
 						uiIcon.StopAskingButton:SetHide(false);

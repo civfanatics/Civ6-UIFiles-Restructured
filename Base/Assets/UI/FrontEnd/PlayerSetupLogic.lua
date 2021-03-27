@@ -15,6 +15,7 @@ local m_currentInfo = {											--m_currentInfo is a duplicate of the data whi
 	};
 
 local m_tooltipControls = {};
+local m_teamColors = {};
 
 -------------------------------------------------------------------------------
 -- Parameter Hooks
@@ -494,7 +495,17 @@ function GetPlayerIcons(domain, leader_type)
 	-- be just another row in the players entry.
 	-- This can't happen until GameCore supports 
 	-- multiple 'random' pools.
-	if (leader_type ~= "RANDOM" and leader_type ~= "RANDOM_POOL1" and leader_type ~= "RANDOM_POOL2") then
+	if (leader_type == "RANDOM_POOL1") then
+		return {
+			LeaderIcon = "ICON_LEADER_RANDOM_POOL_1",  
+			CivIcon = "ICON_CIVILIZATION_UNKNOWN"
+		};
+	elseif (leader_type == "RANDOM_POOL2") then
+		return {
+			LeaderIcon = "ICON_LEADER_RANDOM_POOL_2",  
+			CivIcon = "ICON_CIVILIZATION_UNKNOWN"
+		};
+	elseif (leader_type ~= "RANDOM") then
 
 		-- Does the cache need to be invalidated?
 		local changes = DB.ConfigurationChanges();
@@ -1065,6 +1076,7 @@ function SetupLeaderPulldown(
 					end
 
 					local backColor, frontColor = UI.GetPlayerColorValues(icons.PlayerColor, colorIndex);		
+					m_teamColors[playerId] = {backColor, frontColor}
 					if(backColor and frontColor and backColor ~= 0 and frontColor ~= 0) then
 						civIcon:SetSizeVal(36,36);
 						civIcon:SetIcon(icons.CivIcon);
@@ -1111,8 +1123,8 @@ function SetupLeaderPulldown(
 								if(playerId == 0 and m_currentInfo) then
 									m_currentInfo.PlayerColorIndex = j;
 								end
-
 								parameters:SetParameterValue(parameter, j);
+								m_teamColors[playerId] = {backColor, frontColor}
 							end);
 						end           
 					end
@@ -1124,6 +1136,24 @@ function SetupLeaderPulldown(
 				local singleOrEmpty = itemCount == 0 or itemCount == 1;
 
 				colorControl:SetDisabled(notExternalEnabled or singleOrEmpty);
+
+				if colorWarnIcon ~= nil then
+					local myTeam = m_teamColors[playerId];
+					local bShowWarning = false;
+					for k,v in pairs(m_teamColors) do
+						if(k ~= playerId) then
+							 if( myTeam and v and UI.ArePlayerColorsConflicting( v, myTeam ) ) then
+								bShowWarning = true;
+							end
+						end
+					end
+					colorWarnIcon:SetHide(not bShowWarning);
+					if bShowWarning == true then
+						colorWarnIcon:LocalizeAndSetToolTip("LOC_SETUP_PLAYER_COLOR_COLLISION");
+					else
+						colorWarnIcon:SetToolTipString(nil);
+					end
+				end
 			end,
 			SetEnabled = function(enabled, parameter)
 				local notExternalEnabled = not CheckExternalEnabled(playerId, enabled, true, parameter);
@@ -1178,6 +1208,7 @@ function SetupLeaderPulldown(
 					local icons = GetPlayerIcons(v.Domain, v.Value);
 
 					local backColor, frontColor = UI.GetPlayerColorValues(icons.PlayerColor, colorIndex);
+					m_teamColors[playerId] = {backColor, frontColor}
 					if(backColor and frontColor and backColor ~= 0 and frontColor ~= 0) then
 						civIcon:SetSizeVal(36,36);
 						civIcon:SetIcon(icons.CivIcon);
@@ -1443,4 +1474,3 @@ function GameSetup_ConfigurationChanged()
 	SetupParameters_Log("Configuration Changed!");
 	GameSetup_RefreshParameters();
 end
-

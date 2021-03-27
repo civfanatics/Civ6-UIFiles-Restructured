@@ -191,29 +191,6 @@ function GetAdjacentYieldBonusString( eDistrict:number, pkCity:table, plot:table
 			requiredText = nil;
 		end
 
-		local iAppeal = plot:GetAppeal();
-		local iBaseHousing = GameInfo.Districts[eDistrict].Housing;
-
-		-- Default is Mbanza case (no appeal change)
-		local iTotalHousing:number = iBaseHousing;
-
-		for row in GameInfo.AppealHousingChanges() do
-			if (row.DistrictType == GameInfo.Districts[eDistrict].DistrictType) then
-				local iMinimumValue = row.MinimumValue;
-				local iAppealChange = row.AppealChange;
-				local szDescription = row.Description;
-				if (iAppeal >= iMinimumValue) then
-					iTotalHousing = iBaseHousing + iAppealChange;
-					tooltipText = Locale.Lookup("LOC_DISTRICT_ZONE_NEIGHBORHOOD_TOOLTIP", iBaseHousing + iAppealChange, szDescription);
-					break;
-				end
-			end
-		end
-
-		if iTotalHousing ~= 0 then
-			iconString = "[ICON_Housing]+" .. tostring(iTotalHousing);
-		end
-
 	-- Normal handling for all other districts
 	else
 		-- Check each neighbor if it matches criteria with the adjacency rules
@@ -244,6 +221,30 @@ function GetAdjacentYieldBonusString( eDistrict:number, pkCity:table, plot:table
 			requiredText = nil;
 		end
 	end	
+
+	-- Housing effects from districts (both one-per and normal)
+	local iAppeal = plot:GetAppeal();
+	local iBaseHousing = GameInfo.Districts[eDistrict].Housing;
+
+	-- Default is Mbanza case (no appeal change)
+	local iTotalHousing:number = iBaseHousing;
+
+	for row in GameInfo.AppealHousingChanges() do
+		if (row.DistrictType == GameInfo.Districts[eDistrict].DistrictType) then
+			local iMinimumValue = row.MinimumValue;
+			local iAppealChange = row.AppealChange;
+			local szDescription = row.Description;
+			if (iAppeal >= iMinimumValue) then
+				iTotalHousing = iBaseHousing + iAppealChange;
+				tooltipText = Locale.Lookup("LOC_DISTRICT_ZONE_NEIGHBORHOOD_TOOLTIP", iBaseHousing + iAppealChange, szDescription);
+				break;
+			end
+		end
+	end
+
+	if iTotalHousing ~= 0 then
+		iconString = "[ICON_Housing]+" .. tostring(iTotalHousing);
+	end
 
 	return iconString, tooltipText, requiredText;
 end

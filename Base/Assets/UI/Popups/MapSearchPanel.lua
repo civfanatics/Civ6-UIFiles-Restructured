@@ -44,6 +44,13 @@ local ResourceClassNameMap = {
 ["RESOURCECLASS_LUXURY"]    = "LOC_TOOLTIP_LUXURY_RESOURCE",
 ["RESOURCECLASS_STRATEGIC"] = "LOC_TOOLTIP_STRATEGIC_RESOURCE",
 ["RESOURCECLASS_ARTIFACT"]  = "LOC_TOOLTIP_ARTIFACT_RESOURCE",
+};
+
+local ResourceClassNameMapSecretSocieties = {
+["RESOURCECLASS_BONUS"]     = "LOC_TOOLTIP_BONUS_RESOURCE",
+["RESOURCECLASS_LUXURY"]    = "LOC_TOOLTIP_LUXURY_RESOURCE",
+["RESOURCECLASS_STRATEGIC"] = "LOC_TOOLTIP_STRATEGIC_RESOURCE",
+["RESOURCECLASS_ARTIFACT"]  = "LOC_TOOLTIP_ARTIFACT_RESOURCE",
 ["RESOURCECLASS_LEY_LINE"]  = "LOC_TOOLTIP_LEY_LINE_RESOURCE",
 };
 
@@ -826,8 +833,14 @@ function PopulateSuggestionData()
 	for row in GameInfo.Resources() do
 		AddSearchTerm(row.Name);
 	end
-	for _,term in pairs(ResourceClassNameMap) do
-		AddSearchTerm(term);
+	if (GameCapabilities.HasCapability("CAPABILITY_SECRETSOCIETIES")) then
+		for _,term in pairs(ResourceClassNameMapSecretSocieties) do
+			AddSearchTerm(term);
+		end
+	else
+		for _,term in pairs(ResourceClassNameMap) do
+			AddSearchTerm(term);
+		end
 	end
 
 	-- ROUTES

@@ -9,36 +9,17 @@
     <Image ID="WaterMark" Size="123,126" Offset="0,25" Texture="ChatPanel_Watermark"/>
     <Image ID="MapScaleSeparator" Size="parent-4,4" 	Offset="2,25" Texture="Controls_DecoMapScale" StretchMode="Tile" Color="42,75,108,255"/>
     <Container			 					          				Size="parent,parent-5"	Offset="-5,0" >
-      <ScrollPanel	ID="ChatLogPanel"						Anchor="L,T" Offset="16,23" Vertical="1" Size="284,60" HideScrollBar="0">
+      <ScrollPanel	ID="ChatLogPanel"						Anchor="L,T" Offset="16,28" Vertical="1" Size="284,57" HideScrollBar="0">
         <ScrollBar  Style="Slider_Blue" Offset="-13,0" Anchor="L,T"/>
         <Stack			ID="ChatEntryStack"					Anchor="L,B" StackGrowth="Bottom" Padding="0"/>
       </ScrollPanel>
 
       <PullDown ID="ChatPull" Anchor="L,B" Offset="10,2"		Size="260,26" Style="ChatPullDown" ToolTip="LOC_DIPLO_TO_ALL"/>
-      <Button	ID="ExpandButton"	Anchor="R,T" Offset="5,5" Size="20,17" TextureOffset="0,64" StateOffsetIncrement="0,17" Texture="Controls_ButtonExtendSmall.dds" ToolTip="LOC_HUD_CHAT_EXPAND_TOOLTIP"/>
+      <Button	ID="ExpandButton"		Anchor="R,T" Offset="5,5" Size="20,17" TextureOffset="0,64" StateOffsetIncrement="0,17" Texture="Controls_ButtonExtendSmall.dds" ToolTip="LOC_HUD_CHAT_EXPAND_TOOLTIP"/>
+			<Button	ID="ContractButton"	Anchor="R,T" Offset="21,5" Size="20,17" TextureOffset="0,64" StateOffsetIncrement="0,17" Texture="Controls_ButtonExtendSmall2.dds" ToolTip="LOC_HUD_CHAT_COLLAPSE_TOOLTIP" Hidden="1"/>
       <Button ID="DragButton" Texture="Controls_ChatResizeButton" Size="30,30" Anchor="R,B" Offset="-2,2" ToolTip="LOC_CLICK_TO_DRAG" Hidden="0">
         <Drag ID="DragSizer" Size="parent,parent" Buttons="L" SnapBackSpeed="0" DragThreshold="0" />
       </Button>
-      <Button ID="ResetChatButton" Texture="Controls_ButtonExtendSmall.dds" Size="20,17" Anchor="R,T" Offset="30,5" ToolTip="LOC_COLLAPSE_AND_RESET" Hidden="1"/>
-    </Container>
-    <Grid Size="parent+3,default" Anchor="L,B" Offset="-2,-2" Style="Divider3Grid"/>
-  </Box>
-
-  <!-- Expanded World Tracker Chat Panel-->
-  <Box ID="ExpandedChatPanelBG" Offset="0,0"		Size="296,199"		Color="0,0,0,255" Hidden="1" ConsumeMouse="1"/>
-  <Box ID="ExpandedChatPanel" Anchor="L,T" Offset="0,0"		Size="294,198"		Color="15,56,89,255" Hidden="1">
-    <Image Size="parent,parent" Texture="Controls_Gradient" Color="80,133,177,60"/>
-    <Image Size="123,126" Offset="0,25" Texture="ChatPanel_Watermark"/>
-    <Image Size="parent-4,4" 	Offset="2,25" Texture="Controls_DecoMapScale" StretchMode="Tile" Color="42,75,108,255"/>
-    <Container																Size="parent,parent-5"	Offset="-5,0" >
-      <Stack					ID="ExpandedChatLogStack"				Anchor="L,T" Offset="0,23" StackGrowth="Bottom"  >
-        <ScrollPanel	ID="ExpandedChatLogPanel"						Anchor="L,T" Offset="20,0" Vertical="1" Size="296,parent-55" HideScrollBar="0">
-          <ScrollBar Style="Slider_Blue" Offset="-13,0" Anchor="L,T"/>
-          <Stack			ID="ExpandedChatEntryStack"					Anchor="L,B" StackGrowth="Bottom" Padding="0"/>
-        </ScrollPanel>
-        <PullDown ID="ExpandedChatPull" Anchor="L,B" Offset="10,2"		Size="283,27" Style="ExpandedChatPullDown" ToolTip="LOC_DIPLO_TO_ALL"/>
-      </Stack>
-      <Button				ID="ContractButton"				Anchor="R,T" Offset="5,5" Size="20,17" TextureOffset="0,64" StateOffsetIncrement="0,17" Texture="Controls_ButtonExtendSmall2.dds" ToolTip="LOC_HUD_CHAT_COLLAPSE_TOOLTIP"/>
     </Container>
     <Grid Size="parent+3,default" Anchor="L,B" Offset="-2,-2" Style="Divider3Grid"/>
   </Box>

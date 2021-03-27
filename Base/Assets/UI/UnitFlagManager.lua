@@ -737,6 +737,13 @@ function GetLevyTurnsRemaining(pUnit : table)
 			local iOwner = pUnit:GetOwner();
 			local iOriginalOwner = pUnit:GetOriginalOwner();
 			if (iOwner ~= iOriginalOwner) then
+				if (pUnit:GetProperty("LEVY_TURN") ~= nil and pUnit:GetProperty("LEVY_DURATION") ~= nil) then
+					local levyturn = pUnit:GetProperty("LEVY_TURN");
+					local levyduration = pUnit:GetProperty("LEVY_DURATION");
+					local gameturn = Game.GetCurrentGameTurn();
+					return levyturn + levyduration - gameturn;
+				end
+
 				local pOriginalOwner = Players[iOriginalOwner];
 				if (pOriginalOwner ~= nil and pOriginalOwner:GetInfluence() ~= nil) then
 					local iLevyTurnCounter = pOriginalOwner:GetInfluence():GetLevyTurnCounter();
@@ -1920,6 +1927,18 @@ function OnLevyCounterChanged( originalOwnerID : number )
 			end
 
 			local suzerainFlagInstances = m_UnitFlagInstances[ suzerainID ];
+			for id, flag in pairs(suzerainFlagInstances) do
+				if (flag ~= nil) then
+					flag:UpdateName();
+					flag:UpdatePromotions();
+				end
+			end
+		else
+			if (m_UnitFlagInstances[ originalOwnerID ] == nil) then
+				return;
+			end
+
+			local suzerainFlagInstances = m_UnitFlagInstances[ originalOwnerID ];
 			for id, flag in pairs(suzerainFlagInstances) do
 				if (flag ~= nil) then
 					flag:UpdateName();

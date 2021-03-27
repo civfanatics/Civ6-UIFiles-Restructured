@@ -22,6 +22,11 @@ function OnHistoricMoments()
 end
 
 -- ===========================================================================
+function OnHistoricMomentsClosed()
+	bWasInHistoricMoments = false;
+end
+
+-- ===========================================================================
 function OnExportHistoricMoments()
 	 local path, filename = Game.GetHistoryManager():WritePrideMomentInfo();
 
@@ -56,6 +61,8 @@ function LateInitialize()
 		Controls.HistoricMoments:SetHide(true);
 		Controls.ExportHistoricMoments:SetHide(true);
 	end
+
+	LuaEvents.HistoricMoments_Closed.Add( OnHistoricMomentsClosed );	
 
 	BASE_LateInitialize();
 end

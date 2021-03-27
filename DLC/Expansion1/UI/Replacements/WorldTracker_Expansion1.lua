@@ -11,12 +11,13 @@ BASE_LateInitialize = LateInitialize;
 BASE_UpdateResearchPanel = UpdateResearchPanel;
 BASE_RealizeCurrentResearch = RealizeCurrentResearch;
 BASE_ShouldUpdateResearchPanel = ShouldUpdateResearchPanel;
-
+BASE_Subscribe = Subscribe;
+BASE_Unsubscribe = Unsubscribe;
 
 -- ===========================================================================
---	FUNCTIONS
+--	CONSTANTS
 -- ===========================================================================
-
+local EMERGENCY_SIZE : number = 44;
 
 -- ===========================================================================
 --	OVERRIDE
@@ -70,12 +71,40 @@ function RealizeEmptyMessage()
 end
 
 -- ===========================================================================
+function OnSetNumberOfEmergencies(numEmergencies : number)
+	if(numEmergencies > 0)then
+		Controls.OtherContainer:SetHide(false);
+		Controls.OtherContainer:SetSizeY(numEmergencies * EMERGENCY_SIZE)
+	else
+		Controls.OtherContainer:SetHide(true);
+	end
+end
+
+-- ===========================================================================
+--	OVERRIDE
+-- ===========================================================================
+function Subscribe()
+	BASE_Subscribe();
+
+	LuaEvents.WorldTracker_SetEmergencies.Add( OnSetNumberOfEmergencies );
+end
+
+-- ===========================================================================
+--	OVERRIDE
+-- ===========================================================================
+function Unsubscribe()
+	BASE_Unsubscribe();
+
+	LuaEvents.WorldTracker_SetEmergencies.Remove( OnSetNumberOfEmergencies );
+end
+
+-- ===========================================================================
 --	OVERRIDE
 -- ===========================================================================
 function LateInitialize()
 	BASE_LateInitialize();
 	
-	ContextPtr:LoadNewContext("WorldCrisisTracker", Controls.PanelStack);
+	ContextPtr:LoadNewContext("WorldCrisisTracker", Controls.OtherContainer);
 	Controls.TutorialGoals:SetHide(true);
 	Controls.PanelStack:CalculateSize();
 end

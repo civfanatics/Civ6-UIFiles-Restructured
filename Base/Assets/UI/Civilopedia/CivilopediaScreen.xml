@@ -72,7 +72,7 @@
 							<!-- Page Header (Mutually exclusive with Chapter header) -->
 							<Container ID="PageHeader" Size="732,58" Offset="5,0">
 								<Image Style="Civilopedia_PageHeader"/>
-								<Label ID="PageHeaderCaption" Style="Civilopedia_PageHeaderCaption" String="TITLE" />
+								<Label ID="PageHeaderCaption" Style="Civilopedia_PageHeaderCaption" String="TITLE" WrapWidth="700"/>
 							</Container>
 
 							<!-- Page Sub-header -->
@@ -150,7 +150,7 @@
 	<Instance Name="CivilopediaPageTabInstance">
 		<Box ID="Root" Size="parent-5,32" Color="0,0,0,0">
 			<GridButton ID="Button" Style="Civilopedia_PageTabButton" Size="parent-5,parent">
-				<Label ID="Caption" Style="Civilopedia_PageTabButtonCaption" String="Bacon." WrapWidth="210"/>
+				<Label ID="Caption" Style="Civilopedia_PageTabButtonCaption" String="Bacon." WrapWidth="190"/>
 			</GridButton>
 			<Grid ID="Header" Style="Civilopedia_PageTabHeaderOverlay" Size="parent-5,parent" />
       			<Image ID="Expand" Anchor="R,C" Offset="10,0" Size="22,22" Texture="Controls_ExpandButton" />

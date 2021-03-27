@@ -83,6 +83,21 @@ function GetYieldsForRoute(pOriginCity:table, pDestinationCity:table, bReturnDes
 		kModifierYields = pTradeManager:CalculateDestinationYieldsFromModifiers(originOwnerID, originCityID, destOwnerID, destCityID);
 	end
 
+	-- Overall modifiers / multipliers
+	local kYieldMultipliers:table = {};
+	for yieldIndex=1, #kRouteYields, 1 do
+		kYieldMultipliers[yieldIndex] = 1;
+		if originOwnerID ~= destOwnerID then
+			if not bReturnDestiationYields then
+				local pPlayerTrade:table = Players[originOwnerID]:GetTrade();
+				kYieldMultipliers[yieldIndex] = pPlayerTrade:GetInternationalYieldModifier(yieldIndex);
+			else
+				local pPlayerTrade:table = Players[destOwnerID]:GetTrade();
+				kYieldMultipliers[yieldIndex] = pPlayerTrade:GetInternationalYieldModifier(yieldIndex);
+			end
+		end
+	end
+
 	-- Add the yields together and return the result
 	for yieldIndex=1, #kRouteYields, 1 do
 
@@ -113,8 +128,22 @@ function GetYieldsForRoute(pOriginCity:table, pDestinationCity:table, bReturnDes
 				kRouteInfo.TooltipText = kRouteInfo.TooltipText .. Locale.Lookup("LOC_ROUTECHOOSER_YIELD_SOURCE_BONUSES", modifierValue, kYieldInfo.IconString, kYieldInfo.Name);
 			end
 
+			local totalBeforeMultiplier:number = routeValue + pathValue + modifierValue;
+			local total:number = totalBeforeMultiplier;
+			local multiplier:number = kYieldMultipliers[yieldIndex];
+			if total > 0 and multiplier ~= 1 then
+				total = totalBeforeMultiplier * multiplier;
+				local valueFromMultiplier:number = total - totalBeforeMultiplier;
+				local multiplierAsPercent:number = (multiplier * 100) - 100;
+
+				if kRouteInfo.TooltipText ~= "" then
+					kRouteInfo.TooltipText = kRouteInfo.TooltipText .. "[NEWLINE]";
+				end
+				kRouteInfo.TooltipText = kRouteInfo.TooltipText .. Locale.Lookup("LOC_ROUTECHOOSER_YIELD_SOURCE_MULTIPLIERS", valueFromMultiplier, kYieldInfo.IconString, kYieldInfo.Name, multiplierAsPercent);
+			end
+
 			-- Put the total into routeYields
-			kRouteInfo.kYieldValues[yieldIndex] = routeValue + pathValue + modifierValue;
+			kRouteInfo.kYieldValues[yieldIndex] = total;
 		end
 	end
 

@@ -21,6 +21,7 @@ include("CivicsTreeIconLoader_", true);
 -- ===========================================================================
 local RELOAD_CACHE_ID					:string = "WorldTracker"; -- Must be unique (usually the same as the file name)
 local CHAT_COLLAPSED_SIZE				:number = 118;
+local CIVIC_RESEARCH_MIN_SIZE			:number = 96;
 local MAX_BEFORE_TRUNC_TRACKER			:number = 180;
 local MAX_BEFORE_TRUNC_CHECK			:number = 160;
 local MAX_BEFORE_TRUNC_TITLE			:number = 225;
@@ -28,12 +29,12 @@ local LAUNCH_BAR_PADDING				:number = 50;
 local STARTING_TRACKER_OPTIONS_OFFSET	:number = 75;
 local WORLD_TRACKER_PANEL_WIDTH			:number = 300;
 local MINIMAP_PADDING					:number = 40;
-local COLLAPSED_MINIMAP_SIZE			:number = 30;
 
-local UNITS_PANEL_MAX_HEIGHT			:number = 200;
-local UNITS_PANEL_MIN_HEIGHT			:number = 96;
-local UNITS_PANEL_PADDING				:number = 55;
+local UNITS_PANEL_MIN_HEIGHT			:number = 85;
+local UNITS_PANEL_PADDING				:number = 65;
 local TOPBAR_PADDING					:number = 100;
+
+local WORLD_TRACKER_TOP_PADDING			:number = 200;
 
 
 -- ===========================================================================
@@ -66,15 +67,15 @@ local m_lastResearchCompletedID	:number = -1;
 local m_currentCivicID			:number = -1;
 local m_lastCivicCompletedID	:number = -1;
 local m_minimapSize				:number = 199;
-local m_numEmergencies			:number = 0;
 local m_isTrackerAlwaysCollapsed:boolean = false;	-- Once the launch bar extends past the width of the world tracker, we always show the collapsed version of the backing for the tracker element
 local m_isDirty					:boolean = false;	-- Note: renamed from "refresh" which is a built in Forge mechanism; this is based on a gamecore event to check not frame update
 local m_isMinimapCollapsed		:boolean = false;
-local m_isChatExpanded			:boolean = false;
 local m_startingChatSize		:number = 0;
 
 local m_unitSearchString		:string = "";
 local m_remainingRoom			:number = 0;
+local m_isUnitListSizeDirty		:boolean = false;
+local m_isMinimapInitialized	:boolean = false;
 
 local m_uiCheckBoxes			:table = {Controls.ChatCheck, Controls.CivicsCheck, Controls.ResearchCheck, Controls.UnitCheck};
 
@@ -130,50 +131,56 @@ function ToggleDropdown()
 		Controls.DropdownAnim:SetToBeginning();
 		Controls.DropdownAnim:Play();
 		CheckEnoughRoom();
-		AutoSizeUnitsList();
 	end
 end
 
 -- ===========================================================================
 function CheckEnoughRoom()
-	local worldTrackerStackSize : number = Controls.WorldTrackerHeader:GetSizeY();
-	if (not m_researchInstance.MainPanel:IsHidden())then
-		worldTrackerStackSize = worldTrackerStackSize + m_researchInstance.MainPanel:GetSizeY();
+	local availableSpace : number = Controls.WorldTrackerVerticalContainer:GetSizeY();
+	if(m_researchInstance.MainPanel:IsVisible())then
+		availableSpace = availableSpace - CIVIC_RESEARCH_MIN_SIZE;
 	end
-	if (not m_civicsInstance.MainPanel:IsHidden())then
-		worldTrackerStackSize = worldTrackerStackSize + m_civicsInstance.MainPanel:GetSizeY();
+	if(m_civicsInstance.MainPanel:IsVisible())then
+		availableSpace = availableSpace - CIVIC_RESEARCH_MIN_SIZE;
 	end
-	if (not m_unitListInstance.MainPanel:IsHidden())then
-		worldTrackerStackSize = worldTrackerStackSize + m_unitListInstance.MainPanel:GetSizeY();
+	if(m_unitListInstance.UnitListMainPanel:IsVisible())then
+		availableSpace = availableSpace - CIVIC_RESEARCH_MIN_SIZE;
 	end
-	if (not Controls.ChatPanel:IsHidden())then
-		worldTrackerStackSize = worldTrackerStackSize + Controls.ChatPanel:GetSizeY();
+	if(Controls.ChatPanelContainer:IsVisible())then
+		availableSpace = availableSpace - CHAT_COLLAPSED_SIZE;
 	end
-	local _, screenY : number = UIManager:GetScreenSizeVal();
-	local uiMinimap : table  = ContextPtr:LookUpControl("/InGame/MinimapPanel/MinimapContainer");
-	local crisisSize : number = 50 * m_numEmergencies;
-
-	local occupiedSpace : number = worldTrackerStackSize + GetTopBarPadding() + crisisSize;
-	if(uiMinimap ~= nil and not m_isMinimapCollapsed)then
-		occupiedSpace = occupiedSpace + uiMinimap:GetSizeY() + GetMinimapPadding();
+	if(Controls.OtherContainer:IsVisible())then
+		availableSpace = availableSpace - Controls.OtherContainer:GetSizeY();
 	end
 
-	if(occupiedSpace + UNITS_PANEL_MIN_HEIGHT >= screenY)then
-		for k, v in ipairs(m_uiCheckBoxes)do
-			if(not v:IsChecked())then
-				v:SetDisabled(true);
-				v:LocalizeAndSetToolTip("LOC_WORLDTRACKER_NO_ROOM");
-			end
-		end
+	if(not Controls.ResearchCheck:IsChecked() and availableSpace < CIVIC_RESEARCH_MIN_SIZE)then
+		Controls.ResearchCheck:SetDisabled(true);
+		Controls.ResearchCheck:LocalizeAndSetToolTip("LOC_WORLDTRACKER_NO_ROOM");
 	else
-		for k, v in ipairs(m_uiCheckBoxes)do
-			if(not v:IsChecked())then
-				v:SetDisabled(false);
-				v:LocalizeAndSetToolTip("");
-			end
-		end
+		Controls.ResearchCheck:SetDisabled(false);
+		Controls.ResearchCheck:SetToolTipString("");
 	end
-	m_remainingRoom = screenY - occupiedSpace;
+	if(not Controls.CivicsCheck:IsChecked() and availableSpace < CIVIC_RESEARCH_MIN_SIZE)then
+		Controls.CivicsCheck:SetDisabled(true);
+		Controls.CivicsCheck:LocalizeAndSetToolTip("LOC_WORLDTRACKER_NO_ROOM");
+	else
+		Controls.CivicsCheck:SetDisabled(false);
+		Controls.CivicsCheck:SetToolTipString("");
+	end
+	if(not Controls.UnitCheck:IsChecked() and availableSpace < UNITS_PANEL_MIN_HEIGHT)then
+		Controls.UnitCheck:SetDisabled(true);
+		Controls.UnitCheck:LocalizeAndSetToolTip("LOC_WORLDTRACKER_NO_ROOM");
+	else
+		Controls.UnitCheck:SetDisabled(false);
+		Controls.UnitCheck:SetToolTipString("");
+	end
+	if(not Controls.ChatCheck:IsChecked() and availableSpace < CHAT_COLLAPSED_SIZE)then
+		Controls.ChatCheck:SetDisabled(true);
+		Controls.ChatCheck:LocalizeAndSetToolTip("LOC_WORLDTRACKER_NO_ROOM");
+	else
+		Controls.ChatCheck:SetDisabled(false);
+		Controls.ChatCheck:SetToolTipString("");
+	end
 end
 
 -- ===========================================================================
@@ -213,9 +220,6 @@ function ToggleAll(hideAll:boolean)
 
 	LuaEvents.WorldTracker_ToggleCivicPanel(m_hideCivics or m_hideAll);
 	LuaEvents.WorldTracker_ToggleResearchPanel(m_hideResearch or m_hideAll);
-	if m_isChatExpanded then
-		ResizeExpandedChatPanel();
-	end
 end
 
 -- ===========================================================================
@@ -246,7 +250,6 @@ end
 
 -- ===========================================================================
 function RealizeStack()
-	Controls.PanelStack:CalculateSize();
 	if(m_hideAll) then ToggleAll(true); end
 end
 
@@ -263,9 +266,6 @@ function UpdateResearchPanel( isHideResearch:boolean )
 	if not HasCapability("CAPABILITY_TECH_CHOOSER") or not pPlayerConfig:IsAlive() then
 		isHideResearch = true;
 		Controls.ResearchCheck:SetHide(true);
-	end
-	if isHideResearch ~= nil and isHideResearch ~= m_hideResearch then
-		LuaEvents.ChatPanel_OnResetDraggedChatPanel(); --Reset the chat panel so the mouse offset is correct for dragging
 	end
 	if isHideResearch ~= nil then
 		m_hideResearch = isHideResearch;		
@@ -301,11 +301,6 @@ function UpdateResearchPanel( isHideResearch:boolean )
 		m_researchInstance.TitleButton:SetHide( false );
 		TruncateStringWithTooltip(m_researchInstance.TitleButton, MAX_BEFORE_TRUNC_TITLE, Locale.ToUpper(Locale.Lookup("LOC_WORLD_TRACKER_CHOOSE_RESEARCH")) );
 	end
-	if m_isChatExpanded then
-		ResizeExpandedChatPanel();
-	end
-	CheckEnoughRoom();
-	AutoSizeUnitsList();
 end
 
 -- ===========================================================================
@@ -321,9 +316,6 @@ function UpdateCivicsPanel(hideCivics:boolean)
 	if not HasCapability("CAPABILITY_CIVICS_CHOOSER") or (localPlayerID ~= PlayerTypes.NONE and not pPlayerConfig:IsAlive()) then
 		hideCivics = true;
 		Controls.CivicsCheck:SetHide(true);
-	end
-	if hideCivics ~= nil and hideCivics ~= m_hideCivics then
-		LuaEvents.ChatPanel_OnResetDraggedChatPanel(); --Reset the chat panel so the mouse offset is correct for dragging
 	end
 	if hideCivics ~= nil then
 		m_hideCivics = hideCivics;		
@@ -364,12 +356,6 @@ function UpdateCivicsPanel(hideCivics:boolean)
 	else
 		TruncateStringWithTooltip(m_civicsInstance.TitleButton, MAX_BEFORE_TRUNC_TITLE, m_civicsInstance.TitleButton:GetText() );
 	end
-	if m_isChatExpanded then
-		ResizeExpandedChatPanel();
-	end
-
-	CheckEnoughRoom();
-	AutoSizeUnitsList();
 end
 
 -- ===========================================================================
@@ -385,18 +371,15 @@ function UpdateUnitListPanel(hideUnitList:boolean)
 	if not HasCapability("CAPABILITY_UNIT_LIST") or (ePlayer ~= PlayerTypes.NONE and not pPlayerConfig:IsAlive()) then
 		hideUnitList = true;
 		Controls.CivicsCheck:SetHide(true);
-		m_unitListInstance.MainPanel:SetHide(true);
+		m_unitListInstance.UnitListMainPanel:SetHide(true);
 		return;
-	end
-	if hideUnitList ~= nil and hideUnitList ~= m_hideUnitList then
-		LuaEvents.ChatPanel_OnResetDraggedChatPanel(); --Reset the chat panel so the mouse offset is correct for dragging
 	end
 
 	if(hideUnitList ~= nil) then m_hideUnitList = hideUnitList; end
 	
 	m_unitEntryIM:ResetInstances();
 
-	m_unitListInstance.MainPanel:SetHide(m_hideUnitList); 
+	m_unitListInstance.UnitListMainPanel:SetHide(m_hideUnitList); 
 	Controls.UnitCheck:SetCheck(not m_hideUnitList);
 
 	local pPlayer : table = Players[ePlayer];
@@ -460,32 +443,61 @@ function UpdateUnitListPanel(hideUnitList:boolean)
 
 	RealizeEmptyMessage();
 	RealizeStack();
+end
 
-	if m_isChatExpanded then
-		ResizeExpandedChatPanel();
+-- ===========================================================================
+function StartUnitListSizeUpdate()
+	m_isUnitListSizeDirty = true;
+
+	--Allow the unit stack to take up it's full size so the auto sizing parent can do it's thing
+	m_unitListInstance.UnitStackContainer:SetHide(false);
+	m_unitListInstance.UnitStack:ChangeParent(m_unitListInstance.UnitStackContainer); 
+	ContextPtr:RequestRefresh();
+end
+
+-- ===========================================================================
+function UpdateUnitListSize()
+	if(not m_isMinimapInitialized)then
+		UpdateWorldTrackerSize();
+	end
+
+	if(not m_hideUnitList)then
+		local unitStackSize : number = m_unitListInstance.UnitStack:GetSizeY();
+
+		Controls.WorldTrackerVerticalContainer:CalculateSize();
+
+		local slotSize : number = m_unitListInstance.UnitListMainPanel:GetParent():GetSizeY();
+
+		if(unitStackSize > slotSize - UNITS_PANEL_PADDING)then
+			m_unitListInstance.UnitListScroll:SetSizeY(slotSize - UNITS_PANEL_PADDING);
+			m_unitListInstance.UnitStackContainer:SetHide(true);
+			m_unitListInstance.UnitListScroll:SetHide(false);
+			m_unitListInstance.UnitStack:ChangeParent(m_unitListInstance.UnitListScroll);
+		else
+			m_unitListInstance.UnitListScroll:SetHide(true);
+		end
+		m_isUnitListSizeDirty = false;
 	end
 end
 
 -- ===========================================================================
-function AutoSizeUnitsList()
-	local pPlayer : table = Players[Game.GetLocalPlayer()];
-	local pPlayerUnits : table = pPlayer:GetUnits();
-	
-	if(m_remainingRoom > UNITS_PANEL_MAX_HEIGHT)then
-		m_remainingRoom = UNITS_PANEL_MAX_HEIGHT;
-	elseif(m_remainingRoom < UNITS_PANEL_MIN_HEIGHT)then
-		m_remainingRoom = UNITS_PANEL_MIN_HEIGHT;
+function UpdateWorldTrackerSize()
+	local uiMinimap : table  = ContextPtr:LookUpControl("/InGame/MinimapPanel/MinimapContainer");
+	if(uiMinimap ~= nil)then
+		local _, screenHeight : number = UIManager:GetScreenSizeVal();
+		if(m_isMinimapCollapsed)then
+			Controls.WorldTrackerVerticalContainer:SetSizeY(screenHeight - WORLD_TRACKER_TOP_PADDING);
+		else
+			Controls.WorldTrackerVerticalContainer:SetSizeY(screenHeight - uiMinimap:GetSizeY() - WORLD_TRACKER_TOP_PADDING);
+		end
+		m_isMinimapInitialized = true;
+	else
+		m_isMinimapInitialized = false;
 	end
 
-	local desiredUnitsPanelSize : number = m_unitListInstance.UnitStack:GetSizeY() + UNITS_PANEL_PADDING;
-
-	if(desiredUnitsPanelSize > m_remainingRoom)then
-		desiredUnitsPanelSize = m_remainingRoom;
-	elseif(pPlayerUnits:GetCount() <= 0 or desiredUnitsPanelSize <= UNITS_PANEL_MIN_HEIGHT)then
-		desiredUnitsPanelSize = UNITS_PANEL_MIN_HEIGHT;
+	if(not m_unitListInstance.UnitListMainPanel:IsHidden())then
+		StartUnitListSizeUpdate()
 	end
-
-	m_unitListInstance.MainPanel:SetSizeY(desiredUnitsPanelSize);
 end
 
 -- ===========================================================================
@@ -592,12 +604,10 @@ end
 -- ===========================================================================
 function UpdateChatPanel(hideChat:boolean)
 	m_hideChat = hideChat; 
-	Controls.ChatPanel:SetHide(m_hideChat);
+	Controls.ChatPanelContainer:SetHide(m_hideChat);
 	Controls.ChatCheck:SetCheck(not m_hideChat);
 	RealizeEmptyMessage();
 	RealizeStack();
-	CheckEnoughRoom();
-	AutoSizeUnitsList();
 	CheckUnreadChatMessageCount();
 end
 
@@ -632,6 +642,8 @@ function Refresh()
 		return;
 	end
 
+	UpdateWorldTrackerSize();
+
 	local pPlayerTechs :table = Players[localPlayer]:GetTechs();
 	m_currentResearchID = pPlayerTechs:GetResearchingTech();
 	
@@ -651,7 +663,6 @@ function Refresh()
 	end	
 
 	UpdateCivicsPanel();
-
 	UpdateUnitListPanel();
 
 	-- Hide world tracker by default if there are no tracker options enabled
@@ -867,6 +878,7 @@ end
 
 -- ===========================================================================
 function OnTutorialGoalsShowing()
+	Controls.TutorialGoals:SetHide(false);
 	RealizeStack();
 end
 
@@ -891,91 +903,17 @@ function Tutorial_ShowTrackerOptions()
 end
 
 -- ===========================================================================
--- Handling chat panel expansion
--- ===========================================================================
-function OnChatPanel_OpenExpandedPanels()	
-	m_isChatExpanded = true;
-	ResizeExpandedChatPanel();	
-	CheckEnoughRoom();
-	AutoSizeUnitsList();
-end
-
--- ===========================================================================
-function OnChatPanel_CloseExpandedPanels()
-	m_isChatExpanded = false;
-	Controls.ChatPanel:SetSizeY( CHAT_COLLAPSED_SIZE );	
-	RealizeStack();	
-	CheckEnoughRoom();
-	AutoSizeUnitsList();
-end
-
--- ===========================================================================
-function OnChatResizeFinished(newChatPanelSize : number)
-	Controls.ChatPanel:SetSizeY(newChatPanelSize);
-	CheckEnoughRoom();
-	AutoSizeUnitsList();
-end
-
--- ===========================================================================
-function ResizeExpandedChatPanel()
-	Controls.ChatPanel:SetHide(true);							-- Hide so it's not part of stack computation.
-	RealizeStack();
-
-	local uiMinimap			:table  = ContextPtr:LookUpControl("/InGame/MinimapPanel/MinimapContainer");
-	local defaultMinimapSize:number = 376;						-- Size of the minimap when the height > width (ex. Nubia/BlackDeath scenarios).
-	local stackSection		:number = 96;
-	local crisisSize		:number = 50;
-	local chatSize			:number = 199;	
-	local stackSize			:number	= Controls.PanelStack:GetSizeY() - m_startingChatSize;
-	local width, height				= UIManager:GetScreenSizeVal();
-	
-	if uiMinimap then
-		m_minimapSize = uiMinimap:GetSizeY() + GetMinimapPadding();
-	else
-		m_minimapSize = defaultMinimapSize;
-	end
-	if not m_hideCivics then
-		stackSize = stackSize + stackSection;
-	end
-	if not m_hideResearch then
-		stackSize = stackSize + stackSection;
-	end
-
-	crisisSize = crisisSize * m_numEmergencies;
-
-	if m_isMinimapCollapsed then
-		m_minimapSize = 100;
-	end
-	
-	chatSize = math.max(199, height-(stackSize + m_minimapSize + crisisSize));
-	
-	if (stackSize + m_minimapSize + chatSize + crisisSize) >= height then
-		chatSize = height - m_minimapSize - stackSize - crisisSize - 25;
-	end
-	Controls.ChatPanel:SetHide(m_hideChat);
-	LuaEvents.ChatPanel_SetChatPanelSize(chatSize);			--Sets chat panel pulldown size
-	Controls.ChatPanel:SetSizeY(chatSize);					--Sets chat stack for placement of emergencies if present
-end
-
--- ===========================================================================
 function OnSetMinimapCollapsed(isMinimapCollapsed:boolean)
 	m_isMinimapCollapsed = isMinimapCollapsed;
-	if m_isChatExpanded then
-		ResizeExpandedChatPanel();
-	end
 	CheckEnoughRoom();
-	AutoSizeUnitsList();
-end
-
--- ===========================================================================
-function OnSetNumberOfEmergencies(numEmergencies:number)
-	m_numEmergencies = numEmergencies;
+	UpdateWorldTrackerSize();
 end
 
 -- ===========================================================================
 function OnUnitAddedToMap(playerID:number, unitID:number)
 	if(playerID == Game.GetLocalPlayer())then
 		UpdateUnitListPanel();
+		StartUnitListSizeUpdate();
 	end
 end
 
@@ -990,6 +928,7 @@ end
 function OnUnitRemovedFromMap(playerID:number, unitID:number)
 	if(playerID == Game.GetLocalPlayer())then
 		UpdateUnitListPanel();
+		StartUnitListSizeUpdate();
 	end
 end
 
@@ -1001,6 +940,7 @@ function OnUnitOperationDeactivated(playerID:number)
 	end
 end
 
+-- ===========================================================================
 function OnUnitOperationStarted(ownerID : number, unitID : number, operationID : number)
 	if(ownerID == Game.GetLocalPlayer() and (operationID == UnitOperationTypes.FORTIFY or operationID == UnitOperationTypes.ALERT))then
 		UpdateUnitListPanel();
@@ -1024,7 +964,7 @@ end
 function AttachDynamicUI()
 	for i,kData in ipairs(g_TrackedItems) do
 		local uiInstance:table = {};
-		ContextPtr:BuildInstanceForControl( kData.InstanceType, uiInstance, Controls.PanelStack );
+		ContextPtr:BuildInstanceForControl( kData.InstanceType, uiInstance, Controls.WorldTrackerVerticalContainer );
 		if uiInstance.IconButton then
 			uiInstance.IconButton:RegisterCallback(Mouse.eLClick, function() kData.SelectFunc() end);
 		end
@@ -1050,6 +990,21 @@ end
 function OnStartObserverMode()
 	UpdateResearchPanel();
 	UpdateCivicsPanel();
+end
+
+-- ===========================================================================
+function OnRefresh()
+	ContextPtr:ClearRequestRefresh();
+	if(not m_isMinimapInitialized)then
+		UpdateWorldTrackerSize();
+	elseif(m_isUnitListSizeDirty)then
+		UpdateUnitListSize();
+	end
+end
+
+-- ===========================================================================
+function OnChatPanelContainerSizeChanged()
+	LuaEvents.WorldTracker_ChatContainerSizeChanged(Controls.ChatPanelContainer:GetSizeY());
 end
 
 -- ===========================================================================
@@ -1098,11 +1053,6 @@ function Subscribe()
 	LuaEvents.Tutorial_EndTutorialRestrictions.Add(		Tutorial_ShowTrackerOptions);
 	LuaEvents.TutorialGoals_Showing.Add(				OnTutorialGoalsShowing );
 	LuaEvents.TutorialGoals_Hiding.Add(					OnTutorialGoalsHiding );
-	LuaEvents.ChatPanel_OpenExpandedPanels.Add(			OnChatPanel_OpenExpandedPanels);
-	LuaEvents.ChatPanel_CloseExpandedPanels.Add(		OnChatPanel_CloseExpandedPanels);
-	LuaEvents.WorldTracker_ChatResizeFinished.Add(		OnChatResizeFinished);
-	LuaEvents.WorldTracker_SetEmergencies.Add(			OnSetNumberOfEmergencies);
-	LuaEvents.WorldTracker_OnScreenResize.Add(			ResizeExpandedChatPanel );
 	LuaEvents.WorldTracker_OnSetMinimapCollapsed.Add(	OnSetMinimapCollapsed );
 end
 
@@ -1141,11 +1091,6 @@ function Unsubscribe()
 	LuaEvents.Tutorial_EndTutorialRestrictions.Remove(		Tutorial_ShowTrackerOptions);
 	LuaEvents.TutorialGoals_Showing.Remove(					OnTutorialGoalsShowing );
 	LuaEvents.TutorialGoals_Hiding.Remove(					OnTutorialGoalsHiding );
-	LuaEvents.ChatPanel_OpenExpandedPanels.Remove(			OnChatPanel_OpenExpandedPanels);
-	LuaEvents.ChatPanel_CloseExpandedPanels.Remove(			OnChatPanel_CloseExpandedPanels);
-	LuaEvents.WorldTracker_ChatResizeFinished.Remove(		OnChatResizeFinished);
-	LuaEvents.WorldTracker_SetEmergencies.Remove(			OnSetNumberOfEmergencies);
-	LuaEvents.WorldTracker_OnScreenResize.Remove(			ResizeExpandedChatPanel );
 	LuaEvents.WorldTracker_OnSetMinimapCollapsed.Remove(	OnSetMinimapCollapsed );
 end
 
@@ -1165,6 +1110,7 @@ function LateInitialize()
 
 	UpdateUnreadChatMsgs();
 	AttachDynamicUI();
+	UpdateWorldTrackerSize();
 end
 
 -- ===========================================================================
@@ -1174,20 +1120,24 @@ function Initialize()
 		ContextPtr:SetHide(true);
 		return;
 	end
+
+	ContextPtr:SetRefreshHandler( OnRefresh );	
 	
 	m_CachedModifiers = TechAndCivicSupport_BuildCivicModifierCache();
 
 	-- Create semi-dynamic instances; hack: change parent back to self for ordering:
-	ContextPtr:BuildInstanceForControl( "ResearchInstance", m_researchInstance, Controls.PanelStack );
-	ContextPtr:BuildInstanceForControl( "CivicInstance",	m_civicsInstance,	Controls.PanelStack );	
-	ContextPtr:BuildInstanceForControl( "UnitListInstance", m_unitListInstance, Controls.PanelStack );
+	ContextPtr:BuildInstanceForControl( "ResearchInstance", m_researchInstance, Controls.WorldTrackerVerticalContainer );
+	ContextPtr:BuildInstanceForControl( "CivicInstance",	m_civicsInstance,	Controls.WorldTrackerVerticalContainer );
+	Controls.OtherContainer:ChangeParent( Controls.WorldTrackerVerticalContainer );
+	ContextPtr:BuildInstanceForControl( "UnitListInstance", m_unitListInstance, Controls.WorldTrackerVerticalContainer );
+
 	m_researchInstance.IconButton:RegisterCallback(	Mouse.eLClick,	function() LuaEvents.WorldTracker_OpenChooseResearch(); end);
 	m_civicsInstance.IconButton:RegisterCallback(	Mouse.eLClick,	function() LuaEvents.WorldTracker_OpenChooseCivic(); end);
 
 	m_unitEntryIM = InstanceManager:new( "UnitListEntry", "Button", m_unitListInstance.UnitStack);
 
-	Controls.ChatPanel:ChangeParent( Controls.PanelStack );
-	Controls.TutorialGoals:ChangeParent( Controls.PanelStack );	
+	Controls.ChatPanelContainer:ChangeParent( Controls.WorldTrackerVerticalContainer );
+	Controls.TutorialGoals:ChangeParent( Controls.WorldTrackerVerticalContainer );	
 
 	-- Handle any text overflows with truncation and tooltip
 	local fullString :string = Controls.WorldTracker:GetText();
@@ -1203,15 +1153,26 @@ function Initialize()
 	Controls.ResearchCheck:SetCheck(true);
 	Controls.ToggleAllButton:SetCheck(true);
 
-	Controls.ChatCheck:RegisterCheckHandler(						function() UpdateChatPanel(not m_hideChat);end);
-	Controls.CivicsCheck:RegisterCheckHandler(						function() UpdateCivicsPanel(not m_hideCivics);end);
-	Controls.ResearchCheck:RegisterCheckHandler(					function() UpdateResearchPanel(not m_hideResearch);end);
-	Controls.UnitCheck:RegisterCheckHandler(						function() UpdateUnitListPanel(not m_hideUnitList);end);
+	Controls.ChatCheck:RegisterCheckHandler(						function() UpdateChatPanel(not m_hideChat);
+																			   StartUnitListSizeUpdate();
+																			   CheckEnoughRoom();
+																			   end);
+	Controls.CivicsCheck:RegisterCheckHandler(						function() UpdateCivicsPanel(not m_hideCivics);
+																			   StartUnitListSizeUpdate();
+																			   CheckEnoughRoom();
+																			   end);
+	Controls.ResearchCheck:RegisterCheckHandler(					function() UpdateResearchPanel(not m_hideResearch);
+																			   StartUnitListSizeUpdate();
+																			   CheckEnoughRoom();
+																			   end);
+	Controls.UnitCheck:RegisterCheckHandler(						function() UpdateUnitListPanel(not m_hideUnitList); 
+																			   StartUnitListSizeUpdate();
+																			   CheckEnoughRoom();
+																			   end);
 	Controls.ToggleAllButton:RegisterCheckHandler(					function() ToggleAll(not Controls.ToggleAllButton:IsChecked()) end);
 	Controls.ToggleDropdownButton:RegisterCallback(	Mouse.eLClick, ToggleDropdown);
 	Controls.WorldTrackerAlpha:RegisterEndCallback( OnWorldTrackerAnimationFinished );
 	m_unitListInstance.UnitsSearchBox:RegisterStringChangedCallback( OnUnitListSearch );
-
-	m_startingChatSize = Controls.ChatPanel:GetSizeY();
+	Controls.ChatPanelContainer:RegisterSizeChanged(OnChatPanelContainerSizeChanged);
 end
 Initialize();

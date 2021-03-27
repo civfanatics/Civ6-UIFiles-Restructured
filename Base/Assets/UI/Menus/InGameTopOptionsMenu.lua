@@ -349,13 +349,15 @@ function SetupButtons()
 
 	-- Eventually remove this check.  Retiring after winning is perfectly fine
 	-- so long as we update the tooltip to no longer state the player will be defeated.
-	local bAlreadyWon = false;
+	local bAlreadyWonOrLost = false;
 	local me = Game.GetLocalPlayer();
 	if(me) then
 		local localPlayer = Players[me];
 		if(localPlayer) then
-			if(Game.GetWinningTeam() == localPlayer:GetTeam()) then
-				bAlreadyWon = true;
+			local winningTeam : number = Game.GetWinningTeam();
+			local localPlayerTeam : number = localPlayer:GetTeam();
+			if(winningTeam == localPlayerTeam or (winningTeam ~= nil and winningTeam ~= localPlayerTeam)) then
+				bAlreadyWonOrLost = true;
 			end
 		end
 	end
@@ -372,7 +374,7 @@ function SetupButtons()
 		Controls.PBCQuitButton:SetHide(true);
 	end
 
-	Controls.RetireButton:SetHide(m_isSimpleMenu or bIsAutomation or bIsMultiplayer or bAlreadyWon or bWorldBuilder);
+	Controls.RetireButton:SetHide(m_isSimpleMenu or bIsAutomation or bIsMultiplayer or bAlreadyWonOrLost or bWorldBuilder);
 	Controls.RestartButton:SetHide( not bCanRestart );
 
 	Controls.ExitGameButton:SetHide(false);	
