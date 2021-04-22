@@ -17,14 +17,24 @@ BASE_RefreshDestinationList = RefreshDestinationList;
 -- Refresh the destination list with all revealed non-city state owned cities
 -- ===========================================================================
 function RefreshDestinationList()
-	local localPlayer = Players[Game.GetLocalPlayer()];
+	local localPlayerID = Game.GetLocalPlayer();
+	local localPlayer = Players[localPlayerID];
+	if localPlayer == nil then
+		return;
+	end
 
 	-- Add each players cities to destination list
 	local players:table = Game.GetPlayers();
 	for i, player in ipairs(players) do
-		if (player:GetID() == localPlayer:GetID() or player:GetTeam() == -1 or localPlayer:GetTeam() == -1 or player:GetTeam() ~= localPlayer:GetTeam()) then
-			if (not player:IsFreeCities()) then
-				AddPlayerCities(player)
+		local diploStateID:number = player:GetDiplomaticAI():GetDiplomaticStateIndex( localPlayerID );
+		if diploStateID ~= -1 then
+			local disploState:string = GameInfo.DiplomaticStates[diploStateID].StateType;
+			if disploState ~= "DIPLO_STATE_ALLIED" then
+				if (player:GetID() == localPlayer:GetID() or player:GetTeam() == -1 or localPlayer:GetTeam() == -1 or player:GetTeam() ~= localPlayer:GetTeam()) then
+					if (not player:IsFreeCities()) then
+						AddPlayerCities(player)
+					end
+				end
 			end
 		end
 	end

@@ -92,7 +92,7 @@ function OnStartKickVote(playerID, playerName)
 	m_kPopupDialog:AddButton( Locale.Lookup("LOC_KICK_VOTE_REASON_GRIEFING"), OnKickVoteGriefing, nil, nil, "PopupButtonInstanceRed" );
 	m_kPopupDialog:AddButton( Locale.Lookup("LOC_KICK_VOTE_REASON_CHEATING"), OnKickVoteCheating, nil, nil, "PopupButtonInstanceRed" );
 	m_kPopupDialog:AddButton( Locale.Lookup("LOC_CANCEL_BUTTON"), OnCancel );
-	Controls.PopupBox:SetSizeX(870);
+	Controls.PopupBox:SetSizeX(944);
 	m_kPopupDialog:Open();
 end
 

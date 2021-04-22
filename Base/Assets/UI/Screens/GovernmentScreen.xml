@@ -168,7 +168,7 @@
                   </Image>
                 </Container>
 
-                <Container ID="PolicyInputShield" Size="parent,parent" ConsumeMouseButton="1" />
+                <Container ID="PolicyInputShield" Size="parent,parent" ConsumeMouseButton="1"/>
               </Container>
 
 

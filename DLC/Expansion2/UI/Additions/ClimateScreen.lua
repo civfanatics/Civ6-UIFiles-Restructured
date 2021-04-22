@@ -578,18 +578,16 @@ function BuildPieChart( uiHolder:table, sliceIM:table, kSliceAmounts:table, kCol
 end
 
 -- ===========================================================================
---	Create a table of colors to use for pie charting.
--- ===========================================================================
-function GetPieChartColorTable()
-	local kColors = {};
-	table.insert(kColors, UI.GetColorValue("COLOR_STANDARD_RED_MD") );
-	table.insert(kColors, UI.GetColorValue("COLOR_STANDARD_ORANGE_MD") );
-	table.insert(kColors, UI.GetColorValue("COLOR_STANDARD_YELLOW_MD") );
-	table.insert(kColors, UI.GetColorValue("COLOR_STANDARD_GREEN_MD") );
-	table.insert(kColors, UI.GetColorValue("COLOR_STANDARD_AQUA_MD") );
-	table.insert(kColors, UI.GetColorValue("COLOR_STANDARD_BLUE_MD") );
-	table.insert(kColors, UI.GetColorValue("COLOR_STANDARD_PURPLE_MD") );
-	return kColors;
+function GetResourceSpecificColor(resourceType : string)
+	if(resourceType == "RESOURCE_COAL")then
+		return UI.GetColorValue("COLOR_STANDARD_RED_MD");
+	elseif(resourceType == "RESOURCE_OIL")then
+		return UI.GetColorValue("COLOR_STANDARD_ORANGE_MD");
+	elseif(resourceType == "RESOURCE_URANIUM")then
+		return UI.GetColorValue("COLOR_STANDARD_YELLOW_MD");
+	else
+		UI.DataAssert("Cannot find color for resource: "..resourceType);
+	end
 end
 
 -- ===========================================================================
@@ -752,10 +750,8 @@ function RealizePlayerCO2()
 	local pResources			:table	= pLocalPlayer:GetResources();	
 	local kResourceUseAmounts	:table = {};		-- hold raw CO2 usage amounts by each resource
 	local kSliceAmounts			:table = {};		-- hold the % each resource is contributing to CO2
+	local kColors				:table = {};
 	local total					:number = 0;
-	local kColors				:table = GetPieChartColorTable();
-	local maxColors				:number = #kColors;
-	local colorIndex			:number = 1;	-- Used to tint correponding colors
 
 	m_kYourCO2IM:ResetInstances();
 
@@ -771,19 +767,20 @@ function RealizePlayerCO2()
 
 				local uiResource		:table = m_kYourCO2IM:GetInstance();
 				local co2Amount			:number = amount;
-				local color				:number = kColors[colorIndex];
 				local amountLastTurn	:number = GameClimate.GetPlayerResourceCO2Footprint( m_playerID, kResourceInfo.Index, true );
 				local resourceLastTurn	:number = GameClimate.GetPlayerRawResourceConsumption( m_playerID, kResourceInfo.Index, true );
+				local color				:number = GetResourceSpecificColor(kResourceInfo.ResourceType);
+				if(color ~= nil)then
+					table.insert(kColors, color);
+				end
 
 				uiResource.Amount:SetText( co2Amount );
 				uiResource.Icon:SetIcon("ICON_" .. kResourceInfo.ResourceType);
-				uiResource.Palette:SetColor( color );
+				uiResource.Palette:SetColor(color);
 				uiResource.Top:SetToolTipString( Locale.Lookup("LOC_CLIMATE_RESOURCE_CONSUMED_LAST_TURN", resourceLastTurn, kResourceInfo.Name, amountLastTurn) );
 
 				table.insert( kResourceUseAmounts, amount);
 				total = total + co2Amount;
-
-				colorIndex = (colorIndex + 1) % maxColors;
 			end
 		end
 	end
@@ -881,10 +878,9 @@ function TabCO2ByResource()
 
 	local kResourceUseAmounts	:table = {};		-- hold raw CO2 usage amounts by each resource
 	local kSliceAmounts			:table = {};		-- hold the % each resource is contributing to CO2
-	local kColors				:table = GetPieChartColorTable();
-	local maxColors				:number = #kColors;
-	local colorIndex			:number = 1;	-- Used to tint correponding colors
 	local total					:number = 0;	-- Total CO2 from all resources
+	local kColors				:table = {};
+	local aliveMajorIDList		:table = PlayerManager.GetAliveMajorIDs();	--All alive major civ IDs, used to calculate total usage last turn.
 
 	-- For all the resources in the game
 	for kResourceInfo in GameInfo.Resources() do
@@ -904,17 +900,25 @@ function TabCO2ByResource()
 				local uiResource	:table = m_kCO2CivsIM:GetInstance();
 				local resourceName	:string = Locale.Lookup( kResourceInfo.Name );
 				local co2Amount		:number = amount;
-				local color			:number = kColors[colorIndex];
+				local color			:number = GetResourceSpecificColor(kResourceInfo.ResourceType);
+				if(color ~= nil)then
+					table.insert(kColors, color);
+				end
+
+				local totalAmountLastTurn	:number = 0;
+				local totalResourceLastTurn :number = 0;
+				for k,v in ipairs(aliveMajorIDList)do
+					totalAmountLastTurn = totalAmountLastTurn + GameClimate.GetPlayerResourceCO2Footprint( v, kResourceInfo.Index, true );
+					totalResourceLastTurn = totalResourceLastTurn + GameClimate.GetPlayerRawResourceConsumption( v, kResourceInfo.Index, true );
+				end
 
 				uiResource.Amount:SetText( co2Amount );
 				uiResource.Icon:SetIcon("ICON_" .. kResourceInfo.ResourceType);
-				uiResource.Palette:SetColor( color );
-				uiResource.Icon:SetToolTipString( resourceName );
+				uiResource.Palette:SetColor( GetResourceSpecificColor(kResourceInfo.ResourceType) );
+				uiResource.Top:SetToolTipString( Locale.Lookup("LOC_CLIMATE_RESOURCE_CONSUMED_LAST_TURN_GLOBAL", totalResourceLastTurn, kResourceInfo.Name, totalAmountLastTurn) );
 
 				table.insert( kResourceUseAmounts, amount );
 				total = total + co2Amount;
-
-				colorIndex = (colorIndex + 1) % maxColors;
 			end
 		end
 	end

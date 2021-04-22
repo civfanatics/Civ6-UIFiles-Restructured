@@ -4048,11 +4048,7 @@ function AddUnitToUnitList(pUnit:table)
 	unitEntry.Button:SetText( Locale.ToUpper(uniqueName) );
 	unitEntry.Button:SetVoids(i, pUnit:GetID());
 
-	-- Update unit icon
-	local iconInfo:table, iconShadowInfo:table = GetUnitIcon(pUnit, 22, true);
-	if iconInfo.textureSheet then
-		unitEntry.UnitTypeIcon:SetTexture( iconInfo.textureOffsetX, iconInfo.textureOffsetY, iconInfo.textureSheet );
-	end
+	UpdateUnitIcon(pUnit, unitEntry);
 
 	-- Update status icon
 	local activityType:number = UnitManager.GetActivityType(pUnit);
@@ -4073,6 +4069,14 @@ function AddUnitToUnitList(pUnit:table)
 	else
 		unitEntry.Button:GetTextControl():SetColorByName("UnitPanelTextDisabledCS");
 		unitEntry.UnitTypeIcon:SetColorByName("UnitPanelTextDisabledCS");
+	end
+end
+
+-- ===========================================================================
+function UpdateUnitIcon(pUnit:table, uiUnitEntry:table)
+	local iconInfo:table, iconShadowInfo:table = GetUnitIcon(pUnit, 22, true);
+	if iconInfo.textureSheet then
+		uiUnitEntry.UnitTypeIcon:SetTexture( iconInfo.textureOffsetX, iconInfo.textureOffsetY, iconInfo.textureSheet );
 	end
 end
 

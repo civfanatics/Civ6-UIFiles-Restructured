@@ -234,7 +234,7 @@ function OnRefresh()
 		Controls.GovernorIcon:SetHide(true);
 		Controls.GovernorName:SetText("");
 		Controls.GovernorTitle:SetText(Locale.Lookup("LOC_HUD_CITY_NO_GOVERNOR"));
-		Controls.GovernorEffects:SetText(Locale.Lookup("LOC_HUD_CITY_NO_GOVERNOR_EFFECT"));
+		Controls.GovernorEffects:SetText("");
 		Controls.GovernorEstablishmentText:SetText("");
 		Controls.TurnsOnSite:SetHide(true);
 	end

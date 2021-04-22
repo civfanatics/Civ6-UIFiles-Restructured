@@ -444,6 +444,20 @@ function OnClose()
 end
 
 -- ===========================================================================
+-- The player explicitedly requested that the screen to close. This marks that the player has considered their governor title options and then closes the screen because we do not return to the main
+function PlayerRequestClose()
+	local localPlayerID = Game.GetLocalPlayer();
+	if (localPlayerID ~= -1) then
+		local localPlayer = Players[localPlayerID];
+		if (localPlayer ~= nil and localPlayer:GetGovernors() ~= nil and not localPlayer:GetGovernors():HasTitleBeenConsidered()) then
+			localPlayer:GetGovernors():SetTitleConsidered(true);
+		end
+	end
+
+	Close();
+end
+
+-- ===========================================================================
 function OnInit( isReload:boolean )
 	if isReload then		
 		LuaEvents.GameDebug_GetValues( RELOAD_CACHE_ID );	
@@ -499,7 +513,7 @@ function OnInputHandler( pInputStruct:table )
 	local key = pInputStruct:GetKey();
 	local msg = pInputStruct:GetMessageType();
 	if msg == KeyEvents.KeyUp and key == Keys.VK_ESCAPE then 
-		OnClose();
+		PlayerRequestClose();
 		return true;
 	end;
 	return false;
@@ -554,7 +568,7 @@ function Initialize()
 	Controls.ConfirmButton:RegisterCallback( Mouse.eLClick, OnConfirm );
 	Controls.ConfirmButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 	Controls.CancelButton:RegisterCallback( Mouse.eLClick, OnCancel );
-	Controls.Header_CloseButton:RegisterCallback( Mouse.eLClick, OnClose );
+	Controls.Header_CloseButton:RegisterCallback( Mouse.eLClick, PlayerRequestClose );
 
 	-- Game Events
 	Events.CityAddedToMap.Add( OnCityAddedToMap );

@@ -363,6 +363,10 @@ end
 --	Game Engine Event
 -- ===========================================================================
 function OnRefreshResources()
+	if UI.IsInGame() == false then
+		return;
+	end
+	
 	RefreshResources();
 end
 

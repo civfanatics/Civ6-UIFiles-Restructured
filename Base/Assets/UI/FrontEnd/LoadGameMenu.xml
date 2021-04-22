@@ -79,7 +79,7 @@
                       <Stack ID="SelectedFileStack" StackGrowth="Down" Padding="1">
                         <!-- INSPECTOR contents-->
                         <Grid Style="ShellLoadSaveHeader" Size="parent,40" Offset="0,1" Anchor="C,T">
-                          <Label ID="FileName" Anchor="C,C" Offset="0,0" Style="BlueGlow" WrapWidth="300"/>
+                          <Label ID="FileName" Anchor="C,C" Offset="0,0" Style="BlueGlow" WrapWidth="260"/>
                         </Grid>
                         <!-- Map Area -->
 						            <Container ID="InspectorTopArea" Size="parent,auto">

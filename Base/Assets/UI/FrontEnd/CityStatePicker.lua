@@ -30,6 +30,10 @@ local m_RulesetType:string = "";
 
 local m_numSelected:number = 0;
 
+-- Track the number of city-states to spawn when opening the picker
+-- Used to revert to that number in case the user modifies the parameter then backs out of the picker
+local m_OriginalCityStateCount:number = 0;
+
 -- ===========================================================================
 function Close()	
 	-- Clear any temporary global variables.
@@ -47,6 +51,7 @@ end
 -- ===========================================================================
 function OnBackButton()
 	Close();
+	LuaEvents.CityStatePicker_SetParameterValue(m_kCityStateCountParam.ParameterId, m_OriginalCityStateCount);
 end
 
 -- ===========================================================================
@@ -161,6 +166,7 @@ function ParameterInitialize(parameter : table, pGameParameters:table)
 	m_kSelectedValues = {};
 
 	m_kCityStateCountParam = pGameParameters.Parameters["CityStateCount"];
+	m_OriginalCityStateCount = m_kCityStateCountParam.Value;
 
 	local kRulesetParam = pGameParameters.Parameters["Ruleset"];
 	m_RulesetType = kRulesetParam.Value.Value;
@@ -208,20 +214,22 @@ end
 
 -- ===========================================================================
 function RefreshCountWarning()
-	local numSelected:number = 0;
+	if m_kParameter ~= nil then
+		local numSelected:number = 0;
 
-	for i, v in ipairs(m_kParameter.Values) do
-		if not IsItemSelected(v) then
-			numSelected = numSelected + 1;
+		for i, v in ipairs(m_kParameter.Values) do
+			if not IsItemSelected(v) then
+				numSelected = numSelected + 1;
+			end
 		end
-	end
 
-	if numSelected < m_kCityStateCountParam.Value then
-		Controls.ConfirmButton:SetDisabled(true);
-		Controls.CountWarning:SetText(Locale.ToUpper(Locale.Lookup("LOC_CITY_STATE_PICKER_COUNT_WARNING", m_kCityStateCountParam.Value, m_kCityStateCountParam.Value - numSelected)));
-	else
-		Controls.ConfirmButton:SetDisabled(false);
-		Controls.CountWarning:SetText("");
+		if numSelected < m_kCityStateCountParam.Value then
+			Controls.ConfirmButton:SetDisabled(true);
+			Controls.CountWarning:SetText(Locale.ToUpper(Locale.Lookup("LOC_CITY_STATE_PICKER_COUNT_WARNING", m_kCityStateCountParam.Value, m_kCityStateCountParam.Value - numSelected)));
+		else
+			Controls.ConfirmButton:SetDisabled(false);
+			Controls.CountWarning:SetText("");
+		end
 	end
 end
 
@@ -335,7 +343,7 @@ function OnInputHandler( pInputStruct:table )
 	if uiMsg == KeyEvents.KeyUp then
 		local key:number = pInputStruct:GetKey();
 		if key == Keys.VK_ESCAPE then
-			Close();
+			OnBackButton();
 		end
 	end
 	return true;

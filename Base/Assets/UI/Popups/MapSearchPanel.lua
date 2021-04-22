@@ -77,7 +77,6 @@ local OmittedTermsMap = {
 ["LOC_BUILDING_SMALL_ROCKET_NAME"]  = true,
 ["LOC_BUILDING_MEDIUM_ROCKET_NAME"] = true,
 ["LOC_BUILDING_LARGE_ROCKET_NAME"]  = true,
-["LOC_UNIT_BARBARIAN_GALLEY_NAME"]  = true,
 ["LOC_TOOLTIP_ARTIFACT_RESOURCE"]   = true,
 };
 
@@ -1286,4 +1285,10 @@ function Initialize()
 
 	UpdateEnabledButtons();
 end
+
+-- This wildcard include will include all loaded files beginning with "MapSearchPanel_"
+-- This method replaces the uses of include("MapSearchPanel") in files that want to override
+-- functions from this file. If you're implementing a new "MapSearchPanel_" file DO NOT include this file.
+include("MapSearchPanel_", true);
+
 Initialize();

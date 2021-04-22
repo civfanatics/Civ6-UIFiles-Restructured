@@ -1,4 +1,4 @@
--- ===========================================================================
+﻿-- ===========================================================================
 --	World Icon Manager
 --	Handles showing world icons (e.g., resources) on the map.
 --	May be moved to PlotInfo.lua
@@ -427,6 +427,10 @@ end
 -------------------------------------------------------------------------------
 function OnResourceVisibilityChanged(x, y, resourceType, visibilityType)
 
+	if UI.IsInGame() == false then
+		return;
+	end
+
 	-- Don't use the 'untouched' version because events this can break depending on the order the events come in.
 	local plotIndex:number = GetPlotIndex(x, y);
 	if plotIndex == -1 then
@@ -452,6 +456,10 @@ end
 
 -------------------------------------------------------------------------------
 function OnResourceChanged(x, y, resourceType)
+
+	if UI.IsInGame() == false then
+		return;
+	end
 
 	local eObserverID = Game.GetLocalObserver();
 	local pLocalPlayerVis = PlayerVisibilityManager.GetPlayerVisibility(eObserverID);
@@ -483,6 +491,10 @@ end
 -------------------------------------------------------------------------------
 function OnPlotVisibilityChanged(x, y, visibilityType)
 
+	if UI.IsInGame() == false then
+		return;
+	end
+
 	-- Don't use the 'untouched' version because events this can break depending on the order the events come in.
 	local plotIndex:number = GetPlotIndex(x, y);
 	if plotIndex == -1 then
@@ -504,6 +516,10 @@ end
 
 -- ===========================================================================
 function OnCityAddedToMap(playerID, cityID, x, y)
+	if UI.IsInGame() == false then
+		return;
+	end
+
 	local plotIndex:number = GetPlotIndex(x, y);
 
     ClearSettlementRecommendations();
@@ -783,6 +799,11 @@ function OnUnitSelectionChanged(player, unitId, locationX, locationY, locationZ,
 end
 
 -- ===========================================================================
+function OnLoadGameViewStateDone()
+	Rebuild();
+end
+
+-- ===========================================================================
 --	UI Callback
 --	Handle the UI shutting down.
 -- ===========================================================================
@@ -791,6 +812,7 @@ function OnShutdown()
 	Events.CityAddedToMap.Remove(OnCityAddedToMap);
 	Events.CivicCompleted.Remove(OnCivicCompleted);
 	Events.EndWonderReveal.Remove( OnEndWonderReveal );
+	Events.LoadGameViewStateDone.Remove(OnLoadGameViewStateDone);
 	Events.LocalPlayerChanged.Remove(OnLocalPlayerChanged);
 	Events.PlotMarkerChanged.Remove(OnPlotMarkersChanged);
 	Events.PlotVisibilityChanged.Remove(OnPlotVisibilityChanged);
@@ -833,6 +855,7 @@ function Initialize()
 	Events.CityAddedToMap.Add(OnCityAddedToMap);
 	Events.CivicCompleted.Add(OnCivicCompleted);
 	Events.EndWonderReveal.Add( OnEndWonderReveal );
+	Events.LoadGameViewStateDone.Add(OnLoadGameViewStateDone);
 	Events.LocalPlayerChanged.Add(OnLocalPlayerChanged);
 	Events.PlotMarkerChanged.Add(OnPlotMarkersChanged);
 	Events.PlotVisibilityChanged.Add(OnPlotVisibilityChanged);

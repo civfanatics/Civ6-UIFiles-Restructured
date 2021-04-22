@@ -24,7 +24,8 @@ g_CultureInst = nil; -- Also initialized in PopulateTabs.  Used by OpenCulture()
 g_victoryData = {
 	VICTORY_CONQUEST = {
 		GetText = function(p) return "LOC_WORLD_RANKINGS_OVERVIEW_DOMINATION_MILITARY_STRENGTH" end,
-		GetScore = function(p) return p:GetStats():GetMilitaryStrengthWithoutTreasury(); end
+		GetScore = function(p) return p:GetStats():GetMilitaryStrengthWithoutTreasury(); end,
+		AdditionalSummary = function(p) return GetDominationVictoryAdditionalSummary(p) end
 	},
 	VICTORY_CULTURE = {
 		Primary = {
@@ -34,7 +35,8 @@ g_victoryData = {
 		Secondary = {
 			GetText = function(p) return "LOC_WORLD_RANKINGS_OVERVIEW_CULTURE_CULTURE_RATE" end,
 			GetScore = function(p) return p:GetCulture():GetCultureYield(); end
-		}
+		},
+		AdditionalSummary = function(p) return GetCulturalVictoryAdditionalSummary(p) end
 	},
 	VICTORY_RELIGIOUS = {
 		Primary = {
@@ -44,7 +46,8 @@ g_victoryData = {
 		Secondary = {
 			GetText = function(p) return "LOC_WORLD_RANKINGS_OVERVIEW_RELIGION_FAITH_RATE" end;
 			GetScore = function(p) return p:GetReligion():GetFaithYield(); end
-		}
+		},
+		AdditionalSummary = function(p) return GetReligiousVictoryAdditionalSummary(p) end
 	},
 	VICTORY_TECHNOLOGY = {
 		Primary = {
@@ -54,7 +57,8 @@ g_victoryData = {
 		Secondary = {
 			GetText = function(p) return "LOC_WORLD_RANKINGS_OVERVIEW_SCIENCE_SCIENCE_RATE" end,
 			GetScore = function(p) return p:GetTechs():GetScienceYield(); end
-		}
+		},
+		AdditionalSummary = function(p) return GetScienceVictoryAdditionalSummary(p) end
 	}
 };
 -- If victory type isn't specified, return default domination data
@@ -712,7 +716,8 @@ function PopulateOverallInstance(instance:table, victoryType:string, typeText:st
 						local firstTiebreaker:table = victoryData.Primary or victoryData;
 						local secondTiebreaker:table = victoryData.Secondary or victoryData;
 						local primaryScore:number = firstTiebreaker.GetScore(pPlayer);
-						local secondaryScore:number = secondTiebreaker.GetScore(pPlayer);
+						local secondaryScore:number = secondTiebreaker.GetScore(pPlayer);					
+						local additionalSummary:string = (victoryData.AdditionalSummary and victoryData.AdditionalSummary(pPlayer)) or "";
 
 						local genericScore = pPlayer:GetScore();
 
@@ -725,7 +730,8 @@ function PopulateOverallInstance(instance:table, victoryType:string, typeText:st
 							FirstTiebreakScore = primaryScore,
 							SecondTiebreakScore = secondaryScore,
 							FirstTiebreakSummary = Locale.Lookup(firstTiebreaker.GetText(pPlayer), Round(primaryScore, 1)),
-							SecondTiebreakSummary = Locale.Lookup(secondTiebreaker.GetText(pPlayer), Round(secondaryScore, 1)),
+							SecondTiebreakSummary = Locale.Lookup(secondTiebreaker.GetText(pPlayer), Round(secondaryScore, 1)),							
+							AdditionalSummary = Locale.Lookup(additionalSummary);
 						};
 
 						playerCount = playerCount + 1;
@@ -913,6 +919,9 @@ function PopulateOverallPlayerIconInstance(instance:table, victoryType:string, t
 		if playerData.FirstTiebreakSummary ~= playerData.SecondTiebreakSummary then
 			details = details .. "[NEWLINE]" .. playerData.SecondTiebreakSummary;
 		end
+		if playerData.AdditionalSummary and playerData.AdditionalSummary ~= "" then
+			details = details .. "[NEWLINE]" .. playerData.AdditionalSummary;
+		end
 		civIconManager:SetLeaderTooltip(playerID, details);
 		civIconManager:UpdateIconFromPlayerID(playerID);
 
@@ -982,6 +991,10 @@ function UpdateTeamTooltip(control, teamData)
 				
 				if playerData.SecondTiebreakSummary and playerData.SecondTiebreakSummary ~= "" and playerData.SecondTiebreakSummary ~= playerData.FirstTiebreakSummary then
 					desc = desc .. "[NEWLINE]" .. playerData.SecondTiebreakSummary;
+				end
+
+				if playerData.AdditionalSummary and playerData.AdditionalSummary ~= "" then
+					desc = desc .. "[NEWLINE]" .. playerData.AdditionalSummary;
 				end
 			
 				civInstance.LeaderName:SetText(desc);
@@ -1297,6 +1310,11 @@ function ViewScience()
 	end
 
 	RealizeScienceStackSize();
+end
+
+function GetScienceVictoryAdditionalSummary(pPlayer:table)
+	-- Add or override in expansions
+	return "";
 end
 
 function GetNextStepForScienceProject(pPlayer:table, projectInfos:table, bHasSpaceport:boolean, finishedProjects:table)
@@ -1630,6 +1648,11 @@ function ViewCulture()
 	RealizeCultureStackSize();
 end
 
+function GetCulturalVictoryAdditionalSummary(pPlayer:table)
+	-- Add or override in expansions
+	return "";
+end
+
 function GatherCultureData()
 	local data:table = {};
 
@@ -1858,6 +1881,11 @@ function ViewDomination()
 	RealizeDominationStackSize();
 end
 
+function GetDominationVictoryAdditionalSummary(pPlayer:table)
+	-- Add or override in expansions
+	return "";
+end
+
 function PopulateDominationTeamInstance(instance:table, teamData:table)
 	
 	PopulateTeamInstanceShared(instance, teamData.TeamID);
@@ -1973,6 +2001,11 @@ function ViewReligion()
 	end
 
 	RealizeReligionStackSize();
+end
+
+function GetReligiousVictoryAdditionalSummary(pPlayer:table)
+	-- Add or override in expansions
+	return "";
 end
 
 function GatherReligionData()

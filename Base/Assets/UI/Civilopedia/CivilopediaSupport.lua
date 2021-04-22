@@ -1076,6 +1076,11 @@ function OnClose()
 	UIManager:DequeuePopup(ContextPtr);
 	UI.PlaySound("Civilopedia_Close");
 	UI.PlaySound("Stop_Leader_Speech");
+	UI.PlaySound("Stop_Speech_Civics");
+	UI.PlaySound("Stop_Speech_GreatWriting");
+	UI.PlaySound("Stop_Speech_NaturalWonders");
+	UI.PlaySound("Stop_Speech_Tech");
+	UI.PlaySound("Stop_Speech_Wonders");
 end
 
 

@@ -11,6 +11,8 @@ local governorOpportunityString:string = Locale.Lookup("LOC_ACTION_PANEL_GOVERNO
 local governorOpportunityTooltip:string = Locale.Lookup("LOC_ACTION_PANEL_GOVERNOR_OPPORTUNITY_TOOLTIP");
 local governorPromotionString:string = Locale.Lookup("LOC_ACTION_PANEL_GOVERNOR_PROMOTION");
 local governorPromotionTooltip:string = Locale.Lookup("LOC_ACTION_PANEL_GOVERNOR_PROMOTION_TOOLTIP");
+local governorIdleString:string = Locale.Lookup("LOC_ACTION_PANEL_GOVERNOR_IDLE");
+local governorIdleTooltip:string = Locale.Lookup("LOC_ACTION_PANEL_GOVERNOR_IDLE_TOOLTIP");
 local considerDisloyalCityString:string = Locale.Lookup("LOC_ACTION_PANEL_CONSIDER_DISLOYAL_CITY");
 local considerDisloyalCityTooltip:string = Locale.Lookup("LOC_ACTION_PANEL_CONSIDER_DISLOYAL_CITY_TOOLTIP");
 local EmergencyAttentionString:string = Locale.Lookup("LOC_NOTIFICATION_EMERGENCY_NEEDS_ATTENTION_MESSAGE");
@@ -20,9 +22,10 @@ local commemorationAvailableTooltip:string = Locale.Lookup("LOC_NOTIFICATION_COM
 
 g_kMessageInfo[EndTurnBlockingTypes.ENDTURN_BLOCKING_GOVERNOR_APPOINTMENT]		= {Message = governorAppointmentString,		ToolTip = governorAppointmentTooltip	, Icon="ICON_NOTIFICATION_GOVERNOR_APPOINTMENT_AVAILABLE"	};
 g_kMessageInfo[EndTurnBlockingTypes.ENDTURN_BLOCKING_GOVERNOR_OPPORTUNITY]		= {Message = governorOpportunityString,		ToolTip = governorOpportunityTooltip	, Icon="ICON_NOTIFICATION_GOVERNOR_OPPORTUNITY_AVAILABLE"	};
-g_kMessageInfo[EndTurnBlockingTypes.ENDTURN_BLOCKING_GOVERNOR_PROMOTION]		= {Message = governorPromotionString,		ToolTip = governorPromotionTooltip	, Icon="ICON_NOTIFICATION_GOVERNOR_PROMOTION_AVAILABLE"	};
+g_kMessageInfo[EndTurnBlockingTypes.ENDTURN_BLOCKING_GOVERNOR_PROMOTION]		= {Message = governorPromotionString,		ToolTip = governorPromotionTooltip		, Icon="ICON_NOTIFICATION_GOVERNOR_PROMOTION_AVAILABLE"	};
+g_kMessageInfo[EndTurnBlockingTypes.ENDTURN_BLOCKING_GOVERNOR_IDLE]				= {Message = governorIdleString,			ToolTip = governorIdleTooltip			, Icon="ICON_NOTIFICATION_GOVERNOR_IDLE"	};
 g_kMessageInfo[EndTurnBlockingTypes.ENDTURN_BLOCKING_CONSIDER_DISLOYAL_CITY]	= {Message = considerDisloyalCityString,	ToolTip = considerDisloyalCityTooltip	, Icon="ICON_NOTIFICATION_CONSIDER_DISLOYAL_CITY"			};
-g_kMessageInfo[EndTurnBlockingTypes.ENDTURN_BLOCKING_EMERGENCY_NEEDS_ATTENTION]	= {Message = EmergencyAttentionString,	ToolTip = EmergencyAttentionTooltip	, Icon="ICON_NOTIFICATION_TURNBLOCKER_EMERGENCY"			};
+g_kMessageInfo[EndTurnBlockingTypes.ENDTURN_BLOCKING_EMERGENCY_NEEDS_ATTENTION]	= {Message = EmergencyAttentionString,	ToolTip = EmergencyAttentionTooltip			, Icon="ICON_NOTIFICATION_TURNBLOCKER_EMERGENCY"			};
 g_kMessageInfo[EndTurnBlockingTypes.ENDTURN_BLOCKING_COMMEMORATION_AVAILABLE]	= {Message = commemorationAvailableString,	ToolTip = commemorationAvailableTooltip	, Icon="ICON_NOTIFICATION_COMMEMORATION_AVAILABLE"			};
 
 

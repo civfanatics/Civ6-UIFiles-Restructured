@@ -120,6 +120,7 @@ function OnLensLayerOn( layerNum:number )
 		ResetInstances();
 		RealizePowerOverlay();
 		UI.EnableTimeOfDayOverride(0, TIME_OVERRIDE_TRANSITION_TIME);
+		UILens.ShowOverlays("CultureBorders");
 	end
 end
 

@@ -1863,7 +1863,9 @@ end
 --	Check ENGINE Events
 -- ===========================================================================
 function OnCityAddedToMap()
-	TutorialCheck("CityAddedToMap")
+	if UI.IsInGame() then
+		TutorialCheck("CityAddedToMap")
+	end
 end
 
 -- ===========================================================================
@@ -1991,6 +1993,11 @@ end
 
 -- ===========================================================================
 function OnImprovementAddedToMap(locationX, locationY, improvementType, eImprovementOwner, resource, isPillaged, isWorked)
+
+	if UI.IsInGame() == false then
+		return;
+	end
+
 	TutorialCheck("ImprovementAddedToMap")
 
 	local playerID = Game.GetLocalPlayer();
@@ -2168,6 +2175,11 @@ end
 
 -- ===========================================================================
 function OnDistrictAddedToMap( playerID: number, districtID : number, cityID :number, districtX : number, districtY : number, districtType:number, percentComplete:number )
+
+	if UI.IsInGame() == false then
+		return;
+	end
+
 	local localPlayerID = Game.GetLocalPlayer();
 	if (playerID == localPlayerID) then
 		local campus = GameInfo.Districts["DISTRICT_CAMPUS"];
@@ -2514,6 +2526,11 @@ function OnUnitKilledInCombat()				TutorialCheck("UnitKilledInCombat"); end
 
 -- ===========================================================================
 function OnUnitAddedToMap(player, unit, x, y)
+
+	if UI.IsInGame() == false then
+		return;
+	end
+
 	local localPlayer = Game.GetLocalPlayer()
 
 	if player == localPlayer then
@@ -2692,6 +2709,10 @@ end
 
 -- ===========================================================================
 function OnTradeRouteAddedToMap(player, x, y)
+	if UI.IsInGame() == false then
+		return;
+	end
+
 	local localPlayer = Game.GetLocalPlayer()
 
 	if player == localPlayer then

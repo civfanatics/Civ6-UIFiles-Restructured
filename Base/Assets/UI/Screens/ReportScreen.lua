@@ -983,15 +983,19 @@ function ViewYieldsPage()
 								kCityData.WorkedTileYields["YIELD_CULTURE"],
 								kCityData.WorkedTileYields["YIELD_FAITH"]);
 
-		local iYieldPercent = (Round(1 + (kCityData.HappinessNonFoodYieldModifier/100), 2)*.1);
-		CreatLineItemInstance(	pCityInstance,
-								Locale.Lookup("LOC_HUD_REPORTS_HEADER_AMENITIES"),
-								kCityData.WorkedTileYields["YIELD_PRODUCTION"] * iYieldPercent,
-								kCityData.WorkedTileYields["YIELD_GOLD"] * iYieldPercent,
-								0,
-								kCityData.WorkedTileYields["YIELD_SCIENCE"] * iYieldPercent,
-								kCityData.WorkedTileYields["YIELD_CULTURE"] * iYieldPercent,
-								kCityData.WorkedTileYields["YIELD_FAITH"] * iYieldPercent);
+		if kCityData.City:GetGrowth() ~= nil then
+			if kCityData.City:GetGrowth():GetHappiness() ~= 4 then	-- 4 is "content" happiness status; there is no amenities yield then
+				local iYieldPercent = (Round(1 + (kCityData.HappinessNonFoodYieldModifier/100), 2)*.1);
+				CreatLineItemInstance(	pCityInstance,
+										Locale.Lookup("LOC_HUD_REPORTS_HEADER_AMENITIES"),
+										kCityData.WorkedTileYields["YIELD_PRODUCTION"] * iYieldPercent,
+										kCityData.WorkedTileYields["YIELD_GOLD"] * iYieldPercent,
+										0,
+										kCityData.WorkedTileYields["YIELD_SCIENCE"] * iYieldPercent,
+										kCityData.WorkedTileYields["YIELD_CULTURE"] * iYieldPercent,
+										kCityData.WorkedTileYields["YIELD_FAITH"] * iYieldPercent);
+			end
+		end
 
 		local populationToCultureScale:number = GameInfo.GlobalParameters["CULTURE_PERCENTAGE_YIELD_PER_POP"].Value / 100;
 		CreatLineItemInstance(	pCityInstance,

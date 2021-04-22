@@ -175,6 +175,13 @@ function OnLensLayerOff( layerNum:number )
 end
 
 -- ===========================================================================
+function OnPlotVisibilityChanged()
+	if(UILens.IsLayerOn(m_HexColoringWaterAvail))then
+		RealizeInfluenceTiles();
+	end
+end
+
+-- ===========================================================================
 --	
 -- ===========================================================================
 function Initialize()

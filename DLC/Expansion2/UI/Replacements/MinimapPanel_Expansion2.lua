@@ -8,11 +8,11 @@ include("MinimapPanel_Expansion1");
 -- ===========================================================================
 -- Cached Base Functions
 -- ===========================================================================
+BASE_CloseLensList			= CloseLensList;
 XP1_LateInitialize			= LateInitialize;
 XP1_OnToggleLensList		= OnToggleLensList;
 XP1_OnInterfaceModeChanged	= OnInterfaceModeChanged;
 XP1_OnInputActionTriggered  = OnInputActionTriggered;
-
 -- ===========================================================================
 -- Members
 -- ===========================================================================
@@ -105,6 +105,12 @@ function TogglePowerLens()
 			UI.SetInterfaceMode(InterfaceModeTypes.SELECTION);
 		end
 	end
+end
+
+-- ===========================================================================
+function CloseLensList()
+	BASE_CloseLensList();
+	Controls.PowerLensButton:SetCheck(false);
 end
 
 -- ===========================================================================

@@ -182,9 +182,6 @@ function ParameterInitialize( kParameter:table, pGameParameters:table )
 
 	RemoveRandomLeadersFromParameter(kParameter);
 
-	local kPlayerIds:table = GameConfiguration.GetParticipatingPlayerIDs();
-	m_minSelected = #kPlayerIds;
-
 	m_kParameter = kParameter;
 	m_kSelectedValues = {};
 

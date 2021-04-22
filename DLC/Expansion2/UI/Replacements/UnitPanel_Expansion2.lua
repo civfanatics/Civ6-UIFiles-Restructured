@@ -135,6 +135,16 @@ function FilterUnitStatsFromUnitData( kUnitData:table, ignoreStatType:number )
 		table.insert(kData, {Value = kUnitData.RockBandLevel,	Type = "SpreadCharges", Label = "LOC_HUD_UNIT_PANEL_ROCK_BAND_LEVEL",		FontIcon="[ICON_ReligionStat_Large]",	IconName="ICON_STAT_ROCKBAND_LEVEL"});
 	end
 
+	local pPlayer : table = Players[kUnitData.Owner];
+	if (pPlayer ~= nil) then
+		local pUnit : table = pPlayer:GetUnits():FindID(kUnitData.UnitID);
+		if(GameInfo.Units[pUnit:GetUnitType()].ParkCharges > 0)then
+			table.insert(kData, {Value = pUnit:GetParkCharges(), Type = "ParkCharges", Label = "LOC_HUD_UNIT_PANEL_PARK_CHARGES", FontIcon = "[ICON_Charges_Large]", IconName = "ICON_BUILD_CHARGES"});
+		end
+	end
+
+	
+
 	return kData;
 end
 

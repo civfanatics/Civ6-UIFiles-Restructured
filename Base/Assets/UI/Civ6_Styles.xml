@@ -2417,7 +2417,7 @@
   <Civilopedia_RightColumnQuotePanel Anchor="C,T" Texture="Civilopedia_QuoteButton" SliceCorner="53,43" SliceTextureSize="102,84" Size="260,100" />
   <Civilopedia_RightColumnQuoteText Anchor="C,C" WrapWidth="190" Style="FontNormalMedium16" FontStyle="shadow" Size="16" Color0="201,193,188,255" Color1="0,0,0,128" />
 
-  <Civilopedia_RightColumnStatText Style="FontNormal16" Color="27,27,27,255" />
+  <Civilopedia_RightColumnStatText Style="FontNormal17" Color="27,27,27,255" />
   <Civilopedia_RightColumnStatSmallText Style="FontNormal12"  Color="27,27,27,255" />
   <Civilopedia_RightColumnStatHeader Style="FontNormal18" Color="27,27,27,255" />
 

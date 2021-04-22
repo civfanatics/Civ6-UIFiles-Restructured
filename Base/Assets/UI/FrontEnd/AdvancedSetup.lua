@@ -41,7 +41,7 @@ local m_RulesetData					:table = {};
 local m_BasicTooltipData			:table = {};
 local m_WorldBuilderImport          :boolean = false;
 
-local m_pCityStateWarningPopup:table = PopupDialog:new("CityStateWarningPopup");
+local m_pWarningPopup:table = PopupDialog:new("CityStateWarningPopup");
 
 -- ===========================================================================
 -- Override hiding game setup to release simplified instances.
@@ -301,6 +301,17 @@ function OnSetParameterValues(pid: string, values: table)
 				end
 			end		
 			g_GameParameters:SetParameterValue(kParameter, resolved_values);
+			Network.BroadcastGameConfig();	
+		end
+	end	
+end
+
+-- ===========================================================================
+function OnSetParameterValue(pid: string, value: number)
+	if(g_GameParameters) then
+		local kParameter: table = g_GameParameters.Parameters and g_GameParameters.Parameters[pid] or nil;
+		if(kParameter and kParameter.Value ~= nil) then	
+            g_GameParameters:SetParameterValue(kParameter, value);
 			Network.BroadcastGameConfig();	
 		end
 	end	
@@ -1435,13 +1446,31 @@ function OnStartButton()
 			UI.PlaySound("Set_View_2D");
 			Network.HostGame(ServerType.SERVER_TYPE_NONE);
 		end
-	else
-		if AreAllCityStateSlotsUsed() then
-			HostGame();
-		else
-			m_pCityStateWarningPopup:ShowOkCancelDialog(Locale.Lookup("LOC_CITY_STATE_PICKER_TOO_FEW_WARNING"), HostGame);
+    else
+        local showCityStatesWarning:boolean = ShouldShowCityStatesWarning();
+        local showLeaderPoolWarning:boolean = ShouldShowLeaderPoolWarning();
+		if showCityStatesWarning then
+			ShowCityStateWarning(showLeaderPoolWarning);
+        elseif showLeaderPoolWarning then
+            ShowLeaderPoolWarning();
+        else
+            HostGame();
 		end
 	end
+end
+
+-- ===========================================================================
+function ShowCityStateWarning(showLeaderPoolWarningNext:boolean)
+    if showLeaderPoolWarningNext then
+        m_pWarningPopup:ShowOkCancelDialog(Locale.Lookup("LOC_CITY_STATE_PICKER_TOO_FEW_WARNING"), ShowLeaderPoolWarning);
+    else
+        m_pWarningPopup:ShowOkCancelDialog(Locale.Lookup("LOC_CITY_STATE_PICKER_TOO_FEW_WARNING"), HostGame);
+    end
+end
+
+-- ===========================================================================
+function ShowLeaderPoolWarning()
+    m_pWarningPopup:ShowOkCancelDialog(Locale.Lookup("LOC_LEADER_POOL_TOO_FEW_WARNING"), HostGame);
 end
 
 -- ===========================================================================
@@ -1452,22 +1481,73 @@ function HostGame()
 end
 
 -- ===========================================================================
-function AreAllCityStateSlotsUsed()
+function ShouldShowCityStatesWarning()
 	local kParameters:table = g_GameParameters["Parameters"];
 
+    -- No City-States for this game so don't worry about it
 	if kParameters["CityStates"] == nil then
-		return true;
+		return false;
 	end
 
 	local cityStateSlots:number = kParameters["CityStateCount"].Value;
 	local totalCityStates:number = #kParameters["CityStates"].AllValues;
 	local excludedCityStates:number = kParameters["CityStates"].Value ~= nil and #kParameters["CityStates"].Value or 0;
 
+    -- Too few city-states selected in the city-state picker
 	if (totalCityStates - excludedCityStates) < cityStateSlots then
-		return false;
+		return true;
 	end
 
-	return true;
+	return false;
+end
+
+-- ===========================================================================
+function ShouldShowLeaderPoolWarning()
+    -- Determine how many players are trying to use leader pool 1 and 2
+    local numPool1Players:number = 0;
+    local numPool2Players:number = 0
+    local player_ids = GameConfiguration.GetParticipatingPlayerIDs();
+    for i, player_id in ipairs(player_ids) do	
+	    local playerConfig = PlayerConfigurations[player_id];
+	    if(playerConfig) then
+            local pool_id:number = playerConfig:GetLeaderRandomPoolID();
+			if pool_id == LeaderRandomPoolTypes.LEADER_RANDOM_POOL_1 then
+				numPool1Players = numPool1Players + 1;
+			elseif pool_id == LeaderRandomPoolTypes.LEADER_RANDOM_POOL_2 then
+				numPool2Players = numPool2Players + 1;
+	        end
+        end
+    end
+
+    local kParameters:table = g_GameParameters["Parameters"];
+
+    -- Check if leader pool 1 has enough leaders for all the players who selected it
+    if numPool1Players > 0 then
+        local kPool1Param:table = kParameters["LeaderPool1"];
+        if kPool1Param then
+            if kPool1Param.Value ~= nil then
+                local numLeadersInPool:number = #kPool1Param.AllValues - #kPool1Param.Value;
+                if numLeadersInPool ~= 0 and numPool1Players > numLeadersInPool then
+                    return true;
+                end
+            end
+        end
+    end
+
+    -- Check if leader pool 2 has enough leaders for all the players who selected it
+    if numPool2Players > 0 then
+        local kPool2Param:table = kParameters["LeaderPool2"];
+        if kPool2Param then
+            if kPool2Param.Value ~= nil then
+                local numLeadersInPool:number = #kPool2Param.AllValues - #kPool2Param.Value;
+                if numLeadersInPool ~= 0 and numPool2Players > numLeadersInPool then
+                    return true;
+                end
+            end
+        end
+    end
+
+    return false;
 end
 
 ----------------------------------------------------------------    
@@ -1618,6 +1698,7 @@ function OnShutdown()
 	LuaEvents.MapSelect_SetMapByValue.Remove( OnSetMapByValue );
 	LuaEvents.MultiSelectWindow_SetParameterValues.Remove(OnSetParameterValues);
 	LuaEvents.CityStatePicker_SetParameterValues.Remove(OnSetParameterValues);
+    LuaEvents.CityStatePicker_SetParameterValue.Remove(OnSetParameterValue);
 	LuaEvents.LeaderPicker_SetParameterValues.Remove(OnSetParameterValues);
 end
 
@@ -1657,6 +1738,7 @@ function Initialize()
 	LuaEvents.MapSelect_SetMapByValue.Add( OnSetMapByValue );
 	LuaEvents.MultiSelectWindow_SetParameterValues.Add(OnSetParameterValues);
 	LuaEvents.CityStatePicker_SetParameterValues.Add(OnSetParameterValues);
+    LuaEvents.CityStatePicker_SetParameterValue.Add(OnSetParameterValue);
 	LuaEvents.LeaderPicker_SetParameterValues.Add(OnSetParameterValues);
 
 	Resize();

@@ -586,24 +586,26 @@ function ApplyStatement(handler : table, statementTypeName : string, statementSu
 
 	if (kParsedStatement.Selections ~= nil) then
 		for _, selection in ipairs(kParsedStatement.Selections) do
-			local instance		:table	= ms_ConversationSelectionIM:GetInstance();
-			instance.SelectionText:SetText( Locale.Lookup(selection.Text) );
+			if(selection.Key ~= "CHOICE_STOP_ASKING" or (selection.Key == "CHOICE_STOP_ASKING" and not Players[ms_OtherPlayerID]:IsHuman()))then
+				local instance		:table	= ms_ConversationSelectionIM:GetInstance();
+				instance.SelectionText:SetText( Locale.Lookup(selection.Text) );
 			
-			local texth			:number	= math.max( instance.SelectionText:GetSizeY() + SELECTION_PADDING_Y, 45 );
-			instance.SelectionButton:SetSizeY( texth );
-			instance.SelectionButton:SetToolTipString(); -- Clear any tooltips that may have been lingering
-			if (selection.IsDisabled == nil or selection.IsDisabled == false) then
-				instance.SelectionButton:SetDisabled( false );
-				instance.SelectionButton:RegisterCallback(Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
-				instance.SelectionButton:RegisterCallback( Mouse.eLClick, 
-					function() 
-						handler.OnSelectionButtonClicked(selection.Key); 
-					end );
-			else
-				-- It is disabled
-				instance.SelectionButton:SetDisabled( true );
-				if (selection.FailureReasons ~= nil) then
-					instance.SelectionButton:SetToolTipString(Locale.Lookup(selection.FailureReasons[1]));
+				local texth			:number	= math.max( instance.SelectionText:GetSizeY() + SELECTION_PADDING_Y, 45 );
+				instance.SelectionButton:SetSizeY( texth );
+				instance.SelectionButton:SetToolTipString(); -- Clear any tooltips that may have been lingering
+				if (selection.IsDisabled == nil or selection.IsDisabled == false) then
+					instance.SelectionButton:SetDisabled( false );
+					instance.SelectionButton:RegisterCallback(Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
+					instance.SelectionButton:RegisterCallback( Mouse.eLClick, 
+						function() 
+							handler.OnSelectionButtonClicked(selection.Key); 
+						end );
+				else
+					-- It is disabled
+					instance.SelectionButton:SetDisabled( true );
+					if (selection.FailureReasons ~= nil) then
+						instance.SelectionButton:SetToolTipString(Locale.Lookup(selection.FailureReasons[1]));
+					end
 				end
 			end
 		end

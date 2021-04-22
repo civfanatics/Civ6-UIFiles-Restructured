@@ -431,16 +431,19 @@ function GetDetails(data)
 	elseif(data.DistrictID ~= -1 and data.DistrictType ~= nil) then
 		if (not GameInfo.Districts[data.DistrictType].InternalOnly) then	--Ignore 'Wonder' districts
 			-- Plot yields (ie. from Specialists)
-			if (data.Yields ~= nil) then
-				if (table.count(data.Yields) > 0) then
-					table.insert(details, "------------------");
-					table.insert(details, Locale.Lookup("LOC_PEDIA_CONCEPTS_PAGE_CITIES_9_CHAPTER_CONTENT_TITLE")); -- "Specialists", text lock :'()
-				end
-				for yieldType, v in pairs(data.Yields) do
-					local yield = GameInfo.Yields[yieldType].Name;
-					local yieldicon = GameInfo.Yields[yieldType].IconString;
-					local str = tostring(v) .. Locale.Lookup(yieldicon) .. Locale.Lookup(yield);
-					table.insert(details, str);
+			-- Don't show specialist info to other players
+			if (data.Owner ~= nil) and (data.Owner == Game.GetLocalPlayer()) then
+				if (data.Yields ~= nil) then
+					if (table.count(data.Yields) > 0) then
+						table.insert(details, "------------------");
+						table.insert(details, Locale.Lookup("LOC_PEDIA_CONCEPTS_PAGE_CITIES_9_CHAPTER_CONTENT_TITLE")); -- "Specialists", text lock :'()
+					end
+					for yieldType, v in pairs(data.Yields) do
+						local yield = GameInfo.Yields[yieldType].Name;
+						local yieldicon = GameInfo.Yields[yieldType].IconString;
+						local str = tostring(v) .. Locale.Lookup(yieldicon) .. Locale.Lookup(yield);
+						table.insert(details, str);
+					end
 				end
 			end
 
@@ -560,7 +563,7 @@ function View( data:table )
 			end
 		end
 		if m_isWorldBuilder then
-			table.insert(debugInfo, "("..tostring(data.X) .. "," .. tostring(data.Y) .. ")");
+			table.insert(debugInfo, "Hex #" .. tostring(data.Index) .. " ("..tostring(data.X) .. "," .. tostring(data.Y) .. ")");
 		else
 			table.insert(debugInfo, "Debug #" .. tostring(data.Index) .. " ("..tostring(data.X) .. "," .. tostring(data.Y) .. "), vis:" .. tostring(iVisCount));
 		end

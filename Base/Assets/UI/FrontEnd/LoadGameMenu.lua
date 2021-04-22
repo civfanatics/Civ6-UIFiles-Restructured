@@ -498,6 +498,18 @@ function OnLoadComplete(eResult, eType, eOptions, eFileType )
 			-- got the configuration out of a save, it will be in a state where they can't edit some values.
 			if (GameConfiguration ~= nil) then
 				GameConfiguration.SetToPreGame();
+
+				--Reset the seeds and leader selection when loading a config so that configs are more usable
+				GameConfiguration.RegenerateSeeds();
+				local playerIDs : table = GameConfiguration.GetParticipatingPlayerIDs();
+				for k,v in ipairs(playerIDs)do
+					local kPlayerConfig : table = PlayerConfigurations[v];
+					local leaderTypeName : string = kPlayerConfig:GetLeaderTypeName();
+					if(leaderTypeName ~= nil)then
+						kPlayerConfig:SetLeaderTypeName(nil);
+						kPlayerConfig:SetCivilizationTypeName(nil);
+					end
+				end
 			end
 
 			UIManager:DequeuePopup( ContextPtr );

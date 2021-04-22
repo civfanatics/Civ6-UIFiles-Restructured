@@ -23,7 +23,7 @@
 					<Image				ID="BannerStalemate"																		Size="169,194"	Texture="CombatPreview_BannerEven.dds"		Hidden="1"/>
 					<Image				ID="BannerVictory"																			Size="169,194"	Texture="CombatPreview_BannerVictory.dds" Hidden="1"/>
 					<Grid																		Anchor="C,T" Offset="0,38"		Size="169,22"		Texture="CombatPreview_VsFrame.dds"  SliceCorner="8,8" SliceSize="6,6">
-						<Label			ID="VersusText"						Anchor="C,C" Offset="0,2"			Style="UnitPanelHeader" String="{LOC_HUD_UNIT_PANEL_VS:upper}"/>
+						<ScrollTextField			ID="VersusText"	Anchor="C,C" Offset="0,2"			Size="40,22" Style="UnitPanelHeader" String="{LOC_HUD_UNIT_PANEL_VS:upper}"/>
 					</Grid>
 					<Label				ID="CombatAssessmentText"	Anchor="C,C" Offset="-6,-76"	Align="Center" WrapWidth="110" Style="UnitPanelHeader" />
 				</Container>

@@ -108,24 +108,9 @@ function ShowTechBoost(techIndex, iTechProgress, eSource)
 
 	Controls.BoostCauseString:SetText(msgString);
 
-	-- Look up the boost amount from the database
-	for row in GameInfo.Boosts() do
-		if(row.TechnologyType == currentTech.TechnologyType) then
-			boostAmt = row.Boost;
-			break;
-		end
-	end
-	
-	-- handle boosts larger than the total cost
-	if boostAmt >= totalTechCost then
-		boostAmt = totalTechCost;
-	else
-		boostAmt = (totalTechCost * boostAmt) / 100;
-	end
-
 	-- Show the player the amount of progress the boost has given
 	local currentPercent = iTechProgress / totalTechCost;
-	local totalProgress = iTechProgress + boostAmt;
+	local totalProgress = playerTechs:GetResearchProgress(techIndex);
 	local endPercent :number;
 
 	Controls.ProgressBar:SetAnimationSpeed(0);
@@ -224,19 +209,9 @@ function ShowCivicBoost(civicIndex, iCivicProgress, eSource)
 
 	Controls.BoostCauseString:SetText(msgString);
 
-	-- Look up the boost amount from the database
-	for row in GameInfo.Boosts() do
-		if(row.CivicType == currentCivic.CivicType) then
-			boostAmt = row.Boost;
-			break;
-		end
-	end
-
-	boostAmt = (totalCivicCost * boostAmt) / 100;
-
 	-- Show the player the amount of progress the boost has given
 	local currentPercent = iCivicProgress / totalCivicCost;
-	local totalProgress = iCivicProgress + boostAmt;
+	local totalProgress = playerCulture:GetCulturalProgress(civicIndex);
 	local endPercent :number;
 
 	Controls.ProgressBar:SetAnimationSpeed(0);

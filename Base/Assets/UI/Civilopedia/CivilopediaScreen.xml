@@ -150,7 +150,7 @@
 	<Instance Name="CivilopediaPageTabInstance">
 		<Box ID="Root" Size="parent-5,32" Color="0,0,0,0">
 			<GridButton ID="Button" Style="Civilopedia_PageTabButton" Size="parent-5,parent">
-				<Label ID="Caption" Style="Civilopedia_PageTabButtonCaption" String="Bacon." WrapWidth="190"/>
+				<Label ID="Caption" Style="Civilopedia_PageTabButtonCaption" String="Bacon." WrapWidth="210"/>
 			</GridButton>
 			<Grid ID="Header" Style="Civilopedia_PageTabHeaderOverlay" Size="parent-5,parent" />
       			<Image ID="Expand" Anchor="R,C" Offset="10,0" Size="22,22" Texture="Controls_ExpandButton" />
@@ -276,7 +276,7 @@
 				<Label ID="Value" Style="Civilopedia_RightColumnStatText" Anchor="C,C" String="55" FontSize="30" />
 			</Container>
 			<Container Size="parent-100,parent" Offset="105,0">
-				<Label ID="Caption" Style="Civilopedia_RightColumnStatText" Anchor="L,C" WrapWidth="125" String="Caption" />
+				<Label ID="Caption" Style="Civilopedia_RightColumnStatText" Anchor="L,C" WrapWidth="130" String="Caption" />
 			</Container>
 		</Container>
 	</Instance>

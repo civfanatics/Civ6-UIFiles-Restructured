@@ -91,6 +91,7 @@ local m_isTradeSelectionActive	:boolean = false;
 
 local m_refreshLocalPlayerRangeStrike:boolean = false;
 local m_refreshLocalPlayerProduction:boolean = false;
+local m_refreshPlayerBanner		:table = {};		-- tracks if a player needs all of their banners updated
 
 local m_DelayedUpdate : table = {};
 
@@ -3097,6 +3098,12 @@ function FlushChanges()
 		RefreshPlayerProduction( Game.GetLocalPlayer() );
 		m_refreshLocalPlayerProduction = false;
 	end
+	for playerID, updateState in pairs(m_refreshPlayerBanner) do
+		if updateState == true then
+			RefreshPlayerBanners( playerID );
+			m_refreshPlayerBanner[ playerID ] = false;
+		end
+	end
 end
 
 -- ===========================================================================
@@ -3112,7 +3119,7 @@ function OnUnitAddedOrUpgraded( playerID:number, unitID:number )
 				local pUnitDef = GameInfo.Units[pUnit:GetUnitType()];
 				if pUnitDef ~= nil then
 					if pUnitDef.Combat > 0 then -- Only do this for melee units
-						RefreshPlayerBanners( playerID );
+						m_refreshPlayerBanner[ playerID ] = true;
 					end
 				end
 			end

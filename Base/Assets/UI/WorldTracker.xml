@@ -9,7 +9,7 @@
 
   <AlphaAnim					ID="WorldTrackerAlpha" AlphaBegin="0" AlphaEnd="1" Speed="3" Cycle="Once" Function="OutQuint" Stopped="0" >
     <SlideAnim				ID="WorldTrackerSlide" Start="0,-100" EndOffset="0,100" Function="OutQuint" Speed="3" Cycle="Once" Stopped="0" >
-      <Stack					ID="PanelStack"  StackGrowth="Down" Offset="0,75" ConsumeMouseOver="1">
+      <Stack					ID="PanelStack"  StackGrowth="Down" Offset="0,75">
         <Box					ID="WorldTrackerHeader" Color="40,35,25,230" Size="296,auto" AutoSizePadding="0,2" >
           <Box Color="143,122,82,200" Anchor="L,B" Size="parent-1,2">
             <Box Color="0,0,0,200" Anchor="L,T" Size="parent-1,1" AnchorSide="I,O"/>

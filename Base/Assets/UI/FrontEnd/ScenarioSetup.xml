@@ -62,15 +62,15 @@
 								<Container ID="CreateGame_RulesetContainer" Size="parent+10,50">
 									<Box Color="62,152,203,20" Anchor="C,T" Size="parent,30">
 										<Label Anchor="C,T" Style="ShellSubHeaderText" String="{LOC_SETUP_SCENARIO:upper}" AnchorSide="I,O"/>
-										<PullDown ID="CreateGame_GameRuleset" Anchor="C,C" Style="PullDownBlue" Size="325,24"/>
+										<PullDown ID="CreateGame_GameRuleset" Anchor="C,C" Style="PullDownBlue" Size="330,24"/>
 									</Box>
 								</Container>
 								<Container Size="parent+10,70">
 									<Box Color="62,152,203,20" Anchor="C,C" Size="parent,55">
 										<Label Anchor="C,T" Style="ShellSubHeaderText" String="{LOC_SETUP_CIVILIZATION:upper}" AnchorSide="I,O"/>
-										<PullDown ID="Basic_LocalPlayerPulldown" Anchor="C,C" Offset="0,0" Size="325,50"  AutoSizePopup="1" ScrollThreshold="520" SpaceForScroll="15">
+										<PullDown ID="Basic_LocalPlayerPulldown" Anchor="C,C" Offset="0,0" Size="330,50"  AutoSizePopup="1" ScrollThreshold="520" SpaceForScroll="15">
 											<ButtonData>
-												<GridButton  Size="325,45" Style="TabFont">
+												<GridButton  Size="330,45" Style="TabFont">
 													<GridData Texture="Controls_DropDownControlLarge" StateOffsetIncrement="0,45"	SliceCorner="10,15" SliceTextureSize="45,45" />
 													<Container Size="44,44" Anchor="L,T" Offset="3,3">
 														<Image	ID="Basic_LocalPlayerCivIconBG" Texture="CircleBacking44" Size="44,44"/>
@@ -178,9 +178,9 @@
 										<!-- Local Player Civ -->
 										<Box Color="6,33,54" Anchor="C,T" Size="340,55">
 											<Grid ID="LocalPlayerAdvancedOptions" Style="YouIndicator" Anchor="C,C" Size="345,60">
-												<PullDown ID="Advanced_LocalPlayerPulldown" Anchor="C,C" Offset="0,0" Size="325,50"  AutoSizePopup="1" ScrollThreshold="350" SpaceForScroll="15">
+												<PullDown ID="Advanced_LocalPlayerPulldown" Anchor="C,C" Offset="0,0" Size="330,50"  AutoSizePopup="1" ScrollThreshold="350" SpaceForScroll="15">
 													<ButtonData>
-														<GridButton  Size="325,45" Style="TabFont">
+														<GridButton  Size="330,45" Style="TabFont">
 															<GridData Texture="Controls_DropDownControlLarge" StateOffsetIncrement="0,45"	SliceCorner="10,15" SliceTextureSize="45,45" />
 															<Container Size="44,44" Anchor="L,T" Offset="3,3">
 																<Image	ID="Advanced_LocalPlayerCivIconBG"	Size="44,44" Texture="CircleBacking44" />
@@ -188,7 +188,7 @@
 																<Image	ID="Advanced_IconHighlights"				Size="44,44" Texture="Circle44_Lighter" Color="255,255,255,100" />
 																<Image	ID="Advanced_LocalPlayerCivIcon"		Size="44,44" Texture="CivSymbols44" Anchor="C,C"/>
 															</Container>
-															<Container Size="45,45" Offset="52,2">
+															<Container Size="45,45" Offset="48,2">
 																<Image Texture="Controls_CircleBacking45" Size="51,51" Anchor="L,T" Offset="-3,-3"/>
 																<Image ID="Advanced_LocalPlayerLeaderIcon" Texture="Leaders45" Size="45,45" Anchor="C,C"/>
 															</Container>
@@ -224,7 +224,7 @@
 								<ScrollPanel  ID="NonLocalPlayersPanel" Anchor="C,C" Vertical="1" Size="parent,parent-120" AutoScrollBar="1">
 									<Stack ID="NonLocalPlayersStack" StackGrowth="Down" Offset="60,0">
 										<Stack ID="NonLocalPlayersSlotStack" StackGrowth="Bottom" Padding="4" />
-										<GridButton ID="AddAIButton" Style="ShellButtonControlLarge" Size="325,54" Offset="0,10" ToolTip="LOC_SETUP_ADD_AI_PLAYER_TT" String="{LOC_SETUP_ADD_AI_PLAYER:upper}">
+										<GridButton ID="AddAIButton" Style="ShellButtonControlLarge" Size="330,54" Offset="0,10" ToolTip="LOC_SETUP_ADD_AI_PLAYER_TT" String="{LOC_SETUP_ADD_AI_PLAYER:upper}">
 											<Image Anchor="R,C" Offset="6,0" Texture="Shell_Add" Size="37,37"/>
 										</GridButton>
 									</Stack>
@@ -280,7 +280,7 @@
 		<!-- Local Player Civ -->
 		<Container ID="Root"  Size="auto,auto">
 			<!-- Local Player Civ -->
-			<PullDown ID="PlayerPullDown"  Anchor="C,T" Style="PlayerSelectPullDown" Offset="0,0" Size="325,50">
+			<PullDown ID="PlayerPullDown"  Anchor="C,T" Style="PlayerSelectPullDown" Offset="0,0" Size="330,50">
 				<Container AnchorSide="O,I" Anchor="R,C" Size="40,50">
 					<Image Texture="Shell_CircleAnchor" Size="9,47" Anchor="L,C"/>
 					<Button ID="RemoveButton" Texture="Shell_XButton" Size="37,37" Anchor="L,C" ToolTip="LOC_DELETE_AI"/>
@@ -434,7 +434,7 @@
 
 	<!-- Enhanced ToolTip for Leaders -->
 	<Instance Name="CivToolTip">
-		<Container ID="Top" Size="340,parent" Offset="-4,2">
+		<Container ID="Top" Size="340,parent-50" Offset="-4,52">
 			<AlphaAnim    ID="CivToolTipAlpha" AlphaBegin="0" AlphaEnd="1" Speed="4" Function="Root" Cycle="Once" Size="parent,parent" Stopped="1">
 				<SlideAnim  ID="CivToolTipSlide" Start="-20,0" End="0,0" Speed="4" Function="Root" Cycle="Once" Size="parent,parent">
 					<Grid Style="EnhancedToolTip" Size="parent,parent">
@@ -449,7 +449,7 @@
 	</Instance>
 
 	<Instance Name="LeaderPlacard">
-		<Container ID="Top" Size="340,parent" Offset="4,2">
+		<Container ID="Top" Size="340,parent-50" Offset="4,52">
 			<AlphaAnim    ID="CivLeaderAlpha" AlphaBegin="0" AlphaEnd="1" Speed="4" Function="Root" Cycle="Once" Size="parent,parent" Stopped="1">
 				<SlideAnim  ID="CivLeaderSlide" Start="20,0" End="0,0" Speed="4" Function="Root" Cycle="Once" Size="parent,parent">
 					<Grid Style="EnhancedToolTip" Size="parent,parent">

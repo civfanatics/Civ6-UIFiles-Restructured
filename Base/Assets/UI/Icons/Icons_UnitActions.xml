@@ -107,7 +107,8 @@
 		<!-- Skip index 86 since we're using ICON_UNITOPERATION_FOUND_RELIGION as the Prophet's operation icon -->
 		<Row Name="ICON_UNITOPERATION_SCIENTIST_ACTION"   			Atlas="ICON_ATLAS_UNIT_ACTIONS"   Index="87"/>
 		<Row Name="ICON_UNITOPERATION_WRITER_ACTION"   					Atlas="ICON_ATLAS_UNIT_ACTIONS"   Index="88"/>
-    <Row Name="ICON_UNITCOMMAND_HARVEST_WONDER"   				Atlas="ICON_ATLAS_UNIT_ACTIONS"   Index="89"/>
+    <Row Name="ICON_UNITCOMMAND_HARVEST_WONDER"   					Atlas="ICON_ATLAS_UNIT_ACTIONS"   Index="89"/>
+		<Row Name="ICON_UNITCOMMAND_PET_THE_DOG"								Atlas="ICON_ATLAS_UNIT_ACTIONS"   Index="91"/>
     
     <!-- Spy Operations -->
     <Row Name="ICON_UNITOPERATION_SPY_LISTENING_POST"       Atlas="ICON_ATLAS_SPYOPERATIONS"  Index="0"/>

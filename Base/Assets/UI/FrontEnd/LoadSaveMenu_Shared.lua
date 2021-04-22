@@ -493,7 +493,15 @@ function SetSelected( index )
 			-- Selected a save game
 			local displayName = GetDisplayName(kSelectedFile); 
 
-			local mods = kSelectedFile.RequiredMods or {};
+			local mods;
+
+			-- Configuration files depend on the Enabled mods while other types depend on Required mods.
+			if(g_FileType == SaveFileTypes.GAME_CONFIGURATION) then
+				mods = kSelectedFile.EnabledMods or {};
+			else 
+				mods = kSelectedFile.RequiredMods or {};
+			end
+
 			local mod_errors = Modding.CheckRequirements(mods, g_GameType);
 			local success = (mod_errors == nil or mod_errors.Success);
 
@@ -738,7 +746,15 @@ function PopulateInspectorData(fileInfo, fileName, mod_errors)
 	-- advanced.Description:SetText("Quick Combat[NEWLINE]Quick Movement[NEWLINE]No City Razing[NEWLINE]No Barbarians");
 
 	-- List mods.
-	local mods = fileInfo.RequiredMods or {};
+	local mods;
+
+	-- Configuration files depend on the Enabled mods while other types depend on Required mods.
+	if(g_FileType == SaveFileTypes.GAME_CONFIGURATION) then
+		mods = fileInfo.EnabledMods or {};
+	else 
+		mods = fileInfo.RequiredMods or {};
+	end
+
 	local mod_titles = {};
 
 	for i,v in ipairs(mods) do

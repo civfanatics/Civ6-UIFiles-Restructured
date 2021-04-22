@@ -1,28 +1,25 @@
--- Copyright 2019, Firaxis Games
-
-include("MapSearchPanel");
-
+-- Copyright 2021, Firaxis Games
 
 -- ===========================================================================
 -- CACHE BASE FUNCTIONS
 -- ===========================================================================
-BASE_FetchData = FetchData;
-BASE_GetPlotSearchTerms = GetPlotSearchTerms;
-BASE_PopulateSuggestionData = PopulateSuggestionData;
+XP2_FetchData = FetchData;
+XP2_GetPlotSearchTerms = GetPlotSearchTerms;
+XP2_PopulateSuggestionData = PopulateSuggestionData;
 
 -- ===========================================================================
 -- OVERRIDE BASE FUNCTIONS
 -- ===========================================================================
 function GetPlotSearchTerms(data)
 	-- Get the original search terms
-	local pSearchTerms = BASE_GetPlotSearchTerms(data);
+	local pSearchTerms = XP2_GetPlotSearchTerms(data);
 	local AddLocalizedSearchTerm = function(kLocKey)
 		-- TODO try caching localized strings
 		table.insert( pSearchTerms, Locale.Lookup(kLocKey) );
 	end
 
 	if (data.IsVolcano == true) then
-		-- Generic 'Volcano' term already added in BASE_GetPlotSearchTerms
+		-- Generic 'Volcano' term already added in XP2_GetPlotSearchTerms
 		if (data.Erupting) then
 			AddLocalizedSearchTerm("LOC_HUD_MAP_SEARCH_TERMS_ERUPTING");
 		end
@@ -33,7 +30,7 @@ function GetPlotSearchTerms(data)
 	end
 
 	if (data.IsRiver and table.count(data.RiverNames) > 0) then
-		-- Generic 'River' term already added in BASE_GetPlotSearchTerms
+		-- Generic 'River' term already added in XP2_GetPlotSearchTerms
 		for _,szRiverName in pairs(data.RiverNames) do
 			AddLocalizedSearchTerm(szRiverName);
 		end
@@ -77,7 +74,7 @@ end
 -- ===========================================================================
 function FetchData(plot)
 	-- Get the original plot data
-	local data = BASE_FetchData(plot);
+	local data = XP2_FetchData(plot);
 	
 	data.IsVolcano      = MapFeatureManager.IsVolcano(plot);
 	data.VolcanoName    = MapFeatureManager.GetVolcanoName(plot);
@@ -121,7 +118,7 @@ function PopulateSuggestionData()
 	end
 
 	-- Populate the original search terms
-	BASE_PopulateSuggestionData();
+	XP2_PopulateSuggestionData();
 	local AddSearchTerm = function(kLocKey)
 		local szTerm = Locale.Lookup(kLocKey);
 		Search.AddData(SEARCHCONTEXT_SUGGESTIONS, szTerm, szTerm, "");
@@ -134,7 +131,7 @@ function PopulateSuggestionData()
 		end
 	end
 
-	-- XP2 Features, Improvements, etc are already added in BASE_PopulateSuggestionData
+	-- XP2 Features, Improvements, etc are already added in XP2_PopulateSuggestionData
 	AddSearchTerm("LOC_HUD_MAP_SEARCH_TERMS_ERUPTING");
 	AddSearchTerm("LOC_HUD_MAP_SEARCH_TERMS_ACTIVE");
 	AddSearchTerm("LOC_HUD_MAP_SEARCH_TERMS_STORM");

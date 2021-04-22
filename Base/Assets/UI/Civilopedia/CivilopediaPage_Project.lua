@@ -85,6 +85,21 @@ local sectionId = page.SectionId;
 	-- Right Column
 	AddPortrait("ICON_" .. projectType);
 	
+	-- Heroes Mode unlocks
+	if string.find(projectType, "CREATE_HERO") then
+		local heroType:string = projectType:gsub("PROJECT_CREATE_HERO_", "");
+
+		AddRightColumnStatBox("LOC_UI_PEDIA_UNLOCKS", function(s)
+			s:AddSeparator();
+			local icon : table = {"ICON_UNIT_HERO_" .. heroType, "LOC_UNIT_HERO_" .. heroType .. "_DESCRIPTION", "UNIT_HERO_" .. heroType};
+
+			s:AddIconLabel(icon, "LOC_UNIT_HERO_" .. heroType .. "_NAME");
+
+			s:AddSeparator();
+		end);
+
+	end
+
 	AddRightColumnStatBox("LOC_UI_PEDIA_TRAITS", function(s)
 		s:AddSeparator();
 		if(#unique_to > 0) then

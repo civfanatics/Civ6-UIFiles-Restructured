@@ -57,6 +57,7 @@ BASE_OnTabClicked = OnTabClicked;
 BASE_PopulateGenericInstance = PopulateGenericInstance;
 BASE_PopulateGenericTeamInstance = PopulateGenericTeamInstance;
 BASE_GetDefaultStackSize = GetDefaultStackSize;
+BASE_GetCulturalVictoryAdditionalSummary = GetCulturalVictoryAdditionalSummary;
 
 g_victoryData.VICTORY_DIPLOMATIC = {
 	GetText = function(p) 
@@ -75,7 +76,8 @@ g_victoryData.VICTORY_DIPLOMATIC = {
 		end
 
 		return current;
-	end
+	end,
+	AdditionalSummary = function(p) return GetDiplomaticVictoryAdditionalSummary(p) end
 };
 
 -- ===========================================================================
@@ -201,6 +203,66 @@ function PopulateGenericInstance(instance:table, playerData:table, victoryType:s
 	end
 	
 	instance.ButtonBG:SetSizeY(itemSize);
+end
+
+-- ===========================================================================
+--	Culture victory update
+-- ===========================================================================
+function GetCulturalVictoryAdditionalSummary(pPlayer:table)
+	if (g_LocalPlayer == nil) then
+		return "";	
+	end
+
+	local iPlayerID:number = pPlayer:GetID();
+	local pLocalPlayerCulture:table = g_LocalPlayer:GetCulture();
+	local pOtherPlayerCulture:table = pPlayer:GetCulture();
+	if (pLocalPlayerCulture == nil or pOtherPlayerCulture == nil) then
+		return "";	
+	end
+
+	local tSummaryStrings = {};
+
+	-- Base game additional summary, if any
+	local baseDetails:string = BASE_GetCulturalVictoryAdditionalSummary(pPlayer);
+	if (baseDetails ~= nil and baseDetails ~= "") then
+		table.insert(tSummaryStrings, baseDetails);
+	end
+
+	-- Cultural Dominance summaries
+
+	-- This is us, show the quantity of civs we dominate or that dominate us
+	if (iPlayerID == g_LocalPlayerID) then		
+		local iNumWeDominate:number = 0;
+		local iNumDominateUs:number = 0;
+		for _, iLoopID in ipairs(PlayerManager.GetAliveMajorIDs()) do
+			if (iLoopID ~= g_LocalPlayerID) then
+				if (pLocalPlayerCulture:IsDominantOver(iLoopID)) then
+					iNumWeDominate = iNumWeDominate + 1;
+				else
+					local pLoopPlayerCulture = Players[iLoopID]:GetCulture();
+					if (pLoopPlayerCulture ~= nil and pLoopPlayerCulture:IsDominantOver(g_LocalPlayerID)) then
+						iNumDominateUs = iNumDominateUs + 1;
+					end
+				end
+			end
+		end
+
+		if iNumWeDominate > 0 then
+			table.insert(tSummaryStrings, Locale.Lookup("LOC_WORLD_RANKINGS_OVERVIEW_CULTURE_NUM_WE_DOMINATE", iNumWeDominate));
+		end
+		if iNumDominateUs > 0 then
+			table.insert(tSummaryStrings, Locale.Lookup("LOC_WORLD_RANKINGS_OVERVIEW_CULTURE_NUM_DOMINATE_US", iNumDominateUs));
+		end
+	else
+		-- Are we/they culturally dominant
+		if (pLocalPlayerCulture:IsDominantOver(iPlayerID)) then
+			table.insert(tSummaryStrings, Locale.Lookup("LOC_WORLD_RANKINGS_OVERVIEW_CULTURE_WE_ARE_DOMINANT"));
+		elseif (pOtherPlayerCulture:IsDominantOver(g_LocalPlayerID)) then
+			table.insert(tSummaryStrings, Locale.Lookup("LOC_WORLD_RANKINGS_OVERVIEW_CULTURE_THEY_ARE_DOMINANT"));
+		end
+	end
+
+	return FormatTableAsNewLineString(tSummaryStrings);
 end
 
 -- ===========================================================================
@@ -715,6 +777,11 @@ function ViewDiplomatic(victoryType:string)
 	end
 
 	RealizeGenericStackSize();
+end
+
+function GetDiplomaticVictoryAdditionalSummary(pPlayer:table)
+	-- Add or override in expansions
+	return "";
 end
 
 function GetDefaultStackSize()

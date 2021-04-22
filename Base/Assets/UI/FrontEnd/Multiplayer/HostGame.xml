@@ -95,7 +95,7 @@
 
 	<!-- Instance for a boolean parameters -->
 	<Instance Name="BooleanParameterInstance">
-		<GridButton ID="CheckBox" Offset="0,0" Anchor="C,T" Style="CheckBoxControl"  Size="300,24" States="8"/>
+		<GridButton ID="CheckBox" Offset="0,0" Anchor="C,T" Style="CheckBoxControl"  Size="330,24" States="8"/>
 	</Instance>
 
 	<!-- Slider with number display -->
@@ -117,7 +117,7 @@
 	<!-- Instance for a string parameters -->
 	<Instance Name="StringParameterInstance">
 		<Container			ID="StringRoot" Anchor="C,T"	Size="300,30">
-				<Grid				Style="EditTextArea"					Size="300,30">
+				<Grid				Style="EditTextArea"					Size="314,30">
 					<EditBox	ID="StringEdit" Anchor="L,C" Offset="6,0" Size="parent,23" EditMode="1" Style="FontNormal14" ColorSet="BodyTextCool" FontStyle="stroke" MaxLength="22"/>
 					<Label		ID="StringName" Anchor="L,C" AnchorSide="O,I" Style="FontNormal16" ColorSet="ShellOptionText" FontStyle="stroke" WrapWidth="180" String="UNKNOWN_EDIT_BOX"/>
 				</Grid>
@@ -127,7 +127,7 @@
 	<!-- Instance for a parameter that has multiple choices for the value, displayed as a dropdown -->
 	<Instance Name="PullDownParameterInstance">
 		<Container ID="Root" Anchor="L,T" Size="parent,24" Offset="0,0">
-			<PullDown Anchor="C,T" ID="PullDown" Style="PullDownBlue" Size="300,24" Offset="0,0">
+			<PullDown Anchor="C,T" ID="PullDown" Style="PullDownBlue" Size="330,24" Offset="0,0">
 				<Label Style="ShellOptionText" ID="StringName" AnchorSide="O,I" Anchor="L,C" String=""/>
 			</PullDown>
 		</Container>
@@ -136,7 +136,7 @@
 	<!-- Instance for a parameter that has a button to launch a popup (e.g., map-select) -->
 	<Instance Name="ButtonParameterInstance">
 		<Container		ID="ButtonRoot" Anchor="L,T" Size="parent,24" Offset="0,0">
-			<GridButton ID="Button"			Anchor="C,T" Style="ButtonControl" Size="300,24" Offset="0,0">
+			<GridButton ID="Button"			Anchor="C,T" Style="ButtonControl" Size="330,24" Offset="0,0">
 				<Label		ID="StringName"	Anchor="L,C" Style="ShellOptionText" AnchorSide="O,I" String="$Name$"/>
 			</GridButton>
 		</Container>

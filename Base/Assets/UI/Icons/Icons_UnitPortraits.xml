@@ -4,40 +4,54 @@
     <!--Default textures are European (because that was the one with the most civs!)-->
     <Row Name="ICON_ATLAS_UNIT_PORTRAITS"   IconSize="256" IconsPerRow="8" IconsPerColumn="8" Filename="UnitPortraits256_1"/>
     <Row Name="ICON_ATLAS_UNIT_PORTRAITS_2" IconSize="256" IconsPerRow="8" IconsPerColumn="8" Filename="UnitPortraits256_2"/>
+    <Row Name="ICON_ATLAS_UNIT_PORTRAITS_3" IconSize="256" IconsPerRow="8" IconsPerColumn="8" Filename="UnitPortraits256_3"/>
     <Row Name="ICON_ATLAS_UNIT_PORTRAITS"   IconSize="200" IconsPerRow="8" IconsPerColumn="8" Filename="UnitPortraits200_1"/>
     <Row Name="ICON_ATLAS_UNIT_PORTRAITS_2" IconSize="200" IconsPerRow="8" IconsPerColumn="8" Filename="UnitPortraits200_2"/>
+    <Row Name="ICON_ATLAS_UNIT_PORTRAITS_3" IconSize="200" IconsPerRow="8" IconsPerColumn="8" Filename="UnitPortraits200_3"/>
     <Row Name="ICON_ATLAS_UNIT_PORTRAITS"   IconSize="95" IconsPerRow="8" IconsPerColumn="8" Filename="UnitPortraits95_1"/>
     <Row Name="ICON_ATLAS_UNIT_PORTRAITS_2" IconSize="95" IconsPerRow="8" IconsPerColumn="8" Filename="UnitPortraits95_2"/>
+    <Row Name="ICON_ATLAS_UNIT_PORTRAITS_3" IconSize="95" IconsPerRow="8" IconsPerColumn="8" Filename="UnitPortraits95_3"/>
     <Row Name="ICON_ATLAS_UNIT_PORTRAITS"   IconSize="70" IconsPerRow="8" IconsPerColumn="8" Filename="UnitPortraits70_1"/>
     <Row Name="ICON_ATLAS_UNIT_PORTRAITS_2" IconSize="70" IconsPerRow="8" IconsPerColumn="8" Filename="UnitPortraits70_2"/>
+    <Row Name="ICON_ATLAS_UNIT_PORTRAITS_3" IconSize="70" IconsPerRow="8" IconsPerColumn="8" Filename="UnitPortraits70_3"/>
     <Row Name="ICON_ATLAS_UNIT_PORTRAITS"   IconSize="50" IconsPerRow="8" IconsPerColumn="8" Filename="UnitPortraits50_1"/>
     <Row Name="ICON_ATLAS_UNIT_PORTRAITS_2" IconSize="50" IconsPerRow="8" IconsPerColumn="8" Filename="UnitPortraits50_2"/>
+    <Row Name="ICON_ATLAS_UNIT_PORTRAITS_3" IconSize="50" IconsPerRow="8" IconsPerColumn="8" Filename="UnitPortraits50_3"/>
     <Row Name="ICON_ATLAS_UNIT_PORTRAITS"   IconSize="38" IconsPerRow="8" IconsPerColumn="8" Filename="UnitPortraits38_1"/>
     <Row Name="ICON_ATLAS_UNIT_PORTRAITS_2" IconSize="38" IconsPerRow="8" IconsPerColumn="8" Filename="UnitPortraits38_2"/>
+    <Row Name="ICON_ATLAS_UNIT_PORTRAITS_3" IconSize="38" IconsPerRow="8" IconsPerColumn="8" Filename="UnitPortraits38_3"/>
     
     <!-- Asian -->
     <Row Name="ICON_ATLAS_ASIAN_UNIT_PORTRAITS"   IconSize="70" IconsPerRow="8" IconsPerColumn="8" Filename="UnitPortraits70asi_1"/>
     <Row Name="ICON_ATLAS_ASIAN_UNIT_PORTRAITS_2" IconSize="70" IconsPerRow="8" IconsPerColumn="8" Filename="UnitPortraits70asi_2"/>
+    <Row Name="ICON_ATLAS_ASIAN_UNIT_PORTRAITS_3" IconSize="70" IconsPerRow="8" IconsPerColumn="8" Filename="UnitPortraits70asi_3"/>
     <Row Name="ICON_ATLAS_ASIAN_UNIT_PORTRAITS"   IconSize="95" IconsPerRow="8" IconsPerColumn="8" Filename="UnitPortraits95asi_1"/>
     <Row Name="ICON_ATLAS_ASIAN_UNIT_PORTRAITS_2" IconSize="95" IconsPerRow="8" IconsPerColumn="8" Filename="UnitPortraits95asi_2"/>
+    <Row Name="ICON_ATLAS_ASIAN_UNIT_PORTRAITS_3" IconSize="95" IconsPerRow="8" IconsPerColumn="8" Filename="UnitPortraits95asi_3"/>
 
     <!-- Mediterranean  -->
     <Row Name="ICON_ATLAS_MEDITERRANEAN_UNIT_PORTRAITS"   IconSize="70" IconsPerRow="8" IconsPerColumn="8" Filename="UnitPortraits70med_1"/>
     <Row Name="ICON_ATLAS_MEDITERRANEAN_UNIT_PORTRAITS_2" IconSize="70" IconsPerRow="8" IconsPerColumn="8" Filename="UnitPortraits70med_2"/>
+    <Row Name="ICON_ATLAS_MEDITERRANEAN_UNIT_PORTRAITS_3" IconSize="70" IconsPerRow="8" IconsPerColumn="8" Filename="UnitPortraits70med_3"/>
     <Row Name="ICON_ATLAS_MEDITERRANEAN_UNIT_PORTRAITS"   IconSize="95" IconsPerRow="8" IconsPerColumn="8" Filename="UnitPortraits95med_1"/>
     <Row Name="ICON_ATLAS_MEDITERRANEAN_UNIT_PORTRAITS_2" IconSize="95" IconsPerRow="8" IconsPerColumn="8" Filename="UnitPortraits95med_2"/>
+    <Row Name="ICON_ATLAS_MEDITERRANEAN_UNIT_PORTRAITS_3" IconSize="95" IconsPerRow="8" IconsPerColumn="8" Filename="UnitPortraits95med_3"/>
 
     <!-- South American  -->
     <Row Name="ICON_ATLAS_SOUTH_AMERICAN_UNIT_PORTRAITS"   IconSize="70" IconsPerRow="8" IconsPerColumn="8" Filename="UnitPortraits70sou_1"/>
     <Row Name="ICON_ATLAS_SOUTH_AMERICAN_UNIT_PORTRAITS_2" IconSize="70" IconsPerRow="8" IconsPerColumn="8" Filename="UnitPortraits70sou_2"/>
+    <Row Name="ICON_ATLAS_SOUTH_AMERICAN_UNIT_PORTRAITS_3" IconSize="70" IconsPerRow="8" IconsPerColumn="8" Filename="UnitPortraits70sou_3"/>
     <Row Name="ICON_ATLAS_SOUTH_AMERICAN_UNIT_PORTRAITS"   IconSize="95" IconsPerRow="8" IconsPerColumn="8" Filename="UnitPortraits95sou_1"/>
     <Row Name="ICON_ATLAS_SOUTH_AMERICAN_UNIT_PORTRAITS_2" IconSize="95" IconsPerRow="8" IconsPerColumn="8" Filename="UnitPortraits95sou_2"/>
+    <Row Name="ICON_ATLAS_SOUTH_AMERICAN_UNIT_PORTRAITS_3" IconSize="95" IconsPerRow="8" IconsPerColumn="8" Filename="UnitPortraits95sou_3"/>
 
     <!-- African  -->
     <Row Name="ICON_ATLAS_AFRICAN_UNIT_PORTRAITS"   IconSize="70" IconsPerRow="8" IconsPerColumn="8" Filename="UnitPortraits70afr_1"/>
     <Row Name="ICON_ATLAS_AFRICAN_UNIT_PORTRAITS_2" IconSize="70" IconsPerRow="8" IconsPerColumn="8" Filename="UnitPortraits70afr_2"/>
+    <Row Name="ICON_ATLAS_AFRICAN_UNIT_PORTRAITS_3" IconSize="70" IconsPerRow="8" IconsPerColumn="8" Filename="UnitPortraits70afr_3"/>
     <Row Name="ICON_ATLAS_AFRICAN_UNIT_PORTRAITS"   IconSize="95" IconsPerRow="8" IconsPerColumn="8" Filename="UnitPortraits95afr_1"/>
     <Row Name="ICON_ATLAS_AFRICAN_UNIT_PORTRAITS_2" IconSize="95" IconsPerRow="8" IconsPerColumn="8" Filename="UnitPortraits95afr_2"/>
+    <Row Name="ICON_ATLAS_AFRICAN_UNIT_PORTRAITS_3" IconSize="95" IconsPerRow="8" IconsPerColumn="8" Filename="UnitPortraits95afr_3"/>
     
   </IconTextureAtlases>
   <IconDefinitions>
@@ -67,7 +81,6 @@
     <Row Name="ICON_UNIT_BARBARIAN_HORSE_ARCHER_PORTRAIT"       Atlas="ICON_ATLAS_UNIT_PORTRAITS"   Index="34"/>
     <Row Name="ICON_UNIT_SUMERIAN_WAR_CART_PORTRAIT"            Atlas="ICON_ATLAS_UNIT_PORTRAITS"   Index="22"/>
     <Row Name="ICON_UNIT_AZTEC_EAGLE_WARRIOR_PORTRAIT"          Atlas="ICON_ATLAS_UNIT_PORTRAITS"   Index="23"/>
-    <Row Name="ICON_UNIT_BARBARIAN_RAIDER_PORTRAIT"             Atlas="ICON_ATLAS_UNIT_PORTRAITS"   Index="24"/>
     <Row Name="ICON_UNIT_GALLEY_PORTRAIT"                       Atlas="ICON_ATLAS_UNIT_PORTRAITS"   Index="25"/>
     <Row Name="ICON_UNIT_NORWEGIAN_LONGSHIP_PORTRAIT"           Atlas="ICON_ATLAS_UNIT_PORTRAITS"   Index="26"/>
     <Row Name="ICON_UNIT_ARCHER_PORTRAIT"                       Atlas="ICON_ATLAS_UNIT_PORTRAITS"   Index="27"/>
@@ -139,7 +152,9 @@
     <Row Name="ICON_UNIT_MODERN_ARMOR_PORTRAIT"                 Atlas="ICON_ATLAS_UNIT_PORTRAITS_2" Index="29"/>
     <Row Name="ICON_UNIT_WARRIOR_MONK_PORTRAIT"                 Atlas="ICON_ATLAS_UNIT_PORTRAITS_2" Index="35"/>
     <Row Name="ICON_UNIT_GURU_PORTRAIT"                         Atlas="ICON_ATLAS_UNIT_PORTRAITS_2" Index="36"/>
-
+    <Row Name="ICON_UNIT_TREBUCHET_PORTRAIT"                	Atlas="ICON_ATLAS_UNIT_PORTRAITS_3" Index="0"/>
+    <Row Name="ICON_UNIT_MAN_AT_ARMS_PORTRAIT"              	Atlas="ICON_ATLAS_UNIT_PORTRAITS_3" Index="1"/>
+    <Row Name="ICON_UNIT_LINE_INFANTRY_PORTRAIT"            	Atlas="ICON_ATLAS_UNIT_PORTRAITS_3" Index="2"/>
 
     <Row Name="ICON_ETHNICITY_ASIAN_UNIT_SETTLER_PORTRAIT"                      Atlas="ICON_ATLAS_ASIAN_UNIT_PORTRAITS"   Index="0"/>
     <Row Name="ICON_ETHNICITY_ASIAN_UNIT_BUILDER_PORTRAIT"                      Atlas="ICON_ATLAS_ASIAN_UNIT_PORTRAITS"   Index="1"/>
@@ -167,7 +182,6 @@
     <Row Name="ICON_ETHNICITY_ASIAN_UNIT_BARBARIAN_HORSE_ARCHER_PORTRAIT"       Atlas="ICON_ATLAS_ASIAN_UNIT_PORTRAITS"   Index="34"/>
     <Row Name="ICON_ETHNICITY_ASIAN_UNIT_SUMERIAN_WAR_CART_PORTRAIT"            Atlas="ICON_ATLAS_ASIAN_UNIT_PORTRAITS"   Index="22"/>
     <Row Name="ICON_ETHNICITY_ASIAN_UNIT_AZTEC_EAGLE_WARRIOR_PORTRAIT"          Atlas="ICON_ATLAS_ASIAN_UNIT_PORTRAITS"   Index="23"/>
-    <Row Name="ICON_ETHNICITY_ASIAN_UNIT_BARBARIAN_RAIDER_PORTRAIT"             Atlas="ICON_ATLAS_ASIAN_UNIT_PORTRAITS"   Index="24"/>
     <Row Name="ICON_ETHNICITY_ASIAN_UNIT_GALLEY_PORTRAIT"                       Atlas="ICON_ATLAS_ASIAN_UNIT_PORTRAITS"   Index="25"/>
     <Row Name="ICON_ETHNICITY_ASIAN_UNIT_NORWEGIAN_LONGSHIP_PORTRAIT"           Atlas="ICON_ATLAS_ASIAN_UNIT_PORTRAITS"   Index="26"/>
     <Row Name="ICON_ETHNICITY_ASIAN_UNIT_ARCHER_PORTRAIT"                       Atlas="ICON_ATLAS_ASIAN_UNIT_PORTRAITS"   Index="27"/>
@@ -239,6 +253,9 @@
     <Row Name="ICON_ETHNICITY_ASIAN_UNIT_MODERN_ARMOR_PORTRAIT"                 Atlas="ICON_ATLAS_ASIAN_UNIT_PORTRAITS_2" Index="29"/>
     <Row Name="ICON_ETHNICITY_ASIAN_UNIT_WARRIOR_MONK_PORTRAIT"                 Atlas="ICON_ATLAS_ASIAN_UNIT_PORTRAITS_2" Index="35"/>
     <Row Name="ICON_ETHNICITY_ASIAN_UNIT_GURU_PORTRAIT"                         Atlas="ICON_ATLAS_ASIAN_UNIT_PORTRAITS_2" Index="36"/>
+    <Row Name="ICON_ETHNICITY_ASIAN_UNIT_TREBUCHET_PORTRAIT"                	Atlas="ICON_ATLAS_ASIAN_UNIT_PORTRAITS_3" Index="0"/>
+    <Row Name="ICON_ETHNICITY_ASIAN_UNIT_MAN_AT_ARMS_PORTRAIT"              	Atlas="ICON_ATLAS_ASIAN_UNIT_PORTRAITS_3" Index="1"/>
+    <Row Name="ICON_ETHNICITY_ASIAN_UNIT_LINE_INFANTRY_PORTRAIT"            	Atlas="ICON_ATLAS_ASIAN_UNIT_PORTRAITS_3" Index="2"/>
 
     <Row Name="ICON_ETHNICITY_MEDIT_UNIT_SETTLER_PORTRAIT"                      Atlas="ICON_ATLAS_MEDITERRANEAN_UNIT_PORTRAITS"   Index="0"/>
     <Row Name="ICON_ETHNICITY_MEDIT_UNIT_BUILDER_PORTRAIT"                      Atlas="ICON_ATLAS_MEDITERRANEAN_UNIT_PORTRAITS"   Index="1"/>
@@ -266,7 +283,6 @@
     <Row Name="ICON_ETHNICITY_MEDIT_UNIT_BARBARIAN_HORSE_ARCHER_PORTRAIT"       Atlas="ICON_ATLAS_MEDITERRANEAN_UNIT_PORTRAITS"   Index="34"/>
     <Row Name="ICON_ETHNICITY_MEDIT_UNIT_SUMERIAN_WAR_CART_PORTRAIT"            Atlas="ICON_ATLAS_MEDITERRANEAN_UNIT_PORTRAITS"   Index="22"/>
     <Row Name="ICON_ETHNICITY_MEDIT_UNIT_AZTEC_EAGLE_WARRIOR_PORTRAIT"          Atlas="ICON_ATLAS_MEDITERRANEAN_UNIT_PORTRAITS"   Index="23"/>
-    <Row Name="ICON_ETHNICITY_MEDIT_UNIT_BARBARIAN_RAIDER_PORTRAIT"             Atlas="ICON_ATLAS_MEDITERRANEAN_UNIT_PORTRAITS"   Index="24"/>
     <Row Name="ICON_ETHNICITY_MEDIT_UNIT_GALLEY_PORTRAIT"                       Atlas="ICON_ATLAS_MEDITERRANEAN_UNIT_PORTRAITS"   Index="25"/>
     <Row Name="ICON_ETHNICITY_MEDIT_UNIT_NORWEGIAN_LONGSHIP_PORTRAIT"           Atlas="ICON_ATLAS_MEDITERRANEAN_UNIT_PORTRAITS"   Index="26"/>
     <Row Name="ICON_ETHNICITY_MEDIT_UNIT_ARCHER_PORTRAIT"                       Atlas="ICON_ATLAS_MEDITERRANEAN_UNIT_PORTRAITS"   Index="27"/>
@@ -338,6 +354,9 @@
     <Row Name="ICON_ETHNICITY_MEDIT_UNIT_MODERN_ARMOR_PORTRAIT"                 Atlas="ICON_ATLAS_MEDITERRANEAN_UNIT_PORTRAITS_2" Index="29"/>
     <Row Name="ICON_ETHNICITY_MEDIT_UNIT_WARRIOR_MONK_PORTRAIT"                 Atlas="ICON_ATLAS_MEDITERRANEAN_UNIT_PORTRAITS_2" Index="35"/>
     <Row Name="ICON_ETHNICITY_MEDIT_UNIT_GURU_PORTRAIT"                         Atlas="ICON_ATLAS_MEDITERRANEAN_UNIT_PORTRAITS_2" Index="36"/>
+    <Row Name="ICON_ETHNICITY_MEDIT_UNIT_TREBUCHET_PORTRAIT"                	Atlas="ICON_ATLAS_MEDITERRANEAN_UNIT_PORTRAITS_3" Index="0"/>
+    <Row Name="ICON_ETHNICITY_MEDIT_UNIT_MAN_AT_ARMS_PORTRAIT"              	Atlas="ICON_ATLAS_MEDITERRANEAN_UNIT_PORTRAITS_3" Index="1"/>
+    <Row Name="ICON_ETHNICITY_MEDIT_UNIT_LINE_INFANTRY_PORTRAIT"            	Atlas="ICON_ATLAS_MEDITERRANEAN_UNIT_PORTRAITS_3" Index="2"/>
 
     <Row Name="ICON_ETHNICITY_SOUTHAM_UNIT_SETTLER_PORTRAIT"                      Atlas="ICON_ATLAS_SOUTH_AMERICAN_UNIT_PORTRAITS"   Index="0"/>
     <Row Name="ICON_ETHNICITY_SOUTHAM_UNIT_BUILDER_PORTRAIT"                      Atlas="ICON_ATLAS_SOUTH_AMERICAN_UNIT_PORTRAITS"   Index="1"/>
@@ -365,7 +384,6 @@
     <Row Name="ICON_ETHNICITY_SOUTHAM_UNIT_BARBARIAN_HORSE_ARCHER_PORTRAIT"       Atlas="ICON_ATLAS_SOUTH_AMERICAN_UNIT_PORTRAITS"   Index="34"/>
     <Row Name="ICON_ETHNICITY_SOUTHAM_UNIT_SUMERIAN_WAR_CART_PORTRAIT"            Atlas="ICON_ATLAS_SOUTH_AMERICAN_UNIT_PORTRAITS"   Index="22"/>
     <Row Name="ICON_ETHNICITY_SOUTHAM_UNIT_AZTEC_EAGLE_WARRIOR_PORTRAIT"          Atlas="ICON_ATLAS_SOUTH_AMERICAN_UNIT_PORTRAITS"   Index="23"/>
-    <Row Name="ICON_ETHNICITY_SOUTHAM_UNIT_BARBARIAN_RAIDER_PORTRAIT"             Atlas="ICON_ATLAS_SOUTH_AMERICAN_UNIT_PORTRAITS"   Index="24"/>
     <Row Name="ICON_ETHNICITY_SOUTHAM_UNIT_GALLEY_PORTRAIT"                       Atlas="ICON_ATLAS_SOUTH_AMERICAN_UNIT_PORTRAITS"   Index="25"/>
     <Row Name="ICON_ETHNICITY_SOUTHAM_UNIT_NORWEGIAN_LONGSHIP_PORTRAIT"           Atlas="ICON_ATLAS_SOUTH_AMERICAN_UNIT_PORTRAITS"   Index="26"/>
     <Row Name="ICON_ETHNICITY_SOUTHAM_UNIT_ARCHER_PORTRAIT"                       Atlas="ICON_ATLAS_SOUTH_AMERICAN_UNIT_PORTRAITS"   Index="27"/>
@@ -437,6 +455,9 @@
     <Row Name="ICON_ETHNICITY_SOUTHAM_UNIT_MODERN_ARMOR_PORTRAIT"                 Atlas="ICON_ATLAS_SOUTH_AMERICAN_UNIT_PORTRAITS_2" Index="29"/>
     <Row Name="ICON_ETHNICITY_SOUTHAM_UNIT_WARRIOR_MONK_PORTRAIT"                 Atlas="ICON_ATLAS_SOUTH_AMERICAN_UNIT_PORTRAITS_2" Index="35"/>
     <Row Name="ICON_ETHNICITY_SOUTHAM_UNIT_GURU_PORTRAIT"                         Atlas="ICON_ATLAS_SOUTH_AMERICAN_UNIT_PORTRAITS_2" Index="36"/>
+    <Row Name="ICON_ETHNICITY_SOUTHAM_UNIT_TREBUCHET_PORTRAIT"                	  Atlas="ICON_ATLAS_SOUTH_AMERICAN_UNIT_PORTRAITS_3" Index="0"/>
+    <Row Name="ICON_ETHNICITY_SOUTHAM_UNIT_MAN_AT_ARMS_PORTRAIT"              	  Atlas="ICON_ATLAS_SOUTH_AMERICAN_UNIT_PORTRAITS_3" Index="1"/>
+    <Row Name="ICON_ETHNICITY_SOUTHAM_UNIT_LINE_INFANTRY_PORTRAIT"            	  Atlas="ICON_ATLAS_SOUTH_AMERICAN_UNIT_PORTRAITS_3" Index="2"/>
 
     <Row Name="ICON_ETHNICITY_AFRICAN_UNIT_SETTLER_PORTRAIT"                      Atlas="ICON_ATLAS_AFRICAN_UNIT_PORTRAITS"   Index="0"/>
     <Row Name="ICON_ETHNICITY_AFRICAN_UNIT_BUILDER_PORTRAIT"                      Atlas="ICON_ATLAS_AFRICAN_UNIT_PORTRAITS"   Index="1"/>
@@ -464,7 +485,6 @@
     <Row Name="ICON_ETHNICITY_AFRICAN_UNIT_BARBARIAN_HORSE_ARCHER_PORTRAIT"       Atlas="ICON_ATLAS_AFRICAN_UNIT_PORTRAITS"   Index="34"/>
     <Row Name="ICON_ETHNICITY_AFRICAN_UNIT_SUMERIAN_WAR_CART_PORTRAIT"            Atlas="ICON_ATLAS_AFRICAN_UNIT_PORTRAITS"   Index="22"/>
     <Row Name="ICON_ETHNICITY_AFRICAN_UNIT_AZTEC_EAGLE_WARRIOR_PORTRAIT"          Atlas="ICON_ATLAS_AFRICAN_UNIT_PORTRAITS"   Index="23"/>
-    <Row Name="ICON_ETHNICITY_AFRICAN_UNIT_BARBARIAN_RAIDER_PORTRAIT"             Atlas="ICON_ATLAS_AFRICAN_UNIT_PORTRAITS"   Index="24"/>
     <Row Name="ICON_ETHNICITY_AFRICAN_UNIT_GALLEY_PORTRAIT"                       Atlas="ICON_ATLAS_AFRICAN_UNIT_PORTRAITS"   Index="25"/>
     <Row Name="ICON_ETHNICITY_AFRICAN_UNIT_NORWEGIAN_LONGSHIP_PORTRAIT"           Atlas="ICON_ATLAS_AFRICAN_UNIT_PORTRAITS"   Index="26"/>
     <Row Name="ICON_ETHNICITY_AFRICAN_UNIT_ARCHER_PORTRAIT"                       Atlas="ICON_ATLAS_AFRICAN_UNIT_PORTRAITS"   Index="27"/>
@@ -536,6 +556,9 @@
     <Row Name="ICON_ETHNICITY_AFRICAN_UNIT_MODERN_ARMOR_PORTRAIT"                 Atlas="ICON_ATLAS_AFRICAN_UNIT_PORTRAITS_2" Index="29"/>
     <Row Name="ICON_ETHNICITY_AFRICAN_UNIT_WARRIOR_MONK_PORTRAIT"                 Atlas="ICON_ATLAS_AFRICAN_UNIT_PORTRAITS_2" Index="35"/>
     <Row Name="ICON_ETHNICITY_AFRICAN_UNIT_GURU_PORTRAIT"                         Atlas="ICON_ATLAS_AFRICAN_UNIT_PORTRAITS_2" Index="36"/>
+    <Row Name="ICON_ETHNICITY_AFRICAN_UNIT_TREBUCHET_PORTRAIT"                	  Atlas="ICON_ATLAS_AFRICAN_UNIT_PORTRAITS_3" Index="0"/>
+    <Row Name="ICON_ETHNICITY_AFRICAN_UNIT_MAN_AT_ARMS_PORTRAIT"              	  Atlas="ICON_ATLAS_AFRICAN_UNIT_PORTRAITS_3" Index="1"/>
+    <Row Name="ICON_ETHNICITY_AFRICAN_UNIT_LINE_INFANTRY_PORTRAIT"            	  Atlas="ICON_ATLAS_AFRICAN_UNIT_PORTRAITS_3" Index="2"/>
     
     <Row Name="ICON_UNIT_GREAT_GENERAL_PORTRAIT_F"                  Atlas="ICON_ATLAS_UNIT_PORTRAITS_2" Index="30"/>
     <Row Name="ICON_UNIT_GREAT_ENGINEER_PORTRAIT_F"                 Atlas="ICON_ATLAS_UNIT_PORTRAITS_2" Index="31"/>

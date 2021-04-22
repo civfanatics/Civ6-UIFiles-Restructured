@@ -447,12 +447,6 @@
 				<LuaReplace>UI/Replacements/MinimapPanel_Expansion2.lua</LuaReplace>
 			</Properties>
 		</ReplaceUIScript>
-		<ReplaceUIScript id="Expansion2_MapSearchPanel" criteria="Expansion2">
-			<Properties>
-				<LuaContext>MapSearchPanel</LuaContext>
-				<LuaReplace>UI/Replacements/MapSearchPanel_Expansion2.lua</LuaReplace>
-			</Properties>
-		</ReplaceUIScript>
 		<ReplaceUIScript id="Expansion2_PartialScreenHooks" criteria="Expansion2">
 			<Properties>
 				<LuaContext>PartialScreenHooks</LuaContext>
@@ -883,8 +877,16 @@
 		<!-- XP2 Maps-->
 		<File>Maps/EarthMaps/EarthStandard_XP2.Civ6Map</File>
 		<File>Maps/EarthMaps/EarthStandard_XP2.lua</File>
+		<File>Maps/EarthMaps/MediterraneanLarge_XP2.Civ6Map</File>
+    	<File>Maps/EarthMaps/MediterraneanLarge_XP2.lua</File>
 		<File>Maps/EarthMaps/TSLEarthStandard_XP2.Civ6Map</File>
 		<File>Maps/EarthMaps/TSLEarthStandard_XP2.lua</File>
+		<File>Maps/EarthMaps/TSLMediterraneanLarge_XP2.Civ6Map</File>
+		<File>Maps/EarthMaps/TSLMediterraneanLarge_XP2.lua</File>
+		<File>Maps/EarthMaps/TSLWorldMapHuge_XP2.Civ6Map</File>
+    	<File>Maps/EarthMaps/TSLWorldMapHuge_XP2.lua</File>
+    	<File>Maps/EarthMaps/WorldMapHuge_XP2.Civ6Map</File>
+    	<File>Maps/EarthMaps/WorldMapHuge_XP2.lua</File>
 		<File>Maps/Continents.lua</File>
 		<File>Maps/Continents_Islands.lua</File>
 		<File>Maps/Fractal.lua</File>

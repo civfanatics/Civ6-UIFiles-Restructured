@@ -1975,8 +1975,8 @@ function PopulateAvailableOtherPlayers(player : table, iconList : table)
 end
 
 -- ===========================================================================
-function GetGreatWorkIcon(GreatWorkDesc : table)
-	return "ICON_" .. GreatWorkDesc.GreatWorkType;
+function GetGreatWorkIcon(GreatWorkDesc : table, GreatWorkBackupString : string)
+	return "ICON_" .. GreatWorkBackupString;
 end
 
 -- ===========================================================================
@@ -1999,7 +1999,7 @@ function PopulateAvailableGreatWorks(player : table, iconList : table)
 				local type : number = entry.ForType;
 				local uiIcon : table = g_IconAndTextIM:GetInstance(iconList.ListStack);
 				local uiMinimizedIcon : table = g_IconOnlyIM:GetInstance(uiMinimizedSection.MinimizedSectionStack);
-				local iconName : string = GetGreatWorkIcon(greatWorkDesc);
+				local iconName : string = GetGreatWorkIcon(greatWorkDesc, greatWorkDesc.GreatWorkType);
 
 				SetIconToSize(uiIcon.Icon, iconName, 45);
 				SetIconToSize(uiMinimizedIcon.Icon, iconName, 45);
@@ -2493,7 +2493,7 @@ function PopulateDealGreatWorks(player : table, iconList : table)
 					local uiIcon : table = g_IconAndTextIM:GetInstance(iconList.GreatWorksDealsStack);
 					local uiMinimizedIcon : table = g_IconOnlyIM:GetInstance(iconList.MinimizedGreatWorksDealsStack);
 					local greatWorkDesc : table = GameInfo.GreatWorks[pDealItem:GetSubType()];
-					local iconName : string = GetGreatWorkIcon(greatWorkDesc);
+					local iconName : string = GetGreatWorkIcon(greatWorkDesc, pDealItem:GetValueTypeID());
 
 					SetIconToSize(uiIcon.Icon, iconName, 45);
 					SetIconToSize(uiMinimizedIcon.Icon, iconName, 45);

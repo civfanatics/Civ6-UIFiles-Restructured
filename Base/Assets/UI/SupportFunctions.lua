@@ -112,15 +112,16 @@ end
 -- ===========================================================================
 --	Given a table of strings, format it as a single string separated by spaces.
 -- ===========================================================================
-function FormatTableAsString( tStringTable:table)
+function FormatTableAsString( tStringTable:table, strSeparator:string )
 	if tStringTable == nil or #tStringTable == 0 then
 		return "";
 	end
+	strSeparator = strSeparator or "";
 	local sFormattedString:string = "";
 	for i,line in ipairs(tStringTable) do
 		if (line ~= nil and line ~= "") then
 			if (sFormattedString ~= "") then
-				sFormattedString = sFormattedString .. " ";
+				sFormattedString = sFormattedString .. strSeparator .. " ";
 			end
 			sFormattedString = sFormattedString .. Locale.Lookup(line);
 		end

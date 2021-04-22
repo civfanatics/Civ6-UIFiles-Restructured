@@ -36,7 +36,6 @@
     <Row Name="ICON_UNIT_BARBARIAN_HORSE_ARCHER"   Atlas="ICON_ATLAS_UNITS" Index="23"/>
     <Row Name="ICON_UNIT_SUMERIAN_WAR_CART"        Atlas="ICON_ATLAS_UNITS" Index="24"/>
     <Row Name="ICON_UNIT_AZTEC_EAGLE_WARRIOR"      Atlas="ICON_ATLAS_UNITS" Index="25"/>
-    <Row Name="ICON_UNIT_BARBARIAN_RAIDER"         Atlas="ICON_ATLAS_UNITS" Index="26"/>
     <Row Name="ICON_UNIT_GALLEY"                   Atlas="ICON_ATLAS_UNITS" Index="27"/>
     <Row Name="ICON_UNIT_NORWEGIAN_LONGSHIP"       Atlas="ICON_ATLAS_UNITS" Index="28"/>
     <Row Name="ICON_UNIT_ARCHER"                   Atlas="ICON_ATLAS_UNITS" Index="29"/>
@@ -108,7 +107,10 @@
     <Row Name="ICON_UNIT_MODERN_ARMOR"             Atlas="ICON_ATLAS_UNITS" Index="95"/>
     <Row Name="ICON_UNIT_WARRIOR_MONK"             Atlas="ICON_ATLAS_UNITS" Index="96"/>
     <Row Name="ICON_UNIT_GURU"                     Atlas="ICON_ATLAS_UNITS" Index="97"/>
-    
+    <Row Name="ICON_UNIT_TREBUCHET"                Atlas="ICON_ATLAS_UNITS" Index="99"/>
+    <Row Name="ICON_UNIT_MAN_AT_ARMS"              Atlas="ICON_ATLAS_UNITS" Index="100"/>
+    <Row Name="ICON_UNIT_LINE_INFANTRY"            Atlas="ICON_ATLAS_UNITS" Index="101"/>
+	    
     <Row Name="ICON_UNIT_SETTLER_FOW"                  Atlas="ICON_ATLAS_UNITS_FOW" Index="0"/>
     <Row Name="ICON_UNIT_BUILDER_FOW"                  Atlas="ICON_ATLAS_UNITS_FOW" Index="1"/>
     <Row Name="ICON_UNIT_COLOSSAL_HEAD_BUILDER_FOW"    Atlas="ICON_ATLAS_UNITS_FOW" Index="2"/>
@@ -135,7 +137,6 @@
     <Row Name="ICON_UNIT_BARBARIAN_HORSE_ARCHER_FOW"   Atlas="ICON_ATLAS_UNITS_FOW" Index="23"/>
     <Row Name="ICON_UNIT_SUMERIAN_WAR_CART_FOW"        Atlas="ICON_ATLAS_UNITS_FOW" Index="24"/>
     <Row Name="ICON_UNIT_AZTEC_EAGLE_WARRIOR_FOW"      Atlas="ICON_ATLAS_UNITS_FOW" Index="25"/>
-    <Row Name="ICON_UNIT_BARBARIAN_RAIDER_FOW"         Atlas="ICON_ATLAS_UNITS_FOW" Index="26"/>
     <Row Name="ICON_UNIT_GALLEY_FOW"                   Atlas="ICON_ATLAS_UNITS_FOW" Index="27"/>
     <Row Name="ICON_UNIT_NORWEGIAN_LONGSHIP_FOW"       Atlas="ICON_ATLAS_UNITS_FOW" Index="28"/>
     <Row Name="ICON_UNIT_ARCHER_FOW"                   Atlas="ICON_ATLAS_UNITS_FOW" Index="29"/>
@@ -208,6 +209,9 @@
     
     <Row Name="ICON_UNIT_WARRIOR_MONK_FOW"             Atlas="ICON_ATLAS_UNITS_FOW" Index="96"/>
     <Row Name="ICON_UNIT_GURU_FOW"             Atlas="ICON_ATLAS_UNITS_FOW" Index="97"/>
+    <Row Name="ICON_UNIT_TREBUCHET_FOW"                Atlas="ICON_ATLAS_UNITS_FOW" Index="99"/>
+    <Row Name="ICON_UNIT_MAN_AT_ARMS_FOW"              Atlas="ICON_ATLAS_UNITS_FOW" Index="100"/>
+    <Row Name="ICON_UNIT_LINE_INFANTRY_FOW"            Atlas="ICON_ATLAS_UNITS_FOW" Index="101"/>
   </IconDefinitions>
 </GameInfo>
 

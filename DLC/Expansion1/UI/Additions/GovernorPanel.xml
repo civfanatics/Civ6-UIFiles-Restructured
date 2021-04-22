@@ -75,7 +75,7 @@
           
           <!--Governor Name and Title-->
           <Grid ID="NameButton" Anchor="C,T" Size="parent-28,58" Offset="0,201" Texture="Governors_NamePlaque" SliceCorner="20,25" SliceSize="17,7">
-            <Label ID="GovernorName"  Anchor="C,T" Offset="0,14" Style="FontFlair16" SmallCaps="20" SmallCapsType="EveryWord" FontStyle="Shadow"	Color0="225,225,225,255" Color1="0,0,0,50"/>
+            <Label ID="GovernorName"  Anchor="C,T" Offset="0,14" Style="FontFlair16" SmallCaps="20" SmallCapsType="EveryWord" FontStyle="Shadow"	Color0="225,225,225,255" Color1="0,0,0,50" TruncateWidth="140" TruncatedTooltip="1"/>
             <Label ID="GovernorTitle" Anchor="C,B" Offset="0,9" Style="FontNormal14" FontStyle="Shadow"	Color0="240,240,240,255" Color1="0,0,0,50" />
           </Grid>
         </Container>
@@ -120,7 +120,7 @@
 
           <!--Governor Name and Title-->
           <Grid ID="NameButton" Anchor="C,T" Size="parent-28,58" Offset="0,201" Texture="Secret_NamePlaque" SliceCorner="20,25" SliceSize="17,7">
-            <Label ID="GovernorName"  Anchor="C,T" Offset="0,14" Style="FontFlair16" SmallCaps="20" SmallCapsType="EveryWord" FontStyle="Shadow"	Color0="225,225,225,255" Color1="0,0,0,50"/>
+            <Label ID="GovernorName"  Anchor="C,T" Offset="0,14" Style="FontFlair16" SmallCaps="20" SmallCapsType="EveryWord" FontStyle="Shadow"	Color0="225,225,225,255" Color1="0,0,0,50" TruncateWidth="140" TruncatedTooltip="1"/>
             <Label ID="GovernorTitle" Anchor="C,B" Offset="0,9" Style="FontNormal14" FontStyle="Shadow"	Color0="240,240,240,255" Color1="0,0,0,50" />
           </Grid>
         </Container>

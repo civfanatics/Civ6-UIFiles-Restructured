@@ -1540,33 +1540,36 @@ function GetData()
 			-- Obtain bonus text:
 			local title:string, details:string = GetBonusText( iPlayer, NUM_ENVOY_TOKENS_FOR_FIRST_BONUS );
 			kCityState.Bonuses[ NUM_ENVOY_TOKENS_FOR_FIRST_BONUS ] = { Title = title, Details = details } 				
-			if kCityState.isBonus1 then	
-				if m_kLastCityStates ~= nil and not m_kLastCityStates[iPlayer].isBonus1 then
-					isNewBonusAchieved = true;
-				end
-			end
 			title, details = GetBonusText( iPlayer, NUM_ENVOY_TOKENS_FOR_SECOND_BONUS );
 			kCityState.Bonuses[ NUM_ENVOY_TOKENS_FOR_SECOND_BONUS ] = { Title = title, Details = details } 
-			if kCityState.isBonus3 then
-				if m_kLastCityStates ~= nil and not m_kLastCityStates[iPlayer].isBonus3 then
-					isNewBonusAchieved = true;
-				end
-			end
 			title, details = GetBonusText( iPlayer, NUM_ENVOY_TOKENS_FOR_THIRD_BONUS );
 			kCityState.Bonuses[ NUM_ENVOY_TOKENS_FOR_THIRD_BONUS ] = { Title = title, Details = details } 
-			if kCityState.isBonus6 then
-				if m_kLastCityStates ~= nil and not m_kLastCityStates[iPlayer].isBonus6 then
-					isNewBonusAchieved = true;
-				end
-			end
 			details = GetSuzerainBonusText( iPlayer );
 			kCityState.Bonuses["Suzerain"] = { 
 				Title = Locale.Lookup("LOC_CITY_STATES_SUZERAIN_ENVOYS"), 
 				Details = details
-				}
-			if kCityState.isBonusSuzerain then
-				if m_kLastCityStates ~= nil and not m_kLastCityStates[iPlayer].isBonusSuzerain then
-					isNewBonusAchieved = true;
+			}	
+			
+			if m_kLastCityStates ~= nil and m_kLastCityStates[iPlayer] ~= nil then
+				if kCityState.isBonus1 then	
+					if not m_kLastCityStates[iPlayer].isBonus1 then
+						isNewBonusAchieved = true;
+					end
+				end
+				if kCityState.isBonus3 then
+					if not m_kLastCityStates[iPlayer].isBonus3 then
+						isNewBonusAchieved = true;
+					end
+				end
+				if kCityState.isBonus6 then
+					if not m_kLastCityStates[iPlayer].isBonus6 then
+						isNewBonusAchieved = true;
+					end
+				end
+				if kCityState.isBonusSuzerain then
+					if not m_kLastCityStates[iPlayer].isBonusSuzerain then
+						isNewBonusAchieved = true;
+					end
 				end
 			end
 

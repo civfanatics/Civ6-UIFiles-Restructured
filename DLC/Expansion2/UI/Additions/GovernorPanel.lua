@@ -17,6 +17,7 @@ local RELOAD_CACHE_ID:string = "GovernorPanel"; -- Must be unique (usually the s
 m_GovernorApptAvailableHash = DB.MakeHash("NOTIFICATION_GOVERNOR_APPOINTMENT_AVAILABLE");
 m_GovernorOpportunityAvailableHash = DB.MakeHash("NOTIFICATION_GOVERNOR_OPPORTUNITY_AVAILABLE");
 m_GovernorPromotionAvailableHash = DB.MakeHash("NOTIFICATION_GOVERNOR_PROMOTION_AVAILABLE");
+m_GovernorIdleHash = DB.MakeHash("NOTIFICATION_GOVERNOR_IDLE");
 m_SecretSocietyLevelUpHash = DB.MakeHash("NOTIFICATION_SECRETSOCIETY_LEVEL_UP");
 
 local PANEL_MAX_WIDTH = 1890;
@@ -456,17 +457,25 @@ function OnAssignButton( governorIndex:number, playerID:number, cityID:number )
 end
 
 -- ===========================================================================
-function Close()
-	if Controls.DetailsPanel:IsVisible() then
-		Controls.DetailsPanel:SetHide(true);
-	end
-
+-- The player explicitedly requested that the screen to close. This marks that the player has considered their governor title options and then closes the screen.
+function PlayerRequestClose()
 	local localPlayerID = Game.GetLocalPlayer();
 	if (localPlayerID ~= -1) then
 		local localPlayer = Players[localPlayerID];
 		if (localPlayer ~= nil and localPlayer:GetGovernors() ~= nil and not localPlayer:GetGovernors():HasTitleBeenConsidered()) then
 			localPlayer:GetGovernors():SetTitleConsidered(true);
 		end
+	end
+
+	Close();
+end
+
+-- ===========================================================================
+-- Close the Screen. This can happen from the player explicitedly closing the screen or an action that implicitedly closes the screen.
+-- As such, do not mark the player as having considered their governor title options.
+function Close()
+	if Controls.DetailsPanel:IsVisible() then
+		Controls.DetailsPanel:SetHide(true);
 	end
 
 	if UIManager:DequeuePopup(ContextPtr) then
@@ -586,6 +595,7 @@ function OnProcessNotification(playerID:number, notificationID:number, activated
 			if (pNotification:GetType() == m_GovernorApptAvailableHash or
 				pNotification:GetType() == m_GovernorOpportunityAvailableHash or
 				pNotification:GetType() == m_GovernorPromotionAvailableHash or
+				pNotification:GetType() == m_GovernorIdleHash or
 				pNotification:GetType() == m_SecretSocietyLevelUpHash) then
 				-- Open/refresh Governor Panel when we catch a governor notification
 				Open();
@@ -605,7 +615,8 @@ function OnProcessTurnBlocker( pNotification:table)
 
 		if (pNotification:GetType() == m_GovernorApptAvailableHash or
 			pNotification:GetType() == m_GovernorOpportunityAvailableHash or
-			pNotification:GetType() == m_GovernorPromotionAvailableHash) then
+			pNotification:GetType() == m_GovernorPromotionAvailableHash or
+			pNotification:GetType() == m_GovernorIdleHash) then
 			-- Open/refresh Governor Panel when we catch a governor notification
 			Open();
 		end
@@ -654,7 +665,7 @@ function OnInputHandler( pInputStruct:table )
 	local key = pInputStruct:GetKey();
 	local msg = pInputStruct:GetMessageType();
 	if msg == KeyEvents.KeyUp and key == Keys.VK_ESCAPE then 
-		Close();
+		PlayerRequestClose();
 		return true;
 	end;
 	return false;
@@ -746,7 +757,7 @@ function Initialize()
 
 	LuaEvents.ActionPanel_ActivateNotification.Add(	OnProcessTurnBlocker );
 
-	Controls.ModalScreenClose:RegisterCallback(Mouse.eLClick, Close);
+	Controls.ModalScreenClose:RegisterCallback(Mouse.eLClick, PlayerRequestClose);
 
 	m_TopPanelConsideredHeight = Controls.Vignette:GetSizeY() - TOP_PANEL_OFFSET;
 	

@@ -1139,7 +1139,6 @@ function OnInterfaceModeChanged( eOldMode:number, eNewMode:number )
 	elseif eNewMode == InterfaceModeTypes.DISTRICT_PLACEMENT then
 		Controls.PurchaseTileCheck:SetDisabled( true );
 		Controls.ManageCitizensCheck:SetDisabled( true );
-		Controls.ChangeProductionCheck:SetDisabled( true );
 		Controls.ProduceWithFaithCheck:SetDisabled( true );
 		Controls.ProduceWithGoldCheck:SetDisabled( true );
 		local newGrowthPlot:number = g_pCity:GetCulture():GetNextPlot();	--show the growth tile if the district can be placed there

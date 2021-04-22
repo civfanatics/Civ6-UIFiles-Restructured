@@ -1292,10 +1292,12 @@ function RealizeActivePoliciesRows()
 				ContextPtr:BuildInstanceForControl( "PolicyCard", cardInst, stackControl );
 				RealizePolicyCard( cardInst, policyType );
 				cardInst.CardContainer:SetHide(true);
-				cardInst.Draggable:RegisterCallback( Drag.eDown, function(dragStruct) OnStartDragFromRow(dragStruct, cardInst ); end );
-				cardInst.Draggable:RegisterCallback( Drag.eDrop, function(dragStruct) OnDropFromRow(dragStruct, cardInst ); end );
-				cardInst.Button:RegisterMouseEnterCallback( function() PushActiveCardMouseover( cardInst ); end);
-				cardInst.Button:RegisterMouseExitCallback( function() PopActiveCardMouseover( cardInst ); end);
+				if(IsAbleToChangePolicies())then
+					cardInst.Draggable:RegisterCallback( Drag.eDown, function(dragStruct) OnStartDragFromRow(dragStruct, cardInst ); end );
+					cardInst.Draggable:RegisterCallback( Drag.eDrop, function(dragStruct) OnDropFromRow(dragStruct, cardInst ); end );
+					cardInst.Button:RegisterMouseEnterCallback( function() PushActiveCardMouseover( cardInst ); end);
+					cardInst.Button:RegisterMouseExitCallback( function() PopActiveCardMouseover( cardInst ); end);
+				end
 				
 				
 				local fnRemoveCard = function( )
@@ -1749,8 +1751,7 @@ function SwitchTab( tabFrom, tabTo, bForce )
 
 	local isEditOn			:boolean = IsAbleToChangePolicies();
 	local isInputConsumed	:boolean = not (isEditOn and isToPolicies);
-	
-	Controls.PolicyInputShield:SetConsumeMouseOver( isInputConsumed );
+
 	Controls.PolicyInputShield:SetConsumeMouseButton( isInputConsumed );
 	Controls.CatalogInputShield:SetHide( isEditOn );
 	
